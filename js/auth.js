@@ -151,18 +151,18 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Logout button
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', async function() {
-            await supabaseClient.auth.signOut();
-            window.location.href = APP_CONFIG.LOGIN_URL;
+        logoutBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            await handleLogout();
         });
     }
 
     // Mobile logout button
     const logoutBtnMobile = document.getElementById('logoutBtnMobile');
     if (logoutBtnMobile) {
-        logoutBtnMobile.addEventListener('click', async function() {
-            await supabaseClient.auth.signOut();
-            window.location.href = APP_CONFIG.LOGIN_URL;
+        logoutBtnMobile.addEventListener('click', async function(e) {
+            e.preventDefault();
+            await handleLogout();
         });
     }
 
@@ -217,4 +217,25 @@ async function addAdminDashboardLink() {
             mobileNav.insertBefore(adminLinkMobile, mobileNav.firstChild);
         }
     }
+}
+
+// Handle logout - thorough cleanup for mobile browsers
+async function handleLogout() {
+    try {
+        // Sign out from Supabase (scope: global signs out from all tabs/devices)
+        await supabaseClient.auth.signOut({ scope: 'global' });
+    } catch (e) {
+        console.error('Signout error:', e);
+    }
+    
+    // Clear any cached storage (helps with mobile browser issues)
+    try {
+        localStorage.clear();
+        sessionStorage.clear();
+    } catch (e) {
+        console.error('Storage clear error:', e);
+    }
+    
+    // Redirect to login with cache-busting
+    window.location.href = APP_CONFIG.LOGIN_URL + '?logout=' + Date.now();
 }
