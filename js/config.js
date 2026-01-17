@@ -29,11 +29,19 @@ function getFunctionUrl(functionName) {
 
 // Helper to call Edge Functions with auth
 async function callEdgeFunction(functionName, body = {}) {
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+    
+    if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Session error: ' + sessionError.message);
+    }
     
     if (!session) {
-        throw new Error('Not authenticated');
+        console.error('No session found');
+        throw new Error('Not authenticated - please log in again');
     }
+
+    console.log('Calling function:', functionName, 'with session user:', session.user.email);
 
     const response = await fetch(getFunctionUrl(functionName), {
         method: 'POST',
@@ -46,6 +54,8 @@ async function callEdgeFunction(functionName, body = {}) {
     });
 
     const data = await response.json();
+    
+    console.log('Function response:', response.status, data);
 
     if (!response.ok) {
         throw new Error(data.error || 'Function call failed');
