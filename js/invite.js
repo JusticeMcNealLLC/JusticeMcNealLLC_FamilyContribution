@@ -8,9 +8,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Set up invite form
     setupInviteForm();
 
-    // Load pending invites and members
-    await loadPendingInvites();
-    await loadAllMembers();
+    // Load all sections
+    await loadAllSections();
 });
 
 function setupInviteForm() {
@@ -47,9 +46,8 @@ async function handleInvite() {
         showSuccess('inviteSuccess', `Invitation sent to ${email}!`);
         emailInput.value = '';
         
-        // Reload pending invites
-        await loadPendingInvites();
-        await loadAllMembers();
+        // Reload all sections
+        await loadAllSections();
 
     } catch (error) {
         showError('inviteError', error.message || 'Failed to send invitation');
@@ -58,105 +56,144 @@ async function handleInvite() {
     }
 }
 
-async function loadPendingInvites() {
-    const pendingBody = document.getElementById('pendingBody');
-    const noPending = document.getElementById('noPending');
-    const pendingInvites = document.getElementById('pendingInvites');
-
+async function loadAllSections() {
     try {
-        // Get profiles that haven't completed setup (no subscription yet)
-        const { data: profiles, error } = await supabaseClient
+        // Get all profiles with subscription info
+        const { data: profiles, error: profileError } = await supabaseClient
             .from('profiles')
-            .select(`
-                id,
-                email,
-                created_at,
-                subscriptions (
-                    id
-                )
-            `)
-            .eq('is_active', true);
+            .select('id, email, role, is_active, setup_completed, created_at')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error('Error loading pending invites:', error);
+        if (profileError) {
+            console.error('Error loading profiles:', profileError);
             return;
         }
 
-        // Filter to only those without subscriptions
-        const pendingUsers = profiles?.filter(p => !p.subscriptions || p.subscriptions.length === 0) || [];
+        // Get all subscriptions
+        const { data: subscriptions, error: subError } = await supabaseClient
+            .from('subscriptions')
+            .select('user_id, status, current_amount_cents');
 
-        if (pendingUsers.length === 0) {
-            if (pendingInvites) pendingInvites.classList.add('hidden');
-            if (noPending) noPending.classList.remove('hidden');
-            return;
+        const subsByUser = {};
+        if (!subError && subscriptions) {
+            subscriptions.forEach(sub => {
+                subsByUser[sub.user_id] = sub;
+            });
         }
 
-        if (pendingInvites) pendingInvites.classList.remove('hidden');
-        if (noPending) noPending.classList.add('hidden');
+        // Categorize users
+        const pending = [];      // setup_completed = false (haven't set password)
+        const awaiting = [];     // setup_completed = true but no active subscription
+        const active = [];       // has active/trialing subscription
 
-        pendingBody.innerHTML = pendingUsers.map(user => `
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-sm text-gray-900">
-                    ${user.email}
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-500">
-                    ${formatDate(user.created_at)}
-                </td>
-                <td class="px-6 py-4">
-                    <button 
-                        onclick="resendInvite('${user.email}')"
-                        class="text-primary hover:text-primary-hover text-sm font-medium"
-                    >
-                        Resend
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+        profiles.forEach(profile => {
+            // Skip admins from these lists (they manage, not contribute)
+            if (profile.role === 'admin') return;
+
+            const sub = subsByUser[profile.id];
+            const hasActiveSub = sub && (sub.status === 'active' || sub.status === 'trialing');
+
+            if (!profile.setup_completed) {
+                pending.push(profile);
+            } else if (!hasActiveSub) {
+                awaiting.push({ ...profile, subscription: sub });
+            } else {
+                active.push({ ...profile, subscription: sub });
+            }
+        });
+
+        // Render each section
+        renderPendingInvites(pending);
+        renderAwaitingSubscription(awaiting);
+        renderActiveMembers(active);
 
     } catch (error) {
-        console.error('Error loading pending invites:', error);
+        console.error('Error loading sections:', error);
     }
 }
 
-async function loadAllMembers() {
-    const container = document.getElementById('membersListContainer');
+function renderPendingInvites(users) {
+    const section = document.getElementById('pendingInvites');
+    const body = document.getElementById('pendingBody');
+    const empty = document.getElementById('noPending');
 
-    try {
-        const { data: profiles, error } = await supabaseClient
-            .from('profiles')
-            .select('email, role, is_active')
-            .order('email');
-
-        if (error) {
-            console.error('Error loading members:', error);
-            return;
-        }
-
-        if (!profiles || profiles.length === 0) {
-            container.innerHTML = '<p class="text-gray-500">No members yet</p>';
-            return;
-        }
-
-        container.innerHTML = profiles.map(profile => `
-            <div class="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 text-sm font-medium">
-                        ${profile.email.charAt(0).toUpperCase()}
-                    </div>
-                    <span class="text-gray-900">${profile.email}</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    ${profile.role === 'admin' ? `
-                        <span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-2 py-1 rounded">Admin</span>
-                    ` : ''}
-                    <span class="w-2 h-2 rounded-full ${profile.is_active ? 'bg-green-500' : 'bg-gray-300'}"></span>
-                </div>
-            </div>
-        `).join('');
-
-    } catch (error) {
-        console.error('Error loading members:', error);
+    if (users.length === 0) {
+        section.classList.add('hidden');
+        empty.classList.remove('hidden');
+        return;
     }
+
+    section.classList.remove('hidden');
+    empty.classList.add('hidden');
+
+    body.innerHTML = users.map(user => `
+        <tr class="hover:bg-yellow-50">
+            <td class="px-6 py-4 text-sm text-gray-900">${user.email}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">${formatDate(user.created_at)}</td>
+            <td class="px-6 py-4">
+                <button 
+                    onclick="resendInvite('${user.email}')"
+                    class="text-primary hover:text-primary-hover text-sm font-medium"
+                >
+                    Resend
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function renderAwaitingSubscription(users) {
+    const section = document.getElementById('awaitingSection');
+    const body = document.getElementById('awaitingBody');
+    const empty = document.getElementById('noAwaiting');
+
+    if (users.length === 0) {
+        section.classList.add('hidden');
+        empty.classList.remove('hidden');
+        return;
+    }
+
+    section.classList.remove('hidden');
+    empty.classList.add('hidden');
+
+    body.innerHTML = users.map(user => `
+        <tr class="hover:bg-blue-50">
+            <td class="px-6 py-4 text-sm text-gray-900">${user.email}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">${formatDate(user.created_at)}</td>
+        </tr>
+    `).join('');
+}
+
+function renderActiveMembers(users) {
+    const section = document.getElementById('activeSection');
+    const body = document.getElementById('activeBody');
+    const empty = document.getElementById('noActive');
+
+    if (users.length === 0) {
+        section.classList.add('hidden');
+        empty.classList.remove('hidden');
+        return;
+    }
+
+    section.classList.remove('hidden');
+    empty.classList.add('hidden');
+
+    body.innerHTML = users.map(user => `
+        <tr class="hover:bg-green-50">
+            <td class="px-6 py-4 text-sm text-gray-900">${user.email}</td>
+            <td class="px-6 py-4 text-sm text-gray-900 font-medium">
+                ${user.subscription?.current_amount_cents 
+                    ? formatCurrency(user.subscription.current_amount_cents) + '/mo'
+                    : '--'}
+            </td>
+            <td class="px-6 py-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClasses(user.subscription?.status)}">
+                    ${user.subscription?.status || 'Unknown'}
+                </span>
+            </td>
+        </tr>
+    `).join('');
 }
 
 // Global function for resend button

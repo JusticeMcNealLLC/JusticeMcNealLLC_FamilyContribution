@@ -197,17 +197,24 @@ async function addAdminDashboardLink() {
         .single();
 
     if (profile?.role === 'admin') {
-        // Find the navigation container
-        const nav = document.querySelector('nav .flex.items-center.gap-6');
-        if (nav) {
-            // Create admin dashboard link
+        // Add to desktop nav
+        const desktopNav = document.querySelector('nav .hidden.md\\:flex.items-center.gap-6');
+        if (desktopNav) {
             const adminLink = document.createElement('a');
             adminLink.href = '../admin/index.html';
             adminLink.className = 'text-gray-600 hover:text-gray-900';
-            adminLink.textContent = 'Admin Dashboard';
-            
-            // Insert at the beginning of the nav
-            nav.insertBefore(adminLink, nav.firstChild);
+            adminLink.textContent = 'Admin';
+            desktopNav.insertBefore(adminLink, desktopNav.firstChild);
+        }
+
+        // Add to mobile nav
+        const mobileNav = document.querySelector('#mobileMenu .flex.flex-col.gap-2');
+        if (mobileNav) {
+            const adminLinkMobile = document.createElement('a');
+            adminLinkMobile.href = '../admin/index.html';
+            adminLinkMobile.className = 'text-gray-600 hover:text-gray-900 py-2';
+            adminLinkMobile.textContent = 'Admin';
+            mobileNav.insertBefore(adminLinkMobile, mobileNav.firstChild);
         }
     }
 }
