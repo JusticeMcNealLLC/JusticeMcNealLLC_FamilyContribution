@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment History | Family Contribution Portal</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Family Contribution</div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Dashboard</a>
+            <a href="history.html" class="nav-link active">History</a>
+            <a href="settings.html" class="nav-link">Settings</a>
+            <button id="logoutBtn" class="btn btn-secondary btn-small">Logout</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <a href="index.html" class="back-link">← Back to Dashboard</a>
+
+            <h1>Payment History</h1>
+            <p class="subtitle">View your past contributions and download receipts</p>
+
+            <!-- Filters -->
+            <div class="filters">
+                <select id="statusFilter" class="filter-select">
+                    <option value="all">All Payments</option>
+                    <option value="paid">Paid Only</option>
+                </select>
+                <select id="periodFilter" class="filter-select">
+                    <option value="all">All Time</option>
+                    <option value="12">Last 12 Months</option>
+                    <option value="6">Last 6 Months</option>
+                </select>
+            </div>
+
+            <!-- Summary -->
+            <div class="history-summary">
+                <div class="summary-item">
+                    <span class="summary-label">Total Contributed:</span>
+                    <span class="summary-value" id="historyTotal">$--</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Payments:</span>
+                    <span class="summary-value" id="paymentCount">--</span>
+                </div>
+            </div>
+
+            <!-- Invoices Table -->
+            <div class="table-container">
+                <table class="data-table" id="invoicesTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoicesBody">
+                        <tr>
+                            <td colspan="4" class="table-loading">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">📋</div>
+                <h3>No payments yet</h3>
+                <p>Your payment history will appear here once you start contributing.</p>
+                <a href="contribution.html" class="btn btn-primary">Start Contributing</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/portal.js"></script>
+    <script src="../js/history.js"></script>
+</body>
+</html>

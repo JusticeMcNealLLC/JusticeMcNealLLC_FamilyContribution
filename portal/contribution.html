@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Contribution | Family Contribution Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        'primary-hover': '#4338CA',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="font-bold text-xl text-gray-900">Family Contribution</div>
+                <div class="flex items-center gap-6">
+                    <a href="index.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                    <a href="history.html" class="text-gray-600 hover:text-gray-900">History</a>
+                    <a href="settings.html" class="text-gray-600 hover:text-gray-900">Settings</a>
+                    <button id="logoutBtn" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <a href="index.html" class="text-primary hover:text-primary-hover text-sm mb-6 inline-block">
+            ← Back to Dashboard
+        </a>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <h1 class="text-2xl font-bold text-gray-900 mb-6">Change Your Contribution</h1>
+
+            <!-- Current Info -->
+            <div id="currentInfo" class="bg-gray-50 rounded-lg p-4 mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">Current amount:</span>
+                    <strong class="text-gray-900" id="currentAmountDisplay">$--/month</strong>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Next bill date:</span>
+                    <strong class="text-gray-900" id="nextBillDateDisplay">--</strong>
+                </div>
+            </div>
+
+            <!-- Amount Form -->
+            <form id="contributionForm" class="space-y-6">
+                <div>
+                    <label for="newAmount" class="block text-sm font-medium text-gray-700 mb-2">
+                        New Monthly Amount
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                        <input 
+                            type="number" 
+                            id="newAmount" 
+                            name="newAmount" 
+                            min="30" 
+                            max="250" 
+                            step="1"
+                            required 
+                            placeholder="50"
+                            class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                        >
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2">Minimum $30, maximum $250 (whole dollars only)</p>
+                </div>
+
+                <div id="formError" class="text-red-600 text-sm hidden"></div>
+
+                <!-- Confirmation Preview -->
+                <div id="confirmationPreview" class="hidden bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center gap-3">
+                        <div class="text-green-600 text-xl">✓</div>
+                        <div class="text-green-800">
+                            Your new amount of <strong id="previewAmount">$--</strong>/month 
+                            will start on <strong id="previewDate">--</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <button type="submit" id="saveBtn" class="flex-1 bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-4 rounded-lg transition">
+                        Save Changes
+                    </button>
+                    <a href="index.html" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg transition text-center">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+
+            <!-- First Time Setup (shown if no subscription) -->
+            <div id="firstTimeSetup" class="hidden">
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Start Your Contribution</h2>
+                <p class="text-gray-600 mb-6">Choose your monthly contribution amount to get started.</p>
+                
+                <form id="setupForm" class="space-y-6">
+                    <div>
+                        <label for="setupAmount" class="block text-sm font-medium text-gray-700 mb-2">
+                            Monthly Amount
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                            <input 
+                                type="number" 
+                                id="setupAmount" 
+                                name="setupAmount" 
+                                min="30" 
+                                max="250" 
+                                step="1"
+                                required 
+                                placeholder="50"
+                                class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                            >
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">Minimum $30, maximum $250 (whole dollars only)</p>
+                    </div>
+
+                    <div id="setupError" class="text-red-600 text-sm hidden"></div>
+
+                    <button type="submit" id="setupBtn" class="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-4 rounded-lg transition">
+                        Start Subscription
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/portal.js"></script>
+    <script src="../js/contribution.js"></script>
+</body>
+</html>

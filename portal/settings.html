@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Family Contribution Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        'primary-hover': '#4338CA',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="font-bold text-xl text-gray-900">Family Contribution</div>
+                <div class="flex items-center gap-6">
+                    <a href="index.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                    <a href="history.html" class="text-gray-600 hover:text-gray-900">History</a>
+                    <a href="settings.html" class="text-primary font-medium">Settings</a>
+                    <button id="logoutBtn" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <a href="index.html" class="text-primary hover:text-primary-hover text-sm mb-6 inline-block">
+            ← Back to Dashboard
+        </a>
+
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">Settings</h1>
+            <p class="text-gray-600 mt-1">Manage your account and billing</p>
+        </div>
+
+        <!-- Account Section -->
+        <section class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Account</h2>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 divide-y divide-gray-200">
+                <div class="p-4 flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-medium text-gray-500">Email</div>
+                        <div class="text-gray-900" id="accountEmail">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="p-4 flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-medium text-gray-500">Password</div>
+                        <div class="text-gray-900">••••••••</div>
+                    </div>
+                    <button id="changePasswordBtn" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition">
+                        Change Password
+                    </button>
+                </div>
+            </div>
+
+            <!-- Change Password Form (hidden by default) -->
+            <div id="changePasswordForm" class="hidden mt-4 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
+                <form id="passwordForm" class="space-y-4">
+                    <div>
+                        <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                        <input 
+                            type="password" 
+                            id="newPassword" 
+                            name="newPassword" 
+                            required 
+                            minlength="8"
+                            placeholder="••••••••"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                        >
+                        <p class="text-sm text-gray-500 mt-1">Minimum 8 characters</p>
+                    </div>
+
+                    <div>
+                        <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            name="confirmPassword" 
+                            required 
+                            placeholder="••••••••"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                        >
+                    </div>
+
+                    <div id="passwordError" class="text-red-600 text-sm hidden"></div>
+                    <div id="passwordSuccess" class="text-green-600 text-sm hidden"></div>
+
+                    <div class="flex gap-4">
+                        <button type="submit" id="savePasswordBtn" class="bg-primary hover:bg-primary-hover text-white font-semibold py-2 px-4 rounded-lg transition">
+                            Update Password
+                        </button>
+                        <button type="button" id="cancelPasswordBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Billing Section -->
+        <section class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Billing</h2>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 divide-y divide-gray-200">
+                <div class="p-4 flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-medium text-gray-500">Payment Method</div>
+                        <div class="text-gray-900" id="paymentMethod">Loading...</div>
+                    </div>
+                    <button id="updatePaymentBtn" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition">
+                        Update
+                    </button>
+                </div>
+
+                <div class="p-4 flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-medium text-gray-500">Current Contribution</div>
+                        <div class="text-gray-900" id="currentContribution">$--/month</div>
+                    </div>
+                    <a href="contribution.html" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition inline-block">
+                        Change
+                    </a>
+                </div>
+
+                <div class="p-4 flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-medium text-gray-500">Subscription Status</div>
+                        <div class="text-gray-900" id="subscriptionStatusText">--</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Danger Zone -->
+        <section>
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Danger Zone</h2>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-red-200 p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-medium text-gray-900">Cancel Subscription</div>
+                        <div class="text-sm text-gray-500">Your contribution will stop at the end of your current billing period.</div>
+                    </div>
+                    <button id="cancelSubscriptionBtn" class="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg transition">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/portal.js"></script>
+    <script src="../js/settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Contribution | Family Contribution Portal</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Family Contribution</div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Dashboard</a>
+            <a href="history.html" class="nav-link">History</a>
+            <a href="settings.html" class="nav-link">Settings</a>
+            <button id="logoutBtn" class="btn btn-secondary btn-small">Logout</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container container-small">
+            <a href="index.html" class="back-link">← Back to Dashboard</a>
+
+            <div class="card">
+                <h1>Change Your Contribution</h1>
+
+                <!-- Current Info -->
+                <div id="currentInfo" class="info-box">
+                    <div class="info-row">
+                        <span>Current amount:</span>
+                        <strong id="currentAmountDisplay">$--/month</strong>
+                    </div>
+                    <div class="info-row">
+                        <span>Next bill date:</span>
+                        <strong id="nextBillDateDisplay">--</strong>
+                    </div>
+                </div>
+
+                <!-- Amount Form -->
+                <form id="contributionForm">
+                    <div class="form-group">
+                        <label for="newAmount">New Monthly Amount</label>
+                        <div class="input-with-prefix">
+                            <span class="input-prefix">$</span>
+                            <input 
+                                type="number" 
+                                id="newAmount" 
+                                name="newAmount" 
+                                min="30" 
+                                max="250" 
+                                step="1"
+                                required 
+                                placeholder="50"
+                            >
+                        </div>
+                        <div class="form-hint">Minimum $30, maximum $250 (whole dollars only)</div>
+                    </div>
+
+                    <div class="form-error" id="formError"></div>
+
+                    <!-- Confirmation Preview -->
+                    <div id="confirmationPreview" class="confirmation-box" style="display: none;">
+                        <div class="confirmation-icon">✓</div>
+                        <div class="confirmation-text">
+                            Your new amount of <strong id="previewAmount">$--</strong>/month 
+                            will start on <strong id="previewDate">--</strong>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="saveBtn">
+                            Save Changes
+                        </button>
+                        <a href="index.html" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+
+                <!-- First Time Setup (shown if no subscription) -->
+                <div id="firstTimeSetup" style="display: none;">
+                    <h2>Start Your Contribution</h2>
+                    <p>Choose your monthly contribution amount to get started.</p>
+                    
+                    <form id="setupForm">
+                        <div class="form-group">
+                            <label for="setupAmount">Monthly Amount</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">$</span>
+                                <input 
+                                    type="number" 
+                                    id="setupAmount" 
+                                    name="setupAmount" 
+                                    min="30" 
+                                    max="250" 
+                                    step="1"
+                                    required 
+                                    placeholder="50"
+                                >
+                            </div>
+                            <div class="form-hint">Minimum $30, maximum $250 (whole dollars only)</div>
+                        </div>
+
+                        <div class="form-error" id="setupError"></div>
+
+                        <button type="submit" class="btn btn-primary btn-full" id="setupBtn">
+                            Start Subscription
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/portal.js"></script>
+    <script src="../js/contribution.js"></script>
+</body>
+</html>

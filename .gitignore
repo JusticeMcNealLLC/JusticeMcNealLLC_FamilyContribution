@@ -1,0 +1,17 @@
+# Don't commit these
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Supabase
+supabase/.temp/
+
+# Node (if you add any build tools later)
+node_modules/

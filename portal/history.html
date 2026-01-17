@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment History | Family Contribution Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        'primary-hover': '#4338CA',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="font-bold text-xl text-gray-900">Family Contribution</div>
+                <div class="flex items-center gap-6">
+                    <a href="index.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                    <a href="history.html" class="text-primary font-medium">History</a>
+                    <a href="settings.html" class="text-gray-600 hover:text-gray-900">Settings</a>
+                    <button id="logoutBtn" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <a href="index.html" class="text-primary hover:text-primary-hover text-sm mb-6 inline-block">
+            ← Back to Dashboard
+        </a>
+
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">Payment History</h1>
+            <p class="text-gray-600 mt-1">View your past contributions and download receipts</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex gap-4 mb-6">
+            <select id="statusFilter" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+                <option value="all">All Payments</option>
+                <option value="paid">Paid Only</option>
+            </select>
+            <select id="periodFilter" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+                <option value="all">All Time</option>
+                <option value="12">Last 12 Months</option>
+                <option value="6">Last 6 Months</option>
+            </select>
+        </div>
+
+        <!-- Summary -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex gap-8">
+            <div>
+                <span class="text-gray-500 text-sm">Total Contributed:</span>
+                <span class="font-bold text-gray-900 ml-2" id="historyTotal">$--</span>
+            </div>
+            <div>
+                <span class="text-gray-500 text-sm">Payments:</span>
+                <span class="font-bold text-gray-900 ml-2" id="paymentCount">--</span>
+            </div>
+        </div>
+
+        <!-- Invoices Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <table class="w-full" id="invoicesTable">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody id="invoicesBody" class="divide-y divide-gray-200">
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <div class="text-5xl mb-4">📋</div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No payments yet</h3>
+            <p class="text-gray-600 mb-6">Your payment history will appear here once you start contributing.</p>
+            <a href="contribution.html" class="inline-block bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-6 rounded-lg transition">
+                Start Contributing
+            </a>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/portal.js"></script>
+    <script src="../js/history.js"></script>
+</body>
+</html>

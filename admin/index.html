@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Family Contribution Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        'primary-hover': '#4338CA',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-indigo-900 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <span class="font-bold text-xl text-white">Family Contribution</span>
+                    <span class="bg-indigo-700 text-indigo-100 text-xs font-medium px-2 py-1 rounded">Admin</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <a href="index.html" class="text-white font-medium">Dashboard</a>
+                    <a href="invite.html" class="text-indigo-200 hover:text-white">Invite</a>
+                    <a href="../portal/index.html" class="text-indigo-200 hover:text-white">My Portal</a>
+                    <button id="logoutBtn" class="text-sm bg-indigo-800 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p class="text-gray-600 mt-1">Overview of family contributions</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                <div class="text-sm font-medium text-indigo-100 mb-1">This Month</div>
+                <div class="text-4xl font-bold" id="thisMonthTotal">$--</div>
+                <div class="text-sm text-indigo-100 mt-2">collected</div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="text-sm font-medium text-gray-500 mb-1">Active Members</div>
+                <div class="text-4xl font-bold text-gray-900" id="activeMemberCount">--</div>
+                <div class="text-sm text-gray-500 mt-2">contributing</div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="text-sm font-medium text-gray-500 mb-1">All Time Total</div>
+                <div class="text-4xl font-bold text-gray-900" id="allTimeTotal">$--</div>
+                <div class="text-sm text-gray-500 mt-2">collected</div>
+            </div>
+        </div>
+
+        <!-- Past Due Section -->
+        <section id="pastDueSection" class="hidden mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">⚠️ Past Due</h2>
+            <p class="text-gray-600 mb-4">These members have failed payments that need attention.</p>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-red-50 border-b border-red-200">
+                        <tr>
+                            <th class="text-left px-6 py-3 text-xs font-medium text-red-800 uppercase tracking-wider">Member</th>
+                            <th class="text-left px-6 py-3 text-xs font-medium text-red-800 uppercase tracking-wider">Amount</th>
+                            <th class="text-left px-6 py-3 text-xs font-medium text-red-800 uppercase tracking-wider">Last Attempt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pastDueBody" class="divide-y divide-red-100">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Active Members -->
+        <section class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">Active Members</h2>
+                    <p class="text-gray-600 text-sm">All contributing family members</p>
+                </div>
+                <a href="invite.html" class="bg-primary hover:bg-primary-hover text-white font-medium py-2 px-4 rounded-lg transition text-sm">
+                    + Invite Member
+                </a>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                            <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Total Contributed</th>
+                            <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membersBody" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Deactivated Members -->
+        <section id="deactivatedSection" class="mb-8 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-500">Deactivated Members</h2>
+                    <p class="text-gray-500 text-sm">Members who have been deactivated</p>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-100 border-b border-gray-200">
+                        <tr>
+                            <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
+                            <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Total Contributed</th>
+                            <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deactivatedBody" class="divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <div class="text-5xl mb-4">👥</div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No members yet</h3>
+            <p class="text-gray-600 mb-6">Start by inviting family members to join.</p>
+            <a href="invite.html" class="inline-block bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-6 rounded-lg transition">
+                Invite First Member
+            </a>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invite Member | Family Contribution Portal</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-admin">
+        <div class="nav-brand">Family Contribution <span class="badge">Admin</span></div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Dashboard</a>
+            <a href="invite.html" class="nav-link active">Invite</a>
+            <a href="../portal/index.html" class="nav-link">My Portal</a>
+            <button id="logoutBtn" class="btn btn-secondary btn-small">Logout</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container container-small">
+            <a href="index.html" class="back-link">← Back to Admin Dashboard</a>
+
+            <div class="card">
+                <h1>Invite Family Member</h1>
+                <p class="subtitle">Send an invitation to join the contribution portal</p>
+
+                <form id="inviteForm">
+                    <div class="form-group">
+                        <label for="inviteEmail">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="inviteEmail" 
+                            name="inviteEmail" 
+                            required 
+                            placeholder="family.member@example.com"
+                        >
+                        <div class="form-hint">They'll receive an email with a link to set their password</div>
+                    </div>
+
+                    <div class="form-error" id="inviteError"></div>
+                    <div class="form-success" id="inviteSuccess"></div>
+
+                    <button type="submit" class="btn btn-primary btn-full" id="inviteBtn">
+                        Send Invitation
+                    </button>
+                </form>
+            </div>
+
+            <!-- Pending Invites Section -->
+            <section class="section">
+                <h2>Pending Invitations</h2>
+                <p class="section-desc">Members who haven't completed signup yet</p>
+
+                <div id="pendingInvites">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Invited</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingBody">
+                                <tr>
+                                    <td colspan="3" class="table-loading">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- No Pending Invites -->
+                <div id="noPending" class="info-box" style="display: none;">
+                    <p>No pending invitations. All invited members have completed signup.</p>
+                </div>
+            </section>
+
+            <!-- All Members Quick List -->
+            <section class="section">
+                <h2>All Members</h2>
+                <div id="allMembersList">
+                    <div class="members-list" id="membersListContainer">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/admin.js"></script>
+    <script src="../js/invite.js"></script>
+</body>
+</html>
