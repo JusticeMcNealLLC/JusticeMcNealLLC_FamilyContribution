@@ -1,0 +1,15 @@
+{
+  "name": "justicemcnealllc_02",
+  "version": "1.0.0",
+  "description": "A simple, invite-only portal for managing family contributions using Stripe subscriptions.",
+  "main": "insert-test-invoices.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.90.1"
+  }
+}

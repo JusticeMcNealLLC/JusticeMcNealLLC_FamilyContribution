@@ -263,15 +263,37 @@ async function handleInvoicePaymentFailed(supabase: any, invoice: Stripe.Invoice
 
 // Helper: Get Supabase user ID from Stripe customer ID
 async function getUserIdFromCustomer(supabase: any, stripeCustomerId: string): Promise<string | null> {
+  // First try to find in stripe_customers table
   const { data, error } = await supabase
     .from('stripe_customers')
     .select('user_id')
     .eq('stripe_customer_id', stripeCustomerId)
     .single()
 
-  if (error || !data) {
-    return null
+  if (data?.user_id) {
+    return data.user_id
   }
 
-  return data.user_id
+  // Fallback: Check customer metadata from Stripe
+  try {
+    const customer = await stripe.customers.retrieve(stripeCustomerId)
+    if (customer && !customer.deleted && customer.metadata?.supabase_user_id) {
+      const userId = customer.metadata.supabase_user_id
+      
+      // Save to stripe_customers table for future lookups
+      await supabase.from('stripe_customers').upsert({
+        user_id: userId,
+        stripe_customer_id: stripeCustomerId,
+      }, {
+        onConflict: 'stripe_customer_id',
+      })
+      
+      console.log('Found user from customer metadata and saved mapping:', userId)
+      return userId
+    }
+  } catch (err) {
+    console.error('Error fetching customer from Stripe:', err)
+  }
+
+  return null
 }
