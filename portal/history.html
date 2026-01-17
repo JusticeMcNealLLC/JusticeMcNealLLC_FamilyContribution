@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment History | Family Contribution Portal</title>
+    <title>Payment History | Justice McNeal LLC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -23,12 +23,30 @@
     <nav class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <div class="font-bold text-xl text-gray-900">Family Contribution</div>
-                <div class="flex items-center gap-6">
+                <div class="font-bold text-xl text-gray-900">Justice McNeal LLC</div>
+                <!-- Mobile menu button -->
+                <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg hover:bg-gray-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <!-- Desktop nav -->
+                <div class="hidden md:flex items-center gap-6">
                     <a href="index.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
                     <a href="history.html" class="text-primary font-medium">History</a>
                     <a href="settings.html" class="text-gray-600 hover:text-gray-900">Settings</a>
                     <button id="logoutBtn" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+            <!-- Mobile nav -->
+            <div id="mobileMenu" class="hidden md:hidden pb-4">
+                <div class="flex flex-col gap-2">
+                    <a href="index.html" class="text-gray-600 hover:text-gray-900 py-2">Dashboard</a>
+                    <a href="history.html" class="text-primary font-medium py-2">History</a>
+                    <a href="settings.html" class="text-gray-600 hover:text-gray-900 py-2">Settings</a>
+                    <button id="logoutBtnMobile" class="text-left text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition mt-2">
                         Logout
                     </button>
                 </div>

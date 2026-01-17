@@ -157,6 +157,24 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
+    // Mobile logout button
+    const logoutBtnMobile = document.getElementById('logoutBtnMobile');
+    if (logoutBtnMobile) {
+        logoutBtnMobile.addEventListener('click', async function() {
+            await supabaseClient.auth.signOut();
+            window.location.href = APP_CONFIG.LOGIN_URL;
+        });
+    }
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+    }
+
     // Add admin dashboard link for admin users on portal pages
     await addAdminDashboardLink();
 });
