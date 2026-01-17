@@ -124,7 +124,7 @@ async function loadMembers() {
             const isAdmin = profile.role === 'admin';
             
             return `
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50 cursor-pointer" onclick="openMemberModal('${profile.id}')">
                     <td class="px-6 py-4 text-sm text-gray-900">
                         ${profile.email}
                         ${isAdmin ? '<span class="ml-2 bg-indigo-100 text-indigo-800 text-xs font-medium px-2 py-0.5 rounded">Admin</span>' : ''}
@@ -142,10 +142,10 @@ async function loadMembers() {
                     <td class="px-6 py-4 text-sm text-gray-900">
                         ${formatCurrency(total)}
                     </td>
-                    <td class="px-6 py-4 text-sm">
+                    <td class="px-6 py-4 text-sm" onclick="event.stopPropagation()">
                         ${!isAdmin ? `
                             <button 
-                                onclick="deactivateUser('${profile.id}', '${profile.email}')"
+                                onclick="event.stopPropagation(); deactivateUser('${profile.id}', '${profile.email}')"
                                 class="text-red-600 hover:text-red-800 font-medium"
                             >
                                 Deactivate
@@ -287,7 +287,7 @@ async function loadDeactivatedMembers() {
         deactivatedBody.innerHTML = profiles.map(profile => {
             const total = totalsByUser[profile.id] || 0;
             return `
-                <tr class="hover:bg-gray-100">
+                <tr class="hover:bg-gray-100 cursor-pointer" onclick="openMemberModal('${profile.id}')">
                     <td class="px-6 py-4 text-sm text-gray-500">
                         ${profile.email}
                         <span class="ml-2 bg-gray-200 text-gray-600 text-xs font-medium px-2 py-0.5 rounded">Deactivated</span>
@@ -295,9 +295,9 @@ async function loadDeactivatedMembers() {
                     <td class="px-6 py-4 text-sm text-gray-500">
                         ${formatCurrency(total)}
                     </td>
-                    <td class="px-6 py-4 text-sm">
+                    <td class="px-6 py-4 text-sm" onclick="event.stopPropagation()">
                         <button 
-                            onclick="reactivateUser('${profile.id}', '${profile.email}')"
+                            onclick="event.stopPropagation(); reactivateUser('${profile.id}', '${profile.email}')"
                             class="text-green-600 hover:text-green-800 font-medium"
                         >
                             Reactivate
@@ -330,3 +330,134 @@ async function reactivateUser(userId, email) {
         alert('Error: ' + error.message);
     }
 }
+
+// Member Modal Functions
+async function openMemberModal(userId) {
+    const modal = document.getElementById('memberModal');
+    modal.classList.remove('hidden');
+    
+    // Reset modal content
+    document.getElementById('modalMemberEmail').textContent = 'Loading...';
+    document.getElementById('modalMemberRole').textContent = '';
+    document.getElementById('modalStatus').innerHTML = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800">--</span>';
+    document.getElementById('modalAmount').textContent = '$--';
+    document.getElementById('modalTotal').textContent = '$--';
+    document.getElementById('modalTransactions').innerHTML = '<div class="text-gray-500 text-center py-4">Loading transactions...</div>';
+
+    try {
+        // Load member profile
+        const { data: profile, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('id, email, role, is_active')
+            .eq('id', userId)
+            .single();
+
+        if (profileError) throw profileError;
+
+        document.getElementById('modalMemberEmail').textContent = profile.email;
+        document.getElementById('modalMemberRole').textContent = profile.role === 'admin' ? '👑 Administrator' : '👤 Member';
+
+        // Load subscription
+        const { data: subscription } = await supabaseClient
+            .from('subscriptions')
+            .select('status, current_amount_cents')
+            .eq('user_id', userId)
+            .single();
+
+        if (subscription) {
+            document.getElementById('modalStatus').innerHTML = `
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${getStatusClasses(subscription.status)}">
+                    ${subscription.status}
+                </span>
+            `;
+            document.getElementById('modalAmount').textContent = subscription.current_amount_cents 
+                ? formatCurrency(subscription.current_amount_cents) + '/mo'
+                : 'Not set';
+        } else {
+            document.getElementById('modalStatus').innerHTML = `
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                    No subscription
+                </span>
+            `;
+            document.getElementById('modalAmount').textContent = 'N/A';
+        }
+
+        // Load invoices/transactions
+        const { data: invoices, error: invError } = await supabaseClient
+            .from('invoices')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (invError) throw invError;
+
+        // Calculate total
+        const totalPaid = invoices
+            .filter(inv => inv.status === 'paid')
+            .reduce((sum, inv) => sum + (inv.amount_paid_cents || 0), 0);
+        document.getElementById('modalTotal').textContent = formatCurrency(totalPaid);
+
+        // Render transactions
+        const transactionsEl = document.getElementById('modalTransactions');
+        if (!invoices || invoices.length === 0) {
+            transactionsEl.innerHTML = `
+                <div class="text-gray-500 text-center py-8">
+                    <div class="text-3xl mb-2">📭</div>
+                    <p>No transactions yet</p>
+                </div>
+            `;
+        } else {
+            transactionsEl.innerHTML = invoices.map(inv => `
+                <div class="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center ${inv.status === 'paid' ? 'bg-green-100' : 'bg-red-100'}">
+                            ${inv.status === 'paid' 
+                                ? '<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                                : '<svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>'
+                            }
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">
+                                ${inv.status === 'paid' ? 'Payment received' : 'Payment ' + inv.status}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                ${formatDate(inv.created_at)}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-semibold ${inv.status === 'paid' ? 'text-green-600' : 'text-red-600'}">
+                            ${inv.status === 'paid' ? '+' : ''}${formatCurrency(inv.amount_paid_cents || inv.amount_due_cents || 0)}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+    } catch (error) {
+        console.error('Error loading member details:', error);
+        document.getElementById('modalTransactions').innerHTML = `
+            <div class="text-red-500 text-center py-4">Error loading member details</div>
+        `;
+    }
+}
+
+function closeMemberModal() {
+    const modal = document.getElementById('memberModal');
+    modal.classList.add('hidden');
+}
+
+// Close modal on background click
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('memberModal');
+    if (e.target === modal) {
+        closeMemberModal();
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeMemberModal();
+    }
+});
