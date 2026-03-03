@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Dashboard | Justice McNeal LLC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -27,17 +27,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/shared.css">
 </head>
-<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col">
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar">
 
-    <!-- Navigation -->
+    <!-- Navigation (Desktop only — mobile uses bottom tab bar) -->
     <nav class="sticky top-0 z-40 glass border-b border-gray-200/60">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+            <div class="flex justify-between items-center h-14 md:h-16">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
                         <span class="text-white font-bold text-sm">JM</span>
                     </div>
-                    <span class="font-bold text-lg text-gray-900 hidden sm:block">Justice McNeal</span>
+                    <span class="font-bold text-lg text-gray-900">Justice McNeal</span>
                 </div>
 
                 <!-- Desktop nav -->
@@ -48,44 +48,11 @@
                     <div class="w-px h-6 bg-gray-200 mx-2"></div>
                     <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>
                 </div>
-
-                <!-- Mobile menu button -->
-                <button id="mobileMenuBtn" class="md:hidden p-2 -mr-1 rounded-lg hover:bg-gray-100 transition">
-                    <svg id="menuIconOpen" class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                    <svg id="menuIconClose" class="w-5 h-5 text-gray-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Mobile nav -->
-            <div id="mobileMenu" class="hidden md:hidden pb-4 -mx-2">
-                <div class="flex flex-col gap-1 bg-gray-50 rounded-xl p-2">
-                    <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-brand-600 bg-white rounded-lg shadow-sm">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                        Dashboard
-                    </a>
-                    <a href="history.html" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-white rounded-lg transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        History
-                    </a>
-                    <a href="settings.html" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-white rounded-lg transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        Settings
-                    </a>
-                    <div class="h-px bg-gray-200 my-1"></div>
-                    <button id="logoutBtnMobile" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition text-left w-full">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                        Sign Out
-                    </button>
-                </div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
 
         <!-- Success Banner -->
         <div id="successBanner" class="hidden mb-6 fade-in">
@@ -124,15 +91,15 @@
         </div>
 
         <!-- Welcome Header -->
-        <div class="mb-8">
-            <div class="flex items-end justify-between gap-4 flex-wrap">
+        <div class="mb-6 sm:mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Welcome back</h1>
-                    <p class="text-gray-500 mt-1 text-sm sm:text-base" id="userEmail">
+                    <h1 class="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Welcome back</h1>
+                    <p class="text-gray-500 mt-0.5 sm:mt-1 text-sm" id="userEmail">
                         <span class="skeleton inline-block h-4 w-48 rounded"></span>
                     </p>
                 </div>
-                <a href="contribution.html" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-2.5 px-5 rounded-xl transition shadow-sm shadow-brand-200 text-sm">
+                <a href="contribution.html" class="inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 px-5 rounded-xl transition shadow-sm shadow-brand-200 text-sm w-full sm:w-auto">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Manage Contribution
                 </a>
@@ -140,10 +107,10 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
 
             <!-- Monthly Amount — Hero Card -->
-            <div class="sm:col-span-1 bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 rounded-2xl p-6 text-white relative overflow-hidden card-hover">
+            <div class="sm:col-span-1 bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 rounded-2xl p-5 sm:p-6 text-white relative overflow-hidden card-hover">
                 <div class="absolute top-0 right-0 w-28 h-28 bg-white/5 rounded-full -translate-y-8 translate-x-8"></div>
                 <div class="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-5 -translate-x-5"></div>
                 <div class="relative">
@@ -153,7 +120,7 @@
                         </div>
                         <span class="text-sm font-medium text-brand-200">Monthly Contribution</span>
                     </div>
-                    <div class="text-3xl font-extrabold stat-number" id="currentAmount">
+                    <div class="text-2xl sm:text-3xl font-extrabold stat-number" id="currentAmount">
                         <span class="skeleton inline-block h-9 w-24 rounded-lg opacity-30"></span>
                     </div>
                     <a href="contribution.html" class="text-brand-200 hover:text-white text-sm mt-2 inline-flex items-center gap-1 transition">
@@ -164,7 +131,7 @@
             </div>
 
             <!-- Next Bill Date -->
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-6 card-hover">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 card-hover">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
                         <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -183,7 +150,7 @@
             </div>
 
             <!-- Total Contributed -->
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-6 card-hover">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 card-hover">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
                         <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
@@ -201,8 +168,8 @@
         </div>
 
         <!-- Quick Actions -->
-        <section class="mb-8">
-            <h2 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
+        <section class="mb-6 sm:mb-8">
+            <h2 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Quick Actions</h2>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
 
                 <a href="contribution.html" class="group bg-white rounded-2xl border border-gray-200/80 p-5 card-hover flex items-start gap-4">
@@ -254,8 +221,8 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-gray-200/60 mt-auto">
+    <!-- Footer (hidden on mobile — bottom bar replaces it) -->
+    <footer class="hidden md:block border-t border-gray-200/60 mt-auto">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-400">
                 <p>&copy; 2026 Justice McNeal LLC</p>
@@ -263,6 +230,28 @@
             </div>
         </div>
     </footer>
+
+    <!-- Mobile Bottom Tab Bar -->
+    <div class="bottom-tab-bar md:hidden">
+        <div class="max-w-lg mx-auto grid grid-cols-4 px-2">
+            <a href="index.html" class="tab-active">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span>Home</span>
+            </a>
+            <a href="history.html" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>History</span>
+            </a>
+            <a href="settings.html" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span>Settings</span>
+            </a>
+            <button id="logoutBtnMobile" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
