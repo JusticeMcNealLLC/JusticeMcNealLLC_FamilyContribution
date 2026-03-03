@@ -14,7 +14,7 @@ const APP_CONFIG = {
     MAX_AMOUNT: 250,
     
     // URLs
-    LOGIN_URL: '/login.html',
+    LOGIN_URL: '/auth/login.html',
     PORTAL_URL: '/portal/index.html',
     ADMIN_URL: '/admin/index.html',
     
