@@ -222,6 +222,34 @@ async function handleInvoicePaid(supabase: any, invoice: Stripe.Invoice) {
   if (error) {
     console.error('Error inserting invoice:', error)
   }
+
+  // Also refresh the subscription's current_period_end from Stripe
+  // The invoice.paid event is the most reliable signal that a new billing cycle started
+  if (invoice.subscription) {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
+      const periodEnd = subscription.current_period_end
+        ? new Date(subscription.current_period_end * 1000).toISOString()
+        : null
+
+      console.log('Updating subscription period_end after invoice paid:', periodEnd)
+
+      const { error: subError } = await supabase
+        .from('subscriptions')
+        .update({
+          current_period_end: periodEnd,
+          status: subscription.status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId)
+
+      if (subError) {
+        console.error('Error updating subscription period_end:', subError)
+      }
+    } catch (err) {
+      console.error('Error fetching subscription for period update:', err)
+    }
+  }
 }
 
 // Handler: Invoice payment failed
