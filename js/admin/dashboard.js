@@ -250,6 +250,9 @@ async function loadDeactivatedMembers() {
         (invoiceTotals || []).forEach(i => { totMap[i.user_id] = (totMap[i.user_id] || 0) + (i.amount_paid_cents || 0); });
 
         section.classList.remove('hidden');
+        // Auto-expand the details element
+        const details = section.querySelector('details');
+        if (details) details.open = true;
         grid.innerHTML = profiles.map(p => {
             const total = totMap[p.id] || 0;
             const initials = getInitials(p.email);

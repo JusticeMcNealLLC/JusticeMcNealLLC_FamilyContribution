@@ -116,6 +116,7 @@ async function loadAllSections() {
 function renderPendingInvites(users) {
     const section = document.getElementById('pendingInvites');
     const body = document.getElementById('pendingBody');
+    const mobileList = document.getElementById('pendingMobileList');
     const empty = document.getElementById('noPending');
 
     if (users.length === 0) {
@@ -127,25 +128,35 @@ function renderPendingInvites(users) {
     section.classList.remove('hidden');
     empty.classList.add('hidden');
 
-    body.innerHTML = users.map(user => `
-        <tr class="hover:bg-yellow-50">
-            <td class="px-6 py-4 text-sm text-gray-900">${user.email}</td>
-            <td class="px-6 py-4 text-sm text-gray-500">${formatDate(user.created_at)}</td>
-            <td class="px-6 py-4">
-                <button 
-                    onclick="resendInvite('${user.email}')"
-                    class="text-primary hover:text-primary-hover text-sm font-medium"
-                >
-                    Resend
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    if (body) {
+        body.innerHTML = users.map(user => `
+            <tr class="hover:bg-surface-50 transition">
+                <td class="px-5 py-3.5 text-sm text-gray-900">${user.email}</td>
+                <td class="px-5 py-3.5 text-sm text-gray-500">${formatDate(user.created_at)}</td>
+                <td class="px-5 py-3.5">
+                    <button onclick="resendInvite('${user.email}')" class="text-brand-600 hover:text-brand-700 text-sm font-medium">Resend</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    if (mobileList) {
+        mobileList.innerHTML = users.map(user => `
+            <div class="px-4 py-3.5 flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-sm font-medium text-gray-900 truncate">${user.email}</div>
+                    <div class="text-xs text-gray-400 mt-0.5">Invited ${formatDate(user.created_at)}</div>
+                </div>
+                <button onclick="resendInvite('${user.email}')" class="text-brand-600 hover:text-brand-700 text-xs font-semibold px-3 py-1.5 bg-brand-50 rounded-lg flex-shrink-0">Resend</button>
+            </div>
+        `).join('');
+    }
 }
 
 function renderAwaitingSubscription(users) {
     const section = document.getElementById('awaitingSection');
     const body = document.getElementById('awaitingBody');
+    const mobileList = document.getElementById('awaitingMobileList');
     const empty = document.getElementById('noAwaiting');
 
     if (users.length === 0) {
@@ -157,17 +168,39 @@ function renderAwaitingSubscription(users) {
     section.classList.remove('hidden');
     empty.classList.add('hidden');
 
-    body.innerHTML = users.map(user => `
-        <tr class="hover:bg-blue-50">
-            <td class="px-6 py-4 text-sm text-gray-900">${user.email}</td>
-            <td class="px-6 py-4 text-sm text-gray-500">${formatDate(user.created_at)}</td>
-        </tr>
-    `).join('');
+    if (body) {
+        body.innerHTML = users.map(user => `
+            <tr class="hover:bg-surface-50 transition">
+                <td class="px-5 py-3.5 text-sm text-gray-900">${user.email}</td>
+                <td class="px-5 py-3.5 text-sm text-gray-500">${formatDate(user.created_at)}</td>
+            </tr>
+        `).join('');
+    }
+
+    if (mobileList) {
+        mobileList.innerHTML = users.map(user => `
+            <div class="px-4 py-3.5">
+                <div class="text-sm font-medium text-gray-900 truncate">${user.email}</div>
+                <div class="text-xs text-gray-400 mt-0.5">Signed up ${formatDate(user.created_at)}</div>
+            </div>
+        `).join('');
+    }
+}
+
+function getStatusClasses(status) {
+    const map = {
+        active: 'bg-emerald-100 text-emerald-700',
+        trialing: 'bg-blue-100 text-blue-700',
+        past_due: 'bg-red-100 text-red-700',
+        canceled: 'bg-gray-100 text-gray-600',
+    };
+    return map[status] || 'bg-gray-100 text-gray-600';
 }
 
 function renderActiveMembers(users) {
     const section = document.getElementById('activeSection');
     const body = document.getElementById('activeBody');
+    const mobileList = document.getElementById('activeMobileList');
     const empty = document.getElementById('noActive');
 
     if (users.length === 0) {
@@ -179,21 +212,41 @@ function renderActiveMembers(users) {
     section.classList.remove('hidden');
     empty.classList.add('hidden');
 
-    body.innerHTML = users.map(user => `
-        <tr class="hover:bg-green-50">
-            <td class="px-6 py-4 text-sm text-gray-900">${user.email}</td>
-            <td class="px-6 py-4 text-sm text-gray-900 font-medium">
-                ${user.subscription?.current_amount_cents 
-                    ? formatCurrency(user.subscription.current_amount_cents) + '/mo'
-                    : '--'}
-            </td>
-            <td class="px-6 py-4">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClasses(user.subscription?.status)}">
+    if (body) {
+        body.innerHTML = users.map(user => `
+            <tr class="hover:bg-surface-50 transition">
+                <td class="px-5 py-3.5 text-sm text-gray-900">${user.email}</td>
+                <td class="px-5 py-3.5 text-sm text-gray-900 font-medium">
+                    ${user.subscription?.current_amount_cents 
+                        ? formatCurrency(user.subscription.current_amount_cents) + '/mo'
+                        : '--'}
+                </td>
+                <td class="px-5 py-3.5">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusClasses(user.subscription?.status)}">
+                        ${user.subscription?.status || 'Unknown'}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    if (mobileList) {
+        mobileList.innerHTML = users.map(user => `
+            <div class="px-4 py-3.5 flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-sm font-medium text-gray-900 truncate">${user.email}</div>
+                    <div class="text-xs text-gray-400 mt-0.5">
+                        ${user.subscription?.current_amount_cents 
+                            ? formatCurrency(user.subscription.current_amount_cents) + '/mo'
+                            : 'No plan'}
+                    </div>
+                </div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${getStatusClasses(user.subscription?.status)}">
                     ${user.subscription?.status || 'Unknown'}
                 </span>
-            </td>
-        </tr>
-    `).join('');
+            </div>
+        `).join('');
+    }
 }
 
 // Global function for resend button
