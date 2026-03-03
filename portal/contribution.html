@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Change Contribution | Justice McNeal LLC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -10,78 +10,80 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#4F46E5',
-                        'primary-hover': '#4338CA',
-                    }
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
                 }
             }
         }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
 </head>
-<body class="min-h-screen bg-gray-50">
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar">
+
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="font-bold text-xl text-gray-900">Justice McNeal LLC</div>
-                <!-- Mobile menu button -->
-                <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg hover:bg-gray-100">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
-                <!-- Desktop nav -->
-                <div class="hidden md:flex items-center gap-6">
-                    <a href="index.html" class="text-gray-600 hover:text-gray-900">Dashboard</a>
-                    <a href="history.html" class="text-gray-600 hover:text-gray-900">History</a>
-                    <a href="settings.html" class="text-gray-600 hover:text-gray-900">Settings</a>
-                    <button id="logoutBtn" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition">
-                        Logout
-                    </button>
+    <nav class="sticky top-0 z-40 glass border-b border-gray-200/60">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-14 md:h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">JM</span>
+                    </div>
+                    <span class="font-bold text-lg text-gray-900">Justice McNeal</span>
                 </div>
-            </div>
-            <!-- Mobile nav -->
-            <div id="mobileMenu" class="hidden md:hidden pb-4">
-                <div class="flex flex-col gap-2">
-                    <a href="index.html" class="text-gray-600 hover:text-gray-900 py-2">Dashboard</a>
-                    <a href="history.html" class="text-gray-600 hover:text-gray-900 py-2">History</a>
-                    <a href="settings.html" class="text-gray-600 hover:text-gray-900 py-2">Settings</a>
-                    <button id="logoutBtnMobile" class="text-left text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition mt-2">
-                        Logout
-                    </button>
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="index.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Dashboard</a>
+                    <a href="history.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">History</a>
+                    <a href="settings.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Settings</a>
+                    <div class="w-px h-6 bg-gray-200 mx-2"></div>
+                    <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <a href="index.html" class="text-primary hover:text-primary-hover text-sm mb-6 inline-block">
-            ← Back to Dashboard
+    <main class="max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <a href="index.html" class="inline-flex items-center gap-1 text-gray-500 hover:text-brand-600 text-sm mb-5 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            Back to Dashboard
         </a>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <h1 class="text-2xl font-bold text-gray-900 mb-6">Change Your Contribution</h1>
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-8 fade-in">
+            <h1 class="text-xl sm:text-2xl font-extrabold text-gray-900 mb-6 tracking-tight">Change Your Contribution</h1>
 
             <!-- Current Info -->
-            <div id="currentInfo" class="bg-gray-50 rounded-lg p-4 mb-6">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-gray-600">Current amount:</span>
-                    <strong class="text-gray-900" id="currentAmountDisplay">$--/month</strong>
+            <div id="currentInfo" class="bg-surface-50 rounded-xl p-4 mb-6 border border-gray-100">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm text-gray-500">Current amount</span>
+                    <span class="text-sm font-bold text-gray-900" id="currentAmountDisplay">
+                        <span class="skeleton inline-block h-4 w-20 rounded"></span>
+                    </span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Next bill date:</span>
-                    <strong class="text-gray-900" id="nextBillDateDisplay">--</strong>
+                    <span class="text-sm text-gray-500">Next bill date</span>
+                    <span class="text-sm font-bold text-gray-900" id="nextBillDateDisplay">
+                        <span class="skeleton inline-block h-4 w-24 rounded"></span>
+                    </span>
                 </div>
             </div>
 
             <!-- Amount Form -->
-            <form id="contributionForm" class="space-y-6">
+            <form id="contributionForm" class="space-y-5">
                 <div>
                     <label for="newAmount" class="block text-sm font-medium text-gray-700 mb-2">
                         New Monthly Amount
                     </label>
                     <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">$</span>
                         <input 
                             type="number" 
                             id="newAmount" 
@@ -91,47 +93,51 @@
                             step="1"
                             required 
                             placeholder="50"
-                            class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                            class="w-full pl-9 pr-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-lg font-semibold"
                         >
                     </div>
-                    <p class="text-sm text-gray-500 mt-2">Minimum $30, maximum $250 (whole dollars only)</p>
+                    <p class="text-xs text-gray-400 mt-2">Minimum $30, maximum $250 (whole dollars only)</p>
                 </div>
 
                 <div id="formError" class="text-red-600 text-sm hidden"></div>
 
                 <!-- Confirmation Preview -->
-                <div id="confirmationPreview" class="hidden bg-green-50 border border-green-200 rounded-lg p-4">
+                <div id="confirmationPreview" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                     <div class="flex items-center gap-3">
-                        <div class="text-green-600 text-xl">✓</div>
-                        <div class="text-green-800">
-                            Your new amount of <strong id="previewAmount">$--</strong>/month 
-                            will start on <strong id="previewDate">--</strong>
+                        <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         </div>
+                        <p class="text-sm text-emerald-800">
+                            New amount of <strong id="previewAmount">$--</strong>/month starts <strong id="previewDate">--</strong>
+                        </p>
                     </div>
                 </div>
 
-                <div class="flex gap-4">
-                    <button type="submit" id="saveBtn" class="flex-1 bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-4 rounded-lg transition">
+                <div class="flex gap-3">
+                    <button type="submit" id="saveBtn" class="flex-1 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3.5 px-4 rounded-xl transition text-sm">
                         Save Changes
                     </button>
-                    <a href="index.html" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg transition text-center">
+                    <a href="index.html" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3.5 px-4 rounded-xl transition text-center text-sm">
                         Cancel
                     </a>
                 </div>
             </form>
 
-            <!-- First Time Setup (shown if no subscription) -->
+            <!-- First Time Setup -->
             <div id="firstTimeSetup" class="hidden">
-                <h2 class="text-xl font-semibold text-gray-900 mb-2">Start Your Contribution</h2>
-                <p class="text-gray-600 mb-6">Choose your monthly contribution amount to get started.</p>
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-1">Start Your Contribution</h2>
+                    <p class="text-gray-500 text-sm">Choose your monthly amount to get started.</p>
+                </div>
                 
-                <form id="setupForm" class="space-y-6">
+                <form id="setupForm" class="space-y-5">
                     <div>
-                        <label for="setupAmount" class="block text-sm font-medium text-gray-700 mb-2">
-                            Monthly Amount
-                        </label>
+                        <label for="setupAmount" class="block text-sm font-medium text-gray-700 mb-2">Monthly Amount</label>
                         <div class="relative">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">$</span>
                             <input 
                                 type="number" 
                                 id="setupAmount" 
@@ -141,21 +147,53 @@
                                 step="1"
                                 required 
                                 placeholder="50"
-                                class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                class="w-full pl-9 pr-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-lg font-semibold"
                             >
                         </div>
-                        <p class="text-sm text-gray-500 mt-2">Minimum $30, maximum $250 (whole dollars only)</p>
+                        <p class="text-xs text-gray-400 mt-2">Minimum $30, maximum $250 (whole dollars only)</p>
                     </div>
 
                     <div id="setupError" class="text-red-600 text-sm hidden"></div>
 
-                    <button type="submit" id="setupBtn" class="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-4 rounded-lg transition">
+                    <button type="submit" id="setupBtn" class="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3.5 px-4 rounded-xl transition text-sm">
                         Start Subscription
                     </button>
                 </form>
             </div>
         </div>
     </main>
+
+    <!-- Footer (desktop) -->
+    <footer class="hidden md:block border-t border-gray-200/60 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between text-sm text-gray-400">
+                <p>&copy; 2026 Justice McNeal LLC</p>
+                <p>Family Contribution Portal</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Bottom Tab Bar -->
+    <div class="bottom-tab-bar md:hidden">
+        <div class="max-w-lg mx-auto grid grid-cols-4 px-2">
+            <a href="index.html" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span>Home</span>
+            </a>
+            <a href="history.html" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>History</span>
+            </a>
+            <a href="settings.html" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span>Settings</span>
+            </a>
+            <button id="logoutBtnMobile" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
