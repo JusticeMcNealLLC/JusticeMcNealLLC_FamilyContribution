@@ -86,15 +86,23 @@ async function loadSubscription(userId) {
                 const formattedDate = formatDate(subscription.current_period_end);
                 if (nextBillDateEl) nextBillDateEl.textContent = formattedDate;
                 if (nextBillDateDisplayEl) nextBillDateDisplayEl.textContent = formattedDate;
+            } else {
+                if (nextBillDateEl) nextBillDateEl.textContent = '--';
             }
 
             // Update status
             const subscriptionStatusEl = document.getElementById('subscriptionStatus');
             const subscriptionStatusTextEl = document.getElementById('subscriptionStatusText');
+            const statusDotEl = document.getElementById('statusDot');
             const statusText = getStatusText(subscription.status, subscription.cancel_at_period_end);
             
             if (subscriptionStatusEl) subscriptionStatusEl.textContent = statusText;
             if (subscriptionStatusTextEl) subscriptionStatusTextEl.textContent = statusText;
+            
+            // Show pulsing dot for active subscriptions
+            if (statusDotEl && (subscription.status === 'active' || subscription.status === 'trialing')) {
+                statusDotEl.classList.remove('hidden');
+            }
 
             // Show past due banner if needed
             if (subscription.status === 'past_due') {

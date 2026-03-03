@@ -10,131 +10,259 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#4F46E5',
-                        'primary-hover': '#4338CA',
-                    }
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
                 }
             }
         }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
 </head>
-<body class="min-h-screen bg-gray-50">
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col">
+
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="sticky top-0 z-40 glass border-b border-gray-200/60">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                <div class="font-bold text-xl text-gray-900">Justice McNeal LLC</div>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">JM</span>
+                    </div>
+                    <span class="font-bold text-lg text-gray-900 hidden sm:block">Justice McNeal</span>
+                </div>
+
+                <!-- Desktop nav -->
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="index.html" class="px-4 py-2 text-sm font-medium text-brand-600 bg-brand-50 rounded-lg">Dashboard</a>
+                    <a href="history.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">History</a>
+                    <a href="settings.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Settings</a>
+                    <div class="w-px h-6 bg-gray-200 mx-2"></div>
+                    <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>
+                </div>
+
                 <!-- Mobile menu button -->
-                <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg hover:bg-gray-100">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="mobileMenuBtn" class="md:hidden p-2 -mr-1 rounded-lg hover:bg-gray-100 transition">
+                    <svg id="menuIconOpen" class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
+                    <svg id="menuIconClose" class="w-5 h-5 text-gray-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                 </button>
-                <!-- Desktop nav -->
-                <div class="hidden md:flex items-center gap-6">
-                    <a href="index.html" class="text-primary font-medium">Dashboard</a>
-                    <a href="history.html" class="text-gray-600 hover:text-gray-900">History</a>
-                    <a href="settings.html" class="text-gray-600 hover:text-gray-900">Settings</a>
-                    <button id="logoutBtn" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition">
-                        Logout
-                    </button>
-                </div>
             </div>
+
             <!-- Mobile nav -->
-            <div id="mobileMenu" class="hidden md:hidden pb-4">
-                <div class="flex flex-col gap-2">
-                    <a href="index.html" class="text-primary font-medium py-2">Dashboard</a>
-                    <a href="history.html" class="text-gray-600 hover:text-gray-900 py-2">History</a>
-                    <a href="settings.html" class="text-gray-600 hover:text-gray-900 py-2">Settings</a>
-                    <button id="logoutBtnMobile" class="text-left text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition mt-2">
-                        Logout
+            <div id="mobileMenu" class="hidden md:hidden pb-4 -mx-2">
+                <div class="flex flex-col gap-1 bg-gray-50 rounded-xl p-2">
+                    <a href="index.html" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-brand-600 bg-white rounded-lg shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        Dashboard
+                    </a>
+                    <a href="history.html" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-white rounded-lg transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        History
+                    </a>
+                    <a href="settings.html" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-white rounded-lg transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Settings
+                    </a>
+                    <div class="h-px bg-gray-200 my-1"></div>
+                    <button id="logoutBtnMobile" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition text-left w-full">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        Sign Out
                     </button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
+
         <!-- Success Banner -->
-        <div id="successBanner" class="hidden mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
-            <div>
-                <strong>🎉 Success!</strong> — Your contribution has been set up. Thank you for your support!
+        <div id="successBanner" class="hidden mb-6 fade-in">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-emerald-900 text-sm">You're all set!</p>
+                        <p class="text-emerald-700 text-sm">Your contribution has been set up. Thank you for your support.</p>
+                    </div>
+                </div>
+                <button id="closeSuccessBanner" class="p-1.5 hover:bg-emerald-100 rounded-lg transition flex-shrink-0">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
-            <button id="closeSuccessBanner" class="text-green-600 hover:text-green-800 font-bold text-xl">&times;</button>
         </div>
 
         <!-- Past Due Banner -->
-        <div id="pastDueBanner" class="hidden mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
-            <div>
-                <strong>Payment Failed</strong> — Your last payment didn't go through.
-            </div>
-            <a href="#" id="updatePaymentLink" class="text-red-600 hover:text-red-800 font-medium underline">
-                Update payment method
-            </a>
-        </div>
-
-        <!-- Welcome -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Welcome back!</h1>
-            <p class="text-gray-600 mt-1" id="userEmail">Loading...</p>
-        </div>
-
-        <!-- Stats Grid -->
-        <div class="grid md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="text-sm font-medium text-gray-500 mb-1">Current Monthly Amount</div>
-                <div class="text-3xl font-bold text-gray-900" id="currentAmount">$--</div>
-                <a href="contribution.html" class="text-primary hover:text-primary-hover text-sm mt-3 inline-block">
-                    Change amount →
+        <div id="pastDueBanner" class="hidden mb-6 fade-in">
+            <div class="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-red-900 text-sm">Payment failed</p>
+                        <p class="text-red-700 text-sm">Your last payment didn't go through. Please update your payment method.</p>
+                    </div>
+                </div>
+                <a href="#" id="updatePaymentLink" class="text-sm font-semibold text-red-700 hover:text-red-800 bg-red-100 hover:bg-red-200 px-4 py-2 rounded-xl transition flex-shrink-0 whitespace-nowrap">
+                    Fix Payment
                 </a>
             </div>
+        </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="text-sm font-medium text-gray-500 mb-1">Next Bill Date</div>
-                <div class="text-3xl font-bold text-gray-900" id="nextBillDate">--</div>
-                <div class="text-sm text-gray-500 mt-3" id="subscriptionStatus">--</div>
+        <!-- Welcome Header -->
+        <div class="mb-8">
+            <div class="flex items-end justify-between gap-4 flex-wrap">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Welcome back</h1>
+                    <p class="text-gray-500 mt-1 text-sm sm:text-base" id="userEmail">
+                        <span class="skeleton inline-block h-4 w-48 rounded"></span>
+                    </p>
+                </div>
+                <a href="contribution.html" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-2.5 px-5 rounded-xl transition shadow-sm shadow-brand-200 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Manage Contribution
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+
+            <!-- Monthly Amount — Hero Card -->
+            <div class="sm:col-span-1 bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 rounded-2xl p-6 text-white relative overflow-hidden card-hover">
+                <div class="absolute top-0 right-0 w-28 h-28 bg-white/5 rounded-full -translate-y-8 translate-x-8"></div>
+                <div class="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-5 -translate-x-5"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <span class="text-sm font-medium text-brand-200">Monthly Contribution</span>
+                    </div>
+                    <div class="text-3xl font-extrabold stat-number" id="currentAmount">
+                        <span class="skeleton inline-block h-9 w-24 rounded-lg opacity-30"></span>
+                    </div>
+                    <a href="contribution.html" class="text-brand-200 hover:text-white text-sm mt-2 inline-flex items-center gap-1 transition">
+                        Change amount
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div class="text-sm font-medium text-gray-500 mb-1">Total Contributed</div>
-                <div class="text-3xl font-bold text-gray-900" id="totalContributed">$--</div>
-                <a href="history.html" class="text-primary hover:text-primary-hover text-sm mt-3 inline-block">
-                    View history →
+            <!-- Next Bill Date -->
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-6 card-hover">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <span class="text-sm font-medium text-gray-500">Next Bill Date</span>
+                </div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-gray-900 stat-number" id="nextBillDate">
+                    <span class="skeleton inline-block h-9 w-32 rounded-lg"></span>
+                </div>
+                <div class="mt-2 flex items-center gap-1.5">
+                    <span id="statusDot" class="hidden w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+                    <span class="text-sm text-gray-500" id="subscriptionStatus">
+                        <span class="skeleton inline-block h-4 w-16 rounded"></span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Total Contributed -->
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-6 card-hover">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    </div>
+                    <span class="text-sm font-medium text-gray-500">Total Contributed</span>
+                </div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 stat-number" id="totalContributed">
+                    <span class="skeleton inline-block h-9 w-24 rounded-lg"></span>
+                </div>
+                <a href="history.html" class="text-gray-500 hover:text-brand-600 text-sm mt-2 inline-flex items-center gap-1 transition">
+                    View history
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                 </a>
             </div>
         </div>
 
         <!-- Quick Actions -->
-        <div class="mb-8">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-            <div class="grid md:grid-cols-3 gap-4">
-                <a href="contribution.html" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-primary transition group">
-                    <div class="text-3xl mb-3">💰</div>
-                    <div class="font-semibold text-gray-900 group-hover:text-primary">Change Amount</div>
-                    <div class="text-sm text-gray-500 mt-1">Update your monthly contribution</div>
+        <section class="mb-8">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+                <a href="contribution.html" class="group bg-white rounded-2xl border border-gray-200/80 p-5 card-hover flex items-start gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-200 transition">
+                        <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-900 group-hover:text-brand-600 transition text-sm">Change Amount</div>
+                        <div class="text-xs text-gray-500 mt-0.5">Update your monthly contribution</div>
+                    </div>
                 </a>
-                <a href="history.html" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-primary transition group">
-                    <div class="text-3xl mb-3">📋</div>
-                    <div class="font-semibold text-gray-900 group-hover:text-primary">Payment History</div>
-                    <div class="text-sm text-gray-500 mt-1">View past payments and receipts</div>
+
+                <a href="history.html" class="group bg-white rounded-2xl border border-gray-200/80 p-5 card-hover flex items-start gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-900 group-hover:text-emerald-600 transition text-sm">Payment History</div>
+                        <div class="text-xs text-gray-500 mt-0.5">View past payments and receipts</div>
+                    </div>
                 </a>
-                <a href="settings.html" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-primary transition group">
-                    <div class="text-3xl mb-3">⚙️</div>
-                    <div class="font-semibold text-gray-900 group-hover:text-primary">Settings</div>
-                    <div class="text-sm text-gray-500 mt-1">Manage billing and account</div>
+
+                <a href="settings.html" class="group bg-white rounded-2xl border border-gray-200/80 p-5 card-hover flex items-start gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition">
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-900 group-hover:text-gray-700 transition text-sm">Settings</div>
+                        <div class="text-xs text-gray-500 mt-0.5">Manage billing and account</div>
+                    </div>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- No Subscription State -->
+        <div id="noSubscription" class="hidden fade-in">
+            <div class="bg-white rounded-2xl border border-gray-200 p-8 sm:p-16 text-center">
+                <div class="w-20 h-20 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Start Your Contribution</h3>
+                <p class="text-gray-500 mb-8 max-w-sm mx-auto">You don't have an active subscription yet. Set up your monthly contribution to get started.</p>
+                <a href="contribution.html" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 px-6 rounded-xl transition shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Set Up Contribution
                 </a>
             </div>
         </div>
-
-        <!-- No Subscription State -->
-        <div id="noSubscription" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-            <h2 class="text-xl font-semibold text-gray-900 mb-2">Start Your Contribution</h2>
-            <p class="text-gray-600 mb-6">You don't have an active subscription yet. Set up your monthly contribution to get started.</p>
-            <a href="contribution.html" class="inline-block bg-primary hover:bg-primary-hover text-white font-semibold py-3 px-6 rounded-lg transition">
-                Set Up Contribution
-            </a>
-        </div>
     </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200/60 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-400">
+                <p>&copy; 2026 Justice McNeal LLC</p>
+                <p>Family Contribution Portal</p>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>

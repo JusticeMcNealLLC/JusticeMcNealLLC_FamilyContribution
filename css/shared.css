@@ -1,0 +1,97 @@
+/* ─── Justice McNeal LLC — Shared Styles ─── */
+/* Used alongside Tailwind CDN for custom animations, scrollbar, and reusable effects */
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #a5b4fc; }
+
+/* ─── Card Hover ─── */
+.card-hover {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Skeleton Loader ─── */
+.skeleton {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ─── Fade-in animation ─── */
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Slide-up (for modals / bottom sheets) ─── */
+.slide-up {
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Pulse glow (for live status dots) ─── */
+.pulse-dot {
+    animation: pulseDot 2s ease-in-out infinite;
+}
+@keyframes pulseDot {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+}
+
+/* ─── Number counter (for stats) ─── */
+.stat-number {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+}
+
+/* ─── Glass panel ─── */
+.glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* ─── Mobile bottom-sheet modal ─── */
+@media (max-width: 640px) {
+    .modal-bottom-sheet .modal-panel {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        max-width: 100% !important;
+        max-height: 92vh !important;
+        border-radius: 1.5rem 1.5rem 0 0 !important;
+        margin: 0 !important;
+    }
+    .modal-bottom-sheet .modal-center {
+        align-items: flex-end !important;
+    }
+}
+
+/* ─── Status badge colors (reusable) ─── */
+.badge-active { background-color: #d1fae5; color: #065f46; }
+.badge-trialing { background-color: #dbeafe; color: #1e40af; }
+.badge-past-due { background-color: #fee2e2; color: #991b1b; }
+.badge-canceled { background-color: #f3f4f6; color: #4b5563; }
+
+/* ─── Smooth page transitions ─── */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
