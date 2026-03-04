@@ -6,7 +6,7 @@
 
 -- 1. INVESTMENT_SNAPSHOTS - one row per upload/update
 CREATE TABLE IF NOT EXISTS investment_snapshots (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     snapshot_date DATE NOT NULL,
     total_value_cents BIGINT NOT NULL DEFAULT 0,
     notes TEXT,
@@ -21,7 +21,7 @@ CREATE INDEX idx_snapshots_uploaded_by ON investment_snapshots(uploaded_by);
 
 -- 2. INVESTMENT_HOLDINGS - individual fund positions per snapshot
 CREATE TABLE IF NOT EXISTS investment_holdings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     snapshot_id UUID NOT NULL REFERENCES investment_snapshots(id) ON DELETE CASCADE,
     fund_ticker TEXT NOT NULL,
     fund_name TEXT NOT NULL,
