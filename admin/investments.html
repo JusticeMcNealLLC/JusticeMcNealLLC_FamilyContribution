@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Investments | Admin | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar">
+
+    <!-- Top Navigation -->
+    <nav class="sticky top-0 z-40 glass border-b border-gray-200/60">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-14 md:h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index.html" class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-sm">JM</span>
+                        </div>
+                        <span class="font-bold text-lg text-gray-900">Justice McNeal</span>
+                    </a>
+                    <span class="bg-brand-100 text-brand-700 text-xs font-semibold px-2.5 py-1 rounded-full">Admin</span>
+                </div>
+
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="index.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Admin Hub</a>
+                    <a href="investments.html" class="px-4 py-2 text-sm font-medium text-brand-600 bg-brand-50 rounded-lg">Investments</a>
+                    <a href="members.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Members</a>
+                    <div class="w-px h-6 bg-gray-200 mx-2"></div>
+                    <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
+
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Investment Management</h1>
+                <p class="text-gray-500 mt-1 text-sm sm:text-base">Upload Fidelity data and manage portfolio records</p>
+            </div>
+        </div>
+
+        <!-- How To Guide -->
+        <div class="bg-brand-50 border border-brand-200 rounded-2xl p-5 sm:p-6 mb-8">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-brand-900 mb-2">How to Export from Fidelity</h3>
+                    <ol class="text-sm text-brand-800 space-y-1 list-decimal list-inside">
+                        <li>Log in to <strong>Fidelity NetBenefits</strong> or <strong>Fidelity.com</strong></li>
+                        <li>Navigate to <strong>Positions</strong> (under Portfolio)</li>
+                        <li>Click the <strong>Download</strong> icon (arrow down) in the top-right of the positions table</li>
+                        <li>Select <strong>CSV</strong> format and download</li>
+                        <li>Upload that file below, or enter holdings manually</li>
+                    </ol>
+                    <p class="text-xs text-brand-600 mt-3">The CSV should contain columns: Symbol, Description, Quantity, Last Price, Current Value</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload / Manual Entry Tabs -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden mb-8">
+            <div class="flex border-b border-gray-200">
+                <button id="tabCsv" onclick="switchTab('csv')" class="flex-1 px-4 py-3 text-sm font-semibold text-brand-600 border-b-2 border-brand-600 bg-brand-50/50 transition">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        Upload CSV
+                    </span>
+                </button>
+                <button id="tabManual" onclick="switchTab('manual')" class="flex-1 px-4 py-3 text-sm font-semibold text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition">
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        Manual Entry
+                    </span>
+                </button>
+            </div>
+
+            <!-- CSV Upload Panel -->
+            <div id="panelCsv" class="p-5 sm:p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Snapshot Date</label>
+                    <input type="date" id="csvDate" class="w-full sm:w-auto px-4 py-2.5 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                </div>
+                <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-2xl p-8 sm:p-12 text-center hover:border-brand-400 hover:bg-brand-50/30 transition cursor-pointer">
+                    <input type="file" id="csvFileInput" accept=".csv" class="hidden">
+                    <div class="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    </div>
+                    <p class="text-sm font-medium text-gray-700 mb-1">Drop your Fidelity CSV here</p>
+                    <p class="text-xs text-gray-500">or click to browse</p>
+                    <p id="csvFileName" class="text-sm font-medium text-brand-600 mt-3 hidden"></p>
+                </div>
+
+                <!-- CSV Preview -->
+                <div id="csvPreview" class="hidden mt-5">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Preview</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                                    <th class="pb-2 pr-4">Ticker</th>
+                                    <th class="pb-2 pr-4">Fund Name</th>
+                                    <th class="pb-2 pr-4 text-right">Shares</th>
+                                    <th class="pb-2 pr-4 text-right">Price</th>
+                                    <th class="pb-2 text-right">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="csvPreviewBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                        <div class="text-sm font-bold text-gray-900">Total: <span id="csvPreviewTotal" class="text-emerald-600">$0.00</span></div>
+                        <div class="flex gap-2">
+                            <button onclick="clearCsvPreview()" class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Clear</button>
+                            <button id="csvSaveBtn" onclick="saveCsvSnapshot()" class="px-5 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm">Save Snapshot</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="csvError" class="hidden mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3"></div>
+                <div id="csvSuccess" class="hidden mt-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl p-3"></div>
+            </div>
+
+            <!-- Manual Entry Panel -->
+            <div id="panelManual" class="p-5 sm:p-6 hidden">
+                <form id="manualForm" onsubmit="return false;">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Snapshot Date</label>
+                            <input type="date" id="manualDate" required class="w-full px-4 py-2.5 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Notes (optional)</label>
+                            <input type="text" id="manualNotes" placeholder="e.g., Monthly update" class="w-full px-4 py-2.5 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div id="holdingsContainer">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-semibold text-gray-700">Holdings</h3>
+                            <button type="button" onclick="addHoldingRow()" class="text-xs font-medium text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Add Fund
+                            </button>
+                        </div>
+
+                        <!-- Default fund rows -->
+                        <div id="holdingRows" class="space-y-3">
+                            <!-- Rows will be added dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
+                        <div class="text-sm font-bold text-gray-900">Total: <span id="manualTotal" class="text-emerald-600">$0.00</span></div>
+                        <button type="button" id="manualSaveBtn" onclick="saveManualSnapshot()" class="px-5 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm">Save Snapshot</button>
+                    </div>
+
+                    <div id="manualError" class="hidden mt-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3"></div>
+                    <div id="manualSuccess" class="hidden mt-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl p-3"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Upload History -->
+        <section>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-900">Snapshot History</h2>
+                <span id="snapshotCount" class="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full hidden"></span>
+            </div>
+
+            <div id="snapshotList" class="space-y-3">
+                <!-- Loading skeletons -->
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-5">
+                    <div class="flex items-center gap-4">
+                        <div class="skeleton w-12 h-12 rounded-xl flex-shrink-0"></div>
+                        <div class="flex-1 space-y-2"><div class="skeleton h-4 w-40 rounded"></div><div class="skeleton h-3 w-24 rounded"></div></div>
+                        <div class="skeleton h-6 w-24 rounded-lg"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-5">
+                    <div class="flex items-center gap-4">
+                        <div class="skeleton w-12 h-12 rounded-xl flex-shrink-0"></div>
+                        <div class="flex-1 space-y-2"><div class="skeleton h-4 w-32 rounded"></div><div class="skeleton h-3 w-20 rounded"></div></div>
+                        <div class="skeleton h-6 w-24 rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="noSnapshots" class="hidden">
+                <div class="bg-white rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
+                    <div class="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">No snapshots yet</h3>
+                    <p class="text-sm text-gray-500 max-w-sm mx-auto">Upload a Fidelity CSV or add holdings manually to create your first portfolio snapshot.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer (desktop) -->
+    <footer class="hidden md:block border-t border-gray-200/60 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between text-sm text-gray-400">
+                <p>&copy; 2026 Justice McNeal LLC</p>
+                <p>Family Contribution Portal</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Bottom Tab Bar -->
+    <div class="bottom-tab-bar md:hidden">
+        <div class="max-w-lg mx-auto grid grid-cols-4 px-2">
+            <a href="index.html" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span>Hub</span>
+            </a>
+            <a href="members.html" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span>Members</span>
+            </a>
+            <a href="investments.html" class="tab-active">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                <span>Investments</span>
+            </a>
+            <button id="logoutBtnMobile" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/admin/investments.js"></script>
+</body>
+</html>
