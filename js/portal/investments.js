@@ -52,6 +52,7 @@ async function loadInvestmentData() {
         renderPortfolioTotal(latest);
         renderHoldings(holdings || []);
         renderAllocationChart(holdings || []);
+        renderGrowthChart(snapshots);
         renderGrowthHistory(snapshots);
 
     } catch (err) {
@@ -127,6 +128,95 @@ function renderAllocationChart(holdings) {
     }).join('');
 }
 
+function renderGrowthChart(snapshots) {
+    if (snapshots.length < 1) return;
+
+    document.getElementById('chartSection').style.display = '';
+
+    // Snapshots come in desc order — reverse for chronological chart
+    const sorted = [...snapshots].reverse();
+
+    const labels = sorted.map(s => {
+        const d = new Date(s.snapshot_date + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+    });
+
+    const values = sorted.map(s => s.total_value_cents / 100);
+
+    const ctx = document.getElementById('growthChart').getContext('2d');
+
+    // Gradient fill
+    const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.25)');
+    gradient.addColorStop(1, 'rgba(99, 102, 241, 0.02)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Portfolio Value',
+                data: values,
+                borderColor: '#6366f1',
+                backgroundColor: gradient,
+                borderWidth: 2.5,
+                pointBackgroundColor: '#6366f1',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: snapshots.length <= 12 ? 5 : 3,
+                pointHoverRadius: 7,
+                tension: 0.3,
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e1b4b',
+                    titleColor: '#e0e7ff',
+                    bodyColor: '#fff',
+                    bodyFont: { weight: '600', size: 14 },
+                    padding: 12,
+                    cornerRadius: 10,
+                    displayColors: false,
+                    callbacks: {
+                        label: (ctx) => '$' + ctx.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 11, family: 'Inter' },
+                        color: '#94a3b8',
+                        maxTicksLimit: 8,
+                    },
+                    border: { display: false },
+                },
+                y: {
+                    grid: { color: 'rgba(0,0,0,0.04)' },
+                    ticks: {
+                        font: { size: 11, family: 'Inter' },
+                        color: '#94a3b8',
+                        callback: (v) => '$' + v.toLocaleString('en-US'),
+                        maxTicksLimit: 6,
+                    },
+                    border: { display: false },
+                    beginAtZero: false,
+                }
+            }
+        }
+    });
+}
+
 function renderGrowthHistory(snapshots) {
     if (snapshots.length === 0) return;
 
@@ -197,6 +287,7 @@ function showNoData() {
     // Hide data sections
     document.getElementById('holdingsSection').style.display = 'none';
     document.getElementById('allocationSection').style.display = 'none';
+    document.getElementById('chartSection').style.display = 'none';
     document.getElementById('growthSection').style.display = 'none';
 
     // Hide portfolio total skeleton

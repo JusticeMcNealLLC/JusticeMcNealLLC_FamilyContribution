@@ -44,17 +44,24 @@ Invested into:
 ## 🗺️ The Roadmap
 
 ### Phase 1: Investment Visibility & Manual Deposits
-**Status:** 🔲 Not Started
+**Status:** � In Progress
 **Priority:** High
 **Goal:** Members should be able to see where the money is and how it's growing.
 
 #### 1A. Investment Dashboard
-- [ ] Dashboard showing total portfolio value
-- [ ] Breakdown by fund (VTI, VXUS, VIG, SPAXX) with percentages and dollar amounts
-- [ ] Growth over time chart (line graph)
+- [x] Dashboard showing total portfolio value
+- [x] Breakdown by fund (VTI, VXUS, VIG, SPAXX) with percentages and dollar amounts
+- [x] Growth over time chart (line graph via Chart.js)
 - [ ] Individual member contribution totals
 - [ ] Family-wide contribution totals
 - [ ] Monthly/quarterly performance summary
+- [x] Admin hub page with grid navigation
+- [x] Admin investment management (Fidelity CSV upload + manual entry)
+- [x] Snapshot history with change tracking
+- [x] Allocation bar chart
+- [x] Portfolio history table (desktop + mobile)
+- [x] All portal pages updated with Investments nav link
+- [x] Database: `investment_snapshots` + `investment_holdings` tables with RLS
 
 ##### Fidelity Data Integration Options
 | Option | Pros | Cons | Feasibility |
@@ -435,7 +442,7 @@ This roadmap is a **living document**. It will be updated as:
 - The fund grows and new possibilities open up
 - Members provide feedback and suggestions
 
-**Last Updated:** March 3, 2026
+**Last Updated:** March 6, 2026
 **Maintained By:** Justin McNeal (Admin)
 
 ---

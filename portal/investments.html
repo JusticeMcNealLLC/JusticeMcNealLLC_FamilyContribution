@@ -26,6 +26,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/shared.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 </head>
 <body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar">
 
@@ -114,6 +115,14 @@
             <div class="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6">
                 <div id="allocationBar" class="h-6 rounded-full overflow-hidden flex mb-4"></div>
                 <div id="allocationLegend" class="flex flex-wrap gap-x-5 gap-y-2"></div>
+            </div>
+        </section>
+
+        <!-- Growth Chart -->
+        <section class="mb-6 sm:mb-8" id="chartSection" style="display:none;">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Growth Over Time</h2>
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6">
+                <canvas id="growthChart" height="280"></canvas>
             </div>
         </section>
 
