@@ -101,14 +101,208 @@ Invested into:
 - [ ] "Complete Your Profile" nudge banner if profile is incomplete
 - [ ] Admin can see onboarding completion status per member
 - [ ] Profile picture displayed throughout portal (nav, settings, social feed)
-- [ ] Birthday auto-celebration (ties into Phase 3A milestones & Phase 4 events)
+- [ ] Birthday auto-celebration (ties into Phase 2 milestones & Phase 5 events)
 
 ---
 
-### Phase 2: Family Lending Program
+### Phase 2: Milestones & Perks Tracker
 **Status:** 🔲 Not Started
-**Priority:** High
+**Priority:** 🔴 High
+**Goal:** Show members what we've achieved and what perks unlock as our assets grow — gamify generational wealth.
+
+#### Milestone Tiers (Unlockable by Asset Threshold)
+| Threshold | Milestone | Perk / Feature Unlocked |
+|-----------|-----------|-------------------------|
+| $5,000 | 🌱 Seed Planted | Social feed launches — members can post & interact |
+| $10,000 | 📈 First Five Figures | Events system opens — plan family gatherings |
+| $25,000 | 💪 Building Momentum | Family gallery unlocked — store & share memories |
+| $50,000 | 🏦 Mini Bank | Lending program opens — members can borrow from the fund |
+| $75,000 | 🛡️ Safety Net | Emergency fund access for members in need |
+| $100,000 | 🎉 Six Figures | Trust formation begins — consult estate attorney |
+| $250,000 | 🚗 Fleet Ready | Family vehicle program evaluation begins |
+| $500,000 | 🏠 Compound Vision | Real estate research & land acquisition planning |
+| $1,000,000 | 👑 Generational | Full benefits suite — life insurance, scholarships, compound |
+
+#### Features to Build
+- [ ] Milestones page on the portal (visual roadmap with progress bars)
+- [ ] Current asset level indicator with animated progress to next tier
+- [ ] Animated celebration when a new milestone is reached (confetti, toast notification)
+- [ ] Milestone history timeline (when each tier was achieved)
+- [ ] Push notification to all members when a milestone is hit
+- [ ] Admin can create custom milestones beyond the defaults
+- [ ] Perk status badges on member profiles
+- [ ] "Next Unlock" countdown card on the portal dashboard
+- [ ] Auto-generated social feed posts for milestone achievements
+- [ ] Locked/unlocked visual state for each perk tier
+
+---
+
+### Phase 3: Family Structure & Identity
+**Status:** 🔲 Not Started
+**Priority:** 🔴 High
+**Goal:** Show who we are, how we're connected, and who's responsible for what.
+
+#### 3A. Family Hierarchy & Roles Page
+- [ ] Org chart / hierarchy page showing the LLC's structure and roles
+- [ ] Role definitions with responsibilities:
+  - **Founder / Admin** — manages the LLC, portal, investments, approvals
+  - **Treasurer** — tracks finances, reconciles accounts (future role)
+  - **Event Coordinator** — plans and manages family events (future role)
+  - **Social Manager** — moderates feed, manages announcements (future role)
+  - **Member** — contributes, participates, votes on decisions
+- [ ] Role assignment by admin (assign roles to members from the dashboard)
+- [ ] Role badges displayed on profiles and in the social feed
+- [ ] Visual org chart layout (tree or hierarchy diagram)
+- [ ] "How It Works" section explaining the LLC structure, money flow, and governance
+- [ ] Responsive design — clean layout on mobile and desktop
+
+#### 3B. Family Tree Page
+- [ ] Interactive family tree visualization (D3.js or similar)
+- [ ] Each node shows: profile picture, name, relationship, member status
+- [ ] Admin can add/edit family connections (parent, child, sibling, spouse)
+- [ ] Expandable/collapsible branches
+- [ ] Non-member family shown as grayed-out nodes (potential future members)
+- [ ] Tap a person to see their profile or member page
+- [ ] Mobile-friendly touch navigation (pinch to zoom, drag to pan)
+- [ ] "Invite to Join" button on non-member nodes
+- [ ] Database: `family_relationships` table (person_a, person_b, relationship_type)
+- [ ] Support for multi-generational depth (grandparents, grandchildren, etc.)
+
+---
+
+### Phase 4: Family Social Hub
+**Status:** 🔲 Not Started
+**Priority:** 🟡 Medium
+**Goal:** Make the portal more than finances — make it the family's digital home.
+
+#### 4A. Social Feed & Announcements
+- [ ] Admin announcements section (pinned to top of feed)
+- [ ] Milestone celebrations (auto-generated: "The family just hit $10,000 in total investments! 🎉")
+- [ ] Social feed — members can post text, images, and videos
+- [ ] Like, comment, and bookmark posts
+- [ ] Feed filtering (All / Announcements / Milestones / Member Posts)
+- [ ] Threaded replies — reply to any post inline
+- [ ] @mentions — tag other family members in posts and replies
+- [ ] Post editing and deletion (own posts only)
+- [ ] Emoji reactions (beyond just “like” — ❤️ 😂 🔥 👏 etc.)
+- [ ] Image/video upload with preview before posting
+- [ ] Link preview cards (auto-fetch title + thumbnail for shared URLs)
+- [ ] "New posts" indicator when feed updates while scrolling
+- [ ] Mobile-optimized infinite scroll
+
+#### 4B. Member Profiles
+- [ ] Profile pictures (upload + crop)
+- [ ] Bio / about section
+- [ ] Member's post history on their profile page
+- [ ] Member since date, contribution streak, badges
+- [ ] Profile privacy settings
+
+#### 4C. Private Messaging (DMs)
+- [ ] One-on-one direct messages between members
+- [ ] Real-time messaging (Supabase Realtime or similar)
+- [ ] Message notifications
+- [ ] Read receipts
+- [ ] Optional: Group chats
+
+#### 4D. Push & Text Notifications
+- [ ] Push notifications (web push via service workers)
+- [ ] SMS/text notifications via **Twilio** (or similar)
+- [ ] Notification preferences per member (what they want to be notified about)
+- [ ] Notification types:
+  - New announcements
+  - Event invites & RSVPs
+  - DM received
+  - Milestone reached
+  - Loan status updates
+  - Subscription reminders
+
+---
+
+### Phase 5: Events & Family Activities
+**Status:** 🔲 Not Started
+**Priority:** 🟡 Medium
+**Goal:** Bring the family together IRL with organized events and shared experiences.
+
+#### 5A. Events System
+- [ ] Create event (title, description, date/time, location, cover image)
+- [ ] Event types: **Gathering**, **Birthday**, **Holiday**, **Vacation**, **Meeting**, **Custom**
+- [ ] RSVP system (Going / Maybe / Not Going)
+- [ ] See who's attending with profile pics
+- [ ] Event reminders (push + SMS)
+- [ ] Event comments / discussion thread
+- [ ] Past events archive with photos
+
+#### 5B. Vacation / Trip Events (Special Type)
+- [ ] Trip-style events with a **deposit requirement**
+- [ ] Members RSVP by submitting a deposit (goes into a trip pot)
+- [ ] Pot covers shared expenses (Airbnb, rental cars, activities, etc.)
+- [ ] The LLC pays from the pot on behalf of the group
+- [ ] **No refunds for last-minute cancellations** (policy clearly stated at RSVP)
+- [ ] Trip expense breakdown visible to all attendees
+- [ ] Trip budget tracker (target vs. collected)
+
+#### Example Flow
+```
+Jennifer creates "Jennifer's 54th Birthday Bash"
+    📍 Location: The Venue, Atlanta GA
+    📅 Saturday, July 18th at 6:00 PM
+    
+    → Push notification sent to all members:
+      "🎂 Jennifer created an event! Jennifer's 54th Birthday
+       at The Venue — Click here to RSVP"
+    
+    → Members tap notification → See event details → RSVP
+    → Jennifer sees RSVP list with profile pics
+    → Event page shows countdown, attendee list, and comments
+```
+
+---
+
+### Phase 6: Family Gallery
+**Status:** 🔲 Not Started
+**Priority:** 🟡 Medium
+**Goal:** One place for all family memories — organized, searchable, and preserved forever.
+
+#### Features
+- [ ] Photo & video uploads (drag and drop, mobile camera support)
+- [ ] Album creation (by event, year, person, custom)
+- [ ] Metadata per photo:
+  - Date taken
+  - Location / address
+  - People tagged (linked to member profiles)
+  - Caption / description
+  - Who uploaded it
+- [ ] Search by person, date, location, or keyword
+- [ ] Slideshow view
+- [ ] Download originals
+- [ ] Storage solution: Supabase Storage or S3-compatible bucket
+- [ ] Auto-organize by date (timeline view)
+- [ ] "On This Day" — resurface old memories
+
+---
+
+### Phase 7: Trust Formation & Legal Structure
+**Status:** 🔲 Not Started (Planned)
+**Priority:** 🟡 Medium (should happen before major asset acquisition)
+**Goal:** Transition the LLC to be owned by a Family Trust for maximum asset protection and generational transfer.
+
+- [ ] Research revocable vs. irrevocable trust structures
+- [ ] Consult with estate planning attorney
+- [ ] Draft trust agreement
+- [ ] Transfer LLC ownership to the Trust
+- [ ] Update all accounts and policies to reflect new structure
+- [ ] Establish succession plan (who manages the Trust if current trustees can't)
+- [ ] Annual trust review process
+- [ ] Member education on how the trust works and protects them
+
+---
+
+### Phase 8: Family Lending Program
+**Status:** 🔲 Not Started
+**Priority:** 🟡 Medium (requires legal research + $50k milestone)
 **Goal:** Become the family's own bank — low-interest loans that keep money in the family.
+
+> **🔒 Unlocks at $50,000 milestone tier (see Phase 2)**
 
 #### How It Works
 - **30% of total LLC funds** are available in the lending pool at any given time
@@ -138,124 +332,15 @@ Invested into:
 
 ---
 
-### Phase 3: Family Social Hub
+### Phase 9: Member Benefits Program
 **Status:** 🔲 Not Started
-**Priority:** Medium
-**Goal:** Make the portal more than finances — make it the family's digital home.
-
-#### 3A. Social Feed & Announcements
-- [ ] Admin announcements section (pinned to top of feed)
-- [ ] Milestone celebrations (auto-generated: "The family just hit $10,000 in total investments! 🎉")
-- [ ] Social feed — members can post text, images, and videos
-- [ ] Like, comment, and bookmark posts
-- [ ] Feed filtering (All / Announcements / Milestones / Member Posts)
-- [ ] Threaded replies — reply to any post inline
-- [ ] @mentions — tag other family members in posts and replies
-- [ ] Post editing and deletion (own posts only)
-- [ ] Emoji reactions (beyond just “like” — ❤️ 😂 🔥 👏 etc.)
-- [ ] Image/video upload with preview before posting
-- [ ] Link preview cards (auto-fetch title + thumbnail for shared URLs)
-- [ ] "New posts" indicator when feed updates while scrolling
-- [ ] Mobile-optimized infinite scroll
-
-#### 3B. Member Profiles
-- [ ] Profile pictures (upload + crop)
-- [ ] Bio / about section
-- [ ] Member's post history on their profile page
-- [ ] Member since date, contribution streak, badges
-- [ ] Profile privacy settings
-
-#### 3C. Private Messaging (DMs)
-- [ ] One-on-one direct messages between members
-- [ ] Real-time messaging (Supabase Realtime or similar)
-- [ ] Message notifications
-- [ ] Read receipts
-- [ ] Optional: Group chats
-
-#### 3D. Push & Text Notifications
-- [ ] Push notifications (web push via service workers)
-- [ ] SMS/text notifications via **Twilio** (or similar)
-- [ ] Notification preferences per member (what they want to be notified about)
-- [ ] Notification types:
-  - New announcements
-  - Event invites & RSVPs
-  - DM received
-  - Milestone reached
-  - Loan status updates
-  - Subscription reminders
-
----
-
-### Phase 4: Events & Family Activities
-**Status:** 🔲 Not Started
-**Priority:** Medium
-**Goal:** Bring the family together IRL with organized events and shared experiences.
-
-#### 4A. Events System
-- [ ] Create event (title, description, date/time, location, cover image)
-- [ ] Event types: **Gathering**, **Birthday**, **Holiday**, **Vacation**, **Meeting**, **Custom**
-- [ ] RSVP system (Going / Maybe / Not Going)
-- [ ] See who's attending with profile pics
-- [ ] Event reminders (push + SMS)
-- [ ] Event comments / discussion thread
-- [ ] Past events archive with photos
-
-#### 4B. Vacation / Trip Events (Special Type)
-- [ ] Trip-style events with a **deposit requirement**
-- [ ] Members RSVP by submitting a deposit (goes into a trip pot)
-- [ ] Pot covers shared expenses (Airbnb, rental cars, activities, etc.)
-- [ ] The LLC pays from the pot on behalf of the group
-- [ ] **No refunds for last-minute cancellations** (policy clearly stated at RSVP)
-- [ ] Trip expense breakdown visible to all attendees
-- [ ] Trip budget tracker (target vs. collected)
-
-#### Example Flow
-```
-Jennifer creates "Jennifer's 54th Birthday Bash"
-    📍 Location: The Venue, Atlanta GA
-    📅 Saturday, July 18th at 6:00 PM
-    
-    → Push notification sent to all members:
-      "🎂 Jennifer created an event! Jennifer's 54th Birthday
-       at The Venue — Click here to RSVP"
-    
-    → Members tap notification → See event details → RSVP
-    → Jennifer sees RSVP list with profile pics
-    → Event page shows countdown, attendee list, and comments
-```
-
----
-
-### Phase 5: Family Gallery
-**Status:** 🔲 Not Started
-**Priority:** Medium
-**Goal:** One place for all family memories — organized, searchable, and preserved forever.
-
-#### Features
-- [ ] Photo & video uploads (drag and drop, mobile camera support)
-- [ ] Album creation (by event, year, person, custom)
-- [ ] Metadata per photo:
-  - Date taken
-  - Location / address
-  - People tagged (linked to member profiles)
-  - Caption / description
-  - Who uploaded it
-- [ ] Search by person, date, location, or keyword
-- [ ] Slideshow view
-- [ ] Download originals
-- [ ] Storage solution: Supabase Storage or S3-compatible bucket
-- [ ] Auto-organize by date (timeline view)
-- [ ] "On This Day" — resurface old memories
-
----
-
-### Phase 6: Member Benefits Program
-**Status:** 🔲 Not Started  
-**Priority:** Medium-Low (requires significant legal research)
+**Priority:** 🟠 Medium-Low (requires significant legal research + capital)
 **Goal:** Make membership tangibly valuable beyond investment returns.
 
-#### 6A. Family Vehicle Program 🚗
+#### 9A. Family Vehicle Program 🚗
 **Concept:** LLC-owned vehicle(s) available for members who need transportation — whether they're in a pinch, young and need a ride to work/school, or between cars.
+
+> **🔒 Unlocks at $250,000 milestone tier (see Phase 2)**
 
 - [ ] LLC purchases and owns the vehicle(s)
 - [ ] Reservation / scheduling system on the portal
@@ -274,7 +359,7 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 - [ ] Maintenance responsibility and cost allocation
 - [ ] Potential revenue model (small usage fee to cover insurance + maintenance)
 
-#### 6B. Life Insurance Benefit 🛡️
+#### 9B. Life Insurance Benefit 🛡️
 **Concept:** A whole life insurance policy for every member, paid for by the LLC/Trust, with the Trust as primary beneficiary.
 
 - [ ] Whole life policy issued for each active member
@@ -293,7 +378,7 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 - [ ] Cost projections per member per year
 - [ ] Vesting schedule (minimum membership duration before policy is issued?)
 
-#### 6C. Future Benefits (Ideas)
+#### 9C. Future Benefits (Ideas)
 - [ ] Emergency fund access (separate from lending program)
 - [ ] Education assistance / scholarship fund for members' children
 - [ ] Financial literacy resources and workshops
@@ -303,10 +388,12 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 
 ---
 
-### Phase 7: Family Compound / Real Estate
+### Phase 10: Family Compound / Real Estate
 **Status:** 🔲 Not Started (Long-Term Vision)
-**Priority:** Low (future phase — requires significant capital)
+**Priority:** 🔵 Low (future phase — requires significant capital)
 **Goal:** Family-owned land with affordable housing for members.
+
+> **🔒 Unlocks at $500,000 milestone tier (see Phase 2)**
 
 #### Vision
 - LLC/Trust purchases land
@@ -324,45 +411,7 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 - [ ] Insurance (property + liability)
 - [ ] Tax implications of LLC-owned rental property
 - [ ] Zoning laws for multi-unit on single property
-- [ ] Timeline: Begin when investment fund reaches $______ (TBD)
-
----
-
-### Phase 8: Trust Formation & Legal Structure
-**Status:** 🔲 Not Started (Planned)
-**Priority:** Medium (should happen before major asset acquisition)
-**Goal:** Transition the LLC to be owned by a Family Trust for maximum asset protection and generational transfer.
-
-- [ ] Research revocable vs. irrevocable trust structures
-- [ ] Consult with estate planning attorney
-- [ ] Draft trust agreement
-- [ ] Transfer LLC ownership to the Trust
-- [ ] Update all accounts and policies to reflect new structure
-- [ ] Establish succession plan (who manages the Trust if current trustees can't)
-- [ ] Annual trust review process
-- [ ] Member education on how the trust works and protects them
-
----
-
-### Phase 9: Milestone & Progress Tracker (Website Feature)
-**Status:** 🔲 Not Started
-**Priority:** Medium
-**Goal:** A public-facing (to members) page that shows the progress of every feature and milestone.
-
-#### Features
-- [ ] Visual roadmap page on the portal (this document, but interactive)
-- [ ] Progress bars for each phase
-- [ ] Milestone timeline (auto-populated + admin-created)
-- [ ] Celebration animations when milestones are hit
-- [ ] Examples of milestones:
-  - "First $1,000 invested"
-  - "First $10,000 invested"
-  - "5 active members"
-  - "10 active members"
-  - "First loan issued"
-  - "Family car acquired"
-  - "Trust established"
-  - "Family compound purchased"
+- [ ] Timeline: Begin when investment fund reaches $500,000+
 
 ---
 
@@ -373,19 +422,21 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 | 1A | Investment Dashboard | 🔴 High | Medium | Fidelity data (manual or Plaid) |
 | 1B | Manual Deposits | 🔴 High | Low-Medium | Database schema update |
 | 1C | Member Onboarding | 🔴 High | Low-Medium | Supabase Storage (profile pics) |
-| 2 | Family Lending | 🔴 High | High | Legal research, loan tracking system |
-| 3A | Social Feed | 🟡 Medium | Medium | Supabase storage for media |
-| 3B | Member Profiles | 🟡 Medium | Medium | Profile pics storage |
-| 3C | Private Messaging | 🟡 Medium | Medium-High | Supabase Realtime |
-| 3D | Notifications | 🟡 Medium | Medium | Twilio account, service workers |
-| 4A | Events System | 🟡 Medium | Medium | Notification system (Phase 3D) |
-| 4B | Vacation Events | 🟡 Medium | High | Events system, payment processing |
-| 5 | Family Gallery | 🟡 Medium | Medium | Storage solution |
-| 6A | Family Vehicle | 🟠 Medium-Low | Low (portal) / High (legal) | Legal research, vehicle purchase |
-| 6B | Life Insurance | 🟠 Medium-Low | Low (portal) / High (legal) | Legal research, insurance broker |
-| 7 | Family Compound | 🔵 Low | Very High | Significant capital, legal, real estate |
-| 8 | Trust Formation | 🟡 Medium | High (legal) | Estate planning attorney |
-| 9 | Milestone Tracker | 🟡 Medium | Low-Medium | Data from all other phases |
+| 2 | Milestones & Perks | 🔴 High | Low-Medium | Investment data from Phase 1A |
+| 3A | Hierarchy & Roles | 🔴 High | Low | Profile system |
+| 3B | Family Tree | 🔴 High | Medium | D3.js or tree library |
+| 4A | Social Feed | 🟡 Medium | Medium | Supabase storage for media |
+| 4B | Member Profiles | 🟡 Medium | Medium | Profile pics storage |
+| 4C | Private Messaging | 🟡 Medium | Medium-High | Supabase Realtime |
+| 4D | Notifications | 🟡 Medium | Medium | Twilio account, service workers |
+| 5A | Events System | 🟡 Medium | Medium | Notification system (Phase 4D) |
+| 5B | Vacation Events | 🟡 Medium | High | Events system, payment processing |
+| 6 | Family Gallery | 🟡 Medium | Medium | Storage solution |
+| 7 | Trust Formation | 🟡 Medium | High (legal) | Estate planning attorney |
+| 8 | Family Lending | 🟡 Medium | High | Legal research, $50k milestone |
+| 9A | Family Vehicle | 🟠 Medium-Low | Low (portal) / High (legal) | Legal research, $250k milestone |
+| 9B | Life Insurance | 🟠 Medium-Low | Low (portal) / High (legal) | Legal research, insurance broker |
+| 10 | Family Compound | 🔵 Low | Very High | Significant capital, $500k milestone |
 
 ---
 
@@ -403,6 +454,10 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 | Payment processing | **Stripe** (existing) | One-time deposits, trip deposits, rent payments |
 
 ### Database Expansion Needed
+- `milestones` table (title, description, threshold_cents, achieved_at, type, perk_description)
+- `family_roles` table (user_id, role_name, role_description, assigned_by, assigned_at)
+- `family_relationships` table (person_a_id, person_b_id, relationship_type, added_by, created_at)
+- `family_tree_nodes` table (name, profile_id, is_portal_member, parent_node_id, created_at)
 - `investments` table (fund, shares, value, date, updated_by)
 - `manual_deposits` table (member_id, amount, date, notes, recorded_by)
 - `loans` table (member_id, amount, interest_rate, term, status, payments)
@@ -420,7 +475,6 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 - `notifications` table (user_id, type, content, read, created_at)
 - `vehicles` table (name, make, model, year, status, insurance_info)
 - `vehicle_reservations` table (vehicle_id, user_id, start_date, end_date)
-- `milestones` table (title, description, achieved_at, type)
 
 ---
 
@@ -441,29 +495,31 @@ The LLC sustains itself through:
 1. ✅ Core portal (subscriptions, payments, admin) — **DONE**
 2. ✅ Investment dashboard (manual entry to start) — **DONE**
 3. Member onboarding (profile setup wizard, profile pics, birthday)
-4. One-time deposit feature
-5. Milestone tracker page
+4. Milestones & perks page (asset threshold tiers, progress tracker)
+5. Family hierarchy & roles page
+6. Family tree page
 
 ### 3–6 Months
-6. Member profiles with profile pictures
-7. Social feed + admin announcements (with replies & threads)
-8. Notifications (push first, then Twilio SMS)
+7. One-time deposit feature
+8. Social feed + admin announcements (with replies & threads)
+9. Member profiles with profile pictures
+10. Notifications (push first, then Twilio SMS)
 
 ### 6–12 Months
-9. Events system with RSVPs
-10. Private messaging
-11. Family gallery
-12. Plaid integration for Fidelity data (if fund size warrants the cost)
+11. Events system with RSVPs
+12. Family gallery
+13. Trust formation (consult attorney)
+14. Plaid integration for Fidelity data (if fund size warrants the cost)
 
 ### 12–24 Months
-13. Family lending program (after legal consultation)
-14. Vacation-style events with deposit system
-15. Trust formation (consult attorney)
+15. Family lending program (after legal consultation + $50k milestone)
+16. Vacation-style events with deposit system
+17. Private messaging
 
 ### 24+ Months (As Capital Allows)
-16. Life insurance benefit
-17. Family vehicle program
-18. Family compound research and acquisition
+18. Life insurance benefit
+19. Family vehicle program
+20. Family compound research and acquisition
 
 ---
 
