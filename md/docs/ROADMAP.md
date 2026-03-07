@@ -80,7 +80,7 @@ Invested into:
 #### 1B. One-Time / Manual Deposits
 - [ ] "Extra Deposit" feature — members can make a one-time contribution outside of their subscription
 - [x] Admin-initiated manual deposit recording (for transfers like moving personal investments into the LLC account)
-- [ ] Transaction log showing both Stripe subscription payments AND manual deposits
+- [x] Transaction log showing both Stripe subscription payments AND manual deposits
 - [x] Proper attribution — each manual deposit is tagged to the correct member with date and notes
 - [x] Running total per member (Stripe payments + manual deposits combined)
 

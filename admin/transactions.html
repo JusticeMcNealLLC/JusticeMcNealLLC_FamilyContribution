@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Transaction History | Justice McNeal LLC</title>
+    <title>Transaction Log | Admin | Justice McNeal LLC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -29,21 +29,24 @@
 </head>
 <body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar">
 
-    <!-- Navigation -->
+    <!-- Top Navigation -->
     <nav class="sticky top-0 z-40 glass border-b border-gray-200/60">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-14 md:h-16">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
-                        <span class="text-white font-bold text-sm">JM</span>
-                    </div>
-                    <span class="font-bold text-lg text-gray-900">Justice McNeal</span>
+                    <a href="index.html" class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-sm">JM</span>
+                        </div>
+                        <span class="font-bold text-lg text-gray-900">Justice McNeal</span>
+                    </a>
+                    <span class="bg-brand-100 text-brand-700 text-xs font-semibold px-2.5 py-1 rounded-full">Admin</span>
                 </div>
+
                 <div class="hidden md:flex items-center gap-1">
-                    <a href="index.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Dashboard</a>
-                    <a href="investments.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Investments</a>
-                    <a href="history.html" class="px-4 py-2 text-sm font-medium text-brand-600 bg-brand-50 rounded-lg">History</a>
-                    <a href="settings.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Settings</a>
+                    <a href="index.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Admin Hub</a>
+                    <a href="transactions.html" class="px-4 py-2 text-sm font-medium text-brand-600 bg-brand-50 rounded-lg">Transactions</a>
+                    <a href="../portal/index.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">My Portal</a>
                     <div class="w-px h-6 bg-gray-200 mx-2"></div>
                     <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>
                 </div>
@@ -51,35 +54,41 @@
         </div>
     </nav>
 
-    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
 
         <a href="index.html" class="inline-flex items-center gap-1 text-gray-500 hover:text-brand-600 text-sm mb-5 transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-            Back to Dashboard
+            Back to Admin Hub
         </a>
 
         <div class="mb-6">
-            <h1 class="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Transaction History</h1>
-            <p class="text-gray-500 mt-1 text-sm">All your contributions — subscriptions and deposits combined</p>
+            <h1 class="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Transaction Log</h1>
+            <p class="text-gray-500 mt-1 text-sm">All family contributions — subscriptions and manual deposits combined</p>
         </div>
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-3 gap-3 mb-6">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
-                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Contributed</div>
-                <div class="text-lg sm:text-2xl font-extrabold text-emerald-600 stat-number" id="historyTotal">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">All Time</div>
+                <div class="text-lg sm:text-2xl font-extrabold text-emerald-600 stat-number" id="statAllTime">
                     <span class="skeleton inline-block h-7 w-20 rounded"></span>
                 </div>
             </div>
             <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
-                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Payments</div>
-                <div class="text-lg sm:text-2xl font-extrabold text-gray-900 stat-number" id="paymentCount">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">This Month</div>
+                <div class="text-lg sm:text-2xl font-extrabold text-gray-900 stat-number" id="statThisMonth">
+                    <span class="skeleton inline-block h-7 w-16 rounded"></span>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Stripe</div>
+                <div class="text-lg sm:text-2xl font-extrabold text-gray-900 stat-number" id="statStripeCount">
                     <span class="skeleton inline-block h-7 w-10 rounded"></span>
                 </div>
             </div>
             <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
                 <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Deposits</div>
-                <div class="text-lg sm:text-2xl font-extrabold text-blue-600 stat-number" id="depositCount">
+                <div class="text-lg sm:text-2xl font-extrabold text-blue-600 stat-number" id="statDepositCount">
                     <span class="skeleton inline-block h-7 w-10 rounded"></span>
                 </div>
             </div>
@@ -87,6 +96,9 @@
 
         <!-- Filters -->
         <div class="flex flex-wrap gap-3 mb-4">
+            <select id="memberFilter" class="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none min-w-[160px]">
+                <option value="all">All Members</option>
+            </select>
             <select id="sourceFilter" class="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none">
                 <option value="all">All Sources</option>
                 <option value="stripe">Stripe Payments</option>
@@ -97,25 +109,27 @@
                 <option value="12">Last 12 Months</option>
                 <option value="6">Last 6 Months</option>
                 <option value="3">Last 3 Months</option>
+                <option value="1">Last Month</option>
             </select>
         </div>
 
-        <!-- Transactions — Mobile: Cards / Desktop: Table -->
+        <!-- Transactions Table -->
         <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden" id="transactionsContainer">
             <!-- Desktop Table -->
             <table class="w-full hidden sm:table" id="transactionsTable">
                 <thead class="bg-surface-50 border-b border-gray-200/80">
                     <tr>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Member</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Source</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Amount</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Details</th>
+                        <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Notes</th>
                     </tr>
                 </thead>
                 <tbody id="transactionsBody" class="divide-y divide-gray-100">
                     <tr>
-                        <td colspan="5" class="px-5 py-8 text-center text-gray-400 text-sm">Loading...</td>
+                        <td colspan="6" class="px-5 py-8 text-center text-gray-400 text-sm">Loading...</td>
                     </tr>
                 </tbody>
             </table>
@@ -132,11 +146,17 @@
                 <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                 </div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2">No payments yet</h3>
-                <p class="text-gray-500 text-sm mb-6">Your payment history will appear here once you start contributing.</p>
-                <a href="contribution.html" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 px-5 rounded-xl transition text-sm">
-                    Start Contributing
-                </a>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">No transactions found</h3>
+                <p class="text-gray-500 text-sm">No matching transactions for the selected filters.</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="paginationRow" class="hidden flex items-center justify-between mt-4">
+            <span class="text-sm text-gray-500" id="paginationInfo"></span>
+            <div class="flex gap-2">
+                <button id="prevPageBtn" class="px-3 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition disabled:opacity-40" disabled>Previous</button>
+                <button id="nextPageBtn" class="px-3 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition disabled:opacity-40" disabled>Next</button>
             </div>
         </div>
     </main>
@@ -153,22 +173,18 @@
 
     <!-- Mobile Bottom Tab Bar -->
     <div class="bottom-tab-bar md:hidden">
-        <div class="max-w-lg mx-auto grid grid-cols-5 px-2">
+        <div class="max-w-lg mx-auto grid grid-cols-4 px-2">
             <a href="index.html" class="tab-inactive">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                <span>Home</span>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span>Hub</span>
             </a>
-            <a href="investments.html" class="tab-inactive">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                <span>Invest</span>
+            <a href="members.html" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span>Members</span>
             </a>
-            <a href="history.html" class="tab-active">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>History</span>
-            </a>
-            <a href="settings.html" class="tab-inactive">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                <span>Settings</span>
+            <a href="transactions.html" class="tab-active">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                <span>Log</span>
             </a>
             <button id="logoutBtnMobile" class="tab-inactive">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
@@ -180,7 +196,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
     <script src="../js/auth.js"></script>
-    <script src="../js/portal/portal.js"></script>
-    <script src="../js/portal/history.js"></script>
+    <script src="../js/admin/transactions.js"></script>
 </body>
 </html>
