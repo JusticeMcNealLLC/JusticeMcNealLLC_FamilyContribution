@@ -408,7 +408,7 @@ async function openMemberModal(userId) {
             transactions.push({
                 type: 'invoice',
                 date: new Date(inv.created_at),
-                amount: inv.amount_paid_cents || inv.amount_due_cents || 0,
+                amount: inv.amount_paid_cents || 0,
                 status: inv.status,
             });
         });

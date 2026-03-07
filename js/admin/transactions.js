@@ -48,7 +48,7 @@ async function loadAllTransactions() {
         const [invoiceRes, depositRes] = await Promise.all([
             supabaseClient
                 .from('invoices')
-                .select('user_id, amount_paid_cents, amount_due_cents, status, created_at, hosted_invoice_url')
+                .select('user_id, amount_paid_cents, status, created_at, hosted_invoice_url')
                 .order('created_at', { ascending: false }),
             supabaseClient
                 .from('manual_deposits')
@@ -67,7 +67,7 @@ async function loadAllTransactions() {
                 memberId: inv.user_id,
                 memberEmail: memberMap[inv.user_id] || 'Unknown',
                 date: new Date(inv.created_at),
-                amount: inv.amount_paid_cents || inv.amount_due_cents || 0,
+                amount: inv.amount_paid_cents || 0,
                 status: inv.status,
                 receiptUrl: inv.hosted_invoice_url || null,
                 depositType: null,

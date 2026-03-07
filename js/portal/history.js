@@ -55,7 +55,7 @@ async function loadTransactions(userId, filters = {}) {
             transactions.push({
                 source: 'stripe',
                 date: new Date(inv.created_at),
-                amount: inv.amount_paid_cents || inv.amount_due_cents || 0,
+                amount: inv.amount_paid_cents || 0,
                 status: inv.status,
                 receiptUrl: inv.hosted_invoice_url || null,
                 notes: null,
