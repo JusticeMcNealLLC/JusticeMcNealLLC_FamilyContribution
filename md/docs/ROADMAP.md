@@ -46,7 +46,7 @@ Invested into:
 ## 🗺️ The Roadmap
 
 ### Phase 1: Investment Visibility & Manual Deposits
-**Status:** � In Progress
+**Status:** ✅ 1A Complete — 1B/1C Not Started
 **Priority:** High
 **Goal:** Members should be able to see where the money is and how it's growing.
 
@@ -56,7 +56,9 @@ Invested into:
 - [x] Growth over time chart (line graph via Chart.js)
 - [x] Individual member contribution total (private, shown only to that member)
 - [x] Family-wide contribution total (sum of all payments)
-- [ ] Monthly/quarterly performance summary
+- [x] Monthly/quarterly performance summary (30d, 90d, all-time cards)
+- [x] All-time gain/loss badge on hero card
+- [x] Top holding highlight card
 - [x] Admin hub page with grid navigation
 - [x] Admin investment management (Fidelity CSV upload + manual entry)
 - [x] Snapshot history with change tracking

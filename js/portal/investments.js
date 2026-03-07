@@ -55,6 +55,8 @@ async function loadInvestmentData() {
         renderPortfolioTotal(latest);
         renderHoldings(holdings || []);
         renderAllocationChart(holdings || []);
+        renderPerformanceSummary(snapshots);
+        renderTopPerformer(holdings || []);
         renderGrowthChart(snapshots);
         renderGrowthHistory(snapshots);
 
@@ -312,12 +314,120 @@ function renderGrowthHistory(snapshots) {
     mobileList.innerHTML = mobileHtml;
 }
 
+// ---------- Performance Summary (30d / 90d / All-Time) ----------
+
+function renderPerformanceSummary(snapshots) {
+    if (snapshots.length < 2) return;
+
+    // snapshots are desc by date — latest first
+    const latest = snapshots[0];
+    const latestVal = latest.total_value_cents;
+    const latestDate = new Date(latest.snapshot_date + 'T00:00:00');
+
+    // Sort ascending for lookups
+    const sorted = [...snapshots].reverse();
+    const earliest = sorted[0];
+
+    // Helper: find the snapshot closest to N days ago
+    function findClosest(daysAgo) {
+        const target = new Date(latestDate);
+        target.setDate(target.getDate() - daysAgo);
+        let best = null;
+        let bestDiff = Infinity;
+        for (const s of sorted) {
+            const d = new Date(s.snapshot_date + 'T00:00:00');
+            const diff = Math.abs(d - target);
+            if (diff < bestDiff) { bestDiff = diff; best = s; }
+        }
+        // Only use if it's actually older than latest
+        return (best && best.id !== latest.id) ? best : null;
+    }
+
+    // Helper: render a perf card
+    function renderCard(prefix, currentCents, previousCents) {
+        const valEl = document.getElementById(prefix + 'Value');
+        const changeEl = document.getElementById(prefix + 'Change');
+        const badgeEl = document.getElementById(prefix + 'Badge');
+
+        const currentVal = currentCents / 100;
+        valEl.textContent = '$' + currentVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        if (!previousCents || previousCents === 0) return;
+
+        const diff = currentCents - previousCents;
+        const pct = ((diff / previousCents) * 100).toFixed(1);
+        const isPositive = diff >= 0;
+
+        const sign = isPositive ? '+' : '-';
+        const diffStr = sign + '$' + (Math.abs(diff) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 });
+        const pctStr = (isPositive ? '+' : '') + pct + '%';
+
+        changeEl.textContent = diffStr;
+        changeEl.className = 'text-sm font-medium ' + (isPositive ? 'text-emerald-600' : 'text-red-600');
+
+        badgeEl.textContent = pctStr;
+        badgeEl.className = 'text-xs px-1.5 py-0.5 rounded-full font-semibold ' +
+            (isPositive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700');
+        badgeEl.style.display = '';
+    }
+
+    // 30 days
+    const snap30 = findClosest(30);
+    if (snap30) renderCard('perf1m', latestVal, snap30.total_value_cents);
+
+    // 90 days
+    const snap90 = findClosest(90);
+    if (snap90) renderCard('perf3m', latestVal, snap90.total_value_cents);
+
+    // All-time (first snapshot ever)
+    renderCard('perfAll', latestVal, earliest.total_value_cents);
+
+    // Show the section if we rendered at least one
+    if (snap30 || snap90 || earliest.id !== latest.id) {
+        document.getElementById('performanceSection').style.display = '';
+    }
+
+    // Also update the all-time gain badge on the hero card
+    if (earliest.id !== latest.id) {
+        const diff = latestVal - earliest.total_value_cents;
+        const pct = ((diff / earliest.total_value_cents) * 100).toFixed(1);
+        const isPositive = diff >= 0;
+        const sign = isPositive ? '+' : '-';
+        const diffStr = sign + '$' + (Math.abs(diff) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 });
+        const pctStr = (isPositive ? '+' : '') + pct + '%';
+
+        const gainEl = document.getElementById('allTimeGainValue');
+        gainEl.textContent = diffStr + ' (' + pctStr + ')';
+        gainEl.className = 'text-sm font-semibold ' + (isPositive ? 'text-emerald-300' : 'text-red-300');
+        document.getElementById('allTimeGainBadge').style.display = '';
+    }
+}
+
+// ---------- Top Performer (largest holding) ----------
+
+function renderTopPerformer(holdings) {
+    if (!holdings || holdings.length === 0) return;
+
+    // Find holding with the highest market value
+    const top = holdings.reduce((a, b) => (b.market_value_cents > a.market_value_cents ? b : a), holdings[0]);
+    if (!top || top.market_value_cents === 0) return;
+
+    document.getElementById('topPerformerSection').style.display = '';
+    document.getElementById('topPerformerName').textContent = top.fund_name || top.fund_ticker;
+    document.getElementById('topPerformerValue').textContent =
+        (top.market_value_cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    document.getElementById('topPerformerAlloc').textContent =
+        top.allocation_percent ? top.allocation_percent.toFixed(1) + '% of portfolio' : '';
+}
+
 function showNoData() {
     // Hide data sections
     document.getElementById('holdingsSection').style.display = 'none';
     document.getElementById('allocationSection').style.display = 'none';
     document.getElementById('chartSection').style.display = 'none';
     document.getElementById('growthSection').style.display = 'none';
+    document.getElementById('performanceSection').style.display = 'none';
+    document.getElementById('topPerformerSection').style.display = 'none';
 
     // Hide portfolio total skeleton
     document.getElementById('portfolioTotal').textContent = '$0.00';

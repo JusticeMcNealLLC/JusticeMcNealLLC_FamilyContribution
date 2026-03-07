@@ -91,6 +91,112 @@
             </div>
         </div>
 
+        <!-- Performance Summary -->
+        <section class="mb-6 sm:mb-8" id="performanceSection" style="display:none">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Performance Summary</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <!-- 1 Month -->
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Last 30 Days</div>
+                    <div class="text-2xl font-extrabold text-gray-900" id="perf1mValue">—</div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-sm font-medium" id="perf1mChange">—</span>
+                        <span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" id="perf1mBadge" style="display:none">—</span>
+                    </div>
+                </div>
+                <!-- 3 Months -->
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Last 90 Days</div>
+                    <div class="text-2xl font-extrabold text-gray-900" id="perf3mValue">—</div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-sm font-medium" id="perf3mChange">—</span>
+                        <span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" id="perf3mBadge" style="display:none">—</span>
+                    </div>
+                </div>
+                <!-- All Time -->
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">All Time</div>
+                    <div class="text-2xl font-extrabold text-gray-900" id="perfAllValue">—</div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-sm font-medium" id="perfAllChange">—</span>
+                        <span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" id="perfAllBadge" style="display:none">—</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Top Performer -->
+        <section class="mb-6 sm:mb-8" id="topPerformerSection" style="display:none">
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200/60 p-4 sm:p-5">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Top Holding</div>
+                        <div class="font-bold text-gray-900" id="topPerformerName">—</div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <div class="font-bold text-gray-900" id="topPerformerValue">—</div>
+                        <div class="text-xs text-amber-600 font-semibold" id="topPerformerAlloc">—</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Performance Summary -->
+        <section class="mb-6 sm:mb-8" id="performanceSection" style="display:none">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Performance Summary</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <!-- 1 Month -->
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Last 30 Days</div>
+                    <div class="text-2xl font-extrabold text-gray-900" id="perf1mValue">—</div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-sm font-medium" id="perf1mChange">—</span>
+                        <span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" id="perf1mBadge" style="display:none">—</span>
+                    </div>
+                </div>
+                <!-- 3 Months -->
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Last 90 Days</div>
+                    <div class="text-2xl font-extrabold text-gray-900" id="perf3mValue">—</div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-sm font-medium" id="perf3mChange">—</span>
+                        <span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" id="perf3mBadge" style="display:none">—</span>
+                    </div>
+                </div>
+                <!-- All Time -->
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">All Time</div>
+                    <div class="text-2xl font-extrabold text-gray-900" id="perfAllValue">—</div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-sm font-medium" id="perfAllChange">—</span>
+                        <span class="text-xs px-1.5 py-0.5 rounded-full font-semibold" id="perfAllBadge" style="display:none">—</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Top Performer -->
+        <section class="mb-6 sm:mb-8" id="topPerformerSection" style="display:none">
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200/60 p-4 sm:p-5">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Top Holding</div>
+                        <div class="font-bold text-gray-900" id="topPerformerName">—</div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <div class="font-bold text-gray-900" id="topPerformerValue">—</div>
+                        <div class="text-xs text-amber-600 font-semibold" id="topPerformerAlloc">—</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Fund Holdings -->
         <section class="mb-6 sm:mb-8" id="holdingsSection">
             <h2 class="text-lg font-bold text-gray-900 mb-4">Holdings Breakdown</h2>
