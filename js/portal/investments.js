@@ -397,9 +397,12 @@ function renderPerformanceSummary(snapshots) {
         const pctStr = (isPositive ? '+' : '') + pct + '%';
 
         const gainEl = document.getElementById('allTimeGainValue');
-        gainEl.textContent = diffStr + ' (' + pctStr + ')';
-        gainEl.className = 'text-sm font-semibold ' + (isPositive ? 'text-emerald-300' : 'text-red-300');
-        document.getElementById('allTimeGainBadge').style.display = '';
+        const badgeWrap = document.getElementById('allTimeGainBadge');
+        if (gainEl && badgeWrap) {
+            gainEl.textContent = diffStr + ' (' + pctStr + ')';
+            gainEl.className = 'text-sm font-semibold ' + (isPositive ? 'text-emerald-300' : 'text-red-300');
+            badgeWrap.style.display = '';
+        }
     }
 }
 
