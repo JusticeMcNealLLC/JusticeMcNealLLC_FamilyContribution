@@ -38,6 +38,8 @@ Invested into:
 - [x] Admin dashboard (member management, invite system)
 - [x] Member activation / deactivation
 - [x] Mobile-friendly design with bottom tab navigation
+- [x] Admin hub with grid navigation to sub-pages
+- [x] Investment dashboard (CSV upload, manual entry, portfolio viewer)
 
 ---
 
@@ -79,6 +81,27 @@ Invested into:
 - [ ] Transaction log showing both Stripe subscription payments AND manual deposits
 - [ ] Proper attribution — each manual deposit is tagged to the correct member with date and notes
 - [ ] Running total per member (Stripe payments + manual deposits combined)
+
+#### 1C. Member Onboarding
+**Goal:** Smooth, welcoming experience from invite to fully set-up member.
+
+##### Current Flow (Partial ✅)
+- [x] Admin sends invite via email
+- [x] Member receives invite link
+- [x] Member creates account (sets password)
+- [x] Member lands on portal
+
+##### Onboarding Improvements Needed
+- [ ] Welcome screen / first-time setup wizard after accepting invite
+- [ ] Set first name & last name during onboarding (not buried in settings)
+- [ ] Set birthday during onboarding
+- [ ] Upload profile picture during onboarding (crop + preview)
+- [ ] Database: add `birthday`, `profile_picture_url` columns to `profiles`
+- [ ] Supabase Storage bucket for profile pictures
+- [ ] "Complete Your Profile" nudge banner if profile is incomplete
+- [ ] Admin can see onboarding completion status per member
+- [ ] Profile picture displayed throughout portal (nav, settings, social feed)
+- [ ] Birthday auto-celebration (ties into Phase 3A milestones & Phase 4 events)
 
 ---
 
@@ -126,6 +149,14 @@ Invested into:
 - [ ] Social feed — members can post text, images, and videos
 - [ ] Like, comment, and bookmark posts
 - [ ] Feed filtering (All / Announcements / Milestones / Member Posts)
+- [ ] Threaded replies — reply to any post inline
+- [ ] @mentions — tag other family members in posts and replies
+- [ ] Post editing and deletion (own posts only)
+- [ ] Emoji reactions (beyond just “like” — ❤️ 😂 🔥 👏 etc.)
+- [ ] Image/video upload with preview before posting
+- [ ] Link preview cards (auto-fetch title + thumbnail for shared URLs)
+- [ ] "New posts" indicator when feed updates while scrolling
+- [ ] Mobile-optimized infinite scroll
 
 #### 3B. Member Profiles
 - [ ] Profile pictures (upload + crop)
@@ -341,6 +372,7 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 |-------|------|----------|------------|--------------|
 | 1A | Investment Dashboard | 🔴 High | Medium | Fidelity data (manual or Plaid) |
 | 1B | Manual Deposits | 🔴 High | Low-Medium | Database schema update |
+| 1C | Member Onboarding | 🔴 High | Low-Medium | Supabase Storage (profile pics) |
 | 2 | Family Lending | 🔴 High | High | Legal research, loan tracking system |
 | 3A | Social Feed | 🟡 Medium | Medium | Supabase storage for media |
 | 3B | Member Profiles | 🟡 Medium | Medium | Profile pics storage |
@@ -376,7 +408,8 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 - `loans` table (member_id, amount, interest_rate, term, status, payments)
 - `loan_payments` table (loan_id, amount, date, remaining_balance)
 - `posts` table (author_id, content, media_urls, created_at)
-- `comments` table (post_id, author_id, content, created_at)
+- `comments` table (post_id, author_id, content, parent_comment_id, created_at)
+- `reactions` table (post_id, user_id, emoji)
 - `likes` table (post_id, user_id)
 - `bookmarks` table (post_id, user_id)
 - `messages` table (sender_id, receiver_id, content, read_at)
@@ -406,30 +439,31 @@ The LLC sustains itself through:
 
 ### Now → Next 3 Months
 1. ✅ Core portal (subscriptions, payments, admin) — **DONE**
-2. Investment dashboard (manual entry to start)
-3. One-time deposit feature
-4. Milestone tracker page
+2. ✅ Investment dashboard (manual entry to start) — **DONE**
+3. Member onboarding (profile setup wizard, profile pics, birthday)
+4. One-time deposit feature
+5. Milestone tracker page
 
 ### 3–6 Months
-5. Member profiles with profile pictures
-6. Social feed + admin announcements
-7. Notifications (push first, then Twilio SMS)
+6. Member profiles with profile pictures
+7. Social feed + admin announcements (with replies & threads)
+8. Notifications (push first, then Twilio SMS)
 
 ### 6–12 Months
-8. Events system with RSVPs
-9. Private messaging
-10. Family gallery
-11. Plaid integration for Fidelity data (if fund size warrants the cost)
+9. Events system with RSVPs
+10. Private messaging
+11. Family gallery
+12. Plaid integration for Fidelity data (if fund size warrants the cost)
 
 ### 12–24 Months
-12. Family lending program (after legal consultation)
-13. Vacation-style events with deposit system
-14. Trust formation (consult attorney)
+13. Family lending program (after legal consultation)
+14. Vacation-style events with deposit system
+15. Trust formation (consult attorney)
 
 ### 24+ Months (As Capital Allows)
-15. Life insurance benefit
-16. Family vehicle program
-17. Family compound research and acquisition
+16. Life insurance benefit
+17. Family vehicle program
+18. Family compound research and acquisition
 
 ---
 
