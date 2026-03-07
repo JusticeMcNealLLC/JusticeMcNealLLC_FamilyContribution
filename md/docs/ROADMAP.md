@@ -52,8 +52,8 @@ Invested into:
 - [x] Dashboard showing total portfolio value
 - [x] Breakdown by fund (VTI, VXUS, VIG, SPAXX) with percentages and dollar amounts
 - [x] Growth over time chart (line graph via Chart.js)
-- [ ] Individual member contribution totals
-- [ ] Family-wide contribution totals
+- [x] Individual member contribution total (private, shown only to that member)
+- [x] Family-wide contribution total (sum of all payments)
 - [ ] Monthly/quarterly performance summary
 - [x] Admin hub page with grid navigation
 - [x] Admin investment management (Fidelity CSV upload + manual entry)

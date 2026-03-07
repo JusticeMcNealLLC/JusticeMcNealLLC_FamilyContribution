@@ -20,7 +20,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
     document.getElementById('logoutBtnMobile')?.addEventListener('click', handleLogout);
 
-    await loadInvestmentData();
+    await Promise.all([
+        loadInvestmentData(),
+        loadContributionTotals(user.id),
+    ]);
 });
 
 async function loadInvestmentData() {
@@ -68,6 +71,29 @@ function renderPortfolioTotal(snapshot) {
     const date = new Date(snapshot.snapshot_date + 'T00:00:00');
     const formatted = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     document.getElementById('portfolioDate').textContent = `As of ${formatted}`;
+}
+
+async function loadContributionTotals(userId) {
+    try {
+        // Get ALL paid invoices (family total)
+        const { data: allInvoices, error: allErr } = await supabaseClient
+            .from('invoices')
+            .select('amount_paid_cents, user_id')
+            .eq('status', 'paid');
+
+        if (allErr) throw allErr;
+
+        const familyTotal = (allInvoices || []).reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
+        document.getElementById('familyContributed').textContent = formatCurrency(familyTotal);
+
+        // Filter for current user's contributions
+        const userTotal = (allInvoices || [])
+            .filter(i => i.user_id === userId)
+            .reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
+        document.getElementById('yourContributed').textContent = formatCurrency(userTotal);
+    } catch (err) {
+        console.error('Failed to load contribution totals:', err);
+    }
 }
 
 function renderHoldings(holdings) {
