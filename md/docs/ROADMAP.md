@@ -86,6 +86,7 @@ Invested into:
 
 #### 1C. Member Onboarding
 **Goal:** Smooth, welcoming experience from invite to fully set-up member.
+**Note:** Existing members will be required to complete the onboarding wizard on their next login. A `setup_completed` flag on the profile determines whether to redirect to onboarding or the portal. This ensures all current members have complete profiles (name, birthday, photo) before continuing.
 
 ##### Current Flow (Partial ✅)
 - [x] Admin sends invite via email
@@ -95,6 +96,7 @@ Invested into:
 
 ##### Onboarding Improvements Needed
 - [ ] Welcome screen / first-time setup wizard after accepting invite
+- [ ] **Existing member forced onboarding** — redirect to wizard on login if `setup_completed = false`
 - [ ] Set first name & last name during onboarding (not buried in settings)
 - [ ] Set birthday during onboarding
 - [ ] Upload profile picture during onboarding (crop + preview)
