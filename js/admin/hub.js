@@ -41,6 +41,18 @@ async function loadFinancialStats() {
         if (rpcErr) throw rpcErr;
         document.getElementById('statAllTime').textContent = formatCurrency(allTimeTotal || 0);
 
+        // Fee breakdown
+        const [netRes, feeRes] = await Promise.all([
+            supabaseClient.rpc('get_family_net_total'),
+            supabaseClient.rpc('get_total_stripe_fees')
+        ]);
+        const netTotal = netRes.data || 0;
+        const totalFees = feeRes.data || 0;
+        const feeEl = document.getElementById('statFeeBreakdown');
+        if (feeEl && (netTotal > 0 || totalFees > 0)) {
+            feeEl.innerHTML = `Net: <span class="text-emerald-600 font-semibold">${formatCurrency(netTotal)}</span> · Fees: <span class="text-red-500 font-semibold">${formatCurrency(totalFees)}</span>`;
+        }
+
         // This Month — Stripe invoices + manual deposits from current month
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);

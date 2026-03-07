@@ -60,6 +60,18 @@ async function loadStats() {
             if (el1) el1.textContent = formatCurrency(allTimeTotal || 0);
         }
 
+        // Fee breakdown for All Time stat
+        const [netRes, feeRes] = await Promise.all([
+            supabaseClient.rpc('get_family_net_total'),
+            supabaseClient.rpc('get_total_stripe_fees')
+        ]);
+        const netTotal = netRes.data || 0;
+        const totalFees = feeRes.data || 0;
+        const feeEl = document.getElementById('allTimeFeeBreakdown');
+        if (feeEl && (netTotal > 0 || totalFees > 0)) {
+            feeEl.innerHTML = `Net: <span class="text-emerald-600 font-semibold">${formatCurrency(netTotal)}</span> · Fees: <span class="text-red-500 font-semibold">${formatCurrency(totalFees)}</span>`;
+        }
+
         // This Month — Stripe invoices + manual deposits from current month
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -409,6 +421,8 @@ async function openMemberModal(userId) {
                 type: 'invoice',
                 date: new Date(inv.created_at),
                 amount: inv.amount_paid_cents || 0,
+                fee: inv.stripe_fee_cents || 0,
+                net: inv.net_amount_cents || (inv.amount_paid_cents || 0),
                 status: inv.status,
             });
         });
@@ -450,6 +464,9 @@ async function openMemberModal(userId) {
                 const bgCls = isDeposit ? 'bg-blue-50/60' : (isPaid ? 'bg-emerald-50/60' : 'bg-red-50/60');
                 const iconBg = isDeposit ? 'bg-blue-100' : (isPaid ? 'bg-emerald-100' : 'bg-red-100');
                 const amountCls = isDeposit ? 'text-blue-600' : (isPaid ? 'text-emerald-600' : 'text-red-500');
+                const feeInfo = (!isDeposit && tx.fee > 0)
+                    ? `<div class="text-[10px] text-gray-400 mt-0.5 text-right">Fee: -${formatCurrency(tx.fee)} · Net: ${formatCurrency(tx.net)}</div>`
+                    : '';
                 const icon = isDeposit
                     ? '<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>'
                     : (isPaid
@@ -468,9 +485,12 @@ async function openMemberModal(userId) {
                             <div class="text-xs text-gray-500">${sublabel}</div>
                         </div>
                     </div>
-                    <span class="text-sm font-bold ${amountCls}">
-                        ${isPaid || isDeposit ? '+' : ''}${formatCurrency(tx.amount)}
-                    </span>
+                    <div class="text-right flex-shrink-0">
+                        <span class="text-sm font-bold ${amountCls}">
+                            ${isPaid || isDeposit ? '+' : ''}${formatCurrency(tx.amount)}
+                        </span>
+                        ${feeInfo}
+                    </div>
                 </div>`;
             }).join('');
         }

@@ -206,11 +206,34 @@ async function handleInvoicePaid(supabase: any, invoice: Stripe.Invoice) {
     return
   }
 
+  // Retrieve fee data from the charge's balance transaction
+  let stripeFee = 0
+  let netAmount = invoice.amount_paid || 0
+  try {
+    if (invoice.charge) {
+      const charge = await stripe.charges.retrieve(invoice.charge as string, {
+        expand: ['balance_transaction'],
+      })
+      const bt = charge.balance_transaction as Stripe.BalanceTransaction
+      if (bt && typeof bt === 'object') {
+        stripeFee = bt.fee || 0
+        netAmount = bt.net || (invoice.amount_paid - stripeFee)
+        console.log(`Invoice ${invoice.id}: gross=${invoice.amount_paid}, fee=${stripeFee}, net=${netAmount}`)
+      }
+    }
+  } catch (feeErr) {
+    console.error('Error retrieving fee data (non-fatal):', feeErr)
+    // Fall back to gross amount if fee lookup fails
+    netAmount = invoice.amount_paid || 0
+  }
+
   // Insert invoice record
   const { error } = await supabase.from('invoices').upsert({
     user_id: userId,
     stripe_invoice_id: invoice.id,
     amount_paid_cents: invoice.amount_paid,
+    stripe_fee_cents: stripeFee,
+    net_amount_cents: netAmount,
     status: invoice.status,
     hosted_invoice_url: invoice.hosted_invoice_url,
     invoice_pdf: invoice.invoice_pdf,

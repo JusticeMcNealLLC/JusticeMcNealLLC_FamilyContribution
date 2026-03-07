@@ -48,7 +48,7 @@ async function loadAllTransactions() {
         const [invoiceRes, depositRes] = await Promise.all([
             supabaseClient
                 .from('invoices')
-                .select('user_id, amount_paid_cents, status, created_at, hosted_invoice_url')
+                .select('user_id, amount_paid_cents, stripe_fee_cents, net_amount_cents, status, created_at, hosted_invoice_url')
                 .order('created_at', { ascending: false }),
             supabaseClient
                 .from('manual_deposits')
@@ -68,6 +68,8 @@ async function loadAllTransactions() {
                 memberEmail: memberMap[inv.user_id] || 'Unknown',
                 date: new Date(inv.created_at),
                 amount: inv.amount_paid_cents || 0,
+                fee: inv.stripe_fee_cents || 0,
+                net: inv.net_amount_cents || (inv.amount_paid_cents || 0),
                 status: inv.status,
                 receiptUrl: inv.hosted_invoice_url || null,
                 depositType: null,
@@ -83,6 +85,8 @@ async function loadAllTransactions() {
                 memberEmail: memberMap[dep.member_id] || 'Unknown',
                 date: new Date(dep.deposit_date + 'T00:00:00'),
                 amount: dep.amount_cents,
+                fee: 0,
+                net: dep.amount_cents,
                 status: 'paid',
                 receiptUrl: null,
                 depositType: typeLabel,
@@ -101,10 +105,20 @@ async function loadAllTransactions() {
 
 // ─── Summary Stats ──────────────────────────────────────
 async function updateSummary() {
-    // All Time total via RPC
+    // All Time gross total via RPC
     try {
         const { data: allTimeTotal } = await supabaseClient.rpc('get_family_contribution_total');
         document.getElementById('statAllTime').textContent = formatCurrency(allTimeTotal || 0);
+    } catch (e) { /* */ }
+
+    // Net received & total fees via RPC
+    try {
+        const [netRes, feeRes] = await Promise.all([
+            supabaseClient.rpc('get_family_net_total'),
+            supabaseClient.rpc('get_total_stripe_fees')
+        ]);
+        document.getElementById('statNetReceived').textContent = formatCurrency(netRes.data || 0);
+        document.getElementById('statTotalFees').textContent = '-' + formatCurrency(feeRes.data || 0);
     } catch (e) { /* */ }
 
     // This month
@@ -229,6 +243,13 @@ function renderDesktopTable(items) {
                 ? `<a href="${tx.receiptUrl}" target="_blank" class="text-brand-600 hover:text-brand-700 text-sm font-medium">Receipt &rarr;</a>`
                 : '<span class="text-gray-300">—</span>';
 
+        const feeDisplay = tx.source === 'stripe' && tx.fee > 0
+            ? `<span class="text-red-500 text-sm">-${formatCurrency(tx.fee)}</span>`
+            : '<span class="text-gray-300">—</span>';
+        const netDisplay = tx.source === 'stripe' && tx.net > 0
+            ? `<span class="text-sm font-semibold text-emerald-600">${formatCurrency(tx.net)}</span>`
+            : `<span class="text-sm font-semibold text-emerald-600">${formatCurrency(tx.amount)}</span>`;
+
         return `<tr class="hover:bg-gray-50 transition">
             <td class="px-5 py-3.5 text-sm text-gray-900 whitespace-nowrap">${formatDate(tx.date)}</td>
             <td class="px-5 py-3.5">
@@ -236,6 +257,8 @@ function renderDesktopTable(items) {
             </td>
             <td class="px-5 py-3.5">${sourceBadge}</td>
             <td class="px-5 py-3.5 text-sm font-semibold ${tx.status === 'paid' ? 'text-emerald-600' : 'text-gray-700'}">+${formatCurrency(tx.amount)}</td>
+            <td class="px-5 py-3.5">${feeDisplay}</td>
+            <td class="px-5 py-3.5">${netDisplay}</td>
             <td class="px-5 py-3.5"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusCls}">${tx.status}</span></td>
             <td class="px-5 py-3.5">${notes}</td>
         </tr>`;
@@ -254,6 +277,7 @@ function renderMobileList(items) {
 
         const label = isDeposit ? `${tx.depositType} deposit` : 'Subscription';
         const initials = getInitials(tx.memberEmail);
+        const feeInfo = (!isDeposit && tx.fee > 0) ? `<div class="text-[10px] text-gray-400 mt-0.5">Fee: -${formatCurrency(tx.fee)} · Net: ${formatCurrency(tx.net)}</div>` : '';
 
         return `<div class="flex items-center gap-3 px-4 py-3.5">
             <div class="w-9 h-9 rounded-full ${iconBg} flex items-center justify-center flex-shrink-0">${icon}</div>
@@ -264,7 +288,10 @@ function renderMobileList(items) {
                 </div>
                 <div class="text-xs text-gray-500">${formatDate(tx.date)}${tx.notes ? ' · ' + tx.notes : ''}</div>
             </div>
-            <span class="text-sm font-bold ${tx.status === 'paid' ? 'text-emerald-600' : 'text-gray-600'} flex-shrink-0">+${formatCurrency(tx.amount)}</span>
+            <div class="flex-shrink-0 text-right">
+                <span class="text-sm font-bold ${tx.status === 'paid' ? 'text-emerald-600' : 'text-gray-600'}">+${formatCurrency(tx.amount)}</span>
+                ${feeInfo}
+            </div>
         </div>`;
     }).join('');
 }
