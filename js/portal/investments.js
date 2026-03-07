@@ -139,18 +139,18 @@ function renderHoldings(holdings) {
         const price = (h.price_per_share_cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
         const alloc = h.allocation_percent ? h.allocation_percent.toFixed(1) + '%' : '';
 
-        return `<div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover fade-in" style="animation-delay: ${i * 60}ms">
-            <div class="flex items-center gap-3 sm:gap-4">
+        return `<div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover fade-in overflow-hidden" style="animation-delay: ${i * 60}ms">
+            <div class="flex items-center gap-2.5 sm:gap-4">
                 <div class="w-10 h-10 sm:w-12 sm:h-12 ${color.label.split(' ')[0]} rounded-xl flex items-center justify-center flex-shrink-0">
                     <span class="text-[10px] sm:text-xs font-bold ${color.label.split(' ')[1]}">${h.fund_ticker}</span>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <div class="font-semibold text-gray-900 text-sm sm:text-base truncate">${resolveFundName(h.fund_ticker, h.fund_name)}</div>
-                    <div class="text-[11px] sm:text-xs text-gray-500 mt-0.5">${h.shares?.toFixed(4) || '—'} shares @ ${price}</div>
+                <div class="flex-1 min-w-0 overflow-hidden">
+                    <div class="font-semibold text-gray-900 text-xs sm:text-base truncate">${resolveFundName(h.fund_ticker, h.fund_name)}</div>
+                    <div class="text-[10px] sm:text-xs text-gray-500 mt-0.5 truncate">${h.shares?.toFixed(4) || '—'} shares @ ${price}</div>
                 </div>
-                <div class="text-right flex-shrink-0">
-                    <div class="font-bold text-sm sm:text-base text-gray-900">${value}</div>
-                    ${alloc ? `<div class="text-[11px] sm:text-xs text-gray-500">${alloc}</div>` : ''}
+                <div class="text-right flex-shrink-0 pl-1">
+                    <div class="font-bold text-sm sm:text-base text-gray-900 whitespace-nowrap">${value}</div>
+                    ${alloc ? `<div class="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">${alloc}</div>` : ''}
                 </div>
             </div>
         </div>`;
