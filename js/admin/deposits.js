@@ -39,7 +39,7 @@ async function loadMembers() {
     try {
         const { data, error } = await supabaseClient
             .from('profiles')
-            .select('id, email, first_name, last_name, is_active')
+            .select('id, email, is_active')
             .eq('is_active', true)
             .order('email');
 
@@ -49,9 +49,7 @@ async function loadMembers() {
         const filterSelect = document.getElementById('filterMember');
 
         (data || []).forEach(m => {
-            const name = (m.first_name && m.last_name)
-                ? `${m.first_name} ${m.last_name}`
-                : m.email;
+            const name = m.email;
             memberMap[m.id] = { email: m.email, name };
 
             const opt = document.createElement('option');
