@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Manual Deposits | Admin | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar">
+
+    <!-- Top Navigation -->
+    <nav class="sticky top-0 z-40 glass border-b border-gray-200/60">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-14 md:h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index.html" class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-sm">JM</span>
+                        </div>
+                        <span class="font-bold text-lg text-gray-900">Justice McNeal</span>
+                    </a>
+                    <span class="bg-brand-100 text-brand-700 text-xs font-semibold px-2.5 py-1 rounded-full">Admin</span>
+                </div>
+
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="index.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Admin Hub</a>
+                    <a href="deposits.html" class="px-4 py-2 text-sm font-medium text-brand-600 bg-brand-50 rounded-lg">Deposits</a>
+                    <a href="../portal/index.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">My Portal</a>
+                    <div class="w-px h-6 bg-gray-200 mx-2"></div>
+                    <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <!-- Header + Back -->
+        <div class="mb-6 sm:mb-8">
+            <a href="index.html" class="inline-flex items-center text-sm text-gray-500 hover:text-brand-600 mb-3 transition">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                Back to Hub
+            </a>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Manual Deposits</h1>
+            <p class="text-gray-500 mt-1 text-sm sm:text-base">Record deposits made outside of Stripe subscriptions</p>
+        </div>
+
+        <!-- Record New Deposit -->
+        <section class="mb-8">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-5">Record a Deposit</h2>
+
+                <!-- Success / Error Messages -->
+                <div id="depositSuccess" class="hidden mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm font-medium"></div>
+                <div id="depositError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium"></div>
+
+                <form id="depositForm" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Member Select -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Member</label>
+                            <select id="depositMember" required class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition appearance-none">
+                                <option value="">Select a member...</option>
+                            </select>
+                        </div>
+
+                        <!-- Amount -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Amount ($)</label>
+                            <input type="number" id="depositAmount" required min="0.01" step="0.01" placeholder="0.00"
+                                class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                        </div>
+
+                        <!-- Deposit Date -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Deposit Date</label>
+                            <input type="date" id="depositDate" required
+                                class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                        </div>
+
+                        <!-- Type -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Type</label>
+                            <select id="depositType" required class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition appearance-none">
+                                <option value="manual">Manual Deposit</option>
+                                <option value="transfer">Investment Transfer</option>
+                                <option value="cash">Cash Deposit</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Notes (optional)</label>
+                        <textarea id="depositNotes" rows="2" placeholder="e.g., Transferred personal Fidelity brokerage holdings into LLC account"
+                            class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition resize-none"></textarea>
+                    </div>
+
+                    <button type="submit" id="depositSubmitBtn"
+                        class="w-full sm:w-auto px-6 py-3 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 active:scale-[0.98] transition shadow-sm">
+                        Record Deposit
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Deposit History -->
+        <section>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-gray-900">Deposit History</h2>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-500" id="depositCount">—</span>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5" id="summaryCards">
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4">
+                    <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Deposits</div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-gray-900" id="totalDeposits">
+                        <div class="skeleton h-7 w-24 rounded-lg"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4">
+                    <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">This Month</div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-emerald-600" id="monthDeposits">
+                        <div class="skeleton h-7 w-20 rounded-lg"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 col-span-2 sm:col-span-1">
+                    <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Deposit Count</div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-brand-600" id="countDeposits">
+                        <div class="skeleton h-7 w-10 rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter by member -->
+            <div class="mb-4">
+                <select id="filterMember" class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition appearance-none">
+                    <option value="">All Members</option>
+                </select>
+            </div>
+
+            <!-- Deposit Table (desktop) -->
+            <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden">
+                <div class="hidden sm:block overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200 bg-surface-50">
+                                <th class="px-5 py-3">Date</th>
+                                <th class="px-5 py-3">Member</th>
+                                <th class="px-5 py-3 text-right">Amount</th>
+                                <th class="px-5 py-3">Type</th>
+                                <th class="px-5 py-3">Notes</th>
+                                <th class="px-5 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="depositsTableBody">
+                            <tr><td colspan="6" class="px-5 py-8 text-center text-gray-400 text-sm">
+                                <div class="skeleton h-4 w-40 rounded mx-auto"></div>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile card list -->
+                <div class="sm:hidden divide-y divide-gray-100" id="depositsMobileList">
+                    <div class="px-4 py-6 text-center text-gray-400 text-sm">
+                        <div class="skeleton h-4 w-40 rounded mx-auto"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden">
+                <div class="bg-white rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
+                    <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">No deposits recorded yet</h3>
+                    <p class="text-gray-500 text-sm">Use the form above to record a manual deposit for any member.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" id="deleteModalOverlay"></div>
+        <div class="flex items-center justify-center min-h-full p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 slide-up">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Deposit?</h3>
+                <p class="text-sm text-gray-500 mb-5" id="deleteModalText">Are you sure you want to delete this deposit record? This cannot be undone.</p>
+                <div class="flex gap-3">
+                    <button id="deleteConfirmBtn" class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition">Delete</button>
+                    <button id="deleteCancelBtn" class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="hidden md:block border-t border-gray-200/60 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between text-sm text-gray-400">
+                <p>&copy; 2026 Justice McNeal LLC</p>
+                <p>Family Contribution Portal</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Bottom Tab Bar -->
+    <div class="bottom-tab-bar md:hidden">
+        <div class="max-w-lg mx-auto grid grid-cols-4 px-2">
+            <a href="index.html" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                <span>Hub</span>
+            </a>
+            <a href="members.html" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span>Members</span>
+            </a>
+            <a href="deposits.html" class="tab-active">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                <span>Deposits</span>
+            </a>
+            <button id="logoutBtnMobile" class="tab-inactive">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/admin/deposits.js"></script>
+</body>
+</html>

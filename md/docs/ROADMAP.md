@@ -46,7 +46,7 @@ Invested into:
 ## 🗺️ The Roadmap
 
 ### Phase 1: Investment Visibility & Manual Deposits
-**Status:** ✅ 1A Complete — 1B/1C Not Started
+**Status:** ✅ 1A Complete — 🔧 1B In Progress — 1C Not Started
 **Priority:** High
 **Goal:** Members should be able to see where the money is and how it's growing.
 
@@ -79,9 +79,9 @@ Invested into:
 
 #### 1B. One-Time / Manual Deposits
 - [ ] "Extra Deposit" feature — members can make a one-time contribution outside of their subscription
-- [ ] Admin-initiated manual deposit recording (for transfers like moving personal investments into the LLC account)
+- [x] Admin-initiated manual deposit recording (for transfers like moving personal investments into the LLC account)
 - [ ] Transaction log showing both Stripe subscription payments AND manual deposits
-- [ ] Proper attribution — each manual deposit is tagged to the correct member with date and notes
+- [x] Proper attribution — each manual deposit is tagged to the correct member with date and notes
 - [ ] Running total per member (Stripe payments + manual deposits combined)
 
 #### 1C. Member Onboarding
