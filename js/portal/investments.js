@@ -75,21 +75,24 @@ function renderPortfolioTotal(snapshot) {
 
 async function loadContributionTotals(userId) {
     try {
-        // Get ALL paid invoices (family total)
-        const { data: allInvoices, error: allErr } = await supabaseClient
+        // Family total via SECURITY DEFINER function (bypasses RLS so all members see the real total)
+        const { data: familyTotal, error: famErr } = await supabaseClient
+            .rpc('get_family_contribution_total');
+
+        if (famErr) throw famErr;
+
+        document.getElementById('familyContributed').textContent = formatCurrency(familyTotal || 0);
+
+        // Current user's contributions (RLS naturally scopes to own rows)
+        const { data: myInvoices, error: myErr } = await supabaseClient
             .from('invoices')
-            .select('amount_paid_cents, user_id')
-            .eq('status', 'paid');
+            .select('amount_paid_cents')
+            .eq('status', 'paid')
+            .eq('user_id', userId);
 
-        if (allErr) throw allErr;
+        if (myErr) throw myErr;
 
-        const familyTotal = (allInvoices || []).reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
-        document.getElementById('familyContributed').textContent = formatCurrency(familyTotal);
-
-        // Filter for current user's contributions
-        const userTotal = (allInvoices || [])
-            .filter(i => i.user_id === userId)
-            .reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
+        const userTotal = (myInvoices || []).reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
         document.getElementById('yourContributed').textContent = formatCurrency(userTotal);
     } catch (err) {
         console.error('Failed to load contribution totals:', err);
