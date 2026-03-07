@@ -1,6 +1,31 @@
 // Portal Investment Dashboard
 // Displays portfolio data for all authenticated members
 
+// Ticker → Proper Fund Name lookup (Fidelity CSVs often store the account name instead)
+const FUND_NAME_MAP = {
+    'VTI': 'Vanguard Total Stock Market ETF',
+    'VXUS': 'Vanguard Total International Stock ETF',
+    'VIG': 'Vanguard Dividend Appreciation ETF',
+    'SPAXX': 'Fidelity Government Money Market',
+    'SPAXX**': 'Fidelity Government Money Market',
+    'VOO': 'Vanguard S&P 500 ETF',
+    'VNQ': 'Vanguard Real Estate ETF',
+    'BND': 'Vanguard Total Bond Market ETF',
+    'VBTLX': 'Vanguard Total Bond Market Index',
+    'FXAIX': 'Fidelity 500 Index Fund',
+    'FSKAX': 'Fidelity Total Market Index Fund',
+    'FTIHX': 'Fidelity Total International Index Fund',
+};
+
+function resolveFundName(ticker, rawName) {
+    if (FUND_NAME_MAP[ticker]) return FUND_NAME_MAP[ticker];
+    // If the raw name looks like a generic account name, fall back to ticker
+    if (!rawName || rawName.toLowerCase().includes('limited liability') || rawName.toLowerCase().includes('individual') || rawName.toLowerCase().includes('account')) {
+        return ticker;
+    }
+    return rawName;
+}
+
 const FUND_COLORS = [
     { bg: 'bg-brand-500', hex: '#6366f1', label: 'bg-brand-100 text-brand-700' },
     { bg: 'bg-emerald-500', hex: '#10b981', label: 'bg-emerald-100 text-emerald-700' },
@@ -115,17 +140,17 @@ function renderHoldings(holdings) {
         const alloc = h.allocation_percent ? h.allocation_percent.toFixed(1) + '%' : '';
 
         return `<div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover fade-in" style="animation-delay: ${i * 60}ms">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 ${color.label.split(' ')[0]} rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span class="text-xs font-bold ${color.label.split(' ')[1]}">${h.fund_ticker}</span>
+            <div class="flex items-center gap-3 sm:gap-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 ${color.label.split(' ')[0]} rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span class="text-[10px] sm:text-xs font-bold ${color.label.split(' ')[1]}">${h.fund_ticker}</span>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <div class="font-semibold text-gray-900 truncate">${h.fund_name || h.fund_ticker}</div>
-                    <div class="text-xs text-gray-500 mt-0.5">${h.shares?.toFixed(4) || '—'} shares @ ${price}</div>
+                    <div class="font-semibold text-gray-900 text-sm sm:text-base truncate">${resolveFundName(h.fund_ticker, h.fund_name)}</div>
+                    <div class="text-[11px] sm:text-xs text-gray-500 mt-0.5">${h.shares?.toFixed(4) || '—'} shares @ ${price}</div>
                 </div>
                 <div class="text-right flex-shrink-0">
-                    <div class="font-bold text-gray-900">${value}</div>
-                    ${alloc ? `<div class="text-xs text-gray-500">${alloc}</div>` : ''}
+                    <div class="font-bold text-sm sm:text-base text-gray-900">${value}</div>
+                    ${alloc ? `<div class="text-[11px] sm:text-xs text-gray-500">${alloc}</div>` : ''}
                 </div>
             </div>
         </div>`;
@@ -416,7 +441,7 @@ function renderTopPerformer(holdings) {
     if (!top || top.market_value_cents === 0) return;
 
     document.getElementById('topPerformerSection').style.display = '';
-    document.getElementById('topPerformerName').textContent = top.fund_name || top.fund_ticker;
+    document.getElementById('topPerformerName').textContent = resolveFundName(top.fund_ticker, top.fund_name);
     document.getElementById('topPerformerValue').textContent =
         (top.market_value_cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
     document.getElementById('topPerformerAlloc').textContent =

@@ -1,6 +1,22 @@
 // Admin Investment Management
 // Handles CSV upload, manual entry, and snapshot history
 
+// Ticker → Proper Fund Name lookup (Fidelity CSVs store account name in Description)
+const FUND_NAME_MAP = {
+    'VTI': 'Vanguard Total Stock Market ETF',
+    'VXUS': 'Vanguard Total International Stock ETF',
+    'VIG': 'Vanguard Dividend Appreciation ETF',
+    'SPAXX': 'Fidelity Government Money Market',
+    'SPAXX**': 'Fidelity Government Money Market',
+    'VOO': 'Vanguard S&P 500 ETF',
+    'VNQ': 'Vanguard Real Estate ETF',
+    'BND': 'Vanguard Total Bond Market ETF',
+    'VBTLX': 'Vanguard Total Bond Market Index',
+    'FXAIX': 'Fidelity 500 Index Fund',
+    'FSKAX': 'Fidelity Total Market Index Fund',
+    'FTIHX': 'Fidelity Total International Index Fund',
+};
+
 let parsedCsvData = [];
 let currentUser = null;
 
@@ -140,13 +156,16 @@ function parseFidelityCsv(csvText) {
         if (!ticker || ticker.toLowerCase().includes('total') || ticker === '--') continue;
 
         const name = nameIdx >= 0 ? (cols[nameIdx] || '').trim().replace(/"/g, '') : ticker;
+        // Use known fund name if CSV description is generic (e.g., account name)
+        const resolvedName = FUND_NAME_MAP[ticker] || FUND_NAME_MAP[ticker.replace(/\*+$/, '')] ||
+            (name.toLowerCase().includes('limited liability') || name.toLowerCase().includes('individual') || name.toLowerCase().includes('account') ? ticker : name);
         const shares = sharesIdx >= 0 ? parseFloat((cols[sharesIdx] || '0').replace(/[$,"\s]/g, '')) || 0 : 0;
         const price = priceIdx >= 0 ? parseFloat((cols[priceIdx] || '0').replace(/[$,"\s]/g, '')) || 0 : 0;
         let value = valueIdx >= 0 ? parseFloat((cols[valueIdx] || '0').replace(/[$,"\s]/g, '')) || 0 : shares * price;
 
         if (value <= 0 && shares > 0 && price > 0) value = shares * price;
 
-        holdings.push({ ticker, name, shares, price, value });
+        holdings.push({ ticker, name: resolvedName, shares, price, value });
     }
     return holdings;
 }
