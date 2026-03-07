@@ -34,22 +34,33 @@ async function loadMemberStats() {
 
 async function loadFinancialStats() {
     try {
-        const { data: invoices, error } = await supabaseClient
-            .from('invoices')
-            .select('amount_paid_cents, created_at, status')
-            .eq('status', 'paid');
+        // All Time — combined Stripe + manual deposits via SECURITY DEFINER function
+        const { data: allTimeTotal, error: rpcErr } = await supabaseClient
+            .rpc('get_family_contribution_total');
 
-        if (error) throw error;
+        if (rpcErr) throw rpcErr;
+        document.getElementById('statAllTime').textContent = formatCurrency(allTimeTotal || 0);
 
-        const allTimeTotal = (invoices || []).reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
-        document.getElementById('statAllTime').textContent = formatCurrency(allTimeTotal);
-
+        // This Month — Stripe invoices + manual deposits from current month
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const thisMonthTotal = (invoices || [])
-            .filter(i => new Date(i.created_at) >= startOfMonth)
-            .reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
-        document.getElementById('statMonthly').textContent = formatCurrency(thisMonthTotal);
+        const startStr = startOfMonth.toISOString();
+
+        const [invoiceRes, depositRes] = await Promise.all([
+            supabaseClient
+                .from('invoices')
+                .select('amount_paid_cents, created_at')
+                .eq('status', 'paid')
+                .gte('created_at', startStr),
+            supabaseClient
+                .from('manual_deposits')
+                .select('amount_cents, deposit_date')
+                .gte('deposit_date', startOfMonth.toISOString().split('T')[0])
+        ]);
+
+        const monthInvoices = (invoiceRes.data || []).reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
+        const monthDeposits = (depositRes.data || []).reduce((s, d) => s + (d.amount_cents || 0), 0);
+        document.getElementById('statMonthly').textContent = formatCurrency(monthInvoices + monthDeposits);
     } catch (err) {
         console.error('Failed to load financial stats:', err);
         document.getElementById('statAllTime').textContent = '—';

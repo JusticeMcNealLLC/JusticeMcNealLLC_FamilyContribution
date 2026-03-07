@@ -82,7 +82,7 @@ Invested into:
 - [x] Admin-initiated manual deposit recording (for transfers like moving personal investments into the LLC account)
 - [ ] Transaction log showing both Stripe subscription payments AND manual deposits
 - [x] Proper attribution — each manual deposit is tagged to the correct member with date and notes
-- [ ] Running total per member (Stripe payments + manual deposits combined)
+- [x] Running total per member (Stripe payments + manual deposits combined)
 
 #### 1C. Member Onboarding
 **Goal:** Smooth, welcoming experience from invite to fully set-up member.

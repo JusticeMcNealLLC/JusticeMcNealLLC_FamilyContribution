@@ -110,17 +110,13 @@ async function loadContributionTotals(userId) {
 
         document.getElementById('familyContributed').textContent = formatCurrency(familyTotal || 0);
 
-        // Current user's contributions (RLS naturally scopes to own rows)
-        const { data: myInvoices, error: myErr } = await supabaseClient
-            .from('invoices')
-            .select('amount_paid_cents')
-            .eq('status', 'paid')
-            .eq('user_id', userId);
+        // Current user's combined contributions (Stripe + manual deposits)
+        const { data: userTotal, error: myErr } = await supabaseClient
+            .rpc('get_member_total_contributions', { target_member_id: userId });
 
         if (myErr) throw myErr;
 
-        const userTotal = (myInvoices || []).reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
-        document.getElementById('yourContributed').textContent = formatCurrency(userTotal);
+        document.getElementById('yourContributed').textContent = formatCurrency(userTotal || 0);
     } catch (err) {
         console.error('Failed to load contribution totals:', err);
     }

@@ -132,24 +132,20 @@ async function loadSubscription(userId) {
 
 async function loadTotalContributed(userId) {
     try {
-        const { data: invoices, error } = await supabaseClient
-            .from('invoices')
-            .select('amount_paid_cents')
-            .eq('user_id', userId)
-            .eq('status', 'paid');
+        // Combined total: Stripe invoices + manual deposits via SECURITY DEFINER function
+        const { data: total, error } = await supabaseClient
+            .rpc('get_member_total_contributions', { target_member_id: userId });
 
         if (error) {
-            console.error('Error loading invoices:', error);
+            console.error('Error loading total contributions:', error);
             return;
         }
 
-        const total = invoices.reduce((sum, inv) => sum + (inv.amount_paid_cents || 0), 0);
-        
         const totalContributedEl = document.getElementById('totalContributed');
         const historyTotalEl = document.getElementById('historyTotal');
         
-        if (totalContributedEl) totalContributedEl.textContent = formatCurrency(total);
-        if (historyTotalEl) historyTotalEl.textContent = formatCurrency(total);
+        if (totalContributedEl) totalContributedEl.textContent = formatCurrency(total || 0);
+        if (historyTotalEl) historyTotalEl.textContent = formatCurrency(total || 0);
 
     } catch (error) {
         console.error('Error calculating total:', error);

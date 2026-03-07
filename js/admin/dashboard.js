@@ -51,24 +51,36 @@ async function loadStats() {
             if (el) el.textContent = subscriptions.length;
         }
 
-        const { data: invoices, error: invError } = await supabaseClient
-            .from('invoices')
-            .select('amount_paid_cents, created_at, status')
-            .eq('status', 'paid');
+        // All Time — combined Stripe + manual deposits
+        const { data: allTimeTotal, error: rpcErr } = await supabaseClient
+            .rpc('get_family_contribution_total');
 
-        if (!invError && invoices) {
-            const allTimeTotal = invoices.reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
+        if (!rpcErr) {
             const el1 = document.getElementById('allTimeTotal');
-            if (el1) el1.textContent = formatCurrency(allTimeTotal);
-
-            const now = new Date();
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const thisMonthTotal = invoices
-                .filter(i => new Date(i.created_at) >= startOfMonth)
-                .reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
-            const el2 = document.getElementById('thisMonthTotal');
-            if (el2) el2.textContent = formatCurrency(thisMonthTotal);
+            if (el1) el1.textContent = formatCurrency(allTimeTotal || 0);
         }
+
+        // This Month — Stripe invoices + manual deposits from current month
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startStr = startOfMonth.toISOString();
+
+        const [invoiceRes, depositRes] = await Promise.all([
+            supabaseClient
+                .from('invoices')
+                .select('amount_paid_cents, created_at')
+                .eq('status', 'paid')
+                .gte('created_at', startStr),
+            supabaseClient
+                .from('manual_deposits')
+                .select('amount_cents, deposit_date')
+                .gte('deposit_date', startOfMonth.toISOString().split('T')[0])
+        ]);
+
+        const monthInvoices = (invoiceRes.data || []).reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
+        const monthDeposits = (depositRes.data || []).reduce((s, d) => s + (d.amount_cents || 0), 0);
+        const el2 = document.getElementById('thisMonthTotal');
+        if (el2) el2.textContent = formatCurrency(monthInvoices + monthDeposits);
     } catch (err) {
         console.error('Error loading stats:', err);
     }
@@ -142,16 +154,24 @@ async function loadMembers() {
         const subMap = {};
         (subscriptions || []).forEach(s => { subMap[s.user_id] = s; });
 
+        // Stripe invoice totals
         const { data: invoiceTotals } = await supabaseClient
             .from('invoices')
             .select('user_id, amount_paid_cents')
             .eq('status', 'paid');
-        const totMap = {};
-        (invoiceTotals || []).forEach(i => { totMap[i.user_id] = (totMap[i.user_id] || 0) + (i.amount_paid_cents || 0); });
+        const invMap = {};
+        (invoiceTotals || []).forEach(i => { invMap[i.user_id] = (invMap[i.user_id] || 0) + (i.amount_paid_cents || 0); });
+
+        // Manual deposit totals
+        const { data: depositTotals } = await supabaseClient
+            .from('manual_deposits')
+            .select('member_id, amount_cents');
+        const depMap = {};
+        (depositTotals || []).forEach(d => { depMap[d.member_id] = (depMap[d.member_id] || 0) + (d.amount_cents || 0); });
 
         grid.innerHTML = profiles.map(p => {
             const sub = subMap[p.id];
-            const total = totMap[p.id] || 0;
+            const total = (invMap[p.id] || 0) + (depMap[p.id] || 0);
             const isAdmin = p.role === 'admin';
             const initials = getInitials(p.email);
             const avatarCls = getAvatarColor(p.email);
@@ -246,15 +266,22 @@ async function loadDeactivatedMembers() {
             .from('invoices')
             .select('user_id, amount_paid_cents')
             .eq('status', 'paid');
-        const totMap = {};
-        (invoiceTotals || []).forEach(i => { totMap[i.user_id] = (totMap[i.user_id] || 0) + (i.amount_paid_cents || 0); });
+        const invMap = {};
+        (invoiceTotals || []).forEach(i => { invMap[i.user_id] = (invMap[i.user_id] || 0) + (i.amount_paid_cents || 0); });
+
+        // Manual deposit totals for deactivated members
+        const { data: depositTotals } = await supabaseClient
+            .from('manual_deposits')
+            .select('member_id, amount_cents');
+        const depMap = {};
+        (depositTotals || []).forEach(d => { depMap[d.member_id] = (depMap[d.member_id] || 0) + (d.amount_cents || 0); });
 
         section.classList.remove('hidden');
         // Auto-expand the details element
         const details = section.querySelector('details');
         if (details) details.open = true;
         grid.innerHTML = profiles.map(p => {
-            const total = totMap[p.id] || 0;
+            const total = (invMap[p.id] || 0) + (depMap[p.id] || 0);
             const initials = getInitials(p.email);
             return `
                 <div class="bg-gray-50 rounded-2xl border border-gray-200 p-4 sm:p-5 opacity-70 hover:opacity-100 transition cursor-pointer" onclick="openMemberModal('${p.id}')">
@@ -351,21 +378,54 @@ async function openMemberModal(userId) {
             document.getElementById('modalAmount').textContent = 'N/A';
         }
 
-        // Invoices
-        const { data: invoices, error: iErr } = await supabaseClient
-            .from('invoices')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
-        if (iErr) throw iErr;
+        // Invoices + manual deposits
+        const [invoiceRes, depositRes] = await Promise.all([
+            supabaseClient
+                .from('invoices')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false }),
+            supabaseClient
+                .from('manual_deposits')
+                .select('*')
+                .eq('member_id', userId)
+                .order('deposit_date', { ascending: false })
+        ]);
 
-        const totalPaid = invoices
-            .filter(i => i.status === 'paid')
-            .reduce((s, i) => s + (i.amount_paid_cents || 0), 0);
-        document.getElementById('modalTotal').textContent = formatCurrency(totalPaid);
+        const invoices = invoiceRes.data || [];
+        const deposits = depositRes.data || [];
+        if (invoiceRes.error) throw invoiceRes.error;
+
+        // Combined total via RPC
+        const { data: combinedTotal, error: totErr } = await supabaseClient
+            .rpc('get_member_total_contributions', { target_member_id: userId });
+        if (totErr) throw totErr;
+        document.getElementById('modalTotal').textContent = formatCurrency(combinedTotal || 0);
+
+        // Build unified transaction list (invoices + deposits sorted by date)
+        const transactions = [];
+        invoices.forEach(inv => {
+            transactions.push({
+                type: 'invoice',
+                date: new Date(inv.created_at),
+                amount: inv.amount_paid_cents || inv.amount_due_cents || 0,
+                status: inv.status,
+            });
+        });
+        deposits.forEach(dep => {
+            transactions.push({
+                type: 'deposit',
+                date: new Date(dep.deposit_date + 'T00:00:00'),
+                amount: dep.amount_cents,
+                status: 'paid',
+                depositType: dep.deposit_type,
+                notes: dep.notes,
+            });
+        });
+        transactions.sort((a, b) => b.date - a.date);
 
         const txEl = document.getElementById('modalTransactions');
-        if (!invoices || invoices.length === 0) {
+        if (transactions.length === 0) {
             txEl.innerHTML = `
                 <div class="text-gray-400 text-center py-8">
                     <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
@@ -373,25 +433,46 @@ async function openMemberModal(userId) {
                 </div>
             `;
         } else {
-            txEl.innerHTML = invoices.map(inv => `
-                <div class="flex items-center justify-between py-2.5 px-3.5 rounded-xl ${inv.status === 'paid' ? 'bg-emerald-50/60' : 'bg-red-50/60'}">
+            txEl.innerHTML = transactions.map(tx => {
+                const isPaid = tx.status === 'paid';
+                const isDeposit = tx.type === 'deposit';
+
+                let label, sublabel;
+                if (isDeposit) {
+                    const typeLabel = tx.depositType === 'cash' ? 'Cash' : tx.depositType === 'transfer' ? 'Transfer' : 'Manual';
+                    label = `${typeLabel} deposit`;
+                    sublabel = tx.notes ? tx.notes : formatDate(tx.date);
+                } else {
+                    label = isPaid ? 'Payment received' : 'Payment ' + tx.status;
+                    sublabel = formatDate(tx.date);
+                }
+
+                const bgCls = isDeposit ? 'bg-blue-50/60' : (isPaid ? 'bg-emerald-50/60' : 'bg-red-50/60');
+                const iconBg = isDeposit ? 'bg-blue-100' : (isPaid ? 'bg-emerald-100' : 'bg-red-100');
+                const amountCls = isDeposit ? 'text-blue-600' : (isPaid ? 'text-emerald-600' : 'text-red-500');
+                const icon = isDeposit
+                    ? '<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>'
+                    : (isPaid
+                        ? '<svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                        : '<svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>'
+                    );
+
+                return `
+                <div class="flex items-center justify-between py-2.5 px-3.5 rounded-xl ${bgCls}">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center ${inv.status === 'paid' ? 'bg-emerald-100' : 'bg-red-100'}">
-                            ${inv.status === 'paid'
-                                ? '<svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
-                                : '<svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>'
-                            }
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center ${iconBg}">
+                            ${icon}
                         </div>
                         <div>
-                            <div class="text-sm font-medium text-gray-900">${inv.status === 'paid' ? 'Payment received' : 'Payment ' + inv.status}</div>
-                            <div class="text-xs text-gray-500">${formatDate(inv.created_at)}</div>
+                            <div class="text-sm font-medium text-gray-900">${label}</div>
+                            <div class="text-xs text-gray-500">${sublabel}</div>
                         </div>
                     </div>
-                    <span class="text-sm font-bold ${inv.status === 'paid' ? 'text-emerald-600' : 'text-red-500'}">
-                        ${inv.status === 'paid' ? '+' : ''}${formatCurrency(inv.amount_paid_cents || inv.amount_due_cents || 0)}
+                    <span class="text-sm font-bold ${amountCls}">
+                        ${isPaid || isDeposit ? '+' : ''}${formatCurrency(tx.amount)}
                     </span>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         }
 
     } catch (err) {
