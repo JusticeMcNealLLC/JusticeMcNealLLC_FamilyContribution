@@ -189,3 +189,38 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+
+/* ─── Expandable milestone detail cards ─── */
+.milestone-card {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+.milestone-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+}
+.milestone-chevron {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+.milestone-chevron.expanded {
+    transform: rotate(180deg);
+}
+.milestone-detail {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.25s ease;
+    opacity: 0;
+}
+.milestone-detail.expanded {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+.milestone-detail-inner {
+    overflow: hidden;
+}
+.milestone-detail-inner .detail-content {
+    padding-top: 0.75rem;
+}

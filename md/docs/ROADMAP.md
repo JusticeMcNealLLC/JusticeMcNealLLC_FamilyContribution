@@ -148,7 +148,7 @@ Invested into:
 ##### Features to Build
 - [x] Milestones page on the portal (visual roadmap with progress bars)
 - [x] Current asset level indicator with animated progress to next tier
-- [ ] **Expandable milestone detail cards** — tap/press a milestone to expand and see:
+- [x] **Expandable milestone detail cards** — tap/press a milestone to expand and see:
   - What the perk/feature unlocks in detail
   - Requirements and what counts toward the threshold
   - Estimated timeline to reach it (based on current contribution pace)

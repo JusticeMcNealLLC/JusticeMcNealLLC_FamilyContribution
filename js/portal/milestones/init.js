@@ -14,18 +14,31 @@ async function loadMilestonesData() {
     try {
         // Fetch current portfolio value (contributions are invested into ETFs,
         // so portfolio = the single source of truth for family wealth)
-        const { data: snapshots } = await supabaseClient
-            .from('investment_snapshots')
-            .select('total_value_cents')
-            .order('snapshot_date', { ascending: false })
-            .limit(1);
+        const [snapshotRes, memberCountRes] = await Promise.all([
+            supabaseClient
+                .from('investment_snapshots')
+                .select('total_value_cents')
+                .order('snapshot_date', { ascending: false })
+                .limit(1),
+            supabaseClient
+                .from('profiles')
+                .select('id', { count: 'exact', head: true })
+                .eq('subscription_status', 'active'),
+        ]);
 
-        const totalAssets = snapshots?.[0]?.total_value_cents || 0;
+        const totalAssets = snapshotRes.data?.[0]?.total_value_cents || 0;
+
+        // Monthly contribution pace = active members × minimum monthly amount
+        const activeMembers = memberCountRes.count || 0;
+        const minAmountCents = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.MIN_AMOUNT)
+            ? APP_CONFIG.MIN_AMOUNT * 100
+            : 3000; // fallback $30
+        const monthlyPaceCents = activeMembers * minAmountCents;
 
         // Render everything
         renderProgressHero(totalAssets);
         renderStatsRow(totalAssets);
-        renderMilestoneRoadmap(totalAssets);
+        renderMilestoneRoadmap(totalAssets, monthlyPaceCents);
 
         // Show the content, hide loading
         document.getElementById('loadingState')?.classList.add('hidden');
