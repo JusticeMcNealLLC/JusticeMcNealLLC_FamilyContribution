@@ -108,6 +108,12 @@
                     '<span class="font-bold text-lg text-gray-900">Justice McNeal</span>' +
                     adminBadge +
                 '</div>' +
+                '<div class="flex items-center gap-2 md:hidden" id="mobileProfileSection" style="display:none">' +
+                    '<div class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden flex-shrink-0">' +
+                        '<span id="mobileProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
+                        '<img id="mobileProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+                    '</div>' +
+                '</div>' +
                 '<div class="hidden md:flex items-center gap-1">' +
                     desktopLinks +
                     '<div class="w-px h-6 bg-gray-200 mx-2" id="navDivider"></div>' +
@@ -191,6 +197,23 @@ async function loadNavProfile() {
                 };
             }
             section.classList.remove('hidden');
+        }
+
+        // Mobile nav profile
+        var mSection    = document.getElementById('mobileProfileSection');
+        var mInitialsEl = document.getElementById('mobileProfileInitials');
+        var mImgEl      = document.getElementById('mobileProfileImg');
+
+        if (mSection) {
+            if (mInitialsEl) mInitialsEl.textContent = initials;
+            if (photoUrl && mImgEl) {
+                mImgEl.src = photoUrl;
+                mImgEl.onload = function () {
+                    mImgEl.classList.remove('hidden');
+                    if (mInitialsEl) mInitialsEl.classList.add('hidden');
+                };
+            }
+            mSection.style.display = '';
         }
     } catch (e) {
         console.error('loadNavProfile error:', e);
