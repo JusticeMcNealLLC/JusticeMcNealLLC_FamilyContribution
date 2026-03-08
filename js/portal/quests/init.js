@@ -319,7 +319,7 @@ async function runAutoDetection() {
         // Fetch profile for detection checks
         const { data: profile } = await supabaseClient
             .from('profiles')
-            .select('first_name, last_name, birthday, profile_picture_url, setup_completed, subscription_status, created_at')
+            .select('first_name, last_name, birthday, profile_picture_url, setup_completed, created_at')
             .eq('id', _currentUserId)
             .single();
 
