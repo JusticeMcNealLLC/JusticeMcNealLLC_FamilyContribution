@@ -150,6 +150,7 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
       status: 'paid',
       hosted_invoice_url: receiptUrl,
       invoice_pdf: null,
+      payment_type: 'extra_deposit',
       created_at: new Date().toISOString(),
     }, {
       onConflict: 'stripe_invoice_id',
