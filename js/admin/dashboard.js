@@ -136,6 +136,19 @@ function getStatusBadge(status) {
     return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cls}">${label}</span>`;
 }
 
+function getOnboardingBadge(setupCompleted) {
+    if (setupCompleted) {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600" title="Onboarding complete">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+            Onboarded
+        </span>`;
+    }
+    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-600" title="Onboarding incomplete">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01"></path></svg>
+        Incomplete
+    </span>`;
+}
+
 // ─── Members ────────────────────────────────────────────
 async function loadMembers() {
     const grid = document.getElementById('membersGrid');
@@ -145,7 +158,7 @@ async function loadMembers() {
     try {
         const { data: profiles, error } = await supabaseClient
             .from('profiles')
-            .select('id, email, role, first_name, last_name, profile_picture_url')
+            .select('id, email, role, first_name, last_name, profile_picture_url, setup_completed')
             .eq('is_active', true);
 
         if (error) { console.error('Error loading members:', error); return; }
@@ -203,6 +216,7 @@ async function loadMembers() {
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="text-sm font-semibold text-gray-900 truncate">${displayName}</span>
                                 ${isAdmin ? '<span class="bg-brand-100 text-brand-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-md">Admin</span>' : ''}
+                                ${getOnboardingBadge(p.setup_completed)}
                             </div>
                             ${(p.first_name && p.last_name) ? `<div class="text-xs text-gray-400 truncate">${p.email}</div>` : ''}
                             <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
@@ -380,7 +394,7 @@ async function openMemberModal(userId) {
     try {
         const { data: profile, error: pErr } = await supabaseClient
             .from('profiles')
-            .select('id, email, role, is_active, first_name, last_name, profile_picture_url, birthday')
+            .select('id, email, role, is_active, first_name, last_name, profile_picture_url, birthday, setup_completed')
             .eq('id', userId)
             .single();
         if (pErr) throw pErr;
@@ -429,6 +443,10 @@ async function openMemberModal(userId) {
             detailsHTML += `<div class="flex justify-between py-2">
                 <span class="text-xs text-gray-500">Role</span>
                 <span class="text-xs font-medium text-gray-900">${profile.role === 'admin' ? 'Administrator' : 'Member'}</span>
+            </div>`;
+            detailsHTML += `<div class="flex justify-between items-center py-2 border-t border-gray-50">
+                <span class="text-xs text-gray-500">Onboarding</span>
+                ${getOnboardingBadge(profile.setup_completed)}
             </div>`;
             detailsEl.innerHTML = detailsHTML;
         }

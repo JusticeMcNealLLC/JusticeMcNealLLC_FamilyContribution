@@ -115,8 +115,8 @@ Invested into:
 - [x] Supabase Storage bucket for profile pictures
 - [x] Profile picture displayed throughout portal (nav desktop + mobile, settings)
 - [x] Profile editing in settings page (name, birthday, photo)
-- [ ] "Complete Your Profile" nudge banner if profile is incomplete
-- [ ] Admin can see onboarding completion status per member
+- [x] "Complete Your Profile" nudge banner if profile is incomplete
+- [x] Admin can see onboarding completion status per member
 - [ ] Birthday auto-celebration + $10 payout (see Phase 2C Birthday Payouts)
 
 ---

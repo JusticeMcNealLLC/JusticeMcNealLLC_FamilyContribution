@@ -50,6 +50,9 @@ async function loadDashboard(user) {
         userEmailEl.textContent = user.email;
     }
 
+    // Check profile completeness & show nudge banner
+    await checkProfileCompleteness(user.id);
+
     // Load subscription data
     const subscription = await loadSubscription(user.id);
     
@@ -58,6 +61,56 @@ async function loadDashboard(user) {
 
     // Show/hide elements based on subscription status
     updateDashboardUI(subscription);
+}
+
+async function checkProfileCompleteness(userId) {
+    try {
+        const { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('first_name, last_name, birthday, profile_picture_url, setup_completed')
+            .eq('id', userId)
+            .single();
+
+        if (error || !profile) return;
+
+        // If fully completed, don't show banner
+        if (profile.setup_completed && profile.first_name && profile.last_name && profile.birthday && profile.profile_picture_url) {
+            return;
+        }
+
+        // Check if user dismissed banner this session
+        if (sessionStorage.getItem('nudgeDismissed')) return;
+
+        // Build missing items list
+        const missing = [];
+        if (!profile.first_name || !profile.last_name) missing.push('your name');
+        if (!profile.birthday) missing.push('your birthday');
+        if (!profile.profile_picture_url) missing.push('a profile photo');
+
+        if (missing.length === 0) return;
+
+        // Show the banner
+        const banner = document.getElementById('profileNudgeBanner');
+        const nudgeText = document.getElementById('nudgeMissingText');
+        if (banner) {
+            const missingStr = missing.length === 1
+                ? missing[0]
+                : missing.slice(0, -1).join(', ') + ' and ' + missing[missing.length - 1];
+            if (nudgeText) nudgeText.textContent = `Still needed: ${missingStr}.`;
+            banner.classList.remove('hidden');
+        }
+
+        // Dismiss handler
+        const closeBtn = document.getElementById('closeNudgeBanner');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                banner.classList.add('hidden');
+                sessionStorage.setItem('nudgeDismissed', '1');
+            });
+        }
+    } catch (err) {
+        console.error('Error checking profile completeness:', err);
+    }
 }
 
 async function loadSubscription(userId) {
