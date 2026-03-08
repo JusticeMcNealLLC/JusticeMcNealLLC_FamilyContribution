@@ -76,14 +76,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             if (error) throw error;
 
-            // Mark setup as completed
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                await supabaseClient
-                    .from('profiles')
-                    .update({ setup_completed: true })
-                    .eq('id', session.user.id);
-            }
+            // Note: setup_completed is NOT set here — the onboarding wizard handles that.
+            // This allows new users to go through onboarding after setting their password.
 
             // Success!
             formSuccess.textContent = 'Password set successfully! Redirecting...';
