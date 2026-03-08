@@ -17,6 +17,7 @@ const APP_CONFIG = {
     LOGIN_URL: '/auth/login.html',
     PORTAL_URL: '/portal/index.html',
     ADMIN_URL: '/admin/index.html',
+    ONBOARDING_URL: '/portal/onboarding.html',
     
     // Supabase Edge Function base URL
     FUNCTIONS_URL: `${SUPABASE_URL}/functions/v1`,

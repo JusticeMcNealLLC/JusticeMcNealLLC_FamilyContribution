@@ -173,15 +173,21 @@ function renderAwaitingSubscription(users) {
             <tr class="hover:bg-surface-50 transition">
                 <td class="px-5 py-3.5 text-sm text-gray-900">${user.email}</td>
                 <td class="px-5 py-3.5 text-sm text-gray-500">${formatDate(user.created_at)}</td>
+                <td class="px-5 py-3.5">
+                    <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-sm font-medium">Reset Onboarding</button>
+                </td>
             </tr>
         `).join('');
     }
 
     if (mobileList) {
         mobileList.innerHTML = users.map(user => `
-            <div class="px-4 py-3.5">
-                <div class="text-sm font-medium text-gray-900 truncate">${user.email}</div>
-                <div class="text-xs text-gray-400 mt-0.5">Signed up ${formatDate(user.created_at)}</div>
+            <div class="px-4 py-3.5 flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-sm font-medium text-gray-900 truncate">${user.email}</div>
+                    <div class="text-xs text-gray-400 mt-0.5">Signed up ${formatDate(user.created_at)}</div>
+                </div>
+                <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-xs font-semibold px-3 py-1.5 bg-amber-50 rounded-lg flex-shrink-0">Reset</button>
             </div>
         `).join('');
     }
@@ -226,6 +232,9 @@ function renderActiveMembers(users) {
                         ${user.subscription?.status || 'Unknown'}
                     </span>
                 </td>
+                <td class="px-5 py-3.5">
+                    <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-sm font-medium">Reset Onboarding</button>
+                </td>
             </tr>
         `).join('');
     }
@@ -241,9 +250,12 @@ function renderActiveMembers(users) {
                             : 'No plan'}
                     </div>
                 </div>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${getStatusClasses(user.subscription?.status)}">
-                    ${user.subscription?.status || 'Unknown'}
-                </span>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusClasses(user.subscription?.status)}">
+                        ${user.subscription?.status || 'Unknown'}
+                    </span>
+                    <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-xs font-semibold px-2 py-1 bg-amber-50 rounded-lg">Reset</button>
+                </div>
             </div>
         `).join('');
     }
@@ -259,5 +271,33 @@ async function resendInvite(email) {
         alert(`Invitation resent to ${email}`);
     } catch (error) {
         alert('Failed to resend invitation: ' + error.message);
+    }
+}
+
+// Global function to reset onboarding for a member
+async function resetOnboarding(userId, email) {
+    if (!confirm(`Reset onboarding for ${email}?\n\nThis will require them to go through the welcome wizard again next time they log in.`)) {
+        return;
+    }
+
+    try {
+        const { error } = await supabaseClient
+            .from('profiles')
+            .update({ 
+                setup_completed: false,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+
+        if (error) throw error;
+
+        alert(`Onboarding reset for ${email}. They'll see the welcome wizard on their next visit.`);
+
+        // Reload sections to reflect the change
+        await loadAllSections();
+
+    } catch (error) {
+        console.error('Reset onboarding error:', error);
+        alert('Failed to reset onboarding: ' + (error.message || 'Unknown error'));
     }
 }

@@ -1,7 +1,8 @@
 // Authentication handling
 
 // Check if user is logged in
-async function checkAuth(requireAdmin = false) {
+// skipOnboardingCheck: set true on the onboarding page itself to avoid redirect loops
+async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
     const { data: { session } } = await supabaseClient.auth.getSession();
     
     if (!session) {
@@ -14,7 +15,7 @@ async function checkAuth(requireAdmin = false) {
     if (requireAdmin) {
         const { data: profile } = await supabaseClient
             .from('profiles')
-            .select('role')
+            .select('role, setup_completed')
             .eq('id', session.user.id)
             .single();
 
@@ -22,6 +23,24 @@ async function checkAuth(requireAdmin = false) {
             // Not an admin, redirect to portal
             window.location.href = APP_CONFIG.PORTAL_URL;
             return null;
+        }
+    }
+
+    // Check onboarding status for non-admin portal pages
+    if (!requireAdmin && !skipOnboardingCheck) {
+        const isOnboardingPage = window.location.pathname.includes('/onboarding');
+        if (!isOnboardingPage) {
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('setup_completed, role')
+                .eq('id', session.user.id)
+                .single();
+
+            // Admins skip onboarding check — they manage, not onboard
+            if (profile && !profile.setup_completed && profile.role !== 'admin') {
+                window.location.href = APP_CONFIG.ONBOARDING_URL;
+                return null;
+            }
         }
     }
 
@@ -33,15 +52,17 @@ async function checkAlreadyLoggedIn() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     
     if (session) {
-        // Check if admin
+        // Check role + onboarding status
         const { data: profile } = await supabaseClient
             .from('profiles')
-            .select('role')
+            .select('role, setup_completed')
             .eq('id', session.user.id)
             .single();
 
         if (profile?.role === 'admin') {
             window.location.href = APP_CONFIG.ADMIN_URL;
+        } else if (!profile?.setup_completed) {
+            window.location.href = APP_CONFIG.ONBOARDING_URL;
         } else {
             window.location.href = APP_CONFIG.PORTAL_URL;
         }
@@ -83,15 +104,17 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                 if (error) throw error;
 
-                // Check user role and redirect
+                // Check user role + onboarding status and redirect
                 const { data: profile } = await supabaseClient
                     .from('profiles')
-                    .select('role')
+                    .select('role, setup_completed')
                     .eq('id', data.user.id)
                     .single();
 
                 if (profile?.role === 'admin') {
                     window.location.href = APP_CONFIG.ADMIN_URL;
+                } else if (!profile?.setup_completed) {
+                    window.location.href = APP_CONFIG.ONBOARDING_URL;
                 } else {
                     window.location.href = APP_CONFIG.PORTAL_URL;
                 }
