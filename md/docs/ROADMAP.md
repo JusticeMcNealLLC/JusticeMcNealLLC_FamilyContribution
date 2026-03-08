@@ -109,12 +109,12 @@ Invested into:
 
 ---
 
-### Phase 2: Milestones & Perks Tracker
+### Phase 2: Milestones, Perks & Quests
 **Status:** 🔲 Not Started
 **Priority:** 🔴 High
 **Goal:** Show members what we've achieved and what perks unlock as our assets grow — gamify generational wealth.
 
-#### Milestone Tiers (Unlockable by Asset Threshold)
+#### 2A. Milestone Tiers (Unlockable by Asset Threshold)
 | Threshold | Milestone | Perk / Feature Unlocked |
 |-----------|-----------|-------------------------|
 | $5,000 | 🌱 Seed Planted | Social feed launches — members can post & interact |
@@ -127,7 +127,7 @@ Invested into:
 | $500,000 | 🏠 Compound Vision | Real estate research & land acquisition planning |
 | $1,000,000 | 👑 Generational | Full benefits suite — life insurance, scholarships, compound |
 
-#### Features to Build
+##### Features to Build
 - [ ] Milestones page on the portal (visual roadmap with progress bars)
 - [ ] Current asset level indicator with animated progress to next tier
 - [ ] Animated celebration when a new milestone is reached (confetti, toast notification)
@@ -139,26 +139,96 @@ Invested into:
 - [ ] Auto-generated social feed posts for milestone achievements
 - [ ] Locked/unlocked visual state for each perk tier
 
+#### 2B. Quest & Task System
+**Goal:** Give members clear, actionable tasks that benefit both them and the LLC — completion earns Credit Points that unlock rewards and boost their status in the system.
+
+##### How It Works
+- Members receive quests (tasks) they can complete at their own pace
+- Completing quests earns **Credit Points (CP)** — tracked on their profile
+- Credit Points unlock **status tiers** and perks within the portal
+- Some quests are one-time (e.g. "Open a Fidelity account"), others are recurring (e.g. "Pay on time this month")
+- Admin can create, edit, and assign quests from the admin dashboard
+- Quest progress is visible on the member's portal dashboard
+
+##### Credit Point Tiers
+| Points | Status | Perks |
+|--------|--------|-------|
+| 0–99 | 🥉 Bronze Member | Base access |
+| 100–249 | 🥈 Silver Member | Priority lending queue, profile badge |
+| 250–499 | 🥇 Gold Member | Higher loan limits, voting weight bonus |
+| 500+ | 💎 Diamond Member | VIP status, featured on leadership page, first access to new benefits |
+
+##### Example Quests
+| Quest | Description | CP Reward | Type |
+|-------|-------------|-----------|------|
+| 🏦 Open Fidelity Account | Create a personal Fidelity brokerage account | 50 CP | One-time |
+| 💳 Apply for Fidelity Credit Card | Apply for the Fidelity Rewards Visa Signature Card | 50 CP | One-time |
+| 🔗 Link Cashback to LLC | Link your Fidelity credit card cashback to the LLC brokerage account | 100 CP | One-time |
+| 💰 Use Fidelity Card as Primary | Use the Fidelity card as your primary spending card for a full month to maximize cashback contributions | 25 CP | Monthly recurring |
+| 📊 Complete Budget Setup | Set up your personal budget tracker on the portal | 30 CP | One-time |
+| 📈 Credit Score Check-In | Log your credit score update on the portal | 15 CP | Monthly recurring |
+| ✅ On-Time Payment Streak | Pay your subscription on time this month | 10 CP | Monthly recurring |
+| 📚 Complete Credit 101 | Read all Credit 101 modules and pass the quiz | 40 CP | One-time |
+| 🎉 Attend Family Event | RSVP and attend a family event | 20 CP | Per event |
+| 👥 Refer a Family Member | Invite and onboard a new family member | 75 CP | Per referral |
+
+##### Fidelity Cashback Quest (Flagship Quest)
+> **Why this matters:** The Fidelity Rewards Visa earns **2% cashback on all purchases** — deposited directly into a Fidelity account. If members link their cashback to the LLC's Fidelity brokerage, every dollar they spend passively grows the family fund. A member spending $2,000/month generates $40/month in extra contributions — automatically.
+
+- [ ] Quest detail page explaining the Fidelity card benefits and step-by-step setup
+- [ ] Guided walkthrough: Open Fidelity account → Apply for card → Link cashback to LLC account
+- [ ] Verification system (member uploads screenshot or admin confirms linkage)
+- [ ] Recurring quest: monthly spending confirmation to earn ongoing CP
+- [ ] Cashback contribution tracking per member (visible on admin dashboard)
+
+##### Features to Build
+- [ ] Quests page on portal (list of available, in-progress, and completed quests)
+- [ ] Quest detail view with instructions, requirements, and reward info
+- [ ] Quest progress tracking (started, submitted proof, admin verified, completed)
+- [ ] Credit Points balance displayed on portal dashboard and profile
+- [ ] Credit Point history log (earned, spent, reason)
+- [ ] Status tier badge on member profiles (Bronze → Silver → Gold → Diamond)
+- [ ] Admin quest management (create/edit quests, set CP rewards, verify completions)
+- [ ] Admin bulk quest assignment (assign a quest to all members or specific groups)
+- [ ] Push notification when a new quest becomes available
+- [ ] Celebration animation when a quest is completed or tier is achieved
+- [ ] Leaderboard — family ranking by Credit Points (optional, can be toggled off)
+- [ ] Database: `quests`, `member_quests`, `credit_points_log` tables
+
 ---
 
-### Phase 3: Family Structure & Identity
+### Phase 3: Family Structure, Identity & Financial Education
 **Status:** 🔲 Not Started
 **Priority:** 🔴 High
-**Goal:** Show who we are, how we're connected, and who's responsible for what.
+**Goal:** Show who we are, how we're connected, who's responsible for what, and empower every member with financial literacy.
 
-#### 3A. Family Hierarchy & Roles Page
-- [ ] Org chart / hierarchy page showing the LLC's structure and roles
+#### 3A. Meet the Team / Leadership Page
+**Goal:** A public-facing (or members-only) page that showcases who runs the LLC — builds trust, transparency, and family pride.
+
+- [ ] **"Meet Us" / "Who We Are" page** — dedicated page showing LLC leadership
+- [ ] Leadership cards for each officer with:
+  - Profile picture
+  - Full name
+  - Title / Role (President, Vice President, Treasurer, Secretary, etc.)
+  - Short bio or responsibility description
+  - Member since date
+  - Optional: fun fact or quote
+- [ ] Org chart / hierarchy layout showing the LLC's structure and chain of command
 - [ ] Role definitions with responsibilities:
-  - **Founder / Admin** — manages the LLC, portal, investments, approvals
-  - **Treasurer** — tracks finances, reconciles accounts (future role)
+  - **President / Founder** — manages the LLC, portal, investments, final approvals
+  - **Vice President** — supports President, steps in when needed, co-manages operations
+  - **Treasurer** — tracks finances, reconciles accounts, oversees budgets
+  - **Secretary** — records meeting minutes, manages documents, communications
   - **Event Coordinator** — plans and manages family events (future role)
   - **Social Manager** — moderates feed, manages announcements (future role)
   - **Member** — contributes, participates, votes on decisions
-- [ ] Role assignment by admin (assign roles to members from the dashboard)
-- [ ] Role badges displayed on profiles and in the social feed
+- [ ] Role assignment by admin (assign/change roles from the admin dashboard)
+- [ ] Role badges displayed on profiles, social feed, and the leadership page
 - [ ] Visual org chart layout (tree or hierarchy diagram)
 - [ ] "How It Works" section explaining the LLC structure, money flow, and governance
+- [ ] Page accessible from portal navigation and optionally from the public landing page
 - [ ] Responsive design — clean layout on mobile and desktop
+- [ ] Database: add `title` column to profiles (President, Vice President, Treasurer, etc.)
 
 #### 3B. Family Tree Page
 - [ ] Interactive family tree visualization (D3.js or similar)
@@ -171,6 +241,79 @@ Invested into:
 - [ ] "Invite to Join" button on non-member nodes
 - [ ] Database: `family_relationships` table (person_a, person_b, relationship_type)
 - [ ] Support for multi-generational depth (grandparents, grandchildren, etc.)
+
+#### 3C. Credit 101 — Credit Education Hub
+**Goal:** Equip every member with the knowledge to build, repair, and maintain excellent credit — a cornerstone of generational wealth.
+**Access:** Active members only (gated behind authentication + active subscription check).
+
+- [ ] Dedicated **Credit 101 page** on the portal (members-only)
+- [ ] Structured learning modules (step-by-step, not just a wall of text):
+  - **Module 1: Understanding Your Credit Score** — what it is, FICO vs. VantageScore, the 5 factors (payment history, utilization, length, mix, inquiries)
+  - **Module 2: Checking Your Credit** — how to pull free reports (AnnualCreditReport.com), reading your report, disputing errors
+  - **Module 3: Building Credit from Scratch** — secured cards, authorized user strategy, credit builder loans
+  - **Module 4: Improving Your Score** — lowering utilization, on-time payments, strategic pay-downs, debt snowball vs. avalanche
+  - **Module 5: Credit Card Strategy** — choosing the right cards, cashback optimization, balance transfer tactics, avoiding traps
+  - **Module 6: Advanced Moves** — credit limit increases, age of accounts, removing collections, goodwill letters, rapid rescoring
+  - **Module 7: Protecting Your Credit** — credit freezes, fraud alerts, identity theft recovery, monitoring tools
+- [ ] Progress tracking per member (which modules completed, quiz scores)
+- [ ] Short quiz at the end of each module to reinforce learning
+- [ ] Completion badge / Credit Points reward (ties into Phase 2B Quest System — "Complete Credit 101" quest)
+- [ ] Credit score log — members can periodically log their score to track improvement over time
+- [ ] Score trend chart (line graph showing member's credit score history)
+- [ ] Resource links to recommended tools (Credit Karma, Experian, Discover Scorecard, etc.)
+- [ ] Admin can add/edit modules and content
+- [ ] Mobile-friendly card-based layout for each module
+- [ ] Database: `credit_modules`, `member_module_progress`, `credit_score_log` tables
+
+#### 3D. Personal Finance & Budget Tracker
+**Goal:** Give members a powerful budgeting tool right in the portal — import bank statements, automatically categorize spending, identify habits, and get AI-powered advice.
+**Access:** Active members only.
+
+##### Core Budget Features
+- [ ] **Budget Dashboard** — overview of income, expenses, savings rate, and month-over-month trends
+- [ ] **Bank Statement Import** — upload CSV/OFX bank statements to auto-import transactions
+- [ ] **Auto-Categorization** — transactions automatically sorted into categories (Housing, Food, Transportation, Entertainment, Subscriptions, etc.)
+- [ ] **Manual Transaction Entry** — add cash transactions or adjust categories
+- [ ] **Spending Breakdown** — pie/donut chart showing spending by category
+- [ ] **Monthly Budget Goals** — set target spending per category, visual progress bars
+- [ ] **Budget vs. Actual** — compare planned budget to real spending each month
+- [ ] **Recurring Expense Detection** — auto-detect subscriptions and recurring charges
+- [ ] **Savings Goal Tracker** — set savings targets with progress visualization
+- [ ] **Income Tracking** — log paychecks and other income sources
+- [ ] **Net Worth Snapshot** — total assets minus debts, tracked over time
+- [ ] **Spending Alerts** — notification when approaching budget limits
+- [ ] **Monthly Summary Report** — auto-generated spending report at month end
+- [ ] **Export to CSV** — download budget data for personal records
+
+##### AI Financial Coach (Chat)
+- [ ] **AI Chat Assistant** integrated into the budget page
+- [ ] AI reads the member's budget data, spending patterns, and financial goals
+- [ ] Conversational interface — member can ask questions like:
+  - "Where am I spending the most?"
+  - "How can I save $200 more per month?"
+  - "What subscriptions should I cancel?"
+  - "Am I on track to hit my savings goal?"
+  - "What's the best way to pay down my debt?"
+- [ ] AI provides **personalized, data-driven advice** based on actual spending
+- [ ] Proactive suggestions — AI surfaces insights without being asked (e.g., "You spent 40% more on dining this month")
+- [ ] Chat history preserved per member (can review past conversations)
+- [ ] Powered by OpenAI API (GPT-4) or similar LLM
+- [ ] Data privacy: each member's financial data is only accessible to them and the AI — never shared with other members
+- [ ] Admin cannot see individual member budget data (privacy-first design)
+- [ ] Rate limiting to manage API costs
+
+##### Technical Considerations
+| Component | Technology | Notes |
+|-----------|-----------|-------|
+| Statement parsing | Custom CSV parser + OFX library | Handle multiple bank formats |
+| Categorization | Rule-based + ML fallback | Start with keyword matching, improve with AI over time |
+| AI Chat | OpenAI API (GPT-4) | Context window includes member's spending summary |
+| Data storage | Supabase (encrypted) | RLS ensures members only see their own data |
+| Charts | Chart.js (already in stack) | Consistent with existing portal charts |
+
+- [ ] Database: `budget_transactions`, `budget_categories`, `budget_goals`, `ai_chat_history` tables
+- [ ] Supabase RLS policies ensuring strict per-member data isolation
+- [ ] Edge function for AI chat (proxies requests to OpenAI, injects member's financial context)
 
 ---
 
@@ -385,10 +528,9 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 #### 9C. Future Benefits (Ideas)
 - [ ] Emergency fund access (separate from lending program)
 - [ ] Education assistance / scholarship fund for members' children
-- [ ] Financial literacy resources and workshops
 - [ ] Tax preparation assistance
 - [ ] Group discount programs (insurance, travel, etc.)
-- [ ] Credit building assistance
+- [ ] Credit building assistance (see Phase 3C for dedicated Credit 101 hub)
 
 ---
 
@@ -426,9 +568,12 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 | 1A | Investment Dashboard | 🔴 High | Medium | Fidelity data (manual or Plaid) |
 | 1B | Manual Deposits | 🔴 High | Low-Medium | Database schema update |
 | 1C | Member Onboarding | 🔴 High | Low-Medium | Supabase Storage (profile pics) |
-| 2 | Milestones & Perks | 🔴 High | Low-Medium | Investment data from Phase 1A |
-| 3A | Hierarchy & Roles | 🔴 High | Low | Profile system |
+| 2A | Milestones & Perks | 🔴 High | Low-Medium | Investment data from Phase 1A |
+| 2B | Quest & Task System | 🔴 High | Medium | Milestones system, profiles |
+| 3A | Meet the Team / Leadership | 🔴 High | Low | Profile system |
 | 3B | Family Tree | 🔴 High | Medium | D3.js or tree library |
+| 3C | Credit 101 Education | 🔴 High | Low-Medium | Auth + active member check |
+| 3D | Budget Tracker + AI Coach | 🔴 High | High | OpenAI API, CSV parsing |
 | 4A | Social Feed | 🟡 Medium | Medium | Supabase storage for media |
 | 4B | Member Profiles | 🟡 Medium | Medium | Profile pics storage |
 | 4C | Private Messaging | 🟡 Medium | Medium-High | Supabase Realtime |
@@ -453,6 +598,8 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 | SMS notifications | **Twilio** | Text message notifications for events, reminders |
 | Push notifications | **Web Push API** + service workers | Free, browser-native |
 | File storage | **Supabase Storage** | Already using Supabase — natural fit for photos/videos |
+| AI chat / coaching | **OpenAI API (GPT-4)** | Powers AI financial coach in budget tracker |
+| CSV parsing | **Custom parser** | Bank statement import for budget tracker |
 | Real-time messaging | **Supabase Realtime** | WebSocket-based, already in our stack |
 | Document signing | **DocuSign API** or **HelloSign** | For loan agreements, vehicle waivers |
 | Payment processing | **Stripe** (existing) | One-time deposits, trip deposits, rent payments |
@@ -477,6 +624,16 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 - `gallery_photos` table (uploader_id, url, caption, date_taken, location)
 - `photo_tags` table (photo_id, user_id)
 - `notifications` table (user_id, type, content, read, created_at)
+- `quests` table (title, description, cp_reward, quest_type, is_recurring, instructions, created_by)
+- `member_quests` table (quest_id, user_id, status, proof_url, verified_by, completed_at)
+- `credit_points_log` table (user_id, points, reason, quest_id, created_at)
+- `credit_modules` table (title, slug, content, order, quiz_data)
+- `member_module_progress` table (user_id, module_id, completed, quiz_score, completed_at)
+- `credit_score_log` table (user_id, score, source, logged_at)
+- `budget_transactions` table (user_id, date, description, amount_cents, category, source_file)
+- `budget_categories` table (user_id, name, monthly_limit_cents, color)
+- `budget_goals` table (user_id, title, target_cents, current_cents, deadline)
+- `ai_chat_history` table (user_id, role, content, created_at)
 - `vehicles` table (name, make, model, year, status, insurance_info)
 - `vehicle_reservations` table (vehicle_id, user_id, start_date, end_date)
 
@@ -499,31 +656,36 @@ The LLC sustains itself through:
 1. ✅ Core portal (subscriptions, payments, admin) — **DONE**
 2. ✅ Investment dashboard (manual entry to start) — **DONE**
 3. Member onboarding (profile setup wizard, profile pics, birthday)
-4. Milestones & perks page (asset threshold tiers, progress tracker)
-5. Family hierarchy & roles page
-6. Family tree page
+4. **Meet the Team / Leadership page** (who runs the LLC — roles, bios, org chart)
+5. Milestones & perks page (asset threshold tiers, progress tracker)
+6. **Credit 101 education hub** (members-only credit improvement modules)
+7. Family hierarchy & roles assignment
 
 ### 3–6 Months
-7. One-time deposit feature
-8. Social feed + admin announcements (with replies & threads)
-9. Member profiles with profile pictures
-10. Notifications (push first, then Twilio SMS)
+8. **Quest & task system** (Credit Points, Fidelity cashback quest, gamification)
+9. Family tree page
+10. **Personal finance & budget tracker** (bank statement import, spending analysis)
+11. One-time deposit feature
+12. Social feed + admin announcements (with replies & threads)
 
 ### 6–12 Months
-11. Events system with RSVPs
-12. Family gallery
-13. Trust formation (consult attorney)
-14. Plaid integration for Fidelity data (if fund size warrants the cost)
+13. **AI financial coach** (chat assistant connected to budget data — OpenAI)
+14. Member profiles with profile pictures
+15. Notifications (push first, then Twilio SMS)
+16. Events system with RSVPs
+17. Family gallery
 
 ### 12–24 Months
-15. Family lending program (after legal consultation + $50k milestone)
-16. Vacation-style events with deposit system
-17. Private messaging
+18. Trust formation (consult attorney)
+19. Plaid integration for Fidelity data (if fund size warrants the cost)
+20. Family lending program (after legal consultation + $50k milestone)
+21. Vacation-style events with deposit system
+22. Private messaging
 
 ### 24+ Months (As Capital Allows)
-18. Life insurance benefit
-19. Family vehicle program
-20. Family compound research and acquisition
+23. Life insurance benefit
+24. Family vehicle program
+25. Family compound research and acquisition
 
 ---
 
@@ -536,7 +698,7 @@ This roadmap is a **living document**. It will be updated as:
 - The fund grows and new possibilities open up
 - Members provide feedback and suggestions
 
-**Last Updated:** March 6, 2026
+**Last Updated:** March 8, 2026
 **Maintained By:** Justin McNeal (Admin)
 
 ---
