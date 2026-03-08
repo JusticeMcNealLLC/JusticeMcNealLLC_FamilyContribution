@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════
 // Milestones – Initialization & Data Loading
-// Load order: config.js → renders.js → init.js
+// Load order: config.js → renders.js → celebration.js → history.js → init.js
 // ══════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -39,6 +39,16 @@ async function loadMilestonesData() {
         renderProgressHero(totalAssets);
         renderStatsRow(totalAssets);
         renderMilestoneRoadmap(totalAssets, monthlyPaceCents);
+
+        // Load milestone history timeline (derived from snapshot history)
+        const achievements = await loadMilestoneHistory();
+        renderMilestoneTimeline(achievements);
+        const countEl = document.getElementById('achievementCount');
+        if (countEl) countEl.textContent = `${achievements.length} achieved`;
+
+        // Check for new milestones → confetti + toast if newly crossed
+        const currentIdx = getCurrentTierIndex(totalAssets);
+        checkForNewMilestones(currentIdx);
 
         // Show the content, hide loading
         document.getElementById('loadingState')?.classList.add('hidden');

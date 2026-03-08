@@ -153,8 +153,8 @@ Invested into:
   - Requirements and what counts toward the threshold
   - Estimated timeline to reach it (based on current contribution pace)
   - "What's included" breakdown (e.g., lending terms, event budget, etc.)
-- [ ] Animated celebration when a new milestone is reached (confetti, toast notification)
-- [ ] Milestone history timeline (when each tier was achieved)
+- [x] Animated celebration when a new milestone is reached (confetti, toast notification)
+- [x] Milestone history timeline (when each tier was achieved)
 - [x] "Next Unlock" countdown card on the portal dashboard
 - [x] Locked/unlocked visual state for each perk tier
 
@@ -806,7 +806,7 @@ The LLC sustains itself through:
 7. ✅ Phase 2A — Milestones page, progress bars, expandable detail cards, ETA calculations
 
 ### 🔧 Up Next — Phase 2 (Milestones, Perks & Quests)
-8. **Phase 2A wrap-up** — Animated milestone celebration (confetti + toast), milestone history timeline
+8. ✅ **Phase 2A wrap-up** — Animated milestone celebration (confetti + toast), milestone history timeline
 9. **Phase 2B — Quest & Task System** — Quest board, Credit Points, status tiers (Bronze → Diamond), admin management, Fidelity cashback quest
 10. **Phase 2C — Birthday Payouts** — Stripe Connect Express, automated $10 birthday deposits, bank linking flow
 
