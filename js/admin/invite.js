@@ -173,8 +173,8 @@ function renderAwaitingSubscription(users) {
             <tr class="hover:bg-surface-50 transition">
                 <td class="px-5 py-3.5 text-sm text-gray-900">${user.email}</td>
                 <td class="px-5 py-3.5 text-sm text-gray-500">${formatDate(user.created_at)}</td>
-                <td class="px-5 py-3.5">
-                    <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-sm font-medium">Reset Onboarding</button>
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                    <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-sm font-medium whitespace-nowrap">Reset Onboarding</button>
                 </td>
             </tr>
         `).join('');
@@ -232,8 +232,8 @@ function renderActiveMembers(users) {
                         ${user.subscription?.status || 'Unknown'}
                     </span>
                 </td>
-                <td class="px-5 py-3.5">
-                    <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-sm font-medium">Reset Onboarding</button>
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                    <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-sm font-medium whitespace-nowrap">Reset Onboarding</button>
                 </td>
             </tr>
         `).join('');
