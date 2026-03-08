@@ -1,7 +1,9 @@
 // Onboarding wizard logic
-// Handles the multi-step welcome flow for new members
+// Smart onboarding: auto-skips steps where data already exists
+// Steps: 0=Welcome, 1=Name, 2=Birthday, 3=Photo, 4=Contribution, 5=Done
 
-const TOTAL_STEPS = 6; // 0: Welcome, 1: Name, 2: Birthday, 3: Photo, 4: Contribution, 5: Done
+const ALL_STEPS = [0, 1, 2, 3, 4, 5];
+let activeSteps = [...ALL_STEPS]; // filtered at init based on existing data
 let currentStep = 0;
 let currentUser = null;
 
@@ -15,7 +17,6 @@ const profileData = {
 
 // ── Initialization ──
 document.addEventListener('DOMContentLoaded', async function () {
-    // Verify user is authenticated (but do NOT check onboarding — we're on it!)
     const { data: { session } } = await supabaseClient.auth.getSession();
 
     if (!session) {
@@ -25,10 +26,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     currentUser = session.user;
 
-    // Check if already onboarded — if so, go straight to portal
+    // Fetch full profile data
     const { data: profile } = await supabaseClient
         .from('profiles')
-        .select('setup_completed, first_name, last_name')
+        .select('setup_completed, first_name, last_name, birthday, profile_picture_url')
         .eq('id', currentUser.id)
         .single();
 
@@ -37,25 +38,133 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
     }
 
-    // Pre-fill existing data if the user is re-doing onboarding
+    // Check for active subscription
+    const { data: subs } = await supabaseClient
+        .from('subscriptions')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .in('status', ['active', 'trialing'])
+        .limit(1);
+
+    const hasActiveSub = subs && subs.length > 0;
+
+    // ── Determine which content steps (1-4) can be skipped ──
+    const skippable = [];
+
+    if (profile?.first_name && profile?.last_name) {
+        skippable.push(1); // Name already set
+        profileData.first_name = profile.first_name;
+        profileData.last_name = profile.last_name;
+    }
+    if (profile?.birthday) {
+        skippable.push(2); // Birthday already set
+        profileData.birthday = profile.birthday;
+    }
+    if (profile?.profile_picture_url) {
+        skippable.push(3); // Photo already uploaded
+        profileData.profile_picture_url = profile.profile_picture_url;
+    }
+    if (hasActiveSub) {
+        skippable.push(4); // Already has subscription
+    }
+
+    // Build active steps (Welcome=0 and Done=5 always included)
+    activeSteps = ALL_STEPS.filter(s => !skippable.includes(s));
+
+    // If only Welcome + Done remain, everything is filled → save & redirect
+    if (activeSteps.length <= 2) {
+        try { await saveProfile(); } catch (e) { /* best-effort */ }
+        window.location.href = APP_CONFIG.PORTAL_URL;
+        return;
+    }
+
+    // Pre-fill form inputs with existing data (even for non-skipped steps)
     if (profile?.first_name) {
         document.getElementById('firstName').value = profile.first_name;
-        profileData.first_name = profile.first_name;
+        if (!profileData.first_name) profileData.first_name = profile.first_name;
     }
     if (profile?.last_name) {
         document.getElementById('lastName').value = profile.last_name;
-        profileData.last_name = profile.last_name;
+        if (!profileData.last_name) profileData.last_name = profile.last_name;
+    }
+    if (profile?.birthday) {
+        document.getElementById('birthday').value = profile.birthday;
+        if (!profileData.birthday) profileData.birthday = profile.birthday;
+    }
+    if (profile?.profile_picture_url) {
+        if (!profileData.profile_picture_url) profileData.profile_picture_url = profile.profile_picture_url;
+        // Show existing photo in preview
+        document.getElementById('photoPreview').src = profile.profile_picture_url;
+        document.getElementById('photoPlaceholder').classList.add('hidden');
+        document.getElementById('photoPreviewContainer').classList.remove('hidden');
     }
 
-    // Wire up all buttons
+    // Build dynamic progress bar & wire up buttons
+    buildProgressBar();
     setupNavigation();
     setupPhotoUpload();
 });
 
-// ── Step Navigation ──
+// ── Dynamic Progress Bar ──
+function buildProgressBar() {
+    const bar = document.getElementById('progressBar');
+    bar.innerHTML = '';
+
+    // Show dots for all active steps except Done (step 5)
+    const dotSteps = activeSteps.filter(s => s !== 5);
+
+    dotSteps.forEach((step, i) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex items-center';
+
+        const dot = document.createElement('div');
+        dot.className = 'step-dot w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center';
+        dot.setAttribute('data-step', step);
+        dot.innerHTML = `
+            <svg class="w-4 h-4 text-white hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+            <span class="text-xs font-bold text-gray-400 step-number">${i + 1}</span>
+        `;
+
+        wrapper.appendChild(dot);
+
+        // Connector between dots (not after the last)
+        if (i < dotSteps.length - 1) {
+            const connector = document.createElement('div');
+            connector.className = 'step-connector w-8 sm:w-12 h-0.5 bg-gray-200';
+            connector.setAttribute('data-connector', i);
+            wrapper.appendChild(connector);
+        }
+
+        bar.appendChild(wrapper);
+    });
+
+    updateProgressBar();
+}
+
+// ── Smart Navigation Helpers ──
+function nextStep() {
+    const idx = activeSteps.indexOf(currentStep);
+    if (idx < activeSteps.length - 1) {
+        const next = activeSteps[idx + 1];
+        if (next === 5) {
+            finishOnboarding(); // save + show Done
+        } else {
+            goToStep(next);
+        }
+    }
+}
+
+function prevStep() {
+    const idx = activeSteps.indexOf(currentStep);
+    if (idx > 0) {
+        goToStep(activeSteps[idx - 1]);
+    }
+}
+
+// ── Step Navigation Wiring ──
 function setupNavigation() {
-    // Step 0 → 1 (Welcome → Name)
-    document.getElementById('welcomeNextBtn').addEventListener('click', () => goToStep(1));
+    // Step 0 → next active step
+    document.getElementById('welcomeNextBtn').addEventListener('click', () => nextStep());
 
     // Step 1: Name form
     document.getElementById('nameForm').addEventListener('submit', (e) => {
@@ -71,9 +180,9 @@ function setupNavigation() {
         hideError('nameError');
         profileData.first_name = first;
         profileData.last_name = last;
-        goToStep(2);
+        nextStep();
     });
-    document.getElementById('nameBackBtn').addEventListener('click', () => goToStep(0));
+    document.getElementById('nameBackBtn').addEventListener('click', () => prevStep());
 
     // Step 2: Birthday form
     document.getElementById('birthdayForm').addEventListener('submit', (e) => {
@@ -85,7 +194,6 @@ function setupNavigation() {
             return;
         }
 
-        // Basic validation: must be a real past date
         const birthDate = new Date(bday);
         const today = new Date();
         if (birthDate >= today) {
@@ -95,25 +203,25 @@ function setupNavigation() {
 
         hideError('birthdayError');
         profileData.birthday = bday;
-        goToStep(3);
+        nextStep();
     });
-    document.getElementById('birthdayBackBtn').addEventListener('click', () => goToStep(1));
+    document.getElementById('birthdayBackBtn').addEventListener('click', () => prevStep());
     document.getElementById('birthdaySkipBtn').addEventListener('click', () => {
         profileData.birthday = null;
-        goToStep(3);
+        nextStep();
     });
 
     // Step 3: Photo
-    document.getElementById('photoBackBtn').addEventListener('click', () => goToStep(2));
-    document.getElementById('finishBtn').addEventListener('click', () => goToStep(4));
+    document.getElementById('photoBackBtn').addEventListener('click', () => prevStep());
+    document.getElementById('finishBtn').addEventListener('click', () => nextStep());
     document.getElementById('photoSkipBtn').addEventListener('click', () => {
         profileData.profile_picture_url = null;
-        goToStep(4);
+        nextStep();
     });
 
     // Step 4: Contribution
     setupContributionStep();
-    document.getElementById('contributionBackBtn').addEventListener('click', () => goToStep(3));
+    document.getElementById('contributionBackBtn').addEventListener('click', () => prevStep());
     document.getElementById('startContributionBtn').addEventListener('click', () => handleStartContribution());
     document.getElementById('contributionSkipBtn').addEventListener('click', () => finishOnboarding());
 
@@ -125,48 +233,45 @@ function setupNavigation() {
 
 // ── Step Transition ──
 function goToStep(step) {
-    // Hide current step
     const currentEl = document.querySelector(`.step[data-step="${currentStep}"]`);
     if (currentEl) currentEl.classList.remove('active');
 
-    // Show new step
     currentStep = step;
     const nextEl = document.querySelector(`.step[data-step="${currentStep}"]`);
     if (nextEl) {
         nextEl.classList.add('active');
-        // Re-trigger fade animation
         nextEl.classList.remove('fade-in');
         void nextEl.offsetWidth; // force reflow
         nextEl.classList.add('fade-in');
     }
 
-    // Update progress dots
     updateProgressBar();
 }
 
 function updateProgressBar() {
-    for (let i = 0; i < TOTAL_STEPS - 1; i++) {
-        const dot = document.querySelector(`.step-dot[data-step="${i}"]`);
+    const dotSteps = activeSteps.filter(s => s !== 5);
+    // When on Done step (5), treat index as past all dots so they all show completed
+    const currentIdx = currentStep === 5 ? dotSteps.length : dotSteps.indexOf(currentStep);
+
+    dotSteps.forEach((step, i) => {
+        const dot = document.querySelector(`.step-dot[data-step="${step}"]`);
         const number = dot?.querySelector('.step-number');
         const connector = document.querySelector(`.step-connector[data-connector="${i}"]`);
 
-        if (!dot) continue;
+        if (!dot) return;
 
         dot.classList.remove('completed', 'current');
 
-        if (i < currentStep) {
-            // Completed
+        if (i < currentIdx) {
             dot.classList.add('completed');
             if (number) number.classList.add('hidden');
-        } else if (i === currentStep) {
-            // Current
+        } else if (i === currentIdx) {
             dot.classList.add('current');
             if (number) {
                 number.classList.remove('hidden');
                 number.className = 'text-xs font-bold text-brand-600 step-number';
             }
         } else {
-            // Upcoming
             if (number) {
                 number.classList.remove('hidden');
                 number.className = 'text-xs font-bold text-gray-400 step-number';
@@ -174,9 +279,9 @@ function updateProgressBar() {
         }
 
         if (connector) {
-            connector.classList.toggle('completed', i < currentStep);
+            connector.classList.toggle('completed', i < currentIdx);
         }
-    }
+    });
 }
 
 // ── Contribution Step ──

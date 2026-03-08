@@ -127,17 +127,23 @@ Invested into:
 **Goal:** Show members what we've achieved and what perks unlock as our assets grow — gamify generational wealth.
 
 #### 2A. Milestone Tiers (Unlockable by Asset Threshold)
+
+> **Current pace:** 4 members × $30/mo = **$120/mo** ($1,440/yr base contributions, plus investment growth). Tiers are designed so early wins come fast and keep momentum high.
+
 | Threshold | Milestone | Perk / Feature Unlocked |
 |-----------|-----------|-------------------------|
-| $5,000 | 🌱 Seed Planted | Social feed launches — members can post & interact |
-| $10,000 | 📈 First Five Figures | Events system opens — plan family gatherings |
-| $25,000 | 💪 Building Momentum | Family gallery unlocked — store & share memories |
-| $50,000 | 🏦 Mini Bank | Lending program opens — members can borrow from the fund |
-| $75,000 | 🛡️ Safety Net | Emergency fund access for members in need |
-| $100,000 | 🎉 Six Figures | Trust formation begins — consult estate attorney |
-| $250,000 | 🚗 Fleet Ready | Family vehicle program evaluation begins |
-| $500,000 | 🏠 Compound Vision | Real estate research & land acquisition planning |
-| $1,000,000 | 👑 Generational | Full benefits suite — life insurance, scholarships, compound |
+| $500 | 🌱 First Seed | Social feed launches — members can post & interact |
+| $1,000 | 💵 Four Figures | Events system opens — plan family gatherings |
+| $2,500 | 📈 Gaining Ground | Family gallery unlocked — store & share memories |
+| $5,000 | 🔥 Halfway to Five Figures | Quest system opens — earn Credit Points for tasks |
+| $10,000 | 🏅 Five Figures | Milestone celebration event — family dinner / outing |
+| $25,000 | 💪 Building Momentum | Lending program opens — members can borrow from the fund |
+| $50,000 | 🏦 Mini Bank | Emergency fund access for members in need |
+| $75,000 | 🛡️ Safety Net | Trust formation begins — consult estate attorney |
+| $100,000 | 🎉 Six Figures | Family vehicle program evaluation begins |
+| $250,000 | 🚗 Fleet Ready | Real estate research & land acquisition planning |
+| $500,000 | 🏠 Compound Vision | Scholarships, life insurance, compound planning |
+| $1,000,000 | 👑 Generational | Full benefits suite — generational wealth achieved |
 
 ##### Features to Build
 - [ ] Milestones page on the portal (visual roadmap with progress bars)
@@ -349,12 +355,64 @@ Invested into:
 - [ ] "New posts" indicator when feed updates while scrolling
 - [ ] Mobile-optimized infinite scroll
 
-#### 4B. Member Profiles
-- [ ] Profile pictures (upload + crop)
-- [ ] Bio / about section
-- [ ] Member's post history on their profile page
-- [ ] Member since date, contribution streak, badges
-- [ ] Profile privacy settings
+#### 4B. Member Profiles (Instagram-Style)
+**Goal:** Give every member a rich, visual profile page — part social media, part resume, part family legacy page.
+
+##### Profile Header
+- [ ] Cover photo / banner image (upload + crop)
+- [ ] Large profile picture with online status indicator
+- [ ] Display name (first + last) with editable bio / tagline
+- [ ] Stats bar: **Posts** | **Contributions** | **Member Since** | **Streak**
+- [ ] Credit Point tier badge (🥉 Bronze → 💎 Diamond) displayed on profile
+- [ ] "Edit Profile" button (own profile) / "Message" button (other members)
+- [ ] Contribution streak flame icon with day count
+
+##### Profile Content Tabs
+- [ ] **Posts** tab — grid layout (Instagram-style 3-column image grid with overlay on hover)
+- [ ] **Feed** tab — chronological list view of all the member's posts, comments, and activity
+- [ ] **Photos** tab — all images the member has posted, organized by date
+- [ ] **Milestones** tab — personal contribution milestones and badges earned
+- [ ] **Activity** tab — timeline of actions (joined, reached milestone, completed quest, attended event, etc.)
+
+##### Post Creation (from Profile)
+- [ ] Create post directly from profile page
+- [ ] Post types: **Text**, **Photo**, **Photo + Caption**, **Video**, **Link Share**
+- [ ] Multi-image posts with swipe/carousel view
+- [ ] Post privacy: **Family** (all members) or **Private** (only visible on own profile)
+- [ ] Edit and delete own posts
+- [ ] Post timestamp with relative time ("2h ago", "3d ago")
+
+##### Profile Stats & Gamification
+- [ ] Total lifetime contributions (dollar amount)
+- [ ] Current monthly contribution amount
+- [ ] Contribution streak (consecutive on-time months)
+- [ ] Longest streak record
+- [ ] Quests completed count
+- [ ] Credit Points total + tier progress bar
+- [ ] Badges showcase (earned from milestones, quests, events)
+- [ ] "Top Contributor" / "Streak Master" / "Event Regular" special badges
+
+##### Profile Interactions
+- [ ] View any family member's profile by tapping their avatar anywhere in the app
+- [ ] Like / comment on profile posts
+- [ ] Direct message button → opens DM thread (ties into Phase 4C)
+- [ ] "Nudge" button — send a friendly reminder to contribute or check in
+- [ ] Share profile link (deep link to member's profile)
+
+##### Profile Settings & Privacy
+- [ ] Choose what's visible to other members (bio, birthday, contribution stats, posts)
+- [ ] Hide contribution amount (show streak but not dollar amount)
+- [ ] Block / mute other members (hides their content from your feed)
+- [ ] Profile visibility: **Public to Family** or **Private** (admin-only visible)
+
+##### Technical Requirements
+- [ ] Database: `posts`, `post_images`, `post_likes`, `post_comments`, `profile_badges` tables
+- [ ] Supabase Storage bucket for post images + cover photos
+- [ ] Image compression / thumbnail generation (edge function)
+- [ ] Infinite scroll with cursor-based pagination
+- [ ] RLS: members see only family-visible posts; own profile always fully visible
+- [ ] Profile page route: `/portal/profile.html?id={user_id}`
+- [ ] Responsive: full-width cover on mobile, constrained on desktop
 
 #### 4C. Private Messaging (DMs)
 - [ ] One-on-one direct messages between members

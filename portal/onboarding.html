@@ -68,48 +68,8 @@
 
     <div class="w-full max-w-md relative z-10">
 
-        <!-- Progress Indicator -->
-        <div class="flex items-center justify-center mb-8" id="progressBar">
-            <!-- Step 1: Welcome -->
-            <div class="flex items-center">
-                <div class="step-dot current w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center" data-step="0">
-                    <svg class="w-4 h-4 text-white hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                    <span class="text-xs font-bold text-brand-600 step-number">1</span>
-                </div>
-                <div class="step-connector w-8 sm:w-12 h-0.5 bg-gray-200" data-connector="0"></div>
-            </div>
-            <!-- Step 2: Name -->
-            <div class="flex items-center">
-                <div class="step-dot w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center" data-step="1">
-                    <svg class="w-4 h-4 text-white hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                    <span class="text-xs font-bold text-gray-400 step-number">2</span>
-                </div>
-                <div class="step-connector w-8 sm:w-12 h-0.5 bg-gray-200" data-connector="1"></div>
-            </div>
-            <!-- Step 3: Birthday -->
-            <div class="flex items-center">
-                <div class="step-dot w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center" data-step="2">
-                    <svg class="w-4 h-4 text-white hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                    <span class="text-xs font-bold text-gray-400 step-number">3</span>
-                </div>
-                <div class="step-connector w-8 sm:w-12 h-0.5 bg-gray-200" data-connector="2"></div>
-            </div>
-            <!-- Step 4: Photo -->
-            <div class="flex items-center">
-                <div class="step-dot w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center" data-step="3">
-                    <svg class="w-4 h-4 text-white hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                    <span class="text-xs font-bold text-gray-400 step-number">4</span>
-                </div>
-                <div class="step-connector w-8 sm:w-12 h-0.5 bg-gray-200" data-connector="3"></div>
-            </div>
-            <!-- Step 5: Contribution -->
-            <div class="flex items-center">
-                <div class="step-dot w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center" data-step="4">
-                    <svg class="w-4 h-4 text-white hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                    <span class="text-xs font-bold text-gray-400 step-number">5</span>
-                </div>
-            </div>
-        </div>
+        <!-- Progress Indicator (built dynamically by onboarding.js based on which steps are needed) -->
+        <div class="flex items-center justify-center mb-8" id="progressBar"></div>
 
         <!-- ═══════════════════════════════════════ -->
         <!-- STEP 1: Welcome -->
