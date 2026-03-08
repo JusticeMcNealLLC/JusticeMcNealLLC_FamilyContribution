@@ -179,10 +179,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     await addAdminDashboardLink();
 });
 
-// Add Admin Dashboard link to portal navigation for admin users
+// Add Admin Hub link to portal navigation for admin users
 async function addAdminDashboardLink() {
-    // Only run on portal pages (not admin pages)
-    if (window.location.pathname.includes('/admin/')) {
+    // Only run on portal pages (not admin pages or login)
+    if (window.location.pathname.includes('/admin/') || window.location.pathname.includes('/auth/')) {
         return;
     }
 
@@ -196,26 +196,38 @@ async function addAdminDashboardLink() {
         .eq('id', session.user.id)
         .single();
 
-    if (profile?.role === 'admin') {
-        // Add to desktop nav
-        const desktopNav = document.querySelector('nav .hidden.md\\:flex.items-center.gap-6');
-        if (desktopNav) {
+    if (profile?.role !== 'admin') return;
+
+    // ── Desktop nav: insert "Admin Hub" before the divider ──
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        const divider = logoutBtn.previousElementSibling; // the w-px separator
+        if (divider && divider.parentNode) {
             const adminLink = document.createElement('a');
-            adminLink.href = '../admin/index.html';
-            adminLink.className = 'text-gray-600 hover:text-gray-900';
-            adminLink.textContent = 'Admin';
-            desktopNav.insertBefore(adminLink, desktopNav.firstChild);
+            adminLink.href = '/admin/index.html';
+            adminLink.className = 'px-4 py-2 text-sm font-medium text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition inline-flex items-center gap-1.5';
+            adminLink.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>Admin Hub';
+            divider.parentNode.insertBefore(adminLink, divider);
+        }
+    }
+
+    // ── Mobile bottom tab bar: inject "Admin" as the first tab ──
+    const tabBarGrid = document.querySelector('.bottom-tab-bar .grid');
+    if (tabBarGrid) {
+        // Bump the grid column count by 1
+        const colMatch = tabBarGrid.className.match(/grid-cols-(\d)/);
+        if (colMatch) {
+            tabBarGrid.className = tabBarGrid.className.replace(
+                /grid-cols-\d/,
+                'grid-cols-' + (parseInt(colMatch[1]) + 1)
+            );
         }
 
-        // Add to mobile nav
-        const mobileNav = document.querySelector('#mobileMenu .flex.flex-col.gap-2');
-        if (mobileNav) {
-            const adminLinkMobile = document.createElement('a');
-            adminLinkMobile.href = '../admin/index.html';
-            adminLinkMobile.className = 'text-gray-600 hover:text-gray-900 py-2';
-            adminLinkMobile.textContent = 'Admin';
-            mobileNav.insertBefore(adminLinkMobile, mobileNav.firstChild);
-        }
+        const adminTab = document.createElement('a');
+        adminTab.href = '/admin/index.html';
+        adminTab.className = 'tab-inactive !text-amber-600';
+        adminTab.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg><span>Admin</span>';
+        tabBarGrid.insertBefore(adminTab, tabBarGrid.firstChild);
     }
 }
 
