@@ -122,7 +122,7 @@ Invested into:
 ---
 
 ### Phase 2: Milestones, Perks & Quests
-**Status:** � In Progress
+**Status:** 🔧 In Progress — 2A nearly complete, 2B & 2C next
 **Priority:** 🔴 High
 **Goal:** Show members what we've achieved and what perks unlock as our assets grow — gamify generational wealth.
 
@@ -155,12 +155,14 @@ Invested into:
   - "What's included" breakdown (e.g., lending terms, event budget, etc.)
 - [ ] Animated celebration when a new milestone is reached (confetti, toast notification)
 - [ ] Milestone history timeline (when each tier was achieved)
-- [ ] Push notification to all members when a milestone is hit
-- [ ] Admin can create custom milestones beyond the defaults
-- [ ] Perk status badges on member profiles
 - [x] "Next Unlock" countdown card on the portal dashboard
-- [ ] Auto-generated social feed posts for milestone achievements
 - [x] Locked/unlocked visual state for each perk tier
+
+##### Deferred — Requires Later Phases
+- [ ] Push notification to all members when a milestone is hit *(⏳ Phase 4D — Notifications)*
+- [ ] Auto-generated social feed posts for milestone achievements *(⏳ Phase 4A — Social Feed)*
+- [ ] Perk status badges on member profiles *(⏳ Phase 4B — Member Profiles)*
+- [ ] Admin can create custom milestones beyond the defaults *(lower priority — revisit after Phase 2B)*
 
 #### 2B. Quest & Task System
 **Goal:** Give members clear, actionable tasks that benefit both them and the LLC — completion earns Credit Points that unlock rewards and boost their status in the system.
@@ -247,9 +249,11 @@ Invested into:
 - [ ] Portal notification: "🎂 Happy Birthday! $10 is on its way to your bank account"
 - [ ] Admin dashboard: birthday payout history log
 - [ ] Birthday celebration card on portal dashboard (visible to all members)
-- [ ] Auto-post to social feed: "🎂 Happy Birthday [Name]! The family sent you $10!"
 - [ ] Fallback: if bank not linked, show nudge to link it + queue payout for when they do
 - [ ] Database: `birthday_payouts` table, `stripe_connect_account_id` on profiles
+
+##### Deferred — Requires Later Phases
+- [ ] Auto-post to social feed: "🎂 Happy Birthday [Name]! The family sent you $10!" *(⏳ Phase 4A — Social Feed)*
 
 ##### Alternative Options Considered
 | Option | Verdict |
@@ -703,11 +707,11 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 
 | Phase | Name | Priority | Complexity | Dependencies |
 |-------|------|----------|------------|--------------|
-| 1A | Investment Dashboard | 🔴 High | Medium | Fidelity data (manual or Plaid) |
-| 1B | Manual Deposits | 🔴 High | Low-Medium | Database schema update |
-| 1C | Member Onboarding | 🔴 High | Low-Medium | Supabase Storage (profile pics) |
-| 2A | Milestones & Perks | 🔴 High | Low-Medium | Investment data from Phase 1A |
-| 2B | Quest & Task System | 🔴 High | Medium | Milestones system, profiles |
+| 1A | Investment Dashboard | ✅ Done | Medium | Fidelity data (manual or Plaid) |
+| 1B | Manual Deposits | ✅ Done | Low-Medium | Database schema update |
+| 1C | Member Onboarding | ✅ Done | Low-Medium | Supabase Storage (profile pics) |
+| 2A | Milestones & Perks | ✅ Done | Low-Medium | Investment data from Phase 1A |
+| 2B | Quest & Task System | 🔴 High | Medium | Milestones system |
 | 3A | Meet the Team / Leadership | 🔴 High | Low | Profile system |
 | 3B | Family Tree | 🔴 High | Medium | D3.js or tree library |
 | 3C | Credit 101 Education | 🔴 High | Low-Medium | Auth + active member check |
@@ -788,43 +792,47 @@ The LLC sustains itself through:
 
 ---
 
-## 📅 Suggested Implementation Order
+## 📅 Implementation Order
 
-### Now → Next 3 Months
-1. ✅ Core portal (subscriptions, payments, admin) — **DONE**
-2. ✅ Investment dashboard (manual entry to start) — **DONE**
-3. ✅ One-time / manual deposits (Stripe + admin-recorded) — **DONE**
-4. ✅ Member onboarding wizard (name, birthday, photo, contribution) — **DONE**
-5. ✅ Nav/footer component extraction & profile display — **DONE**
-6. **Meet the Team / Leadership page** (who runs the LLC — roles, bios, org chart)
-7. Milestones & perks page (asset threshold tiers, progress tracker)
-8. **Credit 101 education hub** (members-only credit improvement modules)
-9. Family hierarchy & roles assignment
+> **Rule:** Go in order. Items marked ⏳ are deferred because they depend on a later phase — they'll be picked up when that phase is built. Everything else is buildable in sequence.
 
-### 3–6 Months
-10. **Quest & task system** (Credit Points, Fidelity cashback quest, gamification)
-11. Family tree page
-12. **Personal finance & budget tracker** (bank statement import, spending analysis)
-13. Social feed + admin announcements (with replies & threads)
+### ✅ Complete
+1. ✅ Core portal — subscriptions, payments, admin dashboard
+2. ✅ Phase 1A — Investment dashboard (CSV upload, manual entry, portfolio viewer)
+3. ✅ Phase 1B — One-time & manual deposits (Stripe + admin-recorded)
+4. ✅ Phase 1C — Member onboarding wizard (name, birthday, photo, contribution)
+5. ✅ Nav/footer component extraction & profile display (pageShell.js)
+6. ✅ Mobile nav redesign — 5-tab bar with Instagram-style center button
+7. ✅ Phase 2A — Milestones page, progress bars, expandable detail cards, ETA calculations
 
-### 6–12 Months
-13. **AI financial coach** (chat assistant connected to budget data — OpenAI)
-14. Member profiles with profile pictures
-15. Notifications (push first, then Twilio SMS)
-16. Events system with RSVPs
-17. Family gallery
+### 🔧 Up Next — Phase 2 (Milestones, Perks & Quests)
+8. **Phase 2A wrap-up** — Animated milestone celebration (confetti + toast), milestone history timeline
+9. **Phase 2B — Quest & Task System** — Quest board, Credit Points, status tiers (Bronze → Diamond), admin management, Fidelity cashback quest
+10. **Phase 2C — Birthday Payouts** — Stripe Connect Express, automated $10 birthday deposits, bank linking flow
 
-### 12–24 Months
-18. Trust formation (consult attorney)
-19. Plaid integration for Fidelity data (if fund size warrants the cost)
-20. Family lending program (after legal consultation + $50k milestone)
-21. Vacation-style events with deposit system
-22. Private messaging
+### Phase 3 (Family Structure, Identity & Education)
+11. **Phase 3A — Meet the Team / Leadership page** — roles, bios, org chart, role badges
+12. **Phase 3B — Family Tree** — interactive tree visualization, relationships, multi-generational
+13. **Phase 3C — Credit 101 Education Hub** — learning modules, quizzes, score tracking
+14. **Phase 3D — Budget Tracker + AI Coach** — bank statement import, categorization, spending analysis, OpenAI chat
 
-### 24+ Months (As Capital Allows)
-23. Life insurance benefit
-24. Family vehicle program
-25. Family compound research and acquisition
+### Phase 4 (Family Social Hub)
+15. **Phase 4A — Social Feed & Announcements** — posts, likes, comments, context-aware mobile header
+16. **Phase 4B — Member Profiles (Instagram-style)** — cover photos, posts grid, stats, badges
+17. **Phase 4C — Private Messaging (DMs)** — one-on-one real-time messaging
+18. **Phase 4D — Push & Text Notifications** — web push, Twilio SMS, notification preferences
+19. ⏳ **Pick up deferred items** — social feed posts for milestones/birthdays, push notifications for milestones, perk badges on profiles, admin custom milestones
+
+### Phase 5 (Events & Family Activities)
+20. **Phase 5A — Events System** — create events, RSVP, reminders, event comments
+21. **Phase 5B — Vacation / Trip Events** — deposit requirement, trip pot, expense breakdown
+
+### Phase 6+
+22. **Phase 6 — Family Gallery** — photo/video uploads, albums, tagging, "On This Day"
+23. **Phase 7 — Trust Formation** — estate attorney, trust agreement, succession plan
+24. **Phase 8 — Family Lending Program** — loan applications, repayment tracking ($50k milestone)
+25. **Phase 9 — Member Benefits** — vehicle program ($250k), life insurance, scholarships
+26. **Phase 10 — Family Compound** — real estate acquisition ($500k+ milestone)
 
 ---
 
