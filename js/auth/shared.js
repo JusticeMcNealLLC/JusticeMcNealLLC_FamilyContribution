@@ -121,9 +121,55 @@ async function handleLogout() {
     window.location.href = APP_CONFIG.LOGIN_URL + '?logout=' + Date.now();
 }
 
-// ── Wire up logout buttons + admin link on page load ──
+// ── Wire up logout buttons + profile dropdown + admin link on page load ──
 document.addEventListener('DOMContentLoaded', async function() {
-    // Logout button (desktop)
+    // ── Profile dropdown toggle (desktop nav) ──
+    const dropdownBtn   = document.getElementById('profileDropdownBtn');
+    const dropdown      = document.getElementById('profileDropdown');
+    const chevron       = document.getElementById('profileChevron');
+
+    function openDropdown() {
+        if (!dropdown) return;
+        dropdown.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            dropdown.style.opacity = '1';
+            dropdown.style.transform = 'translateY(0)';
+        });
+        if (chevron) chevron.style.transform = 'rotate(180deg)';
+        if (dropdownBtn) dropdownBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeDropdown() {
+        if (!dropdown) return;
+        dropdown.style.opacity = '0';
+        dropdown.style.transform = 'translateY(4px)';
+        setTimeout(() => dropdown.classList.add('hidden'), 150);
+        if (chevron) chevron.style.transform = '';
+        if (dropdownBtn) dropdownBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    if (dropdownBtn && dropdown) {
+        dropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = !dropdown.classList.contains('hidden');
+            isOpen ? closeDropdown() : openDropdown();
+        });
+
+        // Close on outside click
+        document.addEventListener('click', function(e) {
+            if (!dropdown.classList.contains('hidden')) {
+                var wrap = document.getElementById('profileDropdownWrap');
+                if (wrap && !wrap.contains(e.target)) closeDropdown();
+            }
+        });
+
+        // Close on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !dropdown.classList.contains('hidden')) closeDropdown();
+        });
+    }
+
+    // Logout button (now inside profile dropdown)
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async function(e) {

@@ -99,8 +99,7 @@
             dLink('quests.html', 'Quests', 'quests') +
             dLink('milestones.html', 'Milestones', 'milestones') +
             dLink('investments.html', 'Investments', 'investments') +
-            dLink('history.html', 'History', 'history') +
-            dLink('settings.html', 'Settings', 'settings');
+            dLink('history.html', 'History', 'history');
 
         tabsInner =
             '<div class="max-w-lg mx-auto grid grid-cols-5 px-2">' +
@@ -109,6 +108,52 @@
                 centerTab('milestones.html', p(SVG.trophy), 'Goals', 'milestones') +
                 mTab('history.html', p(SVG.history), 'History', 'history') +
                 profileTab() +
+            '</div>';
+    }
+
+    // ─── Build right-side of desktop nav ───────────────
+    var desktopRight = '';
+
+    if (isAdmin) {
+        // Admin: simple profile + sign out (no dropdown needed — only 3 links)
+        desktopRight =
+            '<div class="w-px h-6 bg-gray-200 mx-2" id="navDivider"></div>' +
+            '<div id="navProfileSection" class="flex items-center gap-2 mr-1 hidden">' +
+                '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden flex-shrink-0">' +
+                    '<span id="navProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
+                    '<img id="navProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+                '</div>' +
+                '<span id="navProfileName" class="text-sm font-medium text-gray-700 max-w-[100px] truncate"></span>' +
+            '</div>' +
+            '<button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>';
+    } else {
+        // Portal: profile dropdown with Settings + Sign Out
+        desktopRight =
+            '<div class="w-px h-6 bg-gray-200 mx-2" id="navDivider"></div>' +
+            '<div class="relative" id="profileDropdownWrap">' +
+                '<button id="profileDropdownBtn" class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition hidden" aria-haspopup="true" aria-expanded="false">' +
+                    '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden flex-shrink-0">' +
+                        '<span id="navProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
+                        '<img id="navProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+                    '</div>' +
+                    '<span id="navProfileName" class="text-sm font-medium text-gray-700 max-w-[100px] truncate"></span>' +
+                    '<svg class="w-4 h-4 text-gray-400 transition-transform" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>' +
+                '</button>' +
+                '<div id="profileDropdown" class="absolute right-0 top-full mt-1.5 w-48 bg-white rounded-xl border border-gray-200/80 shadow-lg shadow-gray-200/50 py-1.5 hidden z-50 opacity-0 translate-y-1" style="transition: opacity 0.15s ease, transform 0.15s ease;">' +
+                    '<a href="settings.html" class="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition rounded-lg mx-1 ' + ('settings' === active ? 'text-brand-600 bg-brand-50/60 font-medium' : '') + '">' +
+                        '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                            p(SVG.gear) + p(SVG.gearDot) +
+                        '</svg>' +
+                        'Settings' +
+                    '</a>' +
+                    '<div class="border-t border-gray-100 my-1"></div>' +
+                    '<button id="logoutBtn" class="flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 transition w-full text-left rounded-lg mx-1" style="width:calc(100% - 0.5rem);">' +
+                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                            p(SVG.logout) +
+                        '</svg>' +
+                        'Sign Out' +
+                    '</button>' +
+                '</div>' +
             '</div>';
     }
 
@@ -133,15 +178,7 @@
                 '</div>' +
                 '<div class="hidden md:flex items-center gap-1">' +
                     desktopLinks +
-                    '<div class="w-px h-6 bg-gray-200 mx-2" id="navDivider"></div>' +
-                    '<div id="navProfileSection" class="flex items-center gap-2 mr-1 hidden">' +
-                        '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden flex-shrink-0">' +
-                            '<span id="navProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
-                            '<img id="navProfileImg" class="w-full h-full object-cover hidden" alt="">' +
-                        '</div>' +
-                        '<span id="navProfileName" class="text-sm font-medium text-gray-700 max-w-[100px] truncate"></span>' +
-                    '</div>' +
-                    '<button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>' +
+                    desktopRight +
                 '</div>' +
             '</div>' +
         '</div>' +
@@ -197,13 +234,27 @@ async function loadNavProfile() {
         var initials  = ((firstName.charAt(0) || '') + (lastName.charAt(0) || '')).toUpperCase() || '?';
         var photoUrl  = res.data.profile_picture_url;
 
-        // Desktop nav
+        // Desktop nav — profile area (dropdown btn on portal, section on admin)
+        var btn        = document.getElementById('profileDropdownBtn');
         var section    = document.getElementById('navProfileSection');
         var nameEl     = document.getElementById('navProfileName');
         var initialsEl = document.getElementById('navProfileInitials');
         var imgEl      = document.getElementById('navProfileImg');
 
-        if (section) {
+        if (btn) {
+            // Portal dropdown trigger
+            if (nameEl) nameEl.textContent = firstName || 'Member';
+            if (initialsEl) initialsEl.textContent = initials;
+            if (photoUrl && imgEl) {
+                imgEl.src = photoUrl;
+                imgEl.onload = function () {
+                    imgEl.classList.remove('hidden');
+                    if (initialsEl) initialsEl.classList.add('hidden');
+                };
+            }
+            btn.classList.remove('hidden');
+        } else if (section) {
+            // Admin simple profile section
             if (nameEl) nameEl.textContent = firstName || 'Member';
             if (initialsEl) initialsEl.textContent = initials;
             if (photoUrl && imgEl) {
