@@ -166,4 +166,35 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (typeof loadNavProfile === 'function') {
         loadNavProfile();
     }
+
+    // Start inactivity auto-logout timer (skip on login, reset-password, onboarding, and splash pages)
+    const path = window.location.pathname;
+    const skipInactivity = path === '/' || path === '/index.html'
+        || path.includes('/auth/')
+        || path.includes('/onboarding');
+    if (!skipInactivity) {
+        startInactivityTimer();
+    }
 });
+
+// ── Inactivity Auto-Logout ──────────────────────────────
+// Logs user out after INACTIVITY_TIMEOUT_MS of no interaction
+const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+let _inactivityTimer = null;
+
+function startInactivityTimer() {
+    resetInactivityTimer();
+
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(evt => {
+        document.addEventListener(evt, resetInactivityTimer, { passive: true });
+    });
+}
+
+function resetInactivityTimer() {
+    if (_inactivityTimer) clearTimeout(_inactivityTimer);
+    _inactivityTimer = setTimeout(async () => {
+        console.log('Inactivity timeout — logging out');
+        await handleLogout();
+    }, INACTIVITY_TIMEOUT_MS);
+}

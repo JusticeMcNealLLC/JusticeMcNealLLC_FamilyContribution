@@ -22,6 +22,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('removeTransparent').addEventListener('click', () => handleRemove('transparent'));
     document.getElementById('removeSolid').addEventListener('click', () => handleRemove('solid'));
 
+    // Drag & drop for both upload zones
+    setupDragDrop('transparentPreview', 'transparentFile', 'transparent');
+    setupDragDrop('solidPreview', 'solidFile', 'solid');
+
     // Checker toggle
     document.getElementById('checkerToggle').addEventListener('change', (e) => {
         const preview = document.getElementById('transparentPreview');
@@ -227,6 +231,58 @@ function formatFileSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function setupDragDrop(previewId, fileInputId, type) {
+    const preview = document.getElementById(previewId);
+    const fileInput = document.getElementById(fileInputId);
+    if (!preview || !fileInput) return;
+
+    preview.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        preview.classList.add('border-brand-400', 'bg-brand-50/50');
+        preview.classList.remove('border-gray-200');
+    });
+
+    preview.addEventListener('dragleave', (e) => {
+        if (!preview.contains(e.relatedTarget)) {
+            preview.classList.remove('border-brand-400', 'bg-brand-50/50');
+            preview.classList.add('border-gray-200');
+        }
+    });
+
+    preview.addEventListener('drop', (e) => {
+        e.preventDefault();
+        preview.classList.remove('border-brand-400', 'bg-brand-50/50');
+        preview.classList.add('border-gray-200');
+
+        const file = e.dataTransfer.files?.[0];
+        if (!file) return;
+
+        // Validate by type
+        if (type === 'transparent' && file.type !== 'image/png') {
+            showToast('Transparent logo must be a PNG file', true);
+            return;
+        }
+        if (!file.type.startsWith('image/')) {
+            showToast('Please drop an image file', true);
+            return;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+            showToast('File too large — max 5 MB', true);
+            return;
+        }
+
+        // Create a synthetic event to reuse handleUpload
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+        fileInput.dispatchEvent(new Event('change'));
+    });
+
+    // Make the preview area clickable to open file picker too
+    preview.style.cursor = 'pointer';
+    preview.addEventListener('click', () => fileInput.click());
 }
 
 function showToast(message, isError = false) {

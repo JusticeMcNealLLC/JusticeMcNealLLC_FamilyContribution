@@ -69,6 +69,7 @@ function setupProfileEditing() {
     const photoWrapper = document.getElementById('profilePhotoWrapper');
     const photoInput = document.getElementById('profilePhotoInput');
     const saveBtn = document.getElementById('saveProfileBtn');
+    const avatarDisplay = document.getElementById('avatarDisplay');
 
     // Click avatar to trigger file picker
     if (photoWrapper) {
@@ -80,6 +81,26 @@ function setupProfileEditing() {
         photoInput.addEventListener('change', (e) => {
             const file = e.target.files?.[0];
             if (file) handleProfilePhoto(file);
+        });
+    }
+
+    // Drag & drop on entire profile section
+    const profileSection = photoWrapper?.closest('section') || photoWrapper?.closest('.bg-white');
+    if (profileSection) {
+        profileSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            avatarDisplay?.classList.add('ring-4', 'ring-brand-300', 'ring-offset-2');
+        });
+        profileSection.addEventListener('dragleave', (e) => {
+            if (!profileSection.contains(e.relatedTarget)) {
+                avatarDisplay?.classList.remove('ring-4', 'ring-brand-300', 'ring-offset-2');
+            }
+        });
+        profileSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            avatarDisplay?.classList.remove('ring-4', 'ring-brand-300', 'ring-offset-2');
+            const file = e.dataTransfer.files?.[0];
+            if (file && file.type.startsWith('image/')) handleProfilePhoto(file);
         });
     }
 
