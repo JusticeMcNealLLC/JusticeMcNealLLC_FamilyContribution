@@ -165,37 +165,65 @@ Invested into:
 - [ ] Admin can create custom milestones beyond the defaults *(lower priority — revisit after Phase 2B)*
 
 #### 2B. Quest & Task System
-**Goal:** Give members clear, actionable tasks that benefit both them and the LLC — completion earns Credit Points that unlock rewards and boost their status in the system.
+**Goal:** Give members clear, actionable tasks that benefit both them and the LLC — completion earns Credit Points that unlock status tiers, better loan terms, and visible badges.
 
 ##### How It Works
 - Members receive quests (tasks) they can complete at their own pace
 - Completing quests earns **Credit Points (CP)** — tracked on their profile
-- Credit Points unlock **status tiers** and perks within the portal
-- Some quests are one-time (e.g. "Open a Fidelity account"), others are recurring (e.g. "Pay on time this month")
-- Admin can create, edit, and assign quests from the admin dashboard
+- **Rolling 3-month window:** Only CP earned in the last 90 days counts toward your active tier. This rewards *ongoing* engagement, not one-time effort.
+- CP determines your **status tier**, which unlocks tangible perks (loan eligibility, voting weight, etc.)
+- **Badges** are separate from CP — they're permanent achievements you collect and display
+- Members choose which badge displays next to their name across the portal
+- Admin can create, edit, assign, and verify quests from the admin dashboard
 - Quest progress is visible on the member's portal dashboard
 
-##### Credit Point Tiers
-| Points | Status | Perks |
-|--------|--------|-------|
-| 0–99 | 🥉 Bronze Member | Base access |
-| 100–249 | 🥈 Silver Member | Priority lending queue, profile badge |
-| 250–499 | 🥇 Gold Member | Higher loan limits, voting weight bonus |
-| 500+ | 💎 Diamond Member | VIP status, featured on leadership page, first access to new benefits |
+##### Credit Point Tiers (Rolling 3-Month Window)
+| 90-Day CP | Status | Tangible Perks |
+|-----------|--------|----------------|
+| 0–99 | 🥉 Bronze Member | Base access, standard loan terms (when lending opens) |
+| 100–249 | 🥈 Silver Member | Priority lending queue, 1.5× loan limit, silver profile ring |
+| 250–499 | 🥇 Gold Member | 2× loan limits, lower interest rate, voting weight bonus, gold profile ring |
+| 500+ | 💎 Diamond Member | Max loan limits, lowest interest rate, first access to new features, diamond profile ring |
+
+> **Why rolling window?** A member who contributed for 12 months but went inactive shouldn't outrank someone actively engaged. The 3-month window keeps everyone incentivized to stay active.
+
+##### Badge System (Permanent Achievements)
+Badges are **permanent** — once earned, they're yours forever. Members pick one badge to display next to their name everywhere in the portal (feed, comments, leaderboard, etc.). All earned badges are visible on their profile page.
+
+| Badge | How to Earn | Icon |
+|-------|-------------|------|
+| 🏅 Founding Member | Joined during year 1 of the LLC | Shield |
+| 📸 Shutterbug | Uploaded a profile picture | Camera |
+| 🔥 Streak Master | 6+ consecutive on-time months | Flame |
+| ⚡ Streak Legend | 12+ consecutive on-time months | Lightning |
+| 🌱 First Seed Witness | Was an active member when $500 milestone was hit | Seedling |
+| 💵 Four Figure Club | Was active when $1,000 milestone was hit | Dollar |
+| 🎯 Quest Champion | Completed 10+ quests total | Target |
+| 🏦 Fidelity Linked | Opened Fidelity account + linked cashback to LLC | Bank |
+| 📚 Credit Scholar | Completed all Credit 101 modules *(Phase 3C)* | Book |
+| 🗳️ Decision Maker | Voted in 5+ family decisions *(future)* | Ballot |
+| 🎂 Birthday VIP | Linked bank for birthday payouts *(Phase 2C)* | Cake |
 
 ##### Example Quests
 | Quest | Description | CP Reward | Type |
 |-------|-------------|-----------|------|
+| ✅ Activate Contribution | Start your monthly subscription | 50 CP | One-time |
+| 📸 Upload Profile Picture | Add a profile photo to your account | 20 CP | One-time |
+| 🎓 Complete Onboarding | Finish all onboarding steps (name, birthday, photo) | 30 CP | One-time |
+| 💰 On-Time Payment | Pay your subscription on time this month | 10 CP | Monthly recurring |
+| 🔥 3-Month Streak | Maintain 3 consecutive on-time months | 25 CP | One-time |
+| ⚡ 6-Month Streak | Maintain 6 consecutive on-time months | 50 CP | One-time |
+| 📈 Increase Contribution | Raise your monthly contribution amount | 30 CP | One-time |
 | 🏦 Open Fidelity Account | Create a personal Fidelity brokerage account | 50 CP | One-time |
-| 💳 Apply for Fidelity Credit Card | Apply for the Fidelity Rewards Visa Signature Card | 50 CP | One-time |
-| 🔗 Link Cashback to LLC | Link your Fidelity credit card cashback to the LLC brokerage account | 100 CP | One-time |
-| 💰 Use Fidelity Card as Primary | Use the Fidelity card as your primary spending card for a full month to maximize cashback contributions | 25 CP | Monthly recurring |
-| 📊 Complete Budget Setup | Set up your personal budget tracker on the portal | 30 CP | One-time |
-| 📈 Credit Score Check-In | Log your credit score update on the portal | 15 CP | Monthly recurring |
-| ✅ On-Time Payment Streak | Pay your subscription on time this month | 10 CP | Monthly recurring |
-| 📚 Complete Credit 101 | Read all Credit 101 modules and pass the quiz | 40 CP | One-time |
-| 🎉 Attend Family Event | RSVP and attend a family event | 20 CP | Per event |
+| 💳 Apply for Fidelity Card | Apply for the Fidelity Rewards Visa Signature Card | 50 CP | One-time |
+| 🔗 Link Cashback to LLC | Link Fidelity card cashback to the LLC brokerage | 100 CP | One-time |
+| 💰 Use Fidelity Card as Primary | Use Fidelity card as primary spending card for a full month | 25 CP | Monthly recurring |
+| 📈 Credit Score Check-In | Log your credit score on the portal | 15 CP | Monthly recurring |
+| 📚 Complete Credit 101 | Finish all Credit 101 modules + quiz *(Phase 3C)* | 40 CP | One-time |
+| 🎉 Attend Family Event | RSVP and attend a family event *(Phase 5A)* | 20 CP | Per event |
 | 👥 Refer a Family Member | Invite and onboard a new family member | 75 CP | Per referral |
+
+> **Note:** Some quests require features from later phases (Credit 101, Events, Social Feed). Those quests will be added to the system when their parent feature launches. The quest/badge infrastructure should support adding new quests at any time.
 
 ##### Fidelity Cashback Quest (Flagship Quest)
 > **Why this matters:** The Fidelity Rewards Visa earns **2% cashback on all purchases** — deposited directly into a Fidelity account. If members link their cashback to the LLC's Fidelity brokerage, every dollar they spend passively grows the family fund. A member spending $2,000/month generates $40/month in extra contributions — automatically.
@@ -211,14 +239,23 @@ Invested into:
 - [ ] Quest detail view with instructions, requirements, and reward info
 - [ ] Quest progress tracking (started, submitted proof, admin verified, completed)
 - [ ] Credit Points balance displayed on portal dashboard and profile
-- [ ] Credit Point history log (earned, spent, reason)
-- [ ] Status tier badge on member profiles (Bronze → Silver → Gold → Diamond)
-- [ ] Admin quest management (create/edit quests, set CP rewards, verify completions)
+- [ ] Credit Point history log (earned, reason, expiry date)
+- [ ] **Rolling 3-month CP calculation** — only last 90 days of CP counts toward active tier
+- [ ] Status tier badge on portal (Bronze → Silver → Gold → Diamond) with profile ring color
+- [ ] **Badge collection page** — view all earned badges, choose which one displays next to your name
+- [ ] Badge display next to member name throughout the portal (nav, feed, comments, etc.)
+- [ ] Admin quest management page (create/edit/delete quests, set CP rewards, set quest type)
+- [ ] Admin quest verification workflow (review proof submissions, approve/deny)
 - [ ] Admin bulk quest assignment (assign a quest to all members or specific groups)
-- [ ] Push notification when a new quest becomes available
+- [ ] Automatic quest completion detection (e.g., auto-detect when member uploads photo, activates subscription, etc.)
 - [ ] Celebration animation when a quest is completed or tier is achieved
-- [ ] Leaderboard — family ranking by Credit Points (optional, can be toggled off)
-- [ ] Database: `quests`, `member_quests`, `credit_points_log` tables
+- [ ] Leaderboard — family ranking by rolling 3-month CP (optional, can be toggled off)
+- [ ] Database: `quests`, `member_quests`, `credit_points_log`, `member_badges` tables
+
+##### Deferred — Requires Later Phases
+- [ ] Push notification when a new quest becomes available *(⏳ Phase 4D — Notifications)*
+- [ ] First Post quest *(⏳ Phase 4A — Social Feed)*
+- [ ] Event attendance quest *(⏳ Phase 5A — Events)*
 
 #### 2C. Birthday Payouts (Automated $10 Gift)
 **Goal:** Every member gets a $10 direct deposit on their birthday — automated, no admin action needed.
@@ -493,6 +530,24 @@ The top navigation bar changes dynamically based on which page the member is on 
 - [ ] Read receipts
 - [ ] Optional: Group chats
 
+##### Snapchat-Style Message Streams
+> **Concept:** Ephemeral, casual messaging that feels more like Snapchat than email. Messages auto-disappear after being viewed (or after 24 hours), encouraging frequent, low-pressure communication between family members.
+
+- [ ] Ephemeral messages — auto-delete after recipient views them (configurable: after view / 24h / 7d)
+- [ ] "Snap" button — quick photo/video message with optional caption
+- [ ] Story-style feature — post a 24-hour story visible to all family members
+- [ ] Story viewers list (who saw your story)
+- [ ] Message streaks — track consecutive days of messaging between two members (🔥 streak counter)
+- [ ] Streak milestone celebrations (7-day, 30-day, 100-day streaks)
+- [ ] Bitmoji-style family avatars (or custom emoji based on profile pic)
+- [ ] Quick reactions to snaps (❤️ 😂 🔥 😮 without needing to type)
+- [ ] Screenshot notification ("[Name] screenshotted your message!")
+- [ ] Archive option — save important messages before they disappear
+- [ ] Database: `ephemeral_messages` table (sender_id, receiver_id, content, media_url, expires_at, viewed_at, type)
+- [ ] Database: `stories` table (author_id, media_url, caption, created_at, expires_at)
+- [ ] Database: `story_views` table (story_id, viewer_id, viewed_at)
+- [ ] Database: `message_streaks` table (user_a_id, user_b_id, current_streak, longest_streak, last_message_at)
+
 #### 4D. Push & Text Notifications
 - [ ] Push notifications (web push via service workers)
 - [ ] SMS/text notifications via **Twilio** (or similar)
@@ -504,6 +559,26 @@ The top navigation bar changes dynamically based on which page the member is on 
   - Milestone reached
   - Loan status updates
   - Subscription reminders
+
+#### 4E. Family Location Map (GPS)
+> **Concept:** An opt-in family map where members can share their live or last-known location — like Find My Friends, but built into the family portal. Great for safety, coordination, and just knowing where everyone is.
+
+- [ ] Opt-in location sharing (must explicitly enable — off by default)
+- [ ] Interactive map using **Leaflet.js** (free, open-source) + **OpenStreetMap** tiles
+- [ ] Member pins on the map with profile picture avatars
+- [ ] Location accuracy levels: **Precise** (exact), **City-level** (approximate), **Off**
+- [ ] Last updated timestamp per member
+- [ ] "Check In" button — manually share current location without continuous tracking
+- [ ] Location history (optional — see where family members have checked in over time)
+- [ ] Geofence alerts (optional — "[Name] arrived at [Place]")
+- [ ] Browser Geolocation API for web; future: native app with background location
+- [ ] Privacy controls per member: who can see your location (all family / specific members / no one)
+- [ ] Admin can see all opted-in members on a single map
+- [ ] Mobile-optimized: full-screen map with bottom sheet for member list
+- [ ] Database: `member_locations` table (user_id, latitude, longitude, accuracy, updated_at, sharing_level)
+- [ ] Database: `location_checkins` table (user_id, latitude, longitude, place_name, created_at)
+
+> **Note:** This feature uses the browser's Geolocation API (no cost). Map tiles from OpenStreetMap are free. Leaflet.js is a lightweight, mobile-friendly map library. For a native-app feel later, this can be upgraded to Mapbox GL JS (free tier: 50k map loads/month).
 
 ---
 
@@ -718,8 +793,9 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 | 3D | Budget Tracker + AI Coach | 🔴 High | High | OpenAI API, CSV parsing |
 | 4A | Social Feed | 🟡 Medium | Medium | Supabase storage for media |
 | 4B | Member Profiles | 🟡 Medium | Medium | Profile pics storage |
-| 4C | Private Messaging | 🟡 Medium | Medium-High | Supabase Realtime |
+| 4C | Private Messaging + Snaps | 🟡 Medium | Medium-High | Supabase Realtime |
 | 4D | Notifications | 🟡 Medium | Medium | Twilio account, service workers |
+| 4E | Family Location Map | 🟡 Medium | Medium | Leaflet.js, browser Geolocation API |
 | 5A | Events System | 🟡 Medium | Medium | Notification system (Phase 4D) |
 | 5B | Vacation Events | 🟡 Medium | High | Events system, payment processing |
 | 6 | Family Gallery | 🟡 Medium | Medium | Storage solution |
@@ -768,7 +844,8 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 - `notifications` table (user_id, type, content, read, created_at)
 - `quests` table (title, description, cp_reward, quest_type, is_recurring, instructions, created_by)
 - `member_quests` table (quest_id, user_id, status, proof_url, verified_by, completed_at)
-- `credit_points_log` table (user_id, points, reason, quest_id, created_at)
+- `credit_points_log` table (user_id, points, reason, quest_id, created_at, expires_at)
+- `member_badges` table (user_id, badge_key, earned_at, is_displayed)
 - `credit_modules` table (title, slug, content, order, quiz_data)
 - `member_module_progress` table (user_id, module_id, completed, quiz_score, completed_at)
 - `credit_score_log` table (user_id, score, source, logged_at)
@@ -819,20 +896,21 @@ The LLC sustains itself through:
 ### Phase 4 (Family Social Hub)
 15. **Phase 4A — Social Feed & Announcements** — posts, likes, comments, context-aware mobile header
 16. **Phase 4B — Member Profiles (Instagram-style)** — cover photos, posts grid, stats, badges
-17. **Phase 4C — Private Messaging (DMs)** — one-on-one real-time messaging
+17. **Phase 4C — Private Messaging + Snaps** — one-on-one DMs, Snapchat-style ephemeral messages, stories, message streaks
 18. **Phase 4D — Push & Text Notifications** — web push, Twilio SMS, notification preferences
-19. ⏳ **Pick up deferred items** — social feed posts for milestones/birthdays, push notifications for milestones, perk badges on profiles, admin custom milestones
+19. **Phase 4E — Family Location Map (GPS)** — opt-in location sharing, Leaflet.js map, check-ins, privacy controls
+20. ⏳ **Pick up deferred items** — social feed posts for milestones/birthdays, push notifications for milestones, perk badges on profiles, admin custom milestones
 
 ### Phase 5 (Events & Family Activities)
-20. **Phase 5A — Events System** — create events, RSVP, reminders, event comments
-21. **Phase 5B — Vacation / Trip Events** — deposit requirement, trip pot, expense breakdown
+21. **Phase 5A — Events System** — create events, RSVP, reminders, event comments
+22. **Phase 5B — Vacation / Trip Events** — deposit requirement, trip pot, expense breakdown
 
 ### Phase 6+
-22. **Phase 6 — Family Gallery** — photo/video uploads, albums, tagging, "On This Day"
-23. **Phase 7 — Trust Formation** — estate attorney, trust agreement, succession plan
-24. **Phase 8 — Family Lending Program** — loan applications, repayment tracking ($50k milestone)
-25. **Phase 9 — Member Benefits** — vehicle program ($250k), life insurance, scholarships
-26. **Phase 10 — Family Compound** — real estate acquisition ($500k+ milestone)
+23. **Phase 6 — Family Gallery** — photo/video uploads, albums, tagging, "On This Day"
+24. **Phase 7 — Trust Formation** — estate attorney, trust agreement, succession plan
+25. **Phase 8 — Family Lending Program** — loan applications, repayment tracking ($50k milestone)
+26. **Phase 9 — Member Benefits** — vehicle program ($250k), life insurance, scholarships
+27. **Phase 10 — Family Compound** — real estate acquisition ($500k+ milestone)
 
 ---
 
@@ -845,7 +923,7 @@ This roadmap is a **living document**. It will be updated as:
 - The fund grows and new possibilities open up
 - Members provide feedback and suggestions
 
-**Last Updated:** March 8, 2026
+**Last Updated:** July 17, 2025
 **Maintained By:** Justin McNeal (Admin)
 
 ---

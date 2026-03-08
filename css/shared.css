@@ -225,6 +225,23 @@ body {
     padding-top: 0.75rem;
 }
 
+/* ─── Mobile date input fix ─── */
+input[type="date"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    max-width: 100%;
+    min-height: 48px;
+    box-sizing: border-box;
+}
+@supports (-webkit-touch-callout: none) {
+    /* iOS Safari: prevent date picker from overflowing */
+    input[type="date"] {
+        position: relative;
+        overflow: hidden;
+    }
+}
+
 /* ─── Milestone celebration toast ─── */
 .milestone-toast {
     position: fixed;

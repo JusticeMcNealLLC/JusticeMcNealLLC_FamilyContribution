@@ -157,7 +157,10 @@
                             type="date" 
                             id="birthday" 
                             required
-                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm"
+                            min="1920-01-01"
+                            max="2012-12-31"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm appearance-none"
+                            style="max-width: 100%; box-sizing: border-box;"
                         >
                     </div>
                     <div id="birthdayError" class="text-red-600 text-sm hidden"></div>
