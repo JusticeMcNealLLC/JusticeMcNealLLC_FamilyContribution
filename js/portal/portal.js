@@ -62,6 +62,9 @@ async function loadDashboard(user) {
     // Load next milestone card (non-blocking)
     loadNextMilestone();
 
+    // Load CP status card (non-blocking)
+    loadCPStatus(user.id);
+
     // Show/hide elements based on subscription status
     updateDashboardUI(subscription);
 }
@@ -314,5 +317,49 @@ async function loadNextMilestone() {
         });
     } catch (err) {
         console.error('Error loading next milestone:', err);
+    }
+}
+
+async function loadCPStatus(userId) {
+    try {
+        // Only load if quests config is available
+        if (typeof getCPTier !== 'function') return;
+
+        const { data: cpBalance } = await supabaseClient
+            .rpc('get_member_cp_balance', { target_user_id: userId });
+
+        const points = cpBalance || 0;
+        const tier = getCPTier(points);
+        const next = getNextCPTier(points);
+        const progress = getCPProgress(points);
+
+        const card      = document.getElementById('cpStatusCard');
+        const iconEl    = document.getElementById('cpTierIcon');
+        const nameEl    = document.getElementById('cpTierName');
+        const pointsEl  = document.getElementById('cpTierPoints');
+        const barEl     = document.getElementById('cpTierBar');
+        const nextInfo  = document.getElementById('cpTierNextInfo');
+
+        if (!card) return;
+
+        if (iconEl)   iconEl.textContent = tier.emoji;
+        if (nameEl)   nameEl.textContent = tier.name;
+        if (pointsEl) pointsEl.textContent = `${points} CP`;
+        if (nextInfo) {
+            nextInfo.textContent = next
+                ? `${next.minCP - points} CP to ${next.name}`
+                : 'Max tier reached!';
+        }
+
+        card.classList.remove('hidden');
+
+        // Animate bar
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                if (barEl) barEl.style.width = progress + '%';
+            });
+        });
+    } catch (err) {
+        console.error('Error loading CP status:', err);
     }
 }
