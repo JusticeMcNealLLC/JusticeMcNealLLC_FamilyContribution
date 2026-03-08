@@ -172,9 +172,9 @@ function setupNavigation() {
 
     // Step 4: Contribution
     setupContributionStep();
-    document.getElementById('contributionBackBtn').addEventListener('click', () => prevStep());
-    document.getElementById('startContributionBtn').addEventListener('click', () => handleStartContribution());
-    document.getElementById('contributionSkipBtn').addEventListener('click', () => finishOnboarding());
+    document.getElementById('contributionBackBtn')?.addEventListener('click', () => prevStep());
+    document.getElementById('startContributionBtn')?.addEventListener('click', () => handleStartContribution());
+    document.getElementById('contributionSkipBtn')?.addEventListener('click', () => finishOnboarding());
 
     // Step 5: Done
     document.getElementById('goToDashboardBtn').addEventListener('click', () => {

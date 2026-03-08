@@ -8,12 +8,13 @@ function setupContributionStep() {
     // If member already has an active subscription (e.g. after onboarding reset),
     // replace the amount picker with a "current plan" summary
     if (existingSubscription) {
-        const stepEl = document.querySelector('[data-step="4"]');
-        if (stepEl) {
-            const amountDisplay = existingSubscription.current_amount_cents
-                ? '$' + (existingSubscription.current_amount_cents / 100).toFixed(0)
-                : '';
-            stepEl.querySelector('.bg-white').innerHTML = `
+        const contentEl = document.getElementById('contributionStepContent');
+        if (!contentEl) return;
+
+        const amountDisplay = existingSubscription.current_amount_cents
+            ? '$' + (existingSubscription.current_amount_cents / 100).toFixed(0)
+            : '';
+        contentEl.innerHTML = `
                 <div class="text-center mb-6">
                     <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-4">
                         <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -36,9 +37,8 @@ function setupContributionStep() {
                 </div>
             `;
             // Wire up the new buttons
-            stepEl.querySelector('#contributionBackBtn').addEventListener('click', () => prevStep());
-            stepEl.querySelector('#keepPlanBtn').addEventListener('click', () => finishOnboarding());
-        }
+            contentEl.querySelector('#contributionBackBtn').addEventListener('click', () => prevStep());
+            contentEl.querySelector('#keepPlanBtn').addEventListener('click', () => finishOnboarding());
         return;
     }
 
