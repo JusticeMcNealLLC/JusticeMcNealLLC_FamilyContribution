@@ -148,6 +148,11 @@ Invested into:
 ##### Features to Build
 - [x] Milestones page on the portal (visual roadmap with progress bars)
 - [x] Current asset level indicator with animated progress to next tier
+- [ ] **Expandable milestone detail cards** — tap/press a milestone to expand and see:
+  - What the perk/feature unlocks in detail
+  - Requirements and what counts toward the threshold
+  - Estimated timeline to reach it (based on current contribution pace)
+  - "What's included" breakdown (e.g., lending terms, event budget, etc.)
 - [ ] Animated celebration when a new milestone is reached (confetti, toast notification)
 - [ ] Milestone history timeline (when each tier was achieved)
 - [ ] Push notification to all members when a milestone is hit
@@ -382,6 +387,28 @@ Invested into:
 **Goal:** Make the portal more than finances — make it the family's digital home.
 
 #### 4A. Social Feed & Announcements
+
+> **Big Picture:** Home becomes the **Feed** — the first thing members see when they open the app. Posts, announcements, milestones, and family updates all in one scrollable timeline. The portal transforms from a finance tool into a living family hub.
+
+##### Context-Aware Mobile Header
+The top navigation bar changes dynamically based on which page the member is on — similar to Instagram's per-page header pattern:
+
+| Page | Left | Center | Right |
+|------|------|--------|-------|
+| **Home (Feed)** | Logo / "JM" | "Family Feed" | ➕ New Post, ❤️ Notifications |
+| **History** | Logo | "History" | Filter icon |
+| **Goals (Milestones)** | Logo | "Milestones" | — |
+| **Invest** | Logo | "Portfolio" | — |
+| **Profile / Settings** | Back arrow | "Profile" | ⚙️ Settings gear |
+
+- [ ] Context-aware mobile top nav (dynamic icons/actions per page)
+- [ ] Home page becomes the social feed (replaces current dashboard)
+- [ ] New Post button (➕) in header opens post composer
+- [ ] Notifications bell/heart icon with unread badge
+- [ ] Profile page accessible via bottom tab avatar (replaces current settings link)
+- [ ] Settings accessible from profile page gear icon
+
+##### Feed Features
 - [ ] Admin announcements section (pinned to top of feed)
 - [ ] Milestone celebrations (auto-generated: "The family just hit $10,000 in total investments! 🎉")
 - [ ] Social feed — members can post text, images, and videos
