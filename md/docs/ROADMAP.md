@@ -886,13 +886,14 @@ The LLC sustains itself through:
 ### 🔧 Up Next — Phase 2 (Milestones, Perks & Quests)
 8. ✅ **Phase 2A wrap-up** — Animated milestone celebration (confetti + toast), milestone history timeline
 9. ✅ **Phase 2B — Quest & Task System** — Quest board, Credit Points, status tiers (Bronze → Diamond), badge collection, auto-detection engine, admin quest management, proof review workflow
-10. **Phase 2C — Birthday Payouts** — Stripe Connect Express, automated $10 birthday deposits, bank linking flow
+10. ✅ **Brand Splash Screen & Logo Management** — Animated splash page with logo, floating orbs, progress bar, auth-aware redirect; admin brand settings page with transparent/solid logo upload
+11. **Phase 2C — Birthday Payouts** — Stripe Connect Express, automated $10 birthday deposits, bank linking flow
 
 ### Phase 3 (Family Structure, Identity & Education)
-11. **Phase 3A — Meet the Team / Leadership page** — roles, bios, org chart, role badges
-12. **Phase 3B — Family Tree** — interactive tree visualization, relationships, multi-generational
-13. **Phase 3C — Credit 101 Education Hub** — learning modules, quizzes, score tracking
-14. **Phase 3D — Budget Tracker + AI Coach** — bank statement import, categorization, spending analysis, OpenAI chat
+12. **Phase 3A — Meet the Team / Leadership page** — roles, bios, org chart, role badges
+13. **Phase 3B — Family Tree** — interactive tree visualization, relationships, multi-generational
+14. **Phase 3C — Credit 101 Education Hub** — learning modules, quizzes, score tracking
+15. **Phase 3D — Budget Tracker + AI Coach** — bank statement import, categorization, spending analysis, OpenAI chat
 
 ### Phase 4 (Family Social Hub)
 15. **Phase 4A — Social Feed & Announcements** — posts, likes, comments, context-aware mobile header
@@ -924,7 +925,7 @@ This roadmap is a **living document**. It will be updated as:
 - The fund grows and new possibilities open up
 - Members provide feedback and suggestions
 
-**Last Updated:** March 8, 2026
+**Last Updated:** March 9, 2026
 **Maintained By:** Justin McNeal (Admin)
 
 ---

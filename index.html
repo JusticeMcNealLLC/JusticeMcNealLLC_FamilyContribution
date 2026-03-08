@@ -2,11 +2,201 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Justice McNeal LLC</title>
-    <meta http-equiv="refresh" content="0; url=auth/login.html">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* ─── Splash Animations ─── */
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Background gradient orbs */
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0;
+            animation: orbAppear 1.2s ease-out forwards;
+        }
+        .bg-orb-1 {
+            width: 360px; height: 360px;
+            background: radial-gradient(circle, rgba(99,102,241,0.35), transparent 70%);
+            top: -80px; right: -80px;
+            animation-delay: 0.2s;
+        }
+        .bg-orb-2 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(129,140,248,0.25), transparent 70%);
+            bottom: -60px; left: -60px;
+            animation-delay: 0.4s;
+        }
+        .bg-orb-3 {
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(165,180,252,0.2), transparent 70%);
+            top: 40%; left: 10%;
+            animation-delay: 0.6s;
+        }
+        @keyframes orbAppear {
+            from { opacity: 0; transform: scale(0.6); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Logo container entrance */
+        .splash-logo-wrap {
+            opacity: 0;
+            transform: scale(0.5) translateY(20px);
+            animation: logoEntrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
+        }
+        @keyframes logoEntrance {
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Glow ring behind logo */
+        .logo-glow {
+            position: absolute;
+            inset: -20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%);
+            opacity: 0;
+            animation: glowPulse 2s ease-in-out 0.8s infinite;
+        }
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.08); }
+        }
+
+        /* Brand name reveal */
+        .brand-name {
+            opacity: 0;
+            transform: translateY(16px);
+            animation: textReveal 0.6s ease-out 0.9s forwards;
+        }
+        @keyframes textReveal {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Tagline */
+        .brand-tagline {
+            opacity: 0;
+            transform: translateY(12px);
+            animation: textReveal 0.6s ease-out 1.2s forwards;
+        }
+
+        /* Progress bar */
+        .splash-progress {
+            opacity: 0;
+            animation: textReveal 0.5s ease-out 1.5s forwards;
+        }
+        .splash-progress-bar {
+            height: 3px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #6366f1, #818cf8, #a5b4fc);
+            background-size: 200% 100%;
+            animation: shimmerBar 1.5s ease-in-out infinite;
+            width: 0%;
+            transition: width 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes shimmerBar {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Page exit */
+        .splash-exit {
+            animation: splashExit 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+        }
+        @keyframes splashExit {
+            to {
+                opacity: 0;
+                transform: scale(1.05);
+                filter: blur(8px);
+            }
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            background: rgba(99,102,241,0.3);
+            opacity: 0;
+            animation: particleFloat 3s ease-in-out infinite;
+        }
+        @keyframes particleFloat {
+            0% { opacity: 0; transform: translateY(0) scale(0); }
+            20% { opacity: 0.6; transform: translateY(-20px) scale(1); }
+            100% { opacity: 0; transform: translateY(-80px) scale(0.3); }
+        }
+    </style>
 </head>
-<body>
-    <p>Redirecting to <a href="auth/login.html">login</a>...</p>
+<body class="min-h-screen flex items-center justify-center overflow-hidden relative" style="background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #e0e7ff 100%);">
+
+    <!-- Floating orbs -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <!-- Particles -->
+    <div id="particles" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+
+    <!-- Splash content -->
+    <div id="splashContent" class="flex flex-col items-center text-center px-6 relative z-10">
+
+        <!-- Logo -->
+        <div class="splash-logo-wrap relative mb-8">
+            <div class="logo-glow"></div>
+            <div id="logoContainer" class="relative w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 flex items-center justify-center shadow-2xl shadow-brand-300/50">
+                <span id="logoFallback" class="text-white font-black text-4xl sm:text-5xl tracking-tight select-none">JM</span>
+                <img id="logoImage" class="hidden absolute inset-0 w-full h-full object-contain rounded-3xl p-2" alt="Justice McNeal LLC" />
+            </div>
+        </div>
+
+        <!-- Brand name -->
+        <h1 class="brand-name text-3xl sm:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+            Justice McNeal
+            <span class="block text-brand-600">LLC</span>
+        </h1>
+
+        <!-- Tagline -->
+        <p class="brand-tagline text-gray-500 text-sm sm:text-base mt-3 max-w-xs">
+            Building generational wealth, one contribution at a time
+        </p>
+
+        <!-- Progress indicator -->
+        <div class="splash-progress mt-10 w-48">
+            <div class="bg-brand-100 rounded-full overflow-hidden">
+                <div id="progressBar" class="splash-progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase + splash JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/splash.js"></script>
 </body>
 </html>

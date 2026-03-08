@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Brand Settings | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="admin" data-active-page="brand">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
+
+        <!-- Back -->
+        <a href="index.html" class="inline-flex items-center text-sm text-gray-500 hover:text-brand-600 mb-6 transition">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            Admin Hub
+        </a>
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Brand Settings</h1>
+            <p class="text-gray-500 mt-1 text-sm sm:text-base">Manage the brand logo shown on the splash screen and throughout the portal</p>
+        </div>
+
+        <!-- Toast -->
+        <div id="toast" class="hidden fixed top-4 right-4 z-50 bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium fade-in">
+            Saved successfully
+        </div>
+
+        <!-- Logo Upload Cards -->
+        <div class="space-y-6">
+
+            <!-- Transparent Logo -->
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h2 class="font-bold text-gray-900 text-lg">Transparent Logo</h2>
+                        <p class="text-sm text-gray-500 mt-0.5">PNG with transparent background — used on the splash screen animation</p>
+                    </div>
+                    <span class="text-xs font-medium bg-brand-100 text-brand-700 px-2.5 py-1 rounded-full">Primary</span>
+                </div>
+
+                <!-- Preview -->
+                <div id="transparentPreview" class="mb-4 flex items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 h-48 overflow-hidden transition-all">
+                    <div id="transparentPlaceholder" class="text-center">
+                        <svg class="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <p class="text-sm text-gray-400">No logo uploaded</p>
+                    </div>
+                    <img id="transparentImg" class="hidden max-h-44 object-contain" alt="Transparent Logo" />
+                </div>
+
+                <!-- Checkerboard toggle for transparent preview -->
+                <div class="flex items-center justify-between mb-4">
+                    <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                        <input type="checkbox" id="checkerToggle" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500" checked>
+                        Show transparency grid
+                    </label>
+                    <span id="transparentSize" class="text-xs text-gray-400"></span>
+                </div>
+
+                <!-- Upload -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="file" id="transparentFile" accept="image/png" class="hidden">
+                        <div class="flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-5 py-3 rounded-xl transition w-full">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            Upload PNG
+                        </div>
+                    </label>
+                    <button id="removeTransparent" class="hidden text-sm font-medium text-red-600 hover:text-red-700 px-4 py-3 rounded-xl border border-red-200 hover:bg-red-50 transition">
+                        Remove
+                    </button>
+                </div>
+            </div>
+
+            <!-- Solid Background Logo -->
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h2 class="font-bold text-gray-900 text-lg">Solid Logo</h2>
+                        <p class="text-sm text-gray-500 mt-0.5">Logo with solid background — used on cards, social previews, and fallbacks</p>
+                    </div>
+                    <span class="text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">Secondary</span>
+                </div>
+
+                <!-- Preview -->
+                <div id="solidPreview" class="mb-4 flex items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 h-48 overflow-hidden transition-all">
+                    <div id="solidPlaceholder" class="text-center">
+                        <svg class="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <p class="text-sm text-gray-400">No logo uploaded</p>
+                    </div>
+                    <img id="solidImg" class="hidden max-h-44 object-contain" alt="Solid Logo" />
+                </div>
+
+                <div class="flex justify-end mb-4">
+                    <span id="solidSize" class="text-xs text-gray-400"></span>
+                </div>
+
+                <!-- Upload -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="file" id="solidFile" accept="image/png,image/jpeg,image/webp" class="hidden">
+                        <div class="flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-900 text-white font-semibold text-sm px-5 py-3 rounded-xl transition w-full">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            Upload Image
+                        </div>
+                    </label>
+                    <button id="removeSolid" class="hidden text-sm font-medium text-red-600 hover:text-red-700 px-4 py-3 rounded-xl border border-red-200 hover:bg-red-50 transition">
+                        Remove
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="bg-brand-50/50 border border-brand-100 rounded-2xl p-5">
+                <h3 class="font-semibold text-brand-900 text-sm mb-2">💡 Logo Tips</h3>
+                <ul class="text-sm text-brand-800/80 space-y-1.5">
+                    <li>• <strong>Transparent:</strong> Use a .PNG with alpha channel — looks best on the animated splash</li>
+                    <li>• <strong>Solid:</strong> Use any image format (PNG, JPG, WebP) with a solid background color</li>
+                    <li>• <strong>Size:</strong> Recommended 512×512 or larger for crisp rendering on all devices</li>
+                    <li>• <strong>Splash screen</strong> will prefer the transparent logo, falling back to solid if not uploaded</li>
+                </ul>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/components/pageShell.js"></script>
+    <script src="../js/auth/shared.js"></script>
+    <script src="../js/admin/brand.js"></script>
+</body>
+</html>
