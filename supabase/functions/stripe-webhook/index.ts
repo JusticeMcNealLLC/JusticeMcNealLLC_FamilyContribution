@@ -82,10 +82,82 @@ serve(async (req) => {
 
 // Handler: Checkout session completed
 async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.Session) {
-  console.log('Checkout completed:', session.id)
-  
-  // The subscription.created event will handle the actual subscription creation
-  // This is just for logging/confirmation
+  console.log('Checkout completed:', session.id, 'mode:', session.mode)
+
+  // For subscription checkouts, the subscription.created event handles things
+  if (session.mode === 'subscription') {
+    console.log('Subscription checkout — handled by subscription.created event')
+    return
+  }
+
+  // Handle one-time payment (extra deposit)
+  if (session.mode === 'payment') {
+    const paymentType = session.metadata?.payment_type
+    console.log('One-time payment checkout, type:', paymentType)
+
+    if (paymentType !== 'extra_deposit') {
+      console.log('Unknown one-time payment type, skipping')
+      return
+    }
+
+    // Get user ID from metadata or customer
+    let userId = session.metadata?.supabase_user_id
+    if (!userId && session.customer) {
+      userId = await getUserIdFromCustomer(supabase, session.customer as string)
+    }
+    if (!userId) {
+      console.error('Could not identify user for extra deposit session:', session.id)
+      return
+    }
+
+    // Retrieve fee data from the payment intent → charge → balance_transaction
+    const amountPaid = session.amount_total || 0
+    let stripeFee = 0
+    let netAmount = amountPaid
+
+    try {
+      if (session.payment_intent) {
+        const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent as string, {
+          expand: ['latest_charge.balance_transaction'],
+        })
+        const charge = paymentIntent.latest_charge as Stripe.Charge
+        if (charge && typeof charge === 'object') {
+          const bt = charge.balance_transaction as Stripe.BalanceTransaction
+          if (bt && typeof bt === 'object') {
+            stripeFee = bt.fee || 0
+            netAmount = bt.net || (amountPaid - stripeFee)
+            console.log(`Extra deposit ${session.id}: gross=${amountPaid}, fee=${stripeFee}, net=${netAmount}`)
+          }
+        }
+      }
+    } catch (feeErr) {
+      console.error('Error retrieving extra deposit fee data (non-fatal):', feeErr)
+      netAmount = amountPaid
+    }
+
+    // Store as an invoice record using the payment_intent ID as the unique key
+    const stripeInvoiceId = (session.payment_intent as string) || `ed_${session.id}`
+
+    const { error } = await supabase.from('invoices').upsert({
+      user_id: userId,
+      stripe_invoice_id: stripeInvoiceId,
+      amount_paid_cents: amountPaid,
+      stripe_fee_cents: stripeFee,
+      net_amount_cents: netAmount,
+      status: 'paid',
+      hosted_invoice_url: null,
+      invoice_pdf: null,
+      created_at: new Date().toISOString(),
+    }, {
+      onConflict: 'stripe_invoice_id',
+    })
+
+    if (error) {
+      console.error('Error inserting extra deposit invoice:', error)
+    } else {
+      console.log('Extra deposit recorded for user:', userId, 'amount:', amountPaid)
+    }
+  }
 }
 
 // Handler: Subscription created

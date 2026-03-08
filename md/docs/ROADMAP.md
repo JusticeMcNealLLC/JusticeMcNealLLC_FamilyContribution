@@ -78,7 +78,7 @@ Invested into:
 > **Recommended Approach:** Start with **manual admin entry** (simple form to update balances/allocations monthly). Explore **Plaid** integration later as the fund grows. Plaid connects to Fidelity and can pull holdings, balances, and transactions programmatically.
 
 #### 1B. One-Time / Manual Deposits
-- [ ] "Extra Deposit" feature — members can make a one-time contribution outside of their subscription
+- [x] "Extra Deposit" feature — members can make a one-time contribution outside of their subscription
 - [x] Admin-initiated manual deposit recording (for transfers like moving personal investments into the LLC account)
 - [x] Transaction log showing both Stripe subscription payments AND manual deposits
 - [x] Proper attribution — each manual deposit is tagged to the correct member with date and notes

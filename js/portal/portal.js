@@ -16,9 +16,20 @@ function checkForSuccess() {
     const urlParams = new URLSearchParams(window.location.search);
     const successBanner = document.getElementById('successBanner');
     const closeBtn = document.getElementById('closeSuccessBanner');
+    const successMessage = document.getElementById('successMessage');
+    const successSubtext = document.getElementById('successSubtext');
     
-    if (urlParams.get('success') === 'true' && successBanner) {
+    const isSuccess = urlParams.get('success') === 'true';
+    const isExtraDeposit = urlParams.get('extra_deposit') === 'true';
+
+    if ((isSuccess || isExtraDeposit) && successBanner) {
         successBanner.classList.remove('hidden');
+
+        // Customize message for extra deposit
+        if (isExtraDeposit) {
+            if (successMessage) successMessage.textContent = 'Extra deposit received!';
+            if (successSubtext) successSubtext.textContent = 'Your one-time contribution has been processed. Thank you!';
+        }
         
         // Remove the parameter from URL without refresh
         const newUrl = window.location.pathname;
