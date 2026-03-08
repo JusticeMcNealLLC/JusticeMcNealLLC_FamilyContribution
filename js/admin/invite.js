@@ -61,7 +61,7 @@ async function loadAllSections() {
         // Get all profiles with subscription info
         const { data: profiles, error: profileError } = await supabaseClient
             .from('profiles')
-            .select('id, email, role, is_active, setup_completed, created_at')
+            .select('id, email, role, is_active, setup_completed, first_name, last_name, created_at')
             .eq('is_active', true)
             .order('created_at', { ascending: false });
 
@@ -83,7 +83,7 @@ async function loadAllSections() {
         }
 
         // Categorize users
-        const pending = [];      // setup_completed = false (haven't set password)
+        const pending = [];      // setup_completed = false AND never filled profile (truly new invite)
         const awaiting = [];     // setup_completed = true but no active subscription
         const active = [];       // has active/trialing subscription
 
@@ -93,13 +93,17 @@ async function loadAllSections() {
 
             const sub = subsByUser[profile.id];
             const hasActiveSub = sub && (sub.status === 'active' || sub.status === 'trialing');
+            const hasProfileData = !!(profile.first_name && profile.last_name);
 
-            if (!profile.setup_completed) {
+            if (!profile.setup_completed && !hasProfileData && !sub) {
+                // Truly fresh invite — never filled out profile, no subscription history
                 pending.push(profile);
-            } else if (!hasActiveSub) {
-                awaiting.push({ ...profile, subscription: sub });
-            } else {
+            } else if (hasActiveSub) {
+                // Active subscriber (may be re-onboarding if setup_completed is false)
                 active.push({ ...profile, subscription: sub });
+            } else {
+                // Onboarded but no active subscription (may be re-onboarding)
+                awaiting.push({ ...profile, subscription: sub });
             }
         });
 
@@ -174,6 +178,7 @@ function renderAwaitingSubscription(users) {
                 <td class="px-5 py-3.5 text-sm text-gray-900">${user.email}</td>
                 <td class="px-5 py-3.5 text-sm text-gray-500">${formatDate(user.created_at)}</td>
                 <td class="px-5 py-3.5 whitespace-nowrap">
+                    ${!user.setup_completed ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 mr-2">Re-onboarding</span>' : ''}
                     <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-sm font-medium whitespace-nowrap">Reset Onboarding</button>
                 </td>
             </tr>
@@ -187,7 +192,10 @@ function renderAwaitingSubscription(users) {
                     <div class="text-sm font-medium text-gray-900 truncate">${user.email}</div>
                     <div class="text-xs text-gray-400 mt-0.5">Signed up ${formatDate(user.created_at)}</div>
                 </div>
-                <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-xs font-semibold px-3 py-1.5 bg-amber-50 rounded-lg flex-shrink-0">Reset</button>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    ${!user.setup_completed ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">Re-onboarding</span>' : ''}
+                    <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-xs font-semibold px-3 py-1.5 bg-amber-50 rounded-lg flex-shrink-0">Reset</button>
+                </div>
             </div>
         `).join('');
     }
@@ -233,6 +241,7 @@ function renderActiveMembers(users) {
                     </span>
                 </td>
                 <td class="px-5 py-3.5 whitespace-nowrap">
+                    ${!user.setup_completed ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 mr-2">Re-onboarding</span>' : ''}
                     <button onclick="resetOnboarding('${user.id}', '${user.email}')" class="text-amber-600 hover:text-amber-700 text-sm font-medium whitespace-nowrap">Reset Onboarding</button>
                 </td>
             </tr>
@@ -251,6 +260,7 @@ function renderActiveMembers(users) {
                     </div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
+                    ${!user.setup_completed ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">Re-onboarding</span>' : ''}
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusClasses(user.subscription?.status)}">
                         ${user.subscription?.status || 'Unknown'}
                     </span>

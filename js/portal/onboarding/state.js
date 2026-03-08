@@ -7,6 +7,7 @@ let activeSteps = [...ALL_STEPS]; // filtered at init based on existing data
 let currentStep = 0;
 let currentUser = null;
 let selectedAmount = null;
+let existingSubscription = null; // populated if member already has active sub
 
 // Collected profile data
 const profileData = {

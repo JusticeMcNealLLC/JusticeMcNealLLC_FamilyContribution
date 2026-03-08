@@ -5,6 +5,43 @@
 // ══════════════════════════════════════════
 
 function setupContributionStep() {
+    // If member already has an active subscription (e.g. after onboarding reset),
+    // replace the amount picker with a "current plan" summary
+    if (existingSubscription) {
+        const stepEl = document.querySelector('[data-step="4"]');
+        if (stepEl) {
+            const amountDisplay = existingSubscription.current_amount_cents
+                ? '$' + (existingSubscription.current_amount_cents / 100).toFixed(0)
+                : '';
+            stepEl.querySelector('.bg-white').innerHTML = `
+                <div class="text-center mb-6">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <h2 class="text-xl font-extrabold text-gray-900 tracking-tight">Subscription active</h2>
+                    <p class="text-gray-500 text-sm mt-1">You already have an active contribution</p>
+                </div>
+                <div class="bg-emerald-50 rounded-xl p-5 mb-5 border border-emerald-200 text-center">
+                    <p class="text-sm text-emerald-700 font-medium">Current plan</p>
+                    <p class="text-3xl font-extrabold text-emerald-800 mt-1">${amountDisplay}<span class="text-base font-semibold text-emerald-600">/mo</span></p>
+                </div>
+                <p class="text-xs text-gray-400 text-center mb-5">You can change your amount anytime from the portal settings.</p>
+                <div class="flex gap-3">
+                    <button type="button" id="contributionBackBtn" class="flex-1 bg-surface-100 hover:bg-surface-200 text-gray-700 font-semibold py-3 px-4 rounded-xl transition text-sm">
+                        Back
+                    </button>
+                    <button type="button" id="keepPlanBtn" class="flex-[2] bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 px-4 rounded-xl transition text-sm shadow-sm shadow-brand-200">
+                        Continue
+                    </button>
+                </div>
+            `;
+            // Wire up the new buttons
+            stepEl.querySelector('#contributionBackBtn').addEventListener('click', () => prevStep());
+            stepEl.querySelector('#keepPlanBtn').addEventListener('click', () => finishOnboarding());
+        }
+        return;
+    }
+
     const presetBtns = document.querySelectorAll('.amount-preset-btn');
     const customWrapper = document.getElementById('customAmountWrapper');
     const customInput = document.getElementById('contributionCustomAmount');
