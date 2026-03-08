@@ -70,7 +70,7 @@ async function addAdminDashboardLink() {
     // ── Desktop nav: insert "Admin Hub" before the divider ──
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-        const divider = logoutBtn.previousElementSibling; // the w-px separator
+        const divider = document.getElementById('navDivider');
         if (divider && divider.parentNode) {
             const adminLink = document.createElement('a');
             adminLink.href = '/admin/index.html';
@@ -152,4 +152,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Add admin dashboard link for admin users on portal pages
     await addAdminDashboardLink();
+
+    // Load profile name + photo into the nav
+    if (typeof loadNavProfile === 'function') {
+        loadNavProfile();
+    }
 });

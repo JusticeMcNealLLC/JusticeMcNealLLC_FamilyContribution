@@ -28,30 +28,9 @@
     <link rel="stylesheet" href="../css/shared.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 </head>
-<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar">
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="investments">
 
-    <!-- Navigation -->
-    <nav class="sticky top-0 z-40 glass border-b border-gray-200/60">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-14 md:h-16">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
-                        <span class="text-white font-bold text-sm">JM</span>
-                    </div>
-                    <span class="font-bold text-lg text-gray-900">Justice McNeal</span>
-                </div>
-
-                <div class="hidden md:flex items-center gap-1">
-                    <a href="index.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Dashboard</a>
-                    <a href="investments.html" class="px-4 py-2 text-sm font-medium text-brand-600 bg-brand-50 rounded-lg">Investments</a>
-                    <a href="history.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">History</a>
-                    <a href="settings.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Settings</a>
-                    <div class="w-px h-6 bg-gray-200 mx-2"></div>
-                    <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <div id="nav-placeholder"></div>
 
     <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
 
@@ -234,44 +213,12 @@
 
     </main>
 
-    <!-- Footer -->
-    <footer class="hidden md:block border-t border-gray-200/60 mt-auto">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-400">
-                <p>&copy; 2026 Justice McNeal LLC</p>
-                <p>Family Contribution Portal</p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Mobile Bottom Tab Bar -->
-    <div class="bottom-tab-bar md:hidden">
-        <div class="max-w-lg mx-auto grid grid-cols-5 px-2">
-            <a href="index.html" class="tab-inactive">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                <span>Home</span>
-            </a>
-            <a href="investments.html" class="tab-active">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                <span>Investments</span>
-            </a>
-            <a href="history.html" class="tab-inactive">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>History</span>
-            </a>
-            <a href="settings.html" class="tab-inactive">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                <span>Settings</span>
-            </a>
-            <button id="logoutBtnMobile" class="tab-inactive">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                <span>Sign Out</span>
-            </button>
-        </div>
-    </div>
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
+    <script src="../js/components/pageShell.js"></script>
     <script src="../js/auth/shared.js"></script>
     <script src="../js/portal/investments.js"></script>
 </body>

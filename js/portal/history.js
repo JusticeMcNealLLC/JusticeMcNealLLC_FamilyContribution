@@ -79,8 +79,10 @@ async function loadTransactions(userId, filters = {}) {
         });
 
         // Apply source filter
-        if (filters.source === 'stripe') {
-            transactions = transactions.filter(t => t.source === 'stripe');
+        if (filters.source === 'stripe_monthly') {
+            transactions = transactions.filter(t => t.source === 'stripe' && !t.isExtraDeposit);
+        } else if (filters.source === 'stripe_onetime') {
+            transactions = transactions.filter(t => t.source === 'stripe' && t.isExtraDeposit);
         } else if (filters.source === 'deposit') {
             transactions = transactions.filter(t => t.source === 'deposit');
         }

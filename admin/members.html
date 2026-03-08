@@ -44,33 +44,9 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar">
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="admin" data-active-page="members">
 
-    <!-- Top Navigation -->
-    <nav class="sticky top-0 z-40 glass border-b border-gray-200/60">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-14 md:h-16">
-                <div class="flex items-center gap-3">
-                    <a href="index.html" class="flex items-center gap-2">
-                        <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
-                            <span class="text-white font-bold text-sm">JM</span>
-                        </div>
-                        <span class="font-bold text-lg text-gray-900">Justice McNeal</span>
-                    </a>
-                    <span class="bg-brand-100 text-brand-700 text-xs font-semibold px-2.5 py-1 rounded-full">Admin</span>
-                </div>
-
-                <div class="hidden md:flex items-center gap-1">
-                    <a href="index.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Admin Hub</a>
-                    <a href="members.html" class="px-4 py-2 text-sm font-medium text-brand-600 bg-brand-50 rounded-lg">Members</a>
-                    <a href="invite.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">Invite</a>
-                    <a href="../portal/index.html" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">My Portal</a>
-                    <div class="w-px h-6 bg-gray-200 mx-2"></div>
-                    <button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <div id="nav-placeholder"></div>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
 
@@ -199,37 +175,8 @@
         </div>
     </main>
 
-    <!-- Footer (desktop) -->
-    <footer class="hidden md:block border-t border-gray-200/60 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="flex items-center justify-between text-sm text-gray-400">
-                <p>&copy; 2026 Justice McNeal LLC</p>
-                <p>Family Contribution Portal</p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Mobile Bottom Tab Bar -->
-    <div class="bottom-tab-bar md:hidden">
-        <div class="max-w-lg mx-auto grid grid-cols-4 px-2">
-            <a href="index.html" class="tab-inactive">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                <span>Hub</span>
-            </a>
-            <a href="members.html" class="tab-active">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                <span>Members</span>
-            </a>
-            <a href="invite.html" class="tab-inactive">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-                <span>Invite</span>
-            </a>
-            <button id="logoutBtnMobile" class="tab-inactive">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                <span>Sign Out</span>
-            </button>
-        </div>
-    </div>
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
 
     <!-- Member Detail Modal -->
     <div id="memberModal" class="fixed inset-0 z-50 hidden">
@@ -283,6 +230,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
+    <script src="../js/components/pageShell.js"></script>
     <script src="../js/auth/shared.js"></script>
     <script src="../js/admin/dashboard.js"></script>
 </body>
