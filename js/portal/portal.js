@@ -274,19 +274,14 @@ async function openBillingPortal() {
 
 async function loadNextMilestone() {
     try {
-        // Fetch net contributions + latest portfolio snapshot in parallel
-        const [netRes, portfolioRes] = await Promise.all([
-            supabaseClient.rpc('get_family_net_total'),
-            supabaseClient
-                .from('investment_snapshots')
-                .select('total_value_cents')
-                .order('snapshot_date', { ascending: false })
-                .limit(1),
-        ]);
+        // Fetch current portfolio value (the single source of truth for milestones)
+        const { data: snapshots } = await supabaseClient
+            .from('investment_snapshots')
+            .select('total_value_cents')
+            .order('snapshot_date', { ascending: false })
+            .limit(1);
 
-        const netContributions = netRes.data || 0;
-        const portfolioValue   = portfolioRes.data?.[0]?.total_value_cents || 0;
-        const totalAssets = netContributions + portfolioValue;
+        const totalAssets = snapshots?.[0]?.total_value_cents || 0;
 
         // Use functions from milestones/config.js (loaded before portal.js)
         const next = getNextTier(totalAssets);

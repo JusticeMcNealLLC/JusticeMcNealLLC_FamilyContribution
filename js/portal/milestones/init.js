@@ -12,21 +12,15 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 async function loadMilestonesData() {
     try {
-        // Fetch net contributions (gross − Stripe fees) + portfolio value in parallel
-        const [netRes, portfolioRes] = await Promise.all([
-            supabaseClient.rpc('get_family_net_total'),
-            supabaseClient
-                .from('investment_snapshots')
-                .select('total_value_cents')
-                .order('snapshot_date', { ascending: false })
-                .limit(1),
-        ]);
+        // Fetch current portfolio value (contributions are invested into ETFs,
+        // so portfolio = the single source of truth for family wealth)
+        const { data: snapshots } = await supabaseClient
+            .from('investment_snapshots')
+            .select('total_value_cents')
+            .order('snapshot_date', { ascending: false })
+            .limit(1);
 
-        const netContributions = netRes.data || 0;
-        const portfolioValue   = portfolioRes.data?.[0]?.total_value_cents || 0;
-
-        // Total family assets = net contributions + current portfolio value
-        const totalAssets = netContributions + portfolioValue;
+        const totalAssets = snapshots?.[0]?.total_value_cents || 0;
 
         // Render everything
         renderProgressHero(totalAssets);
