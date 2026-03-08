@@ -63,8 +63,60 @@
             <p class="text-gray-500 mt-1 text-sm">Manage your account and billing</p>
         </div>
 
-        <!-- Account Section -->
+        <!-- Profile Section -->
         <section class="mb-6 fade-in">
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Profile</h2>
+
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6">
+                <!-- Photo + Name Row -->
+                <div class="flex items-start gap-5">
+                    <!-- Profile Photo -->
+                    <div class="flex-shrink-0">
+                        <div id="profilePhotoWrapper" class="relative group cursor-pointer" title="Change photo">
+                            <!-- Avatar -->
+                            <div id="avatarDisplay" class="w-20 h-20 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border-2 border-gray-200">
+                                <span id="avatarInitials" class="text-2xl font-bold text-brand-600"></span>
+                                <img id="avatarImage" class="w-full h-full object-cover hidden" alt="Profile photo">
+                            </div>
+                            <!-- Overlay -->
+                            <div class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </div>
+                            <input type="file" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden">
+                        </div>
+                        <div id="photoUploadProgress" class="hidden mt-1.5 text-center">
+                            <svg class="animate-spin h-4 w-4 text-brand-500 mx-auto" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </div>
+                    </div>
+
+                    <!-- Name Fields -->
+                    <div class="flex-1 min-w-0 space-y-3">
+                        <div>
+                            <label for="settingsFirstName" class="block text-xs font-medium text-gray-500 mb-1">First Name</label>
+                            <input type="text" id="settingsFirstName" placeholder="First name" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                        </div>
+                        <div>
+                            <label for="settingsLastName" class="block text-xs font-medium text-gray-500 mb-1">Last Name</label>
+                            <input type="text" id="settingsLastName" placeholder="Last name" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error / Success -->
+                <div id="profileError" class="text-red-600 text-sm hidden mt-3"></div>
+                <div id="profileSuccess" class="text-emerald-600 text-sm hidden mt-3"></div>
+
+                <!-- Save Button -->
+                <div class="mt-4 flex justify-end">
+                    <button id="saveProfileBtn" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 px-5 rounded-xl transition text-sm">
+                        Save Profile
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Account Section -->
+        <section class="mb-6 fade-in" style="animation-delay: 60ms">
             <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Account</h2>
             
             <div class="bg-white rounded-2xl border border-gray-200/80 divide-y divide-gray-100">
@@ -132,7 +184,7 @@
         </section>
 
         <!-- Billing Section -->
-        <section class="mb-6 fade-in" style="animation-delay: 80ms">
+        <section class="mb-6 fade-in" style="animation-delay: 140ms">
             <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Billing</h2>
             
             <div class="bg-white rounded-2xl border border-gray-200/80 divide-y divide-gray-100">
@@ -164,7 +216,7 @@
         </section>
 
         <!-- Danger Zone -->
-        <section class="fade-in" style="animation-delay: 160ms">
+        <section class="fade-in" style="animation-delay: 220ms">
             <h2 class="text-xs font-semibold text-red-400 uppercase tracking-wider mb-3 px-1">Danger Zone</h2>
             
             <div class="bg-white rounded-2xl border border-red-200/80 p-4 sm:p-5">

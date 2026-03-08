@@ -104,26 +104,28 @@ async function loadTransactions(userId, filters = {}) {
         }
 
         if (container) container.classList.remove('hidden');
-        if (table) table.classList.remove('hidden');
         if (emptyState) emptyState.classList.add('hidden');
 
         // Render desktop table
         if (tableBody) {
             tableBody.innerHTML = transactions.map(tx => {
-                const sourceBadge = tx.source === 'stripe'
-                    ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Stripe</span>'
-                    : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">${tx.depositType}</span>`;
+                const isDeposit = tx.source === 'deposit';
+                const sourceBadge = !isDeposit
+                    ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Monthly</span>'
+                    : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>One-time · ${tx.depositType}</span>`;
 
                 const statusBadge = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClasses(tx.status)}">${tx.status}</span>`;
 
-                const details = tx.source === 'stripe' && tx.receiptUrl
+                const details = !isDeposit && tx.receiptUrl
                     ? `<a href="${tx.receiptUrl}" target="_blank" class="text-brand-600 hover:text-brand-700 text-sm font-medium">View receipt &rarr;</a>`
                     : tx.notes ? `<span class="text-gray-500 text-sm truncate block max-w-[200px]" title="${tx.notes}">${tx.notes}</span>` : '<span class="text-gray-300">—</span>';
 
-                return `<tr class="hover:bg-gray-50 transition">
+                const rowBorder = isDeposit ? 'border-l-[3px] border-l-violet-400' : '';
+
+                return `<tr class="hover:bg-gray-50 transition ${rowBorder}">
                     <td class="px-5 py-4 text-sm text-gray-900">${formatDate(tx.date)}</td>
                     <td class="px-5 py-4">${sourceBadge}</td>
-                    <td class="px-5 py-4 text-sm font-semibold ${tx.status === 'paid' ? 'text-emerald-600' : 'text-gray-900'}">+${formatCurrency(tx.amount)}</td>
+                    <td class="px-5 py-4 text-sm font-semibold ${tx.status === 'paid' ? (isDeposit ? 'text-violet-600' : 'text-emerald-600') : 'text-gray-900'}">+${formatCurrency(tx.amount)}</td>
                     <td class="px-5 py-4">${statusBadge}</td>
                     <td class="px-5 py-4">${details}</td>
                 </tr>`;
@@ -134,16 +136,20 @@ async function loadTransactions(userId, filters = {}) {
         if (mobileList) {
             mobileList.innerHTML = transactions.map(tx => {
                 const isDeposit = tx.source === 'deposit';
-                const iconBg = isDeposit ? 'bg-blue-100' : 'bg-emerald-100';
-                const iconColor = isDeposit ? 'text-blue-600' : 'text-emerald-600';
-                const icon = isDeposit
-                    ? `<svg class="w-4 h-4 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>`
-                    : `<svg class="w-4 h-4 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
 
-                const label = isDeposit ? `${tx.depositType} deposit` : `Subscription payment`;
-                const sublabel = tx.notes || formatDate(tx.date);
+                // Monthly subscription styling
+                const monthlyIcon = `<svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`;
+                // One-time deposit styling
+                const depositIcon = `<svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
 
-                return `<div class="flex items-center justify-between px-4 py-3.5">
+                const icon = isDeposit ? depositIcon : monthlyIcon;
+                const iconBg = isDeposit ? 'bg-violet-100' : 'bg-emerald-100';
+                const label = isDeposit ? `One-time · ${tx.depositType}` : 'Monthly payment';
+                const sublabel = isDeposit ? (tx.notes || formatDate(tx.date)) : formatDate(tx.date);
+                const amountColor = tx.status === 'paid' ? (isDeposit ? 'text-violet-600' : 'text-emerald-600') : 'text-gray-600';
+                const borderClass = isDeposit ? 'border-l-[3px] border-l-violet-400' : '';
+
+                return `<div class="flex items-center justify-between px-4 py-3.5 ${borderClass}">
                     <div class="flex items-center gap-3 min-w-0 flex-1">
                         <div class="w-9 h-9 rounded-full ${iconBg} flex items-center justify-center flex-shrink-0">${icon}</div>
                         <div class="min-w-0 flex-1">
@@ -152,7 +158,7 @@ async function loadTransactions(userId, filters = {}) {
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0 ml-3">
-                        <div class="text-sm font-bold ${tx.status === 'paid' ? 'text-emerald-600' : 'text-gray-600'}">+${formatCurrency(tx.amount)}</div>
+                        <div class="text-sm font-bold ${amountColor}">+${formatCurrency(tx.amount)}</div>
                         ${tx.receiptUrl ? `<a href="${tx.receiptUrl}" target="_blank" class="text-[10px] text-brand-600 font-medium">Receipt</a>` : ''}
                     </div>
                 </div>`;
