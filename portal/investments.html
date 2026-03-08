@@ -220,6 +220,10 @@
     <script src="../js/config.js"></script>
     <script src="../js/components/pageShell.js"></script>
     <script src="../js/auth/shared.js"></script>
-    <script src="../js/portal/investments.js"></script>
+    <!-- Investment modules (load order matters) -->
+    <script src="../js/portal/investments/config.js"></script>
+    <script src="../js/portal/investments/charts.js"></script>
+    <script src="../js/portal/investments/renders.js"></script>
+    <script src="../js/portal/investments/init.js"></script>
 </body>
 </html>
