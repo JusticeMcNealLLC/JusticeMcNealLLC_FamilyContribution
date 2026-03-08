@@ -99,7 +99,9 @@ async function loadStats() {
 }
 
 // ─── Helpers ────────────────────────────────────────────
-function getInitials(email) {
+function getInitials(email, firstName, lastName) {
+    if (firstName && lastName) return (firstName[0] + lastName[0]).toUpperCase();
+    if (firstName) return firstName.slice(0, 2).toUpperCase();
     const name = email.split('@')[0];
     const parts = name.split(/[._-]/);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
@@ -143,7 +145,7 @@ async function loadMembers() {
     try {
         const { data: profiles, error } = await supabaseClient
             .from('profiles')
-            .select('id, email, role')
+            .select('id, email, role, first_name, last_name, profile_picture_url')
             .eq('is_active', true);
 
         if (error) { console.error('Error loading members:', error); return; }
@@ -185,20 +187,24 @@ async function loadMembers() {
             const sub = subMap[p.id];
             const total = (invMap[p.id] || 0) + (depMap[p.id] || 0);
             const isAdmin = p.role === 'admin';
-            const initials = getInitials(p.email);
+            const initials = getInitials(p.email, p.first_name, p.last_name);
             const avatarCls = getAvatarColor(p.email);
+            const displayName = (p.first_name && p.last_name) ? `${p.first_name} ${p.last_name}` : p.email;
+            const hasPhoto = !!p.profile_picture_url;
 
             return `
                 <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover cursor-pointer" onclick="openMemberModal('${p.id}')">
                     <div class="flex items-center gap-3 sm:gap-4">
-                        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${avatarCls}">
-                            ${initials}
-                        </div>
+                        ${hasPhoto
+                            ? `<img src="${p.profile_picture_url}" alt="${displayName}" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover flex-shrink-0 border-2 border-gray-100">`
+                            : `<div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${avatarCls}">${initials}</div>`
+                        }
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-sm font-semibold text-gray-900 truncate">${p.email}</span>
+                                <span class="text-sm font-semibold text-gray-900 truncate">${displayName}</span>
                                 ${isAdmin ? '<span class="bg-brand-100 text-brand-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-md">Admin</span>' : ''}
                             </div>
+                            ${(p.first_name && p.last_name) ? `<div class="text-xs text-gray-400 truncate">${p.email}</div>` : ''}
                             <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
                                 <span>${sub?.current_amount_cents ? formatCurrency(sub.current_amount_cents) + '/mo' : 'No plan'}</span>
                                 <span class="text-gray-300">&middot;</span>
@@ -231,7 +237,7 @@ async function loadPastDue() {
     try {
         const { data: pastDue, error } = await supabaseClient
             .from('subscriptions')
-            .select(`current_amount_cents, updated_at, profiles ( email )`)
+            .select(`current_amount_cents, updated_at, profiles ( email, first_name, last_name )`)
             .eq('status', 'past_due');
 
         if (error) { console.error('Error loading past due:', error); return; }
@@ -239,20 +245,24 @@ async function loadPastDue() {
 
         if (section) section.classList.remove('hidden');
 
-        body.innerHTML = pastDue.map(s => `
+        body.innerHTML = pastDue.map(s => {
+            const pName = (s.profiles?.first_name && s.profiles?.last_name)
+                ? `${s.profiles.first_name} ${s.profiles.last_name}`
+                : (s.profiles?.email || 'Unknown');
+            return `
             <div class="flex items-center justify-between bg-white rounded-xl p-3 border border-red-100">
                 <div class="flex items-center gap-3 min-w-0">
                     <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                        <span class="text-red-700 font-bold text-xs">${getInitials(s.profiles?.email || 'UK')}</span>
+                        <span class="text-red-700 font-bold text-xs">${getInitials(s.profiles?.email || 'UK', s.profiles?.first_name, s.profiles?.last_name)}</span>
                     </div>
                     <div class="min-w-0">
-                        <span class="text-sm font-medium text-red-900 truncate block">${s.profiles?.email || 'Unknown'}</span>
+                        <span class="text-sm font-medium text-red-900 truncate block">${pName}</span>
                         <span class="text-xs text-red-600">${formatDate(s.updated_at)}</span>
                     </div>
                 </div>
                 <span class="text-sm font-bold text-red-700 flex-shrink-0">${formatCurrency(s.current_amount_cents)}/mo</span>
             </div>
-        `).join('');
+        `}).join('');
 
     } catch (err) {
         console.error('Error loading past due:', err);
@@ -268,7 +278,7 @@ async function loadDeactivatedMembers() {
     try {
         const { data: profiles, error } = await supabaseClient
             .from('profiles')
-            .select('id, email')
+            .select('id, email, first_name, last_name, profile_picture_url')
             .eq('is_active', false);
 
         if (error) { console.error('Error loading deactivated:', error); return; }
@@ -294,13 +304,19 @@ async function loadDeactivatedMembers() {
         if (details) details.open = true;
         grid.innerHTML = profiles.map(p => {
             const total = (invMap[p.id] || 0) + (depMap[p.id] || 0);
-            const initials = getInitials(p.email);
+            const initials = getInitials(p.email, p.first_name, p.last_name);
+            const displayName = (p.first_name && p.last_name) ? `${p.first_name} ${p.last_name}` : p.email;
+            const hasPhoto = !!p.profile_picture_url;
             return `
                 <div class="bg-gray-50 rounded-2xl border border-gray-200 p-4 sm:p-5 opacity-70 hover:opacity-100 transition cursor-pointer" onclick="openMemberModal('${p.id}')">
                     <div class="flex items-center gap-3 sm:gap-4">
-                        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm flex-shrink-0">${initials}</div>
+                        ${hasPhoto
+                            ? `<img src="${p.profile_picture_url}" alt="${displayName}" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover flex-shrink-0 border-2 border-gray-100 grayscale">`
+                            : `<div class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-sm flex-shrink-0">${initials}</div>`
+                        }
                         <div class="flex-1 min-w-0">
-                            <span class="text-sm font-medium text-gray-500 truncate block">${p.email}</span>
+                            <span class="text-sm font-medium text-gray-500 truncate block">${displayName}</span>
+                            ${(p.first_name && p.last_name) ? `<span class="text-xs text-gray-400 truncate block">${p.email}</span>` : ''}
                             <span class="text-xs text-gray-400">Total paid: ${formatCurrency(total)}</span>
                         </div>
                         <button onclick="event.stopPropagation(); reactivateUser('${p.id}', '${p.email}')" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition flex-shrink-0">
@@ -348,10 +364,14 @@ async function openMemberModal(userId) {
     document.body.style.overflow = 'hidden';
 
     // Reset
+    document.getElementById('modalAvatar').innerHTML = '';
     document.getElementById('modalAvatar').textContent = '--';
     document.getElementById('modalAvatar').className = 'w-12 h-12 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-bold text-lg flex-shrink-0';
-    document.getElementById('modalMemberEmail').textContent = 'Loading...';
+    document.getElementById('modalMemberName').textContent = 'Loading...';
+    document.getElementById('modalMemberEmail').textContent = '';
     document.getElementById('modalMemberRole').textContent = '';
+    const detailsReset = document.getElementById('modalProfileDetails');
+    if (detailsReset) detailsReset.innerHTML = '<div class="text-gray-400 text-xs text-center py-2">Loading profile...</div>';
     document.getElementById('modalStatus').innerHTML = getStatusBadge(null);
     document.getElementById('modalAmount').textContent = '$--';
     document.getElementById('modalTotal').textContent = '$--';
@@ -360,18 +380,58 @@ async function openMemberModal(userId) {
     try {
         const { data: profile, error: pErr } = await supabaseClient
             .from('profiles')
-            .select('id, email, role, is_active')
+            .select('id, email, role, is_active, first_name, last_name, profile_picture_url, birthday')
             .eq('id', userId)
             .single();
         if (pErr) throw pErr;
 
+        const displayName = (profile.first_name && profile.last_name)
+            ? `${profile.first_name} ${profile.last_name}`
+            : profile.email;
+
         // Set avatar
         const avatar = document.getElementById('modalAvatar');
-        avatar.textContent = getInitials(profile.email);
-        avatar.className = `w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0 ${getAvatarColor(profile.email)}`;
+        if (profile.profile_picture_url) {
+            avatar.innerHTML = `<img src="${profile.profile_picture_url}" alt="${displayName}" class="w-12 h-12 rounded-full object-cover">`;
+            avatar.className = 'w-12 h-12 rounded-full flex-shrink-0 overflow-hidden';
+        } else {
+            avatar.innerHTML = '';
+            avatar.textContent = getInitials(profile.email, profile.first_name, profile.last_name);
+            avatar.className = `w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0 ${getAvatarColor(profile.email)}`;
+        }
 
+        document.getElementById('modalMemberName').textContent = displayName;
         document.getElementById('modalMemberEmail').textContent = profile.email;
         document.getElementById('modalMemberRole').textContent = profile.role === 'admin' ? 'Administrator' : 'Member';
+
+        // Profile details section
+        const detailsEl = document.getElementById('modalProfileDetails');
+        if (detailsEl) {
+            let detailsHTML = '';
+            if (profile.first_name || profile.last_name) {
+                detailsHTML += `<div class="flex justify-between py-2 border-b border-gray-50">
+                    <span class="text-xs text-gray-500">Full Name</span>
+                    <span class="text-xs font-medium text-gray-900">${profile.first_name || ''} ${profile.last_name || ''}</span>
+                </div>`;
+            }
+            detailsHTML += `<div class="flex justify-between py-2 border-b border-gray-50">
+                <span class="text-xs text-gray-500">Email</span>
+                <span class="text-xs font-medium text-gray-900">${profile.email}</span>
+            </div>`;
+            if (profile.birthday) {
+                const bday = new Date(profile.birthday + 'T00:00:00');
+                const bdayStr = bday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                detailsHTML += `<div class="flex justify-between py-2 border-b border-gray-50">
+                    <span class="text-xs text-gray-500">Birthday</span>
+                    <span class="text-xs font-medium text-gray-900">${bdayStr}</span>
+                </div>`;
+            }
+            detailsHTML += `<div class="flex justify-between py-2">
+                <span class="text-xs text-gray-500">Role</span>
+                <span class="text-xs font-medium text-gray-900">${profile.role === 'admin' ? 'Administrator' : 'Member'}</span>
+            </div>`;
+            detailsEl.innerHTML = detailsHTML;
+        }
 
         // Subscription
         const { data: subscription } = await supabaseClient

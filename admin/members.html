@@ -191,13 +191,21 @@
                         <div class="flex items-center gap-3 min-w-0">
                             <div id="modalAvatar" class="w-12 h-12 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-bold text-lg flex-shrink-0">--</div>
                             <div class="min-w-0">
-                                <h2 id="modalMemberEmail" class="text-base sm:text-lg font-bold text-gray-900 truncate">Loading...</h2>
-                                <div id="modalMemberRole" class="text-sm text-gray-500"></div>
+                                <h2 id="modalMemberName" class="text-base sm:text-lg font-bold text-gray-900 truncate">Loading...</h2>
+                                <div id="modalMemberEmail" class="text-xs text-gray-500 truncate"></div>
+                                <div id="modalMemberRole" class="text-xs text-gray-400"></div>
                             </div>
                         </div>
                         <button onclick="closeMemberModal()" class="p-2 hover:bg-gray-100 rounded-lg transition -mr-2 hidden sm:block">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
+                    </div>
+                </div>
+
+                <!-- Profile Details -->
+                <div class="px-5 sm:px-6 pb-3">
+                    <div id="modalProfileDetails" class="bg-surface-50 rounded-xl p-3 border border-gray-100">
+                        <div class="text-gray-400 text-xs text-center py-2">Loading profile...</div>
                     </div>
                 </div>
                 <div class="grid grid-cols-3 gap-3 px-5 sm:px-6 pb-4">

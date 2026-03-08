@@ -33,20 +33,30 @@ Invested into:
 - [x] Member authentication (login / password reset)
 - [x] Monthly subscription management via Stripe
 - [x] Contribution page with current plan details
-- [x] Payment history with invoices
-- [x] Account settings (name, password)
+- [x] Payment history with invoices (filter by Stripe Monthly, Stripe One-time, Manual)
+- [x] Account settings (name, password, profile editing)
 - [x] Admin dashboard (member management, invite system)
 - [x] Member activation / deactivation
 - [x] Mobile-friendly design with bottom tab navigation
 - [x] Admin hub with grid navigation to sub-pages
 - [x] Investment dashboard (CSV upload, manual entry, portfolio viewer)
+- [x] Extra one-time deposit feature (Stripe Checkout)
+- [x] Manual deposit recording by admin with full attribution
+- [x] Running totals per member (Stripe + manual combined)
+- [x] Stripe fee tracking on all invoices
+- [x] Shared nav/footer components (pageShell.js — single source of truth)
+- [x] Profile name & photo displayed in nav (desktop + mobile)
+- [x] Member onboarding wizard (name, birthday, photo, contribution setup)
+- [x] Skippable contribution step during onboarding (Stripe Checkout)
+- [x] Receipt links for one-time Stripe payments (backfilled)
+- [x] Admin member detail modal with profile info and transaction history
 
 ---
 
 ## 🗺️ The Roadmap
 
-### Phase 1: Investment Visibility & Manual Deposits
-**Status:** ✅ 1A Complete — 🔧 1B In Progress — 1C Not Started
+### Phase 1: Investment Visibility, Manual Deposits & Onboarding
+**Status:** ✅ 1A Complete — ✅ 1B Complete — ✅ 1C Complete
 **Priority:** High
 **Goal:** Members should be able to see where the money is and how it's growing.
 
@@ -88,23 +98,25 @@ Invested into:
 **Goal:** Smooth, welcoming experience from invite to fully set-up member.
 **Note:** Existing members will be required to complete the onboarding wizard on their next login. A `setup_completed` flag on the profile determines whether to redirect to onboarding or the portal. This ensures all current members have complete profiles (name, birthday, photo) before continuing.
 
-##### Current Flow (Partial ✅)
+##### Current Flow (✅ Complete)
 - [x] Admin sends invite via email
 - [x] Member receives invite link
 - [x] Member creates account (sets password)
 - [x] Member lands on portal
 
-##### Onboarding Improvements Needed
-- [ ] Welcome screen / first-time setup wizard after accepting invite
-- [ ] **Existing member forced onboarding** — redirect to wizard on login if `setup_completed = false`
-- [ ] Set first name & last name during onboarding (not buried in settings)
-- [ ] Set birthday during onboarding
-- [ ] Upload profile picture during onboarding (crop + preview)
-- [ ] Database: add `birthday`, `profile_picture_url` columns to `profiles`
-- [ ] Supabase Storage bucket for profile pictures
+##### Onboarding Improvements (✅ Complete)
+- [x] Welcome screen / first-time setup wizard after accepting invite
+- [x] **Existing member forced onboarding** — redirect to wizard on login if `setup_completed = false`
+- [x] Set first name & last name during onboarding (not buried in settings)
+- [x] Set birthday during onboarding (skippable)
+- [x] Upload profile picture during onboarding (drag-drop + preview, skippable)
+- [x] **Start contribution during onboarding** — skippable Stripe subscription setup step
+- [x] Database: add `birthday`, `profile_picture_url`, `setup_completed` columns to `profiles`
+- [x] Supabase Storage bucket for profile pictures
+- [x] Profile picture displayed throughout portal (nav desktop + mobile, settings)
+- [x] Profile editing in settings page (name, birthday, photo)
 - [ ] "Complete Your Profile" nudge banner if profile is incomplete
 - [ ] Admin can see onboarding completion status per member
-- [ ] Profile picture displayed throughout portal (nav, settings, social feed)
 - [ ] Birthday auto-celebration (ties into Phase 2 milestones & Phase 5 events)
 
 ---
@@ -655,18 +667,19 @@ The LLC sustains itself through:
 ### Now → Next 3 Months
 1. ✅ Core portal (subscriptions, payments, admin) — **DONE**
 2. ✅ Investment dashboard (manual entry to start) — **DONE**
-3. Member onboarding (profile setup wizard, profile pics, birthday)
-4. **Meet the Team / Leadership page** (who runs the LLC — roles, bios, org chart)
-5. Milestones & perks page (asset threshold tiers, progress tracker)
-6. **Credit 101 education hub** (members-only credit improvement modules)
-7. Family hierarchy & roles assignment
+3. ✅ One-time / manual deposits (Stripe + admin-recorded) — **DONE**
+4. ✅ Member onboarding wizard (name, birthday, photo, contribution) — **DONE**
+5. ✅ Nav/footer component extraction & profile display — **DONE**
+6. **Meet the Team / Leadership page** (who runs the LLC — roles, bios, org chart)
+7. Milestones & perks page (asset threshold tiers, progress tracker)
+8. **Credit 101 education hub** (members-only credit improvement modules)
+9. Family hierarchy & roles assignment
 
 ### 3–6 Months
-8. **Quest & task system** (Credit Points, Fidelity cashback quest, gamification)
-9. Family tree page
-10. **Personal finance & budget tracker** (bank statement import, spending analysis)
-11. One-time deposit feature
-12. Social feed + admin announcements (with replies & threads)
+10. **Quest & task system** (Credit Points, Fidelity cashback quest, gamification)
+11. Family tree page
+12. **Personal finance & budget tracker** (bank statement import, spending analysis)
+13. Social feed + admin announcements (with replies & threads)
 
 ### 6–12 Months
 13. **AI financial coach** (chat assistant connected to budget data — OpenAI)
