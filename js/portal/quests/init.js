@@ -54,10 +54,22 @@ async function loadQuestData() {
         _earnedBadges = badgesRes.data || [];
         _cpBalance = cpBalRes.data || 0;
 
-        // Run auto-detection before rendering
+        // Run auto-detection (may create member_quests + award CP)
         await runAutoDetection();
 
-        // Render everything
+        // Re-fetch ALL data fresh after auto-detection to pick up any new completions
+        const [freshMQ, freshCP, freshBadges, freshBal] = await Promise.all([
+            supabaseClient.from('member_quests').select('*').eq('user_id', _currentUserId),
+            supabaseClient.from('credit_points_log').select('*').eq('user_id', _currentUserId).order('created_at', { ascending: false }).limit(50),
+            supabaseClient.from('member_badges').select('*').eq('user_id', _currentUserId),
+            supabaseClient.rpc('get_member_cp_balance', { target_user_id: _currentUserId }),
+        ]);
+        _memberQuestsData = freshMQ.data || [];
+        _cpLog = freshCP.data || [];
+        _earnedBadges = freshBadges.data || [];
+        _cpBalance = freshBal.data || 0;
+
+        // Render everything with guaranteed-fresh data
         renderCPHero(_cpBalance, _earnedBadges);
         renderQuestStats(
             _memberQuestsData.filter(mq => mq.status === 'completed').length,
@@ -330,61 +342,62 @@ async function runAutoDetection() {
 
         const paidInvoices = invoices || [];
 
-        // Check each auto-detect quest
+        // Check each auto-detect quest (wrapped per-quest so one failure doesn't block others)
         for (const quest of _questsData) {
             if (!quest.auto_detect_key) continue;
 
-            const mq = _memberQuestsData.find(m => m.quest_id === quest.id);
-            if (mq && mq.status === 'completed') continue; // Already done
+            try {
+                // Re-read member quest status each iteration (may have been updated by a previous auto-complete)
+                const mq = _memberQuestsData.find(m => m.quest_id === quest.id && !m.period_key);
+                if (mq && mq.status === 'completed') continue; // Already done
 
-            let shouldComplete = false;
+                let shouldComplete = false;
 
-            switch (quest.auto_detect_key) {
-                case 'activate_subscription':
-                    shouldComplete = subscription && ['active', 'trialing'].includes(subscription.status);
-                    break;
+                switch (quest.auto_detect_key) {
+                    case 'activate_subscription':
+                        shouldComplete = subscription && ['active', 'trialing'].includes(subscription.status);
+                        break;
 
-                case 'upload_photo':
-                    shouldComplete = !!profile.profile_picture_url;
-                    break;
+                    case 'upload_photo':
+                        shouldComplete = !!profile.profile_picture_url;
+                        break;
 
-                case 'complete_onboarding':
-                    shouldComplete = !!(profile.first_name && profile.last_name && profile.birthday && profile.profile_picture_url);
-                    break;
+                    case 'complete_onboarding':
+                        shouldComplete = !!(profile.first_name && profile.last_name && profile.birthday && profile.profile_picture_url);
+                        break;
 
-                case 'on_time_payment': {
-                    // Check if there's a paid invoice this month that hasn't been credited
-                    const now = new Date();
-                    const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                    const monthlyMq = _memberQuestsData.find(m => m.quest_id === quest.id && m.period_key === currentPeriod);
-                    if (!monthlyMq || monthlyMq.status !== 'completed') {
-                        const thisMonthInvoice = paidInvoices.find(inv => {
+                    case 'on_time_payment': {
+                        // Backfill ALL paid months — not just the current one.
+                        // This ensures members who joined before the quest system get full credit.
+                        for (const inv of paidInvoices) {
                             const d = new Date(inv.period_start || inv.paid_at);
-                            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === currentPeriod;
-                        });
-                        if (thisMonthInvoice) {
-                            // Auto-complete this month's recurring quest
-                            await autoCompleteRecurring(quest, currentPeriod);
+                            const period = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                            const monthlyMq = _memberQuestsData.find(m => m.quest_id === quest.id && m.period_key === period);
+                            if (!monthlyMq || monthlyMq.status !== 'completed') {
+                                await autoCompleteRecurring(quest, period);
+                            }
                         }
+                        continue; // Skip the generic shouldComplete flow
                     }
-                    continue; // Skip the generic shouldComplete flow
+
+                    case 'increase_contribution':
+                        shouldComplete = subscription && subscription.current_amount_cents > (APP_CONFIG.MIN_AMOUNT * 100);
+                        break;
+
+                    case 'streak_3':
+                        shouldComplete = paidInvoices.length >= 3 && checkConsecutiveMonths(paidInvoices, 3);
+                        break;
+
+                    case 'streak_6':
+                        shouldComplete = paidInvoices.length >= 6 && checkConsecutiveMonths(paidInvoices, 6);
+                        break;
                 }
 
-                case 'increase_contribution':
-                    shouldComplete = subscription && subscription.current_amount_cents > (APP_CONFIG.MIN_AMOUNT * 100);
-                    break;
-
-                case 'streak_3':
-                    shouldComplete = paidInvoices.length >= 3 && checkConsecutiveMonths(paidInvoices, 3);
-                    break;
-
-                case 'streak_6':
-                    shouldComplete = paidInvoices.length >= 6 && checkConsecutiveMonths(paidInvoices, 6);
-                    break;
-            }
-
-            if (shouldComplete) {
-                await autoCompleteQuest(quest, mq);
+                if (shouldComplete) {
+                    await autoCompleteQuest(quest, mq);
+                }
+            } catch (questErr) {
+                console.error('Auto-detect failed for quest:', quest.title, questErr);
             }
         }
 

@@ -122,7 +122,7 @@ Invested into:
 ---
 
 ### Phase 2: Milestones, Perks & Quests
-**Status:** 🔧 In Progress — 2A nearly complete, 2B & 2C next
+**Status:** ✅ 2A Complete — ✅ 2B Complete — 🔲 2C Not Started
 **Priority:** 🔴 High
 **Goal:** Show members what we've achieved and what perks unlock as our assets grow — gamify generational wealth.
 
@@ -235,22 +235,23 @@ Badges are **permanent** — once earned, they're yours forever. Members pick on
 - [ ] Cashback contribution tracking per member (visible on admin dashboard)
 
 ##### Features to Build
-- [ ] Quests page on portal (list of available, in-progress, and completed quests)
-- [ ] Quest detail view with instructions, requirements, and reward info
-- [ ] Quest progress tracking (started, submitted proof, admin verified, completed)
-- [ ] Credit Points balance displayed on portal dashboard and profile
-- [ ] Credit Point history log (earned, reason, expiry date)
-- [ ] **Rolling 3-month CP calculation** — only last 90 days of CP counts toward active tier
-- [ ] Status tier badge on portal (Bronze → Silver → Gold → Diamond) with profile ring color
-- [ ] **Badge collection page** — view all earned badges, choose which one displays next to your name
-- [ ] Badge display next to member name throughout the portal (nav, feed, comments, etc.)
-- [ ] Admin quest management page (create/edit/delete quests, set CP rewards, set quest type)
-- [ ] Admin quest verification workflow (review proof submissions, approve/deny)
+- [x] Quests page on portal (list of available, in-progress, and completed quests)
+- [x] Quest detail view with instructions, requirements, and reward info
+- [x] Quest progress tracking (started, submitted proof, admin verified, completed)
+- [x] Credit Points balance displayed on portal dashboard and profile
+- [x] Credit Point history log (earned, reason, expiry date)
+- [x] **Rolling 3-month CP calculation** — only last 90 days of CP counts toward active tier
+- [x] Status tier badge on portal (Bronze → Silver → Gold → Diamond) with profile ring color
+- [x] **Badge collection page** — view all earned badges, choose which one displays next to your name
+- [x] Badge display next to member name throughout the portal (nav, feed, comments, etc.)
+- [x] Admin quest management page (create/edit/delete quests, set CP rewards, set quest type)
+- [x] Admin quest verification workflow (review proof submissions, approve/deny)
 - [ ] Admin bulk quest assignment (assign a quest to all members or specific groups)
-- [ ] Automatic quest completion detection (e.g., auto-detect when member uploads photo, activates subscription, etc.)
+- [x] Automatic quest completion detection (e.g., auto-detect when member uploads photo, activates subscription, etc.)
+- [x] Auto-detection backfill for existing members (retrospective on-time payment credits, streak detection)
 - [ ] Celebration animation when a quest is completed or tier is achieved
 - [ ] Leaderboard — family ranking by rolling 3-month CP (optional, can be toggled off)
-- [ ] Database: `quests`, `member_quests`, `credit_points_log`, `member_badges` tables
+- [x] Database: `quests`, `member_quests`, `credit_points_log`, `member_badges` tables
 
 ##### Deferred — Requires Later Phases
 - [ ] Push notification when a new quest becomes available *(⏳ Phase 4D — Notifications)*
@@ -786,7 +787,7 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 | 1B | Manual Deposits | ✅ Done | Low-Medium | Database schema update |
 | 1C | Member Onboarding | ✅ Done | Low-Medium | Supabase Storage (profile pics) |
 | 2A | Milestones & Perks | ✅ Done | Low-Medium | Investment data from Phase 1A |
-| 2B | Quest & Task System | 🔴 High | Medium | Milestones system |
+| 2B | Quest & Task System | ✅ Done | Medium | Milestones system |
 | 3A | Meet the Team / Leadership | 🔴 High | Low | Profile system |
 | 3B | Family Tree | 🔴 High | Medium | D3.js or tree library |
 | 3C | Credit 101 Education | 🔴 High | Low-Medium | Auth + active member check |
@@ -884,7 +885,7 @@ The LLC sustains itself through:
 
 ### 🔧 Up Next — Phase 2 (Milestones, Perks & Quests)
 8. ✅ **Phase 2A wrap-up** — Animated milestone celebration (confetti + toast), milestone history timeline
-9. **Phase 2B — Quest & Task System** — Quest board, Credit Points, status tiers (Bronze → Diamond), admin management, Fidelity cashback quest
+9. ✅ **Phase 2B — Quest & Task System** — Quest board, Credit Points, status tiers (Bronze → Diamond), badge collection, auto-detection engine, admin quest management, proof review workflow
 10. **Phase 2C — Birthday Payouts** — Stripe Connect Express, automated $10 birthday deposits, bank linking flow
 
 ### Phase 3 (Family Structure, Identity & Education)
@@ -923,7 +924,7 @@ This roadmap is a **living document**. It will be updated as:
 - The fund grows and new possibilities open up
 - Members provide feedback and suggestions
 
-**Last Updated:** July 17, 2025
+**Last Updated:** March 8, 2026
 **Maintained By:** Justin McNeal (Admin)
 
 ---
