@@ -117,7 +117,7 @@ Invested into:
 - [x] Profile editing in settings page (name, birthday, photo)
 - [ ] "Complete Your Profile" nudge banner if profile is incomplete
 - [ ] Admin can see onboarding completion status per member
-- [ ] Birthday auto-celebration (ties into Phase 2 milestones & Phase 5 events)
+- [ ] Birthday auto-celebration + $10 payout (see Phase 2C Birthday Payouts)
 
 ---
 
@@ -212,6 +212,47 @@ Invested into:
 - [ ] Celebration animation when a quest is completed or tier is achieved
 - [ ] Leaderboard — family ranking by Credit Points (optional, can be toggled off)
 - [ ] Database: `quests`, `member_quests`, `credit_points_log` tables
+
+#### 2C. Birthday Payouts (Automated $10 Gift)
+**Goal:** Every member gets a $10 direct deposit on their birthday — automated, no admin action needed.
+
+##### How It Works
+1. Member links their bank account once via **Stripe Connect Express** onboarding
+2. A daily scheduled edge function checks: "any birthdays today?"
+3. If yes → `stripe.transfers.create({ amount: 1000, destination: 'acct_xxx' })`
+4. Money arrives in 1-2 business days via Stripe's automatic payout to their bank
+5. Portal shows "Happy Birthday!" celebration + payout notification
+
+##### Why Stripe Connect
+- Already using Stripe — no new vendor, same dashboard
+- Express accounts handle KYC/compliance (Stripe collects bank details, not us)
+- Member completes a one-time hosted onboarding to link their bank
+- Cost: **$0.25 per payout** ($10/year for 4 members = very low cost)
+- Could scale later for other payouts (bonuses, profit sharing, loan disbursements)
+
+##### Features to Build
+- [ ] "Link Your Bank" button in portal settings (generates Stripe Connect Express onboarding link)
+- [ ] `stripe_connect_account_id` column in profiles table
+- [ ] Stripe Connect Express onboarding flow (hosted by Stripe)
+- [ ] Return URL handler after member completes bank linking
+- [ ] Connect status indicator in settings (✅ Bank Linked / ⚠️ Not Linked)
+- [ ] Edge function: `birthday-payout` — daily cron that queries birthdays matching today's date
+- [ ] Transfer $10 to each birthday member's connected Stripe account
+- [ ] Record payout in `birthday_payouts` table (user_id, amount, stripe_transfer_id, date)
+- [ ] Portal notification: "🎂 Happy Birthday! $10 is on its way to your bank account"
+- [ ] Admin dashboard: birthday payout history log
+- [ ] Birthday celebration card on portal dashboard (visible to all members)
+- [ ] Auto-post to social feed: "🎂 Happy Birthday [Name]! The family sent you $10!"
+- [ ] Fallback: if bank not linked, show nudge to link it + queue payout for when they do
+- [ ] Database: `birthday_payouts` table, `stripe_connect_account_id` on profiles
+
+##### Alternative Options Considered
+| Option | Verdict |
+|--------|---------|
+| **Plaid + Dwolla** | Works but adds 2 new vendors, more complex |
+| **PayPal Payouts** | Adds PayPal dependency, members need PayPal accounts |
+| **Manual Zelle/Venmo** | Free but not automated, admin has to remember |
+| **Stripe Connect (Express)** ✅ | Best fit — integrated, compliant, automated |
 
 ---
 

@@ -298,6 +298,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
-    <script src="../js/portal/onboarding.js"></script>
+    <!-- Onboarding modules (load order matters) -->
+    <script src="../js/portal/onboarding/state.js"></script>
+    <script src="../js/portal/onboarding/steps.js"></script>
+    <script src="../js/portal/onboarding/photo.js"></script>
+    <script src="../js/portal/onboarding/contribution.js"></script>
+    <script src="../js/portal/onboarding/init.js"></script>
 </body>
 </html>
