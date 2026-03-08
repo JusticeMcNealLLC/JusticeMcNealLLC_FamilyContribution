@@ -252,7 +252,17 @@ async function uploadProofFile(file, questId) {
 }
 
 // ─── CP Award Helper ─────────────────────────────────────
-async function awardCP(points, reason, questId, memberQuestId) {
+/**
+ * @param {number} points
+ * @param {string} reason
+ * @param {string|null} questId
+ * @param {string|null} memberQuestId
+ * @param {boolean} permanent — true for one_time/per_event quests (CP never expires)
+ */
+async function awardCP(points, reason, questId, memberQuestId, permanent = false) {
+    const expiresAt = permanent
+        ? '9999-12-31T00:00:00Z'
+        : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
     const { error } = await supabaseClient
         .from('credit_points_log')
         .insert({
@@ -261,7 +271,7 @@ async function awardCP(points, reason, questId, memberQuestId) {
             reason: reason,
             quest_id: questId || null,
             member_quest_id: memberQuestId || null,
-            expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+            expires_at: expiresAt,
         });
     if (error) console.error('Failed to award CP:', error);
 }
@@ -382,6 +392,8 @@ async function runAutoDetection() {
                                 await autoCompleteRecurring(quest, period);
                             }
                         }
+                        // Set progress note with next billing date
+                        await updateOnTimePaymentNote(quest, subscription, paidInvoices);
                         continue; // Skip the generic shouldComplete flow
                     }
 
@@ -389,13 +401,23 @@ async function runAutoDetection() {
                         shouldComplete = subscription && subscription.current_amount_cents > (APP_CONFIG.MIN_AMOUNT * 100);
                         break;
 
-                    case 'streak_3':
-                        shouldComplete = paidInvoices.length >= 3 && checkConsecutiveMonths(paidInvoices, 3);
+                    case 'streak_3': {
+                        const streak3 = getCurrentStreak(paidInvoices);
+                        shouldComplete = streak3 >= 3;
+                        if (!shouldComplete && streak3 > 0) {
+                            await upsertStreakProgress(quest, mq, streak3, 3);
+                        }
                         break;
+                    }
 
-                    case 'streak_6':
-                        shouldComplete = paidInvoices.length >= 6 && checkConsecutiveMonths(paidInvoices, 6);
+                    case 'streak_6': {
+                        const streak6 = getCurrentStreak(paidInvoices);
+                        shouldComplete = streak6 >= 6;
+                        if (!shouldComplete && streak6 > 0) {
+                            await upsertStreakProgress(quest, mq, streak6, 6);
+                        }
                         break;
+                    }
                 }
 
                 if (shouldComplete) {
@@ -484,7 +506,9 @@ async function autoCompleteQuest(quest, existingMQ) {
             .limit(1);
 
         if (!existingCP || existingCP.length === 0) {
-            await awardCP(quest.cp_reward, `Completed: ${quest.title}`, quest.id, mqId);
+            // One-time / per_event quests get permanent CP; recurring gets 90-day rolling
+            const isPermanent = quest.quest_type !== 'recurring_monthly';
+            await awardCP(quest.cp_reward, `Completed: ${quest.title}`, quest.id, mqId, isPermanent);
         }
 
         // Refresh member quests
@@ -551,7 +575,8 @@ async function autoCompleteRecurring(quest, periodKey) {
             .limit(1);
 
         if (!existingCP || existingCP.length === 0) {
-            await awardCP(quest.cp_reward, `${quest.title} (${periodKey})`, quest.id, mqId);
+            // Recurring monthly CP uses 90-day rolling window
+            await awardCP(quest.cp_reward, `${quest.title} (${periodKey})`, quest.id, mqId, false);
         }
     } catch (err) {
         console.error('Auto-complete recurring error:', err);
@@ -585,4 +610,108 @@ function checkConsecutiveMonths(paidInvoices, requiredStreak) {
         }
     }
     return streak >= requiredStreak;
+}
+
+/**
+ * Returns the current consecutive month streak count (ending at most recent month).
+ */
+function getCurrentStreak(paidInvoices) {
+    if (!paidInvoices || paidInvoices.length === 0) return 0;
+
+    const months = new Set();
+    for (const inv of paidInvoices) {
+        const d = new Date(inv.period_start || inv.paid_at);
+        months.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    }
+
+    const sorted = [...months].sort().reverse();
+    let streak = 1;
+    for (let i = 1; i < sorted.length; i++) {
+        const [y1, m1] = sorted[i - 1].split('-').map(Number);
+        const [y2, m2] = sorted[i].split('-').map(Number);
+        const prev = new Date(y1, m1 - 1, 1);
+        prev.setMonth(prev.getMonth() - 1);
+        if (prev.getFullYear() === y2 && prev.getMonth() + 1 === m2) {
+            streak++;
+        } else {
+            break;
+        }
+    }
+    return streak;
+}
+
+/**
+ * Create or update a member_quest for a streak quest with progress info.
+ * Auto-sets status to 'in_progress' if not yet started.
+ */
+async function upsertStreakProgress(quest, existingMQ, current, target) {
+    try {
+        const note = `${current} of ${target} consecutive months`;
+        if (existingMQ) {
+            await supabaseClient
+                .from('member_quests')
+                .update({
+                    status: existingMQ.status === 'available' ? 'in_progress' : existingMQ.status,
+                    progress_current: current,
+                    progress_target: target,
+                    progress_note: note,
+                    started_at: existingMQ.started_at || new Date().toISOString(),
+                })
+                .eq('id', existingMQ.id);
+        } else {
+            const { data } = await supabaseClient
+                .from('member_quests')
+                .insert({
+                    quest_id: quest.id,
+                    user_id: _currentUserId,
+                    status: 'in_progress',
+                    started_at: new Date().toISOString(),
+                    progress_current: current,
+                    progress_target: target,
+                    progress_note: note,
+                    period_key: null,
+                })
+                .select()
+                .single();
+            if (data) {
+                _memberQuestsData.push(data);
+            }
+        }
+    } catch (err) {
+        console.error('upsertStreakProgress error:', err);
+    }
+}
+
+/**
+ * Set a progress_note on the on-time payment quest with the next billing date.
+ */
+async function updateOnTimePaymentNote(quest, subscription, paidInvoices) {
+    try {
+        // Find the most recent non-period member_quest for this quest
+        const currentMonth = new Date();
+        const period = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
+        const mq = _memberQuestsData.find(m => m.quest_id === quest.id && m.period_key === period);
+
+        // Calculate next billing date (1st of next month from last paid invoice)
+        let nextDate = '';
+        if (paidInvoices.length > 0) {
+            const last = paidInvoices[paidInvoices.length - 1];
+            const d = new Date(last.period_start || last.paid_at);
+            d.setMonth(d.getMonth() + 1);
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            nextDate = `Next payment: ${monthNames[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+        }
+
+        if (mq && nextDate) {
+            await supabaseClient
+                .from('member_quests')
+                .update({
+                    progress_current: paidInvoices.length,
+                    progress_note: nextDate,
+                })
+                .eq('id', mq.id);
+        }
+    } catch (err) {
+        console.error('updateOnTimePaymentNote error:', err);
+    }
 }

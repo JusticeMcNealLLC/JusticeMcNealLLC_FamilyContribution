@@ -171,6 +171,14 @@ function renderQuestCard(quest) {
     const catCfg = QUEST_CATEGORIES[quest.category] || QUEST_CATEGORIES.general;
     const isCompleted = status === 'completed';
 
+    // Progress bar for streak / tracked quests
+    const hasProgress = mq && mq.progress_target > 0 && !isCompleted;
+    const progressPct = hasProgress ? Math.min(100, Math.round((mq.progress_current / mq.progress_target) * 100)) : 0;
+    const progressLabel = hasProgress ? `${mq.progress_current}/${mq.progress_target}` : '';
+
+    // Progress note (e.g. "Next payment: Apr 1, 2026")
+    const progressNote = mq && mq.progress_note && !isCompleted ? mq.progress_note : '';
+
     return `
         <div data-quest-id="${quest.id}" class="group bg-white rounded-2xl border ${isCompleted ? 'border-emerald-200 bg-emerald-50/30' : 'border-gray-200/80'} p-4 sm:p-5 cursor-pointer card-hover transition">
             <div class="flex items-start gap-3.5">
@@ -183,6 +191,17 @@ function renderQuestCard(quest) {
                         <span class="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${statusCfg.bg} ${statusCfg.text}">${statusCfg.label}</span>
                     </div>
                     <p class="text-xs text-gray-500 mb-2 line-clamp-2">${quest.description || ''}</p>
+                    ${hasProgress ? `
+                    <div class="mb-2">
+                        <div class="flex items-center justify-between text-[10px] mb-1">
+                            <span class="font-semibold text-brand-600">${progressLabel} months</span>
+                            <span class="text-gray-400">${progressPct}%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-brand-500 to-brand-600 rounded-full transition-all duration-700 ease-out" style="width: ${progressPct}%"></div>
+                        </div>
+                    </div>` : ''}
+                    ${progressNote ? `<div class="text-[10px] text-gray-400 mb-1.5">${progressNote}</div>` : ''}
                     <div class="flex items-center gap-3 text-xs">
                         <span class="font-semibold text-brand-600">+${quest.cp_reward} CP</span>
                         <span class="text-gray-400">•</span>
@@ -278,6 +297,26 @@ function renderQuestDetail(quest, memberQuest) {
                             </div>
                         </div>
                     </div>` : ''}
+
+                    <!-- Progress Tracker (streak / tracked quests) -->
+                    ${memberQuest && memberQuest.progress_target > 0 && !isCompleted ? (() => {
+                        const pCurrent = memberQuest.progress_current || 0;
+                        const pTarget = memberQuest.progress_target || 1;
+                        const pPct = Math.min(100, Math.round((pCurrent / pTarget) * 100));
+                        const pNote = memberQuest.progress_note || '';
+                        return `
+                    <div class="mb-5 bg-brand-50 rounded-xl p-4">
+                        <h4 class="text-xs font-semibold text-brand-700 uppercase tracking-wider mb-3">Progress</h4>
+                        <div class="flex items-end justify-between mb-2">
+                            <div class="text-2xl font-extrabold text-brand-600">${pCurrent}<span class="text-sm font-semibold text-brand-400">/${pTarget}</span></div>
+                            <div class="text-sm font-bold text-brand-500">${pPct}%</div>
+                        </div>
+                        <div class="w-full h-2.5 bg-brand-100 rounded-full overflow-hidden mb-2">
+                            <div class="h-full bg-gradient-to-r from-brand-500 to-brand-600 rounded-full transition-all duration-1000 ease-out" style="width: ${pPct}%"></div>
+                        </div>
+                        ${pNote ? `<div class="text-xs text-brand-600 mt-1">${pNote}</div>` : ''}
+                    </div>`;
+                    })() : ''}
 
                     <!-- Meta Info -->
                     <div class="flex items-center gap-4 text-xs text-gray-400 mb-6">
