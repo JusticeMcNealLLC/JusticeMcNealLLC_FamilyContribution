@@ -132,10 +132,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
-    // Mobile logout button
+    // Mobile logout button (tab bar — legacy, may not exist)
     const logoutBtnMobile = document.getElementById('logoutBtnMobile');
     if (logoutBtnMobile) {
         logoutBtnMobile.addEventListener('click', async function(e) {
+            e.preventDefault();
+            await handleLogout();
+        });
+    }
+
+    // Settings-page logout button
+    const logoutBtnSettings = document.getElementById('logoutBtnSettings');
+    if (logoutBtnSettings) {
+        logoutBtnSettings.addEventListener('click', async function(e) {
             e.preventDefault();
             await handleLogout();
         });

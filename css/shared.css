@@ -127,6 +127,44 @@
     color: #6b7280;
 }
 
+/* ─── Elevated center tab (Instagram-style) ─── */
+.bottom-tab-bar .tab-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 4px 0 8px;
+    min-height: 56px;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    color: #9ca3af;
+    position: relative;
+}
+.bottom-tab-bar .tab-center .tab-center-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-top: -18px;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.bottom-tab-bar .tab-center:active .tab-center-icon {
+    transform: scale(0.92);
+}
+.bottom-tab-bar .tab-center-active {
+    color: #4f46e5;
+}
+.bottom-tab-bar .tab-center-active .tab-center-icon {
+    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.5);
+}
+
 /* ─── Safe-area body padding for bottom bar (mobile only) ─── */
 @media (max-width: 767px) {
     .has-bottom-bar {

@@ -105,9 +105,8 @@ function renderMilestoneRoadmap(totalCents) {
                 ? `<span class="text-lg leading-none">${tier.emoji}</span>`
                 : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>';
 
-        // Connection line between tiles
         const connector = i < MILESTONE_TIERS.length - 1
-            ? `<div class="absolute left-[23px] sm:left-[27px] top-full w-0.5 h-3 ${isUnlocked ? 'bg-emerald-300' : 'bg-gray-200'}"></div>`
+            ? `<div class="absolute left-[17px] sm:left-[27px] top-full w-0.5 h-2 sm:h-3 ${isUnlocked ? 'bg-emerald-300' : 'bg-gray-200'}"></div>`
             : '';
 
         const statusLabel = isUnlocked
@@ -123,23 +122,23 @@ function renderMilestoneRoadmap(totalCents) {
             : '';
 
         return `
-            <div class="relative ${i < MILESTONE_TIERS.length - 1 ? 'mb-3' : ''}">
-                <div class="flex items-start gap-3 sm:gap-4 rounded-2xl border p-4 sm:p-5 transition ${cardCls} ${isNext ? 'ring-2 ring-amber-200/60' : ''}">
+            <div class="relative ${i < MILESTONE_TIERS.length - 1 ? 'mb-2 sm:mb-3' : ''}">
+                <div class="flex items-start gap-2.5 sm:gap-4 rounded-xl sm:rounded-2xl border p-3 sm:p-5 transition ${cardCls} ${isNext ? 'ring-2 ring-amber-200/60' : ''}">
                     <!-- Icon -->
-                    <div class="w-11 h-11 sm:w-13 sm:h-13 rounded-xl border-2 flex items-center justify-center flex-shrink-0 ${ringCls}">
+                    <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl border-2 flex items-center justify-center flex-shrink-0 ${ringCls}">
                         ${checkOrLock}
                     </div>
                     <!-- Content -->
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between gap-2 flex-wrap">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <span class="text-sm sm:text-base font-bold ${nameCls}">${isUnlocked ? tier.emoji + ' ' : ''}${tier.name}</span>
+                        <div class="flex items-center justify-between gap-1.5 sm:gap-2 flex-wrap">
+                            <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                                <span class="text-xs sm:text-base font-bold ${nameCls}">${isUnlocked ? tier.emoji + ' ' : ''}${tier.name}</span>
                             </div>
                             ${statusLabel}
                         </div>
-                        <div class="text-xs sm:text-sm ${perkCls} mt-0.5">${tier.perk}</div>
-                        <div class="flex items-center gap-2 mt-1.5">
-                            <span class="text-xs font-semibold ${isUnlocked ? 'text-emerald-600' : 'text-gray-400'}">${formatCurrency(tier.threshold)}</span>
+                        <div class="text-[11px] sm:text-sm ${perkCls} mt-0.5 line-clamp-1">${tier.perk}</div>
+                        <div class="flex items-center gap-2 mt-1 sm:mt-1.5">
+                            <span class="text-[11px] sm:text-xs font-semibold ${isUnlocked ? 'text-emerald-600' : 'text-gray-400'}">${formatCurrency(tier.threshold)}</span>
                         </div>
                         ${progressBar}
                     </div>

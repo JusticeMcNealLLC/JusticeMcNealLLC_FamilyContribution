@@ -46,17 +46,33 @@
         return '<a href="' + href + '" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">' + label + '</a>';
     }
 
-    function mTab(href, svgInner, label, page) {
+    function mTab(href, svgInner, label, page, extra) {
         var cls = page === active ? 'tab-active' : 'tab-inactive';
-        return '<a href="' + href + '" class="' + cls + '">' +
+        return '<a href="' + href + '" class="' + cls + (extra || '') + '">' +
             '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + svgInner + '</svg>' +
             '<span>' + label + '</span></a>';
     }
 
-    // Sign-out tab (button, not a link)
-    var signOutTab = '<button id="logoutBtnMobile" class="tab-inactive">' +
-        '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.logout) + '</svg>' +
-        '<span>Sign Out</span></button>';
+    // Elevated center tab (Instagram-style)
+    function centerTab(href, svgInner, label, page) {
+        var cls = page === active ? 'tab-center tab-center-active' : 'tab-center';
+        return '<a href="' + href + '" class="' + cls + '">' +
+            '<div class="tab-center-icon">' +
+                '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + svgInner + '</svg>' +
+            '</div>' +
+            '<span>' + label + '</span></a>';
+    }
+
+    // Profile avatar tab (rightmost)
+    function profileTab() {
+        var cls = 'settings' === active ? 'tab-active' : 'tab-inactive';
+        return '<a href="settings.html" class="' + cls + '" id="profileTab">' +
+            '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border-2 ' + ('settings' === active ? 'border-brand-500' : 'border-gray-200') + '">' +
+                '<span id="tabProfileInitials" class="text-brand-600 text-[10px] font-bold"></span>' +
+                '<img id="tabProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+            '</div>' +
+            '<span>Profile</span></a>';
+    }
 
     // ─── Build per page-type ─────────────────────────────
     var desktopLinks, tabsInner, adminBadge = '';
@@ -70,11 +86,10 @@
             dLink('../portal/index.html', 'My Portal', '_');
 
         tabsInner =
-            '<div class="max-w-lg mx-auto grid grid-cols-4 px-2">' +
+            '<div class="max-w-lg mx-auto grid grid-cols-3 px-2">' +
                 mTab('index.html', p(SVG.hub), 'Hub', 'hub') +
                 mTab('invite.html', p(SVG.invite), 'Invite', 'invite') +
                 mTab('../portal/index.html', p(SVG.person), 'Portal', '_') +
-                signOutTab +
             '</div>';
 
     } else {
@@ -86,16 +101,12 @@
             dLink('settings.html', 'Settings', 'settings');
 
         tabsInner =
-            '<div class="max-w-lg mx-auto grid grid-cols-6 px-2">' +
+            '<div class="max-w-lg mx-auto grid grid-cols-5 px-2">' +
                 mTab('index.html', p(SVG.home), 'Home', 'dashboard') +
-                mTab('milestones.html', p(SVG.trophy), 'Goals', 'milestones') +
-                mTab('investments.html', p(SVG.invest), 'Invest', 'investments') +
                 mTab('history.html', p(SVG.history), 'History', 'history') +
-                // Settings has two paths in one SVG
-                '<a href="settings.html" class="' + ('settings' === active ? 'tab-active' : 'tab-inactive') + '">' +
-                    '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.gear) + p(SVG.gearDot) + '</svg>' +
-                    '<span>Settings</span></a>' +
-                signOutTab +
+                centerTab('milestones.html', p(SVG.trophy), 'Goals', 'milestones') +
+                mTab('investments.html', p(SVG.invest), 'Invest', 'investments') +
+                profileTab() +
             '</div>';
     }
 
@@ -217,6 +228,19 @@ async function loadNavProfile() {
                 };
             }
             mSection.style.display = '';
+        }
+
+        // Tab bar profile avatar
+        var tInitialsEl = document.getElementById('tabProfileInitials');
+        var tImgEl      = document.getElementById('tabProfileImg');
+
+        if (tInitialsEl) tInitialsEl.textContent = initials;
+        if (photoUrl && tImgEl) {
+            tImgEl.src = photoUrl;
+            tImgEl.onload = function () {
+                tImgEl.classList.remove('hidden');
+                if (tInitialsEl) tInitialsEl.classList.add('hidden');
+            };
         }
     } catch (e) {
         console.error('loadNavProfile error:', e);
