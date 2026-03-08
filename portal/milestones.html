@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Milestones | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="milestones">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <!-- Header -->
+        <div class="mb-6 sm:mb-8">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Family Milestones</h1>
+            <p class="text-gray-500 mt-1 text-sm sm:text-base">Our journey to generational wealth — one milestone at a time</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState">
+            <!-- Hero skeleton -->
+            <div class="bg-gradient-to-br from-brand-600 to-brand-700 rounded-2xl p-6 sm:p-8 mb-6 sm:mb-8">
+                <div class="skeleton h-6 w-32 rounded-lg opacity-30 mb-4"></div>
+                <div class="skeleton h-10 w-48 rounded-lg opacity-30 mb-6"></div>
+                <div class="skeleton h-3 w-full rounded-full opacity-20"></div>
+            </div>
+            <!-- Stats skeleton -->
+            <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5"><div class="skeleton h-8 w-20 rounded-lg mb-2"></div><div class="skeleton h-4 w-16 rounded"></div></div>
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5"><div class="skeleton h-8 w-16 rounded-lg mb-2"></div><div class="skeleton h-4 w-16 rounded"></div></div>
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5"><div class="skeleton h-8 w-24 rounded-lg mb-2"></div><div class="skeleton h-4 w-16 rounded"></div></div>
+            </div>
+            <!-- Roadmap skeleton -->
+            <div class="space-y-3">
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-5"><div class="flex gap-4"><div class="skeleton w-11 h-11 rounded-xl"></div><div class="flex-1 space-y-2"><div class="skeleton h-5 w-40 rounded"></div><div class="skeleton h-4 w-64 rounded"></div></div></div></div>
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-5"><div class="flex gap-4"><div class="skeleton w-11 h-11 rounded-xl"></div><div class="flex-1 space-y-2"><div class="skeleton h-5 w-36 rounded"></div><div class="skeleton h-4 w-56 rounded"></div></div></div></div>
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-5"><div class="flex gap-4"><div class="skeleton w-11 h-11 rounded-xl"></div><div class="flex-1 space-y-2"><div class="skeleton h-5 w-44 rounded"></div><div class="skeleton h-4 w-48 rounded"></div></div></div></div>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden">
+            <div class="bg-white rounded-2xl border border-gray-200 p-8 sm:p-16 text-center">
+                <div class="w-20 h-20 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Couldn't load milestones</h3>
+                <p class="text-gray-500 max-w-sm mx-auto">Something went wrong loading the data. Please try refreshing the page.</p>
+            </div>
+        </div>
+
+        <!-- Main Content (hidden until data loads) -->
+        <div id="milestonesContent" class="hidden fade-in">
+
+            <!-- Next Unlock Hero Card -->
+            <div id="progressHero" class="bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 rounded-2xl p-5 sm:p-8 text-white relative overflow-hidden mb-6 sm:mb-8">
+                <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-12 translate-x-12"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-10 -translate-x-10"></div>
+                <div class="relative">
+                    <!-- Current tier badge -->
+                    <div id="heroCurrentTier" class="mb-3"></div>
+
+                    <!-- Current total -->
+                    <div class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-1" id="heroCurrentTotal">--</div>
+                    <p class="text-brand-200 text-sm mb-5">Total family assets</p>
+
+                    <!-- Next milestone info -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <div>
+                            <span class="text-brand-200 text-xs font-medium uppercase tracking-wider">Next Milestone</span>
+                            <div class="text-base sm:text-lg font-bold text-white mt-0.5" id="heroNextName">--</div>
+                        </div>
+                        <div class="text-right sm:text-right">
+                            <div class="text-lg sm:text-xl font-extrabold text-white" id="heroNextAmount">--</div>
+                            <div class="text-brand-200 text-xs" id="heroRemaining">--</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="w-full h-3 bg-white/15 rounded-full overflow-hidden">
+                        <div id="heroProgressBar" class="h-full bg-gradient-to-r from-emerald-400 to-emerald-300 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between mt-1.5">
+                        <span class="text-brand-200 text-xs">Progress</span>
+                        <span class="text-white text-xs font-bold" id="heroProgressPct">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 text-center card-hover">
+                    <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Current Tier</div>
+                    <div class="text-base sm:text-lg font-extrabold text-gray-900 truncate" id="statCurrentTier">--</div>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 text-center card-hover">
+                    <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Unlocked</div>
+                    <div class="text-base sm:text-lg font-extrabold text-emerald-600" id="statUnlocked">-- / 12</div>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 text-center card-hover">
+                    <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Assets</div>
+                    <div class="text-base sm:text-lg font-extrabold text-brand-600" id="statTotalAssets">--</div>
+                </div>
+            </div>
+
+            <!-- Milestone Roadmap -->
+            <section>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-gray-900">Roadmap</h2>
+                    <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">12 milestones</span>
+                </div>
+                <div id="milestoneRoadmap"></div>
+            </section>
+
+        </div>
+
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/components/pageShell.js"></script>
+    <script src="../js/auth/shared.js"></script>
+    <!-- Milestone modules (load order matters) -->
+    <script src="../js/portal/milestones/config.js"></script>
+    <script src="../js/portal/milestones/renders.js"></script>
+    <script src="../js/portal/milestones/init.js"></script>
+</body>
+</html>

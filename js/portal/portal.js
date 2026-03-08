@@ -59,6 +59,9 @@ async function loadDashboard(user) {
     // Load total contributed
     await loadTotalContributed(user.id);
 
+    // Load next milestone card (non-blocking)
+    loadNextMilestone();
+
     // Show/hide elements based on subscription status
     updateDashboardUI(subscription);
 }
@@ -266,5 +269,55 @@ async function openBillingPortal() {
     } catch (error) {
         console.error('Error opening billing portal:', error);
         alert('Failed to open billing portal. Please try again.');
+    }
+}
+
+async function loadNextMilestone() {
+    try {
+        // Fetch net contributions + latest portfolio snapshot in parallel
+        const [netRes, portfolioRes] = await Promise.all([
+            supabaseClient.rpc('get_family_net_total'),
+            supabaseClient
+                .from('investment_snapshots')
+                .select('total_value_cents')
+                .order('snapshot_date', { ascending: false })
+                .limit(1),
+        ]);
+
+        const netContributions = netRes.data || 0;
+        const portfolioValue   = portfolioRes.data?.[0]?.total_value_cents || 0;
+        const totalAssets = netContributions + portfolioValue;
+
+        // Use functions from milestones/config.js (loaded before portal.js)
+        const next = getNextTier(totalAssets);
+        if (!next) return; // All tiers achieved — could show a celebration instead
+
+        const pct = getProgressToNext(totalAssets);
+        const remaining = next.threshold - totalAssets;
+
+        const card     = document.getElementById('nextMilestoneCard');
+        const emojiEl  = document.getElementById('nextMilestoneEmoji');
+        const nameEl   = document.getElementById('nextMilestoneName');
+        const pctEl    = document.getElementById('nextMilestonePct');
+        const barEl    = document.getElementById('nextMilestoneBar');
+        const remainEl = document.getElementById('nextMilestoneRemaining');
+
+        if (!card) return;
+
+        if (emojiEl)  emojiEl.textContent = next.emoji;
+        if (nameEl)   nameEl.textContent  = `Next: ${next.name}`;
+        if (pctEl)    pctEl.textContent   = Math.round(pct) + '%';
+        if (remainEl) remainEl.textContent = `${formatCurrency(remaining)} to go · ${formatCurrency(next.threshold)} goal`;
+
+        card.classList.remove('hidden');
+
+        // Animate the bar after reveal
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                if (barEl) barEl.style.width = pct.toFixed(1) + '%';
+            });
+        });
+    } catch (err) {
+        console.error('Error loading next milestone:', err);
     }
 }

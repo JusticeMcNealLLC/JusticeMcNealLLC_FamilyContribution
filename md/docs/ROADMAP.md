@@ -122,7 +122,7 @@ Invested into:
 ---
 
 ### Phase 2: Milestones, Perks & Quests
-**Status:** 🔲 Not Started
+**Status:** � In Progress
 **Priority:** 🔴 High
 **Goal:** Show members what we've achieved and what perks unlock as our assets grow — gamify generational wealth.
 
@@ -146,16 +146,16 @@ Invested into:
 | $1,000,000 | 👑 Generational | Full benefits suite — generational wealth achieved |
 
 ##### Features to Build
-- [ ] Milestones page on the portal (visual roadmap with progress bars)
-- [ ] Current asset level indicator with animated progress to next tier
+- [x] Milestones page on the portal (visual roadmap with progress bars)
+- [x] Current asset level indicator with animated progress to next tier
 - [ ] Animated celebration when a new milestone is reached (confetti, toast notification)
 - [ ] Milestone history timeline (when each tier was achieved)
 - [ ] Push notification to all members when a milestone is hit
 - [ ] Admin can create custom milestones beyond the defaults
 - [ ] Perk status badges on member profiles
-- [ ] "Next Unlock" countdown card on the portal dashboard
+- [x] "Next Unlock" countdown card on the portal dashboard
 - [ ] Auto-generated social feed posts for milestone achievements
-- [ ] Locked/unlocked visual state for each perk tier
+- [x] Locked/unlocked visual state for each perk tier
 
 #### 2B. Quest & Task System
 **Goal:** Give members clear, actionable tasks that benefit both them and the LLC — completion earns Credit Points that unlock rewards and boost their status in the system.
