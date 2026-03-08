@@ -126,3 +126,70 @@ function setButtonLoading(button, loading, originalText = 'Submit') {
         button.textContent = originalText;
     }
 }
+
+// ─── Brand Logo Loader ─────────────────────────────────────
+// Finds all [data-brand-logo] containers and replaces JM text
+// fallback with the uploaded brand logo from Supabase Storage.
+// Markup pattern:
+//   <div data-brand-logo class="...gradient...">
+//       <span data-brand-fallback>JM</span>
+//       <img data-brand-img class="hidden" alt="Logo">
+//   </div>
+var _brandLogoCache = null;
+
+async function loadBrandLogos() {
+    try {
+        // Fetch + cache the logo info
+        if (_brandLogoCache === undefined) return;   // already tried, nothing found
+        if (!_brandLogoCache) {
+            var res = await supabaseClient.storage
+                .from('profile-pictures')
+                .list('brand', { limit: 20 });
+
+            if (!res.data || !res.data.length) { _brandLogoCache = undefined; return; }
+
+            var match = res.data.find(function(f) { return f.name.startsWith('logo-transparent'); });
+            if (!match) match = res.data.find(function(f) { return f.name.startsWith('logo-solid'); });
+            if (!match) { _brandLogoCache = undefined; return; }
+
+            var urlRes = supabaseClient.storage
+                .from('profile-pictures')
+                .getPublicUrl('brand/' + match.name);
+
+            if (!urlRes.data || !urlRes.data.publicUrl) { _brandLogoCache = undefined; return; }
+
+            _brandLogoCache = {
+                url: urlRes.data.publicUrl + '?v=' + Date.now(),
+                isTransparent: match.name.startsWith('logo-transparent'),
+            };
+        }
+
+        var info = _brandLogoCache;
+        var containers = document.querySelectorAll('[data-brand-logo]');
+
+        containers.forEach(function(container) {
+            var fallback = container.querySelector('[data-brand-fallback]');
+            var imgEl    = container.querySelector('[data-brand-img]');
+            if (!imgEl || imgEl.src) return;  // already loaded or missing
+
+            var img = new Image();
+            img.onload = function() {
+                imgEl.src = info.url;
+                imgEl.classList.remove('hidden');
+                if (fallback) fallback.classList.add('hidden');
+
+                if (info.isTransparent) {
+                    container.classList.remove(
+                        'bg-gradient-to-br', 'from-brand-500', 'to-brand-700',
+                        'via-brand-600', 'to-brand-800'
+                    );
+                    container.style.background = 'transparent';
+                    container.style.boxShadow = 'none';
+                }
+            };
+            img.src = info.url;
+        });
+    } catch (e) {
+        // Keep JM fallback
+    }
+}

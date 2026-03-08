@@ -167,6 +167,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         loadNavProfile();
     }
 
+    // Load brand logo into nav (and any other [data-brand-logo] containers)
+    if (typeof loadBrandLogos === 'function') {
+        loadBrandLogos();
+    }
+
     // Start inactivity auto-logout timer (skip on login, reset-password, onboarding, and splash pages)
     const path = window.location.pathname;
     const skipInactivity = path === '/' || path === '/index.html'

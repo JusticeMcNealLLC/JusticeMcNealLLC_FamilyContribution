@@ -118,8 +118,9 @@
         '<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">' +
             '<div class="flex justify-between items-center h-14 md:h-16">' +
                 '<div class="flex items-center gap-3">' +
-                    '<div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">' +
-                        '<span class="text-white font-bold text-sm">JM</span>' +
+                    '<div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center overflow-hidden" data-brand-logo>' +
+                        '<span class="text-white font-bold text-sm" data-brand-fallback>JM</span>' +
+                        '<img class="w-full h-full object-contain hidden" alt="Logo" data-brand-img>' +
                     '</div>' +
                     '<span class="font-bold text-lg text-gray-900">Justice McNeal</span>' +
                     adminBadge +
