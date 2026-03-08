@@ -370,24 +370,26 @@ function renderBadgeCollection(earnedBadges) {
     if (!container) return;
 
     const allKeys = Object.keys(BADGE_CATALOG);
-    const earnedKeys = earnedBadges.map(b => b.badge_key);
 
     container.innerHTML = `
         <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
             ${allKeys.map(key => {
-                const badge = BADGE_CATALOG[key];
+                const badge = getBadge(key);
+                const rarity = getBadgeRarity(key);
                 const earned = earnedBadges.find(b => b.badge_key === key);
                 const isDisplayed = earned && earned.is_displayed;
                 const isEarned = !!earned;
 
                 return `
-                    <div class="relative ${isEarned ? 'cursor-pointer' : 'opacity-40'} group" ${isEarned ? `data-badge-key="${key}"` : ''}>
-                        <div class="bg-white rounded-xl border-2 ${isDisplayed ? 'border-brand-500 ring-2 ring-brand-200' : isEarned ? 'border-gray-200 hover:border-brand-300' : 'border-gray-100'} p-3 text-center transition">
-                            <div class="text-2xl mb-1">${badge.emoji}</div>
-                            <div class="text-[10px] font-semibold text-gray-700 leading-tight">${badge.name}</div>
-                            ${isDisplayed ? '<div class="text-[9px] text-brand-600 font-medium mt-0.5">Displayed</div>' : ''}
-                            ${!isEarned ? '<div class="text-[9px] text-gray-400 mt-0.5">Locked</div>' : ''}
+                    <div class="badge-picker-card ${isDisplayed ? 'badge-active' : ''} ${!isEarned ? 'badge-locked' : ''} bg-white rounded-xl border-2 ${isDisplayed ? 'border-brand-500' : isEarned ? 'border-gray-200 hover:border-brand-300' : 'border-gray-100'} p-3 text-center"
+                         ${isEarned ? `data-badge-key="${key}"` : ''}>
+                        <div class="flex justify-center mb-1.5">
+                            ${buildBadgeChip(key, 'lg')}
                         </div>
+                        <div class="text-[10px] font-semibold text-gray-700 leading-tight mb-0.5">${badge.name}</div>
+                        <div class="text-[9px] font-medium rarity-${badge.rarity || 'common'}">${rarity.label}</div>
+                        ${isDisplayed ? '<div class="text-[9px] text-brand-600 font-semibold mt-0.5">✓ Displayed</div>' : ''}
+                        ${!isEarned ? '<div class="text-[9px] text-gray-400 mt-0.5">🔒 Locked</div>' : ''}
                     </div>
                 `;
             }).join('')}

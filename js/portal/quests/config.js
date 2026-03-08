@@ -60,16 +60,28 @@ const CP_TIERS = [
 ];
 
 // ─── Badge Definitions ───────────────────────────────────
+// Rarity tiers control the CSS animation on the badge chip:
+//   common    — static (no animation)
+//   rare      — subtle shimmer
+//   epic      — pulse glow
+//   legendary — rainbow border + sparkle
+const BADGE_RARITY = {
+    common:    { label: 'Common',    color: 'gray',    cssClass: 'badge-rarity-common' },
+    rare:      { label: 'Rare',      color: 'blue',    cssClass: 'badge-rarity-rare' },
+    epic:      { label: 'Epic',      color: 'purple',  cssClass: 'badge-rarity-epic' },
+    legendary: { label: 'Legendary', color: 'amber',   cssClass: 'badge-rarity-legendary' },
+};
+
 const BADGE_CATALOG = {
-    founding_member:  { emoji: '🏅', name: 'Founding Member',  description: 'Joined during year 1 of the LLC' },
-    shutterbug:       { emoji: '📸', name: 'Shutterbug',       description: 'Uploaded a profile picture' },
-    streak_master:    { emoji: '🔥', name: 'Streak Master',    description: '6+ consecutive on-time months' },
-    streak_legend:    { emoji: '⚡', name: 'Streak Legend',    description: '12+ consecutive on-time months' },
-    first_seed:       { emoji: '🌱', name: 'First Seed Witness', description: 'Active member when $500 milestone hit' },
-    four_figures:     { emoji: '💵', name: 'Four Figure Club', description: 'Active when $1,000 milestone hit' },
-    quest_champion:   { emoji: '🎯', name: 'Quest Champion',   description: 'Completed 10+ quests' },
-    fidelity_linked:  { emoji: '🏦', name: 'Fidelity Linked',  description: 'Opened Fidelity account & linked cashback' },
-    birthday_vip:     { emoji: '🎂', name: 'Birthday VIP',     description: 'Linked bank for birthday payouts' },
+    founding_member:  { emoji: '🏅', name: 'Founding Member',    description: 'Joined during year 1 of the LLC',            rarity: 'legendary' },
+    shutterbug:       { emoji: '📸', name: 'Shutterbug',         description: 'Uploaded a profile picture',                  rarity: 'common' },
+    streak_master:    { emoji: '🔥', name: 'Streak Master',      description: '6+ consecutive on-time months',               rarity: 'epic' },
+    streak_legend:    { emoji: '⚡', name: 'Streak Legend',      description: '12+ consecutive on-time months',              rarity: 'legendary' },
+    first_seed:       { emoji: '🌱', name: 'First Seed Witness', description: 'Active member when $500 milestone hit',       rarity: 'rare' },
+    four_figures:     { emoji: '💵', name: 'Four Figure Club',   description: 'Active when $1,000 milestone hit',            rarity: 'epic' },
+    quest_champion:   { emoji: '🎯', name: 'Quest Champion',     description: 'Completed 10+ quests',                        rarity: 'epic' },
+    fidelity_linked:  { emoji: '🏦', name: 'Fidelity Linked',    description: 'Opened Fidelity account & linked cashback',   rarity: 'rare' },
+    birthday_vip:     { emoji: '🎂', name: 'Birthday VIP',       description: 'Linked bank for birthday payouts',            rarity: 'rare' },
 };
 
 // ─── Quest Category Config ───────────────────────────────
@@ -122,7 +134,40 @@ function getQuestStatusConfig(status) {
 
 /** Get a badge definition from the catalog. */
 function getBadge(key) {
-    return BADGE_CATALOG[key] || { emoji: '❓', name: key, description: 'Unknown badge' };
+    return BADGE_CATALOG[key] || { emoji: '❓', name: key, description: 'Unknown badge', rarity: 'common' };
+}
+
+/** Get rarity config for a badge key. */
+function getBadgeRarity(key) {
+    const badge = getBadge(key);
+    return BADGE_RARITY[badge.rarity] || BADGE_RARITY.common;
+}
+
+/**
+ * Build badge chip HTML — the small animated circle that overlays on avatars.
+ * @param {string} badgeKey — key in BADGE_CATALOG
+ * @param {'sm'|'md'|'lg'} size — sm = nav (18px), md = settings (24px), lg = profile card (32px)
+ * @returns {string} HTML string
+ */
+function buildBadgeChip(badgeKey, size = 'sm') {
+    if (!badgeKey) return '';
+    const badge = getBadge(badgeKey);
+    const rarity = getBadgeRarity(badgeKey);
+    const sizeMap = { sm: 'w-5 h-5 text-[10px]', md: 'w-6 h-6 text-xs', lg: 'w-8 h-8 text-sm' };
+    const sizeClass = sizeMap[size] || sizeMap.sm;
+    return `<div class="badge-chip ${rarity.cssClass} ${sizeClass}" title="${badge.name} (${rarity.label})">${badge.emoji}</div>`;
+}
+
+/**
+ * Build badge chip for nav avatar overlay — positioned at bottom-right.
+ * @param {string} badgeKey
+ * @returns {string} HTML string (empty if no badge)
+ */
+function buildNavBadgeOverlay(badgeKey) {
+    if (!badgeKey) return '';
+    const badge = getBadge(badgeKey);
+    const rarity = getBadgeRarity(badgeKey);
+    return `<div class="badge-chip-overlay ${rarity.cssClass}" title="${badge.name}">${badge.emoji}</div>`;
 }
 
 /** Format quest type label. */

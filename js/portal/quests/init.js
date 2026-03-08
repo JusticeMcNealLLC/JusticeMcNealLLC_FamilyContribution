@@ -288,6 +288,11 @@ async function setDisplayedBadge(badgeKey) {
             .update({ displayed_badge: badgeKey })
             .eq('id', _currentUserId);
 
+        // Update nav badge overlays immediately
+        if (typeof _renderBadgeOverlays === 'function') {
+            _renderBadgeOverlays(badgeKey);
+        }
+
         // Refresh
         await loadQuestData();
     } catch (err) {

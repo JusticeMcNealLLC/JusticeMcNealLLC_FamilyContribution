@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Load subscription for billing info
     await loadSubscription(user.id);
 
+    // Load badge picker
+    await loadBadgePicker(user.id);
+
     // Set up profile editing (photo + name)
     setupProfileEditing();
 
@@ -346,5 +349,176 @@ async function openBillingPortalWithFlow(flowType) {
     } catch (error) {
         console.error('Error opening billing portal:', error);
         alert('Failed to open billing portal. Please try again.');
+    }
+}
+
+// ─── Badge Picker ────────────────────────────────────────
+let _settingsActiveBadge = null;
+let _settingsEarnedBadges = [];
+
+async function loadBadgePicker(userId) {
+    try {
+        // Fetch profile for current badge + photo
+        const [profileRes, badgesRes] = await Promise.all([
+            supabaseClient
+                .from('profiles')
+                .select('first_name, last_name, profile_picture_url, displayed_badge')
+                .eq('id', userId)
+                .single(),
+            supabaseClient
+                .from('member_badges')
+                .select('badge_key, is_displayed, created_at')
+                .eq('user_id', userId),
+        ]);
+
+        const profile = profileRes.data;
+        _settingsEarnedBadges = badgesRes.data || [];
+        _settingsActiveBadge = profile?.displayed_badge || null;
+
+        // Render preview avatar with current badge
+        renderBadgePreview(profile);
+
+        // Render badge selection grid
+        renderBadgeGrid();
+
+        // Wire remove button
+        const removeBtn = document.getElementById('removeBadgeBtn');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => selectSettingsBadge(null));
+        }
+    } catch (err) {
+        console.error('Error loading badge picker:', err);
+    }
+}
+
+function renderBadgePreview(profile) {
+    const initialsEl = document.getElementById('badgePreviewInitials');
+    const imgEl = document.getElementById('badgePreviewImg');
+    const overlayEl = document.getElementById('badgePreviewOverlay');
+    const nameEl = document.getElementById('activeBadgeName');
+    const descEl = document.getElementById('activeBadgeDesc');
+    const removeWrap = document.getElementById('removeBadgeWrap');
+
+    if (!profile) return;
+
+    // Avatar
+    const fi = (profile.first_name || '')[0] || '';
+    const li = (profile.last_name || '')[0] || '';
+    if (initialsEl) initialsEl.textContent = (fi + li).toUpperCase() || '?';
+    if (profile.profile_picture_url && imgEl) {
+        imgEl.src = profile.profile_picture_url + '?t=' + Date.now();
+        imgEl.classList.remove('hidden');
+        if (initialsEl) initialsEl.classList.add('hidden');
+    }
+
+    // Badge overlay
+    if (overlayEl) {
+        if (_settingsActiveBadge && typeof buildNavBadgeOverlay === 'function') {
+            overlayEl.innerHTML = buildNavBadgeOverlay(_settingsActiveBadge);
+        } else {
+            overlayEl.innerHTML = '';
+        }
+    }
+
+    // Badge name / description
+    if (_settingsActiveBadge) {
+        const badge = typeof getBadge === 'function' ? getBadge(_settingsActiveBadge) : { emoji: '❓', name: _settingsActiveBadge, description: '', rarity: 'common' };
+        const rarity = typeof getBadgeRarity === 'function' ? getBadgeRarity(_settingsActiveBadge) : { label: 'Common', color: 'gray', cssClass: '' };
+        if (nameEl) nameEl.innerHTML = `${badge.emoji} ${badge.name} <span class="text-xs font-medium rarity-${badge.rarity || 'common'}">${rarity.label}</span>`;
+        if (descEl) descEl.textContent = badge.description;
+        if (removeWrap) removeWrap.classList.remove('hidden');
+    } else {
+        if (nameEl) nameEl.textContent = 'No badge selected';
+        if (descEl) descEl.textContent = 'Complete quests to earn badges';
+        if (removeWrap) removeWrap.classList.add('hidden');
+    }
+}
+
+function renderBadgeGrid() {
+    const container = document.getElementById('settingsBadgeGrid');
+    if (!container) return;
+
+    const allKeys = typeof BADGE_CATALOG !== 'undefined' ? Object.keys(BADGE_CATALOG) : [];
+    const earnedKeys = _settingsEarnedBadges.map(b => b.badge_key);
+
+    if (allKeys.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-4 text-sm text-gray-400">Badge system loading…</div>';
+        return;
+    }
+
+    container.innerHTML = allKeys.map(key => {
+        const badge = getBadge(key);
+        const rarity = getBadgeRarity(key);
+        const isEarned = earnedKeys.includes(key);
+        const isActive = _settingsActiveBadge === key;
+
+        return `
+            <div class="badge-picker-card ${isActive ? 'badge-active' : ''} ${!isEarned ? 'badge-locked' : ''} bg-white rounded-xl border-2 ${isActive ? 'border-brand-500' : 'border-gray-100'} p-2.5 text-center"
+                 ${isEarned ? `data-badge-pick="${key}"` : ''}>
+                <div class="flex justify-center mb-1.5">
+                    ${buildBadgeChip(key, 'md')}
+                </div>
+                <div class="text-[10px] font-semibold text-gray-700 leading-tight mb-0.5">${badge.name}</div>
+                <div class="text-[9px] font-medium rarity-${badge.rarity || 'common'}">${rarity.label}</div>
+                ${isActive ? '<div class="text-[9px] text-brand-600 font-semibold mt-0.5">✓ Active</div>' : ''}
+                ${!isEarned ? '<div class="text-[9px] text-gray-400 mt-0.5">🔒 Locked</div>' : ''}
+            </div>
+        `;
+    }).join('');
+
+    // Wire up clicks on earned badges
+    container.querySelectorAll('[data-badge-pick]').forEach(el => {
+        el.addEventListener('click', () => {
+            const key = el.dataset.badgePick;
+            // Toggle off if already active
+            selectSettingsBadge(_settingsActiveBadge === key ? null : key);
+        });
+    });
+}
+
+async function selectSettingsBadge(badgeKey) {
+    try {
+        if (!settingsUser) return;
+
+        // Update profiles.displayed_badge
+        const { error: profileErr } = await supabaseClient
+            .from('profiles')
+            .update({ displayed_badge: badgeKey })
+            .eq('id', settingsUser.id);
+        if (profileErr) throw profileErr;
+
+        // Update member_badges is_displayed flags
+        await supabaseClient
+            .from('member_badges')
+            .update({ is_displayed: false })
+            .eq('user_id', settingsUser.id);
+
+        if (badgeKey) {
+            await supabaseClient
+                .from('member_badges')
+                .update({ is_displayed: true })
+                .eq('user_id', settingsUser.id)
+                .eq('badge_key', badgeKey);
+        }
+
+        _settingsActiveBadge = badgeKey;
+
+        // Re-render preview + grid
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('first_name, last_name, profile_picture_url, displayed_badge')
+            .eq('id', settingsUser.id)
+            .single();
+        renderBadgePreview(profile);
+        renderBadgeGrid();
+
+        // Update nav badge overlays immediately
+        if (typeof _renderBadgeOverlays === 'function') {
+            _renderBadgeOverlays(badgeKey);
+        }
+
+    } catch (err) {
+        console.error('Error selecting badge:', err);
+        alert('Failed to update badge. Please try again.');
     }
 }

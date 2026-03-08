@@ -68,9 +68,12 @@
     function profileTab() {
         var cls = 'settings' === active ? 'tab-active' : 'tab-inactive';
         return '<a href="settings.html" class="' + cls + '" id="profileTab">' +
-            '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border-2 ' + ('settings' === active ? 'border-brand-500' : 'border-gray-200') + '">' +
-                '<span id="tabProfileInitials" class="text-brand-600 text-[10px] font-bold"></span>' +
-                '<img id="tabProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+            '<div class="relative w-7 h-7">' +
+                '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border-2 ' + ('settings' === active ? 'border-brand-500' : 'border-gray-200') + '">' +
+                    '<span id="tabProfileInitials" class="text-brand-600 text-[10px] font-bold"></span>' +
+                    '<img id="tabProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+                '</div>' +
+                '<div id="tabBadgeOverlay"></div>' +
             '</div>' +
             '<span>Profile</span></a>';
     }
@@ -119,9 +122,12 @@
         desktopRight =
             '<div class="w-px h-6 bg-gray-200 mx-2" id="navDivider"></div>' +
             '<div id="navProfileSection" class="flex items-center gap-2 mr-1 hidden">' +
-                '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden flex-shrink-0">' +
-                    '<span id="navProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
-                    '<img id="navProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+                '<div class="relative w-7 h-7 flex-shrink-0">' +
+                    '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden">' +
+                        '<span id="navProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
+                        '<img id="navProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+                    '</div>' +
+                    '<div id="navBadgeOverlay"></div>' +
                 '</div>' +
                 '<span id="navProfileName" class="text-sm font-medium text-gray-700 max-w-[100px] truncate"></span>' +
             '</div>' +
@@ -132,9 +138,12 @@
             '<div class="w-px h-6 bg-gray-200 mx-2" id="navDivider"></div>' +
             '<div class="relative" id="profileDropdownWrap">' +
                 '<button id="profileDropdownBtn" class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition hidden" aria-haspopup="true" aria-expanded="false">' +
-                    '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden flex-shrink-0">' +
-                        '<span id="navProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
-                        '<img id="navProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+                    '<div class="relative w-7 h-7 flex-shrink-0">' +
+                        '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden">' +
+                            '<span id="navProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
+                            '<img id="navProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+                        '</div>' +
+                        '<div id="navBadgeOverlay"></div>' +
                     '</div>' +
                     '<span id="navProfileName" class="text-sm font-medium text-gray-700 max-w-[100px] truncate"></span>' +
                     '<svg class="w-4 h-4 text-gray-400 transition-transform" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>' +
@@ -171,9 +180,12 @@
                     adminBadge +
                 '</div>' +
                 '<div class="flex items-center gap-2 md:hidden" id="mobileProfileSection" style="display:none">' +
-                    '<div class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden flex-shrink-0">' +
-                        '<span id="mobileProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
-                        '<img id="mobileProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+                    '<div class="relative w-8 h-8 flex-shrink-0">' +
+                        '<div class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden">' +
+                            '<span id="mobileProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
+                            '<img id="mobileProfileImg" class="w-full h-full object-cover hidden" alt="">' +
+                        '</div>' +
+                        '<div id="mobileBadgeOverlay"></div>' +
                     '</div>' +
                 '</div>' +
                 '<div class="hidden md:flex items-center gap-1">' +
@@ -223,16 +235,17 @@ async function loadNavProfile() {
         var uid = sess.data.session.user.id;
         var res = await supabaseClient
             .from('profiles')
-            .select('first_name, last_name, profile_picture_url')
+            .select('first_name, last_name, profile_picture_url, displayed_badge')
             .eq('id', uid)
             .single();
 
         if (!res.data) return;
 
-        var firstName = res.data.first_name || '';
-        var lastName  = res.data.last_name  || '';
-        var initials  = ((firstName.charAt(0) || '') + (lastName.charAt(0) || '')).toUpperCase() || '?';
-        var photoUrl  = res.data.profile_picture_url;
+        var firstName   = res.data.first_name || '';
+        var lastName    = res.data.last_name  || '';
+        var initials    = ((firstName.charAt(0) || '') + (lastName.charAt(0) || '')).toUpperCase() || '?';
+        var photoUrl    = res.data.profile_picture_url;
+        var badgeKey    = res.data.displayed_badge || '';
 
         // Desktop nav — profile area (dropdown btn on portal, section on admin)
         var btn        = document.getElementById('profileDropdownBtn');
@@ -296,7 +309,50 @@ async function loadNavProfile() {
                 if (tInitialsEl) tInitialsEl.classList.add('hidden');
             };
         }
+
+        // ─── Render displayed badge overlays everywhere ──────
+        _renderBadgeOverlays(badgeKey);
+
     } catch (e) {
         console.error('loadNavProfile error:', e);
     }
+}
+
+/**
+ * Render the active badge chip overlay into all avatar badge slots.
+ * Uses buildNavBadgeOverlay() from quests/config.js if available,
+ * otherwise falls back to a static emoji render.
+ */
+function _renderBadgeOverlays(badgeKey) {
+    var overlayIds = ['navBadgeOverlay', 'mobileBadgeOverlay', 'tabBadgeOverlay'];
+    for (var i = 0; i < overlayIds.length; i++) {
+        var el = document.getElementById(overlayIds[i]);
+        if (!el) continue;
+        if (!badgeKey) { el.innerHTML = ''; continue; }
+
+        // Use the badge chip builder if loaded (quests/config.js)
+        if (typeof buildNavBadgeOverlay === 'function') {
+            el.innerHTML = buildNavBadgeOverlay(badgeKey);
+        } else {
+            // Lightweight fallback for pages that don't load quests/config.js
+            var badge = _badgeFallback(badgeKey);
+            el.innerHTML = '<div class="badge-chip-overlay" title="' + badge.name + '">' + badge.emoji + '</div>';
+        }
+    }
+}
+
+/** Minimal badge lookup for pages without quests/config.js */
+function _badgeFallback(key) {
+    var catalog = {
+        founding_member: { emoji: '🏅', name: 'Founding Member' },
+        shutterbug:      { emoji: '📸', name: 'Shutterbug' },
+        streak_master:   { emoji: '🔥', name: 'Streak Master' },
+        streak_legend:   { emoji: '⚡', name: 'Streak Legend' },
+        first_seed:      { emoji: '🌱', name: 'First Seed Witness' },
+        four_figures:    { emoji: '💵', name: 'Four Figure Club' },
+        quest_champion:  { emoji: '🎯', name: 'Quest Champion' },
+        fidelity_linked: { emoji: '🏦', name: 'Fidelity Linked' },
+        birthday_vip:    { emoji: '🎂', name: 'Birthday VIP' },
+    };
+    return catalog[key] || { emoji: '❓', name: key };
 }
