@@ -55,6 +55,18 @@ serve(async (req) => {
 
     const amountCents = amount_dollars * 100
 
+    // Require an active subscription — extra deposits are for members only
+    const { data: existingSubscription } = await supabase
+      .from('subscriptions')
+      .select('id, status')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trialing', 'past_due'])
+      .maybeSingle()
+
+    if (!existingSubscription) {
+      throw new Error('You need an active subscription before making extra deposits. Please set up your monthly contribution first.')
+    }
+
     // Get or create Stripe customer
     let stripeCustomerId: string
 

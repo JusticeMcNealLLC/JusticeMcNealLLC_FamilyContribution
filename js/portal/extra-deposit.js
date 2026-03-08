@@ -8,6 +8,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     const user = await checkAuth();
     if (!user) return;
 
+    // Check for active subscription — extra deposits are members-only
+    const subscription = await loadSubscription(user.id);
+    const noSubEl = document.getElementById('noSubscription');
+    const depositContent = document.getElementById('depositContent');
+
+    if (!subscription || subscription.status === 'canceled') {
+        // No active subscription — show gated state
+        if (noSubEl) noSubEl.classList.remove('hidden');
+        if (depositContent) depositContent.classList.add('hidden');
+        return;
+    }
+
+    // Has subscription — show deposit form
+    if (noSubEl) noSubEl.classList.add('hidden');
+    if (depositContent) depositContent.classList.remove('hidden');
+
     // Set up form and quick-select buttons
     setupExtraDepositForm();
 });

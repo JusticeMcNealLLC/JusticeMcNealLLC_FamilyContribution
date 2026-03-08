@@ -110,10 +110,11 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
       return
     }
 
-    // Retrieve fee data from the payment intent → charge → balance_transaction
+    // Retrieve fee data and receipt URL from the payment intent → charge → balance_transaction
     const amountPaid = session.amount_total || 0
     let stripeFee = 0
     let netAmount = amountPaid
+    let receiptUrl: string | null = null
 
     try {
       if (session.payment_intent) {
@@ -122,6 +123,8 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
         })
         const charge = paymentIntent.latest_charge as Stripe.Charge
         if (charge && typeof charge === 'object') {
+          // Grab the receipt URL from the charge
+          receiptUrl = charge.receipt_url || null
           const bt = charge.balance_transaction as Stripe.BalanceTransaction
           if (bt && typeof bt === 'object') {
             stripeFee = bt.fee || 0
@@ -145,7 +148,7 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
       stripe_fee_cents: stripeFee,
       net_amount_cents: netAmount,
       status: 'paid',
-      hosted_invoice_url: null,
+      hosted_invoice_url: receiptUrl,
       invoice_pdf: null,
       created_at: new Date().toISOString(),
     }, {
