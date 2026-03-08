@@ -151,6 +151,34 @@
             20% { opacity: 0.6; transform: translateY(-20px) scale(1); }
             100% { opacity: 0; transform: translateY(-80px) scale(0.3); }
         }
+
+        /* Logo loading spinner */
+        .logo-spinner {
+            position: absolute;
+            inset: -6px;
+            border-radius: 2rem;
+            border: 3px solid rgba(255,255,255,0.15);
+            border-top-color: rgba(255,255,255,0.9);
+            border-right-color: rgba(165,180,252,0.6);
+            animation: spinnerRotate 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .logo-spinner.spinner-hidden {
+            opacity: 0;
+        }
+        @keyframes spinnerRotate {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Logo image fade-in when loaded */
+        .logo-reveal {
+            animation: logoRevealIn 0.4s ease-out forwards;
+        }
+        @keyframes logoRevealIn {
+            from { opacity: 0; transform: scale(0.85); }
+            to   { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center overflow-hidden relative" style="background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #e0e7ff 100%);">
@@ -170,10 +198,51 @@
         <div class="splash-logo-wrap relative mb-8">
             <div class="logo-glow"></div>
             <div id="logoContainer" class="relative w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 flex items-center justify-center shadow-2xl shadow-brand-300/50">
-                <span id="logoFallback" class="text-white font-black text-4xl sm:text-5xl tracking-tight select-none">JM</span>
+                <div id="logoSpinner" class="logo-spinner"></div>
+                <span id="logoFallback" class="text-white font-black text-4xl sm:text-5xl tracking-tight select-none hidden">JM</span>
                 <img id="logoImage" class="hidden absolute inset-0 w-full h-full object-contain rounded-3xl p-2" alt="Justice McNeal LLC" />
             </div>
         </div>
+
+    <!-- Instant logo from cache (runs before CSS animation reveals container) -->
+    <script>
+    (function() {
+        try {
+            var cached = localStorage.getItem('brandLogoCache');
+            if (!cached) {
+                // No cache — show JM fallback behind spinner (spinner stays)
+                var fb = document.getElementById('logoFallback');
+                if (fb) fb.classList.remove('hidden');
+                return;
+            }
+            var info = JSON.parse(cached);
+            if (!info || !info.url) {
+                var fb2 = document.getElementById('logoFallback');
+                if (fb2) fb2.classList.remove('hidden');
+                return;
+            }
+            var container = document.getElementById('logoContainer');
+            var fallback  = document.getElementById('logoFallback');
+            var imgEl     = document.getElementById('logoImage');
+            var spinner   = document.getElementById('logoSpinner');
+            if (!container || !imgEl) return;
+            imgEl.src = info.url;
+            imgEl.classList.remove('hidden');
+            imgEl.classList.add('logo-reveal');
+            if (fallback) fallback.classList.add('hidden');
+            if (spinner) spinner.classList.add('spinner-hidden');
+            if (info.isTransparent) {
+                container.classList.remove('bg-gradient-to-br','from-brand-500','via-brand-600','to-brand-800');
+                container.style.background = 'transparent';
+                container.style.boxShadow = 'none';
+                imgEl.classList.remove('p-2');
+            }
+        } catch(e) {
+            var fb3 = document.getElementById('logoFallback');
+            if (fb3) fb3.classList.remove('hidden');
+        }
+    })();
+    </script>
 
         <!-- Brand name -->
         <h1 class="brand-name text-3xl sm:text-4xl font-black text-gray-900 tracking-tight leading-tight">

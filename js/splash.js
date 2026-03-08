@@ -31,6 +31,17 @@
         }
     }
 
+    // ─── Hide spinner + reveal logo/fallback ───
+    function hideSpinner() {
+        const spinner = document.getElementById('logoSpinner');
+        if (spinner) spinner.classList.add('spinner-hidden');
+    }
+
+    function revealElement(el) {
+        el.classList.remove('hidden');
+        el.classList.add('logo-reveal');
+    }
+
     // ─── Try to load brand logo from Supabase Storage ───
     async function tryLoadLogo() {
         try {
@@ -39,14 +50,25 @@
                 .from(BUCKET)
                 .list('brand', { limit: 20 });
 
-            if (!files || files.length === 0) return;
+            if (!files || files.length === 0) {
+                // No brand files — show JM fallback, stop spinner
+                hideSpinner();
+                const fb = document.getElementById('logoFallback');
+                if (fb && fb.classList.contains('hidden')) revealElement(fb);
+                return;
+            }
 
             // Prefer transparent
             let match = files.find(f => f.name.startsWith('logo-transparent'));
             if (!match) {
                 match = files.find(f => f.name.startsWith('logo-solid'));
             }
-            if (!match) return;
+            if (!match) {
+                hideSpinner();
+                const fb = document.getElementById('logoFallback');
+                if (fb && fb.classList.contains('hidden')) revealElement(fb);
+                return;
+            }
 
             const filePath = `brand/${match.name}`;
             const { data: urlData } = supabaseClient.storage
@@ -56,19 +78,32 @@
             if (!urlData?.publicUrl) return;
 
             const url = urlData.publicUrl + '?t=' + Date.now();
+            const isTransparent = match.name.startsWith('logo-transparent');
             const imgEl = document.getElementById('logoImage');
             const fallback = document.getElementById('logoFallback');
             const container = document.getElementById('logoContainer');
 
+            // Write to localStorage cache for instant display on next visit
+            try {
+                localStorage.setItem('brandLogoCache', JSON.stringify({ url: url, isTransparent: isTransparent }));
+            } catch(e) {}
+
+            // If already applied by inline cache script, skip preload
+            if (imgEl && imgEl.src && !imgEl.classList.contains('hidden')) {
+                hideSpinner();
+                return;
+            }
+
             // Preload
             const img = new Image();
             img.onload = function () {
+                hideSpinner();
                 imgEl.src = url;
-                imgEl.classList.remove('hidden');
+                revealElement(imgEl);
                 fallback.classList.add('hidden');
 
                 // If transparent logo, remove the gradient background
-                if (match.name.startsWith('logo-transparent')) {
+                if (isTransparent) {
                     container.classList.remove('bg-gradient-to-br', 'from-brand-500', 'via-brand-600', 'to-brand-800');
                     container.style.background = 'transparent';
                     container.style.boxShadow = 'none';
@@ -76,11 +111,18 @@
                 }
             };
             img.onerror = function () {
-                // Silently keep fallback
+                // Show JM fallback, stop spinner
+                hideSpinner();
+                const fb = document.getElementById('logoFallback');
+                if (fb && fb.classList.contains('hidden')) revealElement(fb);
             };
             img.src = url;
         } catch (err) {
-            // Keep fallback text logo
+            // Keep fallback text logo — clear stale cache
+            hideSpinner();
+            const fb = document.getElementById('logoFallback');
+            if (fb && fb.classList.contains('hidden')) revealElement(fb);
+            try { localStorage.removeItem('brandLogoCache'); } catch(e) {}
             console.log('Splash: using fallback logo');
         }
     }

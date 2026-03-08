@@ -137,20 +137,66 @@ function setButtonLoading(button, loading, originalText = 'Submit') {
 //   </div>
 var _brandLogoCache = null;
 
+// Apply cached brand logo instantly (no network wait)
+function _applyBrandLogoFromCache() {
+    try {
+        var cached = localStorage.getItem('brandLogoCache');
+        if (!cached) return false;
+        var info = JSON.parse(cached);
+        if (!info || !info.url) return false;
+
+        var containers = document.querySelectorAll('[data-brand-logo]');
+        if (!containers.length) return false;
+
+        containers.forEach(function(container) {
+            var fallback = container.querySelector('[data-brand-fallback]');
+            var imgEl    = container.querySelector('[data-brand-img]');
+            if (!imgEl || imgEl.src) return;
+
+            imgEl.src = info.url;
+            imgEl.classList.remove('hidden');
+            if (fallback) fallback.classList.add('hidden');
+
+            if (info.isTransparent) {
+                container.classList.remove(
+                    'bg-gradient-to-br', 'from-brand-500', 'to-brand-700',
+                    'via-brand-600', 'to-brand-800'
+                );
+                container.style.background = 'transparent';
+                container.style.boxShadow = 'none';
+            }
+        });
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 async function loadBrandLogos() {
     try {
-        // Fetch + cache the logo info
+        // Apply from localStorage cache instantly (no flash)
+        _applyBrandLogoFromCache();
+
+        // Fetch + update the in-memory + localStorage cache
         if (_brandLogoCache === undefined) return;   // already tried, nothing found
         if (!_brandLogoCache) {
             var res = await supabaseClient.storage
                 .from('profile-pictures')
                 .list('brand', { limit: 20 });
 
-            if (!res.data || !res.data.length) { _brandLogoCache = undefined; return; }
+            if (!res.data || !res.data.length) {
+                _brandLogoCache = undefined;
+                try { localStorage.removeItem('brandLogoCache'); } catch(e) {}
+                return;
+            }
 
             var match = res.data.find(function(f) { return f.name.startsWith('logo-transparent'); });
             if (!match) match = res.data.find(function(f) { return f.name.startsWith('logo-solid'); });
-            if (!match) { _brandLogoCache = undefined; return; }
+            if (!match) {
+                _brandLogoCache = undefined;
+                try { localStorage.removeItem('brandLogoCache'); } catch(e) {}
+                return;
+            }
 
             var urlRes = supabaseClient.storage
                 .from('profile-pictures')
@@ -162,6 +208,11 @@ async function loadBrandLogos() {
                 url: urlRes.data.publicUrl + '?v=' + Date.now(),
                 isTransparent: match.name.startsWith('logo-transparent'),
             };
+
+            // Persist to localStorage for instant use on next page load
+            try {
+                localStorage.setItem('brandLogoCache', JSON.stringify(_brandLogoCache));
+            } catch(e) {}
         }
 
         var info = _brandLogoCache;
