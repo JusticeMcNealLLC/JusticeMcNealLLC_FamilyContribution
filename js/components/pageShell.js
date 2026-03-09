@@ -165,7 +165,7 @@
                 '<div class="swipe-hint"></div>' +
                 mTab('feed.html', p(SVG.feed), 'Feed', 'feed') +
                 '<div class="dock-slot" data-dock-slot="2">' + mTab('events.html', p(SVG.bell), 'Events', 'events') + '</div>' +
-                centerTab('index.html', p(SVG.plus), 'Contribute', 'dashboard') +
+                centerTab('index.html', p(SVG.home), 'Dashboard', 'dashboard') +
                 '<div class="dock-slot" data-dock-slot="4">' + mTab('investments.html', p(SVG.invest), 'Invest', 'investments') + '</div>' +
                 profileTab() +
             '</div>';
