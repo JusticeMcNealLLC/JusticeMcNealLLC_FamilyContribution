@@ -95,14 +95,14 @@ serve(async (req) => {
 
     // Parse request body for return/refresh URLs
     const { return_url, refresh_url } = await req.json().catch(() => ({}))
-    const origin = req.headers.get('origin') || 'https://justicemcnealllc.com'
+    const siteUrl = 'https://justicemcneal.com'
 
     // Generate Account Link for onboarding
     const accountLink = await stripe.accountLinks.create({
       account: connectAccountId,
       type: 'account_onboarding',
-      return_url: return_url || `${origin}/portal/connect-return.html?status=complete`,
-      refresh_url: refresh_url || `${origin}/portal/connect-return.html?status=refresh`,
+      return_url: return_url || `${siteUrl}/portal/connect-return.html?status=complete`,
+      refresh_url: refresh_url || `${siteUrl}/portal/connect-return.html?status=refresh`,
     })
 
     return new Response(
