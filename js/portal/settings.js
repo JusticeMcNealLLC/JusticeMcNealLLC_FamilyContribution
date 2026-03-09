@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Set up billing buttons
     setupBillingButtons();
+
+    // Set up push notification toggle
+    setupPushToggle();
 });
 
 // ─── Profile Loading & Editing ──────────────────────────
@@ -855,5 +858,74 @@ async function loadMyPayouts(userId, container) {
         `).join('');
     } catch (err) {
         console.error('Error loading payouts:', err);
+    }
+}
+
+// ─── Push Notification Toggle ───────────────────────────
+async function setupPushToggle() {
+    var toggleBtn = document.getElementById('pushToggleBtn');
+    var statusText = document.getElementById('pushStatusText');
+    var section = document.getElementById('pushNotifSection');
+    if (!toggleBtn || !statusText) return;
+
+    // Hide section if push not supported
+    if (!window.JMPush || !window.JMPush.isSupported()) {
+        statusText.textContent = 'Not supported in this browser';
+        toggleBtn.style.display = 'none';
+        return;
+    }
+
+    var permission = window.JMPush.getPermissionState();
+
+    // If permission permanently denied, show that
+    if (permission === 'denied') {
+        statusText.textContent = 'Blocked — enable in browser settings';
+        toggleBtn.style.opacity = '0.5';
+        toggleBtn.style.pointerEvents = 'none';
+        return;
+    }
+
+    // Check current subscription state
+    var subscribed = await window.JMPush.isSubscribed();
+    updateToggleUI(subscribed);
+
+    toggleBtn.addEventListener('click', async function () {
+        toggleBtn.style.pointerEvents = 'none';
+        if (subscribed) {
+            var result = await window.JMPush.unsubscribe();
+            if (result.success) subscribed = false;
+        } else {
+            var result = await window.JMPush.subscribe();
+            if (result.success) {
+                subscribed = true;
+            } else if (result.reason === 'denied') {
+                statusText.textContent = 'Blocked — enable in browser settings';
+                toggleBtn.style.opacity = '0.5';
+                return;
+            }
+        }
+        updateToggleUI(subscribed);
+        toggleBtn.style.pointerEvents = '';
+    });
+
+    function updateToggleUI(on) {
+        var knob = toggleBtn.querySelector('span');
+        if (on) {
+            toggleBtn.classList.remove('bg-gray-200');
+            toggleBtn.classList.add('bg-brand-600');
+            toggleBtn.setAttribute('aria-checked', 'true');
+            knob.classList.remove('translate-x-0');
+            knob.classList.add('translate-x-5');
+            statusText.textContent = 'Enabled — you\'ll get push alerts';
+        } else {
+            toggleBtn.classList.remove('bg-brand-600');
+            toggleBtn.classList.add('bg-gray-200');
+            toggleBtn.setAttribute('aria-checked', 'false');
+            knob.classList.remove('translate-x-5');
+            knob.classList.add('translate-x-0');
+            statusText.textContent = permission === 'default'
+                ? 'Allow push notifications to stay in the loop'
+                : 'Disabled — tap to re-enable';
+        }
     }
 }

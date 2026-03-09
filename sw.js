@@ -1,14 +1,20 @@
 // ─── Service Worker — Justice McNeal Family Portal ──────
 // Cache-first for statics, network-first for API calls.
+// Push notification handler for native OS notifications.
 
-const CACHE_NAME = 'jm-portal-v1';
+const CACHE_NAME = 'jm-portal-v2';
 
 // Shell assets to pre-cache on install
 const SHELL_ASSETS = [
     '/portal/index.html',
     '/portal/feed.html',
     '/css/shared.css',
-    '/js/components/pageShell.js',
+    '/js/components/pageShell/icons.js',
+    '/js/components/pageShell/helpers.js',
+    '/js/components/pageShell/nav.js',
+    '/js/components/pageShell/dropdowns.js',
+    '/js/components/pageShell/drawer.js',
+    '/js/components/pageShell/profile-loader.js',
     '/js/config.js',
     '/manifest.json',
 ];
@@ -59,5 +65,62 @@ self.addEventListener('fetch', (e) => {
                 return cached || fetched;
             })
         )
+    );
+});
+
+// ─── Push Notification Handler ──────────────────────────
+self.addEventListener('push', (e) => {
+    if (!e.data) return;
+
+    let payload;
+    try {
+        payload = e.data.json();
+    } catch (_) {
+        payload = {
+            title: '🔔 Justice McNeal Portal',
+            body: e.data.text() || 'New notification',
+            icon: '/assets/icons/icon-192.svg',
+            data: { url: '/portal/feed.html' },
+        };
+    }
+
+    const options = {
+        body: payload.body || 'New notification',
+        icon: payload.icon || '/assets/icons/icon-192.svg',
+        badge: payload.badge || '/assets/icons/icon-192.svg',
+        tag: payload.tag || 'jm-notification',
+        renotify: true,
+        vibrate: [100, 50, 100],
+        data: payload.data || { url: '/portal/feed.html' },
+        actions: [
+            { action: 'open', title: 'View' },
+            { action: 'dismiss', title: 'Dismiss' },
+        ],
+    };
+
+    e.waitUntil(
+        self.registration.showNotification(payload.title || '🔔 New Notification', options)
+    );
+});
+
+// ─── Notification Click Handler ─────────────────────────
+self.addEventListener('notificationclick', (e) => {
+    e.notification.close();
+
+    if (e.action === 'dismiss') return;
+
+    const targetUrl = (e.notification.data && e.notification.data.url) || '/portal/feed.html';
+
+    e.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+            // Focus existing tab if open
+            for (const client of windowClients) {
+                if (client.url.includes(new URL(targetUrl, self.location.origin).pathname)) {
+                    return client.focus();
+                }
+            }
+            // Otherwise open a new tab
+            return clients.openWindow(targetUrl);
+        })
     );
 });
