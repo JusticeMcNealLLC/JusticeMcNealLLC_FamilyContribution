@@ -172,6 +172,91 @@
     }
 }
 
+/* ─── Nav Drawer (swipe-up) ─── */
+.nav-drawer-backdrop {
+    position: fixed; inset: 0; z-index: 49;
+    background: rgba(0,0,0,0); pointer-events: none;
+    transition: background 0.3s ease;
+}
+.nav-drawer-backdrop.open { background: rgba(0,0,0,0.4); pointer-events: auto; }
+
+.nav-drawer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    z-index: 51;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.12);
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    max-height: 70vh;
+    will-change: transform;
+    touch-action: none;
+}
+.nav-drawer.open { transform: translateY(0); }
+.nav-drawer.dragging { transition: none; }
+
+.nav-drawer-handle {
+    width: 36px; height: 4px; border-radius: 999px;
+    background: #d1d5db; margin: 10px auto 6px;
+}
+
+.nav-drawer-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 6px; padding: 8px 16px 20px;
+}
+
+.nav-drawer-item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; padding: 14px 4px; border-radius: 16px;
+    font-size: 0.68rem; font-weight: 600; color: #6b7280;
+    transition: background 0.15s, transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none; -webkit-user-select: none;
+    position: relative;
+}
+.nav-drawer-item:active { transform: scale(0.95); }
+.nav-drawer-item.active-page { color: #4f46e5; background: #eef2ff; }
+.nav-drawer-item .drawer-icon {
+    width: 44px; height: 44px; border-radius: 14px;
+    background: #f3f4f6; display: flex; align-items: center;
+    justify-content: center; transition: all 0.2s;
+}
+.nav-drawer-item.active-page .drawer-icon { background: #e0e7ff; }
+
+/* Drag ghost for dock customization */
+.nav-drawer-item.dragging-item {
+    opacity: 0.6; transform: scale(1.1); z-index: 100;
+}
+.dock-slot-highlight {
+    animation: dock-pulse 0.6s ease infinite alternate;
+}
+@keyframes dock-pulse {
+    from { background: rgba(79,70,229,0.08); }
+    to { background: rgba(79,70,229,0.2); }
+}
+
+/* Swipe hint indicator */
+.bottom-tab-bar .swipe-hint {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 32px; height: 3px; border-radius: 999px;
+    background: #d1d5db; margin-top: 4px;
+}
+
+/* ─── Desktop More Dropdown ─── */
+.desktop-more-dropdown {
+    position: absolute; right: 0; top: 100%; margin-top: 6px;
+    width: 200px; background: white;
+    border-radius: 12px; border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    padding: 6px; z-index: 50;
+    opacity: 0; transform: translateY(-4px); pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.desktop-more-dropdown.open {
+    opacity: 1; transform: translateY(0); pointer-events: auto;
+}
+
 /* ─── Disable card hover effect on touch devices ─── */
 @media (hover: none) {
     .card-hover:hover {

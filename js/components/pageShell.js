@@ -136,19 +136,37 @@
             '</div>';
 
     } else {
+        // Primary desktop links (always visible)
         desktopLinks =
             dLink('feed.html', 'Feed', 'feed') +
             dLink('index.html', 'Dashboard', 'dashboard') +
             dLink('events.html', 'Events', 'events') +
             dLink('investments.html', 'Investments', 'investments') +
-            dLink('history.html', 'History', 'history');
+            // "More" dropdown for secondary pages
+            '<div class="relative" id="desktopMoreWrap">' +
+                '<button id="desktopMoreBtn" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition flex items-center gap-1">' +
+                    'More' +
+                    '<svg class="w-3.5 h-3.5 transition-transform" id="desktopMoreChev" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>' +
+                '</button>' +
+                '<div class="desktop-more-dropdown" id="desktopMoreDD">' +
+                    '<a href="history.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('history' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
+                        '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.history) + '</svg>History</a>' +
+                    '<a href="quests.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('quests' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
+                        '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.quest) + '</svg>Quests</a>' +
+                    '<a href="milestones.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('milestones' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
+                        '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.trophy) + '</svg>Milestones</a>' +
+                    '<a href="settings.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('settings' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
+                        '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.gear) + p(SVG.gearDot) + '</svg>Settings</a>' +
+                '</div>' +
+            '</div>';
 
         tabsInner =
-            '<div class="max-w-lg mx-auto grid grid-cols-5 px-2">' +
+            '<div class="max-w-lg mx-auto grid grid-cols-5 px-2 relative">' +
+                '<div class="swipe-hint"></div>' +
                 mTab('feed.html', p(SVG.feed), 'Feed', 'feed') +
-                mTab('events.html', p(SVG.bell), 'Events', 'events') +
+                '<div class="dock-slot" data-dock-slot="2">' + mTab('events.html', p(SVG.bell), 'Events', 'events') + '</div>' +
                 centerTab('index.html', p(SVG.plus), 'Contribute', 'dashboard') +
-                mTab('investments.html', p(SVG.invest), 'Invest', 'investments') +
+                '<div class="dock-slot" data-dock-slot="4">' + mTab('investments.html', p(SVG.invest), 'Invest', 'investments') + '</div>' +
                 profileTab() +
             '</div>';
     }
@@ -264,9 +282,49 @@
 
     // ─── Mobile Tab Bar HTML ─────────────────────────────
     var tabsHTML =
-    '<div class="bottom-tab-bar md:hidden">' +
+    '<div class="bottom-tab-bar md:hidden" id="bottomTabBar">' +
         tabsInner +
     '</div>';
+
+    // ─── Nav Drawer (swipe-up page grid) — portal only ──
+    var drawerHTML = '';
+    if (!isAdmin) {
+        // All portal pages for the drawer grid
+        var drawerPages = [
+            { href: 'feed.html',        page: 'feed',        icon: SVG.feed,    label: 'Feed' },
+            { href: 'index.html',       page: 'dashboard',   icon: SVG.home,    label: 'Dashboard' },
+            { href: 'events.html',      page: 'events',      icon: SVG.bell,    label: 'Events' },
+            { href: 'investments.html',  page: 'investments', icon: SVG.invest,  label: 'Invest' },
+            { href: 'history.html',     page: 'history',     icon: SVG.history, label: 'History' },
+            { href: 'quests.html',      page: 'quests',      icon: SVG.quest,   label: 'Quests' },
+            { href: 'milestones.html',  page: 'milestones',  icon: SVG.trophy,  label: 'Milestones' },
+            { href: 'settings.html',    page: 'settings',    icon: SVG.gear,    label: 'Settings', icon2: SVG.gearDot },
+            { href: 'contribution.html',page: 'contribution',icon: SVG.plus,    label: 'Contribute' },
+            { href: 'profile.html',     page: 'profile',     icon: SVG.person,  label: 'Profile' },
+        ];
+
+        var gridItems = '';
+        for (var di = 0; di < drawerPages.length; di++) {
+            var dp = drawerPages[di];
+            var activeCls = dp.page === active ? ' active-page' : '';
+            var iconSvg = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(dp.icon) + (dp.icon2 ? p(dp.icon2) : '') + '</svg>';
+            gridItems += '<a href="' + dp.href + '" class="nav-drawer-item' + activeCls + '" data-drawer-page="' + dp.page + '" data-drawer-href="' + dp.href + '" data-drawer-label="' + dp.label + '" data-drawer-icon=\'' + dp.icon + '\'>' +
+                '<div class="drawer-icon">' + iconSvg + '</div>' +
+                '<span>' + dp.label + '</span>' +
+            '</a>';
+        }
+
+        drawerHTML =
+            '<div class="nav-drawer-backdrop md:hidden" id="navDrawerBackdrop"></div>' +
+            '<div class="nav-drawer md:hidden" id="navDrawer">' +
+                '<div class="nav-drawer-handle" id="navDrawerHandle"></div>' +
+                '<div class="px-4 pb-1 flex items-center justify-between">' +
+                    '<span class="text-sm font-bold text-gray-900">All Pages</span>' +
+                    '<span class="text-[10px] text-gray-400 font-medium">Hold & drag to customize dock</span>' +
+                '</div>' +
+                '<div class="nav-drawer-grid" id="navDrawerGrid">' + gridItems + '</div>' +
+            '</div>';
+    }
 
     // ─── Inject into placeholders ────────────────────────
     var np = document.getElementById('nav-placeholder');
@@ -276,6 +334,261 @@
     if (np) np.outerHTML = navHTML;
     if (fp) fp.outerHTML = footerHTML;
     if (tp) tp.outerHTML = tabsHTML;
+
+    // Inject drawer into body
+    if (drawerHTML) {
+        var drawerContainer = document.createElement('div');
+        drawerContainer.innerHTML = drawerHTML;
+        while (drawerContainer.firstChild) {
+            document.body.appendChild(drawerContainer.firstChild);
+        }
+    }
+})();
+
+
+// ─── Desktop More Dropdown Logic ────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    var moreBtn = document.getElementById('desktopMoreBtn');
+    var moreDD  = document.getElementById('desktopMoreDD');
+    var moreChev = document.getElementById('desktopMoreChev');
+    if (!moreBtn || !moreDD) return;
+
+    moreBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var isOpen = moreDD.classList.contains('open');
+        moreDD.classList.toggle('open', !isOpen);
+        if (moreChev) moreChev.style.transform = isOpen ? '' : 'rotate(180deg)';
+    });
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('desktopMoreWrap')?.contains(e.target)) {
+            moreDD.classList.remove('open');
+            if (moreChev) moreChev.style.transform = '';
+        }
+    });
+});
+
+
+// ─── Nav Drawer: Swipe, Open/Close, Dock Customization ─
+(function() {
+    var tabBar   = document.getElementById('bottomTabBar');
+    var drawer   = document.getElementById('navDrawer');
+    var backdrop = document.getElementById('navDrawerBackdrop');
+    if (!tabBar || !drawer || !backdrop) return;
+
+    var isOpen = false;
+    var startY = 0, currentY = 0, dragging = false;
+
+    // ─── Open / Close helpers ───────────────────────────
+    function openDrawer() {
+        isOpen = true;
+        drawer.classList.add('open');
+        backdrop.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+        isOpen = false;
+        drawer.classList.remove('open');
+        backdrop.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    // ─── Swipe-up on tab bar to open ────────────────────
+    tabBar.addEventListener('touchstart', function(e) {
+        startY = e.touches[0].clientY;
+        dragging = false;
+    }, { passive: true });
+
+    tabBar.addEventListener('touchmove', function(e) {
+        var dy = startY - e.touches[0].clientY;
+        if (dy > 30 && !isOpen) {
+            dragging = true;
+            openDrawer();
+        }
+    }, { passive: true });
+
+    // ─── Swipe-down on drawer to close ──────────────────
+    var drawerStartY = 0;
+    drawer.addEventListener('touchstart', function(e) {
+        drawerStartY = e.touches[0].clientY;
+        currentY = 0;
+        drawer.classList.add('dragging');
+    }, { passive: true });
+
+    drawer.addEventListener('touchmove', function(e) {
+        currentY = e.touches[0].clientY - drawerStartY;
+        if (currentY > 0) {
+            drawer.style.transform = 'translateY(' + currentY + 'px)';
+        }
+    }, { passive: true });
+
+    drawer.addEventListener('touchend', function() {
+        drawer.classList.remove('dragging');
+        drawer.style.transform = '';
+        if (currentY > 80) {
+            closeDrawer();
+        }
+        currentY = 0;
+    });
+
+    // Backdrop close
+    backdrop.addEventListener('click', closeDrawer);
+
+    // ─── Long-press to drag items onto dock slots ───────
+    var DOCK_PAGES = {
+        // page key → { href, icon SVG path, label }
+        // This catalog is used when dropping onto dock slots
+    };
+    var drawerItems = document.querySelectorAll('.nav-drawer-item');
+    var longPressTimer = null;
+    var dragItem = null;
+    var dragGhost = null;
+    var dockSlots = document.querySelectorAll('.dock-slot');
+
+    // Locked pages that can't be placed in dock (they're already permanent)
+    var lockedPages = ['feed', 'dashboard', 'profile'];
+
+    function getSavedDock() {
+        try {
+            var saved = localStorage.getItem('jm_dock_config');
+            return saved ? JSON.parse(saved) : null;
+        } catch(e) { return null; }
+    }
+
+    function saveDock(slot, pageKey, href, label, iconPath) {
+        var config = getSavedDock() || {};
+        config[slot] = { page: pageKey, href: href, label: label, icon: iconPath };
+        localStorage.setItem('jm_dock_config', JSON.stringify(config));
+        // Also save to Supabase if available
+        if (typeof supabaseClient !== 'undefined') {
+            supabaseClient.auth.getSession().then(function(res) {
+                if (res.data?.session?.user?.id) {
+                    supabaseClient.from('profiles').update({
+                        dock_config: config
+                    }).eq('id', res.data.session.user.id);
+                }
+            });
+        }
+    }
+
+    function updateDockSlot(slotNum, pageKey, href, label, iconPath) {
+        var slot = document.querySelector('[data-dock-slot="' + slotNum + '"]');
+        if (!slot) return;
+        var pageType = document.body.dataset.activePage || '';
+        var isActive = pageKey === pageType;
+        var cls = isActive ? 'tab-active' : 'tab-inactive';
+        slot.innerHTML =
+            '<a href="' + href + '" class="' + cls + '">' +
+                '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="' + iconPath + '"></path>' +
+                '</svg>' +
+                '<span>' + label + '</span></a>';
+    }
+
+    // Apply saved dock config on load
+    var savedDock = getSavedDock();
+    if (savedDock) {
+        if (savedDock['2']) updateDockSlot('2', savedDock['2'].page, savedDock['2'].href, savedDock['2'].label, savedDock['2'].icon);
+        if (savedDock['4']) updateDockSlot('4', savedDock['4'].page, savedDock['4'].href, savedDock['4'].label, savedDock['4'].icon);
+    }
+
+    // Long-press handler for drawer items
+    drawerItems.forEach(function(item) {
+        var pageKey = item.dataset.drawerPage;
+        if (lockedPages.indexOf(pageKey) !== -1) return; // skip locked pages
+
+        item.addEventListener('touchstart', function(e) {
+            longPressTimer = setTimeout(function() {
+                // Enter drag mode
+                dragItem = item;
+                item.classList.add('dragging-item');
+
+                // Highlight dock slots
+                dockSlots.forEach(function(s) { s.classList.add('dock-slot-highlight'); });
+
+                // Vibrate if supported
+                if (navigator.vibrate) navigator.vibrate(30);
+            }, 500);
+        }, { passive: true });
+
+        item.addEventListener('touchmove', function(e) {
+            if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+            if (!dragItem) return;
+
+            // Check if finger is over a dock slot
+            var touch = e.touches[0];
+            dockSlots.forEach(function(s) {
+                var rect = s.getBoundingClientRect();
+                if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                    touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                    s.style.transform = 'scale(1.15)';
+                } else {
+                    s.style.transform = '';
+                }
+            });
+        }, { passive: true });
+
+        item.addEventListener('touchend', function(e) {
+            if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+            if (!dragItem) return;
+
+            // Check which dock slot the finger landed on
+            var touch = e.changedTouches[0];
+            dockSlots.forEach(function(s) {
+                var rect = s.getBoundingClientRect();
+                if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                    touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                    var slotNum = s.dataset.dockSlot;
+                    var href = dragItem.dataset.drawerHref;
+                    var label = dragItem.dataset.drawerLabel;
+                    var iconPath = dragItem.dataset.drawerIcon;
+                    var pk = dragItem.dataset.drawerPage;
+
+                    updateDockSlot(slotNum, pk, href, label, iconPath);
+                    saveDock(slotNum, pk, href, label, iconPath);
+
+                    // Flash feedback
+                    s.style.transform = 'scale(1.2)';
+                    setTimeout(function() { s.style.transform = ''; }, 200);
+                    if (navigator.vibrate) navigator.vibrate(15);
+                }
+                s.style.transform = '';
+                s.classList.remove('dock-slot-highlight');
+            });
+
+            dragItem.classList.remove('dragging-item');
+            dragItem = null;
+        });
+
+        item.addEventListener('touchcancel', function() {
+            if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+            if (dragItem) {
+                dragItem.classList.remove('dragging-item');
+                dragItem = null;
+            }
+            dockSlots.forEach(function(s) {
+                s.style.transform = '';
+                s.classList.remove('dock-slot-highlight');
+            });
+        });
+    });
+
+    // Load dock config from Supabase on auth (deferred)
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof supabaseClient === 'undefined') return;
+        supabaseClient.auth.getSession().then(function(res) {
+            if (!res.data?.session?.user?.id) return;
+            supabaseClient.from('profiles').select('dock_config')
+                .eq('id', res.data.session.user.id).single()
+                .then(function(r) {
+                    if (r.data?.dock_config) {
+                        localStorage.setItem('jm_dock_config', JSON.stringify(r.data.dock_config));
+                        var config = r.data.dock_config;
+                        if (config['2']) updateDockSlot('2', config['2'].page, config['2'].href, config['2'].label, config['2'].icon);
+                        if (config['4']) updateDockSlot('4', config['4'].page, config['4'].href, config['4'].label, config['4'].icon);
+                    }
+                });
+        });
+    });
 })();
 
 

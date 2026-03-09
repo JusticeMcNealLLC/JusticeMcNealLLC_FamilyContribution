@@ -1016,19 +1016,20 @@ The LLC sustains itself through:
 22. **Phase 4C — Private Messaging + Snaps** — one-on-one DMs, Snapchat-style ephemeral messages, stories, message streaks
 23. **Phase 4D — Feed Notifications + Push + SMS** — in-app feed notification center (likes/comments), web push, Twilio SMS, notification preferences
 24. **Phase 4E — Family Location Map (GPS)** — opt-in location sharing, Leaflet.js map, check-ins, privacy controls
-25. ⏳ **Pick up deferred items** — social feed posts for milestones/birthdays, push notifications for milestones, perk badges on profiles, admin custom milestones
+25. **Phase 4F — Family Business Directory** — Dedicated business pages for members who own businesses. Each page showcases the business (name, logo, description, photos, website/social links, owner profile link). Two tiers with separate badges + banners: **Official** (has LLC/EIN — verified by admin) and **Small Business** (social media page, website, side hustle — no formal entity). Business page creation, badge assignment, and tier classification are all admin-only. Profile integration: business link shown on owner's profile. Business directory page listing all family-owned businesses with filter by tier. Admin console for managing business listings, approving/editing pages, and assigning the corresponding badge + banner per tier.
+26. ⏳ **Pick up deferred items** — social feed posts for milestones/birthdays, push notifications for milestones, perk badges on profiles, admin custom milestones
 
 ### Phase 5 (Events & Family Activities)
-26. **Phase 5A — Events System** — create events, RSVP, reminders, event comments
-27. **Phase 5B — Vacation / Trip Events** — deposit requirement, trip pot, expense breakdown
+27. **Phase 5A — Events System** — create events, RSVP, reminders, event comments
+28. **Phase 5B — Vacation / Trip Events** — deposit requirement, trip pot, expense breakdown
 
 ### Phase 6+
-28. **Phase 6 — Family Gallery** — photo/video uploads, albums, tagging, "On This Day"
-29. **Phase 7 — Trust Formation** — estate attorney, trust agreement, succession plan
-30. **Phase 8 — Family Lending Program** — loan applications, repayment tracking ($50k milestone)
-31. **Phase 9 — Member Benefits** — vehicle program ($250k), life insurance, scholarships
-32. **Phase 10 — Family Compound** — real estate acquisition ($500k+ milestone)
-33. **Phase 11 — Native Mobile App (iOS + Android)** — When the fund & membership grow large enough, build a true native app (React Native or Swift/Kotlin). Requires MacBook for iOS builds + Apple Developer account ($99/yr). Unlocks real push notifications, biometric login (Face ID / fingerprint), deep camera/GPS integration, and App Store presence. Long-term aspirational — the PWA (item 17) covers 95% of this until the scale justifies it.
+29. **Phase 6 — Family Gallery** — photo/video uploads, albums, tagging, "On This Day"
+30. **Phase 7 — Trust Formation** — estate attorney, trust agreement, succession plan
+31. **Phase 8 — Family Lending Program** — loan applications, repayment tracking ($50k milestone)
+32. **Phase 9 — Member Benefits** — vehicle program ($250k), life insurance, scholarships
+33. **Phase 10 — Family Compound** — real estate acquisition ($500k+ milestone)
+34. **Phase 11 — Native Mobile App (iOS + Android)** — When the fund & membership grow large enough, build a true native app (React Native or Swift/Kotlin). Requires MacBook for iOS builds + Apple Developer account ($99/yr). Unlocks real push notifications, biometric login (Face ID / fingerprint), deep camera/GPS integration, and App Store presence. Long-term aspirational — the PWA (item 17) covers 95% of this until the scale justifies it.
 
 ---
 
