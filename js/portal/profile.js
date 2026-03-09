@@ -21,11 +21,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set up tabs
     setupTabs();
 
-    // Set up edit bio modal
-    if (isOwnProfile) setupEditBio();
+    // Set up edit profile modal (bio + photo + badge)
+    if (isOwnProfile) setupEditProfile();
 
     // Set up cover photo upload
     if (isOwnProfile) setupCoverPhoto();
+
+    // Set up profile pic quick-upload
+    if (isOwnProfile) setupProfilePicUpload();
 });
 
 // ─── Load Profile Data ──────────────────────────────────
@@ -55,11 +58,15 @@ async function loadProfile() {
         const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Member';
         document.title = `${fullName} | Justice McNeal LLC`;
 
-        // Cover photo
+        // Cover photo or gradient
         if (profile.cover_photo_url) {
             const coverImg = document.getElementById('coverImage');
             coverImg.src = profile.cover_photo_url;
             coverImg.classList.remove('hidden');
+        } else if (profile.cover_gradient) {
+            const coverSection = document.getElementById('coverSection');
+            coverSection.className = coverSection.className.replace(/from-\S+/g, '').replace(/to-\S+/g, '').trim();
+            coverSection.classList.add('bg-gradient-to-br', ...profile.cover_gradient.split(' '));
         }
 
         // Profile picture
@@ -97,6 +104,7 @@ async function loadProfile() {
             document.getElementById('editProfileBtn')?.classList.remove('hidden');
             document.getElementById('settingsGearBtn')?.classList.remove('hidden');
             document.getElementById('editCoverBtn')?.classList.remove('hidden');
+            document.getElementById('picCameraOverlay')?.classList.remove('hidden');
         }
 
         // Load stats
@@ -142,6 +150,9 @@ async function loadStats(profile) {
 }
 
 // ─── Badges ─────────────────────────────────────────────
+let earnedBadgeKeys = [];
+let currentDisplayedBadge = null;
+
 async function loadBadges() {
     const { data: badges } = await supabaseClient
         .from('member_badges')
@@ -149,17 +160,130 @@ async function loadBadges() {
         .eq('user_id', viewingUserId)
         .order('earned_at', { ascending: false });
 
+    // Get current displayed badge
+    const { data: prof } = await supabaseClient
+        .from('profiles')
+        .select('displayed_badge')
+        .eq('id', viewingUserId)
+        .single();
+    currentDisplayedBadge = prof?.displayed_badge || null;
+
+    earnedBadgeKeys = (badges || []).map(b => b.badge_key);
+
     if (!badges || badges.length === 0) return;
 
     const section = document.getElementById('badgesSection');
     const grid = document.getElementById('badgesGrid');
     section.classList.remove('hidden');
 
-    // Use BADGE_CATALOG from quests/config.js if available
+    // Render earned badges with equip ability for own profile
     grid.innerHTML = badges.map(b => {
         const badge = (typeof BADGE_CATALOG !== 'undefined' && BADGE_CATALOG[b.badge_key]) || { emoji: '🏅', name: b.badge_key, rarity: 'common' };
-        return `<div class="badge-chip badge-rarity-${badge.rarity || 'common'} w-10 h-10 text-lg" title="${badge.name}">${badge.emoji}</div>`;
+        const isEquipped = currentDisplayedBadge === b.badge_key;
+        const equipClass = isOwnProfile ? 'cursor-pointer hover:scale-110 transition-transform' : '';
+        const ringClass = isEquipped ? 'ring-2 ring-brand-500 ring-offset-2' : '';
+        return `<div class="badge-chip badge-rarity-${badge.rarity || 'common'} w-10 h-10 text-lg ${equipClass} ${ringClass}" title="${badge.name}${isOwnProfile ? (isEquipped ? ' (equipped — tap to unequip)' : ' — tap to equip') : ''}" data-badge-key="${b.badge_key}" role="${isOwnProfile ? 'button' : 'img'}">${badge.emoji}</div>`;
     }).join('');
+
+    // Wire up badge equip clicks (own profile only)
+    if (isOwnProfile) {
+        grid.querySelectorAll('[data-badge-key]').forEach(chip => {
+            chip.addEventListener('click', () => equipBadge(chip.dataset.badgeKey));
+        });
+
+        // Show "View Collection" button
+        const collBtn = document.getElementById('toggleBadgeCollectionBtn');
+        if (collBtn) {
+            collBtn.classList.remove('hidden');
+            collBtn.addEventListener('click', toggleBadgeCollection);
+        }
+    }
+}
+
+async function equipBadge(badgeKey) {
+    const newBadge = (badgeKey === currentDisplayedBadge) ? null : badgeKey;
+
+    const { error } = await supabaseClient
+        .from('profiles')
+        .update({ displayed_badge: newBadge })
+        .eq('id', profileUser.id);
+
+    if (error) { console.error('Equip error:', error); return; }
+
+    currentDisplayedBadge = newBadge;
+
+    // Update badge overlay on avatar
+    const overlay = document.getElementById('profileBadgeOverlay');
+    if (newBadge && typeof buildNavBadgeOverlay === 'function') {
+        overlay.innerHTML = buildNavBadgeOverlay(newBadge);
+        const chip = overlay.querySelector('.badge-chip-overlay');
+        if (chip) { chip.style.width = '28px'; chip.style.height = '28px'; chip.style.fontSize = '14px'; }
+    } else {
+        overlay.innerHTML = '';
+    }
+
+    // Re-render badges grid to update ring indicators
+    refreshBadgeRings();
+    refreshCollectionRings();
+    refreshEditModalBadgePicker();
+}
+
+function refreshBadgeRings() {
+    const grid = document.getElementById('badgesGrid');
+    if (!grid) return;
+    grid.querySelectorAll('[data-badge-key]').forEach(chip => {
+        const isEq = chip.dataset.badgeKey === currentDisplayedBadge;
+        chip.classList.toggle('ring-2', isEq);
+        chip.classList.toggle('ring-brand-500', isEq);
+        chip.classList.toggle('ring-offset-2', isEq);
+        const badge = (typeof BADGE_CATALOG !== 'undefined' && BADGE_CATALOG[chip.dataset.badgeKey]) || { name: chip.dataset.badgeKey };
+        chip.title = badge.name + (isEq ? ' (equipped — tap to unequip)' : ' — tap to equip');
+    });
+}
+
+function refreshCollectionRings() {
+    const grid = document.getElementById('badgeCollectionGrid');
+    if (!grid) return;
+    grid.querySelectorAll('[data-badge-key]').forEach(card => {
+        const isEq = card.dataset.badgeKey === currentDisplayedBadge;
+        card.classList.toggle('ring-2', isEq);
+        card.classList.toggle('ring-brand-500', isEq);
+    });
+}
+
+function toggleBadgeCollection() {
+    const panel = document.getElementById('badgeCollectionPanel');
+    const btn = document.getElementById('toggleBadgeCollectionBtn');
+    if (!panel) return;
+
+    const showing = !panel.classList.contains('hidden');
+    panel.classList.toggle('hidden');
+    btn.textContent = showing ? 'View Collection' : 'Hide Collection';
+
+    if (!showing) renderBadgeCollection();
+}
+
+function renderBadgeCollection() {
+    const grid = document.getElementById('badgeCollectionGrid');
+    if (!grid || typeof BADGE_CATALOG === 'undefined') return;
+
+    grid.innerHTML = Object.entries(BADGE_CATALOG).map(([key, badge]) => {
+        const earned = earnedBadgeKeys.includes(key);
+        const isEquipped = currentDisplayedBadge === key;
+        const lockClass = earned ? '' : 'opacity-30 grayscale pointer-events-none';
+        const ringClass = isEquipped ? 'ring-2 ring-brand-500' : '';
+        return `
+            <div class="flex flex-col items-center gap-1 p-2 rounded-xl ${earned ? 'cursor-pointer hover:bg-gray-50' : ''} ${ringClass} ${lockClass} transition" data-badge-key="${key}" ${earned ? 'role="button"' : ''}>
+                <div class="badge-chip badge-rarity-${badge.rarity || 'common'} w-10 h-10 text-lg">${badge.emoji}</div>
+                <span class="text-[10px] text-gray-500 text-center leading-tight">${badge.name}</span>
+                ${!earned ? '<span class="text-[9px] text-gray-400">🔒</span>' : ''}
+            </div>`;
+    }).join('');
+
+    // Wire equip for earned ones
+    grid.querySelectorAll('[role="button"]').forEach(card => {
+        card.addEventListener('click', () => equipBadge(card.dataset.badgeKey));
+    });
 }
 
 // ─── Posts Grid (Instagram 3-column) ────────────────────
@@ -390,8 +514,71 @@ function setupTabs() {
     });
 }
 
-// ─── Edit Bio ───────────────────────────────────────────
-function setupEditBio() {
+// ─── Profile Pic Quick Upload (tap avatar) ──────────────
+function setupProfilePicUpload() {
+    const wrap = document.getElementById('profilePicWrap');
+    const input = document.getElementById('profilePicInput');
+    if (!wrap || !input) return;
+
+    wrap.addEventListener('click', () => input.click());
+    wrap.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.click(); });
+
+    input.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        await uploadProfilePic(file);
+        input.value = '';
+    });
+}
+
+async function uploadProfilePic(file) {
+    if (file.size > 2 * 1024 * 1024) {
+        alert('Image must be under 2 MB');
+        return;
+    }
+
+    try {
+        const ext = file.name.split('.').pop();
+        const path = `${profileUser.id}/avatar.${ext}`;
+
+        const { error: upErr } = await supabaseClient.storage
+            .from('profile-pictures')
+            .upload(path, file, { contentType: file.type, upsert: true });
+
+        if (upErr) throw upErr;
+
+        const { data: { publicUrl } } = supabaseClient.storage
+            .from('profile-pictures')
+            .getPublicUrl(path);
+
+        const url = publicUrl + '?t=' + Date.now();
+
+        await supabaseClient
+            .from('profiles')
+            .update({ profile_picture_url: publicUrl })
+            .eq('id', profileUser.id);
+
+        // Update main avatar
+        const pic = document.getElementById('profilePic');
+        pic.src = url;
+        pic.classList.remove('hidden');
+        document.getElementById('profileInitials').classList.add('hidden');
+
+        // Also update the edit modal avatar if it exists
+        const modalPic = document.getElementById('editModalPic');
+        if (modalPic) {
+            modalPic.src = url;
+            modalPic.classList.remove('hidden');
+            document.getElementById('editModalInitials')?.classList.add('hidden');
+        }
+    } catch (err) {
+        console.error('Profile pic upload error:', err);
+        alert('Failed to upload profile picture');
+    }
+}
+
+// ─── Edit Profile (Bio + Photo + Badge) ─────────────────
+function setupEditProfile() {
     const editBtn = document.getElementById('editProfileBtn');
     const modal = document.getElementById('editBioModal');
     const backdrop = document.getElementById('editBioBackdrop');
@@ -402,9 +589,44 @@ function setupEditBio() {
 
     if (!editBtn || !modal) return;
 
+    // Photo change inside modal
+    const modalAvatar = document.getElementById('editModalAvatar');
+    const modalPicInput = document.getElementById('editModalPicInput');
+    const changePhotoBtn = document.getElementById('editModalChangePhotoBtn');
+
+    if (modalAvatar && modalPicInput) {
+        modalAvatar.addEventListener('click', () => modalPicInput.click());
+        changePhotoBtn?.addEventListener('click', () => modalPicInput.click());
+        modalPicInput.addEventListener('change', async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            await uploadProfilePic(file);
+            modalPicInput.value = '';
+        });
+    }
+
     editBtn.addEventListener('click', () => {
+        // Populate bio
         input.value = document.getElementById('profileBio').textContent || '';
         charCount.textContent = `${input.value.length} / 200`;
+
+        // Populate modal avatar
+        const mainPic = document.getElementById('profilePic');
+        const modalPic = document.getElementById('editModalPic');
+        const modalInitials = document.getElementById('editModalInitials');
+        if (mainPic && !mainPic.classList.contains('hidden')) {
+            modalPic.src = mainPic.src;
+            modalPic.classList.remove('hidden');
+            modalInitials?.classList.add('hidden');
+        } else {
+            modalPic.classList.add('hidden');
+            modalInitials.textContent = document.getElementById('profileInitials')?.textContent || '?';
+            modalInitials?.classList.remove('hidden');
+        }
+
+        // Populate badge picker
+        populateEditModalBadgePicker();
+
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         input.focus();
@@ -427,34 +649,169 @@ function setupEditBio() {
         saveBtn.disabled = true;
         saveBtn.textContent = 'Saving...';
 
+        // Get selected badge from modal picker
+        const selectedBadge = modal.querySelector('.edit-badge-option.ring-brand-500')?.dataset.badge ?? currentDisplayedBadge;
+
+        const updates = { bio };
+        if (selectedBadge !== undefined) {
+            updates.displayed_badge = selectedBadge || null;
+        }
+
         const { error } = await supabaseClient
             .from('profiles')
-            .update({ bio })
+            .update(updates)
             .eq('id', profileUser.id);
 
         if (!error) {
             document.getElementById('profileBio').textContent = bio;
+
+            // If badge changed, update overlay
+            if (updates.displayed_badge !== undefined && updates.displayed_badge !== currentDisplayedBadge) {
+                currentDisplayedBadge = updates.displayed_badge;
+                const overlay = document.getElementById('profileBadgeOverlay');
+                if (currentDisplayedBadge && typeof buildNavBadgeOverlay === 'function') {
+                    overlay.innerHTML = buildNavBadgeOverlay(currentDisplayedBadge);
+                    const chip = overlay.querySelector('.badge-chip-overlay');
+                    if (chip) { chip.style.width = '28px'; chip.style.height = '28px'; chip.style.fontSize = '14px'; }
+                } else {
+                    overlay.innerHTML = '';
+                }
+                refreshBadgeRings();
+                refreshCollectionRings();
+            }
             close();
         } else {
-            alert('Failed to save bio');
+            alert('Failed to save profile');
         }
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save';
     });
 }
 
-// ─── Cover Photo Upload ─────────────────────────────────
+function populateEditModalBadgePicker() {
+    const picker = document.getElementById('editModalBadgePicker');
+    if (!picker) return;
+
+    // Keep the "None" button, add earned badges
+    const noneBtnHtml = `<button data-badge="" class="edit-badge-option w-10 h-10 rounded-full border-2 ${!currentDisplayedBadge ? 'border-brand-500 ring-2 ring-brand-500' : 'border-gray-200'} flex items-center justify-center text-xs text-gray-400 hover:border-gray-400 transition" title="No badge">✕</button>`;
+
+    const badgeBtns = earnedBadgeKeys.map(key => {
+        const badge = (typeof BADGE_CATALOG !== 'undefined' && BADGE_CATALOG[key]) || { emoji: '🏅', name: key, rarity: 'common' };
+        const isEq = currentDisplayedBadge === key;
+        return `<button data-badge="${key}" class="edit-badge-option badge-chip badge-rarity-${badge.rarity || 'common'} w-10 h-10 text-lg ${isEq ? 'ring-2 ring-brand-500 ring-offset-2' : ''}" title="${badge.name}">${badge.emoji}</button>`;
+    }).join('');
+
+    picker.innerHTML = noneBtnHtml + badgeBtns;
+
+    // Wire clicks
+    picker.querySelectorAll('.edit-badge-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            picker.querySelectorAll('.edit-badge-option').forEach(b => {
+                b.classList.remove('ring-2', 'ring-brand-500', 'ring-offset-2', 'border-brand-500');
+                if (b.dataset.badge === '') b.classList.add('border-gray-200');
+            });
+            btn.classList.add('ring-2', 'ring-brand-500');
+            if (btn.dataset.badge === '') {
+                btn.classList.remove('border-gray-200');
+                btn.classList.add('border-brand-500');
+            } else {
+                btn.classList.add('ring-offset-2');
+            }
+        });
+    });
+}
+
+function refreshEditModalBadgePicker() {
+    const picker = document.getElementById('editModalBadgePicker');
+    if (!picker) return;
+    picker.querySelectorAll('.edit-badge-option').forEach(btn => {
+        const isEq = (btn.dataset.badge || null) === (currentDisplayedBadge || null);
+        btn.classList.toggle('ring-2', isEq);
+        btn.classList.toggle('ring-brand-500', isEq);
+        if (btn.dataset.badge === '') {
+            btn.classList.toggle('border-brand-500', isEq);
+            btn.classList.toggle('border-gray-200', !isEq);
+        } else {
+            btn.classList.toggle('ring-offset-2', isEq);
+        }
+    });
+}
+
+// ─── Cover Photo / Banner Picker ─────────────────────────
 function setupCoverPhoto() {
     const editBtn = document.getElementById('editCoverBtn');
-    const input = document.getElementById('coverPhotoInput');
+    const fileInput = document.getElementById('coverPhotoInput');
+    const modal = document.getElementById('bannerPickerModal');
+    const backdrop = document.getElementById('bannerPickerBackdrop');
+    const uploadBtn = document.getElementById('bannerUploadBtn');
 
-    if (!editBtn || !input) return;
+    if (!editBtn) return;
 
-    editBtn.addEventListener('click', () => input.click());
+    function openPicker() {
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        } else {
+            // Fallback if modal doesn't exist — direct file pick
+            fileInput?.click();
+        }
+    }
 
-    input.addEventListener('change', async (e) => {
+    function closePicker() {
+        modal?.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    editBtn.addEventListener('click', openPicker);
+    backdrop?.addEventListener('click', closePicker);
+
+    // Upload custom photo button
+    uploadBtn?.addEventListener('click', () => {
+        fileInput?.click();
+    });
+
+    // Gradient preset clicks
+    document.querySelectorAll('.banner-preset').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const gradient = btn.dataset.gradient;
+            if (!gradient) return;
+
+            btn.style.opacity = '0.5';
+
+            // Save gradient choice — clear cover photo image, store gradient class
+            await supabaseClient
+                .from('profiles')
+                .update({ cover_photo_url: null, cover_gradient: gradient })
+                .eq('id', profileUser.id);
+
+            // Apply gradient visually
+            const coverSection = document.getElementById('coverSection');
+            const coverImg = document.getElementById('coverImage');
+            coverImg.classList.add('hidden');
+            coverImg.src = '';
+
+            // Remove existing gradient classes & apply new
+            coverSection.className = coverSection.className.replace(/from-\S+/g, '').replace(/to-\S+/g, '').trim();
+            coverSection.classList.add('bg-gradient-to-br', ...gradient.split(' '));
+
+            // Highlight selected
+            document.querySelectorAll('.banner-preset').forEach(p => {
+                p.classList.remove('border-brand-500', 'ring-2', 'ring-brand-500');
+                p.style.opacity = '1';
+            });
+            btn.classList.add('border-brand-500', 'ring-2', 'ring-brand-500');
+            btn.style.opacity = '1';
+
+            closePicker();
+        });
+    });
+
+    // File upload handler
+    fileInput?.addEventListener('change', async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        closePicker();
 
         editBtn.textContent = 'Uploading...';
         editBtn.disabled = true;
@@ -473,12 +830,11 @@ function setupCoverPhoto() {
                 .from('cover-photos')
                 .getPublicUrl(path);
 
-            // Add cache-buster
             const url = publicUrl + '?t=' + Date.now();
 
             await supabaseClient
                 .from('profiles')
-                .update({ cover_photo_url: publicUrl })
+                .update({ cover_photo_url: publicUrl, cover_gradient: null })
                 .eq('id', profileUser.id);
 
             const coverImg = document.getElementById('coverImage');
@@ -492,6 +848,7 @@ function setupCoverPhoto() {
 
         editBtn.textContent = '📷 Edit Cover';
         editBtn.disabled = false;
+        fileInput.value = '';
     });
 }
 
