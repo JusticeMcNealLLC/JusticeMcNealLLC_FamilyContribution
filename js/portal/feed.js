@@ -449,11 +449,9 @@ function renderPostCard(post) {
     const isOwner = post.author_id === feedUser.id;
     const canDelete = isOwner || isAdmin;
 
-    // Like/comment summary line (Instagram-style: "23 likes" below action icons)
-    let likeSummary = '';
-    if (likeCount > 0) {
-        likeSummary = `<div class="px-1 mt-1"><span class="like-summary text-xs font-semibold text-gray-900">${likeCount} like${likeCount !== 1 ? 's' : ''}</span></div>`;
-    }
+    // Inline counts next to icons
+    const likeCountLabel = likeCount > 0 ? likeCount : '';
+    const commentCountLabel = commentCount > 0 ? commentCount : '';
 
     return `
     <article class="bg-white border-b sm:border sm:rounded-2xl sm:border-gray-200/80 post-card fade-in" data-post-id="${post.id}">
@@ -493,26 +491,22 @@ function renderPostCard(post) {
             <!-- Images -->
             ${imageHtml}
 
-            <!-- Action Bar (Instagram-style) -->
+            <!-- Action Bar -->
             <div class="flex items-center justify-between mt-3 pt-2">
-                <div class="flex items-center gap-3">
-                    <button class="like-btn transition-transform active:scale-125 ${myLike ? 'text-red-500' : 'text-gray-700'}" data-post-id="${post.id}" data-liked="${myLike ? 'true' : 'false'}">
+                <div class="flex items-center gap-4">
+                    <button class="like-btn flex items-center gap-1.5 transition-transform active:scale-110 ${myLike ? 'text-red-500' : 'text-gray-700'}" data-post-id="${post.id}" data-liked="${myLike ? 'true' : 'false'}">
                         <svg class="w-6 h-6" fill="${myLike ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        <span class="like-count text-xs font-semibold">${likeCountLabel}</span>
                     </button>
-                    <button class="comment-btn text-gray-700 transition-transform active:scale-110" data-post-id="${post.id}">
+                    <button class="comment-btn flex items-center gap-1.5 text-gray-700 transition-transform active:scale-110" data-post-id="${post.id}">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        <span class="comment-count text-xs font-semibold">${commentCountLabel}</span>
                     </button>
                 </div>
                 <button class="bookmark-btn transition-transform active:scale-110 ${isBookmarked ? 'text-gray-900' : 'text-gray-700'}" data-post-id="${post.id}" data-saved="${isBookmarked ? 'true' : 'false'}">
                     <svg class="w-6 h-6" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
                 </button>
             </div>
-
-            <!-- Like Count -->
-            ${likeSummary}
-
-            <!-- Comment count teaser -->
-            ${commentCount > 0 ? `<button class="comment-btn text-xs text-gray-400 mt-1 px-1 hover:text-gray-600" data-post-id="${post.id}">View all ${commentCount} comment${commentCount !== 1 ? 's' : ''}</button>` : ''}
         </div>
     </article>`;
 }
@@ -654,7 +648,7 @@ async function toggleLike(btn) {
     const postId = btn.dataset.postId;
     const isLiked = btn.dataset.liked === 'true';
     const card = btn.closest('.post-card');
-    const likeSummaryEl = card?.querySelector('.like-summary');
+    const likeCountEl = btn.querySelector('.like-count');
 
     if (isLiked) {
         // Remove like
@@ -663,15 +657,11 @@ async function toggleLike(btn) {
         btn.classList.add('text-gray-700');
         btn.querySelector('svg').setAttribute('fill', 'none');
 
-        // Update count display
-        if (likeSummaryEl) {
-            const m = likeSummaryEl.textContent.match(/\d+/);
-            const newCount = (parseInt(m?.[0]) || 1) - 1;
-            if (newCount > 0) {
-                likeSummaryEl.textContent = `${newCount} like${newCount !== 1 ? 's' : ''}`;
-            } else {
-                likeSummaryEl.parentElement.remove();
-            }
+        // Update inline count
+        if (likeCountEl) {
+            const cur = parseInt(likeCountEl.textContent) || 1;
+            const newCount = Math.max(0, cur - 1);
+            likeCountEl.textContent = newCount > 0 ? newCount : '';
         }
 
         await supabaseClient.from('post_likes').delete()
@@ -688,20 +678,10 @@ async function toggleLike(btn) {
         btn.querySelector('svg').style.transform = 'scale(1.3)';
         setTimeout(() => { btn.querySelector('svg').style.transform = ''; }, 200);
 
-        // Update count display
-        if (likeSummaryEl) {
-            const m = likeSummaryEl.textContent.match(/\d+/);
-            const newCount = (parseInt(m?.[0]) || 0) + 1;
-            likeSummaryEl.textContent = `${newCount} like${newCount !== 1 ? 's' : ''}`;
-        } else {
-            // Insert likes summary below action bar
-            const actionBar = card?.querySelector('.like-btn')?.closest('.flex')?.parentElement;
-            if (actionBar) {
-                const div = document.createElement('div');
-                div.className = 'px-1 mt-1';
-                div.innerHTML = '<span class="like-summary text-xs font-semibold text-gray-900">1 like</span>';
-                actionBar.insertAdjacentElement('afterend', div);
-            }
+        // Update inline count
+        if (likeCountEl) {
+            const cur = parseInt(likeCountEl.textContent) || 0;
+            likeCountEl.textContent = cur + 1;
         }
 
         await supabaseClient.from('post_likes').upsert({
