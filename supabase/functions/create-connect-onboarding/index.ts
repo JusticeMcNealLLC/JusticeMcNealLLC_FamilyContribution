@@ -48,7 +48,7 @@ serve(async (req) => {
     // Get member profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('stripe_connect_account_id, first_name, last_name, connect_onboarding_complete')
+      .select('stripe_connect_account_id, first_name, last_name, birthday, connect_onboarding_complete')
       .eq('id', user.id)
       .single()
 
@@ -56,10 +56,22 @@ serve(async (req) => {
 
     // Create Connect Express account if none exists
     if (!connectAccountId) {
+      // Pre-fill individual details from profile to reduce onboarding friction
+      const individual: Record<string, any> = {}
+      if (profile?.first_name) individual.first_name = profile.first_name
+      if (profile?.last_name) individual.last_name = profile.last_name
+      if (profile?.birthday) {
+        const [y, m, d] = profile.birthday.split('-').map(Number)
+        individual.dob = { year: y, month: m, day: d }
+      }
+      if (user.email) individual.email = user.email
+
       const account = await stripe.accounts.create({
         type: 'express',
         country: 'US',
         email: user.email,
+        business_type: 'individual',
+        individual,
         capabilities: {
           transfers: { requested: true },
         },
