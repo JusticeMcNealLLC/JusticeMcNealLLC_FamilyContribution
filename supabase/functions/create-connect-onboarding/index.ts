@@ -115,6 +115,10 @@ serve(async (req) => {
       type: 'account_onboarding',
       return_url: return_url || `${siteUrl}/portal/connect-return.html?status=complete`,
       refresh_url: refresh_url || `${siteUrl}/portal/connect-return.html?status=refresh`,
+      collection_options: {
+        fields: 'eventually_due',           // only collect what's required
+        future_requirements: 'omit',        // skip future requirement fields
+      },
     })
 
     return new Response(
