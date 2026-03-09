@@ -69,10 +69,10 @@
 
     // Profile avatar tab (rightmost)
     function profileTab() {
-        var cls = 'settings' === active ? 'tab-active' : 'tab-inactive';
-        return '<a href="settings.html" class="' + cls + '" id="profileTab">' +
+        var cls = 'profile' === active ? 'tab-active' : 'tab-inactive';
+        return '<a href="profile.html" class="' + cls + '" id="profileTab">' +
             '<div class="relative w-7 h-7">' +
-                '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border-2 ' + ('settings' === active ? 'border-brand-500' : 'border-gray-200') + '">' +
+                '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border-2 ' + ('profile' === active ? 'border-brand-500' : 'border-gray-200') + '">' +
                     '<span id="tabProfileInitials" class="text-brand-600 text-[10px] font-bold"></span>' +
                     '<img id="tabProfileImg" class="w-full h-full object-cover hidden" alt="">' +
                 '</div>' +
