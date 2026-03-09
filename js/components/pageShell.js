@@ -93,10 +93,10 @@
                     '<button id="newPostBtn" class="w-9 h-9 rounded-full bg-brand-100 flex items-center justify-center hover:bg-brand-200 transition" title="New Post">' +
                         '<svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.plus) + '</svg>' +
                     '</button>' +
-                    '<a href="notifications.html" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition relative" title="Notifications">' +
+                    '<button id="notifBtn" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition relative" title="Notifications">' +
                         '<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.bell) + '</svg>' +
                         '<span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">0</span>' +
-                    '</a>';
+                    '</button>';
                 break;
             case 'history':
                 contextTitle = 'History'; break;
@@ -244,10 +244,10 @@
                 logoBlock +
                 '<span class="font-bold text-lg text-gray-900">Justice McNeal</span>' +
             '</div>' +
-            '<a href="notifications.html" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition relative" title="Notifications">' +
+            '<button id="notifBtn" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition relative" title="Notifications">' +
                 '<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.heart) + '</svg>' +
                 '<span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">0</span>' +
-            '</a>' +
+            '</button>' +
         '</div>';
     }
 
@@ -345,6 +345,30 @@
         drawerContainer.innerHTML = drawerHTML;
         while (drawerContainer.firstChild) {
             document.body.appendChild(drawerContainer.firstChild);
+        }
+    }
+
+    // ─── Notifications Panel (slide-down sheet) ─────────
+    if (!isAdmin) {
+        var notifPanel =
+            '<div class="notif-backdrop" id="notifBackdrop"></div>' +
+            '<div class="notif-panel" id="notifPanel">' +
+                '<div class="notif-panel-header">' +
+                    '<h3 class="text-base font-bold text-gray-900">Notifications</h3>' +
+                    '<button id="notifMarkAllBtn" class="text-xs font-semibold text-brand-600 hover:text-brand-700 transition">Mark all read</button>' +
+                '</div>' +
+                '<div class="notif-panel-body" id="notifPanelBody">' +
+                    '<div class="notif-empty" id="notifEmpty">' +
+                        '<svg class="w-10 h-10 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="' + SVG.bell + '"></path></svg>' +
+                        '<p class="text-sm text-gray-400">No notifications yet</p>' +
+                    '</div>' +
+                    '<div id="notifList" class="notif-list"></div>' +
+                '</div>' +
+            '</div>';
+        var notifContainer = document.createElement('div');
+        notifContainer.innerHTML = notifPanel;
+        while (notifContainer.firstChild) {
+            document.body.appendChild(notifContainer.firstChild);
         }
     }
 })();
