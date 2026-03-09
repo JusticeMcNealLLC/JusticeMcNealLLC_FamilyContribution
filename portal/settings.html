@@ -116,9 +116,25 @@
                 </div>
 
                 <!-- Badge grid -->
-                <div id="settingsBadgeGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                <div id="badgeFilterBar" class="flex gap-1.5 mb-3 overflow-x-auto no-scrollbar">
+                    <button class="badge-filter-pill active" data-filter="all">All</button>
+                    <button class="badge-filter-pill" data-filter="common">Common</button>
+                    <button class="badge-filter-pill" data-filter="rare">Rare</button>
+                    <button class="badge-filter-pill" data-filter="epic">Epic</button>
+                    <button class="badge-filter-pill" data-filter="legendary">Legendary</button>
+                </div>
+                <div id="settingsBadgeGrid" class="grid grid-cols-3 gap-2.5">
                     <!-- Populated by JS -->
                     <div class="col-span-full text-center py-4 text-sm text-gray-400">Loading badges…</div>
+                </div>
+                <div id="badgePagination" class="flex items-center justify-center gap-3 mt-3 hidden">
+                    <button id="badgePrevBtn" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition disabled:opacity-30" disabled>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <div id="badgePageDots" class="flex gap-1.5"></div>
+                    <button id="badgeNextBtn" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition disabled:opacity-30" disabled>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
                 </div>
 
                 <!-- Remove badge button -->

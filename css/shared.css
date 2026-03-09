@@ -346,6 +346,11 @@ input[type="date"] {
     background-clip: padding-box;
     position: relative;
 }
+/* Keep overlay absolutely positioned even with legendary rarity */
+.badge-chip-overlay.badge-rarity-legendary {
+    position: absolute;
+    background-clip: border-box;
+}
 .badge-rarity-legendary::before {
     content: '';
     position: absolute;
@@ -406,3 +411,51 @@ input[type="date"] {
 .rarity-rare      { color: #3b82f6; }
 .rarity-epic      { color: #8b5cf6; }
 .rarity-legendary { color: #d97706; }
+
+/* ─── Badge Filter Pills ──────────────────────────────── */
+.badge-filter-pill {
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 9999px;
+    border: 1.5px solid #e5e7eb;
+    background: white;
+    color: #6b7280;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+.badge-filter-pill:hover { background: #f9fafb; border-color: #d1d5db; }
+.badge-filter-pill.active { background: #4f46e5; color: white; border-color: #4f46e5; }
+.badge-filter-pill[data-filter="common"].active  { background: #6b7280; border-color: #6b7280; }
+.badge-filter-pill[data-filter="rare"].active     { background: #3b82f6; border-color: #3b82f6; }
+.badge-filter-pill[data-filter="epic"].active     { background: #8b5cf6; border-color: #8b5cf6; }
+.badge-filter-pill[data-filter="legendary"].active { background: #d97706; border-color: #d97706; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Badge Pagination Dots ───────────────────────────── */
+.badge-page-dot {
+    width: 8px; height: 8px; border-radius: 9999px;
+    background: #d1d5db; transition: all 0.2s; cursor: pointer;
+}
+.badge-page-dot.active { background: #4f46e5; width: 20px; }
+
+/* ─── Badge Detail Modal ──────────────────────────────── */
+.badge-detail-backdrop {
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.15s;
+    padding: 16px;
+}
+.badge-detail-backdrop.open { opacity: 1; }
+.badge-detail-card {
+    background: white; border-radius: 16px;
+    max-width: 320px; width: 100%;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    transform: translateY(12px); transition: transform 0.2s;
+    overflow: hidden;
+}
+.badge-detail-backdrop.open .badge-detail-card { transform: translateY(0); }

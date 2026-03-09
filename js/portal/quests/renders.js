@@ -404,44 +404,173 @@ function closeQuestDetail() {
 }
 
 // ─── Badge Collection Render ─────────────────────────────
+let _questBadgeFilter = 'all';
+let _questBadgePage = 0;
+let _questEarnedBadges = [];
+const Q_BADGES_PER_PAGE = 6;
+
 function renderBadgeCollection(earnedBadges) {
     const container = document.getElementById('badgeCollection');
     if (!container) return;
 
+    _questEarnedBadges = earnedBadges || [];
+    _questBadgePage = 0;
+    _questBadgeFilter = 'all';
+
+    _renderQuestBadgeInner();
+}
+
+function _renderQuestBadgeInner() {
+    const container = document.getElementById('badgeCollection');
+    if (!container) return;
+
     const allKeys = Object.keys(BADGE_CATALOG);
+    const earnedBadges = _questEarnedBadges;
 
-    container.innerHTML = `
-        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-            ${allKeys.map(key => {
-                const badge = getBadge(key);
-                const rarity = getBadgeRarity(key);
-                const earned = earnedBadges.find(b => b.badge_key === key);
-                const isDisplayed = earned && earned.is_displayed;
-                const isEarned = !!earned;
-
-                return `
-                    <div class="badge-picker-card ${isDisplayed ? 'badge-active' : ''} ${!isEarned ? 'badge-locked' : ''} bg-white rounded-xl border-2 ${isDisplayed ? 'border-brand-500' : isEarned ? 'border-gray-200 hover:border-brand-300' : 'border-gray-100'} p-3 text-center"
-                         ${isEarned ? `data-badge-key="${key}"` : ''}>
-                        <div class="flex justify-center mb-1.5">
-                            ${buildBadgeChip(key, 'lg')}
-                        </div>
-                        <div class="text-[10px] font-semibold text-gray-700 leading-tight mb-0.5">${badge.name}</div>
-                        <div class="text-[9px] font-medium rarity-${badge.rarity || 'common'}">${rarity.label}</div>
-                        ${isDisplayed ? '<div class="text-[9px] text-brand-600 font-semibold mt-0.5">✓ Displayed</div>' : ''}
-                        ${!isEarned ? '<div class="text-[9px] text-gray-400 mt-0.5">🔒 Locked</div>' : ''}
-                    </div>
-                `;
+    // Filter bar + grid + pagination
+    const filterBar = `
+        <div class="flex gap-1.5 mb-3 overflow-x-auto no-scrollbar" id="questBadgeFilterBar">
+            ${['all','common','rare','epic','legendary'].map(f => {
+                const label = f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1);
+                return `<button class="badge-filter-pill ${_questBadgeFilter === f ? 'active' : ''}" data-qfilter="${f}">${label}</button>`;
             }).join('')}
         </div>
     `;
 
-    // Wire up badge selection
+    // Apply filter
+    const filtered = _questBadgeFilter === 'all'
+        ? allKeys
+        : allKeys.filter(k => (getBadge(k).rarity || 'common') === _questBadgeFilter);
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / Q_BADGES_PER_PAGE));
+    if (_questBadgePage >= totalPages) _questBadgePage = totalPages - 1;
+    if (_questBadgePage < 0) _questBadgePage = 0;
+    const start = _questBadgePage * Q_BADGES_PER_PAGE;
+    const pageKeys = filtered.slice(start, start + Q_BADGES_PER_PAGE);
+
+    let gridHTML = '';
+    if (pageKeys.length === 0) {
+        gridHTML = '<div class="col-span-full text-center py-6 text-sm text-gray-400">No badges in this category yet</div>';
+    } else {
+        gridHTML = pageKeys.map(key => {
+            const badge = getBadge(key);
+            const rarity = getBadgeRarity(key);
+            const earned = earnedBadges.find(b => b.badge_key === key);
+            const isDisplayed = earned && earned.is_displayed;
+            const isEarned = !!earned;
+
+            return `
+                <div class="badge-picker-card ${isDisplayed ? 'badge-active' : ''} ${!isEarned ? 'badge-locked' : ''} bg-white rounded-xl border-2 ${isDisplayed ? 'border-brand-500' : isEarned ? 'border-gray-200 hover:border-brand-300' : 'border-gray-100'} p-3 text-center"
+                     data-qbadge-detail="${key}" ${isEarned ? `data-badge-key="${key}"` : ''}>
+                    <div class="flex justify-center mb-1.5">
+                        ${buildBadgeChip(key, 'lg')}
+                    </div>
+                    <div class="text-[10px] font-semibold text-gray-700 leading-tight mb-0.5 truncate">${badge.name}</div>
+                    <div class="text-[9px] font-medium rarity-${badge.rarity || 'common'}">${rarity.label}</div>
+                    ${isDisplayed ? '<div class="text-[9px] text-brand-600 font-semibold mt-0.5">✓ Displayed</div>' : ''}
+                    ${!isEarned ? '<div class="text-[9px] text-gray-400 mt-0.5">🔒 Locked</div>' : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Pagination controls
+    let paginationHTML = '';
+    if (totalPages > 1) {
+        const dots = Array.from({ length: totalPages }, (_, i) =>
+            `<div class="badge-page-dot ${i === _questBadgePage ? 'active' : ''}" data-qpage="${i}"></div>`
+        ).join('');
+        paginationHTML = `
+            <div class="flex items-center justify-center gap-3 mt-3">
+                <button class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition ${_questBadgePage <= 0 ? 'opacity-30 pointer-events-none' : ''}" id="qBadgePrev">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <div class="flex gap-1.5">${dots}</div>
+                <button class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition ${_questBadgePage >= totalPages - 1 ? 'opacity-30 pointer-events-none' : ''}" id="qBadgeNext">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        `;
+    }
+
+    container.innerHTML = filterBar + `<div class="grid grid-cols-3 gap-3">${gridHTML}</div>` + paginationHTML;
+
+    // Wire filter pills
+    container.querySelectorAll('[data-qfilter]').forEach(pill => {
+        pill.addEventListener('click', () => {
+            _questBadgeFilter = pill.dataset.qfilter;
+            _questBadgePage = 0;
+            _renderQuestBadgeInner();
+        });
+    });
+
+    // Wire pagination
+    container.querySelectorAll('[data-qpage]').forEach(dot => {
+        dot.addEventListener('click', () => { _questBadgePage = parseInt(dot.dataset.qpage); _renderQuestBadgeInner(); });
+    });
+    const prevBtn = container.querySelector('#qBadgePrev');
+    const nextBtn = container.querySelector('#qBadgeNext');
+    if (prevBtn) prevBtn.addEventListener('click', () => { _questBadgePage--; _renderQuestBadgeInner(); });
+    if (nextBtn) nextBtn.addEventListener('click', () => { _questBadgePage++; _renderQuestBadgeInner(); });
+
+    // Wire earned badge selection
     container.querySelectorAll('[data-badge-key]').forEach(el => {
         el.addEventListener('click', () => {
             const key = el.dataset.badgeKey;
             if (typeof setDisplayedBadge === 'function') setDisplayedBadge(key);
         });
     });
+
+    // Wire detail click on locked badges
+    container.querySelectorAll('.badge-locked[data-qbadge-detail]').forEach(el => {
+        el.addEventListener('click', () => _openQuestBadgeDetail(el.dataset.qbadgeDetail));
+    });
+}
+
+/** Open badge detail modal from quest page. */
+function _openQuestBadgeDetail(badgeKey) {
+    const badge = getBadge(badgeKey);
+    const rarity = getBadgeRarity(badgeKey);
+    const isEarned = _questEarnedBadges.some(b => b.badge_key === badgeKey);
+
+    const existing = document.getElementById('badgeDetailModal');
+    if (existing) existing.remove();
+
+    const rarityBg = { common: '#f3f4f6', rare: '#eff6ff', epic: '#faf5ff', legendary: '#fffbeb' };
+    const backdrop = document.createElement('div');
+    backdrop.id = 'badgeDetailModal';
+    backdrop.className = 'badge-detail-backdrop';
+    backdrop.innerHTML = `
+        <div class="badge-detail-card">
+            <div class="p-6 text-center" style="background: ${rarityBg[badge.rarity] || rarityBg.common}">
+                <div class="flex justify-center mb-3">${buildBadgeChip(badgeKey, 'lg')}</div>
+                <div class="text-base font-bold text-gray-900">${badge.name}</div>
+                <div class="text-xs font-semibold rarity-${badge.rarity || 'common'} mt-1">${rarity.label}</div>
+            </div>
+            <div class="p-5">
+                <div class="text-sm text-gray-600 leading-relaxed mb-4">
+                    ${isEarned
+                        ? `<span class="inline-flex items-center gap-1 text-emerald-600 font-semibold text-xs mb-2"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg> Earned</span><br>`
+                        : '<div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">How to earn</div>'}
+                    ${badge.description}
+                </div>
+                <button class="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-lg transition" id="qBadgeDetailClose">${isEarned ? 'Close' : 'Got it'}</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(backdrop);
+    requestAnimationFrame(() => backdrop.classList.add('open'));
+
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) _closeQuestBadgeDetail(); });
+    backdrop.querySelector('#qBadgeDetailClose')?.addEventListener('click', _closeQuestBadgeDetail);
+}
+
+function _closeQuestBadgeDetail() {
+    const modal = document.getElementById('badgeDetailModal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    setTimeout(() => modal.remove(), 150);
 }
 
 // ─── CP History ──────────────────────────────────────────

@@ -73,7 +73,7 @@
                     '<span id="tabProfileInitials" class="text-brand-600 text-[10px] font-bold"></span>' +
                     '<img id="tabProfileImg" class="w-full h-full object-cover hidden" alt="">' +
                 '</div>' +
-                '<div id="tabBadgeOverlay"></div>' +
+
             '</div>' +
             '<span>Profile</span></a>';
     }
@@ -324,7 +324,7 @@ async function loadNavProfile() {
  * otherwise falls back to a static emoji render.
  */
 function _renderBadgeOverlays(badgeKey) {
-    var overlayIds = ['navBadgeOverlay', 'mobileBadgeOverlay', 'tabBadgeOverlay'];
+    var overlayIds = ['navBadgeOverlay', 'mobileBadgeOverlay'];
     for (var i = 0; i < overlayIds.length; i++) {
         var el = document.getElementById(overlayIds[i]);
         if (!el) continue;
