@@ -486,6 +486,15 @@ input[type="date"] {
 /* ═══════════════════════════════════════════════════════════ */
 
 /* ─── Feed Filter Pills ──────────────────────────────────── */
+.feed-tabs-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+.feed-tabs-scroll::-webkit-scrollbar { display: none; }
+@media (min-width: 640px) {
+    .feed-tabs-scroll { scrollbar-width: thin; scrollbar-color: #d1d5db transparent; }
+    .feed-tabs-scroll::-webkit-scrollbar { display: block; height: 4px; }
+    .feed-tabs-scroll::-webkit-scrollbar-track { background: transparent; }
+    .feed-tabs-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
+    .feed-tabs-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+}
 .feed-filter-pill {
     padding: 6px 14px;
     font-size: 12px;
