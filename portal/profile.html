@@ -37,54 +37,9 @@
         <div id="coverSection" class="relative w-full h-40 sm:h-52 bg-gradient-to-br from-brand-500 to-brand-700 sm:rounded-b-2xl overflow-hidden group">
             <img id="coverImage" class="w-full h-full object-cover hidden" alt="Cover photo">
             <div id="coverOverlay" class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-            <button id="editCoverBtn" class="hidden absolute bottom-3 right-3 bg-white/90 hover:bg-white text-gray-700 text-xs font-medium px-3 py-1.5 rounded-lg transition shadow-sm z-10">
-                📷 Edit Cover
-            </button>
-            <input type="file" id="coverPhotoInput" accept="image/*" class="hidden">
         </div>
 
-        <!-- Cover / Banner Picker Modal -->
-        <div id="bannerPickerModal" class="fixed inset-0 z-[100] hidden">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" id="bannerPickerBackdrop"></div>
-            <div class="relative flex items-end sm:items-center justify-center min-h-full p-4">
-                <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl slide-up max-h-[70vh] overflow-y-auto">
-                    <h3 class="font-bold text-gray-900 mb-1">Cover Photo</h3>
-                    <p class="text-xs text-gray-400 mb-4">Choose a gradient or upload your own photo</p>
-
-                    <!-- Animated Founders Banner -->
-                    <div class="mb-4">
-                        <p class="text-xs font-semibold text-amber-600 mb-2 flex items-center gap-1">🏅 Founders Exclusive</p>
-                        <button class="banner-preset founders-banner-btn w-full aspect-[3/1] rounded-xl border-2 border-transparent overflow-hidden relative" data-gradient="founders-animated">
-                            <div class="founders-banner-preview"></div>
-                            <span class="absolute inset-0 flex items-center justify-center text-white font-bold text-sm drop-shadow-lg tracking-wide">✨ FOUNDERS ✨</span>
-                        </button>
-                    </div>
-
-                    <!-- Gradient Presets -->
-                    <div class="grid grid-cols-4 gap-2 mb-4">
-                        <button class="banner-preset aspect-[2/1] rounded-xl border-2 border-transparent" data-gradient="from-brand-500 to-brand-700" style="background: linear-gradient(135deg, #6366f1, #4338ca)"></button>
-                        <button class="banner-preset aspect-[2/1] rounded-xl border-2 border-transparent" data-gradient="from-pink-500 to-rose-600" style="background: linear-gradient(135deg, #ec4899, #e11d48)"></button>
-                        <button class="banner-preset aspect-[2/1] rounded-xl border-2 border-transparent" data-gradient="from-emerald-500 to-teal-600" style="background: linear-gradient(135deg, #10b981, #0d9488)"></button>
-                        <button class="banner-preset aspect-[2/1] rounded-xl border-2 border-transparent" data-gradient="from-amber-400 to-orange-500" style="background: linear-gradient(135deg, #fbbf24, #f97316)"></button>
-                        <button class="banner-preset aspect-[2/1] rounded-xl border-2 border-transparent" data-gradient="from-violet-500 to-purple-700" style="background: linear-gradient(135deg, #8b5cf6, #7e22ce)"></button>
-                        <button class="banner-preset aspect-[2/1] rounded-xl border-2 border-transparent" data-gradient="from-cyan-400 to-blue-600" style="background: linear-gradient(135deg, #22d3ee, #2563eb)"></button>
-                        <button class="banner-preset aspect-[2/1] rounded-xl border-2 border-transparent" data-gradient="from-gray-800 to-gray-900" style="background: linear-gradient(135deg, #1f2937, #111827)"></button>
-                        <button class="banner-preset aspect-[2/1] rounded-xl border-2 border-transparent" data-gradient="from-rose-400 to-violet-500" style="background: linear-gradient(135deg, #fb7185, #8b5cf6)"></button>
-                    </div>
-
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1 h-px bg-gray-200"></div>
-                        <span class="text-xs text-gray-400">or</span>
-                        <div class="flex-1 h-px bg-gray-200"></div>
-                    </div>
-
-                    <button id="bannerUploadBtn" class="w-full mt-4 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-xl py-3 text-sm text-gray-500 hover:border-brand-300 hover:text-brand-600 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        Upload Custom Photo
-                    </button>
-                </div>
-            </div>
-        </div>
+        <!-- Banner/Cover is reward-only — no user picker -->
 
         <!-- Profile Header -->
         <div class="relative px-4 sm:px-0 -mt-12 mb-4">

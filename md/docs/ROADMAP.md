@@ -533,11 +533,11 @@ The top navigation bar changes dynamically based on which page the member is on 
 
 | Page | Left | Center | Right |
 |------|------|--------|-------|
-| **Home (Feed)** | Logo / "JM" | "Family Feed" | ➕ New Post, ❤️ Notifications |
-| **History** | Logo | "History" | Filter icon |
-| **Goals (Milestones)** | Logo | "Milestones" | — |
-| **Invest** | Logo | "Portfolio" | — |
-| **Profile / Settings** | Back arrow | "Profile" | ⚙️ Settings gear |
+| **Home (Feed)** | ➕ New Post | Logo + "Justice McNeal" | ❤️ Notifications (heart) |
+| **History** | Logo | — | — |
+| **Goals (Milestones)** | Logo | — | — |
+| **Invest** | Logo | — | — |
+| **Profile / Settings** | Logo | — | — |
 
 - [x] Context-aware mobile top nav (dynamic icons/actions per page)
 - [x] Home page becomes the social feed (Feed tab replaces Home in nav)
@@ -565,7 +565,7 @@ The top navigation bar changes dynamically based on which page the member is on 
 **Goal:** Give every member a rich, visual profile page — part social media, part resume, part family legacy page.
 
 ##### Profile Header
-- [x] Cover photo / banner image (upload + cache-bust)
+- [x] Cover photo / banner image (reward-only — banners are earned like badges, not user-selectable)
 - [x] Large profile picture with badge overlay
 - [x] Display name (first + last) with editable bio / tagline (200 char)
 - [x] Stats bar: **Posts** | **Contributed** | **Streak** | **CP**
@@ -649,6 +649,15 @@ The top navigation bar changes dynamically based on which page the member is on 
 - [ ] Push notifications (web push via service workers)
 - [ ] SMS/text notifications via **Twilio** (or similar)
 - [ ] Notification preferences per member (what they want to be notified about)
+- [ ] **Feed Notifications (likes & comments)** — in-app notification center for social interactions:
+  - [ ] Heart icon in feed mobile header links to notification center page
+  - [ ] Real-time notification when someone likes your post
+  - [ ] Real-time notification when someone comments on your post
+  - [ ] Real-time notification when someone replies to your comment
+  - [ ] Unread count badge on heart icon (red dot with number)
+  - [ ] Notification center page listing all social interactions
+  - [ ] Mark as read / mark all read
+  - [ ] Tap notification to jump to the relevant post
 - [ ] Notification types:
   - New announcements
   - Event invites & RSVPs
@@ -888,8 +897,8 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 | 3B | Family Tree | 🔴 High | Medium | D3.js or tree library |
 | 3C | Credit 101 Education | 🔴 High | Low-Medium | Auth + active member check |
 | 3D | Budget Tracker + AI Coach | 🔴 High | High | OpenAI API, CSV parsing |
-| 4A | Social Feed | 🟡 Medium | Medium | Supabase storage for media |
-| 4B | Member Profiles | 🟡 Medium | Medium | Profile pics storage |
+| 4A | Social Feed | ✅ Done | Medium | Supabase storage for media |
+| 4B | Member Profiles | ✅ Done | Medium | Profile pics storage |
 | 4C | Private Messaging + Snaps | 🟡 Medium | Medium-High | Supabase Realtime |
 | 4D | Notifications | 🟡 Medium | Medium | Twilio account, service workers |
 | 4E | Family Location Map | 🟡 Medium | Medium | Leaflet.js, browser Geolocation API |
@@ -983,32 +992,36 @@ The LLC sustains itself through:
 8. ✅ **Phase 2A wrap-up** — Animated milestone celebration (confetti + toast), milestone history timeline
 9. ✅ **Phase 2B — Quest & Task System** — Quest board, Credit Points, status tiers (Bronze → Diamond), badge collection, auto-detection engine, admin quest management, proof review workflow
 10. ✅ **Brand Splash Screen & Logo Management** — Animated splash page with logo, floating orbs, progress bar, auth-aware redirect; admin brand settings page with transparent/solid logo upload
-11. **Phase 2C — Birthday Payouts** — Stripe Connect Express, automated $10 birthday deposits, bank linking flow
+11. ✅ **Phase 2C — Member Payouts** — Stripe Connect Express, automated $10 birthday deposits, bank linking flow, payout enrollment, manual/competition payouts
+
+### ✅ Phase 4 (Family Social Hub) — 4A + 4B Complete
+12. ✅ **Phase 4A — Social Feed & Announcements** — Posts, likes, comments, bookmarks, reactions, @mentions, threaded replies, image/video uploads, admin announcements, infinite scroll, context-aware mobile header
+13. ✅ **Phase 4B — Member Profiles (Instagram-style)** — Cover photos/banners (reward-only), posts grid (images-only), feed tab (Twitter-style text posts), badges, stats bar, edit profile, bio, tap-to-change avatar
+14. ✅ **Profile Enhancements** — Badge equip from profile, banner/cover system (reward-only like badges), Animated Founders banner, badge collection viewer, expanded edit profile modal
+15. ✅ **Nav Restructure & Events Page** — Dashboard quick links grid (2×3/3×3), Events page, mobile 5-tab bar (Feed/Events/Contribute/Invest/Profile), feed mobile header (plus/logo/heart)
 
 ### Phase 3 (Family Structure, Identity & Education)
-12. **Phase 3A — Meet the Team / Leadership page** — roles, bios, org chart, role badges
-13. **Phase 3B — Family Tree** — interactive tree visualization, relationships, multi-generational
-14. **Phase 3C — Credit 101 Education Hub** — learning modules, quizzes, score tracking
-15. **Phase 3D — Budget Tracker + AI Coach** — bank statement import, categorization, spending analysis, OpenAI chat
+16. **Phase 3A — Meet the Team / Leadership page** — roles, bios, org chart, role badges
+17. **Phase 3B — Family Tree** — interactive tree visualization, relationships, multi-generational
+18. **Phase 3C — Credit 101 Education Hub** — learning modules, quizzes, score tracking
+19. **Phase 3D — Budget Tracker + AI Coach** — bank statement import, categorization, spending analysis, OpenAI chat
 
-### Phase 4 (Family Social Hub)
-15. **Phase 4A — Social Feed & Announcements** — posts, likes, comments, context-aware mobile header
-16. **Phase 4B — Member Profiles (Instagram-style)** — cover photos, posts grid, stats, badges
-17. **Phase 4C — Private Messaging + Snaps** — one-on-one DMs, Snapchat-style ephemeral messages, stories, message streaks
-18. **Phase 4D — Push & Text Notifications** — web push, Twilio SMS, notification preferences
-19. **Phase 4E — Family Location Map (GPS)** — opt-in location sharing, Leaflet.js map, check-ins, privacy controls
-20. ⏳ **Pick up deferred items** — social feed posts for milestones/birthdays, push notifications for milestones, perk badges on profiles, admin custom milestones
+### Phase 4 Continued (Social Hub)
+20. **Phase 4C — Private Messaging + Snaps** — one-on-one DMs, Snapchat-style ephemeral messages, stories, message streaks
+21. **Phase 4D — Feed Notifications + Push + SMS** — in-app feed notification center (likes/comments), web push, Twilio SMS, notification preferences
+22. **Phase 4E — Family Location Map (GPS)** — opt-in location sharing, Leaflet.js map, check-ins, privacy controls
+23. ⏳ **Pick up deferred items** — social feed posts for milestones/birthdays, push notifications for milestones, perk badges on profiles, admin custom milestones
 
 ### Phase 5 (Events & Family Activities)
-21. **Phase 5A — Events System** — create events, RSVP, reminders, event comments
-22. **Phase 5B — Vacation / Trip Events** — deposit requirement, trip pot, expense breakdown
+24. **Phase 5A — Events System** — create events, RSVP, reminders, event comments
+25. **Phase 5B — Vacation / Trip Events** — deposit requirement, trip pot, expense breakdown
 
 ### Phase 6+
-23. **Phase 6 — Family Gallery** — photo/video uploads, albums, tagging, "On This Day"
-24. **Phase 7 — Trust Formation** — estate attorney, trust agreement, succession plan
-25. **Phase 8 — Family Lending Program** — loan applications, repayment tracking ($50k milestone)
-26. **Phase 9 — Member Benefits** — vehicle program ($250k), life insurance, scholarships
-27. **Phase 10 — Family Compound** — real estate acquisition ($500k+ milestone)
+26. **Phase 6 — Family Gallery** — photo/video uploads, albums, tagging, "On This Day"
+27. **Phase 7 — Trust Formation** — estate attorney, trust agreement, succession plan
+28. **Phase 8 — Family Lending Program** — loan applications, repayment tracking ($50k milestone)
+29. **Phase 9 — Member Benefits** — vehicle program ($250k), life insurance, scholarships
+30. **Phase 10 — Family Compound** — real estate acquisition ($500k+ milestone)
 
 ---
 
@@ -1021,7 +1034,7 @@ This roadmap is a **living document**. It will be updated as:
 - The fund grows and new possibilities open up
 - Members provide feedback and suggestions
 
-**Last Updated:** March 9, 2026
+**Last Updated:** March 8, 2026
 **Maintained By:** Justin McNeal (Admin)
 
 ---

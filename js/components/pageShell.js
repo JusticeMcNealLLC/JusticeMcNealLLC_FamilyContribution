@@ -36,6 +36,7 @@
         quest:   'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
         plus:    'M12 4v16m8-8H4',
         bell:    'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
+        heart:   'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
     };
 
     // ─── Helpers ─────────────────────────────────────────
@@ -207,27 +208,40 @@
     }
 
     // ─── Nav HTML ────────────────────────────────────────
+    var logoBlock =
+        '<div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center overflow-hidden" data-brand-logo>' +
+            '<span class="text-white font-bold text-sm" data-brand-fallback>JM</span>' +
+            '<img class="w-full h-full object-contain hidden" alt="Logo" data-brand-img>' +
+        '</div>';
+
+    // Feed page: special mobile header — [+ New Post] [Logo] [❤ Notifs]
+    var feedMobileRow = '';
+    if (active === 'feed' && !isAdmin) {
+        feedMobileRow =
+        '<div class="flex justify-between items-center h-14 md:hidden">' +
+            '<button id="newPostBtn" class="w-9 h-9 rounded-full bg-brand-100 flex items-center justify-center hover:bg-brand-200 transition" title="New Post">' +
+                '<svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.plus) + '</svg>' +
+            '</button>' +
+            '<div class="flex items-center gap-2">' +
+                logoBlock +
+                '<span class="font-bold text-lg text-gray-900">Justice McNeal</span>' +
+            '</div>' +
+            '<a href="notifications.html" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition relative" title="Notifications">' +
+                '<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.heart) + '</svg>' +
+                '<span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">0</span>' +
+            '</a>' +
+        '</div>';
+    }
+
     var navHTML =
     '<nav class="sticky top-0 z-40 glass border-b border-gray-200/60">' +
         '<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">' +
-            '<div class="flex justify-between items-center h-14 md:h-16">' +
+            feedMobileRow +
+            '<div class="' + (feedMobileRow ? 'hidden md:flex' : 'flex') + ' justify-between items-center ' + (feedMobileRow ? 'md:h-16' : 'h-14 md:h-16') + '">' +
                 '<div class="flex items-center gap-3">' +
-                    '<div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center overflow-hidden" data-brand-logo>' +
-                        '<span class="text-white font-bold text-sm" data-brand-fallback>JM</span>' +
-                        '<img class="w-full h-full object-contain hidden" alt="Logo" data-brand-img>' +
-                    '</div>' +
+                    logoBlock +
                     '<span class="font-bold text-lg text-gray-900">Justice McNeal</span>' +
                     adminBadge +
-                '</div>' +
-                '<div class="flex items-center gap-2 md:hidden" id="mobileProfileSection" style="display:none">' +
-                    (contextActions ? '<div class="flex items-center gap-2">' + contextActions + '</div>' : '') +
-                    '<a href="profile.html" class="relative w-8 h-8 flex-shrink-0">' +
-                        '<div class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden">' +
-                            '<span id="mobileProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
-                            '<img id="mobileProfileImg" class="w-full h-full object-cover hidden" alt="">' +
-                        '</div>' +
-                        '<div id="mobileBadgeOverlay"></div>' +
-                    '</a>' +
                 '</div>' +
                 '<div class="hidden md:flex items-center gap-1">' +
                     desktopLinks +
@@ -323,23 +337,6 @@ async function loadNavProfile() {
             section.classList.remove('hidden');
         }
 
-        // Mobile nav profile
-        var mSection    = document.getElementById('mobileProfileSection');
-        var mInitialsEl = document.getElementById('mobileProfileInitials');
-        var mImgEl      = document.getElementById('mobileProfileImg');
-
-        if (mSection) {
-            if (mInitialsEl) mInitialsEl.textContent = initials;
-            if (photoUrl && mImgEl) {
-                mImgEl.src = photoUrl;
-                mImgEl.onload = function () {
-                    mImgEl.classList.remove('hidden');
-                    if (mInitialsEl) mInitialsEl.classList.add('hidden');
-                };
-            }
-            mSection.style.display = '';
-        }
-
         // Tab bar profile avatar
         var tInitialsEl = document.getElementById('tabProfileInitials');
         var tImgEl      = document.getElementById('tabProfileImg');
@@ -367,7 +364,7 @@ async function loadNavProfile() {
  * otherwise falls back to a static emoji render.
  */
 function _renderBadgeOverlays(badgeKey) {
-    var overlayIds = ['navBadgeOverlay', 'mobileBadgeOverlay'];
+    var overlayIds = ['navBadgeOverlay'];
     for (var i = 0; i < overlayIds.length; i++) {
         var el = document.getElementById(overlayIds[i]);
         if (!el) continue;
