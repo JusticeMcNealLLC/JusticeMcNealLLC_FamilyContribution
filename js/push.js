@@ -230,6 +230,9 @@
         if (!isSupported()) return;
         if (typeof supabaseClient === 'undefined') return;
 
+        // Skip auto-prompt on onboarding page (has its own push step)
+        if (window.location.pathname.indexOf('onboarding') > -1) return;
+
         // Wait for auth
         try {
             var sess = await supabaseClient.auth.getSession();

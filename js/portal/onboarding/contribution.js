@@ -214,7 +214,7 @@ async function finishOnboarding() {
             completionName.textContent = `Welcome to the family, ${profileData.first_name}!`;
         }
 
-        goToStep(6);
+        goToStep(7);
 
     } catch (error) {
         console.error('Onboarding save error:', error);

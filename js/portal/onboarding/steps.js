@@ -8,8 +8,8 @@ function buildProgressBar() {
     const bar = document.getElementById('progressBar');
     bar.innerHTML = '';
 
-    // Show dots for all active steps except Done (step 6)
-    const dotSteps = activeSteps.filter(s => s !== 6);
+    // Show dots for all active steps except Done (step 7)
+    const dotSteps = activeSteps.filter(s => s !== 7);
 
     dotSteps.forEach((step, i) => {
         const wrapper = document.createElement('div');
@@ -44,7 +44,7 @@ function nextStep() {
     const idx = activeSteps.indexOf(currentStep);
     if (idx < activeSteps.length - 1) {
         const next = activeSteps[idx + 1];
-        if (next === 6) {
+        if (next === 7) {
             finishOnboarding(); // save + show Done
         } else {
             goToStep(next);
@@ -77,9 +77,9 @@ function goToStep(step) {
 }
 
 function updateProgressBar() {
-    const dotSteps = activeSteps.filter(s => s !== 6);
-    // When on Done step (6), treat index as past all dots so they all show completed
-    const currentIdx = currentStep === 6 ? dotSteps.length : dotSteps.indexOf(currentStep);
+    const dotSteps = activeSteps.filter(s => s !== 7);
+    // When on Done step (7), treat index as past all dots so they all show completed
+    const currentIdx = currentStep === 7 ? dotSteps.length : dotSteps.indexOf(currentStep);
 
     dotSteps.forEach((step, i) => {
         const dot = document.querySelector(`.step-dot[data-step="${step}"]`);
@@ -179,9 +179,38 @@ function setupNavigation() {
     // Step 5: Bank Link
     document.getElementById('bankLinkBackBtn')?.addEventListener('click', () => prevStep());
     document.getElementById('startBankLinkBtn')?.addEventListener('click', () => handleBankLinkOnboarding());
-    document.getElementById('bankLinkSkipBtn')?.addEventListener('click', () => finishOnboarding());
+    document.getElementById('bankLinkSkipBtn')?.addEventListener('click', () => nextStep());
 
-    // Step 6: Done
+    // Step 6: Push Notifications
+    document.getElementById('pushBackBtn')?.addEventListener('click', () => prevStep());
+    document.getElementById('pushAllowBtn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('pushAllowBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Enabling...';
+
+        try {
+            if (window.JMPush && window.JMPush.isSupported()) {
+                const result = await window.JMPush.subscribe();
+                if (result.success) {
+                    document.getElementById('pushStepStatus').classList.remove('hidden');
+                    document.getElementById('pushStepButtons').classList.add('hidden');
+                    document.getElementById('pushSkipBtn').classList.add('hidden');
+                    setTimeout(() => finishOnboarding(), 1200);
+                    return;
+                } else if (result.reason === 'denied') {
+                    document.getElementById('pushStepBlocked').classList.remove('hidden');
+                }
+            }
+        } catch (e) {
+            console.error('Push subscribe error during onboarding:', e);
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"></path></svg> Allow Notifications';
+    });
+    document.getElementById('pushSkipBtn')?.addEventListener('click', () => finishOnboarding());
+
+    // Step 7: Done
     document.getElementById('goToDashboardBtn').addEventListener('click', () => {
         window.location.href = APP_CONFIG.PORTAL_URL;
     });

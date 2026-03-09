@@ -43,6 +43,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         activeSteps = activeSteps.filter(s => s !== 5);
     }
 
+    // Skip push notification step (6) if not supported or already granted
+    if (typeof window.JMPush === 'undefined' || !window.JMPush.isSupported()) {
+        activeSteps = activeSteps.filter(s => s !== 6);
+    } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        // Already granted — skip the prompt
+        activeSteps = activeSteps.filter(s => s !== 6);
+    }
+
     // Check for active subscription (used by contribution step to offer "keep current plan")
     const { data: subs } = await supabaseClient
         .from('subscriptions')
