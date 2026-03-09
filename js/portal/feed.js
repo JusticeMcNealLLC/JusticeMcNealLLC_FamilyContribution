@@ -65,6 +65,12 @@ function setComposerAvatars(profile) {
     if (mn) mn.textContent = (profile?.first_name || 'You');
     if (photoUrl && ma) { ma.src = photoUrl; ma.classList.remove('hidden'); mi?.classList.add('hidden'); }
 
+    // Inline composer (desktop)
+    const ici = document.getElementById('inlineComposerInitials');
+    const ica = document.getElementById('inlineComposerAvatar');
+    if (ici) ici.textContent = initials;
+    if (photoUrl && ica) { ica.src = photoUrl; ica.classList.remove('hidden'); ici?.classList.add('hidden'); }
+
     // Comment input
     const cmi = document.getElementById('commentInitials');
     const cma = document.getElementById('commentAvatar');
@@ -100,10 +106,26 @@ function setupComposer() {
         selectedImages = [];
     }
 
+    const openComposerBtn = document.getElementById('openComposerBtn');
     if (newPostBtn) newPostBtn.addEventListener('click', openComposerModal);
     if (emptyBtn) emptyBtn.addEventListener('click', openComposerModal);
+    if (openComposerBtn) openComposerBtn.addEventListener('click', openComposerModal);
     if (closeBtn) closeBtn.addEventListener('click', closeComposerModal);
     if (backdrop) backdrop.addEventListener('click', closeComposerModal);
+
+    // Quick action buttons in inline composer
+    document.querySelectorAll('.composer-quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            openComposerModal();
+            const action = btn.dataset.action;
+            if (action === 'announce') {
+                setTimeout(() => {
+                    const typeSelect = document.getElementById('postType');
+                    if (typeSelect) typeSelect.value = 'announcement';
+                }, 200);
+            }
+        });
+    });
 
     // Character count
     if (content) {
