@@ -229,28 +229,11 @@
 
             if (error) throw error;
 
-            // If push is enabled, also insert into push_subscriptions trigger flow
-            // The DB trigger on notifications table (024) already handles in-app notifs.
-            // For push: we directly invoke the edge function for each recipient with a sub.
-            if (sendPush) {
-                for (var i = 0; i < recipients.length; i++) {
-                    try {
-                        await supabaseClient.functions.invoke('send-push-notification', {
-                            body: {
-                                user_id: recipients[i],
-                                type: type,
-                                message: message,
-                                actor_name: actorName.trim(),
-                                link: null,
-                            }
-                        });
-                    } catch (pushErr) {
-                        console.warn('Push send failed for', recipients[i], pushErr);
-                    }
-                }
-            }
+            // Note: The DB trigger (trg_push_on_notification) automatically sends
+            // push notifications via pg_net when a notification is inserted.
+            // No need to manually call the edge function — it would cause duplicates.
 
-            successEl.textContent = '✓ Sent to ' + recipients.length + ' member' + (recipients.length > 1 ? 's' : '') + (sendPush ? ' (+ push)' : '');
+            successEl.textContent = '✓ Sent to ' + recipients.length + ' member' + (recipients.length > 1 ? 's' : '') + ' (push auto-sent if subscribed)';
             successEl.classList.remove('hidden');
             document.getElementById('messageInput').value = '';
 

@@ -42,6 +42,10 @@
 
     if (backdrop) backdrop.addEventListener('click', closePanel);
 
+    // Close button in panel header
+    var closeBtn = document.getElementById('notifCloseBtn');
+    if (closeBtn) closeBtn.addEventListener('click', closePanel);
+
     // Close on escape
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && isOpen) closePanel();

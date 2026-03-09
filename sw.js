@@ -2,7 +2,7 @@
 // Cache-first for statics, network-first for API calls.
 // Push notification handler for native OS notifications.
 
-const CACHE_NAME = 'jm-portal-v2';
+const CACHE_NAME = 'jm-portal-v3';
 
 // Shell assets to pre-cache on install
 const SHELL_ASSETS = [
@@ -48,6 +48,11 @@ self.addEventListener('fetch', (e) => {
 
     // Network-only for Tailwind CDN (always fresh)
     if (url.hostname === 'cdn.tailwindcss.com') {
+        return;
+    }
+
+    // Only handle http(s) requests (skip chrome-extension://, etc.)
+    if (!url.protocol.startsWith('http')) {
         return;
     }
 
