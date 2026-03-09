@@ -79,6 +79,44 @@ Higher credit tiers unlock greater financial flexibility.
 
 ---
 
+# Benefit: Member Payouts (Live ✅)
+
+Members can receive direct payments from the LLC for birthdays, competitions, bonuses, and more.
+
+## How It Works
+
+1. Member links their bank account via **Stripe Connect** (one-time setup, ~2 minutes)
+2. Stripe handles all identity verification — the LLC never sees bank details
+3. Once linked, the LLC can send money directly to the member's bank
+
+## Current Payout Types
+
+| Type | Trigger | Amount |
+|------|---------|--------|
+| 🎂 Birthday | Automatic daily check | $10 (admin adjustable) |
+| 🏆 Competition | Admin sends manually | Custom |
+| 🎁 Bonus | Admin sends manually | Custom |
+| 💰 Profit Share | Admin sends manually | Custom |
+| 👥 Referral | Automatic on new member onboard | Custom |
+| 🎯 Quest Reward | Future: cash reward quests | Custom |
+| 🛠️ Custom | Admin sends with reason | Custom |
+
+## Member Controls
+
+- **Per-type enrollment toggles** — opt in or out of each payout type individually
+- **Bank link management** — link, update, or re-link bank from portal settings
+- **Payout history** — view all received payouts with status and dates
+- **Optional onboarding step** — link bank during initial setup, or skip and do it later
+
+## Birthday Payouts
+
+Every day at 8:00 AM UTC, the system automatically checks for members with birthdays:
+- Member must have bank linked + birthday enrolled
+- No duplicate payouts on the same day
+- Money arrives in 1-2 business days
+
+---
+
 # Benefit: Life Insurance Program
 
 Eligible members may receive life insurance coverage funded by the LLC/Trust.

@@ -50,6 +50,13 @@ Invested into:
 - [x] Skippable contribution step during onboarding (Stripe Checkout)
 - [x] Receipt links for one-time Stripe payments (backfilled)
 - [x] Admin member detail modal with profile info and transaction history
+- [x] Milestone tiers with expandable cards and celebration animations
+- [x] Quest & task system with Credit Points, badges, and auto-detection
+- [x] Badge rarity system (Common, Rare, Epic, Legendary) with visual effects
+- [x] Brand splash screen with admin logo management
+- [x] Member payouts via Stripe Connect (birthday auto-payouts, manual payouts, admin console)
+- [x] Bank link onboarding step (optional, skippable, Stripe Connect Express)
+- [x] Admin payout settings with global/per-type toggles
 
 ---
 
@@ -117,7 +124,7 @@ Invested into:
 - [x] Profile editing in settings page (name, birthday, photo)
 - [x] "Complete Your Profile" nudge banner if profile is incomplete
 - [x] Admin can see onboarding completion status per member
-- [ ] Birthday auto-celebration + $10 payout (see Phase 2C Birthday Payouts)
+- [x] Birthday auto-celebration + $10 payout (see Phase 2C Birthday Payouts)
 
 ---
 
@@ -294,80 +301,87 @@ Badges are **permanent** — once earned, they're yours forever. Members pick on
 ##### Member Enrollment & Settings
 Members control their own payout enrollment — they can opt in or out at any time:
 
-- [ ] **Payout enrollment toggle** in portal settings — master on/off for receiving payouts
-- [ ] **Per-type enrollment** — members can enable/disable specific payout types (e.g., opt in to birthday payouts but skip competition payouts)
-- [ ] **Birthday Benefits enrollment** — toggle specifically for the $10 birthday gift
-- [ ] Bank link status indicator: ✅ Bank Linked / ⚠️ Not Linked / ❌ Not Enrolled
-- [ ] "Manage Bank Account" button to update or re-link via Stripe Connect
-- [ ] Enrollment status visible to admin (who's enrolled, who's not, who needs a nudge)
+- [x] **Payout enrollment toggle** in portal settings — master on/off for receiving payouts
+- [x] **Per-type enrollment** — members can enable/disable specific payout types (e.g., opt in to birthday payouts but skip competition payouts)
+- [x] **Birthday Benefits enrollment** — toggle specifically for the $10 birthday gift
+- [x] Bank link status indicator: ✅ Bank Linked / ⚠️ Not Linked / ❌ Not Enrolled
+- [x] "Manage Bank Account" button to update or re-link via Stripe Connect
+- [x] Enrollment status visible to admin (who's enrolled, who's not, who needs a nudge)
 
 ##### Admin Controls
 The admin has full control over the payout system with safety switches:
 
-- [ ] **Global payout kill switch** — instantly disable ALL outgoing payouts (emergency stop)
-- [ ] **Per-type toggle** — enable/disable birthday payouts, competition payouts, etc. independently
-- [ ] **Birthday payout amount** — admin can adjust the default amount (e.g., $10 → $25)
-- [ ] **Manual payout console** — send any amount to any connected member with a reason, type, and optional note
+- [x] **Global payout kill switch** — instantly disable ALL outgoing payouts (emergency stop)
+- [x] **Per-type toggle** — enable/disable birthday payouts, competition payouts, etc. independently
+- [x] **Birthday payout amount** — admin can adjust the default amount (e.g., $10 → $25)
+- [x] **Manual payout console** — send any amount to any connected member with a reason, type, and optional note
 - [ ] **Payout approval queue** (optional) — for large amounts, require admin confirmation before sending
-- [ ] **Payout ledger** — full history of every outgoing transfer: recipient, amount, type, status, Stripe transfer ID, date
+- [x] **Payout ledger** — full history of every outgoing transfer: recipient, amount, type, status, Stripe transfer ID, date
 - [ ] **Budget alerts** — warning when total payouts approach a threshold (e.g., "You've sent $200 this month")
-- [ ] **Member enrollment overview** — see at a glance who's enrolled, bank linked, and eligible for which payout types
-- [ ] Admin settings stored in `app_settings` table (payout_enabled, birthday_payout_enabled, birthday_payout_amount, etc.)
+- [x] **Member enrollment overview** — see at a glance who's enrolled, bank linked, and eligible for which payout types
+- [x] Admin settings stored in `app_settings` table (payout_enabled, birthday_payout_enabled, birthday_payout_amount, etc.)
 
 ##### Onboarding Integration
 Bank linking is added as an **optional step** in the member onboarding wizard:
 
-- [ ] New onboarding step: "Link Your Bank for Payouts" (after profile setup, before contribution)
-- [ ] Explains what payouts are: "The LLC sends you money for birthdays, prizes, and more"
-- [ ] Clear opt-in language: "Would you like to enroll in birthday benefits?"
-- [ ] "Link Bank Account" button → opens Stripe Connect Express hosted onboarding
-- [ ] "Skip for now" option — can always set up later from settings
-- [ ] Return URL handler → marks onboarding step complete, updates enrollment status
+- [x] New onboarding step: "Link Your Bank for Payouts" (after contribution step, skippable)
+- [x] Explains what payouts are: birthday gifts, bonuses, and more
+- [x] "Link Bank Account" button → opens Stripe Connect Express hosted onboarding
+- [x] "Skip for now" option — can always set up later from settings
+- [x] Return URL handler page (`/portal/connect-return.html`) — captures success/pending/refresh states
+- [x] Step conditionally shown based on `app_settings.payouts_enabled` (hidden when payouts disabled globally)
+- [x] Pre-fills member name, DOB, email + sets `business_type: individual` to reduce Stripe onboarding friction
 - [ ] If skipped, a gentle nudge banner appears on the dashboard: "🎂 Your birthday is coming up! Link your bank to receive your $10 gift"
 
 ##### Features to Build — Stripe Connect Infrastructure
-- [ ] `stripe_connect_account_id` column in profiles table
-- [ ] `payout_enrolled` boolean column in profiles table (master enrollment toggle)
-- [ ] Edge function: `create-connect-onboarding` — generates Stripe Connect Express onboarding link
-- [ ] Stripe Connect Express onboarding flow (fully hosted by Stripe)
-- [ ] Return URL handler page (`/portal/connect-return.html`) — captures success/failure after bank linking
-- [ ] Webhook handler for `account.updated` events (track when Connect account becomes active)
+- [x] `stripe_connect_account_id` column in profiles table
+- [x] `payout_enrolled` boolean column in profiles table (master enrollment toggle)
+- [x] `connect_onboarding_complete` boolean column in profiles table
+- [x] Edge function: `create-connect-onboarding` — generates Stripe Connect Express onboarding link (pre-fills name, DOB, email)
+- [x] Stripe Connect Express onboarding flow (fully hosted by Stripe, `business_type: individual`, `collection_options` for minimal fields)
+- [x] Return URL handler page (`/portal/connect-return.html`) — captures success/pending/refresh states
+- [x] Webhook handler for `account.updated` events (track when Connect account becomes active)
 - [ ] Connect status sync — periodically verify account is still active and payable
 
 ##### Features to Build — Birthday Payouts
-- [ ] Edge function: `birthday-payout` — daily cron that:
+- [x] Edge function: `birthday-payout` — daily cron that:
   1. Checks if birthday payouts are enabled (admin toggle)
   2. Queries members where `birthday = today AND payout_enrolled = true AND stripe_connect_account_id IS NOT NULL`
   3. Checks member's birthday enrollment setting
   4. Creates `stripe.transfers.create({ amount: birthday_amount, destination: 'acct_xxx' })`
   5. Records payout in the ledger
+- [x] Daily cron via `pg_cron` + `pg_net` — runs at 8:00 AM UTC daily (Migration 018)
+- [x] Dedup check — won't send duplicate birthday payouts on same day
 - [ ] Portal notification: "🎂 Happy Birthday! $10 is on its way to your bank account"
 - [ ] Birthday celebration card on portal dashboard (visible to all members)
 - [ ] Fallback: if birthday member hasn't linked bank, show nudge + queue payout for when they do
 - [ ] Queued payout system — if a payout can't be sent (no bank linked), hold it and auto-send when bank is linked
 
 ##### Features to Build — Manual / Competition Payouts
-- [ ] Admin payout form: select member → enter amount → select type → add note → send
-- [ ] Confirmation modal before sending ("Send $50 to Jennifer for Competition Winner?")
-- [ ] Payout status tracking: `pending` → `processing` → `completed` / `failed`
+- [x] Admin payout form: select member → enter amount → select type → add note → send
+- [x] Confirmation modal before sending ("Send $X to [Name] for [Reason]?")
+- [x] Payout status tracking: `pending` → `processing` → `completed` / `failed`
 - [ ] Failed payout retry mechanism
 - [ ] Member receives notification when a payout is sent to them
-- [ ] Payout history visible to each member in their settings or history page
+- [x] Payout history visible to each member in their settings page (mini recent payouts list)
 
-##### Database
-- [ ] `payouts` table — universal payout ledger:
-  - `id`, `user_id`, `amount`, `type` (birthday, competition, bonus, profit_share, referral, custom)
+##### Database (Migration 017 + 018)
+- [x] `payouts` table — universal payout ledger:
+  - `id`, `user_id`, `amount_cents`, `payout_type` (birthday, competition, bonus, profit_share, referral, quest_reward, custom)
   - `reason` (text description), `status` (pending, queued, processing, completed, failed)
-  - `stripe_transfer_id`, `stripe_payout_id`
+  - `stripe_transfer_id`, `error_message`
   - `created_by` (admin user_id for manual payouts, NULL for automatic)
   - `created_at`, `completed_at`
-- [ ] `payout_enrollments` table — per-member, per-type enrollment:
-  - `user_id`, `payout_type`, `enrolled` (boolean), `enrolled_at`, `updated_at`
-- [ ] `app_settings` table (or row in existing config) — admin global settings:
+- [x] `payout_enrollments` table — per-member, per-type enrollment:
+  - `user_id`, `payout_type`, `enrolled` (boolean), `created_at`, `updated_at`
+  - Unique constraint on `(user_id, payout_type)`
+- [x] `app_settings` table — admin global settings (key TEXT PK, value JSONB):
   - `payouts_enabled` (global kill switch)
-  - `birthday_payouts_enabled`, `birthday_payout_amount`
+  - `birthday_payouts_enabled`, `birthday_payout_amount_cents`
   - `competition_payouts_enabled`
-- [ ] Add to profiles: `stripe_connect_account_id`, `payout_enrolled`, `connect_onboarding_complete`
+- [x] Add to profiles: `stripe_connect_account_id`, `payout_enrolled`, `connect_onboarding_complete`
+- [x] Full RLS policies: members read own data, admins manage all
+- [x] Daily cron job `daily-birthday-payouts` via `pg_cron` + `pg_net` (Migration 018)
 
 ##### Deferred — Requires Later Phases
 - [ ] Auto-post to social feed: "🎂 Happy Birthday [Name]! The family sent you $10!" *(⏳ Phase 4A — Social Feed)*
