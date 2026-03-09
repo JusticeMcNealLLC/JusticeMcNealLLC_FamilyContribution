@@ -480,3 +480,231 @@ input[type="date"] {
 }
 .toggle-switch input:checked + .toggle-slider { background: #4f46e5; }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ─── Phase 4A: Social Feed Styles ────────────────────────  */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* ─── Feed Filter Pills ──────────────────────────────────── */
+.feed-filter-pill {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 9999px;
+    border: 1.5px solid #e5e7eb;
+    background: white;
+    color: #6b7280;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+.feed-filter-pill:hover { background: #f9fafb; border-color: #d1d5db; }
+.feed-filter-pill.active {
+    background: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+}
+
+/* ─── Post Card ──────────────────────────────────────────── */
+.post-card {
+    animation: fadeIn 0.3s ease-out;
+}
+.post-card .post-menu-dropdown {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: all 0.15s ease;
+}
+.post-card .post-menu-dropdown.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+/* ─── Post Image Grid ────────────────────────────────────── */
+.post-image-grid {
+    display: grid;
+    gap: 2px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.post-image-grid.grid-1 { grid-template-columns: 1fr; }
+.post-image-grid.grid-2 { grid-template-columns: 1fr 1fr; }
+.post-image-grid.grid-3 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+.post-image-grid.grid-3 > :first-child {
+    grid-row: span 2;
+}
+.post-image-grid.grid-4 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+.post-image-grid img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.post-image-grid img:hover { opacity: 0.92; }
+
+/* ─── Reaction Picker ────────────────────────────────────── */
+.reaction-picker {
+    animation: reactionPop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes reactionPop {
+    from { opacity: 0; transform: scale(0.85) translateY(4px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.reaction-picker button {
+    transition: transform 0.15s;
+}
+.reaction-picker button:hover {
+    transform: scale(1.3);
+}
+
+/* ─── Composer Modal ─────────────────────────────────────── */
+.composer-image-preview {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.composer-image-preview img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+}
+.composer-image-preview .remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.composer-image-preview .remove-btn:hover {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+/* ─── New Posts Indicator ────────────────────────────────── */
+.new-posts-indicator {
+    animation: bounceDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes bounceDown {
+    from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ─── Post Detail Modal Comments ─────────────────────────── */
+.comment-thread {
+    border-left: 2px solid #e5e7eb;
+    margin-left: 1rem;
+    padding-left: 0.75rem;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* ─── Phase 4B: Member Profile Styles ─────────────────────  */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* ─── Profile Cover Photo ────────────────────────────────── */
+.profile-cover {
+    position: relative;
+    height: 180px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed, #4f46e5);
+    background-size: 200% 200%;
+    animation: coverGradient 8s ease infinite;
+    overflow: hidden;
+}
+@keyframes coverGradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+.profile-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ─── Profile Tabs (Instagram style) ─────────────────────── */
+.profile-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 0;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+.profile-tab:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+.profile-tab.active {
+    border-bottom-color: #111827;
+    color: #111827;
+}
+.profile-tab svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* ─── Profile Posts Grid (Instagram 3-col) ───────────────── */
+.profile-posts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+}
+.profile-posts-grid > a {
+    display: block;
+}
+.profile-posts-grid > a img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+}
+
+/* ─── Profile Stats Bar ──────────────────────────────────── */
+.profile-stat {
+    text-align: center;
+    flex: 1;
+}
+.profile-stat-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #111827;
+    font-variant-numeric: tabular-nums;
+}
+.profile-stat-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ─── Profile Tab Content Transitions ────────────────────── */
+.profile-tab-content {
+    animation: fadeIn 0.25s ease-out;
+}
+
+/* ─── Like Animation ─────────────────────────────────────── */
+.like-burst {
+    animation: likeBurst 0.35s ease-out;
+}
+@keyframes likeBurst {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}

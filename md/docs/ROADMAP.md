@@ -520,7 +520,7 @@ Bank linking is added as an **optional step** in the member onboarding wizard:
 ---
 
 ### Phase 4: Family Social Hub
-**Status:** 🔲 Not Started
+**Status:** � In Progress (4A ✅ + 4B ✅ shipped)
 **Priority:** 🟡 Medium
 **Goal:** Make the portal more than finances — make it the family's digital home.
 
@@ -539,85 +539,85 @@ The top navigation bar changes dynamically based on which page the member is on 
 | **Invest** | Logo | "Portfolio" | — |
 | **Profile / Settings** | Back arrow | "Profile" | ⚙️ Settings gear |
 
-- [ ] Context-aware mobile top nav (dynamic icons/actions per page)
-- [ ] Home page becomes the social feed (replaces current dashboard)
-- [ ] New Post button (➕) in header opens post composer
-- [ ] Notifications bell/heart icon with unread badge
-- [ ] Profile page accessible via bottom tab avatar (replaces current settings link)
-- [ ] Settings accessible from profile page gear icon
+- [x] Context-aware mobile top nav (dynamic icons/actions per page)
+- [x] Home page becomes the social feed (Feed tab replaces Home in nav)
+- [x] New Post button (➕) in header opens post composer
+- [x] Notifications bell/heart icon with unread badge
+- [x] Profile page accessible via bottom tab avatar
+- [x] Settings accessible from profile page gear icon
 
 ##### Feed Features
-- [ ] Admin announcements section (pinned to top of feed)
-- [ ] Milestone celebrations (auto-generated: "The family just hit $10,000 in total investments! 🎉")
-- [ ] Social feed — members can post text, images, and videos
-- [ ] Like, comment, and bookmark posts
-- [ ] Feed filtering (All / Announcements / Milestones / Member Posts)
-- [ ] Threaded replies — reply to any post inline
-- [ ] @mentions — tag other family members in posts and replies
-- [ ] Post editing and deletion (own posts only)
-- [ ] Emoji reactions (beyond just “like” — ❤️ 😂 🔥 👏 etc.)
-- [ ] Image/video upload with preview before posting
-- [ ] Link preview cards (auto-fetch title + thumbnail for shared URLs)
-- [ ] "New posts" indicator when feed updates while scrolling
-- [ ] Mobile-optimized infinite scroll
+- [x] Admin announcements section (pinned to top of feed)
+- [ ] Milestone celebrations (auto-generated) *(future)*
+- [x] Social feed — members can post text, images, and videos
+- [x] Like, comment, and bookmark posts
+- [x] Feed filtering (All / Announcements / Milestones / Member Posts / Saved)
+- [x] Threaded replies — reply to any post inline
+- [x] @mentions — tag other family members in posts and replies
+- [x] Post editing and deletion (own posts only)
+- [x] Emoji reactions (6 emoji picker)
+- [x] Image/video upload with preview before posting (up to 4 images)
+- [ ] Link preview cards *(future enhancement)*
+- [x] New posts indicator when feed updates while scrolling
+- [x] Mobile-optimized infinite scroll (IntersectionObserver + scroll fallback)
 
 #### 4B. Member Profiles (Instagram-Style)
 **Goal:** Give every member a rich, visual profile page — part social media, part resume, part family legacy page.
 
 ##### Profile Header
-- [ ] Cover photo / banner image (upload + crop)
-- [ ] Large profile picture with online status indicator
-- [ ] Display name (first + last) with editable bio / tagline
-- [ ] Stats bar: **Posts** | **Contributions** | **Member Since** | **Streak**
-- [ ] Credit Point tier badge (🥉 Bronze → 💎 Diamond) displayed on profile
-- [ ] "Edit Profile" button (own profile) / "Message" button (other members)
-- [ ] Contribution streak flame icon with day count
+- [x] Cover photo / banner image (upload + cache-bust)
+- [x] Large profile picture with badge overlay
+- [x] Display name (first + last) with editable bio / tagline (200 char)
+- [x] Stats bar: **Posts** | **Contributed** | **Streak** | **CP**
+- [x] Badge overlay displayed on profile (from displayed_badge)
+- [x] "Edit Profile" button (own profile) + Settings gear icon
+- [x] Contribution streak fire emoji with count
 
 ##### Profile Content Tabs
-- [ ] **Posts** tab — grid layout (Instagram-style 3-column image grid with overlay on hover)
-- [ ] **Feed** tab — chronological list view of all the member's posts, comments, and activity
-- [ ] **Photos** tab — all images the member has posted, organized by date
-- [ ] **Milestones** tab — personal contribution milestones and badges earned
-- [ ] **Activity** tab — timeline of actions (joined, reached milestone, completed quest, attended event, etc.)
+- [x] **Posts** tab — grid layout (Instagram-style 3-column image grid with overlay on hover)
+- [x] **Feed** tab — chronological list view of all the member's posts
+- [ ] **Photos** tab — all images organized by date *(future enhancement)*
+- [x] **Milestones** tab — personal badges earned + quests completed timeline
+- [ ] **Activity** tab — full action timeline *(future enhancement)*
 
 ##### Post Creation (from Profile)
-- [ ] Create post directly from profile page
-- [ ] Post types: **Text**, **Photo**, **Photo + Caption**, **Video**, **Link Share**
-- [ ] Multi-image posts with swipe/carousel view
-- [ ] Post privacy: **Family** (all members) or **Private** (only visible on own profile)
-- [ ] Edit and delete own posts
-- [ ] Post timestamp with relative time ("2h ago", "3d ago")
+- [x] Create post from feed page composer (inline + modal)
+- [x] Post types: **Text**, **Photo**, **Photo + Caption**, **Announcement** (admin)
+- [x] Multi-image posts (up to 4 images with preview grid)
+- [x] Post privacy: **Family** (all members) or **Private** visibility selector
+- [x] Edit and delete own posts
+- [x] Post timestamp with relative time ("2m ago", "3d ago", etc.)
 
 ##### Profile Stats & Gamification
-- [ ] Total lifetime contributions (dollar amount)
-- [ ] Current monthly contribution amount
-- [ ] Contribution streak (consecutive on-time months)
-- [ ] Longest streak record
-- [ ] Quests completed count
-- [ ] Credit Points total + tier progress bar
-- [ ] Badges showcase (earned from milestones, quests, events)
-- [ ] "Top Contributor" / "Streak Master" / "Event Regular" special badges
+- [x] Total lifetime contributions (dollar amount from invoices)
+- [ ] Current monthly contribution amount *(future)*
+- [x] Contribution streak (streak count from profiles)
+- [ ] Longest streak record *(future)*
+- [ ] Quests completed count *(future)*
+- [x] Credit Points total displayed
+- [x] Badges showcase (earned from milestones + quests)
+- [ ] Special role badges *(future)*
 
 ##### Profile Interactions
-- [ ] View any family member's profile by tapping their avatar anywhere in the app
-- [ ] Like / comment on profile posts
-- [ ] Direct message button → opens DM thread (ties into Phase 4C)
-- [ ] "Nudge" button — send a friendly reminder to contribute or check in
-- [ ] Share profile link (deep link to member's profile)
+- [x] View any family member's profile by tapping their avatar
+- [x] Like / comment on profile posts (via feed)
+- [ ] Direct message button (ties into Phase 4C) *(future)*
+- [ ] "Nudge" button *(future)*
+- [ ] Share profile link *(future)*
 
 ##### Profile Settings & Privacy
-- [ ] Choose what's visible to other members (bio, birthday, contribution stats, posts)
-- [ ] Hide contribution amount (show streak but not dollar amount)
-- [ ] Block / mute other members (hides their content from your feed)
-- [ ] Profile visibility: **Public to Family** or **Private** (admin-only visible)
+- [x] Choose what's visible (bio, birthday, contribution stats, posts) — via profile_visibility + show_ flags
+- [ ] Hide contribution amount (show streak but not dollar amount) *(future)*
+- [ ] Block / mute other members *(future)*
+- [x] Profile visibility: **Family** or **Private** (RLS enforced)
 
 ##### Technical Requirements
-- [ ] Database: `posts`, `post_images`, `post_likes`, `post_comments`, `profile_badges` tables
-- [ ] Supabase Storage bucket for post images + cover photos
-- [ ] Image compression / thumbnail generation (edge function)
-- [ ] Infinite scroll with cursor-based pagination
-- [ ] RLS: members see only family-visible posts; own profile always fully visible
-- [ ] Profile page route: `/portal/profile.html?id={user_id}`
+- [x] Database: `posts`, `post_images`, `post_likes`, `post_comments`, `post_bookmarks`, `notifications` tables
+- [x] Supabase Storage bucket for post images (`post-media`) + cover photos (`cover-photos`)
+- [ ] Image compression / thumbnail generation (edge function) *(future)*
+- [x] Infinite scroll with cursor-based pagination
+- [x] RLS: members see only family-visible posts; own profile always fully visible
+- [x] Profile page route: `/portal/profile.html?id={user_id}`
 - [ ] Responsive: full-width cover on mobile, constrained on desktop
 
 #### 4C. Private Messaging (DMs)
