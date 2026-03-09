@@ -67,6 +67,20 @@
     -webkit-backdrop-filter: blur(12px);
 }
 
+/* ─── Safe-area top inset for PWA (iPhone Dynamic Island / notch) ─── */
+@supports (padding-top: env(safe-area-inset-top)) {
+    /* Standalone PWA mode */
+    @media (display-mode: standalone) {
+        nav.sticky {
+            padding-top: env(safe-area-inset-top, 0px);
+        }
+    }
+    /* iOS standalone (older detection) */
+    .pwa-standalone nav.sticky {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+}
+
 /* ─── Mobile bottom-sheet modal ─── */
 @media (max-width: 640px) {
     .modal-bottom-sheet .modal-panel {

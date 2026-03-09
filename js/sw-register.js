@@ -1,6 +1,11 @@
 // ─── Service Worker Registration ────────────────────────
 // Include this script in every page to register the SW.
 (function() {
+    // Detect standalone PWA mode (iOS + Android)
+    if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+        document.documentElement.classList.add('pwa-standalone');
+    }
+
     if ('serviceWorker' in navigator) {
         // Determine root path (works from /portal/, /admin/, /auth/ etc.)
         var swPath = '/sw.js';
