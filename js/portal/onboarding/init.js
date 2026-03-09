@@ -38,8 +38,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     const payoutsEnabled = payoutSetting?.value === true;
 
-    // Also skip bank link if member already completed Connect onboarding
-    if (!payoutsEnabled || profile?.connect_onboarding_complete) {
+    // Only skip bank link step if payouts are globally disabled
+    if (!payoutsEnabled) {
         activeSteps = activeSteps.filter(s => s !== 5);
     }
 
