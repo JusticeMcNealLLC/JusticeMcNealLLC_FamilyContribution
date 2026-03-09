@@ -122,24 +122,23 @@ async function loadStats(profile) {
         .eq('author_id', viewingUserId);
     document.getElementById('statPosts').textContent = postCount || 0;
 
-    // Total contributed (from invoices)
-    if (profile.show_contribution_stats !== false || isOwnProfile) {
-        const { data: invoices } = await supabaseClient
-            .from('invoices')
-            .select('amount_paid')
-            .eq('user_id', viewingUserId)
-            .eq('status', 'paid');
-        const total = (invoices || []).reduce((sum, inv) => sum + (inv.amount_paid || 0), 0);
-        document.getElementById('statContributions').textContent = `$${Math.floor(total / 100).toLocaleString()}`;
-    } else {
-        document.getElementById('statContributions').textContent = '—';
-    }
+    // Badges earned count
+    const { count: badgeCount } = await supabaseClient
+        .from('member_badges')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', viewingUserId);
+    document.getElementById('statBadges').textContent = badgeCount || 0;
 
-    // Streak
+    // Streak (consecutive months contributed)
     document.getElementById('statStreak').textContent = profile.contribution_streak || 0;
 
-    // Credit Points
-    document.getElementById('statCP').textContent = profile.credit_points || 0;
+    // Member Since
+    if (profile.created_at) {
+        const d = new Date(profile.created_at);
+        const month = d.toLocaleString('en-US', { month: 'short' });
+        const year = d.getFullYear().toString().slice(-2);
+        document.getElementById('statMemberSince').textContent = `${month} '${year}`;
+    }
 }
 
 // ─── Badges ─────────────────────────────────────────────
