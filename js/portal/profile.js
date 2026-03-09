@@ -235,7 +235,7 @@ async function loadBadges() {
             if (currentBannerPhotoUrl) {
                 bannerHtml = `<div class="rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><img src="${currentBannerPhotoUrl}" class="w-full h-full object-cover" alt="Banner"></div>`;
             } else if (currentBannerGradient === 'founders-animated') {
-                bannerHtml = `<div class="rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><div class="founders-banner-preview w-full h-full"></div></div>`;
+                bannerHtml = `<div class="relative rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><div class="founders-banner-preview w-full h-full"></div></div>`;
             } else if (currentBannerGradient) {
                 bannerHtml = `<div class="rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><div class="w-full h-full bg-gradient-to-r ${currentBannerGradient}"></div></div>`;
             }
