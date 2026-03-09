@@ -62,6 +62,10 @@ serve(async (req) => {
         console.log('Customer updated:', event.data.object.id)
         break
 
+      case 'account.updated':
+        await handleConnectAccountUpdated(supabase, event.data.object)
+        break
+
       default:
         console.log('Unhandled event type:', event.type)
     }
@@ -423,4 +427,60 @@ async function getUserIdFromCustomer(supabase: any, stripeCustomerId: string): P
   }
 
   return null
+}
+
+// Handler: Stripe Connect account.updated
+// Fires when a Connect account's onboarding status changes
+async function handleConnectAccountUpdated(supabase: any, account: any) {
+  console.log('Connect account updated:', account.id, 'charges_enabled:', account.charges_enabled, 'payouts_enabled:', account.payouts_enabled)
+
+  const connectAccountId = account.id
+  if (!connectAccountId) return
+
+  // Find the member by their Connect account ID
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('id, connect_onboarding_complete')
+    .eq('stripe_connect_account_id', connectAccountId)
+    .single()
+
+  if (error || !profile) {
+    console.error('Could not find profile for Connect account:', connectAccountId, error)
+    return
+  }
+
+  // Mark onboarding complete when Stripe says the account can receive transfers
+  const isComplete = account.charges_enabled || account.payouts_enabled || false
+
+  if (isComplete && !profile.connect_onboarding_complete) {
+    console.log('Marking Connect onboarding complete for user:', profile.id)
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        connect_onboarding_complete: true,
+        payout_enrolled: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', profile.id)
+
+    if (updateError) {
+      console.error('Error updating profile Connect status:', updateError)
+    }
+  } else if (!isComplete && profile.connect_onboarding_complete) {
+    // Account was disabled (e.g., compliance issue)
+    console.log('Connect account disabled for user:', profile.id)
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        connect_onboarding_complete: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', profile.id)
+
+    if (updateError) {
+      console.error('Error updating profile Connect status:', updateError)
+    }
+  }
 }

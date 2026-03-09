@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Bank Account | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex items-center justify-center p-4 relative overflow-hidden">
+
+    <!-- Background decoration -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-brand-100 rounded-full opacity-60 blur-3xl"></div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-brand-50 rounded-full opacity-60 blur-3xl"></div>
+    </div>
+
+    <div class="w-full max-w-md relative z-10">
+
+        <!-- Loading State -->
+        <div id="loadingState" class="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 sm:p-8 text-center">
+            <svg class="animate-spin h-8 w-8 text-brand-500 mx-auto mb-4" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-gray-500 text-sm">Checking account status...</p>
+        </div>
+
+        <!-- Success State -->
+        <div id="successState" class="hidden bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 sm:p-8 text-center">
+            <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">Bank Account Linked!</h1>
+            <p class="text-gray-500 text-sm mb-2">Your account is set up to receive payouts.</p>
+            <p class="text-gray-400 text-xs mb-6">Birthday gifts, bonuses, and more will be sent directly to your bank.</p>
+            <a href="settings.html" class="block w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 px-4 rounded-xl transition text-sm shadow-sm shadow-brand-200 text-center">
+                Back to Settings
+            </a>
+            <a href="index.html" class="block w-full text-gray-400 hover:text-gray-600 text-sm font-medium py-2 transition mt-2 text-center">
+                Go to Dashboard
+            </a>
+        </div>
+
+        <!-- Pending State (onboarding not complete yet) -->
+        <div id="pendingState" class="hidden bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 sm:p-8 text-center">
+            <div class="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">Almost There!</h1>
+            <p class="text-gray-500 text-sm mb-2">Stripe is still verifying your information.</p>
+            <p class="text-gray-400 text-xs mb-6">This usually only takes a minute. You can finish setup from Settings anytime.</p>
+            <button id="retryOnboardingBtn" class="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 px-4 rounded-xl transition text-sm shadow-sm shadow-brand-200 mb-2">
+                Continue Setup
+            </button>
+            <a href="settings.html" class="block w-full text-gray-400 hover:text-gray-600 text-sm font-medium py-2 transition text-center">
+                Back to Settings
+            </a>
+        </div>
+
+        <!-- Refresh State (user needs to re-do onboarding link) -->
+        <div id="refreshState" class="hidden bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 sm:p-8 text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </div>
+            <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">Link Expired</h1>
+            <p class="text-gray-500 text-sm mb-6">The setup link expired. Let's generate a new one.</p>
+            <button id="refreshOnboardingBtn" class="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 px-4 rounded-xl transition text-sm shadow-sm shadow-brand-200 mb-2">
+                Restart Bank Setup
+            </button>
+            <a href="settings.html" class="block w-full text-gray-400 hover:text-gray-600 text-sm font-medium py-2 transition text-center">
+                Back to Settings
+            </a>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 mt-6">&copy; 2026 Justice McNeal LLC</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script>
+    (async function() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) { window.location.href = '/auth/login.html'; return; }
+
+        const params = new URLSearchParams(window.location.search);
+        const status = params.get('status');
+
+        const loadingEl = document.getElementById('loadingState');
+        const successEl = document.getElementById('successState');
+        const pendingEl = document.getElementById('pendingState');
+        const refreshEl = document.getElementById('refreshState');
+
+        if (status === 'refresh') {
+            // Link expired — show refresh state
+            loadingEl.classList.add('hidden');
+            refreshEl.classList.remove('hidden');
+
+            document.getElementById('refreshOnboardingBtn').addEventListener('click', startConnectOnboarding);
+            return;
+        }
+
+        // status === 'complete' — Check if Stripe account is actually fully set up
+        try {
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('connect_onboarding_complete, stripe_connect_account_id')
+                .eq('id', session.user.id)
+                .single();
+
+            loadingEl.classList.add('hidden');
+
+            if (profile?.connect_onboarding_complete) {
+                successEl.classList.remove('hidden');
+            } else {
+                // Stripe hasn't confirmed yet — show pending state
+                pendingEl.classList.remove('hidden');
+                document.getElementById('retryOnboardingBtn').addEventListener('click', startConnectOnboarding);
+            }
+        } catch (err) {
+            console.error('Error checking Connect status:', err);
+            loadingEl.classList.add('hidden');
+            pendingEl.classList.remove('hidden');
+            document.getElementById('retryOnboardingBtn').addEventListener('click', startConnectOnboarding);
+        }
+
+        async function startConnectOnboarding() {
+            try {
+                const btn = event.target;
+                btn.disabled = true;
+                btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white mx-auto" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+                const result = await callEdgeFunction('create-connect-onboarding', {});
+                if (result.url) {
+                    window.location.href = result.url;
+                } else {
+                    throw new Error('No onboarding URL received');
+                }
+            } catch (err) {
+                alert('Failed to start bank setup: ' + (err.message || 'Please try again'));
+                location.reload();
+            }
+        }
+    })();
+    </script>
+</body>
+</html>

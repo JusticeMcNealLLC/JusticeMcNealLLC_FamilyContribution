@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Fetch full profile data
     const { data: profile } = await supabaseClient
         .from('profiles')
-        .select('setup_completed, first_name, last_name, birthday, profile_picture_url')
+        .select('setup_completed, first_name, last_name, birthday, profile_picture_url, stripe_connect_account_id, connect_onboarding_complete')
         .eq('id', currentUser.id)
         .single();
 
@@ -26,8 +26,22 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
     }
 
-    // Always show every step (Welcome=0, Name=1, Birthday=2, Photo=3, Contribution=4, Done=5)
+    // Start with all steps: Welcome=0, Name=1, Birthday=2, Photo=3, Contribution=4, Bank Link=5, Done=6
     activeSteps = [...ALL_STEPS];
+
+    // Check if payouts are enabled globally — if not, skip bank link step
+    const { data: payoutSetting } = await supabaseClient
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'payouts_enabled')
+        .single();
+
+    const payoutsEnabled = payoutSetting?.value === true;
+
+    // Also skip bank link if member already completed Connect onboarding
+    if (!payoutsEnabled || profile?.connect_onboarding_complete) {
+        activeSteps = activeSteps.filter(s => s !== 5);
+    }
 
     // Check for active subscription (used by contribution step to offer "keep current plan")
     const { data: subs } = await supabaseClient

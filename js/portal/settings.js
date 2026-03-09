@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Load subscription for billing info
     await loadSubscription(user.id);
 
+    // Load payout settings
+    await loadPayoutSettings(user.id);
+
     // Load badge picker
     await loadBadgePicker(user.id);
 
@@ -660,5 +663,197 @@ async function selectSettingsBadge(badgeKey) {
     } catch (err) {
         console.error('Error selecting badge:', err);
         alert('Failed to update badge. Please try again.');
+    }
+}
+
+// ─── Payouts & Bank Account ─────────────────────────────
+const PAYOUT_TYPES = [
+    { key: 'birthday', label: 'Birthday Gifts', emoji: '🎂', desc: 'Receive a gift on your birthday' },
+    { key: 'competition', label: 'Competitions', emoji: '🏆', desc: 'Prizes from quest competitions' },
+    { key: 'bonus', label: 'Bonuses', emoji: '💰', desc: 'Admin-sent bonuses' },
+    { key: 'profit_share', label: 'Profit Share', emoji: '📈', desc: 'Share of investment profits' },
+    { key: 'referral', label: 'Referrals', emoji: '🤝', desc: 'Rewards for referring new members' },
+    { key: 'quest_reward', label: 'Quest Rewards', emoji: '⭐', desc: 'Prizes for quest achievements' },
+];
+
+async function loadPayoutSettings(userId) {
+    const statusEl = document.getElementById('bankAccountStatus');
+    const linkBtn = document.getElementById('linkBankBtn');
+    const updateBtn = document.getElementById('updateBankBtn');
+    const enrollmentToggles = document.getElementById('enrollmentToggles');
+    const myPayoutsList = document.getElementById('myPayoutsList');
+
+    if (!statusEl) return; // element not on page
+
+    try {
+        // Check if payouts are globally enabled
+        const { data: globalSetting } = await supabaseClient
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'payouts_enabled')
+            .single();
+
+        const payoutsEnabled = globalSetting?.value === true;
+
+        if (!payoutsEnabled) {
+            statusEl.innerHTML = '<span class="text-gray-400">Payouts are not available at this time</span>';
+            if (enrollmentToggles) enrollmentToggles.innerHTML = '<div class="text-xs text-gray-400">Payouts are currently disabled</div>';
+            return;
+        }
+
+        // Fetch profile for Connect status
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('stripe_connect_account_id, connect_onboarding_complete, payout_enrolled')
+            .eq('id', userId)
+            .single();
+
+        if (!profile?.stripe_connect_account_id) {
+            // No Connect account — show Link Bank button
+            statusEl.innerHTML = '<span class="text-amber-600">Not linked</span>';
+            if (linkBtn) {
+                linkBtn.classList.remove('hidden');
+                linkBtn.addEventListener('click', handleLinkBank);
+            }
+            if (enrollmentToggles) enrollmentToggles.innerHTML = '<div class="text-xs text-gray-400">Link a bank account to manage enrollment</div>';
+        } else if (!profile.connect_onboarding_complete) {
+            // Connect account exists but onboarding not complete
+            statusEl.innerHTML = '<span class="text-amber-600">Setup incomplete</span>';
+            if (updateBtn) {
+                updateBtn.classList.remove('hidden');
+                updateBtn.textContent = 'Finish Setup';
+                updateBtn.addEventListener('click', handleLinkBank);
+            }
+            if (enrollmentToggles) enrollmentToggles.innerHTML = '<div class="text-xs text-amber-500">Complete bank setup to manage enrollment</div>';
+        } else {
+            // Fully connected
+            statusEl.innerHTML = '<span class="text-emerald-600 font-semibold">Connected</span>';
+            if (updateBtn) {
+                updateBtn.classList.remove('hidden');
+                updateBtn.addEventListener('click', handleLinkBank);
+            }
+
+            // Load and show enrollment toggles
+            await renderEnrollmentToggles(userId, enrollmentToggles);
+        }
+
+        // Load member's payout history
+        await loadMyPayouts(userId, myPayoutsList);
+
+    } catch (err) {
+        console.error('Error loading payout settings:', err);
+        statusEl.innerHTML = '<span class="text-red-500">Error loading</span>';
+    }
+}
+
+async function handleLinkBank() {
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin h-4 w-4 text-white mx-auto" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+    try {
+        const result = await callEdgeFunction('create-connect-onboarding', {});
+        if (result.url) {
+            window.location.href = result.url;
+        } else {
+            throw new Error('No onboarding URL received');
+        }
+    } catch (err) {
+        alert('Failed to start bank setup: ' + (err.message || 'Please try again'));
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
+async function renderEnrollmentToggles(userId, container) {
+    if (!container) return;
+
+    // Fetch current enrollments
+    const { data: enrollments } = await supabaseClient
+        .from('payout_enrollments')
+        .select('payout_type, enrolled')
+        .eq('user_id', userId);
+
+    const enrollMap = {};
+    (enrollments || []).forEach(e => { enrollMap[e.payout_type] = e.enrolled; });
+
+    container.innerHTML = PAYOUT_TYPES.map(type => {
+        const enrolled = enrollMap[type.key] !== false; // default true if no row
+        return `
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-base">${type.emoji}</span>
+                    <div>
+                        <div class="text-sm font-medium text-gray-700">${type.label}</div>
+                        <div class="text-[10px] text-gray-400">${type.desc}</div>
+                    </div>
+                </div>
+                <label class="toggle-switch flex-shrink-0">
+                    <input type="checkbox" ${enrolled ? 'checked' : ''} data-enrollment-type="${type.key}">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        `;
+    }).join('');
+
+    // Wire toggle changes
+    container.querySelectorAll('input[data-enrollment-type]').forEach(toggle => {
+        toggle.addEventListener('change', async () => {
+            const payoutType = toggle.dataset.enrollmentType;
+            const enrolled = toggle.checked;
+            try {
+                const { error } = await supabaseClient
+                    .from('payout_enrollments')
+                    .upsert({
+                        user_id: userId,
+                        payout_type: payoutType,
+                        enrolled,
+                        updated_at: new Date().toISOString(),
+                    }, { onConflict: 'user_id,payout_type' });
+                if (error) throw error;
+            } catch (err) {
+                console.error('Error updating enrollment:', err);
+                toggle.checked = !toggle.checked;
+                alert('Failed to update enrollment');
+            }
+        });
+    });
+}
+
+async function loadMyPayouts(userId, container) {
+    if (!container) return;
+
+    try {
+        const { data: payouts } = await supabaseClient
+            .from('payouts')
+            .select('amount_cents, payout_type, status, reason, created_at')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+        if (!payouts || payouts.length === 0) {
+            container.innerHTML = '<div class="text-xs text-gray-400">No payouts received yet</div>';
+            return;
+        }
+
+        const typeEmoji = { birthday: '🎂', competition: '🏆', bonus: '💰', profit_share: '📈', referral: '🤝', quest_reward: '⭐', custom: '✨' };
+        const statusDot = { completed: 'bg-emerald-400', failed: 'bg-red-400', processing: 'bg-blue-400', pending: 'bg-gray-300', queued: 'bg-amber-400' };
+
+        container.innerHTML = payouts.map(p => `
+            <div class="flex items-center gap-3 py-1.5">
+                <span class="text-base">${typeEmoji[p.payout_type] || '💵'}</span>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium text-gray-700">$${(p.amount_cents / 100).toFixed(2)}</div>
+                    <div class="text-[10px] text-gray-400">${p.reason || p.payout_type}</div>
+                </div>
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <div class="w-1.5 h-1.5 rounded-full ${statusDot[p.status] || 'bg-gray-300'}"></div>
+                    <span class="text-[10px] text-gray-400">${new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Error loading payouts:', err);
     }
 }

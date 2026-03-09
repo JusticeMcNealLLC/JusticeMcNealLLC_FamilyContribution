@@ -8,8 +8,8 @@ function buildProgressBar() {
     const bar = document.getElementById('progressBar');
     bar.innerHTML = '';
 
-    // Show dots for all active steps except Done (step 5)
-    const dotSteps = activeSteps.filter(s => s !== 5);
+    // Show dots for all active steps except Done (step 6)
+    const dotSteps = activeSteps.filter(s => s !== 6);
 
     dotSteps.forEach((step, i) => {
         const wrapper = document.createElement('div');
@@ -44,7 +44,7 @@ function nextStep() {
     const idx = activeSteps.indexOf(currentStep);
     if (idx < activeSteps.length - 1) {
         const next = activeSteps[idx + 1];
-        if (next === 5) {
+        if (next === 6) {
             finishOnboarding(); // save + show Done
         } else {
             goToStep(next);
@@ -77,9 +77,9 @@ function goToStep(step) {
 }
 
 function updateProgressBar() {
-    const dotSteps = activeSteps.filter(s => s !== 5);
-    // When on Done step (5), treat index as past all dots so they all show completed
-    const currentIdx = currentStep === 5 ? dotSteps.length : dotSteps.indexOf(currentStep);
+    const dotSteps = activeSteps.filter(s => s !== 6);
+    // When on Done step (6), treat index as past all dots so they all show completed
+    const currentIdx = currentStep === 6 ? dotSteps.length : dotSteps.indexOf(currentStep);
 
     dotSteps.forEach((step, i) => {
         const dot = document.querySelector(`.step-dot[data-step="${step}"]`);
@@ -174,9 +174,14 @@ function setupNavigation() {
     setupContributionStep();
     document.getElementById('contributionBackBtn')?.addEventListener('click', () => prevStep());
     document.getElementById('startContributionBtn')?.addEventListener('click', () => handleStartContribution());
-    document.getElementById('contributionSkipBtn')?.addEventListener('click', () => finishOnboarding());
+    document.getElementById('contributionSkipBtn')?.addEventListener('click', () => nextStep());
 
-    // Step 5: Done
+    // Step 5: Bank Link
+    document.getElementById('bankLinkBackBtn')?.addEventListener('click', () => prevStep());
+    document.getElementById('startBankLinkBtn')?.addEventListener('click', () => handleBankLinkOnboarding());
+    document.getElementById('bankLinkSkipBtn')?.addEventListener('click', () => finishOnboarding());
+
+    // Step 6: Done
     document.getElementById('goToDashboardBtn').addEventListener('click', () => {
         window.location.href = APP_CONFIG.PORTAL_URL;
     });

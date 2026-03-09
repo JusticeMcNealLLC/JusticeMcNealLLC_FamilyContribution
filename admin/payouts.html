@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Payouts | Admin | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="admin" data-active-page="payouts">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
+
+        <!-- Header -->
+        <a href="index.html" class="inline-flex items-center gap-1 text-gray-500 hover:text-brand-600 text-sm mb-5 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            Back to Admin Hub
+        </a>
+
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Payouts</h1>
+                <p class="text-gray-500 mt-1 text-sm">Send payouts and manage payout settings</p>
+            </div>
+        </div>
+
+        <!-- Global Settings -->
+        <section class="mb-8">
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Settings</h2>
+            <div class="bg-white rounded-2xl border border-gray-200/80 divide-y divide-gray-100" id="settingsPanel">
+                <!-- Payouts Master Toggle -->
+                <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-900">Payouts Enabled</div>
+                        <div class="text-xs text-gray-500 mt-0.5">Master kill switch for all payouts</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="togglePayoutsEnabled" data-key="payouts_enabled">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Birthday Payouts Toggle -->
+                <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-900">Birthday Payouts</div>
+                        <div class="text-xs text-gray-500 mt-0.5">Automatically send gifts on member birthdays</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggleBirthdayEnabled" data-key="birthday_payouts_enabled">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Birthday Amount -->
+                <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-900">Birthday Gift Amount</div>
+                        <div class="text-xs text-gray-500 mt-0.5">Amount sent on each birthday</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-gray-400">$</span>
+                        <input type="number" id="birthdayAmountInput" min="1" max="1000" step="1" class="w-20 px-3 py-2 border border-gray-200 rounded-lg text-sm text-right focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none" value="10">
+                        <button id="saveBirthdayAmount" class="text-xs bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-lg font-semibold transition">Save</button>
+                    </div>
+                </div>
+
+                <!-- Competition Payouts Toggle -->
+                <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-900">Competition Payouts</div>
+                        <div class="text-xs text-gray-500 mt-0.5">Enable payouts for quest competitions and contests</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggleCompetitionEnabled" data-key="competition_payouts_enabled">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Eligible Members -->
+        <section class="mb-8">
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Eligible Members</h2>
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5" id="eligibleMembersPanel">
+                <div class="text-sm text-gray-400 text-center py-4">Loading...</div>
+            </div>
+        </section>
+
+        <!-- Send Payout -->
+        <section class="mb-8">
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Send Payout</h2>
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1.5">Recipient</label>
+                        <select id="payoutRecipient" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none">
+                            <option value="">Select member...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1.5">Amount ($)</label>
+                        <input type="number" id="payoutAmount" min="1" max="10000" step="0.01" placeholder="10.00" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1.5">Type</label>
+                        <select id="payoutType" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none">
+                            <option value="birthday">Birthday</option>
+                            <option value="competition">Competition</option>
+                            <option value="bonus">Bonus</option>
+                            <option value="profit_share">Profit Share</option>
+                            <option value="referral">Referral</option>
+                            <option value="quest_reward">Quest Reward</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1.5">Reason</label>
+                        <input type="text" id="payoutReason" placeholder="e.g. Happy Birthday!" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none">
+                    </div>
+                </div>
+
+                <div id="payoutError" class="text-red-600 text-sm hidden mb-3"></div>
+                <div id="payoutSuccess" class="text-emerald-600 text-sm hidden mb-3"></div>
+
+                <button id="sendPayoutBtn" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 px-6 rounded-xl transition text-sm">
+                    Send Payout
+                </button>
+            </div>
+        </section>
+
+        <!-- Payout History -->
+        <section class="mb-8">
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Payout History</h2>
+            <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-surface-50 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                <th class="px-4 py-3">Recipient</th>
+                                <th class="px-4 py-3">Amount</th>
+                                <th class="px-4 py-3">Type</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payoutHistoryBody" class="divide-y divide-gray-100">
+                            <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/components/pageShell.js"></script>
+    <script src="../js/auth/shared.js"></script>
+    <script src="../js/admin/payouts.js"></script>
+</body>
+</html>

@@ -459,3 +459,24 @@ input[type="date"] {
     overflow: hidden;
 }
 .badge-detail-backdrop.open .badge-detail-card { transform: translateY(0); }
+
+/* ─── Toggle Switch ──────────────────────────────────── */
+.toggle-switch {
+    position: relative; display: inline-block;
+    width: 44px; height: 24px; flex-shrink: 0;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+    position: absolute; cursor: pointer;
+    inset: 0; background: #d1d5db;
+    border-radius: 9999px; transition: 0.25s;
+}
+.toggle-slider::before {
+    content: ''; position: absolute;
+    height: 18px; width: 18px;
+    left: 3px; bottom: 3px;
+    background: white; border-radius: 50%;
+    transition: 0.25s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle-switch input:checked + .toggle-slider { background: #4f46e5; }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }

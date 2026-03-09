@@ -248,6 +248,48 @@
 
         <!-- Danger Zone -->
         <section class="fade-in" style="animation-delay: 220ms">
+
+        <!-- Payouts & Bank Account -->
+        <section class="mb-6 fade-in" style="animation-delay: 180ms">
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Payouts & Bank Account</h2>
+
+            <div class="bg-white rounded-2xl border border-gray-200/80 divide-y divide-gray-100">
+                <!-- Bank Account Status -->
+                <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
+                    <div>
+                        <div class="text-xs font-medium text-gray-400 uppercase tracking-wide">Bank Account</div>
+                        <div class="text-sm mt-0.5 font-medium" id="bankAccountStatus">
+                            <span class="text-gray-400">Checking...</span>
+                        </div>
+                    </div>
+                    <button id="linkBankBtn" class="hidden text-sm bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl transition font-medium whitespace-nowrap">
+                        Link Bank
+                    </button>
+                    <button id="updateBankBtn" class="hidden text-sm bg-surface-100 hover:bg-surface-200 text-gray-700 px-4 py-2 rounded-xl transition font-medium whitespace-nowrap">
+                        Update
+                    </button>
+                </div>
+
+                <!-- Enrollment Toggles -->
+                <div class="p-4 sm:p-5" id="enrollmentSection">
+                    <div class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Payout Enrollment</div>
+                    <div class="space-y-3" id="enrollmentToggles">
+                        <div class="text-xs text-gray-400">Link a bank account to manage enrollment</div>
+                    </div>
+                </div>
+
+                <!-- Payout History (Mini) -->
+                <div class="p-4 sm:p-5" id="myPayoutsSection">
+                    <div class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Recent Payouts</div>
+                    <div id="myPayoutsList" class="space-y-2">
+                        <div class="text-xs text-gray-400">No payouts yet</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Danger Zone -->
+        <section class="fade-in" style="animation-delay: 260ms">
             <h2 class="text-xs font-semibold text-red-400 uppercase tracking-wider mb-3 px-1">Danger Zone</h2>
             
             <div class="bg-white rounded-2xl border border-red-200/80 p-4 sm:p-5">
