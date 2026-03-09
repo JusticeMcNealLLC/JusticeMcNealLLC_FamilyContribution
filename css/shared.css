@@ -230,41 +230,98 @@
 }
 .nav-drawer-item.active-page .drawer-icon { background: #e0e7ff; }
 
-/* Drag ghost for dock customization */
-.nav-drawer-item.dragging-item {
-    opacity: 0.35; transform: scale(0.95);
+/* ─── Dock Customize Button ─── */
+.dock-customize-btn {
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 12px; font-size: 0.68rem; font-weight: 600;
+    color: #4f46e5; background: #eef2ff; border: none;
+    border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
 }
-.dock-slot-highlight {
-    animation: dock-pulse 0.6s ease infinite alternate;
-}
-@keyframes dock-pulse {
-    from { background: rgba(79,70,229,0.08); }
-    to { background: rgba(79,70,229,0.2); }
-}
+.dock-customize-btn:active { transform: scale(0.95); }
+.dock-customize-btn.done { background: #4f46e5; color: white; }
 
-/* Floating drag ghost that follows finger */
-.drag-ghost {
-    position: fixed;
-    z-index: 999;
-    pointer-events: none;
-    display: flex; flex-direction: column; align-items: center;
-    gap: 4px; padding: 10px 8px; border-radius: 16px;
-    background: rgba(255,255,255,0.95); box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-    font-size: 0.68rem; font-weight: 600; color: #4f46e5;
-    transform: translate(-50%, -50%) scale(1.1);
-    transition: opacity 0.15s;
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+/* ─── Dock Preview (edit mode) ─── */
+.dock-preview {
+    padding: 10px 16px 14px;
+    margin: 0 16px 8px; background: #f9fafb;
+    border-radius: 16px; border: 1px solid #e5e7eb;
+    transition: opacity 0.25s, transform 0.25s;
 }
-.drag-ghost .drawer-icon {
+.dock-preview.hidden { display: none; }
+.dock-preview-label {
+    font-size: 0.6rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: #9ca3af; margin-bottom: 8px; text-align: center;
+}
+.dock-preview-slots {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
+}
+.dock-preview-slot {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px; padding: 8px 2px; border-radius: 12px;
+    font-size: 0.58rem; font-weight: 600; color: #6b7280;
+    position: relative; transition: all 0.25s ease;
+}
+.dock-preview-slot.locked { opacity: 0.5; }
+.dock-preview-slot.empty { color: #d1d5db; }
+.dock-preview-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: #e5e7eb; display: flex; align-items: center;
+    justify-content: center; color: #6b7280; transition: all 0.2s;
+}
+.dock-preview-icon.center-icon {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white; border-radius: 50%;
+}
+.dock-preview-icon.empty-icon {
+    background: transparent; border: 2px dashed #d1d5db; color: #d1d5db;
+}
+.dock-preview-remove {
+    position: absolute; top: 0; right: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #ef4444; color: white; font-size: 12px;
+    line-height: 18px; text-align: center; border: 2px solid white;
+    cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    -webkit-tap-highlight-color: transparent; transition: transform 0.15s;
+}
+.dock-preview-remove:active { transform: scale(0.85); }
+
+/* ─── Edit mode states ─── */
+.dock-edit-active .nav-drawer-item { transition: opacity 0.2s, transform 0.2s; }
+.dock-edit-active .nav-drawer-item.docked { opacity: 0.4; }
+.dock-edit-active .nav-drawer-item.docked::after {
+    content: '✓'; position: absolute; top: 4px; right: 4px;
+    width: 18px; height: 18px; background: #4f46e5; color: white;
+    font-size: 10px; line-height: 18px; text-align: center;
+    border-radius: 50%; border: 2px solid white;
+}
+/* Shake animation for locked items */
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+.nav-drawer-item.shake { animation: shake 0.3s ease; }
+
+/* Flash animation for already-docked feedback */
+@keyframes slot-flash { 0%,100%{background:transparent} 50%{background:rgba(79,70,229,0.18)} }
+.dock-preview-slot.flash { animation: slot-flash 0.5s ease; }
+.dock-preview.flash .dock-preview-slots { animation: slot-flash 0.5s ease; }
+
+/* Removing animation */
+@keyframes slot-remove { to{transform:scale(0.4);opacity:0} }
+.dock-preview-slot.removing { animation: slot-remove 0.25s ease forwards; }
+
+/* Fly clone (animating icon from grid to preview) */
+.fly-clone {
+    display: flex; align-items: center; justify-content: center;
+}
+.fly-clone .drawer-icon {
     width: 44px; height: 44px; border-radius: 14px;
     background: #e0e7ff; display: flex; align-items: center;
-    justify-content: center;
+    justify-content: center; color: #4f46e5;
+    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
 }
 
-/* When in dock-customize mode, lift drawer above tab bar */
-.nav-drawer.dock-mode {
-    transform: translateY(calc(-72px - env(safe-area-inset-bottom, 0px))) !important;
-}
+/* Empty dock slot on tab bar */
+.dock-slot-empty { pointer-events: none; min-height: 56px; }
 
 /* Swipe hint indicator */
 .bottom-tab-bar .swipe-hint {
