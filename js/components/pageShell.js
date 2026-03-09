@@ -412,9 +412,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }, { passive: true });
 
     tabBar.addEventListener('touchmove', function(e) {
+        e.preventDefault(); // always block scroll on tab bar
         var dy = startY - e.touches[0].clientY;
         if (dy > 30 && !isOpen) {
-            e.preventDefault(); // stop page scroll during swipe-up
             dragging = true;
             openDrawer();
         }
@@ -511,6 +511,45 @@ document.addEventListener('DOMContentLoaded', function() {
         item.addEventListener('contextmenu', function(e) { e.preventDefault(); });
     });
 
+    // ─── Helpers for drag ghost & dock mode ─────────────
+    function createDragGhost(item) {
+        var ghost = document.createElement('div');
+        ghost.className = 'drag-ghost';
+        var iconEl = item.querySelector('.drawer-icon');
+        if (iconEl) ghost.innerHTML = iconEl.outerHTML;
+        var label = item.dataset.drawerLabel || '';
+        ghost.innerHTML += '<span>' + label + '</span>';
+        ghost.style.opacity = '0';
+        document.body.appendChild(ghost);
+        // fade in
+        requestAnimationFrame(function() { ghost.style.opacity = '1'; });
+        return ghost;
+    }
+
+    function moveGhost(ghost, x, y) {
+        ghost.style.left = x + 'px';
+        ghost.style.top = y + 'px';
+    }
+
+    function removeGhost(ghost) {
+        if (!ghost) return;
+        ghost.style.opacity = '0';
+        setTimeout(function() { if (ghost.parentNode) ghost.parentNode.removeChild(ghost); }, 150);
+    }
+
+    function enterDockMode() {
+        drawer.classList.add('dock-mode');
+        dockSlots.forEach(function(s) { s.classList.add('dock-slot-highlight'); });
+    }
+
+    function exitDockMode() {
+        drawer.classList.remove('dock-mode');
+        dockSlots.forEach(function(s) {
+            s.classList.remove('dock-slot-highlight');
+            s.style.transform = '';
+        });
+    }
+
     // Long-press handler for drawer items
     drawerItems.forEach(function(item) {
         var pageKey = item.dataset.drawerPage;
@@ -518,13 +557,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
         item.addEventListener('touchstart', function(e) {
             e.preventDefault(); // block iOS link preview / callout
+            var startTouch = e.touches[0];
             longPressTimer = setTimeout(function() {
                 // Enter drag mode
                 dragItem = item;
                 item.classList.add('dragging-item');
 
-                // Highlight dock slots
-                dockSlots.forEach(function(s) { s.classList.add('dock-slot-highlight'); });
+                // Create floating ghost
+                dragGhost = createDragGhost(item);
+                moveGhost(dragGhost, startTouch.clientX, startTouch.clientY);
+
+                // Lift drawer to show tab bar dock slots
+                enterDockMode();
 
                 // Vibrate if supported
                 if (navigator.vibrate) navigator.vibrate(30);
@@ -536,15 +580,21 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!dragItem) return;
             e.preventDefault(); // prevent scroll while dragging to dock
 
-            // Check if finger is over a dock slot
             var touch = e.touches[0];
+
+            // Move ghost to follow finger
+            if (dragGhost) moveGhost(dragGhost, touch.clientX, touch.clientY);
+
+            // Highlight dock slot under finger
             dockSlots.forEach(function(s) {
                 var rect = s.getBoundingClientRect();
                 if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
                     touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
                     s.style.transform = 'scale(1.15)';
+                    s.style.background = 'rgba(79,70,229,0.25)';
                 } else {
                     s.style.transform = '';
+                    s.style.background = '';
                 }
             });
         }, { passive: false });
@@ -555,6 +605,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Check which dock slot the finger landed on
             var touch = e.changedTouches[0];
+            var dropped = false;
             dockSlots.forEach(function(s) {
                 var rect = s.getBoundingClientRect();
                 if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
@@ -567,6 +618,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     updateDockSlot(slotNum, pk, href, label, iconPath);
                     saveDock(slotNum, pk, href, label, iconPath);
+                    dropped = true;
 
                     // Flash feedback
                     s.style.transform = 'scale(1.2)';
@@ -574,11 +626,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (navigator.vibrate) navigator.vibrate(15);
                 }
                 s.style.transform = '';
-                s.classList.remove('dock-slot-highlight');
+                s.style.background = '';
             });
 
+            // Clean up
+            removeGhost(dragGhost);
+            dragGhost = null;
             dragItem.classList.remove('dragging-item');
             dragItem = null;
+            exitDockMode();
         });
 
         item.addEventListener('touchcancel', function() {
@@ -587,10 +643,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 dragItem.classList.remove('dragging-item');
                 dragItem = null;
             }
-            dockSlots.forEach(function(s) {
-                s.style.transform = '';
-                s.classList.remove('dock-slot-highlight');
-            });
+            removeGhost(dragGhost);
+            dragGhost = null;
+            exitDockMode();
         });
     });
 
