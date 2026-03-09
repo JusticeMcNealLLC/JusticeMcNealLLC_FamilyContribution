@@ -377,19 +377,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var isOpen = false;
     var startY = 0, currentY = 0, dragging = false;
+    var savedScrollY = 0; // for iOS scroll lock
 
-    // ─── Open / Close helpers ───────────────────────────
+    // ─── Open / Close helpers ───────────────────────
     function openDrawer() {
         isOpen = true;
         drawer.classList.add('open');
         backdrop.classList.add('open');
+        // iOS-robust scroll lock: freeze body in place
+        savedScrollY = window.scrollY;
+        document.body.style.position = 'fixed';
+        document.body.style.top = '-' + savedScrollY + 'px';
+        document.body.style.left = '0';
+        document.body.style.right = '0';
         document.body.style.overflow = 'hidden';
     }
     function closeDrawer() {
         isOpen = false;
         drawer.classList.remove('open');
         backdrop.classList.remove('open');
+        // Restore scroll position
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
         document.body.style.overflow = '';
+        window.scrollTo(0, savedScrollY);
     }
 
     // ─── Swipe-up on tab bar to open ────────────────────
@@ -401,10 +414,11 @@ document.addEventListener('DOMContentLoaded', function() {
     tabBar.addEventListener('touchmove', function(e) {
         var dy = startY - e.touches[0].clientY;
         if (dy > 30 && !isOpen) {
+            e.preventDefault(); // stop page scroll during swipe-up
             dragging = true;
             openDrawer();
         }
-    }, { passive: true });
+    }, { passive: false });
 
     // ─── Swipe-down on drawer to close ──────────────────
     var drawerStartY = 0;
@@ -415,11 +429,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }, { passive: true });
 
     drawer.addEventListener('touchmove', function(e) {
+        e.preventDefault(); // prevent body scroll bleed on iOS
         currentY = e.touches[0].clientY - drawerStartY;
         if (currentY > 0) {
             drawer.style.transform = 'translateY(' + currentY + 'px)';
         }
-    }, { passive: true });
+    }, { passive: false });
 
     drawer.addEventListener('touchend', function() {
         drawer.classList.remove('dragging');
@@ -491,12 +506,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedDock['4']) updateDockSlot('4', savedDock['4'].page, savedDock['4'].href, savedDock['4'].label, savedDock['4'].icon);
     }
 
+    // Block iOS long-press link preview on all drawer items
+    drawerItems.forEach(function(item) {
+        item.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+    });
+
     // Long-press handler for drawer items
     drawerItems.forEach(function(item) {
         var pageKey = item.dataset.drawerPage;
         if (lockedPages.indexOf(pageKey) !== -1) return; // skip locked pages
 
         item.addEventListener('touchstart', function(e) {
+            e.preventDefault(); // block iOS link preview / callout
             longPressTimer = setTimeout(function() {
                 // Enter drag mode
                 dragItem = item;
@@ -508,11 +529,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Vibrate if supported
                 if (navigator.vibrate) navigator.vibrate(30);
             }, 500);
-        }, { passive: true });
+        }, { passive: false });
 
         item.addEventListener('touchmove', function(e) {
             if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
             if (!dragItem) return;
+            e.preventDefault(); // prevent scroll while dragging to dock
 
             // Check if finger is over a dock slot
             var touch = e.touches[0];
@@ -525,7 +547,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     s.style.transform = '';
                 }
             });
-        }, { passive: true });
+        }, { passive: false });
 
         item.addEventListener('touchend', function(e) {
             if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
