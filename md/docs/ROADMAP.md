@@ -122,9 +122,9 @@ Invested into:
 ---
 
 ### Phase 2: Milestones, Perks & Quests
-**Status:** ✅ 2A Complete — ✅ 2B Complete — 🔲 2C Not Started
+**Status:** ✅ 2A Complete — ✅ 2B Complete — � 2C In Progress
 **Priority:** 🔴 High
-**Goal:** Show members what we've achieved and what perks unlock as our assets grow — gamify generational wealth.
+**Goal:** Show members what we've achieved and what perks unlock as our assets grow — gamify generational wealth. Build universal payout infrastructure for birthdays, competitions, and beyond.
 
 #### 2A. Milestone Tiers (Unlockable by Asset Threshold)
 
@@ -258,40 +258,122 @@ Badges are **permanent** — once earned, they're yours forever. Members pick on
 - [ ] First Post quest *(⏳ Phase 4A — Social Feed)*
 - [ ] Event attendance quest *(⏳ Phase 5A — Events)*
 
-#### 2C. Birthday Payouts (Automated $10 Gift)
-**Goal:** Every member gets a $10 direct deposit on their birthday — automated, no admin action needed.
+#### 2C. Member Payouts — Birthday Gifts, Competitions & Beyond
+**Goal:** Build a universal payout system powered by Stripe Connect. Members link their bank once, and the LLC can send them money for any reason — birthdays, event prizes, competitions, bonuses, profit sharing, and more. Birthday payouts ($10 auto-gift) are the first use case, but the infrastructure supports anything.
 
 ##### How It Works
-1. Member links their bank account once via **Stripe Connect Express** onboarding
-2. A daily scheduled edge function checks: "any birthdays today?"
-3. If yes → `stripe.transfers.create({ amount: 1000, destination: 'acct_xxx' })`
-4. Money arrives in 1-2 business days via Stripe's automatic payout to their bank
-5. Portal shows "Happy Birthday!" celebration + payout notification
+1. Member opts in to payouts via **portal settings** or during **onboarding** (optional step)
+2. Member completes **Stripe Connect Express** onboarding to link their bank account (hosted by Stripe — we never see their bank details)
+3. Once linked, the LLC can send money to them for any payout type
+4. **Birthday payouts:** A daily edge function checks for birthdays → auto-sends $10
+5. **Competition / event payouts:** Admin sends a payout manually from the admin dashboard with a reason and amount
+6. Money comes from the **LLC's Stripe balance** first; if balance is low, Stripe debits the LLC's connected bank account (BlueVine) — no new bank setup needed
+7. Money arrives in the member's bank in 1-2 business days
+8. All payouts are logged with full audit trail
+
+> **Important:** Subscription payments (member → LLC) and payouts (LLC → member) are completely separate Stripe systems. Subscriptions use **Payment Methods** (card/ACH debit). Payouts use **Stripe Connect** (bank deposits). Even if a member uses the same bank for both, they're independent connections with no conflict.
 
 ##### Why Stripe Connect
-- Already using Stripe — no new vendor, same dashboard
-- Express accounts handle KYC/compliance (Stripe collects bank details, not us)
+- Already using Stripe — no new vendor, same dashboard, same API keys
+- Express accounts handle all KYC/compliance (Stripe collects & verifies bank details, not us)
 - Member completes a one-time hosted onboarding to link their bank
 - Cost: **$0.25 per payout** ($10/year for 4 members = very low cost)
-- Could scale later for other payouts (bonuses, profit sharing, loan disbursements)
+- Scales to any payout use case: birthdays, prizes, profit sharing, loan disbursements, referral bonuses, emergency fund access
 
-##### Features to Build
-- [ ] "Link Your Bank" button in portal settings (generates Stripe Connect Express onboarding link)
+##### Payout Types
+| Type | Trigger | Default Amount | Auto/Manual |
+|------|---------|---------------|-------------|
+| 🎂 Birthday | Daily cron checks birthdays | $10 | Automatic |
+| 🏆 Competition | Admin awards after event/challenge | Custom | Manual |
+| 🎁 Bonus | Admin discretionary | Custom | Manual |
+| 💰 Profit Share | Admin distributes earnings | Custom | Manual |
+| 👥 Referral | New member onboards via referral | Custom | Automatic |
+| 🎯 Quest Reward | Cash reward quests (future) | Custom | Automatic |
+| 🛠️ Custom | Any other reason | Custom | Manual |
+
+##### Member Enrollment & Settings
+Members control their own payout enrollment — they can opt in or out at any time:
+
+- [ ] **Payout enrollment toggle** in portal settings — master on/off for receiving payouts
+- [ ] **Per-type enrollment** — members can enable/disable specific payout types (e.g., opt in to birthday payouts but skip competition payouts)
+- [ ] **Birthday Benefits enrollment** — toggle specifically for the $10 birthday gift
+- [ ] Bank link status indicator: ✅ Bank Linked / ⚠️ Not Linked / ❌ Not Enrolled
+- [ ] "Manage Bank Account" button to update or re-link via Stripe Connect
+- [ ] Enrollment status visible to admin (who's enrolled, who's not, who needs a nudge)
+
+##### Admin Controls
+The admin has full control over the payout system with safety switches:
+
+- [ ] **Global payout kill switch** — instantly disable ALL outgoing payouts (emergency stop)
+- [ ] **Per-type toggle** — enable/disable birthday payouts, competition payouts, etc. independently
+- [ ] **Birthday payout amount** — admin can adjust the default amount (e.g., $10 → $25)
+- [ ] **Manual payout console** — send any amount to any connected member with a reason, type, and optional note
+- [ ] **Payout approval queue** (optional) — for large amounts, require admin confirmation before sending
+- [ ] **Payout ledger** — full history of every outgoing transfer: recipient, amount, type, status, Stripe transfer ID, date
+- [ ] **Budget alerts** — warning when total payouts approach a threshold (e.g., "You've sent $200 this month")
+- [ ] **Member enrollment overview** — see at a glance who's enrolled, bank linked, and eligible for which payout types
+- [ ] Admin settings stored in `app_settings` table (payout_enabled, birthday_payout_enabled, birthday_payout_amount, etc.)
+
+##### Onboarding Integration
+Bank linking is added as an **optional step** in the member onboarding wizard:
+
+- [ ] New onboarding step: "Link Your Bank for Payouts" (after profile setup, before contribution)
+- [ ] Explains what payouts are: "The LLC sends you money for birthdays, prizes, and more"
+- [ ] Clear opt-in language: "Would you like to enroll in birthday benefits?"
+- [ ] "Link Bank Account" button → opens Stripe Connect Express hosted onboarding
+- [ ] "Skip for now" option — can always set up later from settings
+- [ ] Return URL handler → marks onboarding step complete, updates enrollment status
+- [ ] If skipped, a gentle nudge banner appears on the dashboard: "🎂 Your birthday is coming up! Link your bank to receive your $10 gift"
+
+##### Features to Build — Stripe Connect Infrastructure
 - [ ] `stripe_connect_account_id` column in profiles table
-- [ ] Stripe Connect Express onboarding flow (hosted by Stripe)
-- [ ] Return URL handler after member completes bank linking
-- [ ] Connect status indicator in settings (✅ Bank Linked / ⚠️ Not Linked)
-- [ ] Edge function: `birthday-payout` — daily cron that queries birthdays matching today's date
-- [ ] Transfer $10 to each birthday member's connected Stripe account
-- [ ] Record payout in `birthday_payouts` table (user_id, amount, stripe_transfer_id, date)
+- [ ] `payout_enrolled` boolean column in profiles table (master enrollment toggle)
+- [ ] Edge function: `create-connect-onboarding` — generates Stripe Connect Express onboarding link
+- [ ] Stripe Connect Express onboarding flow (fully hosted by Stripe)
+- [ ] Return URL handler page (`/portal/connect-return.html`) — captures success/failure after bank linking
+- [ ] Webhook handler for `account.updated` events (track when Connect account becomes active)
+- [ ] Connect status sync — periodically verify account is still active and payable
+
+##### Features to Build — Birthday Payouts
+- [ ] Edge function: `birthday-payout` — daily cron that:
+  1. Checks if birthday payouts are enabled (admin toggle)
+  2. Queries members where `birthday = today AND payout_enrolled = true AND stripe_connect_account_id IS NOT NULL`
+  3. Checks member's birthday enrollment setting
+  4. Creates `stripe.transfers.create({ amount: birthday_amount, destination: 'acct_xxx' })`
+  5. Records payout in the ledger
 - [ ] Portal notification: "🎂 Happy Birthday! $10 is on its way to your bank account"
-- [ ] Admin dashboard: birthday payout history log
 - [ ] Birthday celebration card on portal dashboard (visible to all members)
-- [ ] Fallback: if bank not linked, show nudge to link it + queue payout for when they do
-- [ ] Database: `birthday_payouts` table, `stripe_connect_account_id` on profiles
+- [ ] Fallback: if birthday member hasn't linked bank, show nudge + queue payout for when they do
+- [ ] Queued payout system — if a payout can't be sent (no bank linked), hold it and auto-send when bank is linked
+
+##### Features to Build — Manual / Competition Payouts
+- [ ] Admin payout form: select member → enter amount → select type → add note → send
+- [ ] Confirmation modal before sending ("Send $50 to Jennifer for Competition Winner?")
+- [ ] Payout status tracking: `pending` → `processing` → `completed` / `failed`
+- [ ] Failed payout retry mechanism
+- [ ] Member receives notification when a payout is sent to them
+- [ ] Payout history visible to each member in their settings or history page
+
+##### Database
+- [ ] `payouts` table — universal payout ledger:
+  - `id`, `user_id`, `amount`, `type` (birthday, competition, bonus, profit_share, referral, custom)
+  - `reason` (text description), `status` (pending, queued, processing, completed, failed)
+  - `stripe_transfer_id`, `stripe_payout_id`
+  - `created_by` (admin user_id for manual payouts, NULL for automatic)
+  - `created_at`, `completed_at`
+- [ ] `payout_enrollments` table — per-member, per-type enrollment:
+  - `user_id`, `payout_type`, `enrolled` (boolean), `enrolled_at`, `updated_at`
+- [ ] `app_settings` table (or row in existing config) — admin global settings:
+  - `payouts_enabled` (global kill switch)
+  - `birthday_payouts_enabled`, `birthday_payout_amount`
+  - `competition_payouts_enabled`
+- [ ] Add to profiles: `stripe_connect_account_id`, `payout_enrolled`, `connect_onboarding_complete`
 
 ##### Deferred — Requires Later Phases
 - [ ] Auto-post to social feed: "🎂 Happy Birthday [Name]! The family sent you $10!" *(⏳ Phase 4A — Social Feed)*
+- [ ] Competition payout tied to event results *(⏳ Phase 5A — Events)*
+- [ ] Profit share distribution to all members *(⏳ when fund is large enough)*
+- [ ] Quest cash rewards (quests that pay real money, not just CP) *(future)*
 
 ##### Alternative Options Considered
 | Option | Verdict |
@@ -299,7 +381,7 @@ Badges are **permanent** — once earned, they're yours forever. Members pick on
 | **Plaid + Dwolla** | Works but adds 2 new vendors, more complex |
 | **PayPal Payouts** | Adds PayPal dependency, members need PayPal accounts |
 | **Manual Zelle/Venmo** | Free but not automated, admin has to remember |
-| **Stripe Connect (Express)** ✅ | Best fit — integrated, compliant, automated |
+| **Stripe Connect (Express)** ✅ | Best fit — integrated, compliant, automated, scales to all payout types |
 
 ---
 
