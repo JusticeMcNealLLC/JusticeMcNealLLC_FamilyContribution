@@ -1000,28 +1000,31 @@ The LLC sustains itself through:
 14. ✅ **Profile Enhancements** — Badge equip from profile, banner/cover system (reward-only like badges), Animated Founders banner, badge collection viewer, expanded edit profile modal
 15. ✅ **Nav Restructure & Events Page** — Dashboard quick links grid (2×3/3×3), Events page, mobile 5-tab bar (Feed/Events/Contribute/Invest/Profile), feed mobile header (plus/logo/heart)
 
+### UX Enhancement — Mobile Nav Drawer & Customizable Dock
+16. **Mobile Nav Swipe-Up Drawer & Dock Customization** — Swipe up on the bottom tab bar to reveal a full page-grid drawer (all pages: Dashboard, History, Settings, Quests, Milestones, etc. in a clean icon grid). Press-and-hold any item in the drawer to enter "edit mode" and drag it onto slot 2 or 4 in the bottom tab bar to replace the default (Events / Invest). Preference saved per-member in Supabase. Smooth spring animations, haptic-style feedback, drag ghost + drop highlight. Slots 1 (Feed), 3 (Contribute), and 5 (Profile) are locked/permanent.
+
 ### Phase 3 (Family Structure, Identity & Education)
-16. **Phase 3A — Meet the Team / Leadership page** — roles, bios, org chart, role badges
-17. **Phase 3B — Family Tree** — interactive tree visualization, relationships, multi-generational
-18. **Phase 3C — Credit 101 Education Hub** — learning modules, quizzes, score tracking
-19. **Phase 3D — Budget Tracker + AI Coach** — bank statement import, categorization, spending analysis, OpenAI chat
+17. **Phase 3A — Meet the Team / Leadership page** — roles, bios, org chart, role badges
+18. **Phase 3B — Family Tree** — interactive tree visualization, relationships, multi-generational
+19. **Phase 3C — Credit 101 Education Hub** — learning modules, quizzes, score tracking
+20. **Phase 3D — Budget Tracker + AI Coach** — bank statement import, categorization, spending analysis, OpenAI chat
 
 ### Phase 4 Continued (Social Hub)
-20. **Phase 4C — Private Messaging + Snaps** — one-on-one DMs, Snapchat-style ephemeral messages, stories, message streaks
-21. **Phase 4D — Feed Notifications + Push + SMS** — in-app feed notification center (likes/comments), web push, Twilio SMS, notification preferences
-22. **Phase 4E — Family Location Map (GPS)** — opt-in location sharing, Leaflet.js map, check-ins, privacy controls
-23. ⏳ **Pick up deferred items** — social feed posts for milestones/birthdays, push notifications for milestones, perk badges on profiles, admin custom milestones
+21. **Phase 4C — Private Messaging + Snaps** — one-on-one DMs, Snapchat-style ephemeral messages, stories, message streaks
+22. **Phase 4D — Feed Notifications + Push + SMS** — in-app feed notification center (likes/comments), web push, Twilio SMS, notification preferences
+23. **Phase 4E — Family Location Map (GPS)** — opt-in location sharing, Leaflet.js map, check-ins, privacy controls
+24. ⏳ **Pick up deferred items** — social feed posts for milestones/birthdays, push notifications for milestones, perk badges on profiles, admin custom milestones
 
 ### Phase 5 (Events & Family Activities)
-24. **Phase 5A — Events System** — create events, RSVP, reminders, event comments
-25. **Phase 5B — Vacation / Trip Events** — deposit requirement, trip pot, expense breakdown
+25. **Phase 5A — Events System** — create events, RSVP, reminders, event comments
+26. **Phase 5B — Vacation / Trip Events** — deposit requirement, trip pot, expense breakdown
 
 ### Phase 6+
-26. **Phase 6 — Family Gallery** — photo/video uploads, albums, tagging, "On This Day"
-27. **Phase 7 — Trust Formation** — estate attorney, trust agreement, succession plan
-28. **Phase 8 — Family Lending Program** — loan applications, repayment tracking ($50k milestone)
-29. **Phase 9 — Member Benefits** — vehicle program ($250k), life insurance, scholarships
-30. **Phase 10 — Family Compound** — real estate acquisition ($500k+ milestone)
+27. **Phase 6 — Family Gallery** — photo/video uploads, albums, tagging, "On This Day"
+28. **Phase 7 — Trust Formation** — estate attorney, trust agreement, succession plan
+29. **Phase 8 — Family Lending Program** — loan applications, repayment tracking ($50k milestone)
+30. **Phase 9 — Member Benefits** — vehicle program ($250k), life insurance, scholarships
+31. **Phase 10 — Family Compound** — real estate acquisition ($500k+ milestone)
 
 ---
 
@@ -1034,7 +1037,7 @@ This roadmap is a **living document**. It will be updated as:
 - The fund grows and new possibilities open up
 - Members provide feedback and suggestions
 
-**Last Updated:** March 8, 2026
+**Last Updated:** March 9, 2026
 **Maintained By:** Justin McNeal (Admin)
 
 ---
