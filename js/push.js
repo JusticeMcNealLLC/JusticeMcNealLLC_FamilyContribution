@@ -11,7 +11,7 @@
     'use strict';
 
     // VAPID public key (must match edge function)
-    var VAPID_PUBLIC_KEY = 'BN1q7r5fShQ3SetPuAb1xi-m5HXcGb0U7OqCv9EZGSye6kQUtnqnQZVPf1O6E0pfnf7q6Di9vhGMbXS4JVSewc4';
+    var VAPID_PUBLIC_KEY = 'BKqi3z9_x6AakHy0napGUG8MIe-CTtEriDWv-hGzgvRW971O0GJgQuGbWIPyhVl_ElOxrQWsH-CCUJPf-BLY2i0';
 
     // ─── Helpers ────────────────────────────────────────
     function urlBase64ToUint8Array(base64String) {

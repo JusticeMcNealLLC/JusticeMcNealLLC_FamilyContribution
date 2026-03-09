@@ -9,8 +9,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
 
 // ─── VAPID Config ───────────────────────────────────────────────────
-const VAPID_PUBLIC_KEY  = 'BN1q7r5fShQ3SetPuAb1xi-m5HXcGb0U7OqCv9EZGSye6kQUtnqnQZVPf1O6E0pfnf7q6Di9vhGMbXS4JVSewc4'
-const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || ''
+const VAPID_PUBLIC_KEY  = 'BKqi3z9_x6AakHy0napGUG8MIe-CTtEriDWv-hGzgvRW971O0GJgQuGbWIPyhVl_ElOxrQWsH-CCUJPf-BLY2i0'
+const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || 'yK4Rk8zMhECTIv12IQKS7U9xEK8hSOLDSwxgo3hlOQg'
 const VAPID_SUBJECT     = 'mailto:admin@justicemcneal.com'
 
 // Configure web-push
