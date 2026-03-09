@@ -65,8 +65,14 @@ async function loadProfile() {
             coverImg.classList.remove('hidden');
         } else if (profile.cover_gradient) {
             const coverSection = document.getElementById('coverSection');
-            coverSection.className = coverSection.className.replace(/from-\S+/g, '').replace(/to-\S+/g, '').trim();
-            coverSection.classList.add('bg-gradient-to-br', ...profile.cover_gradient.split(' '));
+            if (profile.cover_gradient === 'founders-animated') {
+                // Animated founders gold banner
+                coverSection.className = coverSection.className.replace(/from-\S+/g, '').replace(/to-\S+/g, '').replace(/bg-gradient-to-\S+/g, '').trim();
+                coverSection.innerHTML = '<div class="founders-banner-cover"></div>' + coverSection.innerHTML;
+            } else {
+                coverSection.className = coverSection.className.replace(/from-\S+/g, '').replace(/to-\S+/g, '').trim();
+                coverSection.classList.add('bg-gradient-to-br', ...profile.cover_gradient.split(' '));
+            }
         }
 
         // Profile picture
@@ -310,47 +316,45 @@ async function loadPostsGrid() {
 
     empty.classList.add('hidden');
 
-    grid.innerHTML = posts.map(post => {
+    // Filter to only posts with images
+    const photoPosts = posts.filter(post => {
         const images = (post.images || []).sort((a, b) => a.sort_order - b.sort_order);
-        const firstImage = images[0]?.image_url;
+        return images.length > 0 && images[0]?.image_url;
+    });
+
+    if (photoPosts.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+    }
+
+    grid.innerHTML = photoPosts.map(post => {
+        const images = (post.images || []).sort((a, b) => a.sort_order - b.sort_order);
+        const firstImage = images[0].image_url;
         const likeCount = post.likes?.[0]?.count || 0;
         const commentCount = post.comments?.[0]?.count || 0;
 
-        if (firstImage) {
-            return `
-                <a href="feed.html#post-${post.id}" class="relative aspect-square bg-gray-100 overflow-hidden group cursor-pointer">
-                    <img src="${firstImage}" class="w-full h-full object-cover" alt="" loading="lazy">
-                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <div class="flex items-center gap-4 text-white text-sm font-semibold">
-                            <span class="flex items-center gap-1">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
-                                ${likeCount}
-                            </span>
-                            <span class="flex items-center gap-1">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                                ${commentCount}
-                            </span>
-                        </div>
+        return `
+            <a href="feed.html#post-${post.id}" class="relative aspect-square bg-gray-100 overflow-hidden group cursor-pointer">
+                <img src="${firstImage}" class="w-full h-full object-cover" alt="" loading="lazy">
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div class="flex items-center gap-4 text-white text-sm font-semibold">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            ${likeCount}
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                            ${commentCount}
+                        </span>
                     </div>
-                    ${images.length > 1 ? '<div class="absolute top-2 right-2"><svg class="w-4 h-4 text-white drop-shadow-md" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"></path></svg></div>' : ''}
-                </a>`;
-        } else {
-            // Text-only post: show content in a colored card
-            return `
-                <a href="feed.html#post-${post.id}" class="relative aspect-square bg-gradient-to-br from-brand-500 to-brand-700 overflow-hidden flex items-center justify-center p-3 cursor-pointer group">
-                    <p class="text-white text-xs text-center line-clamp-4 leading-relaxed">${(post.content || '').slice(0, 100)}</p>
-                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <div class="flex items-center gap-4 text-white text-sm font-semibold">
-                            <span class="flex items-center gap-1">❤️ ${likeCount}</span>
-                            <span class="flex items-center gap-1">💬 ${commentCount}</span>
-                        </div>
-                    </div>
-                </a>`;
-        }
+                </div>
+                ${images.length > 1 ? '<div class="absolute top-2 right-2"><svg class="w-4 h-4 text-white drop-shadow-md" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"></path></svg></div>' : ''}
+            </a>`;
     }).join('');
 }
 
-// ─── Profile Feed (Chronological list) ──────────────────
+// ─── Profile Feed (Twitter-style text posts) ───────────
 async function loadProfileFeed() {
     const { data: posts } = await supabaseClient
         .from('posts')
@@ -364,7 +368,7 @@ async function loadProfileFeed() {
         `)
         .eq('author_id', viewingUserId)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(30);
 
     const list = document.getElementById('profileFeedList');
     const empty = document.getElementById('profileFeedEmpty');
@@ -377,25 +381,58 @@ async function loadProfileFeed() {
 
     empty.classList.add('hidden');
 
-    // Reuse feed.js renderPostCard if available, otherwise simple render
-    if (typeof renderPostCard === 'function') {
-        list.innerHTML = posts.map(p => renderPostCard(p)).join('');
-        if (typeof wirePostActions === 'function') wirePostActions();
-    } else {
-        list.innerHTML = posts.map(p => {
-            const timeAgo = getProfileTimeAgo(p.created_at);
-            const images = (p.images || []).sort((a, b) => a.sort_order - b.sort_order);
-            let imgHtml = '';
-            if (images.length > 0) {
-                imgHtml = `<img src="${images[0].image_url}" class="w-full rounded-xl mt-3" alt="" loading="lazy">`;
-            }
-            return `<div class="bg-white border-b sm:border sm:rounded-2xl p-4 sm:p-5">
-                <p class="text-xs text-gray-400 mb-2">${timeAgo}</p>
-                ${p.content ? `<p class="text-sm text-gray-800 whitespace-pre-wrap">${p.content}</p>` : ''}
-                ${imgHtml}
-            </div>`;
-        }).join('');
-    }
+    // Twitter-style: render each post as a compact text card
+    const author = posts[0]?.author || {};
+    const authorName = [author.first_name, author.last_name].filter(Boolean).join(' ') || 'Member';
+    const authorPic = author.profile_picture_url;
+    const authorInitial = ((author.first_name || '')[0] || '?').toUpperCase();
+
+    list.innerHTML = posts.map(post => {
+        const timeAgo = getProfileTimeAgo(post.created_at);
+        const likeCount = post.likes?.length || 0;
+        const commentCount = post.comments?.[0]?.count || 0;
+        const images = (post.images || []).sort((a, b) => a.sort_order - b.sort_order);
+        const hasImage = images.length > 0 && images[0]?.image_url;
+
+        // Mini image thumbnail if post has media
+        const thumbHtml = hasImage
+            ? `<div class="mt-2.5 rounded-xl overflow-hidden border border-gray-200"><img src="${images[0].image_url}" class="w-full max-h-64 object-cover" alt="" loading="lazy"></div>`
+            : '';
+
+        return `
+            <a href="feed.html#post-${post.id}" class="block px-4 py-3 hover:bg-gray-50 transition cursor-pointer">
+                <div class="flex gap-3">
+                    <!-- Avatar -->
+                    <div class="flex-shrink-0">
+                        ${authorPic
+                            ? `<img src="${authorPic}" class="w-10 h-10 rounded-full object-cover" alt="">`
+                            : `<div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center"><span class="text-brand-600 text-sm font-bold">${authorInitial}</span></div>`
+                        }
+                    </div>
+                    <!-- Content -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="font-bold text-sm text-gray-900">${authorName}</span>
+                            <span class="text-xs text-gray-400">&middot;</span>
+                            <span class="text-xs text-gray-400">${timeAgo}</span>
+                        </div>
+                        ${post.content ? `<p class="text-sm text-gray-800 mt-0.5 whitespace-pre-wrap break-words">${post.content}</p>` : ''}
+                        ${thumbHtml}
+                        <!-- Engagement row -->
+                        <div class="flex items-center gap-5 mt-2 text-gray-400">
+                            <span class="flex items-center gap-1 text-xs hover:text-red-500 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                ${likeCount || ''}
+                            </span>
+                            <span class="flex items-center gap-1 text-xs hover:text-brand-500 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
+                                ${commentCount || ''}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </a>`;
+    }).join('');
 }
 
 // ─── Milestones Timeline ────────────────────────────────
@@ -790,9 +827,21 @@ function setupCoverPhoto() {
             coverImg.classList.add('hidden');
             coverImg.src = '';
 
-            // Remove existing gradient classes & apply new
-            coverSection.className = coverSection.className.replace(/from-\S+/g, '').replace(/to-\S+/g, '').trim();
-            coverSection.classList.add('bg-gradient-to-br', ...gradient.split(' '));
+            // Remove any existing founders banner overlay
+            const existingFounders = coverSection.querySelector('.founders-banner-cover');
+            if (existingFounders) existingFounders.remove();
+
+            if (gradient === 'founders-animated') {
+                // Animated founders gold banner
+                coverSection.className = coverSection.className.replace(/from-\S+/g, '').replace(/to-\S+/g, '').replace(/bg-gradient-to-\S+/g, '').trim();
+                const founderDiv = document.createElement('div');
+                founderDiv.className = 'founders-banner-cover';
+                coverSection.insertBefore(founderDiv, coverSection.firstChild);
+            } else {
+                // Regular gradient
+                coverSection.className = coverSection.className.replace(/from-\S+/g, '').replace(/to-\S+/g, '').trim();
+                coverSection.classList.add('bg-gradient-to-br', ...gradient.split(' '));
+            }
 
             // Highlight selected
             document.querySelectorAll('.banner-preset').forEach(p => {
