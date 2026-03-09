@@ -174,7 +174,6 @@
         var recipientVal = document.getElementById('recipientSelect').value;
         var type = document.getElementById('typeSelect').value;
         var message = document.getElementById('messageInput').value.trim();
-        var sendPush = document.getElementById('sendPushToggle').checked;
 
         var errEl = document.getElementById('sendError');
         var successEl = document.getElementById('sendSuccess');
