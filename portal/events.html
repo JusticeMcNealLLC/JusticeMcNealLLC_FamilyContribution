@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Events | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="events">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <!-- Page Header -->
+        <div class="mb-6 sm:mb-8">
+            <h1 class="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Events</h1>
+            <p class="text-gray-500 mt-0.5 sm:mt-1 text-sm">Family gatherings, milestones, and upcoming happenings</p>
+        </div>
+
+        <!-- Upcoming Events Section -->
+        <section class="mb-8">
+            <h2 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+                Upcoming
+            </h2>
+            <div id="upcomingEvents" class="space-y-3">
+                <!-- Placeholder event cards rendered by JS -->
+            </div>
+            <div id="noUpcoming" class="hidden">
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-8 text-center">
+                    <div class="w-14 h-14 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-7 h-7 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <p class="text-sm text-gray-500 font-medium">No upcoming events</p>
+                    <p class="text-xs text-gray-400 mt-1">Check back soon — events will show up here!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Past Events Section -->
+        <section class="mb-8">
+            <h2 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Past Events</h2>
+            <div id="pastEvents" class="space-y-3">
+                <!-- Past event cards -->
+            </div>
+            <div id="noPast" class="hidden">
+                <p class="text-sm text-gray-400 text-center py-4">No past events yet</p>
+            </div>
+        </section>
+
+        <!-- Coming Soon Banner -->
+        <div id="comingSoonBanner" class="fade-in">
+            <div class="bg-gradient-to-r from-violet-600 via-brand-600 to-indigo-600 rounded-2xl p-6 sm:p-8 text-white text-center relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-14 translate-x-14"></div>
+                <div class="absolute bottom-0 left-0 w-28 h-28 bg-white/5 rounded-full translate-y-10 -translate-x-10"></div>
+                <div class="relative">
+                    <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Events Coming Soon</h3>
+                    <p class="text-white/70 text-sm max-w-md mx-auto">We're building the events feature — family meetups, BBQs, birthday celebrations, and more will all live here. Stay tuned!</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/components/pageShell.js"></script>
+    <script src="../js/auth/shared.js"></script>
+    <script>
+        // Events page — placeholder logic
+        document.addEventListener('DOMContentLoaded', function () {
+            // Show "no upcoming" and "no past" states for now
+            var noUp = document.getElementById('noUpcoming');
+            var noPast = document.getElementById('noPast');
+            if (noUp) noUp.classList.remove('hidden');
+            if (noPast) noPast.classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>

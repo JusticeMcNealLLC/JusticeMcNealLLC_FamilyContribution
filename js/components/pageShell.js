@@ -99,6 +99,8 @@
                 break;
             case 'history':
                 contextTitle = 'History'; break;
+            case 'events':
+                contextTitle = 'Events'; break;
             case 'quests':
                 contextTitle = 'Quests'; break;
             case 'milestones':
@@ -136,17 +138,16 @@
         desktopLinks =
             dLink('feed.html', 'Feed', 'feed') +
             dLink('index.html', 'Dashboard', 'dashboard') +
-            dLink('quests.html', 'Quests', 'quests') +
-            dLink('milestones.html', 'Milestones', 'milestones') +
+            dLink('events.html', 'Events', 'events') +
             dLink('investments.html', 'Investments', 'investments') +
             dLink('history.html', 'History', 'history');
 
         tabsInner =
             '<div class="max-w-lg mx-auto grid grid-cols-5 px-2">' +
                 mTab('feed.html', p(SVG.feed), 'Feed', 'feed') +
-                mTab('quests.html', p(SVG.quest), 'Quests', 'quests') +
-                centerTab('milestones.html', p(SVG.trophy), 'Goals', 'milestones') +
-                mTab('history.html', p(SVG.history), 'History', 'history') +
+                mTab('events.html', p(SVG.bell), 'Events', 'events') +
+                centerTab('index.html', p(SVG.plus), 'Contribute', 'dashboard') +
+                mTab('investments.html', p(SVG.invest), 'Invest', 'investments') +
                 profileTab() +
             '</div>';
     }
@@ -170,11 +171,11 @@
             '</div>' +
             '<button id="logoutBtn" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition">Sign Out</button>';
     } else {
-        // Portal: profile dropdown with Settings + Sign Out
+        // Portal: profile link + dropdown with Settings + Sign Out
         desktopRight =
             '<div class="w-px h-6 bg-gray-200 mx-2" id="navDivider"></div>' +
-            '<div class="relative" id="profileDropdownWrap">' +
-                '<button id="profileDropdownBtn" class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition hidden" aria-haspopup="true" aria-expanded="false">' +
+            '<div class="relative flex items-center" id="profileDropdownWrap">' +
+                '<a href="profile.html" id="navProfileLink" class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition hidden">' +
                     '<div class="relative w-7 h-7 flex-shrink-0">' +
                         '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden">' +
                             '<span id="navProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
@@ -183,6 +184,8 @@
                         '<div id="navBadgeOverlay"></div>' +
                     '</div>' +
                     '<span id="navProfileName" class="text-sm font-medium text-gray-700 max-w-[100px] truncate"></span>' +
+                '</a>' +
+                '<button id="profileDropdownBtn" class="p-1.5 rounded-lg hover:bg-gray-100 transition hidden" aria-haspopup="true" aria-expanded="false">' +
                     '<svg class="w-4 h-4 text-gray-400 transition-transform" id="profileChevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>' +
                 '</button>' +
                 '<div id="profileDropdown" class="absolute right-0 top-full mt-1.5 w-48 bg-white rounded-xl border border-gray-200/80 shadow-lg shadow-gray-200/50 py-1.5 hidden z-50 opacity-0 translate-y-1" style="transition: opacity 0.15s ease, transform 0.15s ease;">' +
@@ -218,13 +221,13 @@
                 '</div>' +
                 '<div class="flex items-center gap-2 md:hidden" id="mobileProfileSection" style="display:none">' +
                     (contextActions ? '<div class="flex items-center gap-2">' + contextActions + '</div>' : '') +
-                    '<div class="relative w-8 h-8 flex-shrink-0">' +
+                    '<a href="profile.html" class="relative w-8 h-8 flex-shrink-0">' +
                         '<div class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden">' +
                             '<span id="mobileProfileInitials" class="text-brand-600 text-xs font-bold"></span>' +
                             '<img id="mobileProfileImg" class="w-full h-full object-cover hidden" alt="">' +
                         '</div>' +
                         '<div id="mobileBadgeOverlay"></div>' +
-                    '</div>' +
+                    '</a>' +
                 '</div>' +
                 '<div class="hidden md:flex items-center gap-1">' +
                     desktopLinks +
@@ -285,15 +288,16 @@ async function loadNavProfile() {
         var photoUrl    = res.data.profile_picture_url;
         var badgeKey    = res.data.displayed_badge || '';
 
-        // Desktop nav — profile area (dropdown btn on portal, section on admin)
+        // Desktop nav — profile area (link + dropdown btn on portal, section on admin)
         var btn        = document.getElementById('profileDropdownBtn');
+        var profileLink = document.getElementById('navProfileLink');
         var section    = document.getElementById('navProfileSection');
         var nameEl     = document.getElementById('navProfileName');
         var initialsEl = document.getElementById('navProfileInitials');
         var imgEl      = document.getElementById('navProfileImg');
 
-        if (btn) {
-            // Portal dropdown trigger
+        if (profileLink) {
+            // Portal: profile link (avatar+name) + separate dropdown chevron
             if (nameEl) nameEl.textContent = firstName || 'Member';
             if (initialsEl) initialsEl.textContent = initials;
             if (photoUrl && imgEl) {
@@ -303,7 +307,8 @@ async function loadNavProfile() {
                     if (initialsEl) initialsEl.classList.add('hidden');
                 };
             }
-            btn.classList.remove('hidden');
+            profileLink.classList.remove('hidden');
+            if (btn) btn.classList.remove('hidden');
         } else if (section) {
             // Admin simple profile section
             if (nameEl) nameEl.textContent = firstName || 'Member';

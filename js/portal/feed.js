@@ -394,6 +394,18 @@ function renderPostCard(post) {
     const name = [author.first_name, author.last_name].filter(Boolean).join(' ') || 'Member';
     const photoUrl = author.profile_picture_url;
     const authorId = author.id;
+    const displayedBadge = author.displayed_badge;
+
+    // Build badge overlay HTML for feed avatars
+    let avatarBadgeHtml = '';
+    if (displayedBadge) {
+        if (typeof buildNavBadgeOverlay === 'function') {
+            avatarBadgeHtml = '<div class="absolute -bottom-1 -right-1">' + buildNavBadgeOverlay(displayedBadge) + '</div>';
+        } else {
+            const fb = { founding_member:'🏅', shutterbug:'📸', streak_master:'🔥', streak_legend:'⚡', first_seed:'🌱', four_figures:'💵', quest_champion:'🎯', fidelity_linked:'🏦', birthday_vip:'🎂' };
+            avatarBadgeHtml = '<div class="absolute -bottom-1 -right-1"><div class="badge-chip-overlay">' + (fb[displayedBadge] || '❓') + '</div></div>';
+        }
+    }
 
     const timeAgo = getTimeAgo(post.created_at);
     const images = (post.images || []).sort((a, b) => a.sort_order - b.sort_order);
@@ -453,10 +465,11 @@ function renderPostCard(post) {
         <div class="p-4 sm:p-5">
             <!-- Post Header -->
             <div class="flex items-start gap-3">
-                <a href="profile.html?id=${authorId}" class="flex-shrink-0">
+                <a href="profile.html?id=${authorId}" class="flex-shrink-0 relative">
                     <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border border-gray-200">
                         ${photoUrl ? `<img src="${photoUrl}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-sm font-bold">${initials}</span>`}
                     </div>
+                    ${avatarBadgeHtml}
                 </a>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
