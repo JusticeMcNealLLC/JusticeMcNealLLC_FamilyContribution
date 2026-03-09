@@ -38,7 +38,7 @@ function setupContributionStep() {
             `;
             // Wire up the new buttons
             contentEl.querySelector('#contributionBackBtn').addEventListener('click', () => prevStep());
-            contentEl.querySelector('#keepPlanBtn').addEventListener('click', () => finishOnboarding());
+            contentEl.querySelector('#keepPlanBtn').addEventListener('click', () => nextStep());
         return;
     }
 
