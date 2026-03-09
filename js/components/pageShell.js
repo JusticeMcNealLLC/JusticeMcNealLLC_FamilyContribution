@@ -506,9 +506,30 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedDock['4']) updateDockSlot('4', savedDock['4'].page, savedDock['4'].href, savedDock['4'].label, savedDock['4'].icon);
     }
 
-    // Block iOS long-press link preview on all drawer items
+    // Block iOS long-press link preview on ALL drawer items.
+    // Since we preventDefault on touchstart, we handle tap navigation manually.
     drawerItems.forEach(function(item) {
         item.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+
+        var tapStartX = 0, tapStartY = 0, tapMoved = false;
+        item.addEventListener('touchstart', function(e) {
+            e.preventDefault(); // block iOS link preview on every item
+            tapStartX = e.touches[0].clientX;
+            tapStartY = e.touches[0].clientY;
+            tapMoved = false;
+        }, { passive: false });
+        item.addEventListener('touchmove', function(e) {
+            var dx = Math.abs(e.touches[0].clientX - tapStartX);
+            var dy = Math.abs(e.touches[0].clientY - tapStartY);
+            if (dx > 10 || dy > 10) tapMoved = true;
+        }, { passive: true });
+        item.addEventListener('touchend', function(e) {
+            // If it was a simple tap (not a drag), navigate to the link
+            if (!tapMoved && !dragItem) {
+                var href = item.getAttribute('href') || item.dataset.drawerHref;
+                if (href) window.location.href = href;
+            }
+        });
     });
 
     // ─── Helpers for drag ghost & dock mode ─────────────
