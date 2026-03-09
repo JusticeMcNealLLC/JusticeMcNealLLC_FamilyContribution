@@ -705,23 +705,38 @@ document.addEventListener('DOMContentLoaded', function() {
         clone.className = 'fly-clone';
         var icon = fromEl.querySelector('.drawer-icon');
         if (icon) clone.innerHTML = icon.outerHTML;
+
+        // Start position: centered on the source item
         clone.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;opacity:1;' +
-            'left:' + (fr.left + fr.width / 2) + 'px;top:' + (fr.top + fr.height / 2) + 'px;' +
-            'transform:translate(-50%,-50%) scale(1);transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);';
+            'left:' + (fr.left + fr.width / 2) + 'px;' +
+            'top:' + (fr.top + fr.height / 2) + 'px;' +
+            'transform:translate(-50%,-50%) scale(1);' +
+            'transition:left 0.45s cubic-bezier(0.22,1,0.36,1),top 0.45s cubic-bezier(0.22,1,0.36,1),transform 0.45s cubic-bezier(0.22,1,0.36,1),opacity 0.35s ease;';
         document.body.appendChild(clone);
+
+        // Dim the source item during flight
+        fromEl.style.opacity = '0.3';
+        fromEl.style.transform = 'scale(0.9)';
+
         requestAnimationFrame(function() {
             requestAnimationFrame(function() {
                 clone.style.left = (tr.left + tr.width / 2) + 'px';
                 clone.style.top = (tr.top + tr.height / 2) + 'px';
-                clone.style.transform = 'translate(-50%,-50%) scale(0.6)';
-                clone.style.opacity = '0.4';
+                clone.style.transform = 'translate(-50%,-50%) scale(0.7)';
+                clone.style.opacity = '0.6';
             });
         });
+
         setTimeout(function() {
             clone.remove();
+            fromEl.style.opacity = '';
+            fromEl.style.transform = '';
+            // Landing pop on the target slot
+            toEl.classList.add('landing');
+            setTimeout(function() { toEl.classList.remove('landing'); }, 350);
             if (callback) callback();
             if (navigator.vibrate) navigator.vibrate(15);
-        }, 420);
+        }, 460);
     }
 
     // Load dock config from Supabase (deferred)
