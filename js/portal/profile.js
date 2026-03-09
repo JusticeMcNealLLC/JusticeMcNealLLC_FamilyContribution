@@ -155,9 +155,22 @@ async function loadStats(profile) {
     }
 }
 
-// ─── Badges ─────────────────────────────────────────────
+// ─── Badges & Banners (Cosmetics) ───────────────────────
 let earnedBadgeKeys = [];
 let currentDisplayedBadge = null;
+let currentBannerGradient = null;
+let currentBannerPhotoUrl = null;
+
+// Banner presets catalog (gradient-based banners awarded as rewards)
+const BANNER_CATALOG = {
+    'founders-animated': { name: 'Founders Gold', preview: 'founders-banner-preview', isAnimated: true },
+    'from-blue-500 to-purple-600': { name: 'Twilight', gradient: 'from-blue-500 to-purple-600' },
+    'from-emerald-500 to-teal-600': { name: 'Emerald Wave', gradient: 'from-emerald-500 to-teal-600' },
+    'from-rose-500 to-pink-600': { name: 'Rose Gold', gradient: 'from-rose-500 to-pink-600' },
+    'from-amber-500 to-orange-600': { name: 'Sunset', gradient: 'from-amber-500 to-orange-600' },
+    'from-violet-500 to-indigo-600': { name: 'Cosmic Purple', gradient: 'from-violet-500 to-indigo-600' },
+    'from-cyan-500 to-blue-600': { name: 'Ocean Breeze', gradient: 'from-cyan-500 to-blue-600' },
+};
 
 async function loadBadges() {
     const { data: badges } = await supabaseClient
@@ -166,42 +179,67 @@ async function loadBadges() {
         .eq('user_id', viewingUserId)
         .order('earned_at', { ascending: false });
 
-    // Get current displayed badge
+    // Get current displayed badge + banner info
     const { data: prof } = await supabaseClient
         .from('profiles')
-        .select('displayed_badge')
+        .select('displayed_badge, cover_gradient, cover_photo_url')
         .eq('id', viewingUserId)
         .single();
     currentDisplayedBadge = prof?.displayed_badge || null;
+    currentBannerGradient = prof?.cover_gradient || null;
+    currentBannerPhotoUrl = prof?.cover_photo_url || null;
 
     earnedBadgeKeys = (badges || []).map(b => b.badge_key);
 
-    if (!badges || badges.length === 0) return;
+    const hasBadges = badges && badges.length > 0;
+    const hasBanner = currentBannerGradient || currentBannerPhotoUrl;
+
+    if (!hasBadges && !hasBanner) return;
 
     const section = document.getElementById('badgesSection');
     const grid = document.getElementById('badgesGrid');
     section.classList.remove('hidden');
 
-    // Render earned badges with equip ability for own profile
-    grid.innerHTML = badges.map(b => {
-        const badge = (typeof BADGE_CATALOG !== 'undefined' && BADGE_CATALOG[b.badge_key]) || { emoji: '🏅', name: b.badge_key, rarity: 'common' };
-        const isEquipped = currentDisplayedBadge === b.badge_key;
-        const equipClass = isOwnProfile ? 'cursor-pointer hover:scale-110 transition-transform' : '';
-        const ringClass = isEquipped ? 'ring-2 ring-brand-500 ring-offset-2' : '';
-        return `<div class="badge-chip badge-rarity-${badge.rarity || 'common'} w-10 h-10 text-lg ${equipClass} ${ringClass}" title="${badge.name}${isOwnProfile ? (isEquipped ? ' (equipped — tap to unequip)' : ' — tap to equip') : ''}" data-badge-key="${b.badge_key}" role="${isOwnProfile ? 'button' : 'img'}">${badge.emoji}</div>`;
-    }).join('');
+    if (hasBadges) {
+        // Render earned badges with equip ability for own profile
+        grid.innerHTML = badges.map(b => {
+            const badge = (typeof BADGE_CATALOG !== 'undefined' && BADGE_CATALOG[b.badge_key]) || { emoji: '🏅', name: b.badge_key, rarity: 'common' };
+            const isEquipped = currentDisplayedBadge === b.badge_key;
+            const equipClass = isOwnProfile ? 'cursor-pointer hover:scale-110 transition-transform' : '';
+            const ringClass = isEquipped ? 'ring-2 ring-brand-500 ring-offset-2' : '';
+            return `<div class="badge-chip badge-rarity-${badge.rarity || 'common'} w-10 h-10 text-lg ${equipClass} ${ringClass}" title="${badge.name}${isOwnProfile ? (isEquipped ? ' (equipped — tap to unequip)' : ' — tap to equip') : ''}" data-badge-key="${b.badge_key}" role="${isOwnProfile ? 'button' : 'img'}">${badge.emoji}</div>`;
+        }).join('');
 
-    // Wire up badge equip clicks (own profile only)
-    if (isOwnProfile) {
-        grid.querySelectorAll('[data-badge-key]').forEach(chip => {
-            chip.addEventListener('click', () => equipBadge(chip.dataset.badgeKey));
-        });
+        // Wire up badge equip clicks (own profile only)
+        if (isOwnProfile) {
+            grid.querySelectorAll('[data-badge-key]').forEach(chip => {
+                chip.addEventListener('click', () => equipBadge(chip.dataset.badgeKey));
+            });
 
-        // Show "View Collection" button
-        const collBtn = document.getElementById('toggleBadgeCollectionBtn');
-        if (collBtn) {
-            collBtn.classList.remove('hidden');
-            collBtn.addEventListener('click', toggleBadgeCollection);
+            // Show "View Collection" button
+            const collBtn = document.getElementById('toggleBadgeCollectionBtn');
+            if (collBtn) {
+                collBtn.classList.remove('hidden');
+                collBtn.addEventListener('click', toggleBadgeCollection);
+            }
+        }
+    }
+
+    // Render banner in cosmetics section
+    if (hasBanner) {
+        const bannersGrid = document.getElementById('bannersGrid');
+        const earnedGrid = document.getElementById('earnedBannersGrid');
+        if (bannersGrid && earnedGrid) {
+            bannersGrid.classList.remove('hidden');
+            let bannerHtml = '';
+            if (currentBannerPhotoUrl) {
+                bannerHtml = `<div class="rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><img src="${currentBannerPhotoUrl}" class="w-full h-full object-cover" alt="Banner"></div>`;
+            } else if (currentBannerGradient === 'founders-animated') {
+                bannerHtml = `<div class="rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><div class="founders-banner-preview w-full h-full"></div></div>`;
+            } else if (currentBannerGradient) {
+                bannerHtml = `<div class="rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><div class="w-full h-full bg-gradient-to-r ${currentBannerGradient}"></div></div>`;
+            }
+            earnedGrid.innerHTML = bannerHtml;
         }
     }
 }
@@ -664,6 +702,9 @@ function setupEditProfile() {
         // Populate badge picker
         populateEditModalBadgePicker();
 
+        // Populate banner section
+        populateEditModalBanner();
+
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         input.focus();
@@ -780,6 +821,45 @@ function refreshEditModalBadgePicker() {
 function setupCoverPhoto() {
     // No user-facing edit UI — banners are reward-only
     return;
+}
+
+function populateEditModalBanner() {
+    const section = document.getElementById('editBannerSection');
+    const preview = document.getElementById('editBannerPreview');
+    const previewImg = document.getElementById('editBannerPreviewImg');
+
+    if (!section || !preview) return;
+
+    const hasCustomPhoto = !!currentBannerPhotoUrl;
+    const hasGradient = !!currentBannerGradient;
+
+    if (!hasCustomPhoto && !hasGradient) {
+        section.classList.add('hidden');
+        return;
+    }
+
+    section.classList.remove('hidden');
+
+    // Show the current banner preview
+    if (hasCustomPhoto) {
+        previewImg.src = currentBannerPhotoUrl;
+        previewImg.classList.remove('hidden');
+        preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden';
+    } else if (currentBannerGradient === 'founders-animated') {
+        previewImg.classList.add('hidden');
+        preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden relative';
+        preview.innerHTML = '<div class="founders-banner-preview w-full h-full"></div><img id="editBannerPreviewImg" class="w-full h-full object-cover hidden" alt="">';
+    } else if (currentBannerGradient) {
+        previewImg.classList.add('hidden');
+        preview.className = `w-full h-20 rounded-xl mb-2 overflow-hidden bg-gradient-to-r ${currentBannerGradient}`;
+    }
+
+    // Show banner name if known
+    const bannerInfo = BANNER_CATALOG[currentBannerGradient];
+    const picker = document.getElementById('editModalBannerPicker');
+    if (picker) {
+        picker.innerHTML = `<p class="col-span-3 text-xs text-gray-500 text-center py-1">${bannerInfo ? '🎨 ' + bannerInfo.name : '🎨 Custom Banner'} <span class="text-gray-400">(reward-only)</span></p>`;
+    }
 }
 
 // ─── Utility ────────────────────────────────────────────

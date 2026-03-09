@@ -57,12 +57,6 @@ function setComposerAvatars(profile) {
     const initials = (fi + li).toUpperCase() || '?';
     const photoUrl = profile?.profile_picture_url;
 
-    // Inline composer
-    const ci = document.getElementById('composerInitials');
-    const ca = document.getElementById('composerAvatar');
-    if (ci) ci.textContent = initials;
-    if (photoUrl && ca) { ca.src = photoUrl; ca.classList.remove('hidden'); ci?.classList.add('hidden'); }
-
     // Modal composer
     const mi = document.getElementById('modalComposerInitials');
     const ma = document.getElementById('modalComposerAvatar');
@@ -79,7 +73,6 @@ function setComposerAvatars(profile) {
 }
 
 function setupComposer() {
-    const openBtn = document.getElementById('openComposerBtn');
     const newPostBtn = document.getElementById('newPostBtn');
     const emptyBtn = document.getElementById('emptyStatePostBtn');
     const modal = document.getElementById('composerModal');
@@ -90,14 +83,6 @@ function setupComposer() {
     const charCount = document.getElementById('charCount');
     const imageInput = document.getElementById('postImageInput');
     const videoInput = document.getElementById('postVideoInput');
-
-    // Quick buttons in inline composer
-    document.querySelectorAll('.composer-quick-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            openComposerModal();
-            if (btn.dataset.type === 'photo') imageInput?.click();
-        });
-    });
 
     function openComposerModal() {
         modal.classList.remove('hidden');
@@ -115,7 +100,6 @@ function setupComposer() {
         selectedImages = [];
     }
 
-    if (openBtn) openBtn.addEventListener('click', openComposerModal);
     if (newPostBtn) newPostBtn.addEventListener('click', openComposerModal);
     if (emptyBtn) emptyBtn.addEventListener('click', openComposerModal);
     if (closeBtn) closeBtn.addEventListener('click', closeComposerModal);
@@ -415,14 +399,6 @@ function renderPostCard(post) {
     const commentCount = post.comments?.[0]?.count || 0;
     const isBookmarked = (post.bookmarks || []).some(b => b.user_id === feedUser.id);
 
-    // Group reactions
-    const reactionCounts = {};
-    likes.forEach(l => { reactionCounts[l.reaction] = (reactionCounts[l.reaction] || 0) + 1; });
-    const topReactions = Object.entries(reactionCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .map(([emoji]) => emoji);
-
     // Pinned / announcement badge
     let badge = '';
     if (post.is_pinned) badge = '<span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-100 text-amber-700 rounded-full px-2 py-0.5">📌 Pinned</span>';
@@ -445,20 +421,17 @@ function renderPostCard(post) {
         imageHtml = `<div class="mt-3 grid grid-cols-2 gap-0.5 rounded-xl overflow-hidden sm:rounded-2xl">${images.slice(0, 4).map((img, i) => `<div class="relative"><img src="${img.image_url}" class="w-full aspect-square object-cover cursor-pointer post-image" data-full="${img.image_url}" alt="" loading="lazy">${i === 3 && images.length > 4 ? `<div class="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xl font-bold">+${images.length - 4}</div>` : ''}</div>`).join('')}</div>`;
     }
 
-    // Reactions display
-    let reactionDisplay = '';
-    if (likeCount > 0) {
-        reactionDisplay = `<div class="flex items-center gap-1.5 text-xs text-gray-500 mt-3 px-1">
-            <span class="flex -space-x-0.5">${topReactions.map(e => `<span class="text-sm">${e}</span>`).join('')}</span>
-            <span>${likeCount}</span>
-        </div>`;
-    }
+    // Content with @mention highlighting
+    const contentHtml = post.content ? formatPostContent(post.content) : '';
 
     const isOwner = post.author_id === feedUser.id;
     const canDelete = isOwner || isAdmin;
 
-    // Content with @mention highlighting
-    const contentHtml = post.content ? formatPostContent(post.content) : '';
+    // Like/comment summary line (Instagram-style: "23 likes" below action icons)
+    let likeSummary = '';
+    if (likeCount > 0) {
+        likeSummary = `<div class="px-1 mt-1"><span class="like-summary text-xs font-semibold text-gray-900">${likeCount} like${likeCount !== 1 ? 's' : ''}</span></div>`;
+    }
 
     return `
     <article class="bg-white border-b sm:border sm:rounded-2xl sm:border-gray-200/80 post-card fade-in" data-post-id="${post.id}">
@@ -498,23 +471,26 @@ function renderPostCard(post) {
             <!-- Images -->
             ${imageHtml}
 
-            <!-- Reactions Summary -->
-            ${reactionDisplay}
-
-            <!-- Action Bar -->
-            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                <button class="like-btn flex items-center gap-1.5 text-sm transition px-3 py-1.5 rounded-lg ${myLike ? 'text-red-500 font-medium' : 'text-gray-500 hover:text-red-500 hover:bg-red-50'}" data-post-id="${post.id}" data-liked="${myLike ? 'true' : 'false'}" data-reaction="${myLike?.reaction || '❤️'}">
-                    <svg class="w-5 h-5" fill="${myLike ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
-                    <span class="like-count">${likeCount || ''}</span>
-                </button>
-                <button class="comment-btn flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-600 hover:bg-brand-50 transition px-3 py-1.5 rounded-lg" data-post-id="${post.id}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                    <span class="comment-count">${commentCount || ''}</span>
-                </button>
-                <button class="bookmark-btn flex items-center gap-1.5 text-sm transition px-3 py-1.5 rounded-lg ${isBookmarked ? 'text-amber-500' : 'text-gray-500 hover:text-amber-500 hover:bg-amber-50'}" data-post-id="${post.id}" data-saved="${isBookmarked ? 'true' : 'false'}">
-                    <svg class="w-5 h-5" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+            <!-- Action Bar (Instagram-style) -->
+            <div class="flex items-center justify-between mt-3 pt-2">
+                <div class="flex items-center gap-3">
+                    <button class="like-btn transition-transform active:scale-125 ${myLike ? 'text-red-500' : 'text-gray-700'}" data-post-id="${post.id}" data-liked="${myLike ? 'true' : 'false'}">
+                        <svg class="w-6 h-6" fill="${myLike ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                    </button>
+                    <button class="comment-btn text-gray-700 transition-transform active:scale-110" data-post-id="${post.id}">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    </button>
+                </div>
+                <button class="bookmark-btn transition-transform active:scale-110 ${isBookmarked ? 'text-gray-900' : 'text-gray-700'}" data-post-id="${post.id}" data-saved="${isBookmarked ? 'true' : 'false'}">
+                    <svg class="w-6 h-6" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
                 </button>
             </div>
+
+            <!-- Like Count -->
+            ${likeSummary}
+
+            <!-- Comment count teaser -->
+            ${commentCount > 0 ? `<button class="comment-btn text-xs text-gray-400 mt-1 px-1 hover:text-gray-600" data-post-id="${post.id}">View all ${commentCount} comment${commentCount !== 1 ? 's' : ''}</button>` : ''}
         </div>
     </article>`;
 }
@@ -553,20 +529,8 @@ function wirePostActions() {
         if (btn.dataset.wired) return;
         btn.dataset.wired = 'true';
 
-        // Single click = toggle like
+        // Single tap = toggle like
         btn.addEventListener('click', () => toggleLike(btn));
-
-        // Long press = reaction picker
-        let pressTimer;
-        btn.addEventListener('mousedown', () => {
-            pressTimer = setTimeout(() => showReactionPicker(btn), 500);
-        });
-        btn.addEventListener('mouseup', () => clearTimeout(pressTimer));
-        btn.addEventListener('mouseleave', () => clearTimeout(pressTimer));
-        btn.addEventListener('touchstart', (e) => {
-            pressTimer = setTimeout(() => { e.preventDefault(); showReactionPicker(btn); }, 500);
-        }, { passive: false });
-        btn.addEventListener('touchend', () => clearTimeout(pressTimer));
     });
 
     // Comment buttons
@@ -663,20 +627,30 @@ function wirePostActions() {
     });
 }
 
-// ─── Like / React ───────────────────────────────────────
+// ─── Like (Heart) ───────────────────────────────────────
 async function toggleLike(btn) {
     const postId = btn.dataset.postId;
     const isLiked = btn.dataset.liked === 'true';
-    const countEl = btn.querySelector('.like-count');
+    const card = btn.closest('.post-card');
+    const likeSummaryEl = card?.querySelector('.like-summary');
 
     if (isLiked) {
         // Remove like
         btn.dataset.liked = 'false';
-        btn.classList.remove('text-red-500', 'font-medium');
-        btn.classList.add('text-gray-500');
+        btn.classList.remove('text-red-500');
+        btn.classList.add('text-gray-700');
         btn.querySelector('svg').setAttribute('fill', 'none');
-        const current = parseInt(countEl.textContent) || 1;
-        countEl.textContent = current - 1 > 0 ? current - 1 : '';
+
+        // Update count display
+        if (likeSummaryEl) {
+            const m = likeSummaryEl.textContent.match(/\d+/);
+            const newCount = (parseInt(m?.[0]) || 1) - 1;
+            if (newCount > 0) {
+                likeSummaryEl.textContent = `${newCount} like${newCount !== 1 ? 's' : ''}`;
+            } else {
+                likeSummaryEl.parentElement.remove();
+            }
+        }
 
         await supabaseClient.from('post_likes').delete()
             .eq('post_id', postId)
@@ -684,52 +658,36 @@ async function toggleLike(btn) {
     } else {
         // Add like
         btn.dataset.liked = 'true';
-        btn.classList.add('text-red-500', 'font-medium');
-        btn.classList.remove('text-gray-500');
+        btn.classList.add('text-red-500');
+        btn.classList.remove('text-gray-700');
         btn.querySelector('svg').setAttribute('fill', 'currentColor');
-        const current = parseInt(countEl.textContent) || 0;
-        countEl.textContent = current + 1;
 
         // Animate
         btn.querySelector('svg').style.transform = 'scale(1.3)';
         setTimeout(() => { btn.querySelector('svg').style.transform = ''; }, 200);
 
+        // Update count display
+        if (likeSummaryEl) {
+            const m = likeSummaryEl.textContent.match(/\d+/);
+            const newCount = (parseInt(m?.[0]) || 0) + 1;
+            likeSummaryEl.textContent = `${newCount} like${newCount !== 1 ? 's' : ''}`;
+        } else {
+            // Insert likes summary below action bar
+            const actionBar = card?.querySelector('.like-btn')?.closest('.flex')?.parentElement;
+            if (actionBar) {
+                const div = document.createElement('div');
+                div.className = 'px-1 mt-1';
+                div.innerHTML = '<span class="like-summary text-xs font-semibold text-gray-900">1 like</span>';
+                actionBar.insertAdjacentElement('afterend', div);
+            }
+        }
+
         await supabaseClient.from('post_likes').upsert({
             post_id: postId,
             user_id: feedUser.id,
-            reaction: btn.dataset.reaction || '❤️',
+            reaction: '❤️',
         }, { onConflict: 'post_id,user_id' });
     }
-}
-
-// ─── Reaction Picker ────────────────────────────────────
-function showReactionPicker(likeBtn) {
-    const picker = document.getElementById('reactionPicker');
-    if (!picker) return;
-
-    const rect = likeBtn.getBoundingClientRect();
-    picker.style.left = `${rect.left}px`;
-    picker.style.top = `${rect.top - 50}px`;
-    picker.classList.remove('hidden');
-
-    picker.querySelectorAll('.reaction-btn').forEach(btn => {
-        btn.onclick = async () => {
-            picker.classList.add('hidden');
-            likeBtn.dataset.reaction = btn.dataset.reaction;
-            likeBtn.dataset.liked = 'false'; // Force toggle to "add"
-            await toggleLike(likeBtn);
-        };
-    });
-
-    // Close on outside click
-    setTimeout(() => {
-        document.addEventListener('click', function closePicker(e) {
-            if (!picker.contains(e.target)) {
-                picker.classList.add('hidden');
-                document.removeEventListener('click', closePicker);
-            }
-        });
-    }, 100);
 }
 
 // ─── Bookmark ───────────────────────────────────────────
@@ -739,15 +697,15 @@ async function toggleBookmark(btn) {
 
     if (isSaved) {
         btn.dataset.saved = 'false';
-        btn.classList.remove('text-amber-500');
-        btn.classList.add('text-gray-500');
+        btn.classList.remove('text-gray-900');
+        btn.classList.add('text-gray-700');
         btn.querySelector('svg').setAttribute('fill', 'none');
         await supabaseClient.from('post_bookmarks').delete()
             .eq('post_id', postId).eq('user_id', feedUser.id);
     } else {
         btn.dataset.saved = 'true';
-        btn.classList.add('text-amber-500');
-        btn.classList.remove('text-gray-500');
+        btn.classList.add('text-gray-900');
+        btn.classList.remove('text-gray-700');
         btn.querySelector('svg').setAttribute('fill', 'currentColor');
         await supabaseClient.from('post_bookmarks').upsert({
             post_id: postId,
@@ -763,6 +721,7 @@ function setupPostDetail() {
     const backdrop = document.getElementById('detailBackdrop');
     const commentInput = document.getElementById('commentInput');
     const commentSend = document.getElementById('commentSendBtn');
+    const panel = document.getElementById('detailPanel');
 
     if (closeBtn) closeBtn.addEventListener('click', closePostDetail);
     if (backdrop) backdrop.addEventListener('click', closePostDetail);
@@ -779,6 +738,58 @@ function setupPostDetail() {
         });
     }
     if (commentSend) commentSend.addEventListener('click', submitComment);
+
+    // Swipe-to-dismiss for bottom sheet
+    if (panel) {
+        let startY = 0, currentY = 0, isDragging = false;
+        const dragHandle = panel.querySelector('.flex.items-center.justify-center');
+
+        const onStart = (y) => { startY = y; currentY = y; isDragging = true; panel.style.transition = 'none'; };
+        const onMove = (y) => {
+            if (!isDragging) return;
+            currentY = y;
+            const diff = currentY - startY;
+            if (diff > 0) panel.style.transform = `translateY(${diff}px)`;
+        };
+        const onEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            panel.style.transition = 'transform 0.3s ease';
+            if (currentY - startY > 100) {
+                panel.style.transform = 'translateY(100%)';
+                setTimeout(() => { closePostDetail(); panel.style.transform = ''; }, 300);
+            } else {
+                panel.style.transform = '';
+            }
+        };
+
+        if (dragHandle) {
+            dragHandle.addEventListener('touchstart', (e) => onStart(e.touches[0].clientY), { passive: true });
+            dragHandle.addEventListener('mousedown', (e) => onStart(e.clientY));
+        }
+        document.addEventListener('touchmove', (e) => { if (isDragging) onMove(e.touches[0].clientY); }, { passive: true });
+        document.addEventListener('mousemove', (e) => { if (isDragging) onMove(e.clientY); });
+        document.addEventListener('touchend', onEnd);
+        document.addEventListener('mouseup', onEnd);
+    }
+
+    // Set up comment avatar
+    if (feedUser) {
+        const fi = (feedUser.user_metadata?.first_name || '')[0] || '';
+        const li = (feedUser.user_metadata?.last_name || '')[0] || '';
+        const initials = (fi + li).toUpperCase() || '?';
+        const commentInitials = document.getElementById('commentInitials');
+        const commentAvatar = document.getElementById('commentAvatar');
+        if (commentInitials) commentInitials.textContent = initials;
+
+        supabaseClient.from('profiles').select('profile_picture_url').eq('id', feedUser.id).single().then(({ data }) => {
+            if (data?.profile_picture_url && commentAvatar) {
+                commentAvatar.src = data.profile_picture_url;
+                commentAvatar.classList.remove('hidden');
+                if (commentInitials) commentInitials.classList.add('hidden');
+            }
+        });
+    }
 }
 
 function closePostDetail() {
@@ -798,18 +809,7 @@ async function openPostDetail(postId) {
 
     content.innerHTML = '<div class="py-12 text-center"><div class="inline-flex items-center gap-2 text-gray-400"><svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg><span class="text-sm">Loading...</span></div></div>';
 
-    // Fetch post with comments
-    const { data: post } = await supabaseClient
-        .from('posts')
-        .select(`
-            *,
-            author:profiles!posts_author_id_fkey(id, first_name, last_name, profile_picture_url),
-            images:post_images(id, image_url, sort_order),
-            likes:post_likes(id, user_id, reaction)
-        `)
-        .eq('id', postId)
-        .single();
-
+    // Fetch comments only
     const { data: comments } = await supabaseClient
         .from('post_comments')
         .select(`
@@ -819,20 +819,26 @@ async function openPostDetail(postId) {
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
-    if (!post) { content.innerHTML = '<p class="p-4 text-gray-500">Post not found</p>'; return; }
-
-    const author = post.author || {};
-    const name = [author.first_name, author.last_name].filter(Boolean).join(' ') || 'Member';
-    const photoUrl = author.profile_picture_url;
-    const fi = (author.first_name || '')[0] || '';
-    const li = (author.last_name || '')[0] || '';
-    const initials = (fi + li).toUpperCase() || '?';
-    const images = (post.images || []).sort((a, b) => a.sort_order - b.sort_order);
-
-    let imageHtml = '';
-    if (images.length > 0) {
-        imageHtml = images.map(img => `<img src="${img.image_url}" class="w-full rounded-xl" alt="" loading="lazy">`).join('<div class="h-2"></div>');
+    // Fetch comment likes for these comments
+    const commentIds = (comments || []).map(c => c.id);
+    let commentLikesMap = {};
+    let myCommentLikes = new Set();
+    if (commentIds.length > 0) {
+        const { data: cLikes } = await supabaseClient
+            .from('comment_likes')
+            .select('comment_id, user_id')
+            .in('comment_id', commentIds);
+        (cLikes || []).forEach(cl => {
+            commentLikesMap[cl.comment_id] = (commentLikesMap[cl.comment_id] || 0) + 1;
+            if (cl.user_id === feedUser.id) myCommentLikes.add(cl.comment_id);
+        });
     }
+
+    // Attach like data to comments
+    (comments || []).forEach(c => {
+        c.like_count = commentLikesMap[c.id] || 0;
+        c.liked_by_me = myCommentLikes.has(c.id);
+    });
 
     // Build top-level comments grouped
     const topComments = (comments || []).filter(c => !c.parent_id);
@@ -845,30 +851,7 @@ async function openPostDetail(postId) {
 
     let commentsHtml = topComments.map(c => renderComment(c, replyMap[c.id] || [])).join('');
 
-    content.innerHTML = `
-        <div class="p-4">
-            <!-- Post in detail -->
-            <div class="flex items-start gap-3 mb-4">
-                <a href="profile.html?id=${author.id}" class="flex-shrink-0">
-                    <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border border-gray-200">
-                        ${photoUrl ? `<img src="${photoUrl}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-sm font-bold">${initials}</span>`}
-                    </div>
-                </a>
-                <div>
-                    <a href="profile.html?id=${author.id}" class="font-semibold text-gray-900 text-sm hover:underline">${name}</a>
-                    <p class="text-xs text-gray-400">${getTimeAgo(post.created_at)}</p>
-                </div>
-            </div>
-            ${post.content ? `<div class="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap mb-4">${formatPostContent(post.content)}</div>` : ''}
-            ${imageHtml ? `<div class="mb-4">${imageHtml}</div>` : ''}
-            <div class="border-t border-gray-100 pt-4">
-                <h4 class="text-sm font-bold text-gray-900 mb-4">Comments${topComments.length > 0 ? ` (${comments.length})` : ''}</h4>
-                <div id="commentsContainer">
-                    ${commentsHtml || '<p class="text-sm text-gray-400 text-center py-4">No comments yet. Be the first!</p>'}
-                </div>
-            </div>
-        </div>
-    `;
+    content.innerHTML = commentsHtml || '<p class="text-sm text-gray-400 text-center py-8">No comments yet. Be the first!</p>';
 
     // Wire reply buttons
     content.querySelectorAll('.reply-btn').forEach(btn => {
@@ -879,6 +862,66 @@ async function openPostDetail(postId) {
             input.focus();
         });
     });
+
+    // Wire comment like buttons
+    content.querySelectorAll('.comment-like-btn').forEach(btn => {
+        btn.addEventListener('click', () => toggleCommentLike(btn));
+    });
+
+    // Wire delete comment buttons
+    content.querySelectorAll('.delete-comment-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const commentId = btn.dataset.commentId;
+            if (!commentId || !confirm('Delete this comment?')) return;
+            await supabaseClient.from('post_comments').delete().eq('id', commentId);
+            await openPostDetail(currentDetailPostId);
+            // Update comment count on feed
+            const card = document.querySelector(`.post-card[data-post-id="${currentDetailPostId}"]`);
+            if (card) {
+                const teaserBtn = card.querySelector('.comment-btn[data-post-id]');
+                if (teaserBtn && teaserBtn.textContent.includes('View all')) {
+                    const count = parseInt(teaserBtn.textContent.match(/\d+/)?.[0] || '1') - 1;
+                    if (count > 0) teaserBtn.textContent = `View all ${count} comment${count !== 1 ? 's' : ''}`;
+                    else teaserBtn.remove();
+                }
+            }
+        });
+    });
+}
+
+// ─── Toggle Comment Like (heart) ────────────────────────
+async function toggleCommentLike(btn) {
+    const commentId = btn.dataset.commentId;
+    const isLiked = btn.dataset.liked === 'true';
+    const heartIcon = btn.querySelector('svg');
+    const countEl = btn.querySelector('.comment-like-count');
+
+    if (isLiked) {
+        btn.dataset.liked = 'false';
+        btn.classList.remove('text-red-500');
+        btn.classList.add('text-gray-400');
+        heartIcon.setAttribute('fill', 'none');
+        const c = parseInt(countEl.textContent) || 1;
+        countEl.textContent = c - 1 > 0 ? c - 1 : '';
+
+        await supabaseClient.from('comment_likes').delete()
+            .eq('comment_id', commentId)
+            .eq('user_id', feedUser.id);
+    } else {
+        btn.dataset.liked = 'true';
+        btn.classList.add('text-red-500');
+        btn.classList.remove('text-gray-400');
+        heartIcon.setAttribute('fill', 'currentColor');
+        heartIcon.style.transform = 'scale(1.3)';
+        setTimeout(() => { heartIcon.style.transform = ''; }, 200);
+        const c = parseInt(countEl.textContent) || 0;
+        countEl.textContent = c + 1;
+
+        await supabaseClient.from('comment_likes').upsert({
+            comment_id: commentId,
+            user_id: feedUser.id,
+        }, { onConflict: 'comment_id,user_id' });
+    }
 }
 
 function renderComment(comment, replies = []) {
@@ -889,6 +932,8 @@ function renderComment(comment, replies = []) {
     const li = (a.last_name || '')[0] || '';
     const initials = (fi + li).toUpperCase() || '?';
     const isOwn = comment.author_id === feedUser.id;
+    const commentLikeCount = comment.like_count || 0;
+    const commentLikedByMe = comment.liked_by_me || false;
 
     let repliesHtml = replies.map(r => {
         const ra = r.author || {};
@@ -897,15 +942,25 @@ function renderComment(comment, replies = []) {
         const rfi = (ra.first_name || '')[0] || '';
         const rli = (ra.last_name || '')[0] || '';
         const rinitials = (rfi + rli).toUpperCase() || '?';
+        const rLikeCount = r.like_count || 0;
+        const rLikedByMe = r.liked_by_me || false;
         return `
-            <div class="flex items-start gap-2 mt-3 ml-10">
+            <div class="flex items-start gap-2 mt-3 ml-8">
                 <div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden flex-shrink-0 border border-gray-200">
                     ${rphoto ? `<img src="${rphoto}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-[10px] font-bold">${rinitials}</span>`}
                 </div>
-                <div class="flex-1 bg-surface-100 rounded-xl px-3 py-2">
-                    <span class="font-semibold text-xs text-gray-900">${rname}</span>
-                    <p class="text-xs text-gray-700 mt-0.5">${formatPostContent(r.content)}</p>
-                    <span class="text-[10px] text-gray-400 mt-1 block">${getTimeAgo(r.created_at)}</span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <span class="font-semibold text-xs text-gray-900">${rname}</span>
+                            <p class="text-xs text-gray-700 mt-0.5">${formatPostContent(r.content)}</p>
+                            <span class="text-[10px] text-gray-400 mt-1 block">${getTimeAgo(r.created_at)}</span>
+                        </div>
+                        <button class="comment-like-btn flex flex-col items-center gap-0.5 flex-shrink-0 mt-1 ${rLikedByMe ? 'text-red-500' : 'text-gray-400'}" data-comment-id="${r.id}" data-liked="${rLikedByMe ? 'true' : 'false'}">
+                            <svg class="w-3 h-3" fill="${rLikedByMe ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            <span class="comment-like-count text-[9px]">${rLikeCount || ''}</span>
+                        </button>
+                    </div>
                 </div>
             </div>`;
     }).join('');
@@ -917,10 +972,16 @@ function renderComment(comment, replies = []) {
                     ${photoUrl ? `<img src="${photoUrl}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-xs font-bold">${initials}</span>`}
                 </div>
             </a>
-            <div class="flex-1">
-                <div class="bg-surface-100 rounded-xl px-3 py-2">
-                    <a href="profile.html?id=${a.id}" class="font-semibold text-xs text-gray-900 hover:underline">${name}</a>
-                    <p class="text-sm text-gray-700 mt-0.5">${formatPostContent(comment.content)}</p>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="flex-1 min-w-0">
+                        <a href="profile.html?id=${a.id}" class="font-semibold text-xs text-gray-900 hover:underline">${name}</a>
+                        <p class="text-sm text-gray-700 mt-0.5">${formatPostContent(comment.content)}</p>
+                    </div>
+                    <button class="comment-like-btn flex flex-col items-center gap-0.5 flex-shrink-0 mt-1 ${commentLikedByMe ? 'text-red-500' : 'text-gray-400'}" data-comment-id="${comment.id}" data-liked="${commentLikedByMe ? 'true' : 'false'}">
+                        <svg class="w-3.5 h-3.5" fill="${commentLikedByMe ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        <span class="comment-like-count text-[9px]">${commentLikeCount || ''}</span>
+                    </button>
                 </div>
                 <div class="flex items-center gap-3 mt-1 px-1">
                     <span class="text-[10px] text-gray-400">${getTimeAgo(comment.created_at)}</span>
