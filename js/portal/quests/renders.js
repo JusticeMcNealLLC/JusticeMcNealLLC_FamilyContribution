@@ -369,17 +369,18 @@ function renderQuestDetail(quest, memberQuest) {
                             </div>
                             <div class="border-t border-gray-100"></div>
                             <!-- Banner row -->
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0 overflow-hidden relative" id="questFounderBannerPreview">
-                                    <span class="text-lg">✨</span>
-                                </div>
+                            <div class="flex items-start gap-3">
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 flex-wrap">
+                                    <div class="flex items-center gap-2 flex-wrap mb-2">
                                         <span class="text-sm font-bold text-gray-900">Founders Constellation</span>
                                         <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">Animated Banner</span>
                                         ${badgeEarned ? '<span class="text-[10px] font-semibold text-emerald-600">✓ Earned</span>' : ''}
                                     </div>
-                                    <div class="text-xs text-gray-400 mt-0.5">Exclusive animated profile banner with sparkle constellation effect</div>
+                                    <!-- Full-width banner preview -->
+                                    <div class="relative rounded-xl overflow-hidden w-full" style="height: 80px;" id="questFounderBannerPreview">
+                                        <div class="founders-banner-preview w-full h-full"></div>
+                                    </div>
+                                    <div class="text-xs text-gray-400 mt-1.5">Exclusive animated profile banner with sparkle constellation effect</div>
                                 </div>
                             </div>
                         </div>
