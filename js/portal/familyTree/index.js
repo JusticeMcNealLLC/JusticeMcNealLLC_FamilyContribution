@@ -307,8 +307,6 @@
     window.loadFamilyTree = loadFamily;
 
     document.addEventListener('DOMContentLoaded', function () {
-        const refreshBtn = document.getElementById('refreshBtn');
-        if (refreshBtn) refreshBtn.addEventListener('click', loadFamily);
         loadFamily();
     });
 
