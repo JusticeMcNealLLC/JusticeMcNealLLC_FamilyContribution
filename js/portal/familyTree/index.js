@@ -347,19 +347,25 @@
     // ─── Main load ────────────────────────────────────────────────────────────
 
     async function loadFamily() {
-        // ── Access gate: only active members and admins ────────────────────
+        // ── Access gate: only active contributors and admins ───────────────
         try {
             const { data: sess } = await supabaseClient.auth.getSession();
             const uid = sess?.session?.user?.id;
             if (!uid) { window.location.href = '/login.html'; return; }
 
-            const { data: me } = await supabaseClient
-                .from('profiles')
-                .select('is_active, role')
-                .eq('id', uid)
-                .single();
+            const [{ data: me }, { data: sub }] = await Promise.all([
+                supabaseClient.from('profiles').select('role').eq('id', uid).single(),
+                supabaseClient.from('subscriptions')
+                    .select('status')
+                    .eq('user_id', uid)
+                    .in('status', ['active', 'trialing'])
+                    .maybeSingle(),
+            ]);
 
-            if (me?.role !== 'admin' && me?.is_active !== true) {
+            const isAdmin          = me?.role === 'admin';
+            const hasActiveSub     = !!sub;
+
+            if (!isAdmin && !hasActiveSub) {
                 _showAccessGate();
                 return;
             }
