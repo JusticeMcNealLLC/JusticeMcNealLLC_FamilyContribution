@@ -347,6 +347,27 @@
     // ─── Main load ────────────────────────────────────────────────────────────
 
     async function loadFamily() {
+        // ── Access gate: only active members and admins ────────────────────
+        try {
+            const { data: sess } = await supabaseClient.auth.getSession();
+            const uid = sess?.session?.user?.id;
+            if (!uid) { window.location.href = '/login.html'; return; }
+
+            const { data: me } = await supabaseClient
+                .from('profiles')
+                .select('is_active, role')
+                .eq('id', uid)
+                .single();
+
+            if (me?.role !== 'admin' && me?.is_active !== true) {
+                _showAccessGate();
+                return;
+            }
+        } catch (_) {
+            _showAccessGate();
+            return;
+        }
+
         const result = await fetchData();
         if (!result) return;
 
@@ -420,6 +441,15 @@
     }
 
     // ─── Bootstrap ────────────────────────────────────────────────────────────
+
+    function _showAccessGate() {
+        const gate = document.getElementById('accessGate');
+        if (gate) { gate.classList.remove('hidden'); gate.classList.add('flex'); }
+        ['treePageHeader', 'treeMainGrid', 'addRelationBtnMobile'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+    }
 
     window.loadFamilyTree = loadFamily;
 
