@@ -18,14 +18,14 @@ function renderCPHero(cpBalance, earnedBadges, profile) {
     const initials   = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase() || '?';
 
     container.innerHTML = `
-        <div class="w-full bg-gradient-to-br ${tier.gradientFrom} ${tier.gradientTo} text-white relative overflow-hidden">
+        <div class="bg-gradient-to-br ${tier.gradientFrom} ${tier.gradientTo} text-white relative overflow-hidden sm:rounded-2xl sm:max-w-5xl sm:mx-4 lg:mx-auto sm:mt-4">
             <!-- Dot grid overlay -->
             <div class="absolute inset-0 pointer-events-none" style="background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px); background-size: 22px 22px;"></div>
             <!-- Orb decoration -->
             <div class="absolute top-0 right-0 w-56 h-56 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%); transform: translate(35%, -35%);"></div>
 
-            <!-- Inner content centered to match <main> width -->
-            <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-6" style="padding-top: max(2.5rem, calc(env(safe-area-inset-top, 0px) + 1rem));">
+            <!-- safe-area top pad on mobile; clean pt on desktop -->
+            <div class="relative px-4 sm:px-6 lg:px-8 sm:pt-5 pb-6" style="padding-top: max(2.5rem, calc(env(safe-area-inset-top, 0px) + 1rem));">
 
                 <!-- Avatar + Rank + Name row -->
                 <div class="flex items-center gap-4 mb-5">

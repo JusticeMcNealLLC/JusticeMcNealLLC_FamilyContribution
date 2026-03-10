@@ -31,13 +31,22 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+    <style>
+        /* Hero replaces the mobile header — hide nav on mobile only */
+        @media (max-width: 767px) {
+            #nav-placeholder { display: none !important; }
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="quests">
 
-    <!-- Full-bleed Hero (replaces top nav on this page) -->
+    <!-- Desktop nav (hidden on mobile via style in <head>) -->
+    <div id="nav-placeholder"></div>
+
+    <!-- Hero: full-bleed on mobile, rounded card on desktop -->
     <div id="cpHero">
-        <!-- Gradient skeleton shown until JS renders the real hero -->
-        <div class="w-full bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 animate-pulse" style="min-height: 185px; padding-top: max(1rem, env(safe-area-inset-top));"></div>
+        <div class="bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 animate-pulse sm:rounded-2xl sm:max-w-5xl sm:mx-4 lg:mx-auto sm:mt-4 sm:overflow-hidden"
+             style="min-height: 160px; padding-top: max(1rem, env(safe-area-inset-top));"></div>
     </div>
 
     <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
@@ -77,16 +86,6 @@
 
             <!-- Quest Grid (3-column circles) -->
             <div id="questList"></div>
-
-            <!-- Badge Collection -->
-            <section class="mt-6 sm:mt-8">
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-base sm:text-lg font-bold text-gray-900">Badge Collection</h2>
-                    <span class="text-xs text-gray-400" id="badgeCount"></span>
-                </div>
-                <p class="text-xs text-gray-500 mb-3">Tap an earned badge to display it next to your name.</p>
-                <div id="badgeCollection"></div>
-            </section>
 
             <!-- CP History -->
             <section class="mt-6 sm:mt-8">
