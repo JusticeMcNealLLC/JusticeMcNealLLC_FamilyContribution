@@ -3,13 +3,24 @@
 // ═══════════════════════════════════════════════════════════
 // Self-loads lottie-web from CDN, then exposes helpers for
 // rendering Lottie overlay animations on banners + badges.
+//
+// Supports both hosted URLs and local JSON files.
+// For .lottie (dotLottie) files, extract the JSON and host
+// it locally under assets/lottie/ for best compatibility.
 // ═══════════════════════════════════════════════════════════
 
 (function () {
     'use strict';
 
     const CDN_URL = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
-    let lottieReady = null; // Promise that resolves when lottie is loaded
+    let lottieReady = null;
+
+    // ─── Resolve asset paths relative to site root ──────────
+    function assetPath(relPath) {
+        // Works from any page depth (portal/, admin/, etc.)
+        const base = document.querySelector('base')?.href || window.location.origin + '/';
+        return new URL(relPath, base).href;
+    }
 
     // ─── Load lottie-web on demand ──────────────────────────
     function ensureLottie() {
@@ -35,16 +46,15 @@
 
     /**
      * Banner effect definitions.
-     * Each effect has a lottieUrl (hosted JSON), plus optional CSS fallback.
-     * ---
-     * Using free CC0/public Lottie animations from lottiefiles.com CDN.
-     * Replace URLs with your own Lottie JSON files as desired.
+     * lottieUrl can be an absolute URL or a path relative to site root.
+     * Local JSON files (assets/lottie/) are preferred for reliability.
      */
     const BANNER_EFFECTS = {
         sparkle: {
-            name: 'Sparkle',
-            lottieUrl: 'https://lottie.host/d6a08e42-81a9-4eba-b051-0b8a9795e330/TJRrCGYIyh.json',
+            name: 'Founders Sparkle',
+            lottieUrl: 'assets/lottie/founders.json',   // extracted from LottieFiles .lottie
             speed: 0.8,
+            local: true,
         },
         lightning: {
             name: 'Lightning',
@@ -72,6 +82,16 @@
             speed: 0.5,
         },
     };
+
+    /**
+     * Resolve the final URL for a Lottie effect.
+     * Local paths get resolved relative to site root.
+     */
+    function resolveUrl(effect) {
+        if (!effect) return '';
+        if (effect.local) return assetPath(effect.lottieUrl);
+        return effect.lottieUrl;
+    }
 
     /**
      * Render a Lottie overlay on a container element (e.g. profile banner).
@@ -106,17 +126,19 @@
         container.appendChild(overlay);
 
         // Load animation
+        const url = resolveUrl(effect);
         const anim = window.lottie.loadAnimation({
             container: overlay,
             renderer: 'svg',
             loop: loop,
             autoplay: true,
-            path: effect.lottieUrl,
+            path: url,
             rendererSettings: {
                 preserveAspectRatio: 'xMidYMid slice',
             },
         });
         anim.setSpeed(effect.speed || 1);
+        overlay._lottieAnim = anim;
         return anim;
     }
 
@@ -139,22 +161,24 @@
 
     /**
      * Badge rarity Lottie effects — play behind/around badge chips.
-     * These are small, subtle looping animations.
+     * legendary uses the Founders animation; epic uses a subtler version.
      */
     const BADGE_EFFECTS = {
         legendary: {
-            lottieUrl: 'https://lottie.host/d6a08e42-81a9-4eba-b051-0b8a9795e330/TJRrCGYIyh.json',
+            lottieUrl: 'assets/lottie/founders.json',
+            local: true,
             speed: 0.6,
             opacity: 0.7,
-            scale: 1.8,  // larger than the chip itself for glow effect
+            scale: 1.8,
         },
         epic: {
-            lottieUrl: 'https://lottie.host/d6a08e42-81a9-4eba-b051-0b8a9795e330/TJRrCGYIyh.json',
+            lottieUrl: 'assets/lottie/founders.json',
+            local: true,
             speed: 0.4,
             opacity: 0.45,
             scale: 1.5,
         },
-        // rare and common get CSS only — no Lottie needed
+        // rare and common get CSS only — no Lottie
     };
 
     /**
@@ -194,12 +218,13 @@
         chipEl.style.overflow = 'visible';
         chipEl.appendChild(effectEl);
 
+        const url = resolveUrl(effect);
         const anim = window.lottie.loadAnimation({
             container: effectEl,
             renderer: 'svg',
             loop: true,
             autoplay: true,
-            path: effect.lottieUrl,
+            path: url,
             rendererSettings: {
                 preserveAspectRatio: 'xMidYMid slice',
             },

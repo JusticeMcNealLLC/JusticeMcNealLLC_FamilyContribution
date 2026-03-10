@@ -254,9 +254,12 @@ Badges are **permanent** — once earned, they're yours forever. Members pick on
 - [x] Admin quest management page (create/edit/delete quests, set CP rewards, set quest type)
 - [x] Admin quest verification workflow (review proof submissions, approve/deny)
 - [ ] Admin bulk quest assignment (assign a quest to all members or specific groups)
+- [ ] **Admin badge management page** — create/edit/delete badges, set name/emoji/rarity/description, upload Lottie animations, assign badges to members
+- [ ] **Admin banner management page** — create/edit/delete banners, set gradient/image/Lottie effect, preview animated banners, award banners to members
 - [x] Automatic quest completion detection (e.g., auto-detect when member uploads photo, activates subscription, etc.)
 - [x] Auto-detection backfill for existing members (retrospective on-time payment credits, streak detection)
 - [ ] Celebration animation when a quest is completed or tier is achieved
+- [x] **Lottie animation engine** — animated banner overlays (sparkle, lightning, fire, confetti, stars) and badge effects (epic/legendary sparkle glow)
 - [ ] Leaderboard — family ranking by rolling 3-month CP (optional, can be toggled off)
 - [x] Database: `quests`, `member_quests`, `credit_points_log`, `member_badges` tables
 
