@@ -44,7 +44,7 @@ window.ProfileApp.loadBadges = async function loadBadges() {
 
     const section = document.getElementById('badgesSection');
     const grid = document.getElementById('badgesGrid');
-    section.classList.remove('hidden');
+    // Section stays hidden — cosmetics are shown in About modal only
 
     if (hasBadges) {
         // Render earned badges with equip ability for own profile
