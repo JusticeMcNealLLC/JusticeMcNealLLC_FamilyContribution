@@ -5,6 +5,23 @@ const TreeViz = (function () {
     let cy = null;
     let isAdmin = false;
 
+    const POSITIONS_KEY = 'jm_familyTree_positions';
+
+    function savePositions() {
+        if (!cy) return;
+        const pos = {};
+        cy.nodes().forEach(n => { pos[n.id()] = n.position(); });
+        try { localStorage.setItem(POSITIONS_KEY, JSON.stringify(pos)); } catch (_) {}
+    }
+
+    function loadPositions() {
+        try { return JSON.parse(localStorage.getItem(POSITIONS_KEY) || 'null'); } catch (_) { return null; }
+    }
+
+    function clearPositions() {
+        try { localStorage.removeItem(POSITIONS_KEY); } catch (_) {}
+    }
+
     // ─── Zoom / fit controls overlay ──────────────────────────────────────────
 
     function createControls(container, cyInstance) {
@@ -31,9 +48,9 @@ const TreeViz = (function () {
             return b;
         };
 
-        const zoomIn  = makeBtn('+', 'Zoom in');
-        const zoomOut = makeBtn('−', 'Zoom out');
-        const fitBtn  = makeBtn('⤢', 'Fit to view');
+        const zoomIn   = makeBtn('+', 'Zoom in');
+        const zoomOut  = makeBtn('−', 'Zoom out');
+        const fitBtn   = makeBtn('⤢', 'Fit to view');
 
         const slider = document.createElement('input');
         Object.assign(slider, { type: 'range', min: 0.01, max: 4, step: 0.01, title: 'Zoom level' });
@@ -63,6 +80,19 @@ const TreeViz = (function () {
 
         wrap.appendChild(row);
         wrap.appendChild(fitBtn);
+
+        // Admin-only: reset layout button
+        if (isAdmin) {
+            const resetBtn = makeBtn('↺', 'Reset layout (clears saved positions)');
+            Object.assign(resetBtn.style, { fontSize: '15px' });
+            resetBtn.addEventListener('click', () => {
+                clearPositions();
+                const l = cyInstance.layout({ name: 'breadthfirst', directed: true, padding: 30, spacingFactor: 1.4 });
+                l.run();
+                l.on('layoutstop', () => { try { cyInstance.fit(50); } catch (_) {} });
+            });
+            wrap.appendChild(resetBtn);
+        }
 
         container.style.position = container.style.position || 'relative';
         container.appendChild(wrap);
@@ -188,11 +218,29 @@ const TreeViz = (function () {
         // If admin was confirmed before init() ran (timing: rAF delay), unlock now
         if (isAdmin) cy.autoungrabify(false);
 
+        // Save node positions whenever an admin finishes dragging a node
+        cy.on('dragfree', 'node', () => {
+            if (isAdmin) savePositions();
+        });
+
         // Run layout then fit — resize first so Cytoscape reads actual container dimensions
         cy.resize();
-        const layout = cy.layout({ name: 'breadthfirst', directed: true, padding: 30, spacingFactor: 1.4 });
-        layout.run();
-        layout.on('layoutstop', () => { try { cy.fit(50); } catch (_) {} });
+
+        const savedPos = loadPositions();
+        if (savedPos && Object.keys(savedPos).length > 0) {
+            // Restore saved positions — apply preset layout so nodes land exactly where left
+            const preset = cy.layout({
+                name: 'preset',
+                positions: node => savedPos[node.id()] || node.position(),
+                fit: false,
+            });
+            preset.run();
+            preset.on('layoutstop', () => { try { cy.fit(50); } catch (_) {} });
+        } else {
+            const layout = cy.layout({ name: 'breadthfirst', directed: true, padding: 30, spacingFactor: 1.4 });
+            layout.run();
+            layout.on('layoutstop', () => { try { cy.fit(50); } catch (_) {} });
+        }
 
         createControls(container, cy);
 
