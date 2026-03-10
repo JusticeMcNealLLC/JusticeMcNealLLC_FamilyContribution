@@ -235,7 +235,10 @@
                 .from('family_relations')
                 .select('id', { count: 'exact', head: true })
                 .eq('status', 'pending');
-            if (!probe.error) showAdminApprovals();
+            if (!probe.error) {
+                showAdminApprovals();
+                if (window.TreeViz?.setAdmin) window.TreeViz.setAdmin(true);
+            }
         } catch (_) { /* not admin */ }
 
         // Init / refresh the Cytoscape tree

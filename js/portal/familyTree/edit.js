@@ -260,6 +260,57 @@
         }
     }
 
+    // ─── Edit existing relation (admin) ──────────────────────────────────────
+
+    let _editEdgeId = null;
+
+    function openEditEdge(edge) {
+        _editEdgeId = edge.id;
+        const labelEl = el('editRelationLabel');
+        if (labelEl) labelEl.textContent = `${edge.sourceLabel} \u2192 ${edge.targetLabel}`;
+        // Pre-select current relation type by clicking its pill
+        const pill = document.querySelector(`.edit-rel-pill[data-value="${edge.relation}"]`);
+        if (pill) pill.click();
+        const modal = el('editRelationModal');
+        if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    }
+
+    function closeEditModal() {
+        const modal = el('editRelationModal');
+        if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        _editEdgeId = null;
+    }
+
+    async function saveEditRelation() {
+        if (!_editEdgeId) return;
+        const relation = el('editRelationType')?.value;
+        const btn      = el('saveEditRelation');
+        setButtonLoading(btn, true, 'Save');
+        const { error } = await supabaseClient
+            .from('family_relations')
+            .update({ relation, updated_at: new Date().toISOString() })
+            .eq('id', _editEdgeId);
+        setButtonLoading(btn, false, 'Save');
+        if (error) { console.error('[treeEdit] save edit error', error); alert('Failed to save.'); return; }
+        closeEditModal();
+        if (window.loadFamilyTree) window.loadFamilyTree();
+    }
+
+    async function deleteEditRelation() {
+        if (!_editEdgeId) return;
+        if (!confirm('Delete this connection permanently?')) return;
+        const btn = el('deleteEditRelation');
+        setButtonLoading(btn, true, 'Delete');
+        const { error } = await supabaseClient
+            .from('family_relations')
+            .delete()
+            .eq('id', _editEdgeId);
+        setButtonLoading(btn, false, 'Delete');
+        if (error) { console.error('[treeEdit] delete error', error); alert('Failed to delete.'); return; }
+        closeEditModal();
+        if (window.loadFamilyTree) window.loadFamilyTree();
+    }
+
     // ─── Bootstrap ────────────────────────────────────────────────────────────
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -279,6 +330,15 @@
             el(`person${P}ToggleMember`)?.addEventListener('click',    () => setPersonMode(person, 'member'));
             el(`person${P}ToggleNonMember`)?.addEventListener('click', () => setPersonMode(person, 'non-member'));
         });
+
+        // Edit modal wiring
+        el('cancelEditRelation')?.addEventListener('click',  closeEditModal);
+        el('saveEditRelation')?.addEventListener('click',    saveEditRelation);
+        el('deleteEditRelation')?.addEventListener('click',  deleteEditRelation);
+        el('editRelationModal')?.addEventListener('click', e => { if (e.target === el('editRelationModal')) closeEditModal(); });
     });
+
+    // Expose edit API for viz.js edge tap
+    window.FamilyTreeEdit = { openEditEdge };
 
 })();

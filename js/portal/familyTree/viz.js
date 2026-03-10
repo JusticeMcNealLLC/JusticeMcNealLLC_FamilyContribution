@@ -3,6 +3,7 @@
 
 const TreeViz = (function () {
     let cy = null;
+    let isAdmin = false;
 
     // ─── Zoom / fit controls overlay ──────────────────────────────────────────
 
@@ -13,7 +14,7 @@ const TreeViz = (function () {
         wrap.className = 'tv-controls';
         Object.assign(wrap.style, {
             position: 'absolute', top: '12px', right: '12px',
-            zIndex: 999, display: 'flex', flexDirection: 'column', gap: '6px',
+            zIndex: 10, display: 'flex', flexDirection: 'column', gap: '6px',
         });
 
         const makeBtn = (label, title) => {
@@ -174,11 +175,31 @@ const TreeViz = (function () {
             try { cy.fit(50); } catch (_) {}
         });
 
+        // Admin: tap edge → open edit modal
+        cy.on('tap', 'edge', evt => {
+            if (!isAdmin) return;
+            const edge = evt.target;
+            const src  = cy.getElementById(edge.data('source'));
+            const tgt  = cy.getElementById(edge.data('target'));
+            if (window.FamilyTreeEdit?.openEditEdge) {
+                window.FamilyTreeEdit.openEditEdge({
+                    id:          edge.data('id'),
+                    relation:    edge.data('relation'),
+                    sourceLabel: src.data('label') || edge.data('source'),
+                    targetLabel: tgt.data('label') || edge.data('target'),
+                });
+            }
+        });
+
+        // Edge pointer cursor for admin
+        cy.on('mouseover', 'edge', () => { if (isAdmin) container.style.cursor = 'pointer'; });
+        cy.on('mouseout',  'edge', () => { if (isAdmin) container.style.cursor = 'default'; });
+
         // Responsive resize
         window.addEventListener('resize', () => { try { cy.resize(); } catch (_) {} });
     }
 
-    return { init };
+    return { init, setAdmin: val => { isAdmin = val; } };
 })();
 
 // Expose globally for pages that reference window.TreeViz

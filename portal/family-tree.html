@@ -260,7 +260,7 @@
     <script src="../js/sw-register.js"></script>
 
     <!-- ── Add Relation Modal ───────────────────────────────────────────────── -->
-    <div id="relationModal" class="fixed inset-0 hidden items-center justify-center z-50 p-4">
+    <div id="relationModal" class="fixed inset-0 hidden items-center justify-center z-[1000] p-4">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
@@ -412,6 +412,65 @@
         </div>
     </div>
 
+    <!-- ── Edit Connection modal (admin only) ───────────────────────────────── -->
+    <div id="editRelationModal" class="fixed inset-0 hidden items-center justify-center z-[1000] p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900">Edit Connection</h3>
+                </div>
+                <button id="cancelEditRelation"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 py-5 space-y-4">
+                <p id="editRelationLabel" class="text-sm font-medium text-gray-700"></p>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1.5">Relationship Type</label>
+                    <div class="grid grid-cols-5 gap-2" id="editRelationTypePills">
+                        <button type="button" data-value="parent"  class="edit-rel-pill flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 border-transparent text-xs font-semibold transition">👆<span>Parent</span></button>
+                        <button type="button" data-value="child"   class="edit-rel-pill flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 border-transparent text-xs font-semibold transition">👶<span>Child</span></button>
+                        <button type="button" data-value="spouse"  class="edit-rel-pill flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 border-transparent text-xs font-semibold transition">💍<span>Spouse</span></button>
+                        <button type="button" data-value="sibling" class="edit-rel-pill flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 border-transparent text-xs font-semibold transition">🤝<span>Sibling</span></button>
+                        <button type="button" data-value="other"   class="edit-rel-pill flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 border-transparent text-xs font-semibold transition">➕<span>Other</span></button>
+                    </div>
+                    <select id="editRelationType" class="hidden">
+                        <option value="parent">parent</option>
+                        <option value="child">child</option>
+                        <option value="spouse">spouse</option>
+                        <option value="sibling">sibling</option>
+                        <option value="other">other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-50 border-t border-gray-100 flex items-center justify-between gap-2">
+                <button id="deleteEditRelation"
+                        class="px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition">
+                    Delete
+                </button>
+                <div class="flex items-center gap-2">
+                    <button id="cancelEditRelation2"
+                            class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                        Cancel
+                    </button>
+                    <button id="saveEditRelation"
+                            class="px-5 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm shadow-brand-300/30">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Pill selection + skeleton UX wiring ──────────────────────────────── -->
     <script>
     (function () {
@@ -437,6 +496,26 @@
         const cancel2 = document.getElementById('cancelRelation2');
         if (cancel2) cancel2.addEventListener('click', () => {
             document.getElementById('cancelRelation').dispatchEvent(new MouseEvent('click'));
+        });
+
+        // ── Edit relation pill UX ─────────────────────────────────────────
+        const editPills  = document.querySelectorAll('.edit-rel-pill');
+        const editHidden = document.getElementById('editRelationType');
+        function selectEditPill(val) {
+            editPills.forEach(p => {
+                const active = p.dataset.value === val;
+                p.classList.toggle('border-gray-900', active);
+                p.classList.toggle('ring-2',          active);
+                p.classList.toggle('ring-gray-900',   active);
+            });
+            if (editHidden) editHidden.value = val;
+        }
+        editPills.forEach(p => p.addEventListener('click', () => selectEditPill(p.dataset.value)));
+        selectEditPill('parent'); // default
+        // Cancel alias for edit modal footer
+        const cancelEdit2 = document.getElementById('cancelEditRelation2');
+        if (cancelEdit2) cancelEdit2.addEventListener('click', () => {
+            document.getElementById('cancelEditRelation').dispatchEvent(new MouseEvent('click'));
         });
 
         // ── "Add First Relation" empty-state button ───────────────────────
