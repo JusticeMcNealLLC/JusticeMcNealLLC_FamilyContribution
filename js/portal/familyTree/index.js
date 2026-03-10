@@ -40,11 +40,10 @@
         profiles.forEach(p => {
             nodes[p.id] = { data: { id: p.id, label: fullName(p) || p.id } };
         });
-        relations.forEach(r => {
-            if (!nodes[r.person_a]) nodes[r.person_a] = { data: { id: r.person_a, label: r.person_a } };
-            if (!nodes[r.person_b]) nodes[r.person_b] = { data: { id: r.person_b, label: r.person_b } };
-        });
-        const edges = relations.map(r => ({ data: { id: r.id, source: r.person_a, target: r.person_b, relation: r.relation } }));
+        // Only create edges between profiles we actually have — skip orphan nodes
+        const edges = relations
+            .filter(r => nodes[r.person_a] && nodes[r.person_b])
+            .map(r => ({ data: { id: r.id, source: r.person_a, target: r.person_b, relation: r.relation } }));
         return Object.values(nodes).concat(edges);
     }
 
@@ -198,12 +197,15 @@
 
         // Init / refresh the Cytoscape tree
         try {
-            if (elements.filter(e => !e.data.source).length === 0) {
-                // No nodes at all
+            const nodeCount = elements.filter(e => !e.data.source).length;
+            if (nodeCount === 0) {
                 if (window.FamilyTreeUI) window.FamilyTreeUI.showEmpty();
             } else {
+                // Show the container FIRST so #cy has real dimensions, then init on next paint
                 if (window.FamilyTreeUI) window.FamilyTreeUI.showCanvas();
-                if (window.TreeViz) TreeViz.init('#cy', elements);
+                requestAnimationFrame(() => {
+                    if (window.TreeViz) TreeViz.init('#cy', elements);
+                });
             }
         } catch (err) {
             console.error('[familyTree] TreeViz.init error', err);

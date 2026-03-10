@@ -119,7 +119,8 @@ const TreeViz = (function () {
             motionBlur: true,
         });
 
-        // Run layout then fit
+        // Run layout then fit — resize first so Cytoscape reads actual container dimensions
+        cy.resize();
         const layout = cy.layout({ name: 'breadthfirst', directed: true, padding: 10, spacingFactor: 1.2 });
         layout.run();
         layout.on('layoutstop', () => { try { cy.fit(50); } catch (_) {} });
