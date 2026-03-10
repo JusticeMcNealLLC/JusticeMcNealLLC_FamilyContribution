@@ -399,7 +399,7 @@ async function runAutoDetection() {
             .select('paid_at, period_start')
             .eq('user_id', _currentUserId)
             .eq('status', 'paid')
-            .order('period_start', { ascending: true });
+            .order('paid_at', { ascending: true });
 
         const paidInvoices = invoices || [];
 

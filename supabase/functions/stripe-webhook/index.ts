@@ -308,6 +308,13 @@ async function handleInvoicePaid(supabase: any, invoice: Stripe.Invoice) {
   }
 
   // Insert invoice record
+  const paidAt = invoice.status_transitions?.paid_at
+    ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
+    : new Date().toISOString()
+  const periodStart = invoice.lines?.data?.[0]?.period?.start
+    ? new Date(invoice.lines.data[0].period.start * 1000).toISOString()
+    : null
+
   const { error } = await supabase.from('invoices').upsert({
     user_id: userId,
     stripe_invoice_id: invoice.id,
@@ -318,6 +325,8 @@ async function handleInvoicePaid(supabase: any, invoice: Stripe.Invoice) {
     hosted_invoice_url: invoice.hosted_invoice_url,
     invoice_pdf: invoice.invoice_pdf,
     created_at: new Date(invoice.created * 1000).toISOString(),
+    paid_at: paidAt,
+    period_start: periodStart,
   }, {
     onConflict: 'stripe_invoice_id',
   })
