@@ -146,6 +146,7 @@ const TreeViz = (function () {
             minZoom: 0.01,
             maxZoom: 4,
             boxSelectionEnabled: false,
+            autoungrabify: true,   // nodes locked for regular members; admins unlock via setAdmin(true)
             motionBlur: true,
         });
 
@@ -199,7 +200,14 @@ const TreeViz = (function () {
         window.addEventListener('resize', () => { try { cy.resize(); } catch (_) {} });
     }
 
-    return { init, setAdmin: val => { isAdmin = val; } };
+    return {
+        init,
+        setAdmin: val => {
+            isAdmin = val;
+            // Unlock node dragging for admins; re-lock for everyone else
+            if (cy) cy.autoungrabify(!val);
+        },
+    };
 })();
 
 // Expose globally for pages that reference window.TreeViz
