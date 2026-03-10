@@ -86,7 +86,7 @@
             return { data: d };
         });
 
-        return nodes.concat(edges);
+        return { elements: nodes.concat(edges), connectedIds };
     }
 
     // ─── Member list ──────────────────────────────────────────────────────────
@@ -188,21 +188,63 @@
         }
     }
 
+    // Stores full pending detail data keyed by relation id
+    const _pendingDetailMap = {};
+
+    function openPendingDetail(id) {
+        const d = _pendingDetailMap[id];
+        if (!d) return;
+
+        const typeBadge = t => t === 'tree_person'
+            ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full">Non-member</span>'
+            : '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-brand-100 text-brand-700 rounded-full">Member</span>';
+
+        const relLabel = { parent:'Parent', child:'Child', spouse:'Spouse', sibling:'Sibling', other:'Other' };
+
+        const submittedAt = d.created_at ? new Date(d.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '';
+        const note = d.metadata?.note || '';
+
+        document.getElementById('pendingDetailPersonA').innerHTML =
+            `<span class="font-semibold text-gray-900">${escapeHtml(d.nameA)}</span>${typeBadge(d.person_a_type)}`;
+        document.getElementById('pendingDetailPersonB').innerHTML =
+            `<span class="font-semibold text-gray-900">${escapeHtml(d.nameB)}</span>${typeBadge(d.person_b_type)}`;
+        document.getElementById('pendingDetailRelation').textContent =
+            relLabel[d.relation] || d.relation;
+        document.getElementById('pendingDetailSubmitter').textContent =
+            `Suggested by ${escapeHtml(d.nameSubmitter || 'Unknown')}${submittedAt ? ' · ' + submittedAt : ''}`;
+        const noteEl = document.getElementById('pendingDetailNote');
+        if (note) { noteEl.textContent = note; noteEl.classList.remove('hidden'); }
+        else { noteEl.classList.add('hidden'); }
+
+        const approveBtn = document.getElementById('pendingDetailApprove');
+        const rejectBtn  = document.getElementById('pendingDetailReject');
+        if (approveBtn) approveBtn.dataset.id = id;
+        if (rejectBtn)  rejectBtn.dataset.id  = id;
+
+        const modal = document.getElementById('pendingDetailModal');
+        if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    }
+
+    function closePendingDetail() {
+        const modal = document.getElementById('pendingDetailModal');
+        if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    }
+
     async function showAdminApprovals() {
         const wrap = document.getElementById('adminApprovalsWrap');
         const list = document.getElementById('adminApprovalsList');
         if (!wrap || !list) return;
         wrap.classList.remove('hidden');
-        list.innerHTML = '<div class="text-sm text-gray-500">Loading…</div>';
+        list.innerHTML = '<div class="px-4 py-3 text-sm text-gray-400">Loading…</div>';
 
         const { data: pending, error } = await supabaseClient
             .from('family_relations')
-            .select('id, person_a, person_b, relation, metadata, created_by, created_at')
+            .select('id, person_a, person_b, person_a_type, person_b_type, relation, metadata, created_by, created_at')
             .eq('status', 'pending')
             .order('created_at', { ascending: false });
 
         if (error) {
-            list.innerHTML = '<div class="text-sm text-red-600">Failed to load</div>';
+            list.innerHTML = '<div class="px-4 py-3 text-sm text-red-600">Failed to load</div>';
             console.error('[familyTree] pending error', error);
             return;
         }
@@ -214,44 +256,77 @@
 
         if (window.FamilyTreeUI) window.FamilyTreeUI.setPendingBadge(pending.length);
 
-        // Batch-fetch all referenced profiles AND tree_people in two queries (no N+1)
-        const personIds = [...new Set(pending.flatMap(r => [r.person_a, r.person_b]))];
+        // Batch-fetch all referenced profiles AND tree_people (people + submitters)
+        const allIds = [...new Set(pending.flatMap(r => [r.person_a, r.person_b, r.created_by].filter(Boolean)))];
         const [{ data: profileRows }, { data: tpRows }] = await Promise.all([
-            supabaseClient.from('profiles').select('id, first_name, last_name').in('id', personIds),
-            supabaseClient.from('family_tree_people').select('id, display_name').in('id', personIds),
+            supabaseClient.from('profiles').select('id, first_name, last_name').in('id', allIds),
+            supabaseClient.from('family_tree_people').select('id, display_name').in('id', allIds),
         ]);
-        const profileMap = {};
-        (profileRows  || []).forEach(p  => { profileMap[p.id]  = { first_name: p.first_name,   last_name: p.last_name }; });
-        (tpRows       || []).forEach(tp => { profileMap[tp.id] = { first_name: tp.display_name, last_name: '' }; });
+        const nameMap = {};
+        (profileRows || []).forEach(p  => { nameMap[p.id]  = ((p.first_name || '') + ' ' + (p.last_name || '')).trim() || p.id; });
+        (tpRows      || []).forEach(tp => { nameMap[tp.id] = tp.display_name; });
+
+        // Store full data for detail modal
+        pending.forEach(r => {
+            _pendingDetailMap[r.id] = {
+                ...r,
+                nameA:         nameMap[r.person_a]   || 'Unknown',
+                nameB:         nameMap[r.person_b]   || 'Unknown',
+                nameSubmitter: nameMap[r.created_by] || 'Unknown',
+            };
+        });
 
         list.innerHTML = '';
         for (const r of pending) {
-            const a = profileMap[r.person_a] || {};
-            const b = profileMap[r.person_b] || {};
+            const d = _pendingDetailMap[r.id];
             const row = document.createElement('div');
-            row.className = 'flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-50 transition';
+            row.className = 'flex items-center gap-3 px-4 py-3 hover:bg-surface-50 transition cursor-pointer';
+            row.dataset.pendingId = r.id;
             row.innerHTML = `
                 <div class="flex-1 min-w-0">
-                    <div class="text-sm font-medium text-gray-800 truncate">${escapeHtml(fullName(a))} → ${escapeHtml(fullName(b))}</div>
-                    <div class="text-xs text-gray-400 capitalize mt-0.5">${escapeHtml(r.relation)}</div>
+                    <div class="text-sm font-medium text-gray-800 truncate">${escapeHtml(d.nameA)} → ${escapeHtml(d.nameB)}</div>
+                    <div class="text-xs text-gray-400 capitalize mt-0.5">${escapeHtml(r.relation)} · tap for details</div>
                 </div>
                 <div class="flex items-center gap-1.5 flex-shrink-0">
-                    <button data-id="${r.id}" data-action="approve" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition">Approve</button>
-                    <button data-id="${r.id}" data-action="reject"  class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-semibold transition">Reject</button>
+                    <button data-id="${r.id}" data-action="approve" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition">✓</button>
+                    <button data-id="${r.id}" data-action="reject"  class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-semibold border border-red-100 transition">✕</button>
                 </div>`;
             list.appendChild(row);
         }
 
-        // { once: true } prevents listener stacking across re-renders
         list.addEventListener('click', async function handler(e) {
+            // Quick approve/reject buttons
             const btn = e.target.closest('button[data-action]');
-            if (!btn) return;
-            btn.disabled = true;
-            const { id, action } = btn.dataset;
-            if (action === 'approve') await updateStatusInline(id, 'approved');
-            if (action === 'reject')  await updateStatusInline(id, 'rejected');
-            await loadFamily(); // full re-render including approvals panel
+            if (btn) {
+                btn.disabled = true;
+                const { id, action } = btn.dataset;
+                if (action === 'approve') await updateStatusInline(id, 'approved');
+                if (action === 'reject')  await updateStatusInline(id, 'rejected');
+                closePendingDetail();
+                await loadFamily();
+                return;
+            }
+            // Row tap → open detail modal
+            const row = e.target.closest('[data-pending-id]');
+            if (row) openPendingDetail(row.dataset.pendingId);
         }, { once: true });
+
+        // Wire detail modal approve/reject (re-wire each time approvals refresh)
+        const approveBtn = document.getElementById('pendingDetailApprove');
+        const rejectBtn  = document.getElementById('pendingDetailReject');
+        const wireDetailBtn = (btn, status) => {
+            if (!btn) return;
+            btn.onclick = async () => {
+                const id = btn.dataset.id;
+                if (!id) return;
+                btn.disabled = true;
+                await updateStatusInline(id, status);
+                closePendingDetail();
+                await loadFamily();
+            };
+        };
+        wireDetailBtn(approveBtn, 'approved');
+        wireDetailBtn(rejectBtn,  'rejected');
     }
 
     // ─── Main load ────────────────────────────────────────────────────────────
@@ -261,9 +336,11 @@
         if (!result) return;
 
         const { profiles, relations, treePeople } = result;
-        const elements = buildElements(profiles, relations, treePeople);
+        const { elements, connectedIds } = buildElements(profiles, relations, treePeople);
 
-        renderMemberList(profiles, treePeople);
+        // Only show non-members who appear in at least one approved relation
+        const approvedTreePeople = (treePeople || []).filter(tp => connectedIds.has(tp.id));
+        renderMemberList(profiles, approvedTreePeople);
         if (window.FamilyTreeUI) {
             window.FamilyTreeUI.hideMemberSkeleton();
             window.FamilyTreeUI.setMemberCount(profiles.length);
@@ -307,6 +384,12 @@
     window.loadFamilyTree = loadFamily;
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Close pending-detail modal
+        const cpd = document.getElementById('closePendingDetail');
+        if (cpd) cpd.addEventListener('click', closePendingDetail);
+        const pdm = document.getElementById('pendingDetailModal');
+        if (pdm) pdm.addEventListener('click', e => { if (e.target === pdm) closePendingDetail(); });
+
         loadFamily();
     });
 
