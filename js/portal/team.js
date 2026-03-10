@@ -9,8 +9,7 @@
 
     // ─── Role Hierarchy & Definitions ───────────────────────
     const ROLE_ORDER = [
-        'President', 'Vice President', 'Treasurer', 'Secretary',
-        'Event Coordinator', 'Social Manager'
+        'President', 'Vice President', 'Treasurer', 'Secretary', 'Event Coordinator'
     ];
 
     const ROLE_DEFS = {
@@ -38,16 +37,6 @@
             icon: '🎉',
             color: 'pink',
             desc: 'Plans and manages family events — meetups, BBQs, celebrations, and trips.'
-        },
-        'Social Manager': {
-            icon: '📣',
-            color: 'indigo',
-            desc: 'Moderates the social feed, manages announcements, and keeps the community engaged.'
-        },
-        'Member': {
-            icon: '👤',
-            color: 'gray',
-            desc: 'Contributes monthly, participates in quests, and votes on family decisions.'
         }
     };
 
@@ -86,9 +75,8 @@
             return;
         }
 
-        // Split into leadership (has title) and regular members
-        const leaders = members.filter(m => m.title);
-        const regulars = members.filter(m => !m.title);
+        // Only show members with a leadership title assigned
+        const leaders = members.filter(m => m.title && ROLE_ORDER.includes(m.title));
 
         // Sort leaders by role hierarchy
         leaders.sort((a, b) => {
@@ -98,8 +86,7 @@
         });
 
         renderLeadership(leaders);
-        renderMembers(regulars);
-        renderOrgChart(leaders, regulars);
+        renderOrgChart(leaders);
     }
 
     // ─── Render Leadership Cards ────────────────────────────
@@ -113,19 +100,6 @@
         }
 
         grid.innerHTML = leaders.map(m => buildCard(m, true)).join('');
-    }
-
-    // ─── Render Members ─────────────────────────────────────
-    function renderMembers(members) {
-        const grid = document.getElementById('membersGrid');
-        if (!grid) return;
-
-        if (members.length === 0) {
-            grid.innerHTML = '<p class="text-sm text-gray-400 col-span-2 text-center py-8">No additional members yet.</p>';
-            return;
-        }
-
-        grid.innerHTML = members.map(m => buildCard(m, false)).join('');
     }
 
     // ─── Build a Member Card ────────────────────────────────
@@ -181,7 +155,7 @@
     }
 
     // ─── Org Chart ──────────────────────────────────────────
-    function renderOrgChart(leaders, members) {
+    function renderOrgChart(leaders) {
         const container = document.getElementById('orgChart');
         if (!container) return;
 
@@ -202,7 +176,7 @@
         }
 
         // Connector line
-        if (otherLeaders.length > 0 || members.length > 0) {
+        if (otherLeaders.length > 0) {
             html += '<div class="w-px h-6 bg-gray-200"></div>';
         }
 
@@ -211,19 +185,6 @@
             html += '<div class="flex flex-wrap justify-center gap-4">';
             otherLeaders.forEach(l => { html += buildOrgNode(l, false); });
             html += '</div>';
-
-            if (members.length > 0) {
-                html += '<div class="w-px h-6 bg-gray-200"></div>';
-            }
-        }
-
-        // Members row
-        if (members.length > 0) {
-            html += '<div class="w-full border-t border-gray-100 pt-4">';
-            html += '<p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold text-center mb-3">Members</p>';
-            html += '<div class="flex flex-wrap justify-center gap-3">';
-            members.forEach(m => { html += buildOrgNodeSmall(m); });
-            html += '</div></div>';
         }
 
         html += '</div>';
@@ -283,8 +244,7 @@
         const container = document.getElementById('roleDefinitions');
         if (!container) return;
 
-        const roles = [...ROLE_ORDER, 'Member'];
-        container.innerHTML = roles.map(title => {
+        container.innerHTML = ROLE_ORDER.map(title => {
             const def = ROLE_DEFS[title] || ROLE_DEFS['Member'];
             const colors = COLOR_MAP[def.color] || COLOR_MAP.gray;
             return `

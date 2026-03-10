@@ -394,7 +394,7 @@ async function openMemberModal(userId) {
     try {
         const { data: profile, error: pErr } = await supabaseClient
             .from('profiles')
-            .select('id, email, role, is_active, first_name, last_name, profile_picture_url, birthday, setup_completed')
+            .select('id, email, role, is_active, first_name, last_name, profile_picture_url, birthday, setup_completed, title')
             .eq('id', userId)
             .single();
         if (pErr) throw pErr;
@@ -445,9 +445,20 @@ async function openMemberModal(userId) {
                 <span class="text-xs font-medium text-gray-900">${profile.role === 'admin' ? 'Administrator' : 'Member'}</span>
             </div>`;
             detailsHTML += `<div class="flex justify-between items-center py-2 border-t border-gray-50">
-                <span class="text-xs text-gray-500">Onboarding</span>
-                ${getOnboardingBadge(profile.setup_completed)}
+                <span class="text-xs text-gray-500">Leadership Title</span>
+                <select id="modalTitleSelect" onchange="saveLeadershipTitle('${profile.id}', this)"
+                    class="text-xs font-medium text-gray-900 border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-brand-400">
+                    <option value="" ${!profile.title ? 'selected' : ''}>— None (Member) —</option>
+                    <option value="President" ${profile.title === 'President' ? 'selected' : ''}>👑 President</option>
+                    <option value="Vice President" ${profile.title === 'Vice President' ? 'selected' : ''}>⭐ Vice President</option>
+                    <option value="Treasurer" ${profile.title === 'Treasurer' ? 'selected' : ''}>💰 Treasurer</option>
+                    <option value="Secretary" ${profile.title === 'Secretary' ? 'selected' : ''}>📋 Secretary</option>
+                    <option value="Event Coordinator" ${profile.title === 'Event Coordinator' ? 'selected' : ''}>🎉 Event Coordinator</option>
+                </select>
             </div>`;
+            detailsHTML += `<div class="flex justify-between items-center py-2 border-t border-gray-50">`;
+            detailsHTML += `<span class="text-xs text-gray-500">Onboarding</span>`;
+            detailsHTML += `${getOnboardingBadge(profile.setup_completed)}</div>`;
             detailsEl.innerHTML = detailsHTML;
         }
 
@@ -590,6 +601,27 @@ async function openMemberModal(userId) {
     } catch (err) {
         console.error('Error loading member details:', err);
         document.getElementById('modalTransactions').innerHTML = `<div class="text-red-500 text-center py-4 text-sm">Error loading details</div>`;
+    }
+}
+
+async function saveLeadershipTitle(userId, selectEl) {
+    const newTitle = selectEl.value || null;
+    selectEl.disabled = true;
+    try {
+        const { error } = await supabaseClient
+            .from('profiles')
+            .update({ title: newTitle })
+            .eq('id', userId);
+        if (error) throw error;
+        // Visual feedback — briefly flash green border
+        selectEl.style.borderColor = '#10b981';
+        setTimeout(() => { selectEl.style.borderColor = ''; }, 1500);
+    } catch (err) {
+        console.error('Failed to update title:', err);
+        selectEl.style.borderColor = '#ef4444';
+        setTimeout(() => { selectEl.style.borderColor = ''; }, 1500);
+    } finally {
+        selectEl.disabled = false;
     }
 }
 

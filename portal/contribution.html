@@ -32,9 +32,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
     <style>
-        @media (max-width: 767px) {
-            body[data-active-page="contribution"] > nav { display: none !important; }
-        }
         /* Lottie full-screen cover background */
         #lottie-bg {
             position: fixed;
@@ -68,7 +65,7 @@
     <!-- dotLottie player (ES module web component) -->
     <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
 </head>
-<body class="min-h-screen bg-brand-700 font-sans antialiased flex flex-col" data-page-type="portal" data-active-page="contribution">
+<body class="min-h-screen bg-brand-700 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="contribution">
 
     <!-- Lottie background (fixed, full-screen, below all content) -->
     <div id="lottie-bg" aria-hidden="true">
@@ -190,6 +187,9 @@
     </main>
 
     <!-- Footer/tabs hidden on this page — full-bleed lottie background -->
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>

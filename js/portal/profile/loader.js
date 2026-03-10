@@ -78,6 +78,24 @@ window.ProfileApp.loadProfile = async function loadProfile() {
         document.getElementById('profileName').textContent = fullName;
         document.getElementById('profileBio').textContent = profile.bio || '';
 
+        // Leadership title badge
+        const ROLE_ICONS = {
+            'President': '\ud83d\udc51', 'Vice President': '\u2b50', 'Treasurer': '\ud83d\udcb0',
+            'Secretary': '\ud83d\udccb', 'Event Coordinator': '\ud83c\udf89'
+        };
+        const ROLE_COLORS = {
+            'President': 'bg-amber-100 text-amber-700', 'Vice President': 'bg-blue-100 text-blue-700',
+            'Treasurer': 'bg-emerald-100 text-emerald-700', 'Secretary': 'bg-purple-100 text-purple-700',
+            'Event Coordinator': 'bg-pink-100 text-pink-700'
+        };
+        const titleBadgeEl = document.getElementById('profileTitleBadge');
+        if (titleBadgeEl && profile.title && ROLE_ICONS[profile.title]) {
+            const icon = ROLE_ICONS[profile.title];
+            const colors = ROLE_COLORS[profile.title] || 'bg-gray-100 text-gray-600';
+            titleBadgeEl.innerHTML = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${colors}">${icon} ${profile.title}</span>`;
+            titleBadgeEl.classList.remove('hidden');
+        }
+
         // Store profile data for About modal
         S._profileData = profile;
 
