@@ -454,9 +454,23 @@ async function openMemberModal(userId) {
         // Subscription
         const { data: subscription } = await supabaseClient
             .from('subscriptions')
-            .select('status, current_amount_cents')
+            .select('status, current_amount_cents, current_period_end, stripe_subscription_id')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
+
+        // Append Next Bill Date row to profile details
+        const detailsElSub = document.getElementById('modalProfileDetails');
+        if (detailsElSub && subscription) {
+            const billDate = subscription.current_period_end ? formatDate(new Date(subscription.current_period_end)) : '--';
+            const hasSub = !!subscription.stripe_subscription_id;
+            detailsElSub.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center py-2 border-t border-gray-50">
+                <span class="text-xs text-gray-500">Next Bill Date</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-medium text-gray-900" id="modalNextBillDate">${billDate}</span>
+                    ${hasSub ? `<button onclick="syncSubscriptionFromStripe('${userId}', this)" class="text-[10px] font-semibold text-brand-600 bg-brand-50 hover:bg-brand-100 px-2 py-0.5 rounded-md transition">Sync</button>` : ''}
+                </div>
+            </div>`);
+        }
 
         if (subscription) {
             document.getElementById('modalStatus').innerHTML = getStatusBadge(subscription.status);
@@ -586,3 +600,22 @@ function closeMemberModal() {
 
 // Close on Escape
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMemberModal(); });
+
+async function syncSubscriptionFromStripe(userId, btnEl) {
+    const orig = btnEl.textContent;
+    btnEl.disabled = true;
+    btnEl.textContent = 'Syncing...';
+    try {
+        const result = await callEdgeFunction('sync-subscription', { userId });
+        const dateEl = document.getElementById('modalNextBillDate');
+        if (dateEl && result.current_period_end) {
+            dateEl.textContent = formatDate(new Date(result.current_period_end));
+        }
+        btnEl.textContent = '✓ Synced';
+        btnEl.className = 'text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md';
+    } catch (err) {
+        alert('Sync failed: ' + (err.message || err));
+        btnEl.textContent = orig;
+        btnEl.disabled = false;
+    }
+}
