@@ -16,7 +16,11 @@
     // ─── Data ─────────────────────────────────────────────────────────────────
 
     async function fetchData() {
-        const [{ data: profiles, error: pErr }, { data: relations, error: rErr }] = await Promise.all([
+        const [
+            { data: profiles,    error: pErr },
+            { data: relations,   error: rErr },
+            { data: treePeople,  error: tErr },
+        ] = await Promise.all([
             supabaseClient
                 .from('profiles')
                 .select('id, first_name, last_name, title, profile_picture_url, displayed_badge, highlighted_badges, is_active')
@@ -25,26 +29,64 @@
                 .from('family_relations')
                 .select('*')
                 .eq('status', 'approved'),
+            supabaseClient
+                .from('family_tree_people')
+                .select('id, display_name, photo_url, birth_year, death_year, notes'),
         ]);
 
         if (pErr) { console.error('[familyTree] profiles error', pErr); return null; }
         if (rErr) { console.error('[familyTree] relations error', rErr); return null; }
+        // tree_people table may not exist yet — treat as empty rather than crashing
+        if (tErr) console.warn('[familyTree] tree_people not ready yet:', tErr.message);
 
-        return { profiles: profiles || [], relations: relations || [] };
+        return {
+            profiles:   profiles   || [],
+            relations:  relations  || [],
+            treePeople: treePeople || [],
+        };
     }
 
     // ─── Elements builder ─────────────────────────────────────────────────────
 
-    function buildElements(profiles, relations) {
-        const nodes = {};
+    function buildElements(profiles, relations, treePeople) {
+        // Unified person lookup (id → node data)
+        const personMap = {};
+
         profiles.forEach(p => {
-            nodes[p.id] = { data: { id: p.id, label: fullName(p) || p.id } };
+            personMap[p.id] = {
+                id:       p.id,
+                label:    fullName(p) || p.id,
+                photo:    p.profile_picture_url || null,
+                isMember: true,
+                deceased: false,
+            };
         });
-        // Only create edges between profiles we actually have — skip orphan nodes
+
+        (treePeople || []).forEach(tp => {
+            personMap[tp.id] = {
+                id:       tp.id,
+                label:    tp.display_name,
+                photo:    tp.photo_url || null,
+                isMember: false,
+                deceased: !!tp.death_year,
+            };
+        });
+
+        // Only edges between people we know
         const edges = relations
-            .filter(r => nodes[r.person_a] && nodes[r.person_b])
+            .filter(r => personMap[r.person_a] && personMap[r.person_b])
             .map(r => ({ data: { id: r.id, source: r.person_a, target: r.person_b, relation: r.relation } }));
-        return Object.values(nodes).concat(edges);
+
+        // Only include nodes that appear in at least one edge (connected-only graph)
+        const connectedIds = new Set(edges.flatMap(e => [e.data.source, e.data.target]));
+        const nodes = [...connectedIds].map(id => {
+            const d = { ...personMap[id] };
+            // Cytoscape ignores null/undefined for data() selectors — keep photo only if truthy
+            if (!d.photo) delete d.photo;
+            return { data: d };
+        });
+
+        return nodes.concat(edges);
     }
 
     // ─── Member list ──────────────────────────────────────────────────────────
@@ -132,14 +174,15 @@
 
         if (window.FamilyTreeUI) window.FamilyTreeUI.setPendingBadge(pending.length);
 
-        // Batch-fetch all referenced profiles in one query (no N+1)
+        // Batch-fetch all referenced profiles AND tree_people in two queries (no N+1)
         const personIds = [...new Set(pending.flatMap(r => [r.person_a, r.person_b]))];
-        const { data: profileRows } = await supabaseClient
-            .from('profiles')
-            .select('id, first_name, last_name')
-            .in('id', personIds);
+        const [{ data: profileRows }, { data: tpRows }] = await Promise.all([
+            supabaseClient.from('profiles').select('id, first_name, last_name').in('id', personIds),
+            supabaseClient.from('family_tree_people').select('id, display_name').in('id', personIds),
+        ]);
         const profileMap = {};
-        (profileRows || []).forEach(p => { profileMap[p.id] = p; });
+        (profileRows  || []).forEach(p  => { profileMap[p.id]  = { first_name: p.first_name,   last_name: p.last_name }; });
+        (tpRows       || []).forEach(tp => { profileMap[tp.id] = { first_name: tp.display_name, last_name: '' }; });
 
         list.innerHTML = '';
         for (const r of pending) {
@@ -177,8 +220,8 @@
         const result = await fetchData();
         if (!result) return;
 
-        const { profiles, relations } = result;
-        const elements = buildElements(profiles, relations);
+        const { profiles, relations, treePeople } = result;
+        const elements = buildElements(profiles, relations, treePeople);
 
         renderMemberList(profiles);
         if (window.FamilyTreeUI) {

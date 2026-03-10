@@ -82,16 +82,44 @@ const TreeViz = (function () {
             elements,
             style: [
                 {
+                    // Base node — indigo circle, label below
                     selector: 'node',
                     style: {
                         label: 'data(label)',
-                        'text-valign': 'center',
-                        color: '#ffffff',
-                        'font-size': '12px',
+                        'text-valign': 'bottom',
+                        'text-halign': 'center',
+                        'text-margin-y': 8,
+                        color: '#374151',
+                        'font-size': '11px',
+                        'font-weight': '600',
+                        'text-background-color': '#ffffff',
+                        'text-background-opacity': 0.85,
+                        'text-background-padding': '3px',
+                        'text-background-shape': 'roundrectangle',
                         'background-color': '#6366f1',
-                        'border-width': 2,
+                        'border-width': 2.5,
                         'border-color': '#4f46e5',
-                        width: 54, height: 54,
+                        width: 64,
+                        height: 64,
+                    },
+                },
+                {
+                    // Photo node: use profile/tree-person image as background
+                    selector: 'node[photo]',
+                    style: {
+                        'background-image': 'data(photo)',
+                        'background-fit': 'cover',
+                        'background-clip': 'node',
+                        'background-color': '#e0e7ff',
+                    },
+                },
+                {
+                    // Deceased / non-member: amber dashed border
+                    selector: 'node[?deceased]',
+                    style: {
+                        'border-color': '#f59e0b',
+                        'border-width': 3,
+                        'border-style': 'dashed',
                     },
                 },
                 {
@@ -106,6 +134,7 @@ const TreeViz = (function () {
                         'font-size': '10px',
                         'text-rotation': 'autorotate',
                         'text-margin-y': -8,
+                        color: '#6b7280',
                     },
                 },
             ],
@@ -127,10 +156,17 @@ const TreeViz = (function () {
 
         createControls(container, cy);
 
-        // Node tap → profile page
+        // Node tap → profile page (members only)
         cy.on('tap', 'node', evt => {
-            window.location.href = `profile.html?id=${evt.target.id()}`;
+            const node = evt.target;
+            if (node.data('isMember')) {
+                window.location.href = `profile.html?id=${node.id()}`;
+            }
         });
+
+        // Pointer cursor for member nodes
+        cy.on('mouseover', 'node[?isMember]', () => { container.style.cursor = 'pointer'; });
+        cy.on('mouseout',  'node[?isMember]', () => { container.style.cursor = 'default'; });
 
         // Double-click container → fit
         container.addEventListener('dblclick', e => {
