@@ -231,6 +231,7 @@
             { href: 'milestones.html',  page: 'milestones',  icon: SVG.trophy,  label: 'Milestones' },
             { href: 'settings.html',    page: 'settings',    icon: SVG.gear,    label: 'Settings', icon2: SVG.gearDot },
             { href: 'contribution.html',page: 'contribution',icon: SVG.plus,    label: 'Contribute' },
+            { href: 'team.html',        page: 'team',        icon: SVG.team,    label: 'Team' },
             { href: 'profile.html',     page: 'profile',     icon: SVG.person,  label: 'Profile' },
         ];
 
