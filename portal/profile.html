@@ -231,12 +231,12 @@
     </div>
 
     <!-- About Modal (opened from "Member since" tap) -->
-    <div id="aboutModal" class="fixed inset-0 z-[100] hidden">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="aboutModalBackdrop"></div>
-        <div class="relative flex items-end sm:items-center justify-center min-h-full">
-            <div class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-3xl shadow-2xl slide-up max-h-[90vh] overflow-y-auto">
+    <div id="aboutModal" class="fixed inset-0 z-[200] hidden">
+        <div class="absolute inset-0 bg-black/60" id="aboutModalBackdrop"></div>
+        <div class="relative flex items-end sm:items-center justify-center h-full sm:p-4">
+            <div class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-3xl shadow-2xl slide-up overflow-y-auto" style="max-height:85vh;">
                 <!-- Header -->
-                <div class="sticky top-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-between px-5 pt-5 pb-2">
+                <div class="sticky top-0 bg-white z-10 flex items-center justify-between px-5 pt-5 pb-2 border-b border-gray-100">
                     <div class="w-8"></div>
                     <h3 id="aboutModalTitle" class="font-bold text-gray-900 text-base">About</h3>
                     <button id="aboutModalCloseBtn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
