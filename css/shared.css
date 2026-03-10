@@ -1077,6 +1077,12 @@ input[type="date"] {
     padding-top: max(0.75rem, env(safe-area-inset-top));
 }
 
+/* New post button safe-area positioning (right side) */
+.profile-action-btn {
+    padding: 0.75rem;
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
 /* ─── Animated Fire Emoji ────────────────────────────────── */
 @keyframes fireFlicker {
     0%, 100% { transform: scale(1) rotate(0deg); }

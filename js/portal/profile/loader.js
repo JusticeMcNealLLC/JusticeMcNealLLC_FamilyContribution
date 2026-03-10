@@ -86,7 +86,11 @@ window.ProfileApp.loadProfile = async function loadProfile() {
             document.getElementById('settingsGearBtn')?.classList.remove('hidden');
             document.getElementById('editCoverBtn')?.classList.remove('hidden');
             document.getElementById('picCameraOverlay')?.classList.remove('hidden');
+            document.getElementById('profileNewPostBtn')?.classList.remove('hidden');
         }
+
+        // Share button always visible (own or other's profile)
+        document.getElementById('shareProfileBtn')?.classList.remove('hidden');
 
         // Load stats
         await window.ProfileApp.loadStats(profile);

@@ -42,10 +42,10 @@
         <div id="coverSection" class="profile-cover relative w-full h-40 sm:h-52 bg-gradient-to-br from-brand-500 to-brand-700 sm:rounded-b-2xl overflow-hidden group">
             <img id="coverImage" class="w-full h-full object-cover hidden" alt="Cover photo">
             <div id="coverOverlay" class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-            <!-- Back button (mobile only, shown when nav hidden) -->
-            <a href="javascript:history.back()" id="profileBackBtn" class="sm:hidden absolute top-0 left-0 z-10 profile-back-btn">
+            <!-- New Post button (mobile only, own profile) -->
+            <a href="feed.html?compose=1" id="profileNewPostBtn" class="hidden sm:hidden absolute top-0 right-0 z-10 profile-action-btn">
                 <div class="w-8 h-8 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 </div>
             </a>
         </div>
@@ -70,15 +70,8 @@
                     <input type="file" id="profilePicInput" accept="image/*" class="hidden">
                 </div>
 
-                <!-- Action buttons -->
-                <div class="flex items-center gap-2 pb-1">
-                    <button id="editProfileBtn" class="hidden bg-surface-100 hover:bg-surface-200 text-gray-700 text-xs sm:text-sm font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl transition border border-gray-200">
-                        Edit Profile
-                    </button>
-                    <a id="settingsGearBtn" href="settings.html" class="hidden w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-surface-100 hover:bg-surface-200 border border-gray-200 transition">
-                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    </a>
-                </div>
+                <!-- Placeholder for alignment -->
+                <div class="pb-1"></div>
             </div>
 
             <!-- Name + Bio below avatar (full width, no truncation) -->
@@ -101,6 +94,19 @@
                         <span class="text-gray-300">·</span>
                         <span><span class="font-bold text-gray-900" id="miniStatStreak">0</span> <span class="fire-animated">🔥</span></span>
                     </div>
+                </div>
+
+                <!-- Action Buttons Row (own profile: Edit, Share, Settings — other: Share) -->
+                <div id="profileActionsRow" class="flex items-center gap-2 mt-3">
+                    <button id="editProfileBtn" class="hidden flex-1 bg-surface-100 hover:bg-surface-200 text-gray-700 text-xs sm:text-sm font-semibold py-1.5 sm:py-2 rounded-xl transition border border-gray-200">
+                        Edit Profile
+                    </button>
+                    <button id="shareProfileBtn" class="hidden flex-1 bg-surface-100 hover:bg-surface-200 text-gray-700 text-xs sm:text-sm font-semibold py-1.5 sm:py-2 rounded-xl transition border border-gray-200">
+                        Share Profile
+                    </button>
+                    <a id="settingsGearBtn" href="settings.html" class="hidden w-9 h-9 flex items-center justify-center rounded-xl bg-surface-100 hover:bg-surface-200 border border-gray-200 transition flex-shrink-0">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </a>
                 </div>
             </div>
         </div>
@@ -230,6 +236,40 @@
         </div>
     </div>
 
+    <!-- Share Profile / QR Code Modal -->
+    <div id="shareModal" class="fixed inset-0 z-[200] hidden">
+        <div class="absolute inset-0 bg-black/60" id="shareModalBackdrop"></div>
+        <div class="relative flex items-end sm:items-center justify-center h-full sm:p-4">
+            <div class="bg-white w-full sm:max-w-sm sm:rounded-2xl rounded-t-3xl shadow-2xl slide-up overflow-y-auto" style="max-height:85vh;">
+                <div class="flex items-center justify-between px-5 pt-5 pb-3">
+                    <h3 class="font-bold text-gray-900 text-base">Share Profile</h3>
+                    <button id="shareModalCloseBtn" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <!-- QR Code -->
+                <div class="flex flex-col items-center px-5 pb-4">
+                    <div id="qrCodeContainer" class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm mb-4">
+                        <canvas id="qrCodeCanvas" width="200" height="200"></canvas>
+                    </div>
+                    <p id="shareProfileName" class="text-sm font-semibold text-gray-900 mb-1"></p>
+                    <p id="shareProfileUrl" class="text-xs text-gray-400 truncate max-w-full mb-4"></p>
+                </div>
+                <!-- Actions -->
+                <div class="px-5 pb-6 space-y-2">
+                    <button id="copyProfileLinkBtn" class="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl transition text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        Copy Link
+                    </button>
+                    <button id="nativeShareBtn" class="hidden w-full flex items-center justify-center gap-2 bg-surface-100 hover:bg-surface-200 text-gray-700 font-semibold py-2.5 rounded-xl transition text-sm border border-gray-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                        Share
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- About Modal (opened from "Member since" tap) -->
     <div id="aboutModal" class="fixed inset-0 z-[200] hidden">
         <div class="absolute inset-0 bg-black/60" id="aboutModalBackdrop"></div>
@@ -303,6 +343,7 @@
     <script src="../js/portal/profile/tabs.js"></script>
     <script src="../js/portal/profile/edit.js"></script>
     <script src="../js/portal/profile/about.js"></script>
+    <script src="../js/portal/profile/share.js"></script>
     <script src="../js/portal/profile/index.js"></script>
     <script src="../js/sw-register.js"></script>
 </body>

@@ -35,4 +35,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load initial feed
     await loadFeed();
+
+    // Auto-open composer if ?compose=1 (from profile + button)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('compose') === '1') {
+        const modal = document.getElementById('composerModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            const postContent = document.getElementById('postContent');
+            setTimeout(() => postContent?.focus(), 300);
+        }
+        // Clean URL without reload
+        window.history.replaceState({}, '', window.location.pathname);
+    }
 });
