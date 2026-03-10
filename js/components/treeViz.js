@@ -204,7 +204,11 @@ const TreeViz = (function(){
                         const edges = cy.edges().length;
                         const ids = cy.nodes().map(n=>n.id()).slice(0,10).join(', ');
                         const bb = (() => { try { return cy.elements().boundingBox(); } catch(e){ return {}; } })();
-                        panel.innerText = `TreeViz debug:\nnodes: ${nodes}\nedges: ${edges}\nids: ${ids}\nbb: ${Math.round(bb.x1||0)},${Math.round(bb.y1||0)} → ${Math.round(bb.x2||0)},${Math.round(bb.y2||0)}`;
+                        const children = Array.from(container.children || []).map(c => {
+                            const cls = (c.className||'').toString().trim().split(/\s+/).filter(Boolean).join('.');
+                            return `${c.tagName.toLowerCase()}${cls ? ' .' + cls : ''}`;
+                        }).slice(0,10).join(', ');
+                        panel.innerText = `TreeViz debug:\nnodes: ${nodes}\nedges: ${edges}\nids: ${ids}\nbb: ${Math.round(bb.x1||0)},${Math.round(bb.y1||0)} → ${Math.round(bb.x2||0)},${Math.round(bb.y2||0)}\nchildren: ${ (container.children||[]).length } -> ${children}`;
                     } catch (e) { panel.innerText = 'TreeViz debug: error reading cy'; }
                 }
 
