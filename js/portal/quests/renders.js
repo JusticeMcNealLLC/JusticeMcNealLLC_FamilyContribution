@@ -193,27 +193,31 @@ function renderQuestCard(quest) {
         );
 
     // Circle bg + ring based on status
-    let circleBg, ringCss;
+    let circleBg, circleStyle, ringCss;
     if (isContributorLocked) {
-        circleBg = 'bg-gray-100';
-        ringCss  = '';
+        circleBg   = 'bg-gray-100';
+        circleStyle = '';
+        ringCss    = '';
     } else if (isCompleted) {
-        circleBg = 'bg-emerald-100';
-        ringCss  = 'ring-2 ring-emerald-300 ring-offset-2';
+        circleBg   = '';
+        circleStyle = 'background: linear-gradient(135deg, #6ee7b7 0%, #059669 100%); box-shadow: 0 4px 14px rgba(5,150,105,0.35);';
+        ringCss    = 'ring-2 ring-emerald-400 ring-offset-2';
     } else if (isInProgress) {
-        circleBg = 'bg-amber-50';
-        ringCss  = 'ring-2 ring-amber-300 ring-offset-2';
+        circleBg   = '';
+        circleStyle = 'background: linear-gradient(135deg, #fde68a 0%, #f59e0b 100%); box-shadow: 0 4px 12px rgba(245,158,11,0.25);';
+        ringCss    = 'ring-2 ring-amber-400 ring-offset-2';
     } else {
-        circleBg = 'bg-brand-50';
-        ringCss  = 'ring-2 ring-brand-200 ring-offset-2';
+        circleBg   = '';
+        circleStyle = 'background: linear-gradient(135deg, #eef2ff 0%, #c7d2fe 100%); box-shadow: 0 2px 8px rgba(99,102,241,0.12);';
+        ringCss    = 'ring-2 ring-brand-300 ring-offset-2';
     }
 
     const emojiContent = isContributorLocked ? '🔒' : (quest.emoji || '🎯');
 
-    // Completed checkmark badge
+    // Completed checkmark badge — larger and bolder
     const completedBadge = isCompleted ? `
-        <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
-            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
+            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
         </div>` : '';
 
     // CP label in corner (only for uncompleted, unlocked)
@@ -222,7 +226,7 @@ function renderQuestCard(quest) {
 
     return `
         <div data-quest-id="${quest.id}" class="flex flex-col items-center gap-1.5 cursor-pointer group ${isContributorLocked ? 'opacity-40 pointer-events-none' : ''}">
-            <div class="relative w-full max-w-[96px] sm:max-w-[80px] lg:max-w-[88px] aspect-square mx-auto rounded-full ${circleBg} ${ringCss} flex items-center justify-center text-2xl sm:text-xl lg:text-2xl group-hover:scale-105 transition-transform">
+            <div class="relative w-full max-w-[96px] sm:max-w-[80px] lg:max-w-[88px] aspect-square mx-auto rounded-full ${circleBg} ${ringCss} flex items-center justify-center text-2xl sm:text-xl lg:text-2xl group-hover:scale-105 transition-all duration-200" style="${circleStyle}">
                 <span class="${isContributorLocked ? 'grayscale opacity-60' : ''}">${emojiContent}</span>
                 ${completedBadge}
                 ${cpBadge}

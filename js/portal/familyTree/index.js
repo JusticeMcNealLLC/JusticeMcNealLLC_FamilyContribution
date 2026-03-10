@@ -80,9 +80,16 @@
             };
         });
 
-        // Only edges between people we know
+        // Only edges between people we know — deduplicate by sorted node pair
+        const seenEdges = new Set();
         const edges = relations
-            .filter(r => personMap[r.person_a] && personMap[r.person_b])
+            .filter(r => {
+                if (!personMap[r.person_a] || !personMap[r.person_b]) return false;
+                const key = [r.person_a, r.person_b].sort().join('|');
+                if (seenEdges.has(key)) return false;
+                seenEdges.add(key);
+                return true;
+            })
             .map(r => ({ data: { id: r.id, source: r.person_a, target: r.person_b, relation: r.relation } }));
 
         // Only include nodes that appear in at least one edge (connected-only graph)

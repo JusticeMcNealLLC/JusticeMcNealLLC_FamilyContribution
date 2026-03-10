@@ -31,46 +31,65 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+    <style>
+        /* Hide top nav on mobile — History uses full-bleed sticky stats hero */
+        @media (max-width: 767px) {
+            [data-active-page="history"] #nav-placeholder { display: none !important; }
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="history">
 
     <div id="nav-placeholder"></div>
 
+    <!-- Stats hero: sticky full-bleed on mobile, card on desktop -->
+    <div class="sticky top-0 z-30 md:static md:max-w-3xl md:mx-4 lg:mx-auto md:mt-6">
+        <div class="bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 text-white relative overflow-hidden md:rounded-2xl"
+             style="padding-top: max(1rem, env(safe-area-inset-top));">
+            <!-- Orbs -->
+            <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-12 translate-x-12 pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-10 -translate-x-10 pointer-events-none"></div>
+
+            <div class="relative px-5 sm:px-8 pb-5 sm:pb-6">
+                <!-- Desktop: back link -->
+                <a href="index.html" class="hidden md:inline-flex items-center gap-1 text-white/60 hover:text-white text-sm mb-4 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    Back to Dashboard
+                </a>
+                <!-- Desktop: heading -->
+                <div class="hidden md:block mb-5">
+                    <h1 class="text-2xl font-extrabold text-white tracking-tight">Transaction History</h1>
+                    <p class="text-white/60 text-sm mt-0.5">All your contributions — subscriptions and deposits combined</p>
+                </div>
+                <!-- Mobile: compact label -->
+                <p class="md:hidden text-white/70 text-xs font-semibold uppercase tracking-widest mb-3">Transaction History</p>
+
+                <!-- Stats row -->
+                <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div class="bg-white/10 rounded-xl p-3 sm:p-4">
+                        <div class="text-[9px] sm:text-[10px] font-bold text-white/60 uppercase tracking-wide mb-1">Total</div>
+                        <div class="text-base sm:text-2xl font-extrabold text-white stat-number" id="historyTotal">
+                            <span class="skeleton inline-block h-6 w-14 rounded opacity-40"></span>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-3 sm:p-4">
+                        <div class="text-[9px] sm:text-[10px] font-bold text-white/60 uppercase tracking-wide mb-1">Payments</div>
+                        <div class="text-base sm:text-2xl font-extrabold text-white stat-number" id="paymentCount">
+                            <span class="skeleton inline-block h-6 w-8 rounded opacity-40"></span>
+                        </div>
+                    </div>
+                    <div class="bg-white/10 rounded-xl p-3 sm:p-4">
+                        <div class="text-[9px] sm:text-[10px] font-bold text-white/60 uppercase tracking-wide mb-1">Deposits</div>
+                        <div class="text-base sm:text-2xl font-extrabold text-white stat-number" id="depositCount">
+                            <span class="skeleton inline-block h-6 w-8 rounded opacity-40"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
-
-        <a href="index.html" class="inline-flex items-center gap-1 text-gray-500 hover:text-brand-600 text-sm mb-5 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-            Back to Dashboard
-        </a>
-
-        <div class="mb-6">
-            <h1 class="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Transaction History</h1>
-            <p class="text-gray-500 mt-1 text-sm">All your contributions — subscriptions and deposits combined</p>
-        </div>
-
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-3 gap-3 mb-6">
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
-                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Contributed</div>
-                <div class="text-lg sm:text-2xl font-extrabold text-emerald-600 stat-number" id="historyTotal">
-                    <span class="skeleton inline-block h-7 w-20 rounded"></span>
-                </div>
-            </div>
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
-                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Payments</div>
-                <div class="text-lg sm:text-2xl font-extrabold text-gray-900 stat-number" id="paymentCount">
-                    <span class="skeleton inline-block h-7 w-10 rounded"></span>
-                </div>
-            </div>
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
-                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Deposits</div>
-                <div class="text-lg sm:text-2xl font-extrabold text-blue-600 stat-number" id="depositCount">
-                    <span class="skeleton inline-block h-7 w-10 rounded"></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Filters -->
         <div class="flex flex-wrap gap-3 mb-4">
             <select id="sourceFilter" class="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none">
                 <option value="all">All Sources</option>

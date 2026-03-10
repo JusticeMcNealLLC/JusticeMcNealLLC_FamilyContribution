@@ -32,6 +32,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
     <style>
+        /* Hide top nav on mobile — contribution page is full-screen immersive */
+        @media (max-width: 767px) {
+            [data-active-page="contribution"] #nav-placeholder { display: none !important; }
+        }
+
         /* Lottie full-screen cover background */
         #lottie-bg {
             position: fixed;

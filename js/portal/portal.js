@@ -79,6 +79,13 @@ async function checkProfileCompleteness(userId) {
 
         if (error || !profile) return;
 
+        // Set desktop hero display name
+        const nameEl = document.getElementById('userDisplayName');
+        if (nameEl) {
+            const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
+            if (fullName) nameEl.textContent = fullName;
+        }
+
         // If fully completed, don't show banner
         if (profile.setup_completed && profile.first_name && profile.last_name && profile.birthday && profile.profile_picture_url) {
             return;
