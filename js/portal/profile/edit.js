@@ -128,7 +128,7 @@ window.ProfileApp.setupEditProfile = function setupEditProfile() {
 
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
-        input.focus();
+        // Do NOT auto-focus the bio input — user opens to browse, not type
     });
 
     input.addEventListener('input', () => {
@@ -165,6 +165,12 @@ window.ProfileApp.setupEditProfile = function setupEditProfile() {
             updates.displayed_badge = selectedBadge || null;
         }
 
+        // Get selected banner from picker
+        const selectedBannerEl = modal.querySelector('.edit-banner-option.ring-brand-500');
+        if (selectedBannerEl && selectedBannerEl.dataset.bannerKey !== undefined) {
+            updates.cover_gradient = selectedBannerEl.dataset.bannerKey || null;
+        }
+
         const { error } = await supabaseClient
             .from('profiles')
             .update(updates)
@@ -172,6 +178,12 @@ window.ProfileApp.setupEditProfile = function setupEditProfile() {
 
         if (!error) {
             document.getElementById('profileBio').textContent = bio;
+
+            // Update banner on profile if changed
+            if (updates.cover_gradient !== undefined && updates.cover_gradient !== S.currentBannerGradient) {
+                S.currentBannerGradient = updates.cover_gradient;
+                window.ProfileApp.applyBannerToPage(updates.cover_gradient);
+            }
 
             // Update highlighted badges on banner
             S.currentHighlightedBadges = selectedHighlights;
@@ -264,45 +276,76 @@ window.ProfileApp.populateEditModalBanner = function populateEditModalBanner() {
     const section = document.getElementById('editBannerSection');
     const preview = document.getElementById('editBannerPreview');
     const previewImg = document.getElementById('editBannerPreviewImg');
+    const picker = document.getElementById('editModalBannerPicker');
 
-    if (!section || !preview) return;
+    if (!section) return;
 
-    const hasCustomPhoto = !!S.currentBannerPhotoUrl;
-    const hasGradient = !!S.currentBannerGradient;
+    const earnedBanners = S.earnedBannerKeys || [];
     const CATALOG = window.ProfileApp.BANNER_CATALOG || {};
 
-    if (!hasCustomPhoto && !hasGradient) {
+    if (earnedBanners.length === 0 && !S.currentBannerPhotoUrl) {
         section.classList.add('hidden');
         return;
     }
 
     section.classList.remove('hidden');
 
-    // Show the current banner preview
-    if (hasCustomPhoto) {
-        previewImg.src = S.currentBannerPhotoUrl;
-        previewImg.classList.remove('hidden');
-        preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden';
-    } else if (S.currentBannerGradient === 'founders-animated' || (CATALOG[S.currentBannerGradient]?.isAnimated && CATALOG[S.currentBannerGradient]?.preview)) {
-        const bannerCat = CATALOG[S.currentBannerGradient];
-        previewImg.classList.add('hidden');
-        preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden relative';
-        preview.innerHTML = '<div class="' + bannerCat.preview + ' w-full h-full"></div><img id="editBannerPreviewImg" class="w-full h-full object-cover hidden" alt="">';
-    } else if (S.currentBannerGradient) {
-        previewImg.classList.add('hidden');
-        preview.className = `w-full h-20 rounded-xl mb-2 overflow-hidden bg-gradient-to-r ${S.currentBannerGradient}`;
+    // Show current banner preview
+    if (preview) {
+        if (S.currentBannerPhotoUrl) {
+            if (previewImg) { previewImg.src = S.currentBannerPhotoUrl; previewImg.classList.remove('hidden'); }
+            preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden';
+        } else if (S.currentBannerGradient) {
+            const bannerCat = CATALOG[S.currentBannerGradient];
+            if (previewImg) previewImg.classList.add('hidden');
+            if (bannerCat?.isAnimated && bannerCat.preview) {
+                preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden relative';
+                preview.innerHTML = '<div class="' + bannerCat.preview + ' w-full h-full"></div><img id="editBannerPreviewImg" class="w-full h-full object-cover hidden" alt="">';
+            } else if (bannerCat?.gradient) {
+                preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden';
+                preview.innerHTML = '<div class="w-full h-full bg-gradient-to-r ' + bannerCat.gradient + '"></div>';
+            } else if (S.currentBannerGradient) {
+                preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden';
+                preview.innerHTML = '<div class="w-full h-full bg-gradient-to-r ' + S.currentBannerGradient + '"></div>';
+            }
+            // Lottie effect on preview
+            const bannerInfo = CATALOG[S.currentBannerGradient];
+            if (bannerInfo?.lottieEffect && typeof LottieEffects !== 'undefined') {
+                LottieEffects.renderBannerEffect(preview, bannerInfo.lottieEffect, { opacity: 0.6 });
+            }
+        }
     }
 
-    // Show banner name if known
-    const bannerInfo = window.ProfileApp.BANNER_CATALOG[S.currentBannerGradient];
-    const picker = document.getElementById('editModalBannerPicker');
-    if (picker) {
-        picker.innerHTML = `<p class="col-span-3 text-xs text-gray-500 text-center py-1">${bannerInfo ? '🎨 ' + bannerInfo.name : '🎨 Custom Banner'} <span class="text-gray-400">(reward-only)</span></p>`;
-    }
+    // All earned banners as selectable options
+    if (picker && earnedBanners.length > 0) {
+        picker.innerHTML = earnedBanners.map(key => {
+            const def = CATALOG[key];
+            const isActive = key === S.currentBannerGradient;
+            const ringCls = isActive ? 'ring-2 ring-brand-500 ring-offset-2' : 'ring-1 ring-gray-200';
+            let innerHtml;
+            if (def?.isAnimated && def.preview) {
+                innerHtml = '<div class="' + def.preview + ' w-full h-full"></div>';
+            } else {
+                const grad = def?.gradient || key;
+                innerHtml = '<div class="w-full h-full bg-gradient-to-r ' + grad + '"></div>';
+            }
+            const label = def?.name || key;
+            return `<button data-banner-key="${key}" class="edit-banner-option relative rounded-xl overflow-hidden h-12 ${ringCls} cursor-pointer transition hover:ring-brand-400" title="${label}">${innerHtml}</button>`;
+        }).join('');
 
-    // Apply Lottie effect to banner preview if available
-    if (bannerInfo?.lottieEffect && typeof LottieEffects !== 'undefined') {
-        LottieEffects.renderBannerEffect(preview, bannerInfo.lottieEffect, { opacity: 0.6 });
+        // Wire clicks
+        picker.querySelectorAll('.edit-banner-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                picker.querySelectorAll('.edit-banner-option').forEach(b => {
+                    b.classList.remove('ring-2', 'ring-brand-500', 'ring-offset-2');
+                    b.classList.add('ring-1', 'ring-gray-200');
+                });
+                btn.classList.remove('ring-1', 'ring-gray-200');
+                btn.classList.add('ring-2', 'ring-brand-500', 'ring-offset-2');
+            });
+        });
+    } else if (picker) {
+        picker.innerHTML = '<p class="col-span-3 text-xs text-gray-400 text-center py-1">Banners are earned via quests & rewards.</p>';
     }
 };
 // ─── Badge Highlights Picker (select up to 3) ──────────

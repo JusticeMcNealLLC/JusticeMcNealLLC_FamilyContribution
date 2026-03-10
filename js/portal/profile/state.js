@@ -11,6 +11,7 @@ window.ProfileApp.state = {
 
     // Badge / cosmetics state
     earnedBadgeKeys: [],
+    earnedBannerKeys: [],
     currentDisplayedBadge: null,
     currentBannerGradient: null,
     currentBannerPhotoUrl: null,

@@ -102,10 +102,10 @@
 
         // Click handler for each item
         listEl.querySelectorAll('.notif-item').forEach(function(item) {
-            item.addEventListener('click', function() {
+            item.addEventListener('click', async function() {
                 var nid = this.dataset.notifId;
                 var link = this.dataset.notifLink;
-                markAsRead(nid);
+                await markAsRead(nid);
                 if (link) window.location.href = link;
             });
         });

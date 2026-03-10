@@ -198,3 +198,39 @@ window.ProfileApp.loadStats = async function loadStats(profile) {
         }
     }
 };
+
+// ─── Apply Banner to Live Profile Page ──────────────────
+window.ProfileApp.applyBannerToPage = function applyBannerToPage(gradientKey) {
+    const coverSection = document.getElementById('coverSection');
+    if (!coverSection) return;
+
+    // Strip old gradient classes
+    coverSection.className = coverSection.className
+        .replace(/from-\S+/g, '').replace(/to-\S+/g, '').replace(/bg-gradient-to-\S+/g, '').trim();
+
+    // Remove any old animated layer
+    coverSection.querySelectorAll('.founders-banner-preview, .cat-banner-preview, [class*="-banner-preview"]').forEach(el => el.remove());
+
+    if (!gradientKey) {
+        coverSection.classList.add('bg-gradient-to-br', 'from-brand-500', 'to-brand-700');
+        return;
+    }
+
+    const CATALOG = window.ProfileApp.BANNER_CATALOG || {};
+    const def = CATALOG[gradientKey];
+
+    if (def?.isAnimated && def.preview) {
+        const layer = document.createElement('div');
+        layer.className = def.preview + ' w-full h-full absolute inset-0';
+        coverSection.insertAdjacentElement('afterbegin', layer);
+        if (def.lottieEffect && typeof LottieEffects !== 'undefined') {
+            LottieEffects.renderBannerEffect(coverSection, def.lottieEffect);
+        }
+    } else {
+        const grad = def?.gradient || gradientKey;
+        coverSection.classList.add('bg-gradient-to-br', ...grad.split(' '));
+        if (def?.lottieEffect && typeof LottieEffects !== 'undefined') {
+            LottieEffects.renderBannerEffect(coverSection, def.lottieEffect);
+        }
+    }
+};
