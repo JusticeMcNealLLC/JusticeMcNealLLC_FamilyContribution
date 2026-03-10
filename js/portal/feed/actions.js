@@ -115,8 +115,9 @@ async function toggleLike(btn) {
     const postId = btn.dataset.postId;
     const isLiked = btn.dataset.liked === 'true';
     const card = btn.closest('.post-card');
-    // Like count is in a separate div (IG-style) or inside the button (legacy)
-    const likeCountEl = btn.querySelector('.like-count') || card?.querySelector('.feed-like-count');
+    // Inline count next to the icon + separate "X likes" row below
+    const inlineCountEl = btn.querySelector('.like-count');
+    const feedLikeCountEl = card?.querySelector('.feed-like-count');
 
     if (isLiked) {
         // Remove like
@@ -125,17 +126,22 @@ async function toggleLike(btn) {
         btn.classList.add('text-gray-900');
         btn.querySelector('svg').setAttribute('fill', 'none');
 
-        // Update like count display
-        if (likeCountEl) {
-            const cur = parseInt(likeCountEl.textContent) || 1;
+        // Update inline count next to icon
+        if (inlineCountEl) {
+            const cur = parseInt(inlineCountEl.textContent) || 1;
+            const newCount = Math.max(0, cur - 1);
+            inlineCountEl.textContent = newCount > 0 ? newCount.toLocaleString() : '';
+        }
+
+        // Update "X likes" row below action bar
+        if (feedLikeCountEl) {
+            const cur = parseInt(feedLikeCountEl.textContent) || 1;
             const newCount = Math.max(0, cur - 1);
             if (newCount > 0) {
-                likeCountEl.textContent = `${newCount.toLocaleString()} like${newCount !== 1 ? 's' : ''}`;
+                feedLikeCountEl.textContent = `${newCount.toLocaleString()} like${newCount !== 1 ? 's' : ''}`;
             } else {
-                // Remove the count container if 0
-                const countContainer = likeCountEl.closest('.feed-likes-row');
+                const countContainer = feedLikeCountEl.closest('.feed-likes-row');
                 if (countContainer) countContainer.remove();
-                else likeCountEl.textContent = '';
             }
         }
 
@@ -153,13 +159,18 @@ async function toggleLike(btn) {
         btn.querySelector('svg').style.transform = 'scale(1.3)';
         setTimeout(() => { btn.querySelector('svg').style.transform = ''; }, 200);
 
-        // Update like count display
-        if (likeCountEl) {
-            const cur = parseInt(likeCountEl.textContent) || 0;
+        // Update inline count next to icon
+        if (inlineCountEl) {
+            const cur = parseInt(inlineCountEl.textContent) || 0;
+            inlineCountEl.textContent = (cur + 1).toLocaleString();
+        }
+
+        // Update "X likes" row below action bar
+        if (feedLikeCountEl) {
+            const cur = parseInt(feedLikeCountEl.textContent) || 0;
             const newCount = cur + 1;
-            likeCountEl.textContent = `${newCount.toLocaleString()} like${newCount !== 1 ? 's' : ''}`;
+            feedLikeCountEl.textContent = `${newCount.toLocaleString()} like${newCount !== 1 ? 's' : ''}`;
         } else if (card) {
-            // Insert a new likes row if there isn't one
             const actionBar = card.querySelector('.flex.items-center.justify-between');
             if (actionBar) {
                 const likeRow = document.createElement('div');

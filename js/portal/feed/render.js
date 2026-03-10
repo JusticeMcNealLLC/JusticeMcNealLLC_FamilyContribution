@@ -107,9 +107,11 @@ function renderPostCard(post) {
             <div class="flex items-center gap-4">
                 <button class="like-btn flex items-center gap-1.5 transition-transform active:scale-110 ${myLike ? 'text-red-500' : 'text-gray-900'}" data-post-id="${post.id}" data-liked="${myLike ? 'true' : 'false'}">
                     <svg class="w-6 h-6" fill="${myLike ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                    ${likeCount > 0 ? `<span class="like-count text-sm font-semibold">${likeCount.toLocaleString()}</span>` : `<span class="like-count text-sm font-semibold"></span>`}
                 </button>
                 <button class="comment-btn flex items-center gap-1.5 text-gray-900 transition-transform active:scale-110" data-post-id="${post.id}">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    ${commentCount > 0 ? `<span class="comment-count text-sm">${commentCount.toLocaleString()}</span>` : `<span class="comment-count text-sm"></span>`}
                 </button>
             </div>
             <button class="bookmark-btn transition-transform active:scale-110 ${isBookmarked ? 'text-gray-900' : 'text-gray-900'}" data-post-id="${post.id}" data-saved="${isBookmarked ? 'true' : 'false'}">

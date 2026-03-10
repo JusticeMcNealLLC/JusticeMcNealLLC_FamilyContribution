@@ -166,12 +166,22 @@ async function openPostDetail(postId) {
             // Update comment count on feed
             const card = document.querySelector(`.post-card[data-post-id="${currentDetailPostId}"]`);
             if (card) {
-                const teaserBtn = card.querySelector('.comment-btn[data-post-id]');
-                if (teaserBtn && teaserBtn.textContent.includes('View all')) {
-                    const count = parseInt(teaserBtn.textContent.match(/\d+/)?.[0] || '1') - 1;
-                    if (count > 0) teaserBtn.textContent = `View all ${count} comment${count !== 1 ? 's' : ''}`;
-                    else teaserBtn.remove();
+                // Update inline count next to comment icon
+                const inlineCount = card.querySelector('.comment-btn .comment-count');
+                if (inlineCount) {
+                    const cur = parseInt(inlineCount.textContent) || 1;
+                    const newCount = Math.max(0, cur - 1);
+                    inlineCount.textContent = newCount > 0 ? newCount.toLocaleString() : '';
                 }
+                // Update "View all X comments" teaser
+                const teaserBtns = card.querySelectorAll('.comment-btn[data-post-id]');
+                teaserBtns.forEach(tb => {
+                    if (tb.textContent.includes('View all')) {
+                        const count = parseInt(tb.textContent.match(/\d+/)?.[0] || '1') - 1;
+                        if (count > 0) tb.textContent = `View all ${count} comment${count !== 1 ? 's' : ''}`;
+                        else tb.remove();
+                    }
+                });
             }
         });
     });
@@ -332,12 +342,27 @@ async function submitComment() {
         // Update comment count on feed
         const card = document.querySelector(`.post-card[data-post-id="${currentDetailPostId}"]`);
         if (card) {
-            const teaserBtn = card.querySelector('.comment-btn[data-post-id]');
+            // Update inline count next to comment icon
+            const inlineCount = card.querySelector('.comment-btn .comment-count');
+            if (inlineCount) {
+                const cur = parseInt(inlineCount.textContent) || 0;
+                inlineCount.textContent = (cur + 1).toLocaleString();
+            }
+            // Update "View all X comments" teaser
+            const teaserBtn = card.querySelector('.comment-btn:not(:has(.comment-count))[data-post-id]');
             if (teaserBtn && teaserBtn.textContent.includes('View all')) {
                 const count = parseInt(teaserBtn.textContent.match(/\d+/)?.[0] || '0') + 1;
                 teaserBtn.textContent = `View all ${count} comment${count !== 1 ? 's' : ''}`;
-            } else if (teaserBtn) {
-                teaserBtn.textContent = 'View all 1 comment';
+            } else if (!card.querySelector('.comment-btn:not(:has(.comment-count))')) {
+                // Insert a "View all" teaser if none exists
+                const captionDiv = card.querySelector('.px-3.pb-1');
+                if (captionDiv) {
+                    const teaser = document.createElement('button');
+                    teaser.className = 'comment-btn block px-3 pb-0.5 text-sm text-gray-400';
+                    teaser.dataset.postId = currentDetailPostId;
+                    teaser.textContent = 'View all 1 comment';
+                    captionDiv.insertAdjacentElement('afterend', teaser);
+                }
             }
         }
 
