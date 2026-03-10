@@ -253,6 +253,7 @@ window.ProfileApp.populateEditModalBanner = function populateEditModalBanner() {
 
     const hasCustomPhoto = !!S.currentBannerPhotoUrl;
     const hasGradient = !!S.currentBannerGradient;
+    const CATALOG = window.ProfileApp.BANNER_CATALOG || {};
 
     if (!hasCustomPhoto && !hasGradient) {
         section.classList.add('hidden');
@@ -266,10 +267,11 @@ window.ProfileApp.populateEditModalBanner = function populateEditModalBanner() {
         previewImg.src = S.currentBannerPhotoUrl;
         previewImg.classList.remove('hidden');
         preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden';
-    } else if (S.currentBannerGradient === 'founders-animated') {
+    } else if (S.currentBannerGradient === 'founders-animated' || (CATALOG[S.currentBannerGradient]?.isAnimated && CATALOG[S.currentBannerGradient]?.preview)) {
+        const bannerCat = CATALOG[S.currentBannerGradient];
         previewImg.classList.add('hidden');
         preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden relative';
-        preview.innerHTML = '<div class="founders-banner-preview w-full h-full"></div><img id="editBannerPreviewImg" class="w-full h-full object-cover hidden" alt="">';
+        preview.innerHTML = '<div class="' + bannerCat.preview + ' w-full h-full"></div><img id="editBannerPreviewImg" class="w-full h-full object-cover hidden" alt="">';
     } else if (S.currentBannerGradient) {
         previewImg.classList.add('hidden');
         preview.className = `w-full h-20 rounded-xl mb-2 overflow-hidden bg-gradient-to-r ${S.currentBannerGradient}`;

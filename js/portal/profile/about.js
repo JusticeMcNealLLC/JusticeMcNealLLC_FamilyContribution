@@ -129,8 +129,10 @@ window.ProfileApp.populateAboutBanners = async function populateAboutBanners() {
     }
     if (S.currentBannerGradient && S.currentBannerGradient !== 'none') {
         const info = CATALOG[S.currentBannerGradient];
+        const isAnimated = info?.isAnimated && info?.preview;
         banners.push({
-            type: S.currentBannerGradient === 'founders-animated' ? 'founders' : 'gradient',
+            type: isAnimated ? 'animated' : 'gradient',
+            previewClass: info?.preview || null,
             gradient: S.currentBannerGradient,
             name: info?.name || 'Banner'
         });
@@ -146,8 +148,8 @@ window.ProfileApp.populateAboutBanners = async function populateAboutBanners() {
         let preview = '';
         if (b.type === 'photo') {
             preview = `<img src="${b.url}" class="w-full h-full object-cover" alt="${b.name}">`;
-        } else if (b.type === 'founders') {
-            preview = `<div class="founders-banner-preview w-full h-full"></div>`;
+        } else if (b.type === 'animated' && b.previewClass) {
+            preview = `<div class="${b.previewClass} w-full h-full"></div>`;
         } else {
             preview = `<div class="w-full h-full bg-gradient-to-r ${b.gradient}"></div>`;
         }

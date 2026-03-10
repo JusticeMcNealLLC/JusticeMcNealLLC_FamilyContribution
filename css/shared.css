@@ -1016,6 +1016,22 @@ input[type="date"] {
         radial-gradient(circle at 80% 70%, rgba(255,255,255,0.05) 0%, transparent 40%);
 }
 
+/* ─── Cat Banner (legendary exclusive) ───────────────────── */
+.cat-banner-preview,
+.cat-banner-cover {
+    position: absolute;
+    inset: 0;
+    background: url('/assets/banner/cat1.webp') center / cover no-repeat;
+}
+.cat-banner-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 30% 40%, rgba(255,255,255,0.06) 0%, transparent 50%),
+        radial-gradient(circle at 70% 60%, rgba(255,255,255,0.04) 0%, transparent 40%);
+}
+
 /* ─── Edit Badge Picker (profile modal) ──────────────────── */
 .edit-badge-option {
     cursor: pointer;

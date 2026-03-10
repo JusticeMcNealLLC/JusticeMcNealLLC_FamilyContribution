@@ -56,6 +56,12 @@
             speed: 0.8,
             local: true,
         },
+        'cat-playing': {
+            name: 'Cat Playing',
+            lottieUrl: 'assets/lottie/cat-playing.json',
+            speed: 1,
+            local: true,
+        },
         lightning: {
             name: 'Lightning',
             lottieUrl: 'https://lottie.host/bf02cf8c-8147-4248-87e4-daa5c41b9e72/x0IedfbpVx.json',

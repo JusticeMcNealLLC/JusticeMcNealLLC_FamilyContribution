@@ -39,9 +39,14 @@ window.ProfileApp.loadProfile = async function loadProfile() {
             coverImg.classList.remove('hidden');
         } else if (profile.cover_gradient) {
             const coverSection = document.getElementById('coverSection');
-            if (profile.cover_gradient === 'founders-animated') {
+            const CATALOG = window.ProfileApp?.BANNER_CATALOG || {};
+            const bannerDef = CATALOG[profile.cover_gradient];
+
+            if (bannerDef?.isAnimated && bannerDef.preview) {
+                // Animated banner with dedicated CSS class (e.g. founders, cat)
+                const coverClass = bannerDef.preview.replace('-preview', '-cover');
                 coverSection.className = coverSection.className.replace(/from-\S+/g, '').replace(/to-\S+/g, '').replace(/bg-gradient-to-\S+/g, '').trim();
-                coverSection.innerHTML = '<div class="founders-banner-cover"></div>' + coverSection.innerHTML;
+                coverSection.innerHTML = '<div class="' + coverClass + '"></div>' + coverSection.innerHTML;
             } else {
                 coverSection.className = coverSection.className.replace(/from-\S+/g, '').replace(/to-\S+/g, '').trim();
                 coverSection.classList.add('bg-gradient-to-br', ...profile.cover_gradient.split(' '));
