@@ -61,7 +61,8 @@
             return;
         }
 
-        const payload = {
+        // Determine if current user is an admin; admins' inserts should be auto-approved
+        let payload = {
             person_a: a,
             person_b: b,
             relation: relation,
@@ -69,6 +70,20 @@
             status: 'pending',
             created_by: userId
         };
+
+        try {
+            const { data: me } = await supabaseClient
+                .from('profiles')
+                .select('role')
+                .eq('id', userId)
+                .single();
+            if (me && me.role === 'admin') {
+                payload.status = 'approved';
+                payload.approved_by = userId;
+            }
+        } catch (err) {
+            // ignore — fall back to pending
+        }
 
         const { error } = await supabaseClient
             .from('family_relations')
@@ -83,7 +98,13 @@
 
         setButtonLoading(btn, false, 'Submit Suggestion');
         closeModal();
-        alert('Relation suggestion submitted — awaits admin approval.');
+        // If admin auto-approved, refresh tree and show direct message
+        if (payload.status === 'approved') {
+            if (window.loadFamilyTree) window.loadFamilyTree();
+            alert('Relation added.');
+        } else {
+            alert('Relation suggestion submitted — awaits admin approval.');
+        }
     }
 
     function escapeHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
