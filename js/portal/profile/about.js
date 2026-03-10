@@ -152,9 +152,9 @@ window.ProfileApp.populateAboutBanners = async function populateAboutBanners() {
             preview = `<div class="w-full h-full bg-gradient-to-r ${b.gradient}"></div>`;
         }
         return `
-            <div class="rounded-xl overflow-hidden h-16 bg-gray-100">
+            <div class="relative rounded-xl overflow-hidden h-16 bg-gray-100">
                 ${preview}
-                <div class="text-[9px] text-gray-500 text-center mt-1 truncate px-1">${b.name}</div>
+                <div class="absolute bottom-0 inset-x-0 text-[9px] text-white/80 text-center py-0.5 bg-black/30">${b.name}</div>
             </div>`;
     }).join('');
 };
