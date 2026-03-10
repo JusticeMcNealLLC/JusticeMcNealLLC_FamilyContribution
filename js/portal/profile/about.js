@@ -105,11 +105,16 @@ window.ProfileApp.populateAboutBadges = async function populateAboutBadges() {
         const badge = (typeof BADGE_CATALOG !== 'undefined' && BADGE_CATALOG[b.badge_key])
             || { emoji: '🏅', name: b.badge_key, rarity: 'common' };
         return `
-            <div class="flex flex-col items-center gap-1 p-2 rounded-xl">
+            <div class="flex flex-col items-center gap-1.5 p-2 rounded-xl min-w-[72px]">
                 <div class="badge-chip badge-rarity-${badge.rarity || 'common'} w-12 h-12 text-xl">${badge.emoji}</div>
-                <span class="text-[9px] text-gray-500 text-center leading-tight truncate w-full">${badge.name}</span>
+                <span class="text-[10px] text-gray-500 text-center leading-tight max-w-[80px]">${badge.name}</span>
             </div>`;
     }).join('');
+
+    // Apply Lottie effects to legendary/epic badge chips
+    if (typeof LottieEffects !== 'undefined') {
+        setTimeout(() => LottieEffects.applyBadgeEffects(), 150);
+    }
 };
 
 // ─── Banner Unlocks (2-row horizontal carousel) ────────
@@ -119,15 +124,19 @@ window.ProfileApp.populateAboutBanners = async function populateAboutBanners() {
     const grid = document.getElementById('aboutBannersGrid');
     if (!section || !grid) return;
 
-    // Collect all banner info for this user
-    // Currently banners are single-value on profiles; gather from BANNER_CATALOG + custom photo
+    // Collect all earned banners for this user
+    // Derive from: current equipped banner + badge-linked banners
     const banners = [];
     const CATALOG = window.ProfileApp.BANNER_CATALOG || {};
+    const addedKeys = new Set();
 
     if (S.currentBannerPhotoUrl) {
         banners.push({ type: 'photo', url: S.currentBannerPhotoUrl, name: 'Custom Banner' });
     }
+
+    // Add current equipped banner
     if (S.currentBannerGradient && S.currentBannerGradient !== 'none') {
+        addedKeys.add(S.currentBannerGradient);
         const info = CATALOG[S.currentBannerGradient];
         const isAnimated = info?.isAnimated && info?.preview;
         banners.push({
@@ -136,6 +145,21 @@ window.ProfileApp.populateAboutBanners = async function populateAboutBanners() {
             gradient: S.currentBannerGradient,
             name: info?.name || 'Banner'
         });
+    }
+
+    // Founding members always earn the founders-animated banner
+    const earnedKeys = S.earnedBadgeKeys || [];
+    if (earnedKeys.includes('founding_member') && !addedKeys.has('founders-animated')) {
+        const info = CATALOG['founders-animated'];
+        if (info) {
+            addedKeys.add('founders-animated');
+            banners.push({
+                type: info.isAnimated ? 'animated' : 'gradient',
+                previewClass: info.preview || null,
+                gradient: 'founders-animated',
+                name: info.name || 'Founders Banner'
+            });
+        }
     }
 
     if (banners.length === 0) {
@@ -154,9 +178,9 @@ window.ProfileApp.populateAboutBanners = async function populateAboutBanners() {
             preview = `<div class="w-full h-full bg-gradient-to-r ${b.gradient}"></div>`;
         }
         return `
-            <div class="relative rounded-xl overflow-hidden h-16 bg-gray-100">
+            <div class="relative rounded-xl overflow-hidden h-20 bg-gray-100">
                 ${preview}
-                <div class="absolute bottom-0 inset-x-0 text-[9px] text-white/80 text-center py-0.5 bg-black/30">${b.name}</div>
+                <div class="absolute bottom-0 inset-x-0 text-[10px] text-white text-center py-1 bg-gradient-to-t from-black/50 to-transparent font-medium">${b.name}</div>
             </div>`;
     }).join('');
 };
