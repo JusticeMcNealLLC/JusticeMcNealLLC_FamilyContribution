@@ -105,7 +105,6 @@
             diff: d.new_row || d.old_row
         }));
     }
-    }
 
     async function setStatus(id, status) {
         const { data: session } = await supabaseClient.auth.getSession();
