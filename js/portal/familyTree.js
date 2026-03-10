@@ -8,7 +8,7 @@
             .eq('is_active', true);
 
         if (pErr) { console.error('profiles error', pErr); return; }
-
+        console.log('[familyTree] profiles fetched:', Array.isArray(profiles) ? profiles.length : 0, (profiles||[]).slice(0,10));
         // load approved relations
         const { data: relations, error: rErr } = await supabaseClient
             .from('family_relations')
@@ -16,7 +16,7 @@
             .eq('status', 'approved');
 
         if (rErr) { console.error('relations error', rErr); return; }
-
+        console.log('[familyTree] relations fetched:', Array.isArray(relations) ? relations.length : 0, (relations||[]).slice(0,10));
         // Build nodes map
         const nodes = {};
         profiles.forEach(p => {
@@ -33,6 +33,7 @@
         });
 
         const elements = Object.values(nodes).concat(edges);
+        console.log('[familyTree] built elements -> nodes:', Object.keys(nodes).length, 'edges:', edges.length, 'total:', elements.length, (elements||[]).slice(0,10));
 
         // render list of members
         const listEl = document.getElementById('memberList');
@@ -88,7 +89,12 @@
             }
 
         // init viz
-        if (window.TreeViz) TreeViz.init('#cy', elements);
+        try {
+            console.log('[familyTree] initializing TreeViz with elements:', elements.length);
+            if (window.TreeViz) TreeViz.init('#cy', elements);
+        } catch (err) {
+            console.error('[familyTree] TreeViz.init error', err);
+        }
     }
 
     function escapeHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
