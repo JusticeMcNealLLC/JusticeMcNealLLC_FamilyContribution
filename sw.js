@@ -2,7 +2,7 @@
 // Cache-first for statics, network-first for API calls.
 // Push notification handler for native OS notifications.
 
-const CACHE_NAME = 'jm-portal-v7';
+const CACHE_NAME = 'jm-portal-v8';
 
 // Shell assets to pre-cache on install
 const SHELL_ASSETS = [
@@ -18,6 +18,7 @@ const SHELL_ASSETS = [
     '/js/config.js',
     '/js/lottie-effects.js',
     '/assets/lottie/founders.json',
+    '/assets/banner/founder1.webp',
     '/manifest.json',
 ];
 

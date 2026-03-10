@@ -168,8 +168,9 @@
             lottieUrl: 'assets/lottie/founders.json',
             local: true,
             speed: 0.6,
-            opacity: 0.7,
+            opacity: 1,       // full opacity — Lottie IS the badge
             scale: 1.8,
+            zIndex: 1,        // render on top (no emoji behind)
         },
         epic: {
             lottieUrl: 'assets/lottie/founders.json',
@@ -177,6 +178,7 @@
             speed: 0.4,
             opacity: 0.45,
             scale: 1.5,
+            zIndex: -1,       // behind the emoji
         },
         // rare and common get CSS only — no Lottie
     };
@@ -206,6 +208,7 @@
         const effectEl = document.createElement('div');
         effectEl.className = 'lottie-badge-effect';
         const s = effect.scale || 1.5;
+        const zi = effect.zIndex !== undefined ? effect.zIndex : -1;
         effectEl.style.cssText = `
             position: absolute;
             top: 50%; left: 50%;
@@ -213,7 +216,7 @@
             transform: translate(-50%, -50%);
             pointer-events: none;
             opacity: ${effect.opacity || 0.5};
-            z-index: -1;
+            z-index: ${zi};
         `;
         chipEl.style.overflow = 'visible';
         chipEl.appendChild(effectEl);

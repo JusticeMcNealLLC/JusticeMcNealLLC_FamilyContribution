@@ -6,7 +6,7 @@ window.ProfileApp = window.ProfileApp || {};
 
 // Banner presets catalog (gradient-based banners awarded as rewards)
 window.ProfileApp.BANNER_CATALOG = {
-    'founders-animated': { name: 'Founders Gold', preview: 'founders-banner-preview', isAnimated: true, lottieEffect: 'sparkle' },
+    'founders-animated': { name: 'Founders Constellation', preview: 'founders-banner-preview', isAnimated: true, lottieEffect: 'sparkle' },
     'storm': { name: 'Storm', gradient: 'from-slate-900 to-purple-900', lottieEffect: 'lightning' },
     'inferno': { name: 'Inferno', gradient: 'from-red-900 to-orange-600', lottieEffect: 'fire' },
     'celebration': { name: 'Celebration', gradient: 'from-pink-500 to-violet-600', lottieEffect: 'confetti' },
