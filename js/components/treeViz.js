@@ -169,6 +169,46 @@ const TreeViz = (function(){
                     }
                 } catch (err) { console.warn('[TreeViz] debug grid layout error', err); }
             });
+
+        // Visible debug panel inside container to display layout diagnostics
+        (function createDebugPanel(){
+            try {
+                let panel = container.querySelector('.tv-debug-panel');
+                if (!panel) {
+                    panel = document.createElement('div');
+                    panel.className = 'tv-debug-panel';
+                    panel.style.position = 'absolute';
+                    panel.style.right = '12px';
+                    panel.style.bottom = '12px';
+                    panel.style.zIndex = 1001;
+                    panel.style.background = 'rgba(255,255,255,0.95)';
+                    panel.style.border = '1px solid rgba(0,0,0,0.06)';
+                    panel.style.padding = '8px 10px';
+                    panel.style.borderRadius = '8px';
+                    panel.style.fontSize = '12px';
+                    panel.style.color = '#0f172a';
+                    panel.style.maxWidth = '280px';
+                    panel.style.boxShadow = '0 6px 20px rgba(2,6,23,0.08)';
+                    panel.innerText = 'TreeViz debug: initializing...';
+                    container.appendChild(panel);
+                }
+
+                function updatePanel() {
+                    try {
+                        const nodes = cy.nodes().length;
+                        const edges = cy.edges().length;
+                        const ids = cy.nodes().map(n=>n.id()).slice(0,10).join(', ');
+                        const bb = (() => { try { return cy.elements().boundingBox(); } catch(e){ return {}; } })();
+                        panel.innerText = `TreeViz debug:\nnodes: ${nodes}\nedges: ${edges}\nids: ${ids}\nbb: ${Math.round(bb.x1||0)},${Math.round(bb.y1||0)} → ${Math.round(bb.x2||0)},${Math.round(bb.y2||0)}`;
+                    } catch (e) { panel.innerText = 'TreeViz debug: error reading cy'; }
+                }
+
+                // update after layoutstop and on viewport events
+                try { updatePanel(); } catch(_){}
+                cy.on('layoutstop', updatePanel);
+                cy.on('viewport', updatePanel);
+            } catch (err) { console.warn('[TreeViz] debug panel error', err); }
+        })();
         } catch (err) {
             console.warn('layout/run error', err);
         }
