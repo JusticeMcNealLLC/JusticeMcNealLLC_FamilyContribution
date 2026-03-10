@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-// Feed — Post Card Rendering
+// Feed — Post Card Rendering (Instagram-style)
 // ═══════════════════════════════════════════════════════════
 
 // ─── Render a single post card ──────────────────────────
@@ -38,24 +38,25 @@ function renderPostCard(post) {
     if (post.post_type === 'announcement') badge = '<span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">📢 Announcement</span>';
     if (post.post_type === 'milestone') badge = '<span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5">🎉 Milestone</span>';
 
-    // Build image grid
+    // Build image grid — edge-to-edge on mobile, rounded on desktop
     let imageHtml = '';
     if (images.length === 1) {
-        imageHtml = `<div class="mt-3 rounded-xl overflow-hidden sm:rounded-2xl"><img src="${images[0].image_url}" class="w-full max-h-[500px] object-cover cursor-pointer post-image" data-full="${images[0].image_url}" alt="" loading="lazy"></div>`;
+        imageHtml = `<div class="sm:mx-0 overflow-hidden sm:rounded-sm"><img src="${images[0].image_url}" class="w-full object-cover cursor-pointer post-image" style="max-height:600px" data-full="${images[0].image_url}" alt="" loading="lazy"></div>`;
     } else if (images.length === 2) {
-        imageHtml = `<div class="mt-3 grid grid-cols-2 gap-0.5 rounded-xl overflow-hidden sm:rounded-2xl">${images.map(img => `<img src="${img.image_url}" class="w-full aspect-square object-cover cursor-pointer post-image" data-full="${img.image_url}" alt="" loading="lazy">`).join('')}</div>`;
+        imageHtml = `<div class="grid grid-cols-2 gap-px sm:rounded-sm overflow-hidden">${images.map(img => `<img src="${img.image_url}" class="w-full aspect-square object-cover cursor-pointer post-image" data-full="${img.image_url}" alt="" loading="lazy">`).join('')}</div>`;
     } else if (images.length === 3) {
-        imageHtml = `<div class="mt-3 grid grid-cols-2 gap-0.5 rounded-xl overflow-hidden sm:rounded-2xl">
+        imageHtml = `<div class="grid grid-cols-2 gap-px sm:rounded-sm overflow-hidden">
             <img src="${images[0].image_url}" class="w-full aspect-square object-cover row-span-2 cursor-pointer post-image" data-full="${images[0].image_url}" alt="" loading="lazy">
             <img src="${images[1].image_url}" class="w-full aspect-square object-cover cursor-pointer post-image" data-full="${images[1].image_url}" alt="" loading="lazy">
             <img src="${images[2].image_url}" class="w-full aspect-square object-cover cursor-pointer post-image" data-full="${images[2].image_url}" alt="" loading="lazy">
         </div>`;
     } else if (images.length >= 4) {
-        imageHtml = `<div class="mt-3 grid grid-cols-2 gap-0.5 rounded-xl overflow-hidden sm:rounded-2xl">${images.slice(0, 4).map((img, i) => `<div class="relative"><img src="${img.image_url}" class="w-full aspect-square object-cover cursor-pointer post-image" data-full="${img.image_url}" alt="" loading="lazy">${i === 3 && images.length > 4 ? `<div class="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xl font-bold">+${images.length - 4}</div>` : ''}</div>`).join('')}</div>`;
+        imageHtml = `<div class="grid grid-cols-2 gap-px sm:rounded-sm overflow-hidden">${images.slice(0, 4).map((img, i) => `<div class="relative"><img src="${img.image_url}" class="w-full aspect-square object-cover cursor-pointer post-image" data-full="${img.image_url}" alt="" loading="lazy">${i === 3 && images.length > 4 ? `<div class="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xl font-bold">+${images.length - 4}</div>` : ''}</div>`).join('')}</div>`;
     }
 
     // Content with @mention highlighting
-    const contentHtml = post.content ? formatPostContent(post.content) : '';
+    const contentRaw = post.content || '';
+    const contentHtml = contentRaw ? formatPostContent(contentRaw) : '';
 
     const isOwner = post.author_id === feedUser.id;
     const canDelete = isOwner || isAdmin;
@@ -64,60 +65,77 @@ function renderPostCard(post) {
     const likeCountLabel = likeCount > 0 ? likeCount : '';
     const commentCountLabel = commentCount > 0 ? commentCount : '';
 
+    // Caption truncation: show 1 line with "more" if long
+    const captionTruncated = contentRaw.length > 100;
+    const captionClass = captionTruncated ? 'line-clamp-1' : '';
+
     return `
     <article class="bg-white border-b sm:border sm:rounded-2xl sm:border-gray-200/80 post-card fade-in" data-post-id="${post.id}">
-        <div class="p-4 sm:p-5">
-            <!-- Post Header -->
-            <div class="flex items-start gap-3">
-                <a href="profile.html?id=${authorId}" class="flex-shrink-0 relative">
-                    <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border border-gray-200">
-                        ${photoUrl ? `<img src="${photoUrl}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-sm font-bold">${initials}</span>`}
-                    </div>
-                    ${avatarBadgeHtml}
-                </a>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <a href="profile.html?id=${authorId}" class="font-semibold text-gray-900 text-sm hover:underline">${name}</a>
-                        ${badge}
-                    </div>
-                    <p class="text-xs text-gray-400 mt-0.5">${timeAgo}${post.updated_at !== post.created_at ? ' · edited' : ''}</p>
+        <!-- Post Header -->
+        <div class="flex items-center gap-3 px-3 py-2.5">
+            <a href="profile.html?id=${authorId}" class="flex-shrink-0 relative">
+                <div class="w-9 h-9 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border border-gray-200">
+                    ${photoUrl ? `<img src="${photoUrl}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-sm font-bold">${initials}</span>`}
                 </div>
-                ${canDelete ? `
-                <div class="relative">
-                    <button class="post-menu-btn p-1.5 hover:bg-gray-100 rounded-lg transition text-gray-400 hover:text-gray-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"></path></svg>
-                    </button>
-                    <div class="post-menu hidden absolute right-0 top-full mt-1 w-36 bg-white rounded-xl border border-gray-200 shadow-lg py-1 z-30">
-                        ${isOwner ? '<button class="edit-post-btn w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">Edit Post</button>' : ''}
-                        <button class="delete-post-btn w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition">Delete Post</button>
-                        ${isAdmin && !post.is_pinned ? '<button class="pin-post-btn w-full text-left px-3 py-2 text-sm text-amber-600 hover:bg-amber-50 transition">📌 Pin Post</button>' : ''}
-                        ${isAdmin && post.is_pinned ? '<button class="unpin-post-btn w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition">Unpin Post</button>' : ''}
-                    </div>
-                </div>` : ''}
+                ${avatarBadgeHtml}
+            </a>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <a href="profile.html?id=${authorId}" class="font-semibold text-gray-900 text-sm hover:underline">${name}</a>
+                    ${badge}
+                </div>
             </div>
-
-            <!-- Post Content -->
-            ${contentHtml ? `<div class="mt-3 text-sm text-gray-800 leading-relaxed whitespace-pre-wrap post-text">${contentHtml}</div>` : ''}
-            
-            <!-- Images -->
-            ${imageHtml}
-
-            <!-- Action Bar -->
-            <div class="flex items-center justify-between mt-3 pt-2">
-                <div class="flex items-center gap-4">
-                    <button class="like-btn flex items-center gap-1.5 transition-transform active:scale-110 ${myLike ? 'text-red-500' : 'text-gray-700'}" data-post-id="${post.id}" data-liked="${myLike ? 'true' : 'false'}">
-                        <svg class="w-6 h-6" fill="${myLike ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
-                        <span class="like-count text-xs font-semibold">${likeCountLabel}</span>
-                    </button>
-                    <button class="comment-btn flex items-center gap-1.5 text-gray-700 transition-transform active:scale-110" data-post-id="${post.id}">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                        <span class="comment-count text-xs font-semibold">${commentCountLabel}</span>
-                    </button>
+            ${canDelete ? `
+            <div class="relative">
+                <button class="post-menu-btn p-1.5 hover:bg-gray-100 rounded-lg transition text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"></path></svg>
+                </button>
+                <div class="post-menu hidden absolute right-0 top-full mt-1 w-36 bg-white rounded-xl border border-gray-200 shadow-lg py-1 z-30">
+                    ${isOwner ? '<button class="edit-post-btn w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">Edit Post</button>' : ''}
+                    <button class="delete-post-btn w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition">Delete Post</button>
+                    ${isAdmin && !post.is_pinned ? '<button class="pin-post-btn w-full text-left px-3 py-2 text-sm text-amber-600 hover:bg-amber-50 transition">📌 Pin Post</button>' : ''}
+                    ${isAdmin && post.is_pinned ? '<button class="unpin-post-btn w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition">Unpin Post</button>' : ''}
                 </div>
-                <button class="bookmark-btn transition-transform active:scale-110 ${isBookmarked ? 'text-gray-900' : 'text-gray-700'}" data-post-id="${post.id}" data-saved="${isBookmarked ? 'true' : 'false'}">
-                    <svg class="w-6 h-6" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+            </div>` : ''}
+        </div>
+
+        <!-- Images (edge-to-edge on mobile) -->
+        ${imageHtml}
+
+        <!-- Action Bar -->
+        <div class="flex items-center justify-between px-3 pt-2.5 pb-1">
+            <div class="flex items-center gap-4">
+                <button class="like-btn flex items-center gap-1.5 transition-transform active:scale-110 ${myLike ? 'text-red-500' : 'text-gray-900'}" data-post-id="${post.id}" data-liked="${myLike ? 'true' : 'false'}">
+                    <svg class="w-6 h-6" fill="${myLike ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                </button>
+                <button class="comment-btn flex items-center gap-1.5 text-gray-900 transition-transform active:scale-110" data-post-id="${post.id}">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
                 </button>
             </div>
+            <button class="bookmark-btn transition-transform active:scale-110 ${isBookmarked ? 'text-gray-900' : 'text-gray-900'}" data-post-id="${post.id}" data-saved="${isBookmarked ? 'true' : 'false'}">
+                <svg class="w-6 h-6" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+            </button>
+        </div>
+
+        <!-- Like count -->
+        ${likeCount > 0 ? `<div class="px-3 pb-0.5 feed-likes-row"><span class="text-sm font-semibold text-gray-900 feed-like-count">${likeCount.toLocaleString()} like${likeCount !== 1 ? 's' : ''}</span></div>` : ''}
+
+        <!-- Caption -->
+        <div class="px-3 pb-1">
+            ${contentHtml ? `
+            <div class="text-sm leading-snug">
+                <span class="font-semibold text-gray-900">${name}</span>
+                <span class="text-gray-800 feed-caption-text ${captionClass}">${contentHtml}</span>
+                ${captionTruncated ? `<button class="feed-caption-more text-gray-400 text-sm" onclick="this.previousElementSibling.classList.remove('line-clamp-1');this.remove()">more</button>` : ''}
+            </div>` : ''}
+        </div>
+
+        <!-- View comments -->
+        ${commentCount > 0 ? `<button class="comment-btn block px-3 pb-0.5 text-sm text-gray-400" data-post-id="${post.id}">View all ${commentCount} comment${commentCount !== 1 ? 's' : ''}</button>` : ''}
+
+        <!-- Time -->
+        <div class="px-3 pb-3 pt-0.5">
+            <span class="text-[10px] text-gray-400 uppercase tracking-wide">${timeAgo}${post.updated_at !== post.created_at ? ' · edited' : ''}</span>
         </div>
     </article>`;
 }

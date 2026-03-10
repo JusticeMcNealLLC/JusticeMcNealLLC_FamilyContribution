@@ -767,6 +767,18 @@ input[type="date"] {
 /* ─── Phase 4A: Social Feed Styles ────────────────────────  */
 /* ═══════════════════════════════════════════════════════════ */
 
+/* ─── Feed Caption Truncation ─────────────────────────────── */
+.feed-caption-text.line-clamp-1 {
+    display: -webkit-inline-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.feed-caption-more {
+    cursor: pointer;
+    margin-left: 2px;
+}
+
 /* ─── Feed Filter Pills ──────────────────────────────────── */
 .feed-tabs-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 .feed-tabs-scroll::-webkit-scrollbar { display: none; }

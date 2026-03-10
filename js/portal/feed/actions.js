@@ -67,7 +67,7 @@ function wirePostActions() {
             const postId = card?.dataset.postId;
             if (!postId) return;
 
-            const textEl = card.querySelector('.post-text');
+            const textEl = card.querySelector('.feed-caption-text') || card.querySelector('.post-text');
             if (!textEl) return;
 
             const currentText = textEl.textContent;
@@ -82,6 +82,9 @@ function wirePostActions() {
 
             if (!error) {
                 textEl.innerHTML = formatPostContent(newText);
+                textEl.classList.remove('line-clamp-1');
+                const moreBtn = textEl.parentElement?.querySelector('.feed-caption-more');
+                if (moreBtn) moreBtn.remove();
             }
         });
     });
@@ -112,20 +115,28 @@ async function toggleLike(btn) {
     const postId = btn.dataset.postId;
     const isLiked = btn.dataset.liked === 'true';
     const card = btn.closest('.post-card');
-    const likeCountEl = btn.querySelector('.like-count');
+    // Like count is in a separate div (IG-style) or inside the button (legacy)
+    const likeCountEl = btn.querySelector('.like-count') || card?.querySelector('.feed-like-count');
 
     if (isLiked) {
         // Remove like
         btn.dataset.liked = 'false';
         btn.classList.remove('text-red-500');
-        btn.classList.add('text-gray-700');
+        btn.classList.add('text-gray-900');
         btn.querySelector('svg').setAttribute('fill', 'none');
 
-        // Update inline count
+        // Update like count display
         if (likeCountEl) {
             const cur = parseInt(likeCountEl.textContent) || 1;
             const newCount = Math.max(0, cur - 1);
-            likeCountEl.textContent = newCount > 0 ? newCount : '';
+            if (newCount > 0) {
+                likeCountEl.textContent = `${newCount.toLocaleString()} like${newCount !== 1 ? 's' : ''}`;
+            } else {
+                // Remove the count container if 0
+                const countContainer = likeCountEl.closest('.feed-likes-row');
+                if (countContainer) countContainer.remove();
+                else likeCountEl.textContent = '';
+            }
         }
 
         await supabaseClient.from('post_likes').delete()
@@ -135,17 +146,27 @@ async function toggleLike(btn) {
         // Add like
         btn.dataset.liked = 'true';
         btn.classList.add('text-red-500');
-        btn.classList.remove('text-gray-700');
+        btn.classList.remove('text-gray-900');
         btn.querySelector('svg').setAttribute('fill', 'currentColor');
 
         // Animate
         btn.querySelector('svg').style.transform = 'scale(1.3)';
         setTimeout(() => { btn.querySelector('svg').style.transform = ''; }, 200);
 
-        // Update inline count
+        // Update like count display
         if (likeCountEl) {
             const cur = parseInt(likeCountEl.textContent) || 0;
-            likeCountEl.textContent = cur + 1;
+            const newCount = cur + 1;
+            likeCountEl.textContent = `${newCount.toLocaleString()} like${newCount !== 1 ? 's' : ''}`;
+        } else if (card) {
+            // Insert a new likes row if there isn't one
+            const actionBar = card.querySelector('.flex.items-center.justify-between');
+            if (actionBar) {
+                const likeRow = document.createElement('div');
+                likeRow.className = 'px-3 pb-0.5 feed-likes-row';
+                likeRow.innerHTML = '<span class="text-sm font-semibold text-gray-900 feed-like-count">1 like</span>';
+                actionBar.parentElement.insertBefore(likeRow, actionBar.nextSibling);
+            }
         }
 
         await supabaseClient.from('post_likes').upsert({
@@ -163,15 +184,11 @@ async function toggleBookmark(btn) {
 
     if (isSaved) {
         btn.dataset.saved = 'false';
-        btn.classList.remove('text-gray-900');
-        btn.classList.add('text-gray-700');
         btn.querySelector('svg').setAttribute('fill', 'none');
         await supabaseClient.from('post_bookmarks').delete()
             .eq('post_id', postId).eq('user_id', feedUser.id);
     } else {
         btn.dataset.saved = 'true';
-        btn.classList.add('text-gray-900');
-        btn.classList.remove('text-gray-700');
         btn.querySelector('svg').setAttribute('fill', 'currentColor');
         await supabaseClient.from('post_bookmarks').upsert({
             post_id: postId,

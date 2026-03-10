@@ -102,7 +102,7 @@ async function openPostDetail(postId) {
         .from('post_comments')
         .select(`
             *,
-            author:profiles!post_comments_author_id_fkey(id, first_name, last_name, profile_picture_url)
+            author:profiles!post_comments_author_id_fkey(id, first_name, last_name, profile_picture_url, displayed_badge)
         `)
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
@@ -212,6 +212,16 @@ async function toggleCommentLike(btn) {
     }
 }
 
+// ─── Build comment badge overlay ────────────────────────
+function buildCommentBadge(badgeKey) {
+    if (!badgeKey) return '';
+    if (typeof buildNavBadgeOverlay === 'function') {
+        return '<div class="absolute -bottom-0.5 -right-0.5" style="transform:scale(0.7);transform-origin:bottom right">' + buildNavBadgeOverlay(badgeKey) + '</div>';
+    }
+    const fb = { founding_member:'🏅', shutterbug:'📸', streak_master:'🔥', streak_legend:'⚡', first_seed:'🌱', four_figures:'💵', quest_champion:'🎯', fidelity_linked:'🏦', birthday_vip:'🎂' };
+    return '<div class="absolute -bottom-0.5 -right-0.5"><div class="badge-chip-overlay" style="width:14px;height:14px;font-size:8px">' + (fb[badgeKey] || '❓') + '</div></div>';
+}
+
 // ─── Render Comment ─────────────────────────────────────
 function renderComment(comment, replies = []) {
     const a = comment.author || {};
@@ -223,6 +233,7 @@ function renderComment(comment, replies = []) {
     const isOwn = comment.author_id === feedUser.id;
     const commentLikeCount = comment.like_count || 0;
     const commentLikedByMe = comment.liked_by_me || false;
+    const commentBadge = buildCommentBadge(a.displayed_badge);
 
     let repliesHtml = replies.map(r => {
         const ra = r.author || {};
@@ -233,10 +244,14 @@ function renderComment(comment, replies = []) {
         const rinitials = (rfi + rli).toUpperCase() || '?';
         const rLikeCount = r.like_count || 0;
         const rLikedByMe = r.liked_by_me || false;
+        const replyBadge = buildCommentBadge(ra.displayed_badge);
         return `
             <div class="flex items-start gap-2 mt-3 ml-8">
-                <div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden flex-shrink-0 border border-gray-200">
-                    ${rphoto ? `<img src="${rphoto}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-[10px] font-bold">${rinitials}</span>`}
+                <div class="relative flex-shrink-0">
+                    <div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border border-gray-200">
+                        ${rphoto ? `<img src="${rphoto}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-[10px] font-bold">${rinitials}</span>`}
+                    </div>
+                    ${replyBadge}
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-start justify-between gap-2">
@@ -256,10 +271,11 @@ function renderComment(comment, replies = []) {
 
     return `
         <div class="flex items-start gap-2.5 mb-4 comment-item" data-comment-id="${comment.id}">
-            <a href="profile.html?id=${a.id}" class="flex-shrink-0">
+            <a href="profile.html?id=${a.id}" class="flex-shrink-0 relative">
                 <div class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border border-gray-200">
                     ${photoUrl ? `<img src="${photoUrl}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-xs font-bold">${initials}</span>`}
                 </div>
+                ${commentBadge}
             </a>
             <div class="flex-1 min-w-0">
                 <div class="flex items-start justify-between gap-2">
@@ -316,8 +332,13 @@ async function submitComment() {
         // Update comment count on feed
         const card = document.querySelector(`.post-card[data-post-id="${currentDetailPostId}"]`);
         if (card) {
-            const countEl = card.querySelector('.comment-count');
-            if (countEl) countEl.textContent = (parseInt(countEl.textContent) || 0) + 1;
+            const teaserBtn = card.querySelector('.comment-btn[data-post-id]');
+            if (teaserBtn && teaserBtn.textContent.includes('View all')) {
+                const count = parseInt(teaserBtn.textContent.match(/\d+/)?.[0] || '0') + 1;
+                teaserBtn.textContent = `View all ${count} comment${count !== 1 ? 's' : ''}`;
+            } else if (teaserBtn) {
+                teaserBtn.textContent = 'View all 1 comment';
+            }
         }
 
     } catch (err) {
