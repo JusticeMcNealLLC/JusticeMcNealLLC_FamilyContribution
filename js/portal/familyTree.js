@@ -72,6 +72,20 @@
             listEl.appendChild(div);
         });
 
+            // If current user is admin, load pending suggestions inline
+            try {
+                const sess = await supabaseClient.auth.getSession();
+                const uid = sess?.data?.session?.user?.id;
+                if (uid) {
+                    const { data: prof } = await supabaseClient.from('profiles').select('role').eq('id', uid).single();
+                    if (prof && prof.role === 'admin') {
+                        showAdminApprovals();
+                    }
+                }
+            } catch (err) {
+                console.error('admin check error', err);
+            }
+
         // init viz
         if (window.TreeViz) TreeViz.init('#cy', elements);
     }
@@ -88,4 +102,64 @@
         if (search) search.addEventListener('input', function(){ /* simple client filter could be added later */ });
         loadFamily();
     });
+    
+    async function showAdminApprovals() {
+        const wrap = document.getElementById('adminApprovalsWrap');
+        const list = document.getElementById('adminApprovalsList');
+        if (!wrap || !list) return;
+        wrap.classList.remove('hidden');
+        list.innerHTML = '<div class="text-sm text-gray-500">Loading...</div>';
+
+        const { data: pending, error } = await supabaseClient
+            .from('family_relations')
+            .select('id, person_a, person_b, relation, metadata, created_by, created_at')
+            .eq('status','pending')
+            .order('created_at', { ascending: false });
+
+        if (error) { list.innerHTML = '<div class="text-sm text-red-600">Failed to load</div>'; console.error(error); return; }
+
+        if (!pending || pending.length === 0) { list.innerHTML = '<div class="text-sm text-gray-400">No pending suggestions</div>'; return; }
+
+        list.innerHTML = '';
+        for (const r of pending) {
+            const { data: a } = await supabaseClient.from('profiles').select('id, first_name, last_name').eq('id', r.person_a).single();
+            const { data: b } = await supabaseClient.from('profiles').select('id, first_name, last_name').eq('id', r.person_b).single();
+
+            const row = document.createElement('div');
+            row.className = 'flex items-center justify-between gap-3 p-2 rounded bg-surface-50 border border-gray-100';
+            row.innerHTML = `
+                <div class="text-sm">${escapeHtml((a.first_name||'')+' '+(a.last_name||''))} → ${escapeHtml((b.first_name||'')+' '+(b.last_name||''))}</div>
+                <div class="flex items-center gap-2">
+                    <button data-id="${r.id}" data-action="approve" class="px-2 py-1 bg-emerald-600 text-white rounded text-sm">Approve</button>
+                    <button data-id="${r.id}" data-action="reject" class="px-2 py-1 bg-red-50 text-red-700 rounded text-sm">Reject</button>
+                </div>
+            `;
+            list.appendChild(row);
+        }
+
+        list.addEventListener('click', async function(e){
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            const action = btn.dataset.action;
+            if (!id || !action) return;
+            if (action === 'approve') await updateStatusInline(id, 'approved');
+            if (action === 'reject') await updateStatusInline(id, 'rejected');
+            // refresh both approvals and main list
+            await showAdminApprovals();
+            await loadFamily();
+        });
+    }
+
+    async function updateStatusInline(id, status) {
+        try {
+            const { data: sess } = await supabaseClient.auth.getSession();
+            const approver = sess?.data?.session?.user?.id || null;
+            const { error } = await supabaseClient
+                .from('family_relations')
+                .update({ status: status, approved_by: approver, updated_at: new Date().toISOString() })
+                .eq('id', id);
+            if (error) console.error('update status error', error);
+        } catch (err) { console.error('updateStatusInline error', err); }
+    }
 })();
