@@ -35,17 +35,32 @@
         @media (max-width: 767px) {
             body[data-active-page="contribution"] > nav { display: none !important; }
         }
-        /* Force lottie player to fill its fixed container */
+        /* Lottie full-screen cover background */
         #lottie-bg {
             position: fixed;
             inset: 0;
             z-index: 0;
             overflow: hidden;
             pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        /* Scale the web component to always cover the viewport.
+           Works like background-size:cover — fills height, overflows width. */
         #lottie-bg dotlottie-player {
-            position: absolute !important;
-            inset: 0 !important;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* assume landscape ~16:9 animation */
+            height: 100vh;
+            width: calc(100vh * 16 / 9);
+            min-width: 100vw;
+        }
+        /* Guarantee the internal canvas/svg fills the player shell */
+        #lottie-bg dotlottie-player canvas,
+        #lottie-bg dotlottie-player svg {
             width: 100% !important;
             height: 100% !important;
         }
@@ -192,5 +207,30 @@
     <script src="../js/portal/portal.js"></script>
     <script src="../js/portal/contribution.js"></script>
     <script src="../js/sw-register.js"></script>
+    <script>
+        // Pierce the shadow DOM after the dotlottie player initialises
+        // to ensure the internal canvas covers its container.
+        (function () {
+            function patchLottieCanvas() {
+                const player = document.querySelector('#lottie-bg dotlottie-player');
+                if (!player || !player.shadowRoot) return;
+                const canvas = player.shadowRoot.querySelector('canvas');
+                if (canvas) {
+                    Object.assign(canvas.style, {
+                        position: 'absolute',
+                        top: '0', left: '0',
+                        width: '100%', height: '100%',
+                    });
+                }
+            }
+            // Try immediately and again after a short delay
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(patchLottieCanvas, 500);
+                setTimeout(patchLottieCanvas, 1500);
+            });
+            const player = document.querySelector('#lottie-bg dotlottie-player');
+            if (player) player.addEventListener('ready', patchLottieCanvas);
+        })();
+    </script>
 </body>
 </html>
