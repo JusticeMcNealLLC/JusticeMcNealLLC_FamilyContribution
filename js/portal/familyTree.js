@@ -20,7 +20,8 @@
         // Build nodes map
         const nodes = {};
         profiles.forEach(p => {
-            nodes[p.id] = { data: { id: p.id, label: (p.first_name||'') + ' ' + (p.last_name||'').split(' ')[0] } };
+            const name = ((p.first_name||'') + ' ' + (p.last_name||'')).trim();
+            nodes[p.id] = { data: { id: p.id, label: name || p.id } };
         });
 
         // Build edges

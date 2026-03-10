@@ -100,7 +100,7 @@ const TreeViz = (function(){
             container: container,
             elements: elements,
             style: [
-                { selector: 'node', style: { 'label': 'data(label)', 'text-valign':'center', 'color':'#111827','font-size':'12px','background-color':'#fff','border-width':2,'border-color':'#e5e7eb','width':54,'height':54 } },
+                { selector: 'node', style: { 'label': 'data(label)', 'text-valign':'center', 'color':'#ffffff','font-size':'12px','background-color':'#6366f1','border-width':2,'border-color':'#4f46e5','width':54,'height':54 } },
                 { selector: 'edge', style: { 'curve-style':'bezier','target-arrow-shape':'triangle','line-color':'#c7d2fe','target-arrow-color':'#c7d2fe','width':2,'label':'data(relation)','font-size':'10px','text-rotation':'autorotate','text-margin-y':-8 } }
             ],
             layout: { name: 'breadthfirst', directed: true, padding: 10, spacingFactor: 1.2 },
