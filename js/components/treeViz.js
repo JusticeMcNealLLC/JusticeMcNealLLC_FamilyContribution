@@ -130,6 +130,11 @@ const TreeViz = (function(){
             layout.run();
             layout.on('layoutstop', function(){
                 try { cy.fit(50); } catch(_){}
+                try {
+                    console.log('[TreeViz] layoutstop - nodes:', cy.nodes().length, 'edges:', cy.edges().length, 'ids:', cy.nodes().map(n=>n.id()));
+                    const bb = cy.elements().boundingBox();
+                    console.log('[TreeViz] boundingBox:', bb);
+                } catch (e) { console.warn('[TreeViz] layout debug error', e); }
                 // if no nodes, show a friendly message
                 if (cy.nodes().length === 0) {
                     if (!container.querySelector('.tv-empty')) {
@@ -156,6 +161,9 @@ const TreeViz = (function(){
         } catch (err) {
             console.warn('layout/run error', err);
         }
+
+        // quick post-init debug: report nodes/edges
+        try { console.log('[TreeViz] init - nodes:', cy.nodes().length, 'edges:', cy.edges().length); } catch(_){}
 
         // responsive: resize on window resize
         window.addEventListener('resize', function(){
