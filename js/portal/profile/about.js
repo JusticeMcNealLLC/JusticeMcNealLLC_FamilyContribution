@@ -105,8 +105,8 @@ window.ProfileApp.populateAboutBadges = async function populateAboutBadges() {
         const badge = (typeof BADGE_CATALOG !== 'undefined' && BADGE_CATALOG[b.badge_key])
             || { emoji: '🏅', name: b.badge_key, rarity: 'common' };
         return `
-            <div class="flex flex-col items-center gap-1 p-2 rounded-xl bg-gray-50/80">
-                <div class="badge-chip badge-rarity-${badge.rarity || 'common'} w-10 h-10 text-lg">${badge.emoji}</div>
+            <div class="flex flex-col items-center gap-1 p-2 rounded-xl">
+                <div class="badge-chip badge-rarity-${badge.rarity || 'common'} w-12 h-12 text-xl">${badge.emoji}</div>
                 <span class="text-[9px] text-gray-500 text-center leading-tight truncate w-full">${badge.name}</span>
             </div>`;
     }).join('');
