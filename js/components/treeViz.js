@@ -114,6 +114,37 @@ const TreeViz = (function(){
             motionBlur: true,
         });
 
+        // immediate sanity checks
+        try {
+            console.log('[TreeViz] cytoscape available:', typeof cytoscape !== 'undefined');
+            console.log('[TreeViz] cy object:', cy);
+        } catch (e) { console.warn('[TreeViz] cytoscape check error', e); }
+
+        setTimeout(function(){
+            try {
+                const childCount = (container.children || []).length;
+                console.log('[TreeViz] container children after init:', childCount, container.children);
+                if (!childCount) {
+                    if (!container.querySelector('.tv-init-failed')) {
+                        const fm = document.createElement('div');
+                        fm.className = 'tv-init-failed';
+                        fm.style.position = 'absolute';
+                        fm.style.left = '50%';
+                        fm.style.top = '50%';
+                        fm.style.transform = 'translate(-50%,-50%)';
+                        fm.style.background = 'rgba(255,240,240,0.95)';
+                        fm.style.color = '#7f1d1d';
+                        fm.style.padding = '10px 14px';
+                        fm.style.border = '1px solid rgba(127,29,29,0.12)';
+                        fm.style.borderRadius = '8px';
+                        fm.style.zIndex = 2000;
+                        fm.textContent = 'Cytoscape renderer not attached (no child nodes). See console for details.';
+                        container.appendChild(fm);
+                    }
+                }
+            } catch (err) { console.warn('[TreeViz] post-init child check error', err); }
+        }, 250);
+
         // attach controls overlay
         createControls(container, cy);
 
