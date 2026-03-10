@@ -26,6 +26,7 @@
                 <div class="flex items-center gap-2">
                     <input id="searchInput" placeholder="Search members" class="px-3 py-2 rounded-lg border border-gray-200 focus:outline-none" />
                     <button id="refreshBtn" class="bg-brand-600 text-white px-3 py-2 rounded-lg">Refresh</button>
+                    <button id="addRelationBtn" class="ml-2 inline-flex items-center gap-2 bg-white border border-gray-200 px-3 py-2 rounded-lg text-sm hover:bg-gray-50">Add Relation</button>
                 </div>
             </div>
         </div>
@@ -45,11 +46,48 @@
     <script src="https://unpkg.com/cytoscape@3.24.0/dist/cytoscape.min.js"></script>
     <script src="../js/components/treeViz.js"></script>
     <script src="../js/portal/familyTree.js"></script>
+    <script src="../js/portal/treeEdit.js"></script>
     <script>
         // initialize
         document.addEventListener('DOMContentLoaded', function(){
             if (window.loadFamilyTree) window.loadFamilyTree();
         });
     </script>
+
+    <!-- Add Relation Modal -->
+    <div id="relationModal" class="fixed inset-0 hidden items-center justify-center z-50">
+        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="relative bg-white rounded-2xl w-full max-w-xl p-6 shadow-lg">
+            <h3 class="text-lg font-semibold mb-3">Suggest a Relation</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-gray-600">Person A</label>
+                    <select id="personASelect" class="w-full mt-1 p-2 border rounded"></select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-600">Person B</label>
+                    <select id="personBSelect" class="w-full mt-1 p-2 border rounded"></select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-600">Relation</label>
+                    <select id="relationType" class="w-full mt-1 p-2 border rounded">
+                        <option value="parent">Parent</option>
+                        <option value="child">Child</option>
+                        <option value="spouse">Spouse</option>
+                        <option value="sibling">Sibling</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-600">Note (optional)</label>
+                    <textarea id="relationNote" rows="3" class="w-full mt-1 p-2 border rounded"></textarea>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center justify-end gap-2">
+                <button id="cancelRelation" class="px-3 py-2 rounded bg-gray-100">Cancel</button>
+                <button id="submitRelation" class="px-3 py-2 rounded bg-brand-600 text-white">Submit Suggestion</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
