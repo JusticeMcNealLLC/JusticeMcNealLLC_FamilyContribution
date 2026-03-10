@@ -196,22 +196,37 @@
         if (!d) return;
 
         const typeBadge = t => t === 'tree_person'
-            ? '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full">Non-member</span>'
-            : '<span class="ml-1 text-[10px] font-semibold px-1.5 py-0.5 bg-brand-100 text-brand-700 rounded-full">Member</span>';
+            ? '<span class="text-[10px] font-semibold px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full">Non-member</span>'
+            : '<span class="text-[10px] font-semibold px-1.5 py-0.5 bg-brand-100 text-brand-700 rounded-full">Member</span>';
+
+        const setAvatar = (elId, name, type) => {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            el.textContent = (name || '?').charAt(0).toUpperCase();
+            const isMember = type !== 'tree_person';
+            el.className = 'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ' +
+                (isMember ? 'bg-brand-100 text-brand-600' : 'bg-gray-100 text-gray-500');
+        };
 
         const relLabel = { parent:'Parent', child:'Child', spouse:'Spouse', sibling:'Sibling', other:'Other' };
-
-        const submittedAt = d.created_at ? new Date(d.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '';
+        const submittedAt = d.created_at
+            ? new Date(d.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+            : '';
         const note = d.metadata?.note || '';
 
-        document.getElementById('pendingDetailPersonA').innerHTML =
-            `<span class="font-semibold text-gray-900">${escapeHtml(d.nameA)}</span>${typeBadge(d.person_a_type)}`;
-        document.getElementById('pendingDetailPersonB').innerHTML =
-            `<span class="font-semibold text-gray-900">${escapeHtml(d.nameB)}</span>${typeBadge(d.person_b_type)}`;
-        document.getElementById('pendingDetailRelation').textContent =
-            relLabel[d.relation] || d.relation;
         document.getElementById('pendingDetailSubmitter').textContent =
-            `Suggested by ${escapeHtml(d.nameSubmitter || 'Unknown')}${submittedAt ? ' · ' + submittedAt : ''}`;
+            `Suggested by ${d.nameSubmitter || 'Unknown'}${submittedAt ? ' \u00b7 ' + submittedAt : ''}`;
+
+        document.getElementById('pendingDetailPersonA').innerHTML =
+            `<span class="text-sm font-semibold text-gray-900">${escapeHtml(d.nameA)}</span>${typeBadge(d.person_a_type)}`;
+        document.getElementById('pendingDetailPersonB').innerHTML =
+            `<span class="text-sm font-semibold text-gray-900">${escapeHtml(d.nameB)}</span>${typeBadge(d.person_b_type)}`;
+
+        setAvatar('pendingDetailAvatarA', d.nameA, d.person_a_type);
+        setAvatar('pendingDetailAvatarB', d.nameB, d.person_b_type);
+
+        document.getElementById('pendingDetailRelation').textContent = relLabel[d.relation] || d.relation;
+
         const noteEl = document.getElementById('pendingDetailNote');
         if (note) { noteEl.textContent = note; noteEl.classList.remove('hidden'); }
         else { noteEl.classList.add('hidden'); }

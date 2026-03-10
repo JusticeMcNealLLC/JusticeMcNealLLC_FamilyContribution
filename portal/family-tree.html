@@ -555,53 +555,68 @@
     <div id="pendingDetailModal" class="fixed inset-0 hidden items-center justify-center z-[1000] p-4">
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
         <div class="relative bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-amber-100 bg-amber-50">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-base font-bold text-gray-900">Suggestion Details</h3>
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-amber-100 bg-amber-50">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                    <h3 class="text-sm font-bold text-amber-900">Pending Suggestion</h3>
                 </div>
                 <button id="closePendingDetail"
-                        class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-amber-100 hover:text-gray-600 transition">
+                        class="w-7 h-7 flex items-center justify-center rounded-lg text-amber-400 hover:bg-amber-100 transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-            <div class="px-6 py-5 space-y-4">
+
+            <!-- Body -->
+            <div class="px-5 py-4 space-y-3">
+                <!-- Submitter meta -->
                 <p id="pendingDetailSubmitter" class="text-xs text-gray-400"></p>
-                <!-- People -->
-                <div class="grid grid-cols-[1fr_auto_1fr] items-start gap-3">
-                    <div class="text-center">
-                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Person A</div>
-                        <div id="pendingDetailPersonA" class="text-sm text-center leading-snug"></div>
-                    </div>
-                    <svg class="w-5 h-5 text-gray-300 mt-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                    <div class="text-center">
-                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Person B</div>
-                        <div id="pendingDetailPersonB" class="text-sm text-center leading-snug"></div>
+
+                <!-- Person A card -->
+                <div class="flex items-center gap-3 bg-surface-50 rounded-xl px-4 py-3">
+                    <div id="pendingDetailAvatarA"
+                         class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold"></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Person A</div>
+                        <div id="pendingDetailPersonA" class="flex items-center gap-1.5 flex-wrap"></div>
                     </div>
                 </div>
-                <!-- Relation type -->
+
+                <!-- Relation pill (centred between A and B) -->
                 <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Relationship</span>
-                    <span id="pendingDetailRelation" class="text-sm font-semibold text-brand-700 bg-brand-50 px-3 py-1 rounded-full capitalize"></span>
+                    <div class="flex-1 h-px bg-gray-100"></div>
+                    <span id="pendingDetailRelation"
+                          class="text-xs font-bold text-brand-700 bg-brand-50 border border-brand-100 px-3 py-1 rounded-full capitalize tracking-wide"></span>
+                    <div class="flex-1 h-px bg-gray-100"></div>
                 </div>
-                <!-- Note -->
-                <div id="pendingDetailNote" class="hidden text-sm text-gray-700 bg-surface-100 rounded-xl px-4 py-3 italic"></div>
+
+                <!-- Person B card -->
+                <div class="flex items-center gap-3 bg-surface-50 rounded-xl px-4 py-3">
+                    <div id="pendingDetailAvatarB"
+                         class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold"></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Person B</div>
+                        <div id="pendingDetailPersonB" class="flex items-center gap-1.5 flex-wrap"></div>
+                    </div>
+                </div>
+
+                <!-- Note (if any) -->
+                <div id="pendingDetailNote"
+                     class="hidden text-sm text-gray-600 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 italic leading-relaxed"></div>
             </div>
-            <div class="px-6 py-4 bg-surface-50 border-t border-gray-100 flex items-center justify-between gap-2">
+
+            <!-- Footer -->
+            <div class="px-5 py-4 bg-surface-50 border-t border-gray-100 flex items-center justify-between gap-3">
                 <button id="pendingDetailReject" data-id=""
-                        class="px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition">
+                        class="flex-1 py-2.5 text-sm font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition border border-red-100">
                     Reject
                 </button>
                 <button id="pendingDetailApprove" data-id=""
-                        class="px-5 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm">
+                        class="flex-1 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-sm">
                     Approve
                 </button>
             </div>
