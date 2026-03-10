@@ -34,30 +34,25 @@
 </head>
 <body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="quests">
 
-    <div id="nav-placeholder"></div>
+    <!-- Full-bleed Hero (replaces top nav on this page) -->
+    <div id="cpHero">
+        <!-- Gradient skeleton shown until JS renders the real hero -->
+        <div class="w-full bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 animate-pulse" style="min-height: 185px; padding-top: max(1rem, env(safe-area-inset-top));"></div>
+    </div>
 
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-8 flex-1 w-full">
-
-        <!-- Header -->
-        <div class="mb-5 sm:mb-6">
-            <h1 class="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Quests</h1>
-            <p class="text-gray-500 mt-0.5 sm:mt-1 text-sm">Complete tasks to earn Credit Points and unlock rewards</p>
-        </div>
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
 
         <!-- Loading State -->
         <div id="loadingState">
             <div class="space-y-4">
-                <div class="skeleton h-36 rounded-2xl"></div>
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="skeleton h-20 rounded-xl"></div>
-                    <div class="skeleton h-20 rounded-xl"></div>
-                    <div class="skeleton h-20 rounded-xl"></div>
-                </div>
                 <div class="skeleton h-10 rounded-xl"></div>
-                <div class="space-y-3">
-                    <div class="skeleton h-24 rounded-2xl"></div>
-                    <div class="skeleton h-24 rounded-2xl"></div>
-                    <div class="skeleton h-24 rounded-2xl"></div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="skeleton aspect-square rounded-full"></div>
+                    <div class="skeleton aspect-square rounded-full"></div>
+                    <div class="skeleton aspect-square rounded-full"></div>
+                    <div class="skeleton aspect-square rounded-full"></div>
+                    <div class="skeleton aspect-square rounded-full"></div>
+                    <div class="skeleton aspect-square rounded-full"></div>
                 </div>
             </div>
         </div>
@@ -77,17 +72,11 @@
         <!-- Main Content (hidden until loaded) -->
         <div id="questsContent" class="hidden space-y-5 sm:space-y-6">
 
-            <!-- CP Hero Card -->
-            <div id="cpHero"></div>
-
-            <!-- Quick Stats -->
-            <div id="questStats"></div>
-
             <!-- Filter Tabs -->
             <div id="questFilters"></div>
 
-            <!-- Quest List -->
-            <div id="questList" class="space-y-3"></div>
+            <!-- Quest Grid (3-column circles) -->
+            <div id="questList"></div>
 
             <!-- Badge Collection -->
             <section class="mt-6 sm:mt-8">

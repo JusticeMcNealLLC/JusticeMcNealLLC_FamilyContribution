@@ -4,50 +4,62 @@
 // ══════════════════════════════════════════
 
 // ─── CP Hero Card ────────────────────────────────────────
-function renderCPHero(cpBalance, earnedBadges) {
+function renderCPHero(cpBalance, earnedBadges, profile) {
     const container = document.getElementById('cpHero');
     if (!container) return;
 
     const tier = getCPTier(cpBalance);
     const next = getNextCPTier(cpBalance);
     const progress = getCPProgress(cpBalance);
-    const displayedBadge = earnedBadges.find(b => b.is_displayed);
+
+    const firstName  = profile?.first_name  || '';
+    const lastName   = profile?.last_name   || '';
+    const photoUrl   = profile?.profile_picture_url || null;
+    const initials   = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase() || '?';
 
     container.innerHTML = `
-        <div class="bg-gradient-to-br ${tier.gradientFrom} ${tier.gradientTo} rounded-2xl p-5 sm:p-6 text-white relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-12 translate-x-12"></div>
-            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-8 -translate-x-8"></div>
-            <div class="relative">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="text-3xl">${tier.emoji}</div>
-                        <div>
-                            <div class="text-sm font-medium text-white/80">Current Status</div>
-                            <div class="text-xl font-extrabold">${tier.name}</div>
-                        </div>
+        <div class="w-full bg-gradient-to-br ${tier.gradientFrom} ${tier.gradientTo} text-white relative overflow-hidden">
+            <!-- Dot grid overlay -->
+            <div class="absolute inset-0 pointer-events-none" style="background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px); background-size: 22px 22px;"></div>
+            <!-- Orb decoration -->
+            <div class="absolute top-0 right-0 w-56 h-56 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%); transform: translate(35%, -35%);"></div>
+
+            <div class="relative px-5 pb-6" style="padding-top: max(2.5rem, calc(env(safe-area-inset-top, 0px) + 1rem));">
+
+                <!-- Avatar + Rank + Name row -->
+                <div class="flex items-center gap-4 mb-5">
+                    <!-- Profile photo -->
+                    <div class="w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/30 flex-shrink-0 bg-white/20 flex items-center justify-center shadow-lg">
+                        ${photoUrl
+                            ? `<img src="${photoUrl}" class="w-full h-full object-cover" alt="">`
+                            : `<span class="text-white text-xl font-bold">${initials}</span>`
+                        }
                     </div>
-                    <div class="text-right">
-                        <div class="text-3xl font-extrabold">${cpBalance}</div>
-                        <div class="text-sm text-white/70">Credit Points</div>
+                    <!-- Name + Rank -->
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[11px] font-semibold uppercase tracking-widest text-white/60 mb-0.5">${tier.emoji} ${tier.name}</div>
+                        <div class="text-2xl font-extrabold text-white leading-tight truncate">${firstName || 'Member'}</div>
+                    </div>
+                    <!-- CP count -->
+                    <div class="text-right flex-shrink-0">
+                        <div class="text-2xl font-extrabold leading-none">${cpBalance}</div>
+                        <div class="text-[11px] text-white/60 mt-0.5">Credit Points</div>
                     </div>
                 </div>
+
+                <!-- Tier progress bar -->
                 ${next ? `
-                <div class="mt-3">
-                    <div class="flex items-center justify-between text-sm mb-1.5">
-                        <span class="text-white/80">Next: ${next.emoji} ${next.name}</span>
-                        <span class="font-semibold">${progress}%</span>
+                <div>
+                    <div class="flex items-center justify-between text-xs mb-1.5">
+                        <span class="text-white/70">Next: ${next.emoji} ${next.name}</span>
+                        <span class="font-semibold text-white/90">${progress}%</span>
                     </div>
-                    <div class="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
+                    <div class="w-full h-2 bg-white/20 rounded-full overflow-hidden">
                         <div class="h-full bg-white/90 rounded-full transition-all duration-1000 ease-out" style="width: ${progress}%"></div>
                     </div>
-                    <div class="text-xs text-white/60 mt-1">${next.minCP - cpBalance} CP to go</div>
+                    <div class="text-[10px] text-white/50 mt-1.5">${next.minCP - cpBalance} CP to go</div>
                 </div>` : `
-                <div class="mt-3 text-sm text-white/80">You've reached the highest tier! 👑</div>`}
-                ${displayedBadge ? `
-                <div class="mt-3 pt-3 border-t border-white/20 flex items-center gap-2">
-                    <span class="text-lg">${getBadge(displayedBadge.badge_key).emoji}</span>
-                    <span class="text-sm text-white/80">Displaying: <strong class="text-white">${getBadge(displayedBadge.badge_key).name}</strong></span>
-                </div>` : ''}
+                <div class="text-sm text-white/70">You've reached the highest tier! 👑</div>`}
             </div>
         </div>
     `;
@@ -112,7 +124,7 @@ function renderQuestFilters(activeFilter) {
     });
 }
 
-// ─── Quest Cards ─────────────────────────────────────────
+// ─── Quest Grid (3-column circles) ───────────────────────
 function renderQuestList(quests, memberQuests, filter) {
     const container = document.getElementById('questList');
     if (!container) return;
@@ -153,9 +165,9 @@ function renderQuestList(quests, memberQuests, filter) {
         return;
     }
 
-    container.innerHTML = filtered.map(q => renderQuestCard(q)).join('');
+    container.innerHTML = `<div class="grid grid-cols-3 gap-4">${filtered.map(q => renderQuestCard(q)).join('')}</div>`;
 
-    // Wire up card interactions
+    // Wire up card interactions (locked quests use pointer-events-none so no handler needed)
     container.querySelectorAll('[data-quest-id]').forEach(card => {
         card.addEventListener('click', () => {
             const questId = card.dataset.questId;
@@ -167,14 +179,10 @@ function renderQuestList(quests, memberQuests, filter) {
 function renderQuestCard(quest) {
     const mq = quest.memberQuest;
     const status = mq ? mq.status : 'available';
-    const statusCfg = getQuestStatusConfig(status);
-    const catCfg = QUEST_CATEGORIES[quest.category] || QUEST_CATEGORIES.general;
     const isCompleted = status === 'completed';
+    const isInProgress = ['in_progress', 'submitted'].includes(status);
 
     // ── Contributor gate ──────────────────────────────────
-    // A quest is locked when: the user isn't an active contributor AND either
-    //  a) the DB flag contributor_required is true (set per-row in migration 043), OR
-    //  b) the quest's auto_detect_key is in the client-side CONTRIBUTOR_REQUIRED_QUESTS set.
     const isContributorLocked =
         !_isContributor && (
             quest.contributor_required ||
@@ -183,80 +191,42 @@ function renderQuestCard(quest) {
              CONTRIBUTOR_REQUIRED_QUESTS.has(quest.auto_detect_key))
         );
 
+    // Circle bg + ring based on status
+    let circleBg, ringCss;
     if (isContributorLocked) {
-        const lockedBadgeReward = quest.badge_reward_key ? getBadge(quest.badge_reward_key) : null;
-        return `
-        <div class="group bg-white rounded-2xl border border-gray-200/60 p-4 sm:p-5 opacity-60 select-none" title="Activate your contribution to unlock this quest">
-            <div class="flex items-start gap-3.5">
-                <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 text-xl grayscale">
-                    ${quest.emoji || '🎯'}
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-start justify-between gap-2 mb-1">
-                        <h3 class="font-bold text-gray-400 text-sm leading-tight">${quest.title}</h3>
-                        <span class="flex-shrink-0 inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">
-                            🔒 Members Only
-                        </span>
-                    </div>
-                    <p class="text-xs text-gray-400 mb-2">Activate your contribution to unlock this quest and start earning CP.</p>
-                    <div class="flex items-center gap-3 text-xs text-gray-300">
-                        <span>+${quest.cp_reward} CP</span>
-                        <span>•</span>
-                        <span>${getQuestTypeLabel(quest.quest_type)}</span>
-                        ${lockedBadgeReward ? `<span>•</span><span class="grayscale">${lockedBadgeReward.emoji} ${lockedBadgeReward.name}</span>` : ''}
-                    </div>
-                </div>
-                <svg class="w-5 h-5 text-gray-200 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-            </div>
-        </div>`;
+        circleBg = 'bg-gray-100';
+        ringCss  = '';
+    } else if (isCompleted) {
+        circleBg = 'bg-emerald-100';
+        ringCss  = 'ring-2 ring-emerald-300 ring-offset-2';
+    } else if (isInProgress) {
+        circleBg = 'bg-amber-50';
+        ringCss  = 'ring-2 ring-amber-300 ring-offset-2';
+    } else {
+        circleBg = 'bg-brand-50';
+        ringCss  = 'ring-2 ring-brand-200 ring-offset-2';
     }
 
-    // Progress bar for streak / tracked quests
-    const hasProgress = mq && mq.progress_target > 0 && !isCompleted;
-    const progressPct = hasProgress ? Math.min(100, Math.round((mq.progress_current / mq.progress_target) * 100)) : 0;
-    const progressLabel = hasProgress ? `${mq.progress_current}/${mq.progress_target}` : '';
+    const emojiContent = isContributorLocked ? '🔒' : (quest.emoji || '🎯');
 
-    // Progress note (e.g. "Next payment: Apr 1, 2026")
-    const progressNote = mq && mq.progress_note && !isCompleted ? mq.progress_note : '';
+    // Completed checkmark badge
+    const completedBadge = isCompleted ? `
+        <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        </div>` : '';
+
+    // CP label in corner (only for uncompleted, unlocked)
+    const cpBadge = (!isCompleted && !isContributorLocked) ? `
+        <div class="absolute -top-1 -right-1 text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-amber-900 leading-none shadow-sm">+${quest.cp_reward}</div>` : '';
 
     return `
-        <div data-quest-id="${quest.id}" class="group bg-white rounded-2xl border ${isCompleted ? 'border-emerald-200 bg-emerald-50/30' : 'border-gray-200/80'} p-4 sm:p-5 cursor-pointer card-hover transition">
-            <div class="flex items-start gap-3.5">
-                <div class="w-12 h-12 rounded-xl ${isCompleted ? 'bg-emerald-100' : 'bg-gray-100'} flex items-center justify-center flex-shrink-0 text-xl group-hover:scale-105 transition-transform">
-                    ${quest.emoji || '🎯'}
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-start justify-between gap-2 mb-1">
-                        <h3 class="font-bold text-gray-900 text-sm leading-tight ${isCompleted ? 'line-through text-gray-400' : ''}">${quest.title}</h3>
-                        <span class="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${statusCfg.bg} ${statusCfg.text}">${statusCfg.label}</span>
-                    </div>
-                    <p class="text-xs text-gray-500 mb-2 line-clamp-2">${quest.description || ''}</p>
-                    ${hasProgress ? `
-                    <div class="mb-2">
-                        <div class="flex items-center justify-between text-[10px] mb-1">
-                            <span class="font-semibold text-brand-600">${progressLabel} months</span>
-                            <span class="text-gray-400">${progressPct}%</span>
-                        </div>
-                        <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-brand-500 to-brand-600 rounded-full transition-all duration-700 ease-out" style="width: ${progressPct}%"></div>
-                        </div>
-                    </div>` : ''}
-                    ${progressNote ? `<div class="text-[10px] text-gray-400 mb-1.5">${progressNote}</div>` : ''}
-                    <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs">
-                        <span class="font-semibold text-brand-600">+${quest.cp_reward} CP</span>
-                        <span class="text-gray-400">•</span>
-                        <span class="text-gray-400">${getQuestTypeLabel(quest.quest_type)}</span>
-                        ${quest.requires_proof ? '<span class="text-gray-400">•</span><span class="text-amber-600">📎 Proof required</span>' : ''}
-                        ${quest.badge_reward_key ? (() => {
-                            const br = getBadge(quest.badge_reward_key);
-                            const brRarity = getBadgeRarity(quest.badge_reward_key);
-                            return `<span class="text-gray-400">•</span><span class="${brRarity.cssClass} text-[10px] font-semibold px-1.5 py-0.5 rounded-full">${br.emoji} ${br.name}</span>`;
-                        })() : ''}
-                    </div>
-                    ${mq && mq.completed_at ? `<div class="text-xs text-emerald-600 mt-1.5">✓ Completed ${formatDate(mq.completed_at)}</div>` : ''}
-                </div>
-                <svg class="w-5 h-5 text-gray-300 group-hover:text-brand-500 flex-shrink-0 mt-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        <div data-quest-id="${quest.id}" class="flex flex-col items-center gap-2 cursor-pointer group ${isContributorLocked ? 'opacity-40 pointer-events-none' : ''}">
+            <div class="relative w-full aspect-square rounded-full ${circleBg} ${ringCss} flex items-center justify-center text-3xl group-hover:scale-105 transition-transform">
+                <span class="${isContributorLocked ? 'grayscale opacity-60' : ''}">${emojiContent}</span>
+                ${completedBadge}
+                ${cpBadge}
             </div>
+            <span class="text-[10px] font-medium text-gray-600 text-center leading-tight line-clamp-2 w-full">${quest.title}</span>
         </div>
     `;
 }

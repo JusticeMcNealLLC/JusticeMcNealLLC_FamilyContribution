@@ -12,6 +12,7 @@ let _currentFilter = 'all';
 let _currentUserId = null;
 let _selectedProofFile = null;
 let _isContributor = false;   // true when user has active/trialing subscription
+let _memberProfile  = null;   // profile row (first_name, profile_picture_url, …)
 
 // ─── Entry Point ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function () {
@@ -77,12 +78,7 @@ async function loadQuestData() {
         _cpBalance = freshBal.data || 0;
 
         // Render everything with guaranteed-fresh data
-        renderCPHero(_cpBalance, _earnedBadges);
-        renderQuestStats(
-            _memberQuestsData.filter(mq => mq.status === 'completed').length,
-            _questsData.length,
-            _cpBalance
-        );
+        renderCPHero(_cpBalance, _earnedBadges, _memberProfile);
         renderQuestFilters(_currentFilter);
         renderQuestList(_questsData, _memberQuestsData, _currentFilter);
         renderBadgeCollection(_earnedBadges);
@@ -385,6 +381,7 @@ async function runAutoDetection() {
             .single();
 
         if (!profile) return;
+        _memberProfile = profile; // expose to renderCPHero
 
         // Fetch subscription for payment checks
         const { data: subscription } = await supabaseClient
