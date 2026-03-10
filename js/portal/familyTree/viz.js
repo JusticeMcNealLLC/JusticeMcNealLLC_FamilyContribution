@@ -185,6 +185,9 @@ const TreeViz = (function () {
             motionBlur: true,
         });
 
+        // If admin was confirmed before init() ran (timing: rAF delay), unlock now
+        if (isAdmin) cy.autoungrabify(false);
+
         // Run layout then fit — resize first so Cytoscape reads actual container dimensions
         cy.resize();
         const layout = cy.layout({ name: 'breadthfirst', directed: true, padding: 30, spacingFactor: 1.4 });
