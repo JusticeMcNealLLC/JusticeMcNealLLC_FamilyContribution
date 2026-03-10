@@ -568,8 +568,8 @@ input[type="date"] {
 .badge-highlights {
     position: absolute;
     bottom: 0;
-    left: 50%;
-    transform: translate(-50%, 50%);
+    right: 12px;
+    transform: translateY(50%);
     display: flex;
     align-items: center;
     gap: 8px;
