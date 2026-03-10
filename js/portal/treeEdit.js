@@ -85,6 +85,61 @@
             // ignore — fall back to pending
         }
 
+        // Check for existing identical relation (pending or approved)
+        try {
+            const { data: existing } = await supabaseClient
+                .from('family_relations')
+                .select('*')
+                .eq('person_a', a)
+                .eq('person_b', b)
+                .eq('relation', relation);
+
+            if (existing && existing.length) {
+                // If any existing is approved, bail out
+                const alreadyApproved = existing.find(r => r.status === 'approved');
+                if (alreadyApproved) {
+                    setButtonLoading(btn, false, 'Submit Suggestion');
+                    closeModal();
+                    alert('This relation already exists.');
+                    return;
+                }
+
+                // If there's a pending row and current user is admin, approve that instead of inserting duplicate
+                if (existing.find(r => r.status === 'pending')) {
+                    // determine admin status
+                    try {
+                        const { data: me } = await supabaseClient
+                            .from('profiles')
+                            .select('role')
+                            .eq('id', userId)
+                            .single();
+                        if (me && me.role === 'admin') {
+                            // approve all matching pending rows
+                            const ids = existing.filter(r => r.status === 'pending').map(r => r.id);
+                            const { error: updErr } = await supabaseClient
+                                .from('family_relations')
+                                .update({ status: 'approved', approved_by: userId, updated_at: new Date().toISOString() })
+                                .in('id', ids);
+                            if (updErr) console.error('approve existing error', updErr);
+                            setButtonLoading(btn, false, 'Submit Suggestion');
+                            closeModal();
+                            if (window.loadFamilyTree) window.loadFamilyTree();
+                            alert('Existing suggestion approved.');
+                            return;
+                        } else {
+                            setButtonLoading(btn, false, 'Submit Suggestion');
+                            alert('A similar suggestion is already pending.');
+                            return;
+                        }
+                    } catch (err) {
+                        console.error('check role error', err);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('existing check error', err);
+        }
+
         const { error } = await supabaseClient
             .from('family_relations')
             .insert(payload);
