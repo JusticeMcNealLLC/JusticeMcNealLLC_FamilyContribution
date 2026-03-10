@@ -124,15 +124,48 @@ const TreeViz = (function(){
             window.location.href = `profile.html?id=${id}`;
         });
 
+        // Ensure layout runs and then fit the view so nodes are visible
+        try {
+            const layout = cy.layout({ name: 'breadthfirst', directed: true, padding: 10, spacingFactor: 1.2 });
+            layout.run();
+            layout.on('layoutstop', function(){
+                try { cy.fit(50); } catch(_){}
+                // if no nodes, show a friendly message
+                if (cy.nodes().length === 0) {
+                    if (!container.querySelector('.tv-empty')) {
+                        const msg = document.createElement('div');
+                        msg.className = 'tv-empty';
+                        msg.style.position = 'absolute';
+                        msg.style.left = '50%';
+                        msg.style.top = '50%';
+                        msg.style.transform = 'translate(-50%, -50%)';
+                        msg.style.padding = '12px 16px';
+                        msg.style.background = 'rgba(255,255,255,0.95)';
+                        msg.style.border = '1px solid rgba(0,0,0,0.06)';
+                        msg.style.borderRadius = '10px';
+                        msg.style.boxShadow = '0 6px 18px rgba(16,24,40,0.06)';
+                        msg.style.zIndex = 998;
+                        msg.textContent = 'No nodes to display — ensure there are active profiles or approved relations.';
+                        container.appendChild(msg);
+                    }
+                } else {
+                    const existing = container.querySelector('.tv-empty');
+                    if (existing) existing.remove();
+                }
+            });
+        } catch (err) {
+            console.warn('layout/run error', err);
+        }
+
         // responsive: resize on window resize
         window.addEventListener('resize', function(){
-            try { cy.resize(); } catch(_){}
+            try { cy.resize(); } catch(_){ }
         });
 
         // double-click container to fit
         container.addEventListener('dblclick', function(e){
             e.stopPropagation();
-            try { cy.fit(50); } catch(_){}
+            try { cy.fit(50); } catch(_){ }
         });
     }
 
