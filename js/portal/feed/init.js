@@ -17,6 +17,59 @@ function closeFeedGate() {
     if (gate) { gate.classList.add('hidden'); gate.classList.remove('flex'); }
 }
 
+function setupPullToRefresh() {
+    const THRESHOLD = 80; // px of drag needed to trigger a refresh
+    const ptr     = document.getElementById('pullToRefresh');
+    const arrow   = document.getElementById('pullArrowIcon');
+    const spinner = document.getElementById('pullSpinnerIcon');
+    const label   = document.getElementById('pullLabel');
+    if (!ptr) return;
+
+    let startY    = 0;
+    let pulling   = false;
+    let triggered = false;
+
+    document.addEventListener('touchstart', (e) => {
+        if (window.scrollY === 0 && !feedLoading) {
+            startY  = e.touches[0].clientY;
+            pulling = true;
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!pulling) return;
+        const dy = e.touches[0].clientY - startY;
+        if (dy <= 0) { pulling = false; ptr.style.height = '0px'; return; }
+        // Rubber-band: compress drag distance so it feels natural
+        const pull = Math.min(dy, THRESHOLD + 32);
+        ptr.style.height = Math.round(pull * 0.6) + 'px';
+        triggered = dy >= THRESHOLD;
+        arrow.style.transform = triggered ? 'rotate(180deg)' : '';
+        label.textContent = triggered ? 'Release to refresh' : 'Pull to refresh';
+    }, { passive: true });
+
+    document.addEventListener('touchend', async () => {
+        if (!pulling) return;
+        pulling = false;
+        if (triggered) {
+            triggered = false;
+            arrow.classList.add('hidden');
+            spinner.classList.remove('hidden');
+            label.textContent = 'Refreshing...';
+            ptr.style.height = '54px';
+            await loadFeed();
+            ptr.style.height = '0px';
+            arrow.classList.remove('hidden');
+            spinner.classList.add('hidden');
+            label.textContent = 'Pull to refresh';
+        } else {
+            triggered = false;
+            ptr.style.height = '0px';
+        }
+        arrow.style.transform = '';
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     feedUser = await checkAuth();
     if (!feedUser) return;
@@ -66,6 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupFilters();
     setupPostDetail();
     setupInfiniteScroll();
+    setupPullToRefresh();
 
     // Load initial feed
     await loadFeed();

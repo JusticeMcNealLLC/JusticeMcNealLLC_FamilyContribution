@@ -38,6 +38,22 @@
 
     <main class="max-w-xl mx-auto px-0 sm:px-4 lg:px-8 pt-3 sm:py-4 flex-1 w-full">
 
+        <!-- Pull-to-Refresh Indicator -->
+        <div id="pullToRefresh" style="height:0;overflow:hidden;transition:height 0.2s ease" class="flex justify-center items-end">
+            <div class="flex flex-col items-center gap-1 pb-2">
+                <div class="w-8 h-8 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center">
+                    <svg id="pullArrowIcon" class="w-4 h-4 text-brand-600 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                    </svg>
+                    <svg id="pullSpinnerIcon" class="w-4 h-4 text-brand-600 animate-spin hidden" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                </div>
+                <span id="pullLabel" class="text-[11px] font-medium text-brand-600">Pull to refresh</span>
+            </div>
+        </div>
+
         <!-- Inline Composer (desktop only) -->
         <div id="inlineComposer" class="hidden sm:block mb-4">
             <div class="bg-white rounded-2xl border border-gray-200/80 p-4">
