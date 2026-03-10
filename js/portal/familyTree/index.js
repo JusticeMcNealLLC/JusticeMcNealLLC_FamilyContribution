@@ -91,18 +91,19 @@
 
     // ─── Member list ──────────────────────────────────────────────────────────
 
-    function renderMemberList(profiles) {
+    function renderMemberList(profiles, treePeople) {
         const listEl = document.getElementById('memberList');
         if (!listEl) return;
         listEl.innerHTML = '';
 
+        // --- Active members ---
         profiles.forEach(p => {
             const div = document.createElement('div');
             div.className = 'member-row flex items-center gap-3 px-4 py-3 cursor-pointer';
             div.dataset.name = fullName(p).toLowerCase();
             const avatarHtml = p.profile_picture_url
                 ? `<img src="${p.profile_picture_url}" alt="${escapeHtml(fullName(p))}" class="w-10 h-10 object-cover rounded-full">`
-                : `<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm text-gray-600">${(p.first_name || '').charAt(0)}</div>`;
+                : `<div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-sm font-semibold text-brand-600">${(p.first_name || '?').charAt(0)}</div>`;
 
             let badgeOverlay = '';
             if (p.displayed_badge && typeof buildNavBadgeOverlay === 'function') {
@@ -130,6 +131,45 @@
             div.addEventListener('click', () => { window.location.href = `profile.html?id=${p.id}`; });
             listEl.appendChild(div);
         });
+
+        // --- Non-member / family tree people ---
+        const tp = treePeople || [];
+        if (tp.length > 0) {
+            // Divider
+            const divider = document.createElement('div');
+            divider.className = 'px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 bg-surface-100 border-t border-gray-100';
+            divider.textContent = 'Non-Members';
+            listEl.appendChild(divider);
+
+            tp.forEach(person => {
+                const div = document.createElement('div');
+                div.className = 'member-row flex items-center gap-3 px-4 py-3';
+                div.dataset.name = (person.display_name || '').toLowerCase();
+
+                const avatarHtml = person.photo_url
+                    ? `<img src="${person.photo_url}" alt="${escapeHtml(person.display_name)}" class="w-10 h-10 object-cover rounded-full opacity-75">`
+                    : `<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-400">${(person.display_name || '?').charAt(0)}</div>`;
+
+                const deceasedBadge = person.death_year
+                    ? `<span class="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Deceased</span>`
+                    : '';
+
+                const years = person.birth_year
+                    ? (person.death_year ? `${person.birth_year}–${person.death_year}` : `b. ${person.birth_year}`)
+                    : '';
+
+                div.innerHTML = `
+                    <div class="relative flex-shrink-0">${avatarHtml}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center">
+                            <span class="text-sm font-medium text-gray-600 truncate">${escapeHtml(person.display_name)}</span>
+                            ${deceasedBadge}
+                        </div>
+                        <div class="text-xs text-gray-400 truncate">${escapeHtml(years)}</div>
+                    </div>`;
+                listEl.appendChild(div);
+            });
+        }
     }
 
     // ─── Admin approvals panel ────────────────────────────────────────────────
@@ -223,7 +263,7 @@
         const { profiles, relations, treePeople } = result;
         const elements = buildElements(profiles, relations, treePeople);
 
-        renderMemberList(profiles);
+        renderMemberList(profiles, treePeople);
         if (window.FamilyTreeUI) {
             window.FamilyTreeUI.hideMemberSkeleton();
             window.FamilyTreeUI.setMemberCount(profiles.length);
