@@ -61,6 +61,8 @@
             lottieUrl: 'assets/lottie/cat-playing.json',
             speed: 1,
             local: true,
+            blendMode: 'normal',
+            opacity: 1,
         },
         lightning: {
             name: 'Lightning',
@@ -114,19 +116,20 @@
             await ensureLottie();
         } catch { return null; }
 
-        const { loop = true, opacity = 0.55 } = options;
+        const { loop = true, opacity = effect.opacity || 0.55 } = options;
 
         // Remove any existing effect overlay
         const existing = container.querySelector('.lottie-banner-overlay');
         if (existing) existing.remove();
 
         // Create overlay div
+        const blend = effect.blendMode || 'screen';
         const overlay = document.createElement('div');
         overlay.className = 'lottie-banner-overlay';
         overlay.style.cssText = `
             position: absolute; inset: 0; z-index: 1;
             pointer-events: none; overflow: hidden;
-            opacity: ${opacity}; mix-blend-mode: screen;
+            opacity: ${opacity}; mix-blend-mode: ${blend};
         `;
         container.style.position = 'relative';
         container.appendChild(overlay);

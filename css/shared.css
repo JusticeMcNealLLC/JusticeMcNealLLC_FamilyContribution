@@ -1027,9 +1027,8 @@ input[type="date"] {
     content: '';
     position: absolute;
     inset: 0;
-    background:
-        radial-gradient(circle at 30% 40%, rgba(255,255,255,0.06) 0%, transparent 50%),
-        radial-gradient(circle at 70% 60%, rgba(255,255,255,0.04) 0%, transparent 40%);
+    background: linear-gradient(to top, rgba(0,0,0,0.2) 0%, transparent 100%);
+    z-index: 0;
 }
 
 /* ─── Edit Badge Picker (profile modal) ──────────────────── */
