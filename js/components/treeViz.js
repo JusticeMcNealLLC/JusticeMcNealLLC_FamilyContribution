@@ -114,38 +114,7 @@ const TreeViz = (function(){
             motionBlur: true,
         });
 
-        // immediate sanity checks
-        try {
-            console.log('[TreeViz] cytoscape available:', typeof cytoscape !== 'undefined');
-            console.log('[TreeViz] cy object:', cy);
-            // expose for debugging in console
-            try { window.__debug_cy = cy; window.__debug_elements = elements; } catch(_){}
-        } catch (e) { console.warn('[TreeViz] cytoscape check error', e); }
-
-        setTimeout(function(){
-            try {
-                const childCount = (container.children || []).length;
-                console.log('[TreeViz] container children after init:', childCount, container.children);
-                if (!childCount) {
-                    if (!container.querySelector('.tv-init-failed')) {
-                        const fm = document.createElement('div');
-                        fm.className = 'tv-init-failed';
-                        fm.style.position = 'absolute';
-                        fm.style.left = '50%';
-                        fm.style.top = '50%';
-                        fm.style.transform = 'translate(-50%,-50%)';
-                        fm.style.background = 'rgba(255,240,240,0.95)';
-                        fm.style.color = '#7f1d1d';
-                        fm.style.padding = '10px 14px';
-                        fm.style.border = '1px solid rgba(127,29,29,0.12)';
-                        fm.style.borderRadius = '8px';
-                        fm.style.zIndex = 2000;
-                        fm.textContent = 'Cytoscape renderer not attached (no child nodes). See console for details.';
-                        container.appendChild(fm);
-                    }
-                }
-            } catch (err) { console.warn('[TreeViz] post-init child check error', err); }
-        }, 250);
+        // (debug removed) initialize normally
 
         // attach controls overlay
         createControls(container, cy);
@@ -162,95 +131,8 @@ const TreeViz = (function(){
             const layout = cy.layout({ name: 'breadthfirst', directed: true, padding: 10, spacingFactor: 1.2 });
             layout.run();
             layout.on('layoutstop', function(){
-                try { cy.fit(50); } catch(_){}
-                try {
-                    console.log('[TreeViz] layoutstop - nodes:', cy.nodes().length, 'edges:', cy.edges().length, 'ids:', cy.nodes().map(n=>n.id()));
-                    const bb = cy.elements().boundingBox();
-                    console.log('[TreeViz] boundingBox:', bb);
-                } catch (e) { console.warn('[TreeViz] layout debug error', e); }
-                // if no nodes, show a friendly message
-                if (cy.nodes().length === 0) {
-                    if (!container.querySelector('.tv-empty')) {
-                        const msg = document.createElement('div');
-                        msg.className = 'tv-empty';
-                        msg.style.position = 'absolute';
-                        msg.style.left = '50%';
-                        msg.style.top = '50%';
-                        msg.style.transform = 'translate(-50%, -50%)';
-                        msg.style.padding = '12px 16px';
-                        msg.style.background = 'rgba(255,255,255,0.95)';
-                        msg.style.border = '1px solid rgba(0,0,0,0.06)';
-                        msg.style.borderRadius = '10px';
-                        msg.style.boxShadow = '0 6px 18px rgba(16,24,40,0.06)';
-                        msg.style.zIndex = 998;
-                        msg.textContent = 'No nodes to display — ensure there are active profiles or approved relations.';
-                        container.appendChild(msg);
-                    }
-                } else {
-                    const existing = container.querySelector('.tv-empty');
-                    if (existing) existing.remove();
-                }
-
-                // DEBUG: force a compact grid layout after breadthfirst so nodes are definitely visible
-                try {
-                    if (cy.nodes().length > 0) {
-                        const count = cy.nodes().length;
-                        const rows = Math.ceil(Math.sqrt(count));
-                        const grid = cy.layout({ name: 'grid', rows: rows, spacingFactor: 1.1, avoidOverlap: true, animate: true, animationDuration: 300 });
-                        grid.run();
-                        grid.on('layoutstop', function(){ 
-                            try { cy.fit(40); } catch(_){}; 
-                            try { cy.center(); cy.zoom(1); cy.resize(); } catch(_){}
-                            try { cy.nodes().forEach(n => { n.style('width', 80); n.style('height', 80); n.style('font-size', '14px'); }); } catch(_){}
-                            console.log('[TreeViz] debug grid layout applied - fit/center/zoom and nodes enlarged');
-                        });
-                    }
-                } catch (err) { console.warn('[TreeViz] debug grid layout error', err); }
+                try { cy.fit(50); } catch(_){ }
             });
-
-        // Visible debug panel inside container to display layout diagnostics
-        (function createDebugPanel(){
-            try {
-                let panel = container.querySelector('.tv-debug-panel');
-                if (!panel) {
-                    panel = document.createElement('div');
-                    panel.className = 'tv-debug-panel';
-                    panel.style.position = 'absolute';
-                    panel.style.right = '12px';
-                    panel.style.bottom = '12px';
-                    panel.style.zIndex = 1001;
-                    panel.style.background = 'rgba(255,255,255,0.95)';
-                    panel.style.border = '1px solid rgba(0,0,0,0.06)';
-                    panel.style.padding = '8px 10px';
-                    panel.style.borderRadius = '8px';
-                    panel.style.fontSize = '12px';
-                    panel.style.color = '#0f172a';
-                    panel.style.maxWidth = '280px';
-                    panel.style.boxShadow = '0 6px 20px rgba(2,6,23,0.08)';
-                    panel.innerText = 'TreeViz debug: initializing...';
-                    container.appendChild(panel);
-                }
-
-                function updatePanel() {
-                    try {
-                        const nodes = cy.nodes().length;
-                        const edges = cy.edges().length;
-                        const ids = cy.nodes().map(n=>n.id()).slice(0,10).join(', ');
-                        const bb = (() => { try { return cy.elements().boundingBox(); } catch(e){ return {}; } })();
-                        const children = Array.from(container.children || []).map(c => {
-                            const cls = (c.className||'').toString().trim().split(/\s+/).filter(Boolean).join('.');
-                            return `${c.tagName.toLowerCase()}${cls ? ' .' + cls : ''}`;
-                        }).slice(0,10).join(', ');
-                        panel.innerText = `TreeViz debug:\nnodes: ${nodes}\nedges: ${edges}\nids: ${ids}\nbb: ${Math.round(bb.x1||0)},${Math.round(bb.y1||0)} → ${Math.round(bb.x2||0)},${Math.round(bb.y2||0)}\nchildren: ${ (container.children||[]).length } -> ${children}`;
-                    } catch (e) { panel.innerText = 'TreeViz debug: error reading cy'; }
-                }
-
-                // update after layoutstop and on viewport events
-                try { updatePanel(); } catch(_){}
-                cy.on('layoutstop', updatePanel);
-                cy.on('viewport', updatePanel);
-            } catch (err) { console.warn('[TreeViz] debug panel error', err); }
-        })();
         } catch (err) {
             console.warn('layout/run error', err);
         }
