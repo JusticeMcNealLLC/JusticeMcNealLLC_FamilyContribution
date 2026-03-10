@@ -157,6 +157,17 @@ const TreeViz = (function(){
                     const existing = container.querySelector('.tv-empty');
                     if (existing) existing.remove();
                 }
+
+                // DEBUG: force a compact grid layout after breadthfirst so nodes are definitely visible
+                try {
+                    if (cy.nodes().length > 0) {
+                        const count = cy.nodes().length;
+                        const rows = Math.ceil(Math.sqrt(count));
+                        const grid = cy.layout({ name: 'grid', rows: rows, spacingFactor: 1.1, avoidOverlap: true, animate: true, animationDuration: 300 });
+                        grid.run();
+                        grid.on('layoutstop', function(){ try { cy.fit(40); } catch(_){}; console.log('[TreeViz] debug grid layout applied'); });
+                    }
+                } catch (err) { console.warn('[TreeViz] debug grid layout error', err); }
             });
         } catch (err) {
             console.warn('layout/run error', err);
