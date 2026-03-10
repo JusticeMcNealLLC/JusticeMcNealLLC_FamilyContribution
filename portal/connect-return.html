@@ -74,8 +74,11 @@
             </div>
             <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">Almost There!</h1>
             <p class="text-gray-500 text-sm mb-2">Stripe is still verifying your information.</p>
-            <p class="text-gray-400 text-xs mb-6">This usually only takes a minute. You can finish setup from Settings anytime.</p>
-            <button id="retryOnboardingBtn" class="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 px-4 rounded-xl transition text-sm shadow-sm shadow-brand-200 mb-2">
+            <p class="text-gray-400 text-xs mb-6">If you completed all steps, tap "Check Again" — it only takes a second. Otherwise, continue setup to finish.</p>
+            <button id="checkStatusBtn" class="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 px-4 rounded-xl transition text-sm shadow-sm shadow-brand-200 mb-2">
+                Check Again
+            </button>
+            <button id="retryOnboardingBtn" class="w-full bg-surface-100 hover:bg-surface-200 text-gray-700 font-semibold py-3 px-4 rounded-xl transition text-sm mb-2">
                 Continue Setup
             </button>
             <a href="settings.html" class="block w-full text-gray-400 hover:text-gray-600 text-sm font-medium py-2 transition text-center">
@@ -116,45 +119,57 @@
         const pendingEl = document.getElementById('pendingState');
         const refreshEl = document.getElementById('refreshState');
 
+        function showPending() {
+            loadingEl.classList.add('hidden');
+            pendingEl.classList.remove('hidden');
+
+            document.getElementById('checkStatusBtn').addEventListener('click', checkConnectStatus);
+            document.getElementById('retryOnboardingBtn').addEventListener('click', startConnectOnboarding);
+        }
+
         if (status === 'refresh') {
             // Link expired — show refresh state
             loadingEl.classList.add('hidden');
             refreshEl.classList.remove('hidden');
-
             document.getElementById('refreshOnboardingBtn').addEventListener('click', startConnectOnboarding);
             return;
         }
 
-        // status === 'complete' — Check if Stripe account is actually fully set up
-        try {
-            const { data: profile } = await supabaseClient
-                .from('profiles')
-                .select('connect_onboarding_complete, stripe_connect_account_id')
-                .eq('id', session.user.id)
-                .single();
+        // status === 'complete' — Actively verify with Stripe API (don't wait for webhook)
+        await checkConnectStatus(/* initial= */true);
 
-            loadingEl.classList.add('hidden');
-
-            if (profile?.connect_onboarding_complete) {
-                successEl.classList.remove('hidden');
-            } else {
-                // Stripe hasn't confirmed yet — show pending state
-                pendingEl.classList.remove('hidden');
-                document.getElementById('retryOnboardingBtn').addEventListener('click', startConnectOnboarding);
+        // Checks Stripe directly via edge function, updates DB if ready, then shows result.
+        async function checkConnectStatus(initial = false) {
+            if (!initial) {
+                // Re-entered from "Check Again" button: reset to loading
+                successEl.classList.add('hidden');
+                pendingEl.classList.add('hidden');
+                loadingEl.classList.remove('hidden');
             }
-        } catch (err) {
-            console.error('Error checking Connect status:', err);
-            loadingEl.classList.add('hidden');
-            pendingEl.classList.remove('hidden');
-            document.getElementById('retryOnboardingBtn').addEventListener('click', startConnectOnboarding);
+
+            try {
+                const result = await callEdgeFunction('verify-connect-status', {});
+                loadingEl.classList.add('hidden');
+
+                if (result.complete) {
+                    successEl.classList.remove('hidden');
+                } else {
+                    showPending();
+                }
+            } catch (err) {
+                console.error('Error verifying Connect status:', err);
+                loadingEl.classList.add('hidden');
+                showPending();
+            }
         }
 
         async function startConnectOnboarding() {
-            try {
-                const btn = event.target;
-                btn.disabled = true;
-                btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white mx-auto" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            const btn = event.currentTarget;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white mx-auto" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
 
+            try {
                 const result = await callEdgeFunction('create-connect-onboarding', {});
                 if (result.url) {
                     window.location.href = result.url;
@@ -163,7 +178,8 @@
                 }
             } catch (err) {
                 alert('Failed to start bank setup: ' + (err.message || 'Please try again'));
-                location.reload();
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         }
     })();
