@@ -17,7 +17,15 @@ async function loadFeed(append = false) {
     const container = document.getElementById('feedContainer');
     const scrollTrigger = document.getElementById('scrollTrigger');
 
-    if (!append && loading) loading.classList.remove('hidden');
+    if (!append) {
+        // Immediately wipe old posts so stale filter content doesn't linger while loading
+        if (container) {
+            container.innerHTML = '';
+            if (loading) container.appendChild(loading);
+        }
+        if (loading) loading.classList.remove('hidden');
+        if (empty) empty.classList.add('hidden');
+    }
     if (append && scrollTrigger) scrollTrigger.classList.remove('hidden');
 
     try {
@@ -56,9 +64,10 @@ async function loadFeed(append = false) {
             if (bookmarkedIds?.length > 0) {
                 query = query.in('id', bookmarkedIds.map(b => b.post_id));
             } else {
-                // No bookmarks - show empty
+                // No bookmarks - clear any stale posts and show empty state
+                if (container) container.innerHTML = '';
                 if (loading) loading.classList.add('hidden');
-                if (empty) { empty.classList.remove('hidden'); }
+                if (empty) empty.classList.remove('hidden');
                 feedLoading = false;
                 return;
             }

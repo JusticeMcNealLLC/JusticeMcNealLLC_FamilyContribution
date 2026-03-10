@@ -1134,3 +1134,14 @@ input[type="date"] {
 #aboutBannersGrid {
     -webkit-overflow-scrolling: touch;
 }
+
+/* ─── Prevent iOS auto-zoom on input focus ─────────────────── */
+/* iOS Safari zooms in when a focused input has font-size < 16px.
+   Forcing 16px on mobile prevents the zoom without disabling pinch-to-zoom. */
+@media screen and (max-width: 1024px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]),
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+}
