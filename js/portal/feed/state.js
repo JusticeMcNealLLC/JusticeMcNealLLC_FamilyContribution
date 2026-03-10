@@ -13,3 +13,4 @@ let activeFilter = 'all';
 let currentDetailPostId = null;
 let replyingToCommentId = null;
 let isAdmin = false;
+let isContributor = false;   // true for admins + users with active/trialing subscription

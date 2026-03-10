@@ -220,6 +220,35 @@
         </div>
     </div>
 
+    <!-- ── Feed Contributor Gate Modal ──────────────────────────────────── -->
+    <div id="feedContributorGate" class="fixed inset-0 z-[200] hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" id="feedGateBackdrop"></div>
+        <div class="relative bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            <div class="px-6 py-8 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center mx-auto mb-4 shadow-sm">
+                    <svg class="w-7 h-7 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zM10 9V7a2 2 0 114 0v2"/>
+                    </svg>
+                </div>
+                <h3 class="text-base font-extrabold text-gray-900 mb-1">Active Members Only</h3>
+                <p id="feedGateBody" class="text-sm text-gray-500 mb-5 leading-relaxed">
+                    This feature is only available to active contributing members.
+                </p>
+                <a href="contribution.html"
+                   class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Start / Renew Contribution
+                </a>
+                <button id="feedGateClose" class="block w-full mt-3 text-sm text-gray-400 hover:text-gray-600 transition">
+                    Maybe later
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="footer-placeholder"></div>
     <div id="tabs-placeholder"></div>
 

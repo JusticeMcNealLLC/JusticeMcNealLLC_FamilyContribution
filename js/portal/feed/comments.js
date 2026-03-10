@@ -27,6 +27,18 @@ function setupPostDetail() {
     }
     if (commentSend) commentSend.addEventListener('click', submitComment);
 
+    // Lock comment input for non-contributors
+    if (!isContributor && commentInput) {
+        commentInput.placeholder = '🔒 Active members only';
+        commentInput.readOnly = true;
+        commentInput.style.cursor = 'not-allowed';
+        commentInput.style.opacity = '0.55';
+        if (commentSend) commentSend.disabled = true;
+        commentInput.addEventListener('click', () => {
+            openFeedGate('Commenting is only available to active contributing members. Start or renew your contribution to join the conversation.');
+        });
+    }
+
     // Swipe-to-dismiss for bottom sheet
     if (panel) {
         let startY = 0, currentY = 0, isDragging = false;

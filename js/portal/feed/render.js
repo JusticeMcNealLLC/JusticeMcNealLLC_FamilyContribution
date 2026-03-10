@@ -69,6 +69,55 @@ function renderPostCard(post) {
     const captionTruncated = contentRaw.length > 100;
     const captionClass = captionTruncated ? 'line-clamp-1' : '';
 
+    // ── Non-contributor content lock ──────────────────────────────────────
+    // Milestones and announcements are always visible; other recent posts are blurred.
+    const LOCK_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+    const isRecentPost = (Date.now() - new Date(post.created_at).getTime()) < LOCK_WINDOW_MS;
+    const isPublicType = post.post_type === 'milestone' || post.post_type === 'announcement';
+    const isLocked = !isContributor && isRecentPost && !isPublicType;
+
+    if (isLocked) {
+        return `
+    <article class="bg-white border-b sm:border sm:rounded-2xl sm:border-gray-200/80 post-card" data-post-id="${post.id}">
+        <div class="flex items-center gap-3 px-3 py-2.5">
+            <a href="profile.html?id=${authorId}" class="flex-shrink-0 relative">
+                <div class="w-9 h-9 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border border-gray-200">
+                    ${photoUrl ? `<img src="${photoUrl}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-sm font-bold">${initials}</span>`}
+                </div>
+                ${avatarBadgeHtml}
+            </a>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-semibold text-gray-900 text-sm">${name}</span>
+                    ${badge}
+                </div>
+                <p class="text-[10px] text-gray-400">${timeAgo}</p>
+            </div>
+        </div>
+        <div class="relative overflow-hidden" style="min-height:190px">
+            <div class="blur-sm pointer-events-none select-none opacity-50">
+                ${imageHtml || '<div class="h-36 bg-gray-100 flex items-center justify-center"><svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>'}
+                <div class="px-3 py-2 space-y-2">
+                    <div class="h-3 bg-gray-200 rounded-full w-3/4"></div>
+                    <div class="h-3 bg-gray-200 rounded-full w-1/2"></div>
+                </div>
+            </div>
+            <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/55 backdrop-blur-[2px]">
+                <svg class="w-7 h-7 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zM10 9V7a2 2 0 114 0v2"/>
+                </svg>
+                <p class="text-sm font-bold text-gray-900">Active Members Only</p>
+                <p class="text-xs text-gray-500">Contribute to see posts from the last 7 days</p>
+                <a href="contribution.html"
+                   class="mt-1 px-4 py-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-full transition shadow-sm">
+                    Start / Renew Contribution →
+                </a>
+            </div>
+        </div>
+    </article>`;
+    }
+
     return `
     <article class="bg-white border-b sm:border sm:rounded-2xl sm:border-gray-200/80 post-card fade-in" data-post-id="${post.id}">
         <!-- Post Header -->
@@ -119,9 +168,6 @@ function renderPostCard(post) {
             </button>
         </div>
 
-        <!-- Like count -->
-        ${likeCount > 0 ? `<div class="px-3 pb-0.5 feed-likes-row"><span class="text-sm font-semibold text-gray-900 feed-like-count">${likeCount.toLocaleString()} like${likeCount !== 1 ? 's' : ''}</span></div>` : ''}
-
         <!-- Caption -->
         <div class="px-3 pb-1">
             ${contentHtml ? `
@@ -131,9 +177,6 @@ function renderPostCard(post) {
                 ${captionTruncated ? `<button class="feed-caption-more text-gray-400 text-sm" onclick="this.previousElementSibling.classList.remove('line-clamp-1');this.remove()">more</button>` : ''}
             </div>` : ''}
         </div>
-
-        <!-- View comments -->
-        ${commentCount > 0 ? `<button class="comment-btn block px-3 pb-0.5 text-sm text-gray-400" data-post-id="${post.id}">View all ${commentCount} comment${commentCount !== 1 ? 's' : ''}</button>` : ''}
 
         <!-- Time -->
         <div class="px-3 pb-3 pt-0.5">

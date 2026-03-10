@@ -44,6 +44,10 @@ function setupComposer() {
     const videoInput = document.getElementById('postVideoInput');
 
     function openComposerModal() {
+        if (!isContributor) {
+            openFeedGate('Post creation is only available to active contributing members. Start or renew your contribution to post.');
+            return;
+        }
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         setTimeout(() => content?.focus(), 200);
