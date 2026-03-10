@@ -279,6 +279,39 @@
 }
 .dock-preview-slot.locked { opacity: 0.5; }
 .dock-preview-slot.empty { color: #d1d5db; }
+
+/* ─── Swipe-up hint on tab bar ─── */
+.swipe-hint {
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    pointer-events: none;
+    z-index: 2;
+    animation: swipeHintFloat 3s ease-in-out infinite;
+    opacity: 0.55;
+    line-height: 1;
+}
+.swipe-hint svg {
+    width: 14px; height: 9px;
+    color: #9ca3af;
+}
+.swipe-hint-label {
+    font-size: 8px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+@keyframes swipeHintFloat {
+    0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.45; }
+    50%       { transform: translateX(-50%) translateY(-3px); opacity: 0.75; }
+}
 .dock-preview-icon {
     width: 36px; height: 36px; border-radius: 10px;
     background: #e5e7eb; display: flex; align-items: center;

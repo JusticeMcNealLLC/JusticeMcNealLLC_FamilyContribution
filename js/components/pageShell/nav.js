@@ -70,10 +70,13 @@
             dLink('../portal/index.html', 'My Portal', '_');
 
         tabsInner =
-            '<div class="max-w-lg mx-auto grid grid-cols-3 px-2">' +
-                mTab('index.html', p(SVG.hub), 'Hub', 'hub') +
-                mTab('invite.html', p(SVG.invite), 'Invite', 'invite') +
-                mTab('../portal/index.html', p(SVG.person), 'Portal', '_') +
+            '<div class="max-w-sm mx-auto grid grid-cols-2 px-4 gap-2 relative">' +
+                '<div class="swipe-hint" aria-hidden="true">' +
+                    '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg>' +
+                    '<span class="swipe-hint-label">More</span>' +
+                '</div>' +
+                mTab('index.html', p(SVG.hub), 'Admin Hub', 'hub') +
+                mTab('../portal/index.html', p(SVG.home), 'My Portal', '_') +
             '</div>';
 
     } else {
@@ -91,8 +94,6 @@
                 '<div class="desktop-more-dropdown" id="desktopMoreDD">' +
                     '<a href="history.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('history' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
                         '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.history) + '</svg>History</a>' +
-                    '<a href="family-tree.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('family-tree' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
-                        '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.person) + '</svg>Family Tree</a>' +
                     '<a href="quests.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('quests' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
                         '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.quest) + '</svg>Quests</a>' +
                     '<a href="milestones.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('milestones' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
@@ -104,7 +105,10 @@
 
         tabsInner =
             '<div class="max-w-lg mx-auto grid grid-cols-5 px-2 relative">' +
-                '<div class="swipe-hint"></div>' +
+                '<div class="swipe-hint" aria-hidden="true">' +
+                    '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg>' +
+                    '<span class="swipe-hint-label">More</span>' +
+                '</div>' +
                 mTab('feed.html', p(SVG.feed), 'Feed', 'feed') +
                 '<div class="dock-slot" data-dock-slot="2">' + mTab('events.html', p(SVG.bell), 'Events', 'events') + '</div>' +
                 centerTab('index.html', p(SVG.home), 'Dashboard', 'dashboard') +
@@ -221,9 +225,34 @@
         tabsInner +
     '</div>';
 
-    // ─── Nav Drawer (swipe-up page grid) — portal only ──
+    // ─── Nav Drawer (swipe-up page grid) — portal AND admin ──
     var drawerHTML = '';
-    if (!isAdmin) {
+    if (isAdmin) {
+        var adminDrawerPages = [
+            { href: 'index.html',           page: 'hub',    icon: SVG.hub,    label: 'Admin Hub' },
+            { href: 'invite.html',          page: 'invite', icon: SVG.invite, label: 'Invite Member' },
+            { href: '../portal/index.html', page: '_',      icon: SVG.home,   label: 'My Portal' },
+        ];
+        var adminGridItems = '';
+        for (var ai = 0; ai < adminDrawerPages.length; ai++) {
+            var ap = adminDrawerPages[ai];
+            var aActiveCls = ap.page === active ? ' active-page' : '';
+            var aIconSvg = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(ap.icon) + '</svg>';
+            adminGridItems += '<a href="' + ap.href + '" class="nav-drawer-item' + aActiveCls + '">' +
+                '<div class="drawer-icon">' + aIconSvg + '</div>' +
+                '<span>' + ap.label + '</span>' +
+            '</a>';
+        }
+        drawerHTML =
+            '<div class="nav-drawer-backdrop md:hidden" id="navDrawerBackdrop"></div>' +
+            '<div class="nav-drawer md:hidden" id="navDrawer">' +
+                '<div class="nav-drawer-handle" id="navDrawerHandle"></div>' +
+                '<div class="px-4 pb-1 flex items-center justify-between">' +
+                    '<span class="text-sm font-bold text-gray-900">Admin Navigation</span>' +
+                '</div>' +
+                '<div class="nav-drawer-grid" id="navDrawerGrid">' + adminGridItems + '</div>' +
+            '</div>';
+    } else {
         var drawerPages = [
             { href: 'feed.html',        page: 'feed',        icon: SVG.feed,    label: 'Feed' },
             { href: 'index.html',       page: 'dashboard',   icon: SVG.home,    label: 'Dashboard' },
