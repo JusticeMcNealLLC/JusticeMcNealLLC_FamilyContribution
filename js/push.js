@@ -107,10 +107,33 @@
         var sess = await supabaseClient.auth.getSession();
         if (!sess.data?.session?.user?.id) return;
 
+        var userId = sess.data.session.user.id;
         var json = subscription.toJSON();
+        var newEndpoint = json.endpoint;
+
+        // Delete any OTHER endpoints for this user (stale browser sessions)
+        // before inserting the new one — prevents duplicate rows
+        var { data: existing } = await supabaseClient
+            .from('push_subscriptions')
+            .select('id, endpoint')
+            .eq('user_id', userId);
+
+        if (existing && existing.length > 0) {
+            var staleIds = existing
+                .filter(function(row) { return row.endpoint !== newEndpoint; })
+                .map(function(row) { return row.id; });
+
+            if (staleIds.length > 0) {
+                await supabaseClient
+                    .from('push_subscriptions')
+                    .delete()
+                    .in('id', staleIds);
+            }
+        }
+
         var payload = {
-            user_id: sess.data.session.user.id,
-            endpoint: json.endpoint,
+            user_id: userId,
+            endpoint: newEndpoint,
             p256dh: json.keys.p256dh,
             auth_key: json.keys.auth,
             user_agent: navigator.userAgent,
