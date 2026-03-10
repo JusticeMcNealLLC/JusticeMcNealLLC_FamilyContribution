@@ -165,7 +165,12 @@ const TreeViz = (function(){
                         const rows = Math.ceil(Math.sqrt(count));
                         const grid = cy.layout({ name: 'grid', rows: rows, spacingFactor: 1.1, avoidOverlap: true, animate: true, animationDuration: 300 });
                         grid.run();
-                        grid.on('layoutstop', function(){ try { cy.fit(40); } catch(_){}; console.log('[TreeViz] debug grid layout applied'); });
+                        grid.on('layoutstop', function(){ 
+                            try { cy.fit(40); } catch(_){}; 
+                            try { cy.center(); cy.zoom(1); cy.resize(); } catch(_){}
+                            try { cy.nodes().forEach(n => { n.style('width', 80); n.style('height', 80); n.style('font-size', '14px'); }); } catch(_){}
+                            console.log('[TreeViz] debug grid layout applied - fit/center/zoom and nodes enlarged');
+                        });
                     }
                 } catch (err) { console.warn('[TreeViz] debug grid layout error', err); }
             });
