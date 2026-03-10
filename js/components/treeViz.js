@@ -272,3 +272,6 @@ const TreeViz = (function(){
 
     return { init };
 })();
+
+// expose TreeViz to window for pages that check `window.TreeViz`
+try { if (typeof window !== 'undefined' && typeof TreeViz !== 'undefined') window.TreeViz = TreeViz; } catch (_) {}
