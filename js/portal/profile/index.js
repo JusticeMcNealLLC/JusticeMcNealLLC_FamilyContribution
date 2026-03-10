@@ -36,4 +36,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set up profile pic quick-upload
     if (S.isOwnProfile) window.ProfileApp.setupProfilePicUpload();
 });
-});
