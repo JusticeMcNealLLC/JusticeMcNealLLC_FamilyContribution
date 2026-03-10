@@ -31,21 +31,39 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+    <style>
+        /* Hide top nav on mobile — Team page uses full-bleed sticky hero */
+        @media (max-width: 767px) {
+            [data-active-page="team"] #nav-placeholder { display: none !important; }
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="team">
 
     <div id="nav-placeholder"></div>
 
-    <main class="max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-8 flex-1 w-full">
+    <!-- Team hero: sticky full-bleed on mobile, card on desktop -->
+    <div class="sticky top-0 z-30 md:static md:max-w-3xl md:mx-4 lg:mx-auto md:mt-6">
+        <div class="bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 text-white relative overflow-hidden fade-in md:rounded-2xl"
+             style="padding-top: max(1rem, env(safe-area-inset-top));">
+            <!-- Orbs -->
+            <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-12 translate-x-12 pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-10 -translate-x-10 pointer-events-none"></div>
 
-        <!-- Hero -->
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-14 h-14 bg-brand-100 rounded-2xl mb-3">
-                <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <div class="relative px-5 sm:px-8 pb-5 sm:pb-6 flex items-center gap-4">
+                <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </div>
+                <div>
+                    <p class="text-white/70 text-xs font-semibold uppercase tracking-widest mb-0.5">Justice McNeal LLC</p>
+                    <h1 class="text-xl sm:text-2xl font-extrabold text-white leading-tight">Meet the Team</h1>
+                    <p class="text-white/60 text-xs sm:text-sm mt-0.5">Building generational wealth together.</p>
+                </div>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900">Meet the Team</h1>
-            <p class="text-sm text-gray-500 mt-1 max-w-md mx-auto">The people behind Justice McNeal LLC — working together to build generational wealth.</p>
         </div>
+    </div>
+
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-8 flex-1 w-full">
 
         <!-- Leadership Section -->
         <div class="mb-8">
