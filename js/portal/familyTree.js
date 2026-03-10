@@ -73,17 +73,18 @@
         });
 
             // If current user is admin, load pending suggestions inline
+            // Probe whether this client can read pending family_relations rows.
+            // If the query succeeds (no error) we assume the user has admin access and show the approvals panel.
             try {
-                const sess = await supabaseClient.auth.getSession();
-                const uid = sess?.data?.session?.user?.id;
-                if (uid) {
-                    const { data: prof } = await supabaseClient.from('profiles').select('role').eq('id', uid).single();
-                    if (prof && prof.role === 'admin') {
-                        showAdminApprovals();
-                    }
+                const probe = await supabaseClient
+                    .from('family_relations')
+                    .select('id', { limit: 1 })
+                    .eq('status', 'pending');
+                if (!probe.error) {
+                    showAdminApprovals();
                 }
             } catch (err) {
-                console.error('admin check error', err);
+                // silent - not admin or request failed
             }
 
         // init viz
