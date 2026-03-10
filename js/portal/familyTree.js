@@ -36,25 +36,7 @@
         const elements = Object.values(nodes).concat(edges);
         console.log('[familyTree] built elements -> nodes:', Object.keys(nodes).length, 'edges:', edges.length, 'total:', elements.length, (elements||[]).slice(0,10));
 
-        // Visible debug dump: show elements JSON below the cy container for troubleshooting
-        try {
-            const cyEl = document.getElementById('cy');
-            if (cyEl) cyEl.style.background = '#f8fafc';
-            let dump = document.getElementById('cy-debug-data');
-            if (!dump) {
-                dump = document.createElement('pre');
-                dump.id = 'cy-debug-data';
-                dump.style.maxHeight = '160px';
-                dump.style.overflow = 'auto';
-                dump.style.background = 'rgba(0,0,0,0.03)';
-                dump.style.padding = '8px';
-                dump.style.borderRadius = '6px';
-                dump.style.marginTop = '8px';
-                const parent = cyEl && cyEl.parentNode;
-                if (parent) parent.appendChild(dump);
-            }
-            dump.textContent = JSON.stringify({ nodes: Object.keys(nodes).length, edges: edges.length, sample: elements.slice(0,10) }, null, 2);
-        } catch (err) { console.warn('familyTree debug dump error', err); }
+        // debug removed
 
         // render list of members
         const listEl = document.getElementById('memberList');
