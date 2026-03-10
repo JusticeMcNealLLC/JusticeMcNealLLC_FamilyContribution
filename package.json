@@ -4,7 +4,8 @@
   "description": "A simple, invite-only portal for managing family contributions using Stripe subscriptions.",
   "main": "insert-test-invoices.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "icons": "node scripts/generate-icons.js"
   },
   "keywords": [],
   "author": "",
