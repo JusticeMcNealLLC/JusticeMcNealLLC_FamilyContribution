@@ -59,7 +59,9 @@ async function callEdgeFunction(functionName, body = {}) {
     console.log('Function response:', response.status, data);
 
     if (!response.ok) {
-        throw new Error(data.error || 'Function call failed');
+        const err = new Error(data.error || 'Function call failed');
+        if (data.code) err.code = data.code;
+        throw err;
     }
 
     return data;

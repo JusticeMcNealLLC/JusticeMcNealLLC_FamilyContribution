@@ -91,6 +91,17 @@ async function handleAmountChange() {
         window.location.href = 'index.html';
 
     } catch (error) {
+        // If the stored subscription is incomplete_expired/canceled, route to a fresh checkout
+        if (error.code === 'subscription_needs_new_checkout') {
+            try {
+                const result = await callEdgeFunction('create-checkout-session', { amount_dollars: amount });
+                if (result.url) { window.location.href = result.url; return; }
+            } catch (checkoutErr) {
+                showError('formError', checkoutErr.message || 'Failed to start a new checkout');
+                setButtonLoading(saveBtn, false, 'Save Changes');
+                return;
+            }
+        }
         showError('formError', error.message || 'Failed to update contribution');
         setButtonLoading(saveBtn, false, 'Save Changes');
     }

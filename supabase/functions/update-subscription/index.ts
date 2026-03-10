@@ -71,8 +71,14 @@ serve(async (req) => {
       subscription.stripe_subscription_id
     )
 
-    if (!stripeSubscription || stripeSubscription.status === 'canceled') {
-      throw new Error('Subscription is not active')
+    if (!stripeSubscription || ['canceled', 'incomplete_expired', 'incomplete'].includes(stripeSubscription.status)) {
+      return new Response(
+        JSON.stringify({
+          error: `Cannot update subscription — current status is '${stripeSubscription?.status}'. A new checkout session is required.`,
+          code: 'subscription_needs_new_checkout',
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 },
+      )
     }
 
     // Get or create the new price
