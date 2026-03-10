@@ -80,6 +80,7 @@
         desktopLinks =
             dLink('feed.html', 'Feed', 'feed') +
             dLink('index.html', 'Dashboard', 'dashboard') +
+            dLink('family-tree.html', 'Family Tree', 'family-tree') +
             dLink('events.html', 'Events', 'events') +
             dLink('investments.html', 'Investments', 'investments') +
             '<div class="relative" id="desktopMoreWrap">' +
@@ -90,6 +91,8 @@
                 '<div class="desktop-more-dropdown" id="desktopMoreDD">' +
                     '<a href="history.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('history' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
                         '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.history) + '</svg>History</a>' +
+                    '<a href="family-tree.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('family-tree' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
+                        '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.person) + '</svg>Family Tree</a>' +
                     '<a href="quests.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('quests' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
                         '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.quest) + '</svg>Quests</a>' +
                     '<a href="milestones.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('milestones' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
@@ -231,6 +234,7 @@
             { href: 'milestones.html',  page: 'milestones',  icon: SVG.trophy,  label: 'Milestones' },
             { href: 'settings.html',    page: 'settings',    icon: SVG.gear,    label: 'Settings', icon2: SVG.gearDot },
             { href: 'contribution.html',page: 'contribution',icon: SVG.plus,    label: 'Contribute' },
+            { href: 'family-tree.html', page: 'family-tree', icon: SVG.person, label: 'Family Tree' },
             { href: 'team.html',        page: 'team',        icon: SVG.team,    label: 'Team' },
             { href: 'profile.html',     page: 'profile',     icon: SVG.person,  label: 'Profile' },
         ];

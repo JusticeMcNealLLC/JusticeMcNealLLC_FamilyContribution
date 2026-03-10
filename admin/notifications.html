@@ -121,6 +121,15 @@
             </div>
         </div>
 
+                <!-- Push Toggle -->
+                <div class="mt-4 flex items-center justify-between">
+                    <div class="text-sm text-gray-600">Browser Push</div>
+                    <div class="flex items-center gap-3">
+                        <div id="pushStatus" class="text-sm text-gray-500">Checking…</div>
+                        <button id="pushToggleBtn" class="bg-white border border-gray-200 text-gray-700 px-3 py-1 rounded-xl text-sm">Checking...</button>
+                    </div>
+                </div>
+
         <!-- Push Subscribers -->
         <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 mb-8">
             <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -162,6 +171,7 @@
     <script src="../js/components/pageShell/profile-loader.js"></script>
     <script src="../js/components/pageShell/index.js"></script>
     <script src="../js/auth/shared.js"></script>
+    <script src="../js/push.js"></script>
     <script src="../js/admin/notifications.js"></script>
     <script src="../js/sw-register.js"></script>
 </body>

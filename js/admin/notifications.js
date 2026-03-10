@@ -167,6 +167,85 @@
             loadLog();
             loadSubscribers();
         });
+        // Push toggle (uses JMPush API from js/push.js)
+        var pushBtn = document.getElementById('pushToggleBtn');
+        if (pushBtn) {
+            pushBtn.addEventListener('click', handlePushToggle);
+            // initialize state (async)
+            setTimeout(updatePushButtonState, 200);
+        }
+    }
+
+    // ─── Update Push Button State ───────────────────────
+    async function updatePushButtonState() {
+        var statusEl = document.getElementById('pushStatus');
+        var btn = document.getElementById('pushToggleBtn');
+        if (!btn || !statusEl) return;
+
+        if (!window.JMPush || !JMPush.isSupported()) {
+            statusEl.textContent = 'Unsupported';
+            btn.textContent = 'Unavailable';
+            btn.disabled = true;
+            return;
+        }
+
+        try {
+            var perm = JMPush.getPermissionState();
+            var subscribed = await JMPush.isSubscribed();
+
+            if (perm === 'granted') {
+                statusEl.textContent = subscribed ? 'Subscribed' : 'Permission granted';
+            } else if (perm === 'denied') {
+                statusEl.textContent = 'Permission denied';
+            } else {
+                statusEl.textContent = 'Permission: ask';
+            }
+
+            btn.disabled = false;
+            btn.textContent = subscribed ? 'Disable Push' : 'Enable Push';
+        } catch (err) {
+            console.error('Push state error', err);
+            statusEl.textContent = 'Error';
+            btn.textContent = 'Toggle';
+        }
+    }
+
+    // ─── Handle Push Toggle ─────────────────────────────
+    async function handlePushToggle() {
+        var btn = document.getElementById('pushToggleBtn');
+        var statusEl = document.getElementById('pushStatus');
+        if (!btn || !statusEl || !window.JMPush) return;
+
+        btn.disabled = true;
+        try {
+            var subscribed = await JMPush.isSubscribed();
+            if (subscribed) {
+                statusEl.textContent = 'Unsubscribing...';
+                var res = await JMPush.unsubscribe();
+                if (res && res.success) {
+                    statusEl.textContent = 'Unsubscribed';
+                } else {
+                    statusEl.textContent = 'Unsubscribe failed';
+                }
+            } else {
+                statusEl.textContent = 'Subscribing...';
+                var res = await JMPush.subscribe();
+                if (res && res.success) {
+                    statusEl.textContent = 'Subscribed';
+                } else {
+                    statusEl.textContent = 'Subscribe failed';
+                }
+            }
+        } catch (err) {
+            console.error('Push toggle error', err);
+            statusEl.textContent = 'Error';
+        } finally {
+            // refresh UI & stats
+            await updatePushButtonState();
+            loadStats();
+            loadSubscribers();
+            btn.disabled = false;
+        }
     }
 
     // ─── Send Notification ──────────────────────────────
