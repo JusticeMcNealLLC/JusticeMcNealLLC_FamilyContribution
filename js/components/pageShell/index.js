@@ -43,5 +43,26 @@
 		} catch (e) {
 			// silent
 		}
+		try {
+			// show unread notifications for this admin
+			const session = await supabaseClient.auth.getSession();
+			const userId = session?.data?.session?.user?.id;
+			if (userId) {
+				const { count: notifCount } = await supabaseClient
+					.from('notifications')
+					.select('id', { count: 'exact', head: true })
+					.eq('user_id', userId)
+					.is('read_at', null);
+
+				if (notifCount && notifCount > 0) {
+					// attach to navProfileSection if present
+					var profileWrap = document.getElementById('navProfileSection') || document.querySelector('#nav-placeholder');
+					var nBadge = document.createElement('span');
+					nBadge.className = 'ml-2 inline-flex items-center justify-center bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full';
+					nBadge.textContent = notifCount;
+					if (profileWrap && profileWrap.parentNode) profileWrap.parentNode.appendChild(nBadge);
+				}
+			}
+		} catch (e) { /* ignore */ }
 	});
 })();
