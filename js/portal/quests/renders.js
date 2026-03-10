@@ -24,12 +24,13 @@ function renderCPHero(cpBalance, earnedBadges, profile) {
             <!-- Orb decoration -->
             <div class="absolute top-0 right-0 w-56 h-56 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%); transform: translate(35%, -35%);"></div>
 
-            <div class="relative px-5 pb-6" style="padding-top: max(2.5rem, calc(env(safe-area-inset-top, 0px) + 1rem));">
+            <!-- Inner content centered to match <main> width -->
+            <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-6" style="padding-top: max(2.5rem, calc(env(safe-area-inset-top, 0px) + 1rem));">
 
                 <!-- Avatar + Rank + Name row -->
                 <div class="flex items-center gap-4 mb-5">
                     <!-- Profile photo -->
-                    <div class="w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/30 flex-shrink-0 bg-white/20 flex items-center justify-center shadow-lg">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden ring-2 ring-white/30 flex-shrink-0 bg-white/20 flex items-center justify-center shadow-lg">
                         ${photoUrl
                             ? `<img src="${photoUrl}" class="w-full h-full object-cover" alt="">`
                             : `<span class="text-white text-xl font-bold">${initials}</span>`
@@ -38,11 +39,11 @@ function renderCPHero(cpBalance, earnedBadges, profile) {
                     <!-- Name + Rank -->
                     <div class="flex-1 min-w-0">
                         <div class="text-[11px] font-semibold uppercase tracking-widest text-white/60 mb-0.5">${tier.emoji} ${tier.name}</div>
-                        <div class="text-2xl font-extrabold text-white leading-tight truncate">${firstName || 'Member'}</div>
+                        <div class="text-xl sm:text-2xl font-extrabold text-white leading-tight truncate">${firstName || 'Member'}</div>
                     </div>
                     <!-- CP count -->
                     <div class="text-right flex-shrink-0">
-                        <div class="text-2xl font-extrabold leading-none">${cpBalance}</div>
+                        <div class="text-xl sm:text-2xl font-extrabold leading-none">${cpBalance}</div>
                         <div class="text-[11px] text-white/60 mt-0.5">Credit Points</div>
                     </div>
                 </div>
@@ -165,7 +166,7 @@ function renderQuestList(quests, memberQuests, filter) {
         return;
     }
 
-    container.innerHTML = `<div class="grid grid-cols-3 gap-4">${filtered.map(q => renderQuestCard(q)).join('')}</div>`;
+    container.innerHTML = `<div class="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 gap-3 sm:gap-4">${filtered.map(q => renderQuestCard(q)).join('')}</div>`;
 
     // Wire up card interactions (locked quests use pointer-events-none so no handler needed)
     container.querySelectorAll('[data-quest-id]').forEach(card => {
@@ -220,8 +221,8 @@ function renderQuestCard(quest) {
         <div class="absolute -top-1 -right-1 text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-amber-900 leading-none shadow-sm">+${quest.cp_reward}</div>` : '';
 
     return `
-        <div data-quest-id="${quest.id}" class="flex flex-col items-center gap-2 cursor-pointer group ${isContributorLocked ? 'opacity-40 pointer-events-none' : ''}">
-            <div class="relative w-full aspect-square rounded-full ${circleBg} ${ringCss} flex items-center justify-center text-3xl group-hover:scale-105 transition-transform">
+        <div data-quest-id="${quest.id}" class="flex flex-col items-center gap-1.5 cursor-pointer group ${isContributorLocked ? 'opacity-40 pointer-events-none' : ''}">
+            <div class="relative w-full max-w-[96px] sm:max-w-[80px] lg:max-w-[88px] aspect-square mx-auto rounded-full ${circleBg} ${ringCss} flex items-center justify-center text-2xl sm:text-xl lg:text-2xl group-hover:scale-105 transition-transform">
                 <span class="${isContributorLocked ? 'grayscale opacity-60' : ''}">${emojiContent}</span>
                 ${completedBadge}
                 ${cpBadge}
