@@ -13,14 +13,16 @@ function buildProgressBar() {
 
     dotSteps.forEach((step, i) => {
         const wrapper = document.createElement('div');
-        wrapper.className = 'flex items-center';
+        // All wrappers except the last grow to fill space; last is shrink-only (just the dot)
+        const isLast = (i === dotSteps.length - 1);
+        wrapper.className = isLast ? 'flex items-center flex-shrink-0' : 'flex items-center flex-1 min-w-0';
 
         const dot = document.createElement('div');
-        dot.className = 'step-dot w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center';
+        dot.className = 'step-dot w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center flex-shrink-0';
         dot.setAttribute('data-step', step);
-        dot.innerHTML = `
-            <svg class="w-4 h-4 text-white hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-            <span class="text-xs font-bold text-gray-400 step-number">${i + 1}</span>
+            dot.innerHTML = `
+            <svg class="w-3 h-3 text-white hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+            <span class="text-[10px] font-bold text-gray-400 step-number">${i + 1}</span>
         `;
 
         wrapper.appendChild(dot);
@@ -28,7 +30,7 @@ function buildProgressBar() {
         // Connector between dots (not after the last)
         if (i < dotSteps.length - 1) {
             const connector = document.createElement('div');
-            connector.className = 'step-connector w-8 sm:w-12 h-0.5 bg-gray-200';
+            connector.className = 'step-connector flex-1 h-0.5 bg-gray-200 min-w-2';
             connector.setAttribute('data-connector', i);
             wrapper.appendChild(connector);
         }
@@ -97,12 +99,12 @@ function updateProgressBar() {
             dot.classList.add('current');
             if (number) {
                 number.classList.remove('hidden');
-                number.className = 'text-xs font-bold text-brand-600 step-number';
+                number.className = 'text-[10px] font-bold text-brand-600 step-number';
             }
         } else {
             if (number) {
                 number.classList.remove('hidden');
-                number.className = 'text-xs font-bold text-gray-400 step-number';
+                number.className = 'text-[10px] font-bold text-gray-400 step-number';
             }
         }
 
