@@ -118,6 +118,8 @@ const TreeViz = (function(){
         try {
             console.log('[TreeViz] cytoscape available:', typeof cytoscape !== 'undefined');
             console.log('[TreeViz] cy object:', cy);
+            // expose for debugging in console
+            try { window.__debug_cy = cy; window.__debug_elements = elements; } catch(_){}
         } catch (e) { console.warn('[TreeViz] cytoscape check error', e); }
 
         setTimeout(function(){
