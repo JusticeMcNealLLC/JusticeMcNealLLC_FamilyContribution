@@ -168,7 +168,7 @@ window.ProfileApp.populateAboutBanners = async function populateAboutBanners() {
     }
 
     section.classList.remove('hidden');
-    grid.innerHTML = banners.map(b => {
+    grid.innerHTML = banners.map((b, i) => {
         let preview = '';
         if (b.type === 'photo') {
             preview = `<img src="${b.url}" class="w-full h-full object-cover" alt="${b.name}">`;
@@ -178,9 +178,22 @@ window.ProfileApp.populateAboutBanners = async function populateAboutBanners() {
             preview = `<div class="w-full h-full bg-gradient-to-r ${b.gradient}"></div>`;
         }
         return `
-            <div class="relative rounded-xl overflow-hidden h-20 bg-gray-100">
+            <div class="relative rounded-xl overflow-hidden h-20 bg-gray-100" data-banner-idx="${i}">
                 ${preview}
                 <div class="absolute bottom-0 inset-x-0 text-[10px] text-white text-center py-1 bg-gradient-to-t from-black/50 to-transparent font-medium">${b.name}</div>
             </div>`;
     }).join('');
+
+    // Apply Lottie effects to animated banners
+    if (typeof LottieEffects !== 'undefined') {
+        banners.forEach((b, i) => {
+            if (b.gradient) {
+                const info = CATALOG[b.gradient];
+                if (info?.lottieEffect) {
+                    const card = grid.querySelector(`[data-banner-idx="${i}"]`);
+                    if (card) LottieEffects.renderBannerEffect(card, info.lottieEffect, { opacity: 0.7 });
+                }
+            }
+        });
+    }
 };
