@@ -8,8 +8,8 @@ function buildProgressBar() {
     const bar = document.getElementById('progressBar');
     bar.innerHTML = '';
 
-    // Show dots for all active steps except Done (step 7)
-    const dotSteps = activeSteps.filter(s => s !== 7);
+    // Show dots for all active steps except Done (step 8)
+    const dotSteps = activeSteps.filter(s => s !== 8);
 
     dotSteps.forEach((step, i) => {
         const wrapper = document.createElement('div');
@@ -44,7 +44,7 @@ function nextStep() {
     const idx = activeSteps.indexOf(currentStep);
     if (idx < activeSteps.length - 1) {
         const next = activeSteps[idx + 1];
-        if (next === 7) {
+        if (next === 8) {
             finishOnboarding(); // save + show Done
         } else {
             goToStep(next);
@@ -78,8 +78,8 @@ function goToStep(step) {
 
 function updateProgressBar() {
     const dotSteps = activeSteps.filter(s => s !== 7);
-    // When on Done step (7), treat index as past all dots so they all show completed
-    const currentIdx = currentStep === 7 ? dotSteps.length : dotSteps.indexOf(currentStep);
+    // When on Done step (8), treat index as past all dots so they all show completed
+    const currentIdx = currentStep === 8 ? dotSteps.length : dotSteps.indexOf(currentStep);
 
     dotSteps.forEach((step, i) => {
         const dot = document.querySelector(`.step-dot[data-step="${step}"]`);
@@ -195,7 +195,7 @@ function setupNavigation() {
                     document.getElementById('pushStepStatus').classList.remove('hidden');
                     document.getElementById('pushStepButtons').classList.add('hidden');
                     document.getElementById('pushSkipBtn').classList.add('hidden');
-                    setTimeout(() => finishOnboarding(), 1200);
+                    setTimeout(() => nextStep(), 1200);
                     return;
                 } else if (result.reason === 'denied') {
                     document.getElementById('pushStepBlocked').classList.remove('hidden');
@@ -208,10 +208,81 @@ function setupNavigation() {
         btn.disabled = false;
         btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"></path></svg> Allow Notifications';
     });
-    document.getElementById('pushSkipBtn')?.addEventListener('click', () => finishOnboarding());
+    document.getElementById('pushSkipBtn')?.addEventListener('click', () => nextStep());
 
-    // Step 7: Done
+    // Step 7: Add to Home Screen
+    document.getElementById('a2hsBackBtn')?.addEventListener('click', () => prevStep());
+    document.getElementById('a2hsDoneBtn')?.addEventListener('click', () => nextStep());
+    document.getElementById('a2hsSkipBtn')?.addEventListener('click', () => nextStep());
+
+    // Detect platform and show appropriate A2HS instructions
+    setupA2HSStep();
+
+    // Step 8: Done
     document.getElementById('goToDashboardBtn').addEventListener('click', () => {
         window.location.href = APP_CONFIG.PORTAL_URL;
+    });
+}
+
+// ── Add to Home Screen — platform detection & install prompt ──
+let deferredInstallPrompt = null;
+
+// Capture Android's beforeinstallprompt early (fires once before user is asked)
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+
+    // If we're already on the A2HS step, show the install button
+    const btn = document.getElementById('a2hsInstallBtn');
+    if (btn) {
+        btn.classList.remove('hidden');
+        btn.classList.add('flex');
+    }
+});
+
+function setupA2HSStep() {
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPhone|iPad|iPod/i.test(ua) && !window.MSStream;
+    const isAndroid = /Android/i.test(ua);
+
+    const iosEl = document.getElementById('a2hsIos');
+    const androidEl = document.getElementById('a2hsAndroid');
+    const desktopEl = document.getElementById('a2hsDesktop');
+
+    if (isIOS) {
+        if (iosEl) iosEl.classList.remove('hidden');
+    } else if (isAndroid) {
+        if (androidEl) androidEl.classList.remove('hidden');
+
+        // If we captured the install prompt, show the native install button
+        if (deferredInstallPrompt) {
+            const installBtn = document.getElementById('a2hsInstallBtn');
+            if (installBtn) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('flex');
+            }
+        }
+    } else {
+        if (desktopEl) desktopEl.classList.remove('hidden');
+    }
+
+    // Android native install button click
+    document.getElementById('a2hsInstallBtn')?.addEventListener('click', async () => {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+
+        const btn = document.getElementById('a2hsInstallBtn');
+        if (outcome === 'accepted') {
+            if (btn) {
+                btn.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg> Installed!';
+                btn.classList.remove('bg-sky-600', 'hover:bg-sky-700');
+                btn.classList.add('bg-emerald-600', 'cursor-default');
+            }
+            setTimeout(() => nextStep(), 1200);
+        } else {
+            if (btn) btn.classList.add('hidden');
+        }
     });
 }

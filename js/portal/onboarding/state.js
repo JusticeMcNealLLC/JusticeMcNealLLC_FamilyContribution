@@ -2,8 +2,8 @@
 // Onboarding – Shared State
 // ══════════════════════════════════════════
 
-// Welcome=0, Name=1, Birthday=2, Photo=3, Contribution=4, Bank Link=5, Push Notifications=6, Done=7
-const ALL_STEPS = [0, 1, 2, 3, 4, 5, 6, 7];
+// Welcome=0, Name=1, Birthday=2, Photo=3, Contribution=4, Bank Link=5, Push=6, Home Screen=7, Done=8
+const ALL_STEPS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 let activeSteps = [...ALL_STEPS]; // filtered at init based on existing data
 let currentStep = 0;
 let currentUser = null;

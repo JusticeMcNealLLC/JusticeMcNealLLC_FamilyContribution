@@ -390,9 +390,129 @@
         </div>
 
         <!-- ═══════════════════════════════════════ -->
-        <!-- STEP 8: Done! -->
+        <!-- STEP 8: Add to Home Screen -->
         <!-- ═══════════════════════════════════════ -->
         <div class="step fade-in" data-step="7">
+            <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 sm:p-8">
+                <div class="text-center mb-6">
+                    <div class="w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h2 class="text-xl font-extrabold text-gray-900 tracking-tight">Add to Home Screen</h2>
+                    <p class="text-gray-500 text-sm mt-1">Get the full app experience — no browser, just the portal</p>
+                </div>
+
+                <!-- iOS Instructions -->
+                <div id="a2hsIos" class="hidden">
+                    <div class="bg-sky-50 rounded-xl p-4 mb-5 border border-sky-200 space-y-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-7 h-7 bg-sky-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-xs font-bold text-sky-700">1</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-sky-900">Tap the Share button</p>
+                                <p class="text-xs text-sky-600 mt-0.5">It's the icon at the bottom of Safari that looks like a box with an arrow</p>
+                                <div class="mt-2 flex justify-center">
+                                    <svg class="w-6 h-6 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-7 h-7 bg-sky-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-xs font-bold text-sky-700">2</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-sky-900">Scroll down & tap "Add to Home Screen"</p>
+                                <p class="text-xs text-sky-600 mt-0.5">You might need to scroll the share menu to find it</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-7 h-7 bg-sky-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-xs font-bold text-sky-700">3</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-sky-900">Tap "Add" in the top right</p>
+                                <p class="text-xs text-sky-600 mt-0.5">The portal icon will appear on your home screen!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Android Instructions -->
+                <div id="a2hsAndroid" class="hidden">
+                    <div class="bg-sky-50 rounded-xl p-4 mb-5 border border-sky-200 space-y-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-7 h-7 bg-sky-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-xs font-bold text-sky-700">1</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-sky-900">Tap the menu button</p>
+                                <p class="text-xs text-sky-600 mt-0.5">It's the three dots (⋮) in the top right of Chrome</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-7 h-7 bg-sky-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-xs font-bold text-sky-700">2</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-sky-900">Tap "Add to Home screen" or "Install app"</p>
+                                <p class="text-xs text-sky-600 mt-0.5">If you see a banner at the bottom, tap "Install" there too</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-7 h-7 bg-sky-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-xs font-bold text-sky-700">3</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-sky-900">Confirm by tapping "Add" or "Install"</p>
+                                <p class="text-xs text-sky-600 mt-0.5">The portal icon will appear on your home screen!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Android install button (if beforeinstallprompt is available) -->
+                    <button type="button" id="a2hsInstallBtn" class="hidden w-full bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-semibold py-3 px-4 rounded-xl transition text-sm shadow-sm shadow-sky-200 mb-4 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Install App
+                    </button>
+                </div>
+
+                <!-- Desktop fallback -->
+                <div id="a2hsDesktop" class="hidden">
+                    <div class="bg-gray-50 rounded-xl p-4 mb-5 border border-gray-200">
+                        <p class="text-sm text-gray-600 text-center">Open this site on your phone and follow the steps to add it to your home screen for the best experience.</p>
+                    </div>
+                </div>
+
+                <div class="bg-surface-50 rounded-xl p-3 mb-5 border border-gray-100 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center" data-brand-logo>
+                        <span class="text-white font-extrabold text-sm" data-brand-fallback>JM</span>
+                        <img class="w-full h-full object-contain hidden" alt="Logo" data-brand-img>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">JM Portal</p>
+                        <p class="text-xs text-gray-400">This is how the icon will look on your home screen</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" id="a2hsBackBtn" class="flex-1 bg-surface-100 hover:bg-surface-200 text-gray-700 font-semibold py-3 px-4 rounded-xl transition text-sm">
+                        Back
+                    </button>
+                    <button type="button" id="a2hsDoneBtn" class="flex-[2] bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 px-4 rounded-xl transition text-sm shadow-sm shadow-brand-200">
+                        Continue
+                    </button>
+                </div>
+                <button type="button" id="a2hsSkipBtn" class="w-full text-gray-400 hover:text-gray-600 text-sm font-medium py-2 transition mt-1">
+                    Skip for now
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- STEP 9: Done! -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="step fade-in" data-step="8">
             <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 sm:p-8 text-center">
                 <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
                     <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>

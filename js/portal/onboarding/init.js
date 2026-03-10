@@ -51,6 +51,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         activeSteps = activeSteps.filter(s => s !== 6);
     }
 
+    // Skip Add to Home Screen step (7) if already running as installed PWA
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true;
+    if (isStandalone) {
+        activeSteps = activeSteps.filter(s => s !== 7);
+    }
+
     // Check for active subscription (used by contribution step to offer "keep current plan")
     const { data: subs } = await supabaseClient
         .from('subscriptions')
