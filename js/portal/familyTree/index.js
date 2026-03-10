@@ -383,10 +383,35 @@
             if (nodeCount === 0) {
                 if (window.FamilyTreeUI) window.FamilyTreeUI.showEmpty();
             } else {
-                // Show the container FIRST so #cy has real dimensions, then init on next paint
                 if (window.FamilyTreeUI) window.FamilyTreeUI.showCanvas();
+
+                // Fetch shared positions from DB (set by admin, visible to all)
+                let savedPositions = null;
+                try {
+                    const { data: setting } = await supabaseClient
+                        .from('tree_settings')
+                        .select('value')
+                        .eq('key', 'tree_positions')
+                        .maybeSingle();
+                    if (setting?.value && Object.keys(setting.value).length > 0) {
+                        savedPositions = setting.value;
+                    }
+                } catch (_) { /* table may not exist yet — fall back to auto layout */ }
+
+                const onPositionSave = async (posObj) => {
+                    try {
+                        await supabaseClient.from('tree_settings').upsert(
+                            { key: 'tree_positions', value: posObj, updated_at: new Date().toISOString() },
+                            { onConflict: 'key' }
+                        );
+                    } catch (_) {}
+                };
+
                 requestAnimationFrame(() => {
-                    if (window.TreeViz) TreeViz.init('#cy', elements);
+                    if (window.TreeViz) TreeViz.init('#cy', elements, {
+                        positions:      savedPositions,
+                        onPositionSave: onPositionSave,
+                    });
                 });
             }
         } catch (err) {

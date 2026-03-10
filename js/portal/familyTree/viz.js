@@ -4,22 +4,13 @@
 const TreeViz = (function () {
     let cy = null;
     let isAdmin = false;
+    let _onPositionSave = null;   // set by init(), called with positions object (or {}) on save/clear
 
-    const POSITIONS_KEY = 'jm_familyTree_positions';
-
-    function savePositions() {
-        if (!cy) return;
+    function _capturePositions() {
+        if (!cy) return {};
         const pos = {};
         cy.nodes().forEach(n => { pos[n.id()] = n.position(); });
-        try { localStorage.setItem(POSITIONS_KEY, JSON.stringify(pos)); } catch (_) {}
-    }
-
-    function loadPositions() {
-        try { return JSON.parse(localStorage.getItem(POSITIONS_KEY) || 'null'); } catch (_) { return null; }
-    }
-
-    function clearPositions() {
-        try { localStorage.removeItem(POSITIONS_KEY); } catch (_) {}
+        return pos;
     }
 
     // ─── Zoom / fit controls overlay ──────────────────────────────────────────
@@ -86,7 +77,7 @@ const TreeViz = (function () {
             const resetBtn = makeBtn('↺', 'Reset layout (clears saved positions)');
             Object.assign(resetBtn.style, { fontSize: '15px' });
             resetBtn.addEventListener('click', () => {
-                clearPositions();
+                if (_onPositionSave) _onPositionSave({});   // clear saved positions in DB
                 const l = cyInstance.layout({ name: 'breadthfirst', directed: true, padding: 30, spacingFactor: 1.4 });
                 l.run();
                 l.on('layoutstop', () => { try { cyInstance.fit(50); } catch (_) {} });
@@ -100,7 +91,9 @@ const TreeViz = (function () {
 
     // ─── Public: init ─────────────────────────────────────────────────────────
 
-    function init(containerId, elements) {
+    // options.positions  — object {nodeId:{x,y}} loaded from DB (or null)
+    // options.onPositionSave — async fn(posObj) called when admin finishes dragging or resets
+    function init(containerId, elements, options = {}) {
         const id        = containerId.replace('#', '');
         const container = document.getElementById(id);
         if (!container) return;
@@ -215,20 +208,23 @@ const TreeViz = (function () {
             motionBlur: true,
         });
 
+        _onPositionSave = (typeof options.onPositionSave === 'function') ? options.onPositionSave : null;
+
         // If admin was confirmed before init() ran (timing: rAF delay), unlock now
         if (isAdmin) cy.autoungrabify(false);
 
         // Save node positions whenever an admin finishes dragging a node
         cy.on('dragfree', 'node', () => {
-            if (isAdmin) savePositions();
+            if (isAdmin && _onPositionSave) _onPositionSave(_capturePositions());
         });
 
         // Run layout then fit — resize first so Cytoscape reads actual container dimensions
         cy.resize();
 
-        const savedPos = loadPositions();
-        if (savedPos && Object.keys(savedPos).length > 0) {
-            // Restore saved positions — apply preset layout so nodes land exactly where left
+        const savedPos = (options.positions && Object.keys(options.positions).length > 0)
+            ? options.positions : null;
+        if (savedPos) {
+            // Restore positions saved by admin — land nodes exactly where they were left
             const preset = cy.layout({
                 name: 'preset',
                 positions: node => savedPos[node.id()] || node.position(),
