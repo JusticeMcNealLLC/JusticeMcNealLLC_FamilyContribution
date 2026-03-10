@@ -450,6 +450,7 @@
 
         if (addBtn)    addBtn.addEventListener('click', openModal);
         if (addBtnMob) addBtnMob.addEventListener('click', openModal);
+        el('addRelationBtnMobileInline')?.addEventListener('click', openModal);
         if (cancel) cancel.addEventListener('click', closeModal);
         if (submit) submit.addEventListener('click', submitSuggestion);
         if (modal)  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });

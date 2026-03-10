@@ -52,6 +52,11 @@
         // Unified person lookup (id → node data)
         const personMap = {};
 
+        // Build a name set of active members for deduplication against non-member tree people
+        const memberNameSet = new Set(
+            profiles.map(p => fullName(p).toLowerCase().trim()).filter(Boolean)
+        );
+
         profiles.forEach(p => {
             personMap[p.id] = {
                 id:       p.id,
@@ -63,6 +68,9 @@
         });
 
         (treePeople || []).forEach(tp => {
+            // Skip non-member entries whose name matches a real member (they've since joined)
+            const normalised = (tp.display_name || '').toLowerCase().trim();
+            if (memberNameSet.has(normalised)) return;
             personMap[tp.id] = {
                 id:       tp.id,
                 label:    tp.display_name,

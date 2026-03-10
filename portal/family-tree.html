@@ -72,6 +72,30 @@
         .rel-spouse  { background: #fce7f3; color: #be185d; }
         .rel-sibling { background: #fef9c3; color: #a16207; }
         .rel-other   { background: #f3f4f6; color: #374151; }
+
+        /* Hide mobile top nav */
+        @media (max-width: 767px) {
+            body[data-active-page="family-tree"] > nav { display: none !important; }
+        }
+
+        /* Full-bleed sticky canvas panel on mobile */
+        @media (max-width: 767px) {
+            #canvasPanel {
+                border-radius: 0 !important;
+                border-left: none !important;
+                border-right: none !important;
+                border-top: none !important;
+            }
+            /* Smaller zoom controls on mobile */
+            .tv-controls button {
+                padding: 3px 5px !important;
+                font-size: 13px !important;
+                border-radius: 7px !important;
+            }
+            .tv-controls input[type=range] {
+                width: 56px !important;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar pb-20 sm:pb-0"
@@ -79,7 +103,7 @@
 
     <div id="nav-placeholder"></div>
 
-    <main class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-8 flex-1 w-full">
+    <main class="max-w-6xl mx-auto px-0 sm:px-6 lg:px-8 pt-0 sm:pt-8 pb-3 sm:pb-8 flex-1 w-full">
 
         <!-- ── Access gate (shown when user is not an active member) ────────── -->
         <div id="accessGate" class="hidden flex-col items-center justify-center text-center py-20 px-6">
@@ -106,8 +130,8 @@
             </p>
         </div>
 
-        <!-- ── Page header ──────────────────────────────────────────────────── -->
-        <div id="treePageHeader" class="flex items-center justify-between gap-3 mb-4 sm:mb-6">
+        <!-- ── Page header (desktop only) ──────────────────────────────────────────── -->
+        <div id="treePageHeader" class="hidden sm:flex items-center justify-between gap-3 mb-4 sm:mb-6">
             <div class="flex items-center gap-3">
                 <div class="w-11 h-11 rounded-2xl bg-brand-100 flex items-center justify-center flex-shrink-0">
                     <!-- DNA / tree icon -->
@@ -147,12 +171,12 @@
         </div>
 
         <!-- ── Main grid ─────────────────────────────────────────────────────── -->
-        <div id="treeMainGrid" class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-3 sm:gap-4">
+        <div id="treeMainGrid" class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-0 sm:gap-4">
 
             <!-- ── Canvas panel ─────────────────────────────────────────────── -->
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <!-- Canvas header bar -->
-                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <div id="canvasPanel" class="sticky top-0 z-30 md:static bg-white border border-gray-100 shadow-sm overflow-hidden md:rounded-2xl">
+                <!-- Canvas header bar (desktop only) -->
+                <div class="hidden sm:flex items-center justify-between px-4 py-3 border-b border-gray-100">
                     <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Relationship Graph</span>
                     <span class="text-xs text-gray-300">Double-click to fit · scroll to zoom</span>
                 </div>
@@ -252,6 +276,16 @@
 
             </div><!-- /sidebar -->
         </div><!-- /grid -->
+
+        <!-- Mobile Add Relation button inside main (above FAB) -->
+        <div class="sm:hidden flex justify-between items-center px-3 pt-3 pb-1">
+            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Family Tree</span>
+            <button id="addRelationBtnMobileInline"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Relation
+            </button>
+        </div>
 
     </main>
 
