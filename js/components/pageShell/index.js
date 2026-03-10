@@ -13,5 +13,35 @@
 // All modules share state via window.PageShell namespace.
 // ─────────────────────────────────────────────────────────
 
-// Nothing to do here currently — all modules self-initialize.
-// This file exists for documentation and future shared bootstrapping.
+// Minimal bootstrap: show admin pending queue badge in desktop nav
+(function(){
+	document.addEventListener('DOMContentLoaded', async function(){
+		try {
+			var PS = window.PageShell || {};
+			if (!PS._isAdmin) return;
+			if (typeof supabaseClient === 'undefined') return;
+
+			const { count, error } = await supabaseClient
+				.from('family_relations')
+				.select('id', { count: 'exact', head: true })
+				.eq('status','pending');
+
+			if (error) return;
+			if (!count || count <= 0) return;
+
+			// Find the admin hub link in the nav and append a badge
+			var anchors = document.querySelectorAll('nav a[href="index.html"]');
+			var target = null;
+			anchors.forEach(a => { if (a.textContent && a.textContent.trim().includes('Admin Hub')) target = a; });
+			if (!target) target = anchors[0];
+			if (!target) return;
+
+			var badge = document.createElement('span');
+			badge.className = 'ml-2 inline-flex items-center justify-center bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full';
+			badge.textContent = count;
+			target.appendChild(badge);
+		} catch (e) {
+			// silent
+		}
+	});
+})();
