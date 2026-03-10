@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Family Tree | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { brand: { 50: '#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81' } }, fontFamily: { sans: ['Inter','system-ui','-apple-system','sans-serif'] } } } };
+    </script>
+    <link rel="stylesheet" href="../css/shared.css">
+    <link rel="manifest" href="../manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="family-tree">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex-1 w-full">
+        <div class="mb-6 sm:mb-8">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900">Family Tree</h1>
+                    <p class="text-gray-500 text-sm mt-1">Explore relationships across family members. Suggestions require admin approval.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input id="searchInput" placeholder="Search members" class="px-3 py-2 rounded-lg border border-gray-200 focus:outline-none" />
+                    <button id="refreshBtn" class="bg-brand-600 text-white px-3 py-2 rounded-lg">Refresh</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-4">
+                <div id="cy" style="height:560px; width:100%;"></div>
+            </div>
+            <div class="bg-white rounded-2xl border border-gray-200 p-4">
+                <h3 class="font-semibold text-gray-800 mb-2">Members</h3>
+                <div id="memberList" class="space-y-2 max-h-96 overflow-auto"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="https://unpkg.com/cytoscape@3.24.0/dist/cytoscape.min.js"></script>
+    <script src="../js/components/treeViz.js"></script>
+    <script src="../js/portal/familyTree.js"></script>
+    <script>
+        // initialize
+        document.addEventListener('DOMContentLoaded', function(){
+            if (window.loadFamilyTree) window.loadFamilyTree();
+        });
+    </script>
+</body>
+</html>
