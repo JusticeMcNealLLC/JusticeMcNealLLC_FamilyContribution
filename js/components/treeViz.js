@@ -103,7 +103,6 @@ const TreeViz = (function(){
                 { selector: 'node', style: { 'label': 'data(label)', 'text-valign':'center', 'color':'#ffffff','font-size':'12px','background-color':'#6366f1','border-width':2,'border-color':'#4f46e5','width':54,'height':54 } },
                 { selector: 'edge', style: { 'curve-style':'bezier','target-arrow-shape':'triangle','line-color':'#c7d2fe','target-arrow-color':'#c7d2fe','width':2,'label':'data(relation)','font-size':'10px','text-rotation':'autorotate','text-margin-y':-8 } }
             ],
-            layout: { name: 'breadthfirst', directed: true, padding: 10, spacingFactor: 1.2 },
             wheelSensitivity: 0.4,
             userZoomingEnabled: true,
             zoomingEnabled: true,
@@ -136,9 +135,6 @@ const TreeViz = (function(){
         } catch (err) {
             console.warn('layout/run error', err);
         }
-
-        // quick post-init debug: report nodes/edges
-        try { console.log('[TreeViz] init - nodes:', cy.nodes().length, 'edges:', cy.edges().length); } catch(_){}
 
         // responsive: resize on window resize
         window.addEventListener('resize', function(){

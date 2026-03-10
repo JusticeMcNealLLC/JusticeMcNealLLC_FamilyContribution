@@ -8,7 +8,6 @@
             .eq('is_active', true);
 
         if (pErr) { console.error('profiles error', pErr); return; }
-        console.log('[familyTree] profiles fetched:', Array.isArray(profiles) ? profiles.length : 0, (profiles||[]).slice(0,10));
         // load approved relations
         const { data: relations, error: rErr } = await supabaseClient
             .from('family_relations')
@@ -16,7 +15,6 @@
             .eq('status', 'approved');
 
         if (rErr) { console.error('relations error', rErr); return; }
-        console.log('[familyTree] relations fetched:', Array.isArray(relations) ? relations.length : 0, (relations||[]).slice(0,10));
         // Build nodes map
         const nodes = {};
         profiles.forEach(p => {
@@ -34,9 +32,6 @@
         });
 
         const elements = Object.values(nodes).concat(edges);
-        console.log('[familyTree] built elements -> nodes:', Object.keys(nodes).length, 'edges:', edges.length, 'total:', elements.length, (elements||[]).slice(0,10));
-
-        // debug removed
 
         // render list of members
         const listEl = document.getElementById('memberList');
@@ -93,7 +88,6 @@
 
         // init viz
         try {
-            console.log('[familyTree] initializing TreeViz with elements:', elements.length);
             if (window.TreeViz) TreeViz.init('#cy', elements);
         } catch (err) {
             console.error('[familyTree] TreeViz.init error', err);
@@ -123,18 +117,25 @@
         const { data: pending, error } = await supabaseClient
             .from('family_relations')
             .select('id, person_a, person_b, relation, metadata, created_by, created_at')
-            .eq('status','pending')
+            .eq('status', 'pending')
             .order('created_at', { ascending: false });
 
         if (error) { list.innerHTML = '<div class="text-sm text-red-600">Failed to load</div>'; console.error(error); return; }
-
         if (!pending || pending.length === 0) { list.innerHTML = '<div class="text-sm text-gray-400">No pending suggestions</div>'; return; }
+
+        // Batch-fetch all referenced profiles in a single query (no N+1)
+        const personIds = [...new Set(pending.flatMap(r => [r.person_a, r.person_b]))];
+        const { data: profileRows } = await supabaseClient
+            .from('profiles')
+            .select('id, first_name, last_name')
+            .in('id', personIds);
+        const profileMap = {};
+        (profileRows || []).forEach(p => { profileMap[p.id] = p; });
 
         list.innerHTML = '';
         for (const r of pending) {
-            const { data: a } = await supabaseClient.from('profiles').select('id, first_name, last_name').eq('id', r.person_a).single();
-            const { data: b } = await supabaseClient.from('profiles').select('id, first_name, last_name').eq('id', r.person_b).single();
-
+            const a = profileMap[r.person_a] || {};
+            const b = profileMap[r.person_b] || {};
             const row = document.createElement('div');
             row.className = 'flex items-center justify-between gap-3 p-2 rounded bg-surface-50 border border-gray-100';
             row.innerHTML = `
@@ -147,18 +148,19 @@
             list.appendChild(row);
         }
 
-        list.addEventListener('click', async function(e){
-            const btn = e.target.closest('button');
+        // Use one-time listener to avoid stacking listeners on each render
+        list.addEventListener('click', async function handler(e) {
+            const btn = e.target.closest('button[data-action]');
             if (!btn) return;
             const id = btn.dataset.id;
             const action = btn.dataset.action;
             if (!id || !action) return;
+            btn.disabled = true;
             if (action === 'approve') await updateStatusInline(id, 'approved');
             if (action === 'reject') await updateStatusInline(id, 'rejected');
-            // refresh both approvals and main list
-            await showAdminApprovals();
+            // loadFamily re-renders the whole page including the approvals panel
             await loadFamily();
-        });
+        }, { once: true });
     }
 
     async function updateStatusInline(id, status) {
