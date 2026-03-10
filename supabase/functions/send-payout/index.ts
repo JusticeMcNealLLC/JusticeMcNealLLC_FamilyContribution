@@ -45,16 +45,22 @@ serve(async (req) => {
       throw new Error('Admin access required')
     }
 
-    // Check global payouts toggle
-    const { data: setting } = await supabase
+    // Check global payouts toggle + reserve setting
+    const { data: appSettings } = await supabase
       .from('app_settings')
-      .select('value')
-      .eq('key', 'payouts_enabled')
-      .single()
+      .select('key, value')
+      .in('key', ['payouts_enabled', 'payout_reserve_cents'])
 
-    if (!setting || setting.value !== true) {
+    const settingsMap: Record<string, any> = {}
+    for (const s of appSettings || []) settingsMap[s.key] = s.value
+
+    if (settingsMap.payouts_enabled !== true) {
       throw new Error('Payouts are currently disabled')
     }
+
+    const reserveCents: number = typeof settingsMap.payout_reserve_cents === 'number'
+      ? settingsMap.payout_reserve_cents
+      : 20000 // default $200
 
     // Parse request body
     const { user_id, amount_cents, payout_type, reason } = await req.json()
@@ -84,6 +90,21 @@ serve(async (req) => {
 
     if (enrollment && !enrollment.enrolled) {
       throw new Error(`Recipient has opted out of ${payout_type} payouts`)
+    }
+
+    // Check platform Stripe balance against reserve threshold
+    const balance = await stripe.balance.retrieve()
+    const availableCents = balance.available.find((b: any) => b.currency === 'usd')?.amount ?? 0
+    const afterPayout = availableCents - amount_cents
+
+    if (afterPayout < reserveCents) {
+      const availStr = `$${(availableCents / 100).toFixed(2)}`
+      const reserveStr = `$${(reserveCents / 100).toFixed(2)}`
+      const payoutStr = `$${(amount_cents / 100).toFixed(2)}`
+      throw new Error(
+        `Insufficient platform balance. Available: ${availStr}, payout: ${payoutStr}, ` +
+        `minimum reserve: ${reserveStr}. Add funds to your Stripe balance before sending this payout.`
+      )
     }
 
     // Insert pending payout record

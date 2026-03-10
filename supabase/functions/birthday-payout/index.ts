@@ -31,7 +31,7 @@ serve(async (req) => {
     const { data: settings } = await supabase
       .from('app_settings')
       .select('key, value')
-      .in('key', ['payouts_enabled', 'birthday_payouts_enabled', 'birthday_payout_amount_cents'])
+      .in('key', ['payouts_enabled', 'birthday_payouts_enabled', 'birthday_payout_amount_cents', 'payout_reserve_cents'])
 
     const settingsMap: Record<string, any> = {}
     for (const s of settings || []) settingsMap[s.key] = s.value
@@ -46,6 +46,29 @@ serve(async (req) => {
     const amountCents = typeof settingsMap.birthday_payout_amount_cents === 'number'
       ? settingsMap.birthday_payout_amount_cents
       : 1000
+
+    const reserveCents: number = typeof settingsMap.payout_reserve_cents === 'number'
+      ? settingsMap.payout_reserve_cents
+      : 20000 // default $200
+
+    // ── Check platform balance once before the batch ───────
+    const balance = await stripe.balance.retrieve()
+    let availableCents = balance.available.find((b: any) => b.currency === 'usd')?.amount ?? 0
+
+    if (availableCents - amountCents < reserveCents) {
+      console.warn(
+        `Birthday payouts skipped — insufficient balance. ` +
+        `Available: $${(availableCents / 100).toFixed(2)}, ` +
+        `reserve: $${(reserveCents / 100).toFixed(2)}, ` +
+        `payout amount: $${(amountCents / 100).toFixed(2)}`
+      )
+      return jsonResponse({
+        skipped: true,
+        reason: 'insufficient_balance',
+        available_cents: availableCents,
+        reserve_cents: reserveCents,
+      })
+    }
 
     // ── Find today's birthday members ──────────────────────
     const today = new Date()
@@ -112,6 +135,12 @@ serve(async (req) => {
           continue
         }
 
+        // Re-check balance before each transfer (track locally after each success)
+        if (availableCents - amountCents < reserveCents) {
+          results.push({ user_id: member.id, status: 'skipped', reason: 'insufficient_balance' })
+          continue
+        }
+
         // Create Stripe Transfer
         const transfer = await stripe.transfers.create({
           amount: amountCents,
@@ -135,6 +164,7 @@ serve(async (req) => {
           completed_at: new Date().toISOString(),
         })
 
+        availableCents -= amountCents  // track locally so next iteration is accurate
         results.push({ user_id: member.id, status: 'completed', transfer_id: transfer.id })
       } catch (err) {
         console.error(`Failed payout for ${member.id}:`, err)
