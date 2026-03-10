@@ -62,9 +62,10 @@
         badge:      { icon: '🏅', action: 'You earned a badge!' },
         deposit:    { icon: '💰', action: 'Deposit confirmed' },
         payout:     { icon: '💸', action: 'Payout processed' },
-        event:      { icon: '📅', action: 'New family event' },
-        welcome:    { icon: '👋', action: 'Welcome to the family!' },
-        system:     { icon: '🔔', action: '' },
+        event:          { icon: '📅', action: 'New family event' },
+        welcome:        { icon: '👋', action: 'Welcome to the family!' },
+        family_relation:{ icon: '🌳', action: '' },
+        system:         { icon: '🔔', action: '' },
     };
 
     // ─── Render ─────────────────────────────────────────

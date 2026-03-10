@@ -10,7 +10,20 @@
         if (error) { console.error('loadPending error', error); return; }
 
         const container = document.getElementById('approvalsList');
+        const emptyEl   = document.getElementById('approvalsEmpty');
+        const headerEl  = document.getElementById('pendingHeader');
+        const countEl   = document.getElementById('pendingCount');
         container.innerHTML = '';
+
+        if (!pending || !pending.length) {
+            if (emptyEl)  emptyEl.classList.remove('hidden');
+            if (headerEl) headerEl.classList.add('hidden');
+            return;
+        }
+
+        if (emptyEl)  emptyEl.classList.add('hidden');
+        if (headerEl) headerEl.classList.remove('hidden');
+        if (countEl)  countEl.textContent = pending.length;
 
         for (const r of pending) {
             // fetch profiles for display
@@ -18,20 +31,20 @@
             const { data: b } = await supabaseClient.from('profiles').select('id, first_name, last_name, title').eq('id', r.person_b).limit(1).single();
 
             const card = document.createElement('div');
-            card.className = 'bg-white rounded-lg border p-3 flex flex-col gap-3';
+            card.className = 'bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 flex flex-col gap-3';
             card.innerHTML = `
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <div class="text-sm font-medium">${escapeHtml((a.first_name||'')+' '+(a.last_name||''))} → ${escapeHtml((b.first_name||'')+' '+(b.last_name||''))}</div>
-                        <div class="text-xs text-gray-500">Relation: ${escapeHtml(r.relation)} • Suggested: ${new Date(r.created_at).toLocaleString()}</div>
+                        <div class="text-sm font-bold text-gray-900">${escapeHtml((a.first_name||'')+' '+(a.last_name||''))} → ${escapeHtml((b.first_name||'')+' '+(b.last_name||''))}</div>
+                        <div class="text-xs text-gray-500 mt-0.5">Relation: <span class="font-medium text-gray-700">${escapeHtml(r.relation)}</span> · Suggested ${new Date(r.created_at).toLocaleDateString()}</div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button data-id="${r.id}" data-action="approve" class="px-3 py-1 bg-emerald-600 text-white rounded">Approve</button>
-                        <button data-id="${r.id}" data-action="reject" class="px-3 py-1 bg-red-100 text-red-700 rounded">Reject</button>
-                        <button data-id="${r.id}" data-action="history" class="px-3 py-1 bg-gray-100 text-gray-700 rounded">History</button>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button data-id="${r.id}" data-action="approve" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition">Approve</button>
+                        <button data-id="${r.id}" data-action="reject"  class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-lg transition">Reject</button>
+                        <button data-id="${r.id}" data-action="history" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-lg transition">History</button>
                     </div>
                 </div>
-                <div id="history-${r.id}" class="hidden mt-2 text-xs text-gray-600"></div>
+                <div id="history-${r.id}" class="hidden mt-1 text-xs text-gray-600 bg-gray-50 rounded-xl p-3"></div>
             `;
 
             container.appendChild(card);
