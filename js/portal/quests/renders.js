@@ -171,6 +171,42 @@ function renderQuestCard(quest) {
     const catCfg = QUEST_CATEGORIES[quest.category] || QUEST_CATEGORIES.general;
     const isCompleted = status === 'completed';
 
+    // ── Contributor gate ──────────────────────────────────
+    // Certain finance / streak quests are only meaningful for active contributors.
+    // Show a locked card to non-contributors so they know the quest exists but
+    // understand they need an active contribution to unlock it.
+    const isContributorLocked =
+        !_isContributor &&
+        quest.auto_detect_key &&
+        typeof CONTRIBUTOR_REQUIRED_QUESTS !== 'undefined' &&
+        CONTRIBUTOR_REQUIRED_QUESTS.has(quest.auto_detect_key);
+
+    if (isContributorLocked) {
+        return `
+        <div class="group bg-white rounded-2xl border border-gray-200/60 p-4 sm:p-5 opacity-60 select-none" title="Activate your contribution to unlock this quest">
+            <div class="flex items-start gap-3.5">
+                <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 text-xl grayscale">
+                    ${quest.emoji || '🎯'}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                        <h3 class="font-bold text-gray-400 text-sm leading-tight">${quest.title}</h3>
+                        <span class="flex-shrink-0 inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">
+                            🔒 Members Only
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-400 mb-2">Activate your contribution to unlock this quest and start earning CP.</p>
+                    <div class="flex items-center gap-3 text-xs text-gray-300">
+                        <span>+${quest.cp_reward} CP</span>
+                        <span>•</span>
+                        <span>${getQuestTypeLabel(quest.quest_type)}</span>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-gray-200 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+        </div>`;
+    }
+
     // Progress bar for streak / tracked quests
     const hasProgress = mq && mq.progress_target > 0 && !isCompleted;
     const progressPct = hasProgress ? Math.min(100, Math.round((mq.progress_current / mq.progress_target) * 100)) : 0;

@@ -84,6 +84,19 @@ const BADGE_CATALOG = {
     birthday_vip:     { emoji: '🎂', name: 'Birthday VIP',       description: 'Linked bank for birthday payouts',            rarity: 'rare' },
 };
 
+// ─── Contributor-Required Quests ─────────────────────────
+// Quests whose auto_detect_key is in this set are locked behind
+// an active contribution (subscription).  Profile / onboarding
+// quests remain open so non-contributors can still make progress
+// and see the path to becoming a contributor.
+const CONTRIBUTOR_REQUIRED_QUESTS = new Set([
+    'on_time_payment',
+    'increase_contribution',
+    'streak_3',
+    'streak_6',
+    'streak_12',
+]);
+
 // ─── Quest Category Config ───────────────────────────────
 const QUEST_CATEGORIES = {
     general:  { label: 'General',  color: 'gray',    icon: '🎯' },

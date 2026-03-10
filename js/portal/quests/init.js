@@ -11,6 +11,7 @@ let _cpBalance = 0;
 let _currentFilter = 'all';
 let _currentUserId = null;
 let _selectedProofFile = null;
+let _isContributor = false;   // true when user has active/trialing subscription
 
 // ─── Entry Point ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function () {
@@ -23,8 +24,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 // ─── Data Loading ────────────────────────────────────────
 async function loadQuestData() {
     try {
-        // Parallel fetch: quests, member_quests, cp_log, badges
-        const [questsRes, memberQuestsRes, cpLogRes, badgesRes, cpBalRes] = await Promise.all([
+        // Parallel fetch: quests, member_quests, cp_log, badges, subscription
+        const [questsRes, memberQuestsRes, cpLogRes, badgesRes, cpBalRes, subRes] = await Promise.all([
             supabaseClient
                 .from('quests')
                 .select('*')
@@ -46,6 +47,11 @@ async function loadQuestData() {
                 .eq('user_id', _currentUserId),
             supabaseClient
                 .rpc('get_member_cp_balance', { target_user_id: _currentUserId }),
+            supabaseClient
+                .from('subscriptions')
+                .select('status')
+                .eq('user_id', _currentUserId)
+                .maybeSingle(),
         ]);
 
         _questsData = questsRes.data || [];
@@ -53,6 +59,7 @@ async function loadQuestData() {
         _cpLog = cpLogRes.data || [];
         _earnedBadges = badgesRes.data || [];
         _cpBalance = cpBalRes.data || 0;
+        _isContributor = !!(subRes.data && ['active', 'trialing'].includes(subRes.data.status));
 
         // Run auto-detection (may create member_quests + award CP)
         await runAutoDetection();
@@ -80,6 +87,18 @@ async function loadQuestData() {
         renderQuestList(_questsData, _memberQuestsData, _currentFilter);
         renderBadgeCollection(_earnedBadges);
         renderCPHistory(_cpLog);
+
+        // Auto-open a specific quest if linked from a notification (?quest=<id>)
+        const _urlParams = new URLSearchParams(window.location.search);
+        const _questParam = _urlParams.get('quest');
+        if (_questParam) {
+            const _targetQuest = _questsData.find(q => q.id === _questParam);
+            if (_targetQuest) {
+                openQuestDetail(_questParam);
+                // Clean up the URL without reloading the page
+                history.replaceState(null, '', window.location.pathname);
+            }
+        }
 
         // Show content, hide loading
         document.getElementById('loadingState')?.classList.add('hidden');
@@ -276,6 +295,33 @@ async function awardCP(points, reason, questId, memberQuestId, permanent = false
     if (error) console.error('Failed to award CP:', error);
 }
 
+// ─── Quest Completion Notification ───────────────────────
+/**
+ * Inserts a notification so the member sees a rich alert in the bell panel.
+ * The link routes to quests.html?quest=<id> so tapping the notification
+ * lands on the quests page and auto-opens that quest's detail sheet.
+ *
+ * Only called when CP is being awarded for the first time (new completions),
+ * so backfilled historical quests don't generate notification spam.
+ *
+ * @param {object} quest   — quest row from _questsData
+ * @param {string} [period] — period key for recurring quests (e.g. "2026-03")
+ */
+async function sendQuestNotification(quest, period = null) {
+    try {
+        const label = period ? `${quest.title} (${period})` : quest.title;
+        const message = `${quest.emoji || '🎯'} ${label} — quest completed! +${quest.cp_reward} CP`;
+        await supabaseClient.from('notifications').insert({
+            user_id: _currentUserId,
+            type:    'quest',
+            message: message,
+            link:    `quests.html?quest=${quest.id}`,
+        });
+    } catch (err) {
+        console.warn('sendQuestNotification error (non-fatal):', err);
+    }
+}
+
 // ─── Badge Management ────────────────────────────────────
 async function setDisplayedBadge(badgeKey) {
     try {
@@ -433,10 +479,15 @@ async function runAutoDetection() {
             await awardBadge('shutterbug');
         }
 
-        // Founding member: joined within the first year (2025)
+        // Founding member: joined within year-1 founding window AND has activated a contribution.
+        // Non-contributing members don't earn this badge — they must complete
+        // "Activate Your Contribution" first (i.e. have an active/trialing subscription).
         if (profile.created_at) {
             const joinDate = new Date(profile.created_at);
-            if (joinDate.getFullYear() <= 2025 || (joinDate.getFullYear() === 2026 && joinDate.getMonth() < 6)) {
+            const isFoundingPeriod = joinDate.getFullYear() <= 2025 ||
+                (joinDate.getFullYear() === 2026 && joinDate.getMonth() < 6);
+            const hasActivatedContribution = subscription && ['active', 'trialing'].includes(subscription.status);
+            if (isFoundingPeriod && hasActivatedContribution) {
                 await awardBadge('founding_member');
             }
         }
@@ -509,6 +560,8 @@ async function autoCompleteQuest(quest, existingMQ) {
             // One-time / per_event quests get permanent CP; recurring gets 90-day rolling
             const isPermanent = quest.quest_type !== 'recurring_monthly';
             await awardCP(quest.cp_reward, `Completed: ${quest.title}`, quest.id, mqId, isPermanent);
+            // Notify the member — only fires for genuine new completions, not backfills
+            await sendQuestNotification(quest);
         }
 
         // Refresh member quests
@@ -577,6 +630,8 @@ async function autoCompleteRecurring(quest, periodKey) {
         if (!existingCP || existingCP.length === 0) {
             // Recurring monthly CP uses 90-day rolling window
             await awardCP(quest.cp_reward, `${quest.title} (${periodKey})`, quest.id, mqId, false);
+            // Notify the member — only fires for genuine new monthly completions
+            await sendQuestNotification(quest, periodKey);
         }
     } catch (err) {
         console.error('Auto-complete recurring error:', err);
