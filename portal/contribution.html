@@ -31,17 +31,17 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+    <style>
+        @media (max-width: 767px) {
+            body[data-active-page="contribution"] > nav { display: none !important; }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="contribution">
+<body class="min-h-screen bg-brand-600 md:bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="contribution">
 
     <div id="nav-placeholder"></div>
 
-    <main class="max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
-
-        <a href="index.html" class="inline-flex items-center gap-1 text-gray-500 hover:text-brand-600 text-sm mb-5 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-            Back to Dashboard
-        </a>
+    <main class="max-w-lg mx-auto px-4 sm:px-6 lg:px-8 pb-8 flex-1 w-full" style="padding-top: max(1.5rem, calc(env(safe-area-inset-top) + 1rem));">
 
         <div class="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-8 fade-in">
             <h1 class="text-xl sm:text-2xl font-extrabold text-gray-900 mb-6 tracking-tight">Change Your Contribution</h1>
