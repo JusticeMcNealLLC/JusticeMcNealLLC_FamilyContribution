@@ -38,7 +38,8 @@
 
     <main class="max-w-xl mx-auto px-0 sm:px-4 flex-1 w-full">
 
-        <!-- Cover Photo -->
+        <!-- Cover Photo + Badge Highlights -->
+        <div class="relative">
         <div id="coverSection" class="profile-cover relative w-full h-40 sm:h-52 bg-gradient-to-br from-brand-500 to-brand-700 sm:rounded-b-2xl overflow-hidden group">
             <img id="coverImage" class="w-full h-full object-cover hidden" alt="Cover photo">
             <div id="coverOverlay" class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -48,6 +49,9 @@
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 </div>
             </a>
+        </div>
+        <!-- Badge Highlights (3 user-selected badges at bottom-center of banner) -->
+        <div id="badgeHighlights" class="badge-highlights hidden"></div>
         </div>
 
         <!-- Banner/Cover is reward-only — no user picker -->
@@ -213,6 +217,15 @@
                             <!-- Earned badges injected by JS -->
                         </div>
                         <p class="text-xs text-gray-400 mt-1.5">Pick a badge to show on your avatar</p>
+                    </div>
+
+                    <!-- Badge Highlights Picker (select up to 3) -->
+                    <div id="editHighlightSection" class="hidden">
+                        <label class="block text-xs font-medium text-gray-500 mb-2">Badge Highlights <span class="text-gray-400 font-normal">(up to 3)</span></label>
+                        <div id="editHighlightPicker" class="flex flex-wrap gap-2">
+                            <!-- Earned badges injected by JS -->
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1.5">Choose badges to showcase on your banner</p>
                     </div>
 
                     <!-- Banner Picker Section -->

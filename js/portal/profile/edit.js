@@ -120,6 +120,9 @@ window.ProfileApp.setupEditProfile = function setupEditProfile() {
         // Populate badge picker
         window.ProfileApp.populateEditModalBadgePicker();
 
+        // Populate badge highlights picker
+        window.ProfileApp.populateEditHighlightPicker();
+
         // Populate banner section
         window.ProfileApp.populateEditModalBanner();
 
@@ -148,7 +151,16 @@ window.ProfileApp.setupEditProfile = function setupEditProfile() {
         // Get selected badge from modal picker
         const selectedBadge = modal.querySelector('.edit-badge-option.ring-brand-500')?.dataset.badge ?? S.currentDisplayedBadge;
 
-        const updates = { bio };
+        // Get selected highlight badges
+        const highlightPicker = document.getElementById('editHighlightPicker');
+        const selectedHighlights = [];
+        if (highlightPicker) {
+            highlightPicker.querySelectorAll('.highlight-badge-option.ring-2').forEach(btn => {
+                if (btn.dataset.badge) selectedHighlights.push(btn.dataset.badge);
+            });
+        }
+
+        const updates = { bio, highlighted_badges: selectedHighlights };
         if (selectedBadge !== undefined) {
             updates.displayed_badge = selectedBadge || null;
         }
@@ -160,6 +172,10 @@ window.ProfileApp.setupEditProfile = function setupEditProfile() {
 
         if (!error) {
             document.getElementById('profileBio').textContent = bio;
+
+            // Update highlighted badges on banner
+            S.currentHighlightedBadges = selectedHighlights;
+            window.ProfileApp.renderBadgeHighlights();
 
             // If badge changed, update overlay
             if (updates.displayed_badge !== undefined && updates.displayed_badge !== S.currentDisplayedBadge) {
@@ -287,5 +303,83 @@ window.ProfileApp.populateEditModalBanner = function populateEditModalBanner() {
     // Apply Lottie effect to banner preview if available
     if (bannerInfo?.lottieEffect && typeof LottieEffects !== 'undefined') {
         LottieEffects.renderBannerEffect(preview, bannerInfo.lottieEffect, { opacity: 0.6 });
+    }
+};
+// ─── Badge Highlights Picker (select up to 3) ──────────
+window.ProfileApp.populateEditHighlightPicker = function populateEditHighlightPicker() {
+    const S = window.ProfileApp.state;
+    const section = document.getElementById('editHighlightSection');
+    const picker = document.getElementById('editHighlightPicker');
+    if (!section || !picker) return;
+
+    // Only show if user has at least 1 earned badge
+    if (!S.earnedBadgeKeys || S.earnedBadgeKeys.length === 0) {
+        section.classList.add('hidden');
+        return;
+    }
+
+    section.classList.remove('hidden');
+    const current = S.currentHighlightedBadges || [];
+
+    const btns = S.earnedBadgeKeys.map(key => {
+        const badge = (typeof BADGE_CATALOG !== 'undefined' && BADGE_CATALOG[key]) || { emoji: '🏅', name: key, rarity: 'common' };
+        const isSelected = current.includes(key);
+        return `<button data-badge="${key}" class="highlight-badge-option badge-chip badge-rarity-${badge.rarity || 'common'} w-10 h-10 text-lg transition ${isSelected ? 'ring-2 ring-brand-500 ring-offset-2' : ''}" title="${badge.name}">${badge.emoji}</button>`;
+    }).join('');
+
+    picker.innerHTML = btns;
+
+    // Wire clicks — toggle selection, max 3
+    picker.querySelectorAll('.highlight-badge-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const isOn = btn.classList.contains('ring-2');
+            if (isOn) {
+                // Deselect
+                btn.classList.remove('ring-2', 'ring-brand-500', 'ring-offset-2');
+            } else {
+                // Check if already 3 selected
+                const count = picker.querySelectorAll('.highlight-badge-option.ring-2').length;
+                if (count >= 3) return; // max 3
+                btn.classList.add('ring-2', 'ring-brand-500', 'ring-offset-2');
+            }
+        });
+    });
+
+    // Apply Lottie effects to legendary/epic chips
+    if (typeof LottieEffects !== 'undefined') {
+        setTimeout(() => LottieEffects.applyBadgeEffects(), 100);
+    }
+};
+
+// ─── Render Badge Highlights on Banner (after save) ─────
+window.ProfileApp.renderBadgeHighlights = function renderBadgeHighlights() {
+    const S = window.ProfileApp.state;
+    const hlContainer = document.getElementById('badgeHighlights');
+    if (!hlContainer) return;
+
+    const highlights = S.currentHighlightedBadges || [];
+    if (highlights.length === 0) {
+        hlContainer.innerHTML = '';
+        hlContainer.classList.add('hidden');
+        return;
+    }
+
+    hlContainer.innerHTML = highlights.slice(0, 3).map(key => {
+        const badge = (typeof BADGE_CATALOG !== 'undefined' && BADGE_CATALOG[key]) || { emoji: '🏅', name: key, rarity: 'common' };
+        const rarity = badge.rarity || 'common';
+        return `<div class="badge-highlight-chip badge-rarity-${rarity}" title="${badge.name}">${badge.emoji}</div>`;
+    }).join('');
+    hlContainer.classList.remove('hidden');
+
+    // Apply Lottie effects
+    if (typeof LottieEffects !== 'undefined') {
+        setTimeout(() => {
+            hlContainer.querySelectorAll('.badge-rarity-legendary').forEach(el => {
+                LottieEffects.renderBadgeEffect(el, 'legendary');
+            });
+            hlContainer.querySelectorAll('.badge-rarity-epic').forEach(el => {
+                LottieEffects.renderBadgeEffect(el, 'epic');
+            });
+        }, 150);
     }
 };

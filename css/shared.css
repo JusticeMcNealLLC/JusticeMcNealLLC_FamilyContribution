@@ -563,6 +563,54 @@ input[type="date"] {
 }
 
 /* ─── Badge Chip (animated emoji overlay on avatars) ─── */
+
+/* ─── Badge Highlights (3 selected badges at banner bottom) ─── */
+.badge-highlights {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+    pointer-events: none;
+}
+.badge-highlights .badge-highlight-chip {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    position: relative;
+    isolation: isolate;
+    pointer-events: auto;
+}
+.badge-highlights .badge-highlight-chip.badge-rarity-rare {
+    border-color: #93c5fd;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe, #eff6ff);
+    background-size: 200% 200%;
+    animation: badgeShimmer 3s ease-in-out infinite;
+}
+.badge-highlights .badge-highlight-chip.badge-rarity-epic {
+    border-color: #c084fc;
+    background: linear-gradient(135deg, #faf5ff, #f3e8ff, #faf5ff);
+    background-size: 200% 200%;
+    animation: badgeShimmer 3s ease-in-out infinite, badgeGlow 2s ease-in-out infinite;
+}
+.badge-highlights .badge-highlight-chip.badge-rarity-legendary {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    font-size: 0;
+    color: transparent;
+}
+
 .badge-chip {
     display: flex;
     align-items: center;

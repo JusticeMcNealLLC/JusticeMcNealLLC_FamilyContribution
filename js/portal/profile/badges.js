@@ -30,15 +30,16 @@ window.ProfileApp.loadBadges = async function loadBadges() {
         .eq('user_id', S.viewingUserId)
         .order('earned_at', { ascending: false });
 
-    // Get current displayed badge + banner info
+    // Get current displayed badge + banner info + highlights
     const { data: prof } = await supabaseClient
         .from('profiles')
-        .select('displayed_badge, cover_gradient, cover_photo_url')
+        .select('displayed_badge, cover_gradient, cover_photo_url, highlighted_badges')
         .eq('id', S.viewingUserId)
         .single();
     S.currentDisplayedBadge = prof?.displayed_badge || null;
     S.currentBannerGradient = prof?.cover_gradient || null;
     S.currentBannerPhotoUrl = prof?.cover_photo_url || null;
+    S.currentHighlightedBadges = prof?.highlighted_badges || [];
 
     S.earnedBadgeKeys = (badges || []).map(b => b.badge_key);
 

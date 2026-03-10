@@ -93,6 +93,30 @@ window.ProfileApp.loadProfile = async function loadProfile() {
             }
         }
 
+        // Badge Highlights (3 selected badges at bottom of banner)
+        const highlights = profile.highlighted_badges || [];
+        const hlContainer = document.getElementById('badgeHighlights');
+        if (hlContainer && highlights.length > 0 && typeof BADGE_CATALOG !== 'undefined') {
+            hlContainer.innerHTML = highlights.slice(0, 3).map(key => {
+                const badge = BADGE_CATALOG[key] || { emoji: '🏅', name: key, rarity: 'common' };
+                const rarity = badge.rarity || 'common';
+                return `<div class="badge-highlight-chip badge-rarity-${rarity}" title="${badge.name}">${badge.emoji}</div>`;
+            }).join('');
+            hlContainer.classList.remove('hidden');
+
+            // Apply Lottie effects to legendary/epic chips inside highlights
+            if (typeof LottieEffects !== 'undefined') {
+                setTimeout(() => {
+                    hlContainer.querySelectorAll('.badge-rarity-legendary').forEach(el => {
+                        LottieEffects.renderBadgeEffect(el, 'legendary');
+                    });
+                    hlContainer.querySelectorAll('.badge-rarity-epic').forEach(el => {
+                        LottieEffects.renderBadgeEffect(el, 'epic');
+                    });
+                }, 150);
+            }
+        }
+
         // Show edit buttons for own profile
         if (S.isOwnProfile) {
             document.getElementById('editProfileBtn')?.classList.remove('hidden');
