@@ -4,7 +4,7 @@
         // load active profiles
         const { data: profiles, error: pErr } = await supabaseClient
             .from('profiles')
-            .select('id, first_name, last_name, title, profile_picture_url, is_active')
+            .select('id, first_name, last_name, title, profile_picture_url, displayed_badge, highlighted_badges, is_active')
             .eq('is_active', true);
 
         if (pErr) { console.error('profiles error', pErr); return; }
@@ -40,11 +40,31 @@
         profiles.forEach(p => {
             const div = document.createElement('div');
             div.className = 'flex items-center gap-3 p-2 rounded hover:bg-surface-50 cursor-pointer';
+
+            // avatar (image or initial)
+            const avatarHtml = p.profile_picture_url
+                ? `<img src="${p.profile_picture_url}" alt="${escapeHtml((p.first_name||'') + ' ' + (p.last_name||''))}" class="w-10 h-10 object-cover rounded-full">`
+                : `<div class="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center text-sm text-gray-600">${(p.first_name||'').charAt(0)}</div>`;
+
+            // displayed badge overlay
+            let badgeOverlay = '';
+            if (p.displayed_badge && typeof buildNavBadgeOverlay === 'function') {
+                badgeOverlay = `<div class="absolute -bottom-0.5 -right-0.5">${buildNavBadgeOverlay(p.displayed_badge)}</div>`;
+            }
+
+            // highlighted badges (small chips next to name)
+            let highlightsHtml = '';
+            if (Array.isArray(p.highlighted_badges) && p.highlighted_badges.length > 0) {
+                const shown = p.highlighted_badges.slice(0,3);
+                highlightsHtml = '<div class="flex items-center gap-1 mt-1">' + shown.map(bk => (typeof buildBadgeChip === 'function' ? buildBadgeChip(bk, 'sm') : '')) .join('') + '</div>';
+            }
+
             div.innerHTML = `
-                <div class="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center text-sm text-gray-600">${(p.first_name||'').charAt(0)}</div>
+                <div class="relative flex-shrink-0">${avatarHtml}${badgeOverlay}</div>
                 <div class="flex-1 min-w-0">
-                    <div class="text-sm font-medium text-gray-900">${escapeHtml((p.first_name||'') + ' ' + (p.last_name||''))}</div>
-                    <div class="text-xs text-gray-500">${escapeHtml(p.title||'')}</div>
+                    <div class="text-sm font-medium text-gray-900 truncate">${escapeHtml((p.first_name||'') + ' ' + (p.last_name||''))}</div>
+                    <div class="text-xs text-gray-500 truncate">${escapeHtml(p.title||'')}</div>
+                    ${highlightsHtml}
                 </div>
                 <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
             `;
