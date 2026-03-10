@@ -238,10 +238,10 @@ async function toggleCommentLike(btn) {
 function buildCommentBadge(badgeKey) {
     if (!badgeKey) return '';
     if (typeof buildNavBadgeOverlay === 'function') {
-        return '<div class="absolute -bottom-0.5 -right-0.5" style="transform:scale(0.7);transform-origin:bottom right">' + buildNavBadgeOverlay(badgeKey) + '</div>';
+        return buildNavBadgeOverlay(badgeKey);
     }
     const fb = { founding_member:'🏅', shutterbug:'📸', streak_master:'🔥', streak_legend:'⚡', first_seed:'🌱', four_figures:'💵', quest_champion:'🎯', fidelity_linked:'🏦', birthday_vip:'🎂' };
-    return '<div class="absolute -bottom-0.5 -right-0.5"><div class="badge-chip-overlay" style="width:14px;height:14px;font-size:8px">' + (fb[badgeKey] || '❓') + '</div></div>';
+    return '<div class="badge-chip-overlay">' + (fb[badgeKey] || '❓') + '</div>';
 }
 
 // ─── Render Comment ─────────────────────────────────────

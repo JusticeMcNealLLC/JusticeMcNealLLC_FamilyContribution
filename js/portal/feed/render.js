@@ -17,10 +17,10 @@ function renderPostCard(post) {
     let avatarBadgeHtml = '';
     if (displayedBadge) {
         if (typeof buildNavBadgeOverlay === 'function') {
-            avatarBadgeHtml = '<div class="absolute -bottom-1 -right-1">' + buildNavBadgeOverlay(displayedBadge) + '</div>';
+            avatarBadgeHtml = buildNavBadgeOverlay(displayedBadge);
         } else {
             const fb = { founding_member:'🏅', shutterbug:'📸', streak_master:'🔥', streak_legend:'⚡', first_seed:'🌱', four_figures:'💵', quest_champion:'🎯', fidelity_linked:'🏦', birthday_vip:'🎂' };
-            avatarBadgeHtml = '<div class="absolute -bottom-1 -right-1"><div class="badge-chip-overlay">' + (fb[displayedBadge] || '❓') + '</div></div>';
+            avatarBadgeHtml = '<div class="badge-chip-overlay">' + (fb[displayedBadge] || '❓') + '</div>';
         }
     }
 

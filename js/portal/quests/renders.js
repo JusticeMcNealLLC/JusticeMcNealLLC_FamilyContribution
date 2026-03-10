@@ -242,7 +242,7 @@ function renderQuestCard(quest) {
                         </div>
                     </div>` : ''}
                     ${progressNote ? `<div class="text-[10px] text-gray-400 mb-1.5">${progressNote}</div>` : ''}
-                    <div class="flex items-center gap-3 text-xs">
+                    <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs">
                         <span class="font-semibold text-brand-600">+${quest.cp_reward} CP</span>
                         <span class="text-gray-400">•</span>
                         <span class="text-gray-400">${getQuestTypeLabel(quest.quest_type)}</span>
@@ -271,48 +271,65 @@ function renderQuestDetail(quest, memberQuest) {
     const isCompleted = status === 'completed';
 
     modal.innerHTML = `
-        <div class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" id="questModalBackdrop">
-            <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto slide-up">
-                <!-- Header -->
-                <div class="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between z-10 sm:rounded-t-2xl">
-                    <h2 class="font-bold text-gray-900">Quest Details</h2>
-                    <button id="closeQuestDetail" class="p-1.5 hover:bg-gray-100 rounded-lg transition">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
+        <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style="background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);" id="questModalBackdrop">
+            <div class="w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto slide-up" style="background: #0f0e1a; overflow-x: hidden;">
 
-                <div class="p-5 sm:p-6">
-                    <!-- Quest Info -->
-                    <div class="flex items-start gap-4 mb-5">
-                        <div class="w-14 h-14 rounded-xl ${isCompleted ? 'bg-emerald-100' : 'bg-gray-100'} flex items-center justify-center text-2xl flex-shrink-0">
+                <!-- ── RPG Header ── -->
+                <div class="relative overflow-hidden sm:rounded-t-2xl" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 55%, #4c1d95 100%); min-height: 155px;">
+                    <!-- Decorative orbs -->
+                    <div class="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(167,139,250,0.25), transparent 70%); transform: translate(35%, -35%);"></div>
+                    <div class="absolute bottom-0 left-0 w-36 h-36 rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(96,165,250,0.2), transparent 70%); transform: translate(-35%, 35%);"></div>
+                    <!-- Dot grid -->
+                    <div class="absolute inset-0 pointer-events-none" style="background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px); background-size: 22px 22px;"></div>
+
+                    <!-- Close button -->
+                    <button id="closeQuestDetail" class="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center z-10 transition" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+
+                    <!-- Quest type badge -->
+                    <div class="px-5 pt-5 flex items-center gap-2">
+                        <div class="h-px flex-1" style="background: rgba(167,139,250,0.4);"></div>
+                        <span class="text-[10px] font-black uppercase tracking-widest" style="color: rgba(196,181,253,0.9);">${getQuestTypeLabel(quest.quest_type)}</span>
+                        <div class="h-px flex-1" style="background: rgba(167,139,250,0.4);"></div>
+                    </div>
+
+                    <!-- Emoji + title -->
+                    <div class="px-5 pt-3 pb-5 flex items-end gap-4">
+                        <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0" style="background: rgba(255,255,255,0.13); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.22);">
                             ${quest.emoji || '🎯'}
                         </div>
-                        <div>
-                            <h3 class="font-extrabold text-gray-900 text-lg">${quest.title}</h3>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusCfg.bg} ${statusCfg.text}">${statusCfg.label}</span>
-                                <span class="text-sm font-bold text-brand-600">+${quest.cp_reward} CP</span>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-extrabold text-white text-xl leading-tight mb-2">${quest.title}</h3>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-[11px] font-bold px-2.5 py-1 rounded-full ${statusCfg.bg} ${statusCfg.text}">${statusCfg.label}</span>
+                                <span class="text-[11px] font-bold px-2.5 py-1 rounded-full" style="background: rgba(251,191,36,0.2); color: #fbbf24;">⚡ +${quest.cp_reward} CP</span>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- ── Body ── -->
+                <div class="p-4 space-y-3" style="background: #111827;">
 
                     <!-- Description -->
-                    <div class="mb-5">
-                        <p class="text-sm text-gray-600">${quest.description || ''}</p>
-                    </div>
+                    <p class="text-sm px-1" style="color: #9ca3af;">${quest.description || ''}</p>
 
-                    <!-- Rewards -->
-                    <div class="mb-5 bg-amber-50 rounded-xl p-4 border border-amber-100">
-                        <h4 class="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-3">Rewards</h4>
-                        <div class="flex flex-col gap-2">
-                            <!-- CP reward row -->
+                    <!-- ── Rewards Panel ── -->
+                    <div class="rounded-2xl overflow-hidden" style="border: 1px solid rgba(251,191,36,0.25);">
+                        <div class="px-4 py-2.5 flex items-center gap-2" style="background: linear-gradient(90deg, #78350f, #92400e);">
+                            <svg class="w-3.5 h-3.5 flex-shrink-0" style="color: #fbbf24;" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                            <span class="text-[11px] font-black uppercase tracking-widest" style="color: #fbbf24;">Quest Rewards</span>
+                        </div>
+                        <div class="p-4 space-y-3" style="background: #1c1410;">
+                            <!-- CP row -->
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center flex-shrink-0">
-                                    <span class="text-sm">⚡</span>
+                                <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.3);">
+                                    <span class="text-base">⚡</span>
                                 </div>
                                 <div>
-                                    <div class="text-sm font-bold text-brand-700">+${quest.cp_reward} Credit Points</div>
-                                    <div class="text-xs text-gray-500">${quest.quest_type === 'recurring_monthly' ? 'Earned each qualifying month (90-day rolling)' : 'One-time permanent reward'}</div>
+                                    <div class="text-sm font-bold" style="color: #fbbf24;">+${quest.cp_reward} Credit Points</div>
+                                    <div class="text-xs" style="color: #6b7280;">${quest.quest_type === 'recurring_monthly' ? 'Earned each qualifying month' : 'One-time permanent reward'}</div>
                                 </div>
                             </div>
                             ${quest.badge_reward_key ? (() => {
@@ -320,95 +337,118 @@ function renderQuestDetail(quest, memberQuest) {
                                 const brRarity = getBadgeRarity(quest.badge_reward_key);
                                 const alreadyEarned = _questEarnedBadges.some(b => b.badge_key === quest.badge_reward_key);
                                 return `
-                            <!-- Badge reward row -->
+                            <div style="height:1px; background: rgba(251,191,36,0.15);"></div>
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                                <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(167,139,250,0.15); border: 1px solid rgba(167,139,250,0.3);">
                                     ${buildBadgeChip(quest.badge_reward_key, 'md')}
                                 </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm font-bold text-gray-800">${br.emoji} ${br.name}</span>
-                                        <span class="${brRarity.cssClass} text-[10px] font-semibold px-1.5 py-0.5 rounded-full">${brRarity.label}</span>
-                                        ${alreadyEarned ? '<span class="text-[10px] font-semibold text-emerald-600">✓ Earned</span>' : ''}
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-sm font-bold text-white">${br.emoji} ${br.name}</span>
+                                        <span class="${brRarity.cssClass} text-[9px] font-bold px-1.5 py-0.5 rounded-full">${brRarity.label}</span>
+                                        ${alreadyEarned ? '<span class="text-[10px] font-bold" style="color:#34d399;">✓ Earned</span>' : ''}
                                     </div>
-                                    <div class="text-xs text-gray-500 mt-0.5">${br.description}</div>
+                                    <div class="text-xs mt-0.5" style="color: #6b7280;">${br.description}</div>
                                 </div>
                             </div>`;
                             })() : ''}
                         </div>
                     </div>
 
-                    <!-- Instructions -->
-                    ${quest.instructions ? `
-                    <div class="mb-5 bg-brand-50 rounded-xl p-4">
-                        <h4 class="text-xs font-semibold text-brand-700 uppercase tracking-wider mb-2">How to Complete</h4>
-                        <p class="text-sm text-brand-900">${quest.instructions}</p>
-                    </div>` : ''}
-
-                    <!-- Proof Upload (if required and not completed) -->
-                    ${quest.requires_proof && !isCompleted ? `
-                    <div class="mb-5">
-                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Submit Proof</h4>
-                        <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-brand-300 transition cursor-pointer" id="proofUploadArea">
-                            <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <p class="text-sm text-gray-500">Tap to upload a screenshot</p>
-                            <p class="text-xs text-gray-400 mt-1">JPG, PNG, or WebP</p>
-                            <input type="file" id="proofFileInput" accept="image/jpeg,image/png,image/webp" class="hidden">
-                        </div>
-                        <div id="proofPreview" class="hidden mt-3">
-                            <img id="proofPreviewImg" class="w-full rounded-xl border border-gray-200" alt="Proof preview">
-                        </div>
-                        <textarea id="proofNote" class="w-full mt-3 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition" placeholder="Add a note (optional)" rows="2"></textarea>
-                    </div>` : ''}
-
-                    <!-- Admin Feedback (if rejected) -->
-                    ${memberQuest && memberQuest.status === 'rejected' && memberQuest.admin_note ? `
-                    <div class="mb-5 bg-red-50 rounded-xl p-4">
-                        <h4 class="text-xs font-semibold text-red-700 uppercase tracking-wider mb-2">Admin Feedback</h4>
-                        <p class="text-sm text-red-800">${memberQuest.admin_note}</p>
-                    </div>` : ''}
-
-                    <!-- Completion Info -->
-                    ${isCompleted && memberQuest ? `
-                    <div class="mb-5 bg-emerald-50 rounded-xl p-4">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <div>
-                                <div class="text-sm font-semibold text-emerald-800">Quest Completed!</div>
-                                <div class="text-xs text-emerald-600">+${quest.cp_reward} CP earned ${memberQuest.completed_at ? 'on ' + formatDate(memberQuest.completed_at) : ''}</div>
-                            </div>
-                        </div>
-                    </div>` : ''}
-
-                    <!-- Progress Tracker (streak / tracked quests) -->
+                    <!-- ── Progress (tracked quests) ── -->
                     ${memberQuest && memberQuest.progress_target > 0 && !isCompleted ? (() => {
                         const pCurrent = memberQuest.progress_current || 0;
                         const pTarget = memberQuest.progress_target || 1;
                         const pPct = Math.min(100, Math.round((pCurrent / pTarget) * 100));
                         const pNote = memberQuest.progress_note || '';
+                        const segments = pTarget <= 12 ? pTarget : null;
                         return `
-                    <div class="mb-5 bg-brand-50 rounded-xl p-4">
-                        <h4 class="text-xs font-semibold text-brand-700 uppercase tracking-wider mb-3">Progress</h4>
-                        <div class="flex items-end justify-between mb-2">
-                            <div class="text-2xl font-extrabold text-brand-600">${pCurrent}<span class="text-sm font-semibold text-brand-400">/${pTarget}</span></div>
-                            <div class="text-sm font-bold text-brand-500">${pPct}%</div>
+                    <div class="rounded-2xl overflow-hidden" style="border: 1px solid rgba(99,102,241,0.3);">
+                        <div class="px-4 py-2.5" style="background: linear-gradient(90deg, #1e1b4b, #312e81);">
+                            <span class="text-[11px] font-black uppercase tracking-widest" style="color: #a78bfa;">⚔️ Progress</span>
                         </div>
-                        <div class="w-full h-2.5 bg-brand-100 rounded-full overflow-hidden mb-2">
-                            <div class="h-full bg-gradient-to-r from-brand-500 to-brand-600 rounded-full transition-all duration-1000 ease-out" style="width: ${pPct}%"></div>
+                        <div class="p-4" style="background: #12111e;">
+                            <div class="flex items-end justify-between mb-3">
+                                <div class="text-3xl font-black" style="color: #a78bfa;">${pCurrent}<span class="text-lg font-bold" style="color: rgba(167,139,250,0.5);">/${pTarget}</span></div>
+                                <div class="text-sm font-bold" style="color: #818cf8;">${pPct}%</div>
+                            </div>
+                            ${segments ? `
+                            <div class="flex gap-1 mb-2">
+                                ${Array.from({length: segments}, (_, i) => `<div class="flex-1 h-2.5 rounded-sm" style="background: ${i < pCurrent ? 'linear-gradient(90deg,#6366f1,#a78bfa)' : 'rgba(99,102,241,0.2)'};"></div>`).join('')}
+                            </div>` : `
+                            <div class="w-full h-2.5 rounded-full overflow-hidden mb-2" style="background: rgba(99,102,241,0.2);">
+                                <div class="h-full rounded-full transition-all duration-1000" style="width:${pPct}%; background: linear-gradient(90deg,#6366f1,#a78bfa);"></div>
+                            </div>`}
+                            ${pNote ? `<div class="text-xs mt-1" style="color:#818cf8;">${pNote}</div>` : ''}
                         </div>
-                        ${pNote ? `<div class="text-xs text-brand-600 mt-1">${pNote}</div>` : ''}
                     </div>`;
                     })() : ''}
 
-                    <!-- Meta Info -->
-                    <div class="flex items-center gap-4 text-xs text-gray-400 mb-6">
+                    <!-- ── Completion Banner ── -->
+                    ${isCompleted && memberQuest ? `
+                    <div class="rounded-2xl overflow-hidden" style="border: 1px solid rgba(52,211,153,0.3);">
+                        <div class="p-4 flex items-center gap-3" style="background: linear-gradient(90deg, #064e3b, #065f46);">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(52,211,153,0.2); border: 2px solid rgba(52,211,153,0.5);">
+                                <svg class="w-5 h-5" style="color:#34d399;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <div class="font-black text-white text-sm uppercase tracking-wide">Quest Complete!</div>
+                                <div class="text-xs" style="color:#6ee7b7;">+${quest.cp_reward} CP earned ${memberQuest.completed_at ? 'on ' + formatDate(memberQuest.completed_at) : ''}</div>
+                            </div>
+                        </div>
+                    </div>` : ''}
+
+                    <!-- ── Instructions ── -->
+                    ${quest.instructions ? `
+                    <div class="rounded-2xl overflow-hidden" style="border: 1px solid rgba(255,255,255,0.08);">
+                        <div class="px-4 py-2.5" style="background: #1f2937;">
+                            <span class="text-[11px] font-black uppercase tracking-widest" style="color: #9ca3af;">📜 How to Complete</span>
+                        </div>
+                        <div class="p-4" style="background: #111827;">
+                            <p class="text-sm" style="color: #d1d5db;">${quest.instructions}</p>
+                        </div>
+                    </div>` : ''}
+
+                    <!-- ── Proof Upload ── -->
+                    ${quest.requires_proof && !isCompleted ? `
+                    <div class="rounded-2xl overflow-hidden" style="border: 1px solid rgba(255,255,255,0.08);">
+                        <div class="px-4 py-2.5" style="background: #1f2937;">
+                            <span class="text-[11px] font-black uppercase tracking-widest" style="color: #9ca3af;">📎 Submit Proof</span>
+                        </div>
+                        <div class="p-4" style="background: #111827;">
+                            <div class="rounded-xl p-6 text-center cursor-pointer transition-all" id="proofUploadArea" style="border: 2px dashed rgba(99,102,241,0.4); background: rgba(99,102,241,0.05);">
+                                <svg class="w-8 h-8 mx-auto mb-2" style="color: #6366f1;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                <p class="text-sm font-semibold" style="color: #818cf8;">Tap to upload screenshot</p>
+                                <p class="text-xs mt-1" style="color: #4b5563;">JPG, PNG, or WebP</p>
+                                <input type="file" id="proofFileInput" accept="image/jpeg,image/png,image/webp" class="hidden">
+                            </div>
+                            <div id="proofPreview" class="hidden mt-3">
+                                <img id="proofPreviewImg" class="w-full rounded-xl" style="border: 1px solid rgba(255,255,255,0.1);" alt="Proof preview">
+                            </div>
+                            <textarea id="proofNote" class="w-full mt-3 px-3 py-2.5 text-sm rounded-xl outline-none resize-none" style="background: #1f2937; border: 1px solid rgba(255,255,255,0.1); color: #d1d5db;" placeholder="Add a note (optional)" rows="2"></textarea>
+                        </div>
+                    </div>` : ''}
+
+                    <!-- ── Admin Feedback ── -->
+                    ${memberQuest && memberQuest.status === 'rejected' && memberQuest.admin_note ? `
+                    <div class="rounded-2xl overflow-hidden" style="border: 1px solid rgba(239,68,68,0.3);">
+                        <div class="px-4 py-2.5" style="background: #7f1d1d;">
+                            <span class="text-[11px] font-black uppercase tracking-widest" style="color: #fca5a5;">⚠️ Admin Feedback</span>
+                        </div>
+                        <div class="p-4" style="background: #1c0a0a;">
+                            <p class="text-sm" style="color: #fca5a5;">${memberQuest.admin_note}</p>
+                        </div>
+                    </div>` : ''}
+
+                    <!-- ── Meta Info ── -->
+                    <div class="flex items-center gap-3 flex-wrap text-xs px-1" style="color: #4b5563;">
                         <span>${getQuestTypeLabel(quest.quest_type)}</span>
                         <span>•</span>
                         <span>${(QUEST_CATEGORIES[quest.category] || QUEST_CATEGORIES.general).label}</span>
-                        ${quest.requires_proof ? '<span>•</span><span>📎 Proof required</span>' : ''}
+                        ${quest.requires_proof ? `<span>•</span><span style="color:#f59e0b;">📎 Proof required</span>` : ''}
                     </div>
 
-                    <!-- Action Buttons -->
+                    <!-- ── Action Buttons ── -->
                     <div id="questDetailActions">
                         ${renderQuestActions(quest, memberQuest)}
                     </div>
@@ -443,27 +483,27 @@ function renderQuestActions(quest, memberQuest) {
     switch (status) {
         case 'available':
             if (quest.auto_detect_key && !quest.requires_proof) {
-                return `<div class="text-center text-sm text-gray-500 py-2">This quest completes automatically — no action needed!</div>`;
+                return `<div class="text-center text-sm py-3.5 rounded-xl font-semibold" style="color: #818cf8; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2);">🔍 Auto-tracked — no action needed</div>`;
             }
-            return `<button id="startQuestBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 px-5 rounded-xl transition text-sm">Start Quest</button>`;
+            return `<button id="startQuestBtn" class="w-full font-black py-3.5 px-5 rounded-xl transition-all text-sm uppercase tracking-wider active:scale-95" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; box-shadow: 0 4px 20px rgba(99,102,241,0.4);">⚔️ Accept Quest</button>`;
 
         case 'in_progress':
             if (quest.requires_proof) {
-                return `<button id="submitProofBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 px-5 rounded-xl transition text-sm">Submit for Review</button>`;
+                return `<button id="submitProofBtn" class="w-full font-black py-3.5 px-5 rounded-xl transition-all text-sm uppercase tracking-wider active:scale-95" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; box-shadow: 0 4px 20px rgba(99,102,241,0.4);">📤 Submit Evidence</button>`;
             }
             if (quest.auto_detect_key) {
-                return `<div class="text-center text-sm text-gray-500 py-2">Tracking your progress automatically...</div>`;
+                return `<div class="text-center text-sm py-3.5 rounded-xl font-semibold" style="color: #818cf8; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2);">🔍 Tracking your progress automatically...</div>`;
             }
-            return `<button id="completeQuestBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-5 rounded-xl transition text-sm">Mark as Complete</button>`;
+            return `<button id="completeQuestBtn" class="w-full font-black py-3.5 px-5 rounded-xl transition-all text-sm uppercase tracking-wider active:scale-95" style="background: linear-gradient(135deg, #059669, #047857); color: white; box-shadow: 0 4px 20px rgba(5,150,105,0.4);">✅ Complete Quest</button>`;
 
         case 'submitted':
-            return `<div class="text-center text-sm text-amber-600 py-2">⏳ Waiting for admin review...</div>`;
+            return `<div class="text-center text-sm py-3.5 rounded-xl font-semibold" style="color: #fbbf24; background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2);">⏳ Awaiting admin review...</div>`;
 
         case 'completed':
-            return `<div class="text-center text-sm text-emerald-600 py-2">✅ Quest completed!</div>`;
+            return `<div class="text-center text-sm py-3.5 rounded-xl font-bold" style="color: #34d399; background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2);">✅ Quest Complete!</div>`;
 
         case 'rejected':
-            return `<button id="resubmitQuestBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 px-5 rounded-xl transition text-sm">Resubmit Proof</button>`;
+            return `<button id="resubmitQuestBtn" class="w-full font-black py-3.5 px-5 rounded-xl transition-all text-sm uppercase tracking-wider active:scale-95" style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; box-shadow: 0 4px 20px rgba(220,38,38,0.4);">🔄 Resubmit Proof</button>`;
 
         default:
             return '';

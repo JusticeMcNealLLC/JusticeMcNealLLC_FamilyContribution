@@ -108,7 +108,7 @@
                 mTab('feed.html', p(SVG.feed), 'Feed', 'feed') +
                 '<div class="dock-slot" data-dock-slot="2">' + mTab('events.html', p(SVG.bell), 'Events', 'events') + '</div>' +
                 centerTab('index.html', p(SVG.home), 'Dashboard', 'dashboard') +
-                '<div class="dock-slot" data-dock-slot="4">' + mTab('investments.html', p(SVG.invest), 'Invest', 'investments') + '</div>' +
+                '<div class="dock-slot" data-dock-slot="4">' + mTab('extra-deposit.html', p(SVG.deposit), 'Deposit', 'extra-deposit') + '</div>' +
                 profileTab() +
             '</div>';
     }
