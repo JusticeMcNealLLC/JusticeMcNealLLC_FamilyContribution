@@ -74,15 +74,15 @@
         .rel-other   { background: #f3f4f6; color: #374151; }
     </style>
 </head>
-<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar"
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar pb-20 sm:pb-0"
       data-page-type="portal" data-active-page="family-tree">
 
     <div id="nav-placeholder"></div>
 
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+    <main class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-8 flex-1 w-full">
 
         <!-- ── Page header ──────────────────────────────────────────────────── -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div class="flex items-center justify-between gap-3 mb-4 sm:mb-6">
             <div class="flex items-center gap-3">
                 <div class="w-11 h-11 rounded-2xl bg-brand-100 flex items-center justify-center flex-shrink-0">
                     <!-- DNA / tree icon -->
@@ -94,14 +94,13 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-extrabold text-gray-900 leading-tight">Family Tree</h1>
-                    <p class="text-xs text-gray-400 mt-0.5">Visualise connections · suggestions need admin approval</p>
+                    <h1 class="text-lg sm:text-2xl font-extrabold text-gray-900 leading-tight">Family Tree</h1>
+                    <p class="text-xs text-gray-400 mt-0.5 hidden sm:block">Visualise connections · suggestions need admin approval</p>
                 </div>
             </div>
 
-            <!-- Actions -->
+            <!-- Actions (desktop) -->
             <div class="flex items-center gap-2">
-                <!-- Search -->
                 <div class="relative hidden sm:block">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,7 +110,6 @@
                     <input id="searchInput" type="search" placeholder="Search members…"
                            class="pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 w-44"/>
                 </div>
-
                 <button id="refreshBtn"
                         class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-surface-100 transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,9 +118,9 @@
                     </svg>
                     <span class="hidden sm:inline">Refresh</span>
                 </button>
-
+                <!-- Desktop add button -->
                 <button id="addRelationBtn"
-                        class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm shadow-brand-300/30">
+                        class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm shadow-brand-300/30">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
@@ -132,7 +130,7 @@
         </div>
 
         <!-- ── Main grid ─────────────────────────────────────────────────────── -->
-        <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-3 sm:gap-4">
 
             <!-- ── Canvas panel ─────────────────────────────────────────────── -->
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -143,10 +141,10 @@
                 </div>
 
                 <!-- Loading skeleton -->
-                <div id="cyLoading" class="skeleton w-full h-72 sm:h-[520px]"></div>
+                <div id="cyLoading" class="skeleton w-full h-[45vw] min-h-[240px] sm:h-[520px]"></div>
 
                 <!-- Cytoscape container (hidden until data loads) -->
-                <div id="cy" class="w-full h-72 sm:h-[520px] hidden"></div>
+                <div id="cy" class="w-full h-[45vw] min-h-[240px] sm:h-[520px] hidden"></div>
 
                 <!-- Empty state -->
                 <div id="cyEmpty" class="hidden flex-col items-center justify-center py-20 text-center px-6">
@@ -232,13 +230,22 @@
                     </div>
 
                     <!-- Actual member list -->
-                    <div id="memberList" class="divide-y divide-gray-50 max-h-[440px] overflow-y-auto"></div>
+                    <div id="memberList" class="divide-y divide-gray-50 max-h-64 sm:max-h-[440px] overflow-y-auto"></div>
                 </div>
 
             </div><!-- /sidebar -->
         </div><!-- /grid -->
 
     </main>
+
+    <!-- ── Mobile FAB: Add Relation (shown on small screens only) ──────────── -->
+    <button id="addRelationBtnMobile"
+            class="sm:hidden fixed bottom-[72px] right-4 z-40 w-14 h-14 rounded-full bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-400/40 flex items-center justify-center transition active:scale-95">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span class="sr-only">Add Relation</span>
+    </button>
 
     <!-- ── Scripts ──────────────────────────────────────────────────────────── -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

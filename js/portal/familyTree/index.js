@@ -229,18 +229,21 @@
             window.FamilyTreeUI.setMemberCount(profiles.length);
         }
 
-        // Admin probe: if pending rows are readable, show approvals panel
+        // Check actual role — members only see approved rows so the old
+        // probe (count pending) silently returns 0 for everyone with no error.
         try {
-            const probe = await supabaseClient
-                .from('family_relations')
-                .select('id', { count: 'exact', head: true })
-                .eq('status', 'pending');
-            if (!probe.error) {
-                showAdminApprovals();
-                if (window.TreeViz?.setAdmin)            window.TreeViz.setAdmin(true);
-                if (window.FamilyTreeEdit?.setAdminMode) window.FamilyTreeEdit.setAdminMode(true);
+            const { data: sess } = await supabaseClient.auth.getSession();
+            const uid = sess?.session?.user?.id;
+            if (uid) {
+                const { data: me } = await supabaseClient
+                    .from('profiles').select('role').eq('id', uid).single();
+                if (me?.role === 'admin') {
+                    showAdminApprovals();
+                    if (window.TreeViz?.setAdmin)            window.TreeViz.setAdmin(true);
+                    if (window.FamilyTreeEdit?.setAdminMode) window.FamilyTreeEdit.setAdminMode(true);
+                }
             }
-        } catch (_) { /* not admin */ }
+        } catch (_) { /* non-admin or session error */ }
 
         // Init / refresh the Cytoscape tree
         try {
