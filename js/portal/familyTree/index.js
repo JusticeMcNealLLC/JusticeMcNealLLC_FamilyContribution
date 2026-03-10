@@ -57,8 +57,8 @@
 
         profiles.forEach(p => {
             const div = document.createElement('div');
-            div.className = 'flex items-center gap-3 p-2 rounded hover:bg-surface-50 cursor-pointer';
-
+            div.className = 'member-row flex items-center gap-3 px-4 py-3 cursor-pointer';
+            div.dataset.name = fullName(p).toLowerCase();
             const avatarHtml = p.profile_picture_url
                 ? `<img src="${p.profile_picture_url}" alt="${escapeHtml(fullName(p))}" class="w-10 h-10 object-cover rounded-full">`
                 : `<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm text-gray-600">${(p.first_name || '').charAt(0)}</div>`;
@@ -126,9 +126,12 @@
             return;
         }
         if (!pending || pending.length === 0) {
-            list.innerHTML = '<div class="text-sm text-gray-400">No pending suggestions</div>';
+            list.innerHTML = '<div class="px-4 py-3 text-sm text-gray-400">No pending suggestions</div>';
+            if (window.FamilyTreeUI) window.FamilyTreeUI.setPendingBadge(0);
             return;
         }
+
+        if (window.FamilyTreeUI) window.FamilyTreeUI.setPendingBadge(pending.length);
 
         // Batch-fetch all referenced profiles in one query (no N+1)
         const personIds = [...new Set(pending.flatMap(r => [r.person_a, r.person_b]))];
@@ -144,12 +147,15 @@
             const a = profileMap[r.person_a] || {};
             const b = profileMap[r.person_b] || {};
             const row = document.createElement('div');
-            row.className = 'flex items-center justify-between gap-3 p-2 rounded bg-surface-50 border border-gray-100';
+            row.className = 'flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-50 transition';
             row.innerHTML = `
-                <div class="text-sm">${escapeHtml(fullName(a))} → ${escapeHtml(fullName(b))}</div>
-                <div class="flex items-center gap-2">
-                    <button data-id="${r.id}" data-action="approve" class="px-2 py-1 bg-emerald-600 text-white rounded text-sm">Approve</button>
-                    <button data-id="${r.id}" data-action="reject"  class="px-2 py-1 bg-red-50 text-red-700 rounded text-sm">Reject</button>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium text-gray-800 truncate">${escapeHtml(fullName(a))} → ${escapeHtml(fullName(b))}</div>
+                    <div class="text-xs text-gray-400 capitalize mt-0.5">${escapeHtml(r.relation)}</div>
+                </div>
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <button data-id="${r.id}" data-action="approve" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition">Approve</button>
+                    <button data-id="${r.id}" data-action="reject"  class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-semibold transition">Reject</button>
                 </div>`;
             list.appendChild(row);
         }
@@ -176,6 +182,10 @@
         const elements = buildElements(profiles, relations);
 
         renderMemberList(profiles);
+        if (window.FamilyTreeUI) {
+            window.FamilyTreeUI.hideMemberSkeleton();
+            window.FamilyTreeUI.setMemberCount(profiles.length);
+        }
 
         // Admin probe: if pending rows are readable, show approvals panel
         try {
@@ -188,7 +198,13 @@
 
         // Init / refresh the Cytoscape tree
         try {
-            if (window.TreeViz) TreeViz.init('#cy', elements);
+            if (elements.filter(e => !e.data.source).length === 0) {
+                // No nodes at all
+                if (window.FamilyTreeUI) window.FamilyTreeUI.showEmpty();
+            } else {
+                if (window.FamilyTreeUI) window.FamilyTreeUI.showCanvas();
+                if (window.TreeViz) TreeViz.init('#cy', elements);
+            }
         } catch (err) {
             console.error('[familyTree] TreeViz.init error', err);
         }

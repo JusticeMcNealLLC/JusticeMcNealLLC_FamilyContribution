@@ -6,48 +6,241 @@
     <title>Family Tree | Justice McNeal LLC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { theme: { extend: { colors: { brand: { 50: '#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81' } }, fontFamily: { sans: ['Inter','system-ui','-apple-system','sans-serif'] } } } };
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/shared.css">
     <link rel="manifest" href="../manifest.json">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+
+    <style>
+        /* Canvas loading skeleton */
+        @keyframes shimmer {
+            0%   { background-position: -400px 0; }
+            100% { background-position:  400px 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 400px 100%;
+            animation: shimmer 1.4s ease-in-out infinite;
+        }
+        /* Cytoscape container reset */
+        #cy { display: block; }
+
+        /* Pending badge */
+        .pending-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #ef4444;
+            color: #fff;
+            line-height: 1;
+        }
+
+        /* Smooth member hover */
+        .member-row { transition: background 0.12s; }
+        .member-row:hover { background: #f8fafc; }
+
+        /* Relation type pill colours */
+        .rel-parent  { background: #dbeafe; color: #1d4ed8; }
+        .rel-child   { background: #dcfce7; color: #15803d; }
+        .rel-spouse  { background: #fce7f3; color: #be185d; }
+        .rel-sibling { background: #fef9c3; color: #a16207; }
+        .rel-other   { background: #f3f4f6; color: #374151; }
+    </style>
 </head>
-<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="family-tree">
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar"
+      data-page-type="portal" data-active-page="family-tree">
 
     <div id="nav-placeholder"></div>
 
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex-1 w-full">
-        <div class="mb-6 sm:mb-8">
-            <div class="flex items-center justify-between gap-4">
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <!-- ── Page header ──────────────────────────────────────────────────── -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-brand-100 flex items-center justify-center flex-shrink-0">
+                    <!-- DNA / tree icon -->
+                    <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                              d="M12 3v3m0 12v3M9 6a3 3 0 003 3h0a3 3 0 003-3M9 18a3 3 0 003-3h0a3 3 0 003 3
+                                 M5.636 7.05A7 7 0 0112 6m0 0a7 7 0 016.364 1.05
+                                 M5.636 16.95A7 7 0 0012 18m0 0a7 7 0 006.364-1.05"/>
+                    </svg>
+                </div>
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900">Family Tree</h1>
-                    <p class="text-gray-500 text-sm mt-1">Explore relationships across family members. Suggestions require admin approval.</p>
+                    <h1 class="text-xl sm:text-2xl font-extrabold text-gray-900 leading-tight">Family Tree</h1>
+                    <p class="text-xs text-gray-400 mt-0.5">Visualise connections · suggestions need admin approval</p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <input id="searchInput" placeholder="Search members" class="px-3 py-2 rounded-lg border border-gray-200 focus:outline-none" />
-                    <button id="refreshBtn" class="bg-brand-600 text-white px-3 py-2 rounded-lg">Refresh</button>
-                    <button id="addRelationBtn" class="ml-2 inline-flex items-center gap-2 bg-white border border-gray-200 px-3 py-2 rounded-lg text-sm hover:bg-gray-50">Add Relation</button>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2">
+                <!-- Search -->
+                <div class="relative hidden sm:block">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z"/>
+                    </svg>
+                    <input id="searchInput" type="search" placeholder="Search members…"
+                           class="pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 w-44"/>
                 </div>
+
+                <button id="refreshBtn"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-surface-100 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 4v5h.582M20 20v-5h-.581M5.635 15A9 9 0 104.582 9H4"/>
+                    </svg>
+                    <span class="hidden sm:inline">Refresh</span>
+                </button>
+
+                <button id="addRelationBtn"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm shadow-brand-300/30">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add Relation
+                </button>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-4">
-                <div id="cy" class="w-full h-96 sm:h-[560px]" style="width:100%;"></div>
-            </div>
-            <div class="bg-white rounded-2xl border border-gray-200 p-4">
-                <div id="adminApprovalsWrap" class="mb-4 hidden">
-                    <h3 class="font-semibold text-gray-800 mb-2">Pending Suggestions (Admin)</h3>
-                    <div id="adminApprovalsList" class="space-y-2"></div>
-                    <div class="border-t border-gray-100 my-3"></div>
+        <!-- ── Main grid ─────────────────────────────────────────────────────── -->
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
+
+            <!-- ── Canvas panel ─────────────────────────────────────────────── -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <!-- Canvas header bar -->
+                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Relationship Graph</span>
+                    <span class="text-xs text-gray-300">Double-click to fit · scroll to zoom</span>
                 </div>
-                <h3 class="font-semibold text-gray-800 mb-2">Members</h3>
-                <div id="memberList" class="space-y-2 max-h-96 overflow-auto"></div>
+
+                <!-- Loading skeleton -->
+                <div id="cyLoading" class="skeleton w-full h-72 sm:h-[520px]"></div>
+
+                <!-- Cytoscape container (hidden until data loads) -->
+                <div id="cy" class="w-full h-72 sm:h-[520px] hidden"></div>
+
+                <!-- Empty state -->
+                <div id="cyEmpty" class="hidden flex-col items-center justify-center py-20 text-center px-6">
+                    <div class="w-16 h-16 rounded-full bg-surface-100 flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M7 20H2v-2a3 3 0 015.356-1.857
+                                     M15 7a3 3 0 11-6 0 3 3 0 016 0zM21 9a2 2 0 11-4 0 2 2 0 014 0zM7 9a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-700">No connections yet</p>
+                    <p class="text-xs text-gray-400 mt-1">Add the first family relation to start building the tree.</p>
+                    <button id="addRelationEmptyBtn"
+                            class="mt-4 px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition">
+                        Add First Relation
+                    </button>
+                </div>
             </div>
-        </div>
+
+            <!-- ── Sidebar ───────────────────────────────────────────────────── -->
+            <div class="flex flex-col gap-4">
+
+                <!-- Admin approvals panel (hidden until probed) -->
+                <div id="adminApprovalsWrap" class="hidden bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-3 bg-amber-50 border-b border-amber-100">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                            </svg>
+                            <span class="text-xs font-semibold text-amber-700 uppercase tracking-wider">Pending Approval</span>
+                        </div>
+                        <span id="pendingBadge" class="pending-badge hidden">0</span>
+                    </div>
+                    <div id="adminApprovalsList" class="divide-y divide-gray-50 max-h-60 overflow-y-auto">
+                        <div class="px-4 py-3 text-sm text-gray-400">Loading…</div>
+                    </div>
+                </div>
+
+                <!-- Members panel -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex-1">
+                    <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Members</span>
+                        <span id="memberCount" class="text-xs text-gray-300"></span>
+                    </div>
+
+                    <!-- Mobile search (visible only on small screens) -->
+                    <div class="sm:hidden px-3 py-2 border-b border-gray-50">
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300 pointer-events-none"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z"/>
+                            </svg>
+                            <input id="searchInputMobile" type="search" placeholder="Search…"
+                                   class="w-full pl-8 pr-3 py-1.5 text-sm bg-surface-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-400"/>
+                        </div>
+                    </div>
+
+                    <!-- Skeleton rows -->
+                    <div id="memberListLoading" class="divide-y divide-gray-50">
+                        <div class="flex items-center gap-3 px-4 py-3 animate-pulse">
+                            <div class="w-9 h-9 rounded-full skeleton flex-shrink-0"></div>
+                            <div class="flex-1 space-y-1.5">
+                                <div class="h-3 w-24 skeleton rounded"></div>
+                                <div class="h-2.5 w-16 skeleton rounded"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 px-4 py-3 animate-pulse">
+                            <div class="w-9 h-9 rounded-full skeleton flex-shrink-0"></div>
+                            <div class="flex-1 space-y-1.5">
+                                <div class="h-3 w-20 skeleton rounded"></div>
+                                <div class="h-2.5 w-12 skeleton rounded"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 px-4 py-3 animate-pulse">
+                            <div class="w-9 h-9 rounded-full skeleton flex-shrink-0"></div>
+                            <div class="flex-1 space-y-1.5">
+                                <div class="h-3 w-28 skeleton rounded"></div>
+                                <div class="h-2.5 w-14 skeleton rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actual member list -->
+                    <div id="memberList" class="divide-y divide-gray-50 max-h-[440px] overflow-y-auto"></div>
+                </div>
+
+            </div><!-- /sidebar -->
+        </div><!-- /grid -->
 
     </main>
 
+    <!-- ── Scripts ──────────────────────────────────────────────────────────── -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
     <script src="../js/components/pageShell/icons.js"></script>
@@ -66,40 +259,185 @@
     <script src="../js/portal/familyTree/edit.js"></script>
     <script src="../js/sw-register.js"></script>
 
-    <!-- Add Relation Modal -->
-    <div id="relationModal" class="fixed inset-0 hidden items-center justify-center z-50">
-        <div class="absolute inset-0 bg-black/40"></div>
-        <div class="relative bg-white rounded-2xl w-full max-w-xl p-6 shadow-lg">
-            <h3 class="text-lg font-semibold mb-3">Suggest a Relation</h3>
-            <div class="space-y-3">
-                <div>
-                    <label class="text-xs text-gray-600">Person A</label>
-                    <select id="personASelect" class="w-full mt-1 p-2 border rounded"></select>
+    <!-- ── Add Relation Modal ───────────────────────────────────────────────── -->
+    <div id="relationModal" class="fixed inset-0 hidden items-center justify-center z-50 p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+        <!-- Sheet -->
+        <div class="relative bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+
+            <!-- Modal header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-brand-100 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-base font-bold text-gray-900">Suggest a Relation</h3>
                 </div>
-                <div>
-                    <label class="text-xs text-gray-600">Person B</label>
-                    <select id="personBSelect" class="w-full mt-1 p-2 border rounded"></select>
+                <button id="cancelRelation"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal body -->
+            <div class="px-6 py-5 space-y-4">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">Person A</label>
+                        <select id="personASelect"
+                                class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-brand-400 appearance-none">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 mb-1.5">Person B</label>
+                        <select id="personBSelect"
+                                class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-brand-400 appearance-none">
+                        </select>
+                    </div>
                 </div>
+
                 <div>
-                    <label class="text-xs text-gray-600">Relation</label>
-                    <select id="relationType" class="w-full mt-1 p-2 border rounded">
-                        <option value="parent">Parent</option>
-                        <option value="child">Child</option>
-                        <option value="spouse">Spouse</option>
-                        <option value="sibling">Sibling</option>
-                        <option value="other">Other</option>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1.5">Relationship Type</label>
+                    <div class="grid grid-cols-5 gap-2" id="relationTypePills">
+                        <button type="button" data-value="parent"
+                                class="rel-pill rel-parent flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 border-transparent text-xs font-semibold transition">
+                            👆 <span>Parent</span>
+                        </button>
+                        <button type="button" data-value="child"
+                                class="rel-pill rel-child  flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 border-transparent text-xs font-semibold transition">
+                            👶 <span>Child</span>
+                        </button>
+                        <button type="button" data-value="spouse"
+                                class="rel-pill rel-spouse flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 border-transparent text-xs font-semibold transition">
+                            💍 <span>Spouse</span>
+                        </button>
+                        <button type="button" data-value="sibling"
+                                class="rel-pill rel-sibling flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 border-transparent text-xs font-semibold transition">
+                            🤝 <span>Sibling</span>
+                        </button>
+                        <button type="button" data-value="other"
+                                class="rel-pill rel-other flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 border-transparent text-xs font-semibold transition">
+                            ➕ <span>Other</span>
+                        </button>
+                    </div>
+                    <!-- Hidden select kept for JS compatibility -->
+                    <select id="relationType" class="hidden">
+                        <option value="parent">parent</option>
+                        <option value="child">child</option>
+                        <option value="spouse">spouse</option>
+                        <option value="sibling">sibling</option>
+                        <option value="other">other</option>
                     </select>
                 </div>
+
                 <div>
-                    <label class="text-xs text-gray-600">Note (optional)</label>
-                    <textarea id="relationNote" rows="3" class="w-full mt-1 p-2 border rounded"></textarea>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1.5">Note <span class="font-normal text-gray-400">(optional)</span></label>
+                    <textarea id="relationNote" rows="2" placeholder="Any context about this relationship…"
+                              class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 resize-none"></textarea>
                 </div>
+
             </div>
-            <div class="mt-4 flex items-center justify-end gap-2">
-                <button id="cancelRelation" class="px-3 py-2 rounded bg-gray-100">Cancel</button>
-                <button id="submitRelation" class="px-3 py-2 rounded bg-brand-600 text-white">Submit Suggestion</button>
+
+            <!-- Modal footer -->
+            <div class="px-6 py-4 bg-surface-50 border-t border-gray-100 flex items-center justify-end gap-2">
+                <button id="cancelRelation2"
+                        class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                    Cancel
+                </button>
+                <button id="submitRelation"
+                        class="px-5 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm shadow-brand-300/30">
+                    Submit Suggestion
+                </button>
             </div>
         </div>
     </div>
+
+    <!-- ── Pill selection + skeleton UX wiring ──────────────────────────────── -->
+    <script>
+    (function () {
+        // ── Relation type pill UX ──────────────────────────────────────────
+        const pills   = document.querySelectorAll('.rel-pill');
+        const hidden  = document.getElementById('relationType');
+
+        function selectPill(val) {
+            pills.forEach(p => {
+                const active = p.dataset.value === val;
+                p.classList.toggle('border-gray-900', active);
+                p.classList.toggle('ring-2',          active);
+                p.classList.toggle('ring-gray-900',   active);
+            });
+            if (hidden) hidden.value = val;
+        }
+
+        pills.forEach(p => p.addEventListener('click', () => selectPill(p.dataset.value)));
+        // Pre-select "parent" by default
+        selectPill('parent');
+
+        // ── Cancel alias ──────────────────────────────────────────────────
+        const cancel2 = document.getElementById('cancelRelation2');
+        if (cancel2) cancel2.addEventListener('click', () => {
+            document.getElementById('cancelRelation').dispatchEvent(new MouseEvent('click'));
+        });
+
+        // ── "Add First Relation" empty-state button ───────────────────────
+        const emptyBtn = document.getElementById('addRelationEmptyBtn');
+        if (emptyBtn) emptyBtn.addEventListener('click', () => {
+            document.getElementById('addRelationBtn').dispatchEvent(new MouseEvent('click'));
+        });
+
+        // ── Search cross-wiring (mobile → desktop input) ──────────────────
+        const desktopSearch = document.getElementById('searchInput');
+        const mobileSearch  = document.getElementById('searchInputMobile');
+        function syncSearch(src, dst, val) { if (dst) dst.value = val; }
+        if (desktopSearch) desktopSearch.addEventListener('input', function () { syncSearch(this, mobileSearch, this.value); filterMembers(this.value); });
+        if (mobileSearch)  mobileSearch.addEventListener('input',  function () { syncSearch(this, desktopSearch, this.value); filterMembers(this.value); });
+
+        function filterMembers(query) {
+            const q   = query.toLowerCase().trim();
+            const rows = document.querySelectorAll('#memberList .member-row');
+            rows.forEach(row => {
+                const name = (row.dataset.name || '').toLowerCase();
+                row.classList.toggle('hidden', q.length > 0 && !name.includes(q));
+            });
+        }
+
+        // ── Expose canvas state helpers for index.js ──────────────────────
+        window.FamilyTreeUI = {
+            showCanvas() {
+                document.getElementById('cyLoading')?.classList.add('hidden');
+                document.getElementById('cyEmpty')?.classList.add('hidden');
+                const cy = document.getElementById('cy');
+                if (cy) { cy.classList.remove('hidden'); cy.classList.add('block'); }
+            },
+            showEmpty() {
+                document.getElementById('cyLoading')?.classList.add('hidden');
+                document.getElementById('cy')?.classList.add('hidden');
+                const empty = document.getElementById('cyEmpty');
+                if (empty) { empty.classList.remove('hidden'); empty.classList.add('flex'); }
+            },
+            hideMemberSkeleton() {
+                document.getElementById('memberListLoading')?.classList.add('hidden');
+            },
+            setPendingBadge(n) {
+                const badge = document.getElementById('pendingBadge');
+                if (!badge) return;
+                badge.textContent = n;
+                badge.classList.toggle('hidden', n === 0);
+            },
+            setMemberCount(n) {
+                const el = document.getElementById('memberCount');
+                if (el) el.textContent = n ? `${n} members` : '';
+            },
+        };
+    })();
+    </script>
+
 </body>
 </html>
