@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set up tabs
     window.ProfileApp.setupTabs();
 
+    // Set up About modal (mobile "Member since" button)
+    window.ProfileApp.setupAboutModal();
+
     // Set up edit profile modal (bio + photo + badge)
     if (S.isOwnProfile) window.ProfileApp.setupEditProfile();
 

@@ -1057,3 +1057,41 @@ input[type="date"] {
 .edit-badge-option:active {
     transform: scale(0.95);
 }
+
+/* ─── Profile Page — Mobile Redesign ─────────────────────── */
+
+/* Hide top nav on mobile for profile page */
+@media (max-width: 639px) {
+    body[data-active-page="profile"] > nav {
+        display: none !important;
+    }
+    body[data-active-page="profile"] .profile-cover {
+        height: 200px;
+        border-radius: 0;
+    }
+}
+
+/* Back button safe-area positioning */
+.profile-back-btn {
+    padding: 0.75rem;
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+/* ─── Animated Fire Emoji ────────────────────────────────── */
+@keyframes fireFlicker {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    20%      { transform: scale(1.15) rotate(-4deg); }
+    40%      { transform: scale(1.05) rotate(3deg); }
+    60%      { transform: scale(1.2) rotate(-2deg); }
+    80%      { transform: scale(1.08) rotate(1deg); }
+}
+.fire-animated {
+    display: inline-block;
+    animation: fireFlicker 1.2s ease-in-out infinite;
+}
+
+/* ─── About Modal Carousel ───────────────────────────────── */
+#aboutBadgesGrid,
+#aboutBannersGrid {
+    -webkit-overflow-scrolling: touch;
+}

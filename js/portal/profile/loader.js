@@ -65,6 +65,9 @@ window.ProfileApp.loadProfile = async function loadProfile() {
         document.getElementById('profileName').textContent = fullName;
         document.getElementById('profileBio').textContent = profile.bio || '';
 
+        // Store profile data for About modal
+        S._profileData = profile;
+
         // Badge overlay
         if (profile.displayed_badge && typeof buildNavBadgeOverlay === 'function') {
             document.getElementById('profileBadgeOverlay').innerHTML = buildNavBadgeOverlay(profile.displayed_badge);
@@ -108,17 +111,26 @@ window.ProfileApp.loadStats = async function loadStats(profile) {
         .from('posts')
         .select('*', { count: 'exact', head: true })
         .eq('author_id', S.viewingUserId);
-    document.getElementById('statPosts').textContent = postCount || 0;
+    const posts = postCount || 0;
+    document.getElementById('statPosts').textContent = posts;
+    const mp = document.getElementById('miniStatPosts');
+    if (mp) mp.textContent = posts;
 
     // Badges earned count
     const { count: badgeCount } = await supabaseClient
         .from('member_badges')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', S.viewingUserId);
-    document.getElementById('statBadges').textContent = badgeCount || 0;
+    const badges = badgeCount || 0;
+    document.getElementById('statBadges').textContent = badges;
+    const mb = document.getElementById('miniStatBadges');
+    if (mb) mb.textContent = badges;
 
     // Streak (consecutive months contributed)
-    document.getElementById('statStreak').textContent = profile.contribution_streak || 0;
+    const streak = profile.contribution_streak || 0;
+    document.getElementById('statStreak').textContent = streak;
+    const ms = document.getElementById('miniStatStreak');
+    if (ms) ms.textContent = streak;
 
     // Member Since
     if (profile.created_at) {
@@ -126,5 +138,12 @@ window.ProfileApp.loadStats = async function loadStats(profile) {
         const month = d.toLocaleString('en-US', { month: 'short' });
         const year = d.getFullYear().toString().slice(-2);
         document.getElementById('statMemberSince').textContent = `${month} '${year}`;
+
+        // Mobile "Member since" button text
+        const msBtn = document.getElementById('memberSinceText');
+        if (msBtn) {
+            const fullMonth = d.toLocaleString('en-US', { month: 'long' });
+            msBtn.textContent = `Member since ${fullMonth} ${d.getFullYear()}`;
+        }
     }
 };
