@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════
 // Profile – About Modal
-// Opens from the "Member since" button on mobile.
+// Opens from the "Member since" button (mobile + desktop).
 // Shows profile pic, date joined, badge & banner carousels.
 // ═══════════════════════════════════════════════════════════
 

@@ -112,7 +112,6 @@ window.ProfileApp.loadStats = async function loadStats(profile) {
         .select('*', { count: 'exact', head: true })
         .eq('author_id', S.viewingUserId);
     const posts = postCount || 0;
-    document.getElementById('statPosts').textContent = posts;
     const mp = document.getElementById('miniStatPosts');
     if (mp) mp.textContent = posts;
 
@@ -122,24 +121,17 @@ window.ProfileApp.loadStats = async function loadStats(profile) {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', S.viewingUserId);
     const badges = badgeCount || 0;
-    document.getElementById('statBadges').textContent = badges;
     const mb = document.getElementById('miniStatBadges');
     if (mb) mb.textContent = badges;
 
     // Streak (consecutive months contributed)
     const streak = profile.contribution_streak || 0;
-    document.getElementById('statStreak').textContent = streak;
     const ms = document.getElementById('miniStatStreak');
     if (ms) ms.textContent = streak;
 
     // Member Since
     if (profile.created_at) {
         const d = new Date(profile.created_at);
-        const month = d.toLocaleString('en-US', { month: 'short' });
-        const year = d.getFullYear().toString().slice(-2);
-        document.getElementById('statMemberSince').textContent = `${month} '${year}`;
-
-        // Mobile "Member since" button text
         const msBtn = document.getElementById('memberSinceText');
         if (msBtn) {
             const fullMonth = d.toLocaleString('en-US', { month: 'long' });
