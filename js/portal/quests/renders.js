@@ -172,16 +172,19 @@ function renderQuestCard(quest) {
     const isCompleted = status === 'completed';
 
     // ── Contributor gate ──────────────────────────────────
-    // Certain finance / streak quests are only meaningful for active contributors.
-    // Show a locked card to non-contributors so they know the quest exists but
-    // understand they need an active contribution to unlock it.
+    // A quest is locked when: the user isn't an active contributor AND either
+    //  a) the DB flag contributor_required is true (set per-row in migration 043), OR
+    //  b) the quest's auto_detect_key is in the client-side CONTRIBUTOR_REQUIRED_QUESTS set.
     const isContributorLocked =
-        !_isContributor &&
-        quest.auto_detect_key &&
-        typeof CONTRIBUTOR_REQUIRED_QUESTS !== 'undefined' &&
-        CONTRIBUTOR_REQUIRED_QUESTS.has(quest.auto_detect_key);
+        !_isContributor && (
+            quest.contributor_required ||
+            (quest.auto_detect_key &&
+             typeof CONTRIBUTOR_REQUIRED_QUESTS !== 'undefined' &&
+             CONTRIBUTOR_REQUIRED_QUESTS.has(quest.auto_detect_key))
+        );
 
     if (isContributorLocked) {
+        const lockedBadgeReward = quest.badge_reward_key ? getBadge(quest.badge_reward_key) : null;
         return `
         <div class="group bg-white rounded-2xl border border-gray-200/60 p-4 sm:p-5 opacity-60 select-none" title="Activate your contribution to unlock this quest">
             <div class="flex items-start gap-3.5">
@@ -200,6 +203,7 @@ function renderQuestCard(quest) {
                         <span>+${quest.cp_reward} CP</span>
                         <span>•</span>
                         <span>${getQuestTypeLabel(quest.quest_type)}</span>
+                        ${lockedBadgeReward ? `<span>•</span><span class="grayscale">${lockedBadgeReward.emoji} ${lockedBadgeReward.name}</span>` : ''}
                     </div>
                 </div>
                 <svg class="w-5 h-5 text-gray-200 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
@@ -243,6 +247,11 @@ function renderQuestCard(quest) {
                         <span class="text-gray-400">•</span>
                         <span class="text-gray-400">${getQuestTypeLabel(quest.quest_type)}</span>
                         ${quest.requires_proof ? '<span class="text-gray-400">•</span><span class="text-amber-600">📎 Proof required</span>' : ''}
+                        ${quest.badge_reward_key ? (() => {
+                            const br = getBadge(quest.badge_reward_key);
+                            const brRarity = getBadgeRarity(quest.badge_reward_key);
+                            return `<span class="text-gray-400">•</span><span class="${brRarity.cssClass} text-[10px] font-semibold px-1.5 py-0.5 rounded-full">${br.emoji} ${br.name}</span>`;
+                        })() : ''}
                     </div>
                     ${mq && mq.completed_at ? `<div class="text-xs text-emerald-600 mt-1.5">✓ Completed ${formatDate(mq.completed_at)}</div>` : ''}
                 </div>
@@ -290,6 +299,43 @@ function renderQuestDetail(quest, memberQuest) {
                     <!-- Description -->
                     <div class="mb-5">
                         <p class="text-sm text-gray-600">${quest.description || ''}</p>
+                    </div>
+
+                    <!-- Rewards -->
+                    <div class="mb-5 bg-amber-50 rounded-xl p-4 border border-amber-100">
+                        <h4 class="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-3">Rewards</h4>
+                        <div class="flex flex-col gap-2">
+                            <!-- CP reward row -->
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-sm">⚡</span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-bold text-brand-700">+${quest.cp_reward} Credit Points</div>
+                                    <div class="text-xs text-gray-500">${quest.quest_type === 'recurring_monthly' ? 'Earned each qualifying month (90-day rolling)' : 'One-time permanent reward'}</div>
+                                </div>
+                            </div>
+                            ${quest.badge_reward_key ? (() => {
+                                const br = getBadge(quest.badge_reward_key);
+                                const brRarity = getBadgeRarity(quest.badge_reward_key);
+                                const alreadyEarned = _questEarnedBadges.some(b => b.badge_key === quest.badge_reward_key);
+                                return `
+                            <!-- Badge reward row -->
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                                    ${buildBadgeChip(quest.badge_reward_key, 'md')}
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-bold text-gray-800">${br.emoji} ${br.name}</span>
+                                        <span class="${brRarity.cssClass} text-[10px] font-semibold px-1.5 py-0.5 rounded-full">${brRarity.label}</span>
+                                        ${alreadyEarned ? '<span class="text-[10px] font-semibold text-emerald-600">✓ Earned</span>' : ''}
+                                    </div>
+                                    <div class="text-xs text-gray-500 mt-0.5">${br.description}</div>
+                                </div>
+                            </div>`;
+                            })() : ''}
+                        </div>
                     </div>
 
                     <!-- Instructions -->
