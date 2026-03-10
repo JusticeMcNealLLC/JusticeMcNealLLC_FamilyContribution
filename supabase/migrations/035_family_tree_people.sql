@@ -61,20 +61,32 @@ INSERT INTO storage.buckets (id, name, public)
   VALUES ('tree-people', 'tree-people', true)
   ON CONFLICT (id) DO NOTHING;
 
-CREATE POLICY IF NOT EXISTS "public read tree-people"
-  ON storage.objects FOR SELECT
-  USING (bucket_id = 'tree-people');
+DO $pol$ BEGIN
 
-CREATE POLICY IF NOT EXISTS "authenticated upload tree-people"
-  ON storage.objects FOR INSERT
-  WITH CHECK (
-    bucket_id = 'tree-people'
-    AND auth.role() = 'authenticated'
-  );
+  CREATE POLICY "public read tree-people"
+    ON storage.objects FOR SELECT
+    USING (bucket_id = 'tree-people');
 
-CREATE POLICY IF NOT EXISTS "authenticated update tree-people"
-  ON storage.objects FOR UPDATE
-  USING (
-    bucket_id = 'tree-people'
-    AND auth.role() = 'authenticated'
-  );
+EXCEPTION WHEN duplicate_object THEN NULL; END $pol$;
+
+DO $pol$ BEGIN
+
+  CREATE POLICY "authenticated upload tree-people"
+    ON storage.objects FOR INSERT
+    WITH CHECK (
+      bucket_id = 'tree-people'
+      AND auth.role() = 'authenticated'
+    );
+
+EXCEPTION WHEN duplicate_object THEN NULL; END $pol$;
+
+DO $pol$ BEGIN
+
+  CREATE POLICY "authenticated update tree-people"
+    ON storage.objects FOR UPDATE
+    USING (
+      bucket_id = 'tree-people'
+      AND auth.role() = 'authenticated'
+    );
+
+EXCEPTION WHEN duplicate_object THEN NULL; END $pol$;
