@@ -272,6 +272,122 @@
         }
     }
 
+    // ─── Edit non-member tree person (admin) ────────────────────────────────
+
+    let _editTreePersonId = null;
+
+    async function openEditTreePerson(id) {
+        _editTreePersonId = id;
+
+        // Fetch fresh data from DB
+        const { data, error } = await supabaseClient
+            .from('family_tree_people')
+            .select('id, display_name, photo_url, birth_year, death_year, notes')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) {
+            console.error('[treeEdit] fetch tree person error', error);
+            alert('Could not load person details.');
+            return;
+        }
+
+        // Populate form
+        const nameEl  = el('editTreePersonName');
+        const birthEl = el('editTreePersonBirth');
+        const deathEl = el('editTreePersonDeath');
+        const notesEl = el('editTreePersonNotes');
+        const photoEl = el('editTreePersonPhoto');
+        const preview = el('editTreePersonPhotoPreview');
+
+        if (nameEl)  nameEl.value  = data.display_name || '';
+        if (birthEl) birthEl.value = data.birth_year   || '';
+        if (deathEl) deathEl.value = data.death_year   || '';
+        if (notesEl) notesEl.value = data.notes        || '';
+        if (photoEl) photoEl.value = '';
+
+        // Show current photo preview
+        if (preview) {
+            if (data.photo_url) {
+                preview.innerHTML = `<img src="${data.photo_url}" class="w-full h-full object-cover" alt="">`;
+            } else {
+                preview.innerHTML = `<svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>`;
+            }
+        }
+
+        const modal = el('editTreePersonModal');
+        if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    }
+
+    function closeEditTreePersonModal() {
+        const modal = el('editTreePersonModal');
+        if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        _editTreePersonId = null;
+    }
+
+    async function saveEditTreePerson() {
+        if (!_editTreePersonId) return;
+
+        const displayName = el('editTreePersonName')?.value.trim();
+        if (!displayName) { alert('Name is required.'); return; }
+
+        const birthYear = parseInt(el('editTreePersonBirth')?.value, 10) || null;
+        const deathYear = parseInt(el('editTreePersonDeath')?.value, 10) || null;
+        const notes     = el('editTreePersonNotes')?.value.trim() || null;
+        const btn       = el('saveEditTreePerson');
+
+        // Upload new photo if provided
+        let photoUrl = undefined; // undefined = don't change; null = clear
+        const fileInput = el('editTreePersonPhoto');
+        if (fileInput?.files?.[0]) {
+            photoUrl = await uploadTreePersonPhoto(fileInput);
+        }
+
+        const payload = {
+            display_name: displayName,
+            birth_year:   birthYear,
+            death_year:   deathYear,
+            notes,
+            updated_at:   new Date().toISOString(),
+        };
+        if (photoUrl !== undefined) payload.photo_url = photoUrl;
+
+        setButtonLoading(btn, true, 'Save');
+        const { error } = await supabaseClient
+            .from('family_tree_people')
+            .update(payload)
+            .eq('id', _editTreePersonId);
+        setButtonLoading(btn, false, 'Save');
+
+        if (error) { console.error('[treeEdit] save tree person error', error); alert('Failed to save.'); return; }
+        closeEditTreePersonModal();
+        if (window.loadFamilyTree) window.loadFamilyTree();
+    }
+
+    async function deleteEditTreePerson() {
+        if (!_editTreePersonId) return;
+        if (!confirm('Delete this person and all their connections permanently?')) return;
+
+        const btn = el('deleteEditTreePerson');
+        setButtonLoading(btn, true, 'Delete');
+
+        // Delete related family_relations first (no FK cascade)
+        await supabaseClient
+            .from('family_relations')
+            .delete()
+            .or(`person_a.eq.${_editTreePersonId},person_b.eq.${_editTreePersonId}`);
+
+        const { error } = await supabaseClient
+            .from('family_tree_people')
+            .delete()
+            .eq('id', _editTreePersonId);
+
+        setButtonLoading(btn, false, 'Delete');
+        if (error) { console.error('[treeEdit] delete tree person error', error); alert('Failed to delete.'); return; }
+        closeEditTreePersonModal();
+        if (window.loadFamilyTree) window.loadFamilyTree();
+    }
+
     // ─── Edit existing relation (admin) ──────────────────────────────────────
 
     let _editEdgeId = null;
@@ -345,14 +461,21 @@
             el(`person${P}ToggleNonMember`)?.addEventListener('click', () => setPersonMode(person, 'non-member'));
         });
 
-        // Edit modal wiring
+        // Edit relation modal wiring
         el('cancelEditRelation')?.addEventListener('click',  closeEditModal);
         el('saveEditRelation')?.addEventListener('click',    saveEditRelation);
         el('deleteEditRelation')?.addEventListener('click',  deleteEditRelation);
         el('editRelationModal')?.addEventListener('click', e => { if (e.target === el('editRelationModal')) closeEditModal(); });
+
+        // Edit tree person modal wiring
+        el('cancelEditTreePerson')?.addEventListener('click',  closeEditTreePersonModal);
+        el('cancelEditTreePerson2')?.addEventListener('click', closeEditTreePersonModal);
+        el('saveEditTreePerson')?.addEventListener('click',    saveEditTreePerson);
+        el('deleteEditTreePerson')?.addEventListener('click',  deleteEditTreePerson);
+        el('editTreePersonModal')?.addEventListener('click', e => { if (e.target === el('editTreePersonModal')) closeEditTreePersonModal(); });
     });
 
-    // Expose edit API for viz.js edge tap
-    window.FamilyTreeEdit = { openEditEdge, setAdminMode };
+    // Expose edit API for viz.js
+    window.FamilyTreeEdit = { openEditEdge, openEditTreePerson, setAdminMode };
 
 })();

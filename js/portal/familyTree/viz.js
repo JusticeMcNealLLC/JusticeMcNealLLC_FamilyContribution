@@ -244,11 +244,13 @@ const TreeViz = (function () {
 
         createControls(container, cy);
 
-        // Node tap → profile page (members only)
+        // Node tap → profile page (members) or edit non-member (admin)
         cy.on('tap', 'node', evt => {
             const node = evt.target;
             if (node.data('isMember')) {
                 window.location.href = `profile.html?id=${node.id()}`;
+            } else if (isAdmin && window.FamilyTreeEdit?.openEditTreePerson) {
+                window.FamilyTreeEdit.openEditTreePerson(node.id());
             }
         });
 
