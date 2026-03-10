@@ -6,7 +6,11 @@ window.ProfileApp = window.ProfileApp || {};
 
 // Banner presets catalog (gradient-based banners awarded as rewards)
 window.ProfileApp.BANNER_CATALOG = {
-    'founders-animated': { name: 'Founders Gold', preview: 'founders-banner-preview', isAnimated: true },
+    'founders-animated': { name: 'Founders Gold', preview: 'founders-banner-preview', isAnimated: true, lottieEffect: 'sparkle' },
+    'storm': { name: 'Storm', gradient: 'from-slate-900 to-purple-900', lottieEffect: 'lightning' },
+    'inferno': { name: 'Inferno', gradient: 'from-red-900 to-orange-600', lottieEffect: 'fire' },
+    'celebration': { name: 'Celebration', gradient: 'from-pink-500 to-violet-600', lottieEffect: 'confetti' },
+    'starfield': { name: 'Starfield', gradient: 'from-slate-900 to-indigo-950', lottieEffect: 'stars' },
     'from-blue-500 to-purple-600': { name: 'Twilight', gradient: 'from-blue-500 to-purple-600' },
     'from-emerald-500 to-teal-600': { name: 'Emerald Wave', gradient: 'from-emerald-500 to-teal-600' },
     'from-rose-500 to-pink-600': { name: 'Rose Gold', gradient: 'from-rose-500 to-pink-600' },
@@ -68,6 +72,11 @@ window.ProfileApp.loadBadges = async function loadBadges() {
                 collBtn.classList.remove('hidden');
                 collBtn.addEventListener('click', window.ProfileApp.toggleBadgeCollection);
             }
+        }
+
+        // Apply Lottie effects to epic/legendary badge chips
+        if (typeof LottieEffects !== 'undefined') {
+            setTimeout(() => LottieEffects.applyBadgeEffects(), 100);
         }
     }
 
@@ -181,4 +190,9 @@ window.ProfileApp.renderBadgeCollection = function renderBadgeCollection() {
     grid.querySelectorAll('[role="button"]').forEach(card => {
         card.addEventListener('click', () => window.ProfileApp.equipBadge(card.dataset.badgeKey));
     });
+
+    // Apply Lottie effects to epic/legendary badges in collection
+    if (typeof LottieEffects !== 'undefined') {
+        setTimeout(() => LottieEffects.applyBadgeEffects(), 100);
+    }
 };

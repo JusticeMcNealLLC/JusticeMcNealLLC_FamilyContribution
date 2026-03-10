@@ -93,6 +93,11 @@ function _renderBadgeOverlays(badgeKey) {
             var badge = _badgeFallback(badgeKey);
             el.innerHTML = '<div class="badge-chip-overlay" title="' + badge.name + '">' + badge.emoji + '</div>';
         }
+
+        // Apply Lottie sparkle effect to legendary/epic badge overlays
+        if (typeof LottieEffects !== 'undefined') {
+            setTimeout(function() { LottieEffects.applyBadgeEffects(); }, 150);
+        }
     }
 }
 

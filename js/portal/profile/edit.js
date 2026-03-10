@@ -281,4 +281,9 @@ window.ProfileApp.populateEditModalBanner = function populateEditModalBanner() {
     if (picker) {
         picker.innerHTML = `<p class="col-span-3 text-xs text-gray-500 text-center py-1">${bannerInfo ? '🎨 ' + bannerInfo.name : '🎨 Custom Banner'} <span class="text-gray-400">(reward-only)</span></p>`;
     }
+
+    // Apply Lottie effect to banner preview if available
+    if (bannerInfo?.lottieEffect && typeof LottieEffects !== 'undefined') {
+        LottieEffects.renderBannerEffect(preview, bannerInfo.lottieEffect, { opacity: 0.6 });
+    }
 };

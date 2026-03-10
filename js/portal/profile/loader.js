@@ -46,6 +46,14 @@ window.ProfileApp.loadProfile = async function loadProfile() {
                 coverSection.className = coverSection.className.replace(/from-\S+/g, '').replace(/to-\S+/g, '').trim();
                 coverSection.classList.add('bg-gradient-to-br', ...profile.cover_gradient.split(' '));
             }
+
+            // Apply Lottie banner effect if available
+            if (typeof LottieEffects !== 'undefined' && typeof window.ProfileApp !== 'undefined') {
+                const bannerDef = window.ProfileApp.BANNER_CATALOG?.[profile.cover_gradient];
+                if (bannerDef?.lottieEffect) {
+                    LottieEffects.renderBannerEffect(coverSection, bannerDef.lottieEffect);
+                }
+            }
         }
 
         // Profile picture
