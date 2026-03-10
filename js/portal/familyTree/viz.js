@@ -124,10 +124,12 @@ const TreeViz = (function () {
                     },
                 },
                 {
+                    // Base (parent / child): directed arrow
                     selector: 'edge',
                     style: {
                         'curve-style': 'bezier',
                         'target-arrow-shape': 'triangle',
+                        'source-arrow-shape': 'none',
                         'line-color': '#c7d2fe',
                         'target-arrow-color': '#c7d2fe',
                         width: 2,
@@ -136,6 +138,39 @@ const TreeViz = (function () {
                         'text-rotation': 'autorotate',
                         'text-margin-y': -8,
                         color: '#6b7280',
+                    },
+                },
+                {
+                    // Siblings: undirected, teal
+                    selector: 'edge[relation="sibling"]',
+                    style: {
+                        'target-arrow-shape': 'none',
+                        'source-arrow-shape': 'none',
+                        'line-color': '#6ee7b7',
+                        width: 2.5,
+                        color: '#059669',
+                    },
+                },
+                {
+                    // Spouse: undirected, rose
+                    selector: 'edge[relation="spouse"]',
+                    style: {
+                        'target-arrow-shape': 'none',
+                        'source-arrow-shape': 'none',
+                        'line-color': '#fda4af',
+                        width: 2.5,
+                        color: '#e11d48',
+                    },
+                },
+                {
+                    // Other: undirected, gray dashed
+                    selector: 'edge[relation="other"]',
+                    style: {
+                        'target-arrow-shape': 'none',
+                        'source-arrow-shape': 'none',
+                        'line-color': '#d1d5db',
+                        'line-style': 'dashed',
+                        color: '#9ca3af',
                     },
                 },
             ],
@@ -152,7 +187,7 @@ const TreeViz = (function () {
 
         // Run layout then fit — resize first so Cytoscape reads actual container dimensions
         cy.resize();
-        const layout = cy.layout({ name: 'breadthfirst', directed: true, padding: 10, spacingFactor: 1.2 });
+        const layout = cy.layout({ name: 'breadthfirst', directed: true, padding: 30, spacingFactor: 1.4 });
         layout.run();
         layout.on('layoutstop', () => { try { cy.fit(50); } catch (_) {} });
 
@@ -204,7 +239,6 @@ const TreeViz = (function () {
         init,
         setAdmin: val => {
             isAdmin = val;
-            // Unlock node dragging for admins; re-lock for everyone else
             if (cy) cy.autoungrabify(!val);
         },
     };

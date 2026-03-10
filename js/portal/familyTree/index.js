@@ -237,7 +237,8 @@
                 .eq('status', 'pending');
             if (!probe.error) {
                 showAdminApprovals();
-                if (window.TreeViz?.setAdmin) window.TreeViz.setAdmin(true);
+                if (window.TreeViz?.setAdmin)            window.TreeViz.setAdmin(true);
+                if (window.FamilyTreeEdit?.setAdminMode) window.FamilyTreeEdit.setAdminMode(true);
             }
         } catch (_) { /* not admin */ }
 

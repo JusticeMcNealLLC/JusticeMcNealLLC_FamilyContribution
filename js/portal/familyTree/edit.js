@@ -46,6 +46,18 @@
         }
     }
 
+    // ─── Admin mode ───────────────────────────────────────────────────────────
+
+    let _isAdmin = false;
+
+    function setAdminMode(val) {
+        _isAdmin = val;
+        const title = el('relationModalTitle');
+        const btn   = el('submitRelation');
+        if (title) title.textContent = val ? 'Add Relation'  : 'Suggest a Relation';
+        if (btn)   btn.textContent   = val ? 'Add Relation'  : 'Submit Suggestion';
+    }
+
     // ─── Modal open / close ───────────────────────────────────────────────────
 
     function openModal() {
@@ -339,6 +351,6 @@
     });
 
     // Expose edit API for viz.js edge tap
-    window.FamilyTreeEdit = { openEditEdge };
+    window.FamilyTreeEdit = { openEditEdge, setAdminMode };
 
 })();
