@@ -34,7 +34,7 @@
     <style>
         /* Hide top nav on mobile — contribution page is full-screen immersive */
         @media (max-width: 767px) {
-            [data-active-page="contribution"] #nav-placeholder { display: none !important; }
+            body[data-active-page="contribution"] > nav { display: none !important; }
         }
 
         /* Lottie full-screen cover background */
