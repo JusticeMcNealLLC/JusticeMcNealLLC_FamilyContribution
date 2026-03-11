@@ -384,11 +384,11 @@
 /* Empty dock slot on tab bar */
 .dock-slot-empty { pointer-events: none; min-height: 56px; }
 
-/* Swipe hint indicator */
+/* Swipe hint indicator — pill floats above the tab bar strip */
 .bottom-tab-bar .swipe-hint {
-    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-    width: 32px; height: 3px; border-radius: 999px;
-    background: #d1d5db; margin-top: 4px;
+    position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+    width: 36px; height: 4px; border-radius: 999px;
+    background: rgba(0,0,0,0.18); margin-top: 0;
 }
 
 /* ─── Notification Panel ─── */

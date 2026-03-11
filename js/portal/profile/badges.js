@@ -31,32 +31,21 @@ window.ProfileApp.loadBadges = async function loadBadges() {
         .order('earned_at', { ascending: false });
 
     // Get current displayed badge + banner info + highlights
-    // Try with earned_banners first; fall back if column doesn't exist yet
     let prof = null;
     {
-        const { data, error } = await supabaseClient
+        const { data } = await supabaseClient
             .from('profiles')
-            .select('displayed_badge, cover_gradient, cover_photo_url, highlighted_badges, earned_banners')
+            .select('displayed_badge, cover_gradient, cover_photo_url, highlighted_badges')
             .eq('id', S.viewingUserId)
             .single();
-        if (error && (error.code === 'PGRST204' || error.message?.includes('earned_banners') || error.status === 400)) {
-            // Column not migrated yet — retry without it
-            const { data: data2 } = await supabaseClient
-                .from('profiles')
-                .select('displayed_badge, cover_gradient, cover_photo_url, highlighted_badges')
-                .eq('id', S.viewingUserId)
-                .single();
-            prof = data2;
-        } else {
-            prof = data;
-        }
+        prof = data;
     }
     S.currentDisplayedBadge = prof?.displayed_badge || null;
     S.currentBannerGradient = prof?.cover_gradient || null;
     S.currentBannerPhotoUrl = prof?.cover_photo_url || null;
     S.currentHighlightedBadges = prof?.highlighted_badges || [];
-    // Earned banners — deduplicate and include current if missing
-    const earnedRaw = Array.isArray(prof?.earned_banners) ? [...prof.earned_banners] : [];
+    // Earned banners — derive from current banner (earned_banners column not yet migrated)
+    const earnedRaw = [];
     if (S.currentBannerGradient && !earnedRaw.includes(S.currentBannerGradient)) {
         earnedRaw.push(S.currentBannerGradient);
     }

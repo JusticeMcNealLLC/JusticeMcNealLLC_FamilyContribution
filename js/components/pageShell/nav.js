@@ -71,10 +71,7 @@
 
         tabsInner =
             '<div class="max-w-sm mx-auto grid grid-cols-2 px-4 gap-2 relative">' +
-                '<div class="swipe-hint" aria-hidden="true">' +
-                    '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg>' +
-                    '<span class="swipe-hint-label">More</span>' +
-                '</div>' +
+                '<div class="swipe-hint" aria-hidden="true"></div>' +
                 mTab('index.html', p(SVG.hub), 'Admin Hub', 'hub') +
                 mTab('../portal/index.html', p(SVG.home), 'My Portal', '_') +
             '</div>';
@@ -105,10 +102,7 @@
 
         tabsInner =
             '<div class="max-w-lg mx-auto grid grid-cols-5 px-2 relative">' +
-                '<div class="swipe-hint" aria-hidden="true">' +
-                    '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg>' +
-                    '<span class="swipe-hint-label">More</span>' +
-                '</div>' +
+                '<div class="swipe-hint" aria-hidden="true"></div>' +
                 mTab('feed.html', p(SVG.feed), 'Feed', 'feed') +
                 '<div class="dock-slot" data-dock-slot="2">' + mTab('events.html', p(SVG.bell), 'Events', 'events') + '</div>' +
                 centerTab('index.html', p(SVG.home), 'Dashboard', 'dashboard') +

@@ -31,14 +31,48 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+    <style>
+        /* Hide top nav on mobile — full-screen immersive like contribution page */
+        @media (max-width: 767px) {
+            body[data-active-page="extra-deposit"] > nav { display: none !important; }
+        }
+        /* Lottie full-screen cover background */
+        #lottie-bg {
+            position: fixed; inset: 0; z-index: 0;
+            overflow: hidden; pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #lottie-bg dotlottie-player {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            height: 100vh; width: calc(100vh * 16 / 9);
+            min-width: 100vw;
+        }
+        #lottie-bg dotlottie-player canvas,
+        #lottie-bg dotlottie-player svg { width: 100% !important; height: 100% !important; }
+        /* Back link readable on dark background */
+        .deposit-back-link { color: rgba(255,255,255,0.65) !important; }
+        .deposit-back-link:hover { color: rgba(255,255,255,0.95) !important; }
+    </style>
+    <!-- dotLottie player (ES module web component) -->
+    <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
 </head>
-<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="extra-deposit">
+<body class="min-h-screen bg-emerald-950 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="extra-deposit" style="background-color:#022c22">
+
+    <!-- Lottie background (fixed, full-screen, below all content) -->
+    <div id="lottie-bg" aria-hidden="true">
+        <dotlottie-player
+            src="https://assets-v2.lottiefiles.com/a/43a4e8e0-1189-11ee-91f3-3f220e198af4/vHkQOQT25m.lottie"
+            autoplay
+            loop
+        ></dotlottie-player>
+    </div>
 
     <div id="nav-placeholder"></div>
 
-    <main class="max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+    <main class="relative z-10 max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full" style="padding-top: max(1.25rem, calc(env(safe-area-inset-top) + 1rem));">
 
-        <a href="index.html" class="inline-flex items-center gap-1 text-gray-500 hover:text-brand-600 text-sm mb-5 transition">
+        <a href="index.html" class="deposit-back-link inline-flex items-center gap-1 text-sm mb-5 transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
             Back to Dashboard
         </a>
@@ -167,6 +201,7 @@
     <script src="../js/components/notifications.js"></script>
     <script src="../js/push.js"></script>
     <script src="../js/auth/shared.js"></script>
+    <script src="../js/portal/milestones/config.js"></script>
     <script src="../js/portal/portal.js"></script>
     <script src="../js/portal/extra-deposit.js"></script>
     <script src="../js/sw-register.js"></script>
