@@ -58,16 +58,28 @@
     }, { passive: false });
 
     // ─── Swipe-down on drawer to close ──────────────────
-    var drawerStartY = 0;
+    // Detects direction first so horizontal grid scroll still works.
+    var drawerStartX = 0, drawerStartY = 0, drawerSwipeDir = null;
     drawer.addEventListener('touchstart', function(e) {
+        drawerStartX = e.touches[0].clientX;
         drawerStartY = e.touches[0].clientY;
         currentY = 0;
+        drawerSwipeDir = null;
         drawer.classList.add('dragging');
     }, { passive: true });
 
     drawer.addEventListener('touchmove', function(e) {
+        var dx = e.touches[0].clientX - drawerStartX;
+        var dy = e.touches[0].clientY - drawerStartY;
+        if (drawerSwipeDir === null && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
+            drawerSwipeDir = Math.abs(dy) >= Math.abs(dx) ? 'v' : 'h';
+        }
+        if (drawerSwipeDir === 'h') {
+            drawer.classList.remove('dragging'); // allow CSS transition
+            return; // let browser handle horizontal grid scroll
+        }
         e.preventDefault();
-        currentY = e.touches[0].clientY - drawerStartY;
+        currentY = dy;
         if (currentY > 0) {
             drawer.style.transform = 'translateY(' + currentY + 'px)';
         }
@@ -80,6 +92,7 @@
             closeDrawer();
         }
         currentY = 0;
+        drawerSwipeDir = null;
     });
 
     backdrop.addEventListener('click', closeDrawer);

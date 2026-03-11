@@ -245,6 +245,7 @@
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
+    touch-action: pan-x; /* allow horizontal scroll even when parent has touch-action:none */
 }
 .nav-drawer-grid::-webkit-scrollbar { display: none; }
 

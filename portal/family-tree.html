@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -29,7 +29,8 @@
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#4f46e5">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">`n    <meta name="apple-mobile-web-app-title" content="JMLLC">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JMLLC">
     <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
 
     <style>
@@ -105,11 +106,7 @@
                 height: calc(100svh - 72px - env(safe-area-inset-bottom, 0px)) !important;
                 min-height: 0 !important;
             }
-            body.tree-panel-open #cy,
-            body.tree-panel-open #cyLoading {
-                height: 50svh !important;
-                transition: height 0.38s cubic-bezier(0.32, 0.72, 0, 1);
-            }
+            /* Canvas stays fullscreen — sidebar overlays from bottom */
             /* Sidebar becomes fixed bottom sheet */
             #treeSidebar {
                 position: fixed !important;
@@ -857,23 +854,61 @@
         var btn     = document.getElementById('treePanelToggle');
         var chev    = document.getElementById('treePanelChev');
         var handle  = document.getElementById('treeSidebarHandle');
+        var sidebar = document.getElementById('treeSidebar');
         if (!btn) return;
 
         function openPanel() {
             document.body.classList.add('tree-panel-open');
             if (chev) chev.style.transform = 'rotate(180deg)';
-            setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 400);
         }
         function closePanel() {
             document.body.classList.remove('tree-panel-open');
             if (chev) chev.style.transform = '';
-            setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 400);
+            if (sidebar) sidebar.style.transform = '';
         }
 
         btn.addEventListener('click', function () {
             document.body.classList.contains('tree-panel-open') ? closePanel() : openPanel();
         });
         if (handle) handle.addEventListener('click', closePanel);
+
+        // ── Swipe-down anywhere on the panel to close ────────────────────
+        // Tracks from the handle (dedicated drag zone) OR from the top of
+        // the content area when it's already scrolled to the top.
+        if (sidebar) {
+            var tStartY = 0, tCurrentY = 0, tTracking = false;
+            var scrollEl = sidebar.querySelector('#memberList') || sidebar;
+
+            sidebar.addEventListener('touchstart', function(e) {
+                tStartY = e.touches[0].clientY;
+                tCurrentY = 0;
+                tTracking = false;
+                var touch = e.target;
+                // Always track if touching the handle bar
+                var onHandle = !!touch.closest('.tree-sidebar-handle');
+                // Also track if content is scrolled to the very top
+                var atTop = (scrollEl.scrollTop <= 0);
+                if (onHandle || atTop) tTracking = true;
+            }, { passive: true });
+
+            sidebar.addEventListener('touchmove', function(e) {
+                if (!tTracking) return;
+                tCurrentY = e.touches[0].clientY - tStartY;
+                if (tCurrentY > 0) {
+                    e.preventDefault();
+                    sidebar.style.transform = 'translateY(' + tCurrentY + 'px)';
+                } else {
+                    tTracking = false; // swiping up — let content scroll
+                }
+            }, { passive: false });
+
+            sidebar.addEventListener('touchend', function() {
+                sidebar.style.transform = '';
+                if (tCurrentY > 80) closePanel();
+                tCurrentY = 0;
+                tTracking = false;
+            });
+        }
     })();
     </script>
 
