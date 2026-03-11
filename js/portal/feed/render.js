@@ -88,7 +88,7 @@ function renderPostCard(post) {
             </a>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
-                    <span class="font-semibold text-gray-900 text-sm">${name}</span>
+                    <a href="profile.html?id=${authorId}" class="font-semibold text-gray-900 text-sm hover:underline">${name}</a>
                     ${badge}
                 </div>
                 <p class="text-[10px] text-gray-400">${timeAgo}</p>

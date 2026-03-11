@@ -250,10 +250,10 @@ function renderQuestDetail(quest, memberQuest) {
 
     modal.innerHTML = `
         <div class="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" id="questModalBackdrop">
-            <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto slide-up">
+            <div class="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[92vh] flex flex-col slide-up">
 
                 <!-- ── Header ── -->
-                <div class="relative overflow-hidden sm:rounded-t-2xl" style="background: linear-gradient(135deg, #4338ca 0%, #4f46e5 60%, #6366f1 100%); min-height: 140px;">
+                <div class="relative overflow-hidden sm:rounded-t-2xl flex-shrink-0" style="background: linear-gradient(135deg, #4338ca 0%, #4f46e5 60%, #6366f1 100%); min-height: 140px;">
                     <!-- Subtle dot grid overlay -->
                     <div class="absolute inset-0 pointer-events-none" style="background-image: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px); background-size: 20px 20px;"></div>
                     <!-- Orb decoration -->
@@ -285,7 +285,7 @@ function renderQuestDetail(quest, memberQuest) {
                 </div>
 
                 <!-- ── Body ── -->
-                <div class="p-5 space-y-4">
+                <div class="p-5 space-y-4 overflow-y-auto flex-1 pb-[calc(80px+env(safe-area-inset-bottom,0px))] sm:pb-5">
 
                     <!-- Description -->
                     <p class="text-sm text-gray-600">${quest.description || ''}</p>

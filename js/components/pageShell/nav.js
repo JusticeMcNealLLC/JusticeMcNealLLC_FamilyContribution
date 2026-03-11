@@ -286,7 +286,9 @@
                     '</button>' +
                 '</div>' +
                 '<div class="dock-preview hidden" id="dockPreview"></div>' +
-                '<div class="nav-drawer-grid" id="navDrawerGrid">' + gridItems + '</div>' +
+                '<div class="nav-drawer-grid-wrap">' +
+                    '<div class="nav-drawer-grid" id="navDrawerGrid">' + gridItems + '</div>' +
+                '</div>' +
             '</div>';
     }
 

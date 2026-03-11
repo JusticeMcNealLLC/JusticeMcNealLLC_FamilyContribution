@@ -61,6 +61,7 @@ function setupComposer() {
         submitBtn.disabled = true;
         clearImagePreviews();
         selectedImages = [];
+        _announceMode = false;
     }
 
     const openComposerBtn = document.getElementById('openComposerBtn');
@@ -76,10 +77,7 @@ function setupComposer() {
             openComposerModal();
             const action = btn.dataset.action;
             if (action === 'announce') {
-                setTimeout(() => {
-                    const typeSelect = document.getElementById('postType');
-                    if (typeSelect) typeSelect.value = 'announcement';
-                }, 200);
+                _announceMode = true;
             }
         });
     });
@@ -95,6 +93,7 @@ function setupComposer() {
 
     // Image upload
     let selectedImages = [];
+    let _announceMode = false;
     if (imageInput) {
         imageInput.addEventListener('change', (e) => {
             const files = Array.from(e.target.files).slice(0, 4 - selectedImages.length);
@@ -158,7 +157,7 @@ function setupComposer() {
                 const visibility = document.getElementById('postVisibility')?.value || 'family';
 
                 // Check if announcement quick btn was the trigger
-                const isAnnouncement = isAdmin && document.querySelector('.composer-quick-btn[data-type="announcement"]')?.classList.contains('selected');
+                const isAnnouncement = isAdmin && _announceMode;
                 if (isAnnouncement) postType = 'announcement';
 
                 // Insert post

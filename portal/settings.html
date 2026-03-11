@@ -100,56 +100,6 @@
             </div>
         </section>
 
-        <!-- Active Badge Section -->
-        <section class="mb-6 fade-in" style="animation-delay: 50ms">
-            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Active Badge</h2>
-
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6">
-                <!-- Current badge preview -->
-                <div id="currentBadgePreview" class="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-                    <div class="relative">
-                        <div id="badgePreviewAvatar" class="w-14 h-14 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border-2 border-gray-200">
-                            <span id="badgePreviewInitials" class="text-xl font-bold text-brand-600"></span>
-                            <img id="badgePreviewImg" class="w-full h-full object-cover hidden" alt="">
-                        </div>
-                        <div id="badgePreviewOverlay"></div>
-                    </div>
-                    <div>
-                        <div id="activeBadgeName" class="text-sm font-bold text-gray-900">No badge selected</div>
-                        <div id="activeBadgeDesc" class="text-xs text-gray-500 mt-0.5">Complete quests to earn badges</div>
-                    </div>
-                </div>
-
-                <!-- Badge grid -->
-                <div id="badgeFilterBar" class="flex gap-1.5 mb-3 overflow-x-auto no-scrollbar">
-                    <button class="badge-filter-pill active" data-filter="all">All</button>
-                    <button class="badge-filter-pill" data-filter="common">Common</button>
-                    <button class="badge-filter-pill" data-filter="rare">Rare</button>
-                    <button class="badge-filter-pill" data-filter="epic">Epic</button>
-                    <button class="badge-filter-pill" data-filter="legendary">Legendary</button>
-                </div>
-                <div id="settingsBadgeGrid" class="grid grid-cols-3 gap-2.5">
-                    <!-- Populated by JS -->
-                    <div class="col-span-full text-center py-4 text-sm text-gray-400">Loading badges…</div>
-                </div>
-                <div id="badgePagination" class="flex items-center justify-center gap-3 mt-3 hidden">
-                    <button id="badgePrevBtn" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition disabled:opacity-30" disabled>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    </button>
-                    <div id="badgePageDots" class="flex gap-1.5"></div>
-                    <button id="badgeNextBtn" class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition disabled:opacity-30" disabled>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </button>
-                </div>
-
-                <!-- Remove badge button -->
-                <div id="removeBadgeWrap" class="hidden mt-4 pt-3 border-t border-gray-100">
-                    <button id="removeBadgeBtn" class="text-xs text-gray-400 hover:text-red-500 transition font-medium">
-                        Remove active badge
-                    </button>
-                </div>
-            </div>
-        </section>
 
         <!-- Account Section -->
         <section class="mb-6 fade-in" style="animation-delay: 80ms">
