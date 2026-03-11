@@ -57,6 +57,14 @@ Invested into:
 - [x] Member payouts via Stripe Connect (birthday auto-payouts, manual payouts, admin console)
 - [x] Bank link onboarding step (optional, skippable, Stripe Connect Express)
 - [x] Admin payout settings with global/per-type toggles
+- [x] Social feed — posts, images, emoji reactions (6-picker), likes, comments, bookmarks, @mentions, threaded replies, infinite scroll
+- [x] Member profiles — Instagram-style with cover photo/banner (reward-only), posts grid, bio, stats bar, badge overlay, privacy controls
+- [x] Admin announcement posts (pinned to top of feed, admin-only compose button)
+- [x] Feed filtering (All / Announcements / Milestones / Members / Saved)
+- [x] Family tree — interactive Cytoscape.js canvas visualization, fullscreen on mobile, swipe-up members panel
+- [x] Meet the Team / Leadership page — role cards with profile photos, role definitions section
+- [x] Mobile nav swipe-up drawer (all pages in a 3-row horizontal-scrollable icon grid) + dock customization (4 customizable tab slots)
+- [x] Progressive Web App (PWA) — installable to home screen, standalone mode, service worker caching, iOS/Android support
 
 ---
 
@@ -403,48 +411,38 @@ Bank linking is added as an **optional step** in the member onboarding wizard:
 ---
 
 ### Phase 3: Family Structure, Identity & Financial Education
-**Status:** 🔲 Not Started
+**Status:** ⚡ In Progress (3A ✅ Complete — 3B ✅ Complete)
 **Priority:** 🔴 High
 **Goal:** Show who we are, how we're connected, who's responsible for what, and empower every member with financial literacy.
 
 #### 3A. Meet the Team / Leadership Page
-**Goal:** A public-facing (or members-only) page that showcases who runs the LLC — builds trust, transparency, and family pride.
+**Status:** ✅ Complete
 
-- [ ] **"Meet Us" / "Who We Are" page** — dedicated page showing LLC leadership
-- [ ] Leadership cards for each officer with:
-  - Profile picture
-  - Full name
-  - Title / Role (President, Vice President, Treasurer, Secretary, etc.)
-  - Short bio or responsibility description
-  - Member since date
-  - Optional: fun fact or quote
+- [x] **"Meet Us" / "Who We Are" page** — dedicated page showing LLC leadership
+- [x] Leadership cards for each officer with profile picture, full name, title/role, short bio
+- [x] Role definitions with responsibilities section
 - [ ] Org chart / hierarchy layout showing the LLC's structure and chain of command
-- [ ] Role definitions with responsibilities:
-  - **President / Founder** — manages the LLC, portal, investments, final approvals
-  - **Vice President** — supports President, steps in when needed, co-manages operations
-  - **Treasurer** — tracks finances, reconciles accounts, oversees budgets
-  - **Secretary** — records meeting minutes, manages documents, communications
-  - **Event Coordinator** — plans and manages family events (future role)
-  - **Social Manager** — moderates feed, manages announcements (future role)
-  - **Member** — contributes, participates, votes on decisions
 - [ ] Role assignment by admin (assign/change roles from the admin dashboard)
 - [ ] Role badges displayed on profiles, social feed, and the leadership page
 - [ ] Visual org chart layout (tree or hierarchy diagram)
 - [ ] "How It Works" section explaining the LLC structure, money flow, and governance
-- [ ] Page accessible from portal navigation and optionally from the public landing page
-- [ ] Responsive design — clean layout on mobile and desktop
+- [x] Page accessible from portal navigation
+- [x] Responsive design — clean layout on mobile and desktop
 - [ ] Database: add `title` column to profiles (President, Vice President, Treasurer, etc.)
 
 #### 3B. Family Tree Page
-- [ ] Interactive family tree visualization (D3.js or similar)
-- [ ] Each node shows: profile picture, name, relationship, member status
+**Status:** ✅ Complete (core visualization)
+
+- [x] Interactive family tree visualization (Cytoscape.js canvas)
+- [x] Each node shows: profile picture, name, relationship, member status
 - [ ] Admin can add/edit family connections (parent, child, sibling, spouse)
 - [ ] Expandable/collapsible branches
-- [ ] Non-member family shown as grayed-out nodes (potential future members)
-- [ ] Tap a person to see their profile or member page
-- [ ] Mobile-friendly touch navigation (pinch to zoom, drag to pan)
+- [x] Non-member family shown as grayed-out / distinct nodes
+- [x] Tap a person to see their profile or member page
+- [x] Mobile-friendly touch navigation (pinch to zoom, drag to pan, fullscreen canvas)
+- [x] Swipe-up members panel on mobile (list of all family members)
 - [ ] "Invite to Join" button on non-member nodes
-- [ ] Database: `family_relationships` table (person_a, person_b, relationship_type)
+- [x] Database: `family_relationships` table (person_a, person_b, relationship_type)
 - [ ] Support for multi-generational depth (grandparents, grandchildren, etc.)
 
 #### 3C. Credit 101 — Credit Education Hub
@@ -896,8 +894,8 @@ Jennifer creates "Jennifer's 54th Birthday Bash"
 | 1C | Member Onboarding | ✅ Done | Low-Medium | Supabase Storage (profile pics) |
 | 2A | Milestones & Perks | ✅ Done | Low-Medium | Investment data from Phase 1A |
 | 2B | Quest & Task System | ✅ Done | Medium | Milestones system |
-| 3A | Meet the Team / Leadership | 🔴 High | Low | Profile system |
-| 3B | Family Tree | 🔴 High | Medium | D3.js or tree library |
+| 3A | Meet the Team / Leadership | ✅ Done | Low | Profile system |
+| 3B | Family Tree | ✅ Done | Medium | Cytoscape.js |
 | 3C | Credit 101 Education | 🔴 High | Low-Medium | Auth + active member check |
 | 3D | Budget Tracker + AI Coach | 🔴 High | High | OpenAI API, CSV parsing |
 | 4A | Social Feed | ✅ Done | Medium | Supabase storage for media |
@@ -1003,15 +1001,15 @@ The LLC sustains itself through:
 14. ✅ **Profile Enhancements** — Badge equip from profile, banner/cover system (reward-only like badges), Animated Founders banner, badge collection viewer, expanded edit profile modal
 15. ✅ **Nav Restructure & Events Page** — Dashboard quick links grid (2×3/3×3), Events page, mobile 5-tab bar (Feed/Events/Contribute/Invest/Profile), feed mobile header (plus/logo/heart)
 
-### UX Enhancement — Mobile Nav Drawer & Customizable Dock
-16. **Mobile Nav Swipe-Up Drawer & Dock Customization** — Swipe up on the bottom tab bar to reveal a full page-grid drawer (all pages: Dashboard, History, Settings, Quests, Milestones, etc. in a clean icon grid). Press-and-hold any item in the drawer to enter "edit mode" and drag it onto slot 2 or 4 in the bottom tab bar to replace the default (Events / Invest). Preference saved per-member in Supabase. Smooth spring animations, haptic-style feedback, drag ghost + drop highlight. Slots 1 (Feed), 3 (Contribute), and 5 (Profile) are locked/permanent.
+### ✅ Complete — UX Enhancement (Nav Drawer & Dock)
+16. ✅ **Mobile Nav Swipe-Up Drawer & Dock Customization** — Swipe up on the bottom tab bar to reveal a full page-grid drawer (all pages: Dashboard, History, Settings, Quests, Milestones, etc. in a clean 3-row horizontally-scrollable icon grid with right-edge scroll indicator). Press-and-hold any item in the drawer to enter "edit mode" and drag it onto slot 2 or 4 in the bottom tab bar to replace the default (Events / Invest). Preference saved per-member in Supabase. Smooth spring animations, haptic-style feedback, drag ghost + drop highlight. Slots 1 (Feed), 3 (Contribute), and 5 (Profile) are locked/permanent.
 
-### PWA — Install as App (No Browser Chrome)
-17. **Progressive Web App (PWA)** — Add `manifest.json` (app name, icons, theme color, `"display": "standalone"`), register a service worker for offline caching, add iOS meta tags (`apple-mobile-web-app-capable`, status bar style, splash screens). When a member adds the site to their home screen on iOS or Android, it opens full-screen like a native app — no URL bar, no bottom browser tabs. Includes "Add to Home Screen" install prompt/banner for first-time visitors.
+### ✅ Complete — PWA
+17. ✅ **Progressive Web App (PWA)** — Add `manifest.json` (app name, icons, theme color, `"display": "standalone"`), register a service worker for offline caching, add iOS meta tags (`apple-mobile-web-app-capable`, status bar style, splash screens). When a member adds the site to their home screen on iOS or Android, it opens full-screen like a native app — no URL bar, no bottom browser tabs. Includes "Add to Home Screen" install prompt/banner for first-time visitors.
 
-### Phase 3 (Family Structure, Identity & Education)
-18. **Phase 3A — Meet the Team / Leadership page** — roles, bios, org chart, role badges
-19. **Phase 3B — Family Tree** — interactive tree visualization, relationships, multi-generational
+### ✅ Complete — Phase 3 (Family Structure, Identity & Education — core pages)
+18. ✅ **Phase 3A — Meet the Team / Leadership page** — leadership cards, role definitions, responsive grid layout
+19. ✅ **Phase 3B — Family Tree** — interactive Cytoscape.js canvas, fullscreen mobile, swipe-up members panel, tap-to-profile
 20. **Phase 3C — Credit 101 Education Hub** — learning modules, quizzes, score tracking
 21. **Phase 3D — Budget Tracker + AI Coach** — bank statement import, categorization, spending analysis, OpenAI chat
 
@@ -1045,7 +1043,7 @@ This roadmap is a **living document**. It will be updated as:
 - The fund grows and new possibilities open up
 - Members provide feedback and suggestions
 
-**Last Updated:** March 9, 2026
+**Last Updated:** March 10, 2026
 **Maintained By:** Justin McNeal (Admin)
 
 ---
