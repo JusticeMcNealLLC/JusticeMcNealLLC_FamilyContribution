@@ -1,0 +1,9 @@
+# pages/resources/
+
+This folder will contain public-facing resource and document pages.
+
+## Planned pages
+- `index.html` — Resources hub directory (spec: md/pages/resources-hub.md)
+- `why-join.html` — Member pitch / Why Join page (spec: md/pages/resources-why-join.md)
+
+HTML files not created yet — specs defined first.
