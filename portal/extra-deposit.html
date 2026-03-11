@@ -57,12 +57,12 @@
     <!-- dotLottie player (ES module web component) -->
     <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
 </head>
-<body class="min-h-screen bg-emerald-950 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="extra-deposit" style="background-color:#022c22">
+<body class="min-h-screen font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="extra-deposit" style="background-color:#14532d">
 
     <!-- Lottie background (fixed, full-screen, below all content) -->
     <div id="lottie-bg" aria-hidden="true">
         <dotlottie-player
-            src="https://assets-v2.lottiefiles.com/a/43a4e8e0-1189-11ee-91f3-3f220e198af4/vHkQOQT25m.lottie"
+            src="https://assets-v2.lottiefiles.com/a/79b3576a-1174-11ee-9fa3-3fc654b3f7a4/a9czsITbXR.lottie"
             autoplay
             loop
         ></dotlottie-player>
@@ -70,12 +70,7 @@
 
     <div id="nav-placeholder"></div>
 
-    <main class="relative z-10 max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full" style="padding-top: max(1.25rem, calc(env(safe-area-inset-top) + 1rem));">
-
-        <a href="index.html" class="deposit-back-link inline-flex items-center gap-1 text-sm mb-5 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-            Back to Dashboard
-        </a>
+    <main class="relative z-10 max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full flex flex-col" style="padding-top: max(1.25rem, calc(env(safe-area-inset-top) + 1rem));">
 
         <!-- Canceled Banner -->
         <div id="canceledBanner" class="hidden mb-5 fade-in">
@@ -88,14 +83,14 @@
         </div>
 
         <!-- No Subscription State -->
-        <div id="noSubscription" class="hidden fade-in">
-            <div class="bg-white rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
-                <div class="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
+        <div id="noSubscription" class="hidden fade-in flex-1 flex items-center justify-center">
+            <div class="bg-emerald-900/80 backdrop-blur-sm border border-emerald-700/60 rounded-2xl p-8 sm:p-12 text-center w-full max-w-sm">
+                <div class="w-16 h-16 bg-emerald-500/20 border border-emerald-400/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
                 </div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Set Up Your Subscription First</h3>
-                <p class="text-gray-500 text-sm mb-6 max-w-sm mx-auto">Extra deposits are available to active members. Start your monthly contribution to unlock one-time deposits.</p>
-                <a href="contribution.html" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 px-6 rounded-xl transition shadow-sm text-sm">
+                <h3 class="text-lg font-bold text-white mb-2">Set Up Your Contribution First</h3>
+                <p class="text-emerald-200/80 text-sm mb-6 max-w-sm mx-auto">Extra deposits are available to active members. Start your monthly contribution to unlock one-time deposits.</p>
+                <a href="contribution.html" class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold py-3 px-6 rounded-xl transition shadow-sm text-sm">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Start Your Contribution
                 </a>

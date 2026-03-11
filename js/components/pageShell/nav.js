@@ -185,7 +185,7 @@
     }
 
     var navHTML =
-    '<nav class="sticky top-0 z-40 glass border-b border-gray-200/60">' +
+    '<nav id="mainNav" class="sticky top-0 z-40 glass border-b border-gray-200/60">' +
         '<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">' +
             feedMobileRow +
             '<div class="' + (feedMobileRow ? 'hidden md:flex' : 'flex') + ' justify-between items-center ' + (feedMobileRow ? 'md:h-16' : 'h-14 md:h-16') + '">' +

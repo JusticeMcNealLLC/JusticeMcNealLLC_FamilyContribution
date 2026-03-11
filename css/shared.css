@@ -1153,7 +1153,16 @@ input[type="date"] {
 
 /* Hide top nav on mobile for profile page */
 @media (max-width: 639px) {
-    body[data-active-page="profile"] > nav {
+    body[data-active-page="profile"] > nav,
+    body[data-active-page="profile"] #mainNav {
+        display: none !important;
+    }
+}
+
+/* Hide top nav on mobile for full-screen immersive pages */
+@media (max-width: 767px) {
+    body[data-active-page="contribution"] #mainNav,
+    body[data-active-page="extra-deposit"] #mainNav {
         display: none !important;
     }
     body[data-active-page="profile"] .profile-cover {
