@@ -62,6 +62,7 @@ function setupComposer() {
         clearImagePreviews();
         selectedImages = [];
         _announceMode = false;
+        _updateAnnounceUI();
     }
 
     const openComposerBtn = document.getElementById('openComposerBtn');
@@ -78,9 +79,34 @@ function setupComposer() {
             const action = btn.dataset.action;
             if (action === 'announce') {
                 _announceMode = true;
+                _updateAnnounceUI();
             }
         });
     });
+
+    // Announce toggle inside the composer modal (admin only)
+    const announceToggleBtn = document.getElementById('announceToggleBtn');
+    if (announceToggleBtn) {
+        announceToggleBtn.addEventListener('click', () => {
+            _announceMode = !_announceMode;
+            _updateAnnounceUI();
+        });
+    }
+
+    function _updateAnnounceUI() {
+        const btn   = document.getElementById('announceToggleBtn');
+        const label = document.getElementById('announceToggleLabel');
+        const title = document.getElementById('composerModalTitle');
+        if (_announceMode) {
+            if (btn)   { btn.classList.add('text-amber-600', 'border-amber-400', 'bg-amber-50'); btn.classList.remove('text-gray-500', 'border-gray-200'); }
+            if (label) label.textContent = '📢 Announcing';
+            if (title) title.textContent = '📢 New Announcement';
+        } else {
+            if (btn)   { btn.classList.remove('text-amber-600', 'border-amber-400', 'bg-amber-50'); btn.classList.add('text-gray-500', 'border-gray-200'); }
+            if (label) label.textContent = 'Announce';
+            if (title) title.textContent = 'Create Post';
+        }
+    }
 
     // Character count
     if (content) {

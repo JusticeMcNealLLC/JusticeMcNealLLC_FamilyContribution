@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Show admin-only buttons
     if (isAdmin) {
         const announcementBtn = document.getElementById('announcementQuickBtn');
-        if (announcementBtn) announcementBtn.style.display = '';
+        if (announcementBtn) announcementBtn.style.display = 'flex';
         const adminToggle = document.getElementById('composerAdminToggle');
         if (adminToggle) adminToggle.classList.remove('hidden');
     }

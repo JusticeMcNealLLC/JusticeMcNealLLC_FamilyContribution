@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -29,7 +29,7 @@
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#4f46e5">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">`n    <meta name="apple-mobile-web-app-title" content="JMLLC">
     <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
 </head>
 <body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="feed">
@@ -147,7 +147,7 @@
                 <!-- Composer Header -->
                 <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                     <button id="composerCloseBtn" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition">Cancel</button>
-                    <h3 class="font-bold text-gray-900 text-sm">Create Post</h3>
+                    <h3 id="composerModalTitle" class="font-bold text-gray-900 text-sm">Create Post</h3>
                     <button id="composerSubmitBtn" class="bg-brand-600 hover:bg-brand-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-sm py-1.5 px-4 rounded-full transition" disabled>Post</button>
                 </div>
 
@@ -190,10 +190,14 @@
                         <input type="file" id="postVideoInput" accept="video/mp4,video/quicktime" class="hidden">
                     </label>
                     <div class="flex-1"></div>
-                    <div id="composerAdminToggle" class="hidden">
-                        <label class="flex items-center gap-2 text-xs text-amber-700 font-medium cursor-pointer">
+                    <div id="composerAdminToggle" class="hidden items-center gap-2">
+                        <button type="button" id="announceToggleBtn" class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition text-gray-500 border-gray-200 hover:text-amber-600 hover:border-amber-300" title="Toggle Announcement">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                            <span id="announceToggleLabel">Announce</span>
+                        </button>
+                        <label class="flex items-center gap-1.5 text-xs text-gray-500 font-medium cursor-pointer">
                             <input type="checkbox" id="isPinnedCheck" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
-                            📌 Pin to top
+                            📌 Pin
                         </label>
                     </div>
                 </div>
