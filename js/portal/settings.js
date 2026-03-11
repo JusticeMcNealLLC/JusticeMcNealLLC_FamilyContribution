@@ -60,14 +60,16 @@ async function loadProfile(userId) {
 
         if (profile.profile_picture_url) {
             // Add cache-buster so updated photos show immediately
-            avatarImage.src = profile.profile_picture_url + '?t=' + Date.now();
-            avatarImage.classList.remove('hidden');
-            avatarInitials.classList.add('hidden');
+            if (avatarImage) {
+                avatarImage.src = profile.profile_picture_url + '?t=' + Date.now();
+                avatarImage.classList.remove('hidden');
+            }
+            if (avatarInitials) avatarInitials.classList.add('hidden');
         } else {
             // Show initials fallback
             const fi = (profile.first_name || '')[0] || '';
             const li = (profile.last_name || '')[0] || '';
-            avatarInitials.textContent = (fi + li).toUpperCase() || '?';
+            if (avatarInitials) avatarInitials.textContent = (fi + li).toUpperCase() || '?';
         }
     } catch (err) {
         console.error('Error loading profile:', err);
@@ -139,15 +141,14 @@ async function handleProfilePhoto(file) {
     const progress = document.getElementById('photoUploadProgress');
     const avatarImage = document.getElementById('avatarImage');
     const avatarInitials = document.getElementById('avatarInitials');
-    progress.classList.remove('hidden');
+    if (progress) progress.classList.remove('hidden');
 
     try {
         // Show preview immediately
         const reader = new FileReader();
         reader.onload = (e) => {
-            avatarImage.src = e.target.result;
-            avatarImage.classList.remove('hidden');
-            avatarInitials.classList.add('hidden');
+            if (avatarImage) { avatarImage.src = e.target.result; avatarImage.classList.remove('hidden'); }
+            if (avatarInitials) avatarInitials.classList.add('hidden');
         };
         reader.readAsDataURL(file);
 
@@ -176,13 +177,13 @@ async function handleProfilePhoto(file) {
 
         if (updateError) throw updateError;
 
-        progress.classList.add('hidden');
+        if (progress) progress.classList.add('hidden');
         showSuccess('profileSuccess', 'Photo updated!');
         setTimeout(() => hideError('profileSuccess'), 2500);
 
     } catch (error) {
         console.error('Photo upload error:', error);
-        progress.classList.add('hidden');
+        if (progress) progress.classList.add('hidden');
         showError('profileError', 'Upload failed: ' + (error.message || 'Please try again'));
     }
 }
@@ -220,9 +221,10 @@ async function handleSaveProfile() {
 
         // Update avatar initials in case name changed and no photo
         const avatarImage = document.getElementById('avatarImage');
-        if (avatarImage.classList.contains('hidden')) {
+        if (avatarImage && avatarImage.classList.contains('hidden')) {
             const initials = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase();
-            document.getElementById('avatarInitials').textContent = initials;
+            const avatarInitials = document.getElementById('avatarInitials');
+            if (avatarInitials) avatarInitials.textContent = initials;
         }
 
         showSuccess('profileSuccess', 'Profile saved!');
