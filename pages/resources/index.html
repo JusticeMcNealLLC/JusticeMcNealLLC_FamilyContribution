@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resources &amp; Documents | Justice McNeal LLC</title>
+  <meta name="description" content="Everything you need to understand the Justice McNeal LLC plan, benefits, and how to be part of it.">
+  <meta property="og:title" content="McNeal Family Resources | Justice McNeal LLC">
+  <meta property="og:description" content="Documents, guides, and resources for members and prospective members of Justice McNeal LLC.">
+  <meta property="og:url" content="https://justicemcnealllc.com/pages/resources/">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+              800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+            },
+            surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+
+    .card-hover {
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(99,102,241,0.15);
+    }
+
+    .members-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      border-radius: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    .members-card:hover .members-overlay { opacity: 1; }
+
+    .coming-soon-card { opacity: 0.6; cursor: default; }
+    .coming-soon-card:hover { transform: none; box-shadow: none; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { opacity: 0; animation: fadeUp 0.5s ease forwards; }
+    .fade-up-1 { animation-delay: 0.05s; }
+    .fade-up-2 { animation-delay: 0.12s; }
+    .fade-up-3 { animation-delay: 0.19s; }
+    .fade-up-4 { animation-delay: 0.26s; }
+    .fade-up-5 { animation-delay: 0.33s; }
+    .fade-up-6 { animation-delay: 0.40s; }
+    .fade-up-7 { animation-delay: 0.47s; }
+    .fade-up-8 { animation-delay: 0.54s; }
+  </style>
+</head>
+<body class="min-h-screen bg-surface-50 text-gray-900">
+
+  <!-- ─── Header ─── -->
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-gray-100 shadow-sm">
+    <div class="max-w-5xl mx-auto px-5 py-3 flex items-center justify-between">
+
+      <!-- Brand mark -->
+      <a href="/" class="flex items-center gap-3 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 flex items-center justify-center shadow-md flex-shrink-0">
+          <span class="text-white font-black text-sm tracking-tight">JM</span>
+        </div>
+        <span class="font-bold text-gray-900 text-base leading-tight">Justice McNeal LLC</span>
+      </a>
+
+      <!-- Portal link -->
+      <a href="/portal/index.html"
+         class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-500 transition-colors">
+        Member Portal
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M6 12h12"/>
+        </svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- ─── Hero ─── -->
+  <section class="bg-gradient-to-b from-brand-950 to-brand-900 text-white text-center py-16 px-5">
+    <div class="max-w-2xl mx-auto">
+      <p class="text-brand-300 text-sm font-semibold uppercase tracking-widest mb-3">Justice McNeal LLC</p>
+      <h1 class="text-4xl sm:text-5xl font-black leading-tight mb-4">McNeal Family<br>Resources</h1>
+      <p class="text-brand-200 text-lg leading-relaxed">Everything you need to understand our plan, our mission, and how to be part of it.</p>
+    </div>
+  </section>
+
+  <!-- ─── Card Grid ─── -->
+  <main class="max-w-5xl mx-auto px-5 py-14">
+
+    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-7">Resources &amp; Documents</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      <!-- Card: Why Join -->
+      <a href="/pages/resources/why-join.html"
+         class="card-hover relative bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4 cursor-pointer fade-up fade-up-1">
+        <div class="text-4xl">🤝</div>
+        <div class="flex-1">
+          <h3 class="font-bold text-gray-900 text-lg mb-1">Why Join?</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">The case for becoming a member — benefits, the plan, and what $30/month actually builds.</p>
+        </div>
+        <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+          <span class="text-brand-600 font-semibold text-sm">View →</span>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-100 px-2.5 py-0.5 rounded-full">
+            Public
+          </span>
+        </div>
+      </a>
+
+      <!-- Card: Member Rules & FAQ -->
+      <a href="#rules"
+         class="card-hover relative bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4 cursor-pointer fade-up fade-up-2">
+        <div class="text-4xl">📋</div>
+        <div class="flex-1">
+          <h3 class="font-bold text-gray-900 text-lg mb-1">Member Rules &amp; FAQ</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">How contributions work, what's required, and answers to the most common questions.</p>
+        </div>
+        <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+          <span class="text-brand-600 font-semibold text-sm">View →</span>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-100 px-2.5 py-0.5 rounded-full">
+            Public
+          </span>
+        </div>
+      </a>
+
+      <!-- Card: Fidelity Cashback Guide (Members Only) -->
+      <div class="members-card card-hover relative bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4 cursor-pointer fade-up fade-up-3"
+           onclick="requireLogin('/portal/settings.html')">
+        <div class="text-4xl">💳</div>
+        <div class="flex-1">
+          <h3 class="font-bold text-gray-900 text-lg mb-1">Fidelity Cashback Guide</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">Set up 2% passive cashback into the family fund — step by step.</p>
+        </div>
+        <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+          <span class="text-brand-600 font-semibold text-sm">View →</span>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17 11V7a5 5 0 00-10 0v4H5v10h14V11h-2zm-6 7v-3.5a1.5 1.5 0 013 0V18h-3zm2-10H9V7a3 3 0 016 0v1h-2z"/></svg>
+            Members Only
+          </span>
+        </div>
+        <!-- Lock overlay on hover -->
+        <div class="members-overlay rounded-2xl">
+          <svg class="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+          <span class="text-sm font-semibold text-indigo-700">Login to access</span>
+        </div>
+      </div>
+
+      <!-- Card: Generational Wealth Blueprint (Members Only) -->
+      <div class="members-card card-hover relative bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4 cursor-pointer fade-up fade-up-4"
+           onclick="requireLogin('/portal/index.html')">
+        <div class="text-4xl">📈</div>
+        <div class="flex-1">
+          <h3 class="font-bold text-gray-900 text-lg mb-1">Generational Wealth Blueprint</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">Our long-term strategy: property, trust, income streams, and the 6-phase roadmap.</p>
+        </div>
+        <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+          <span class="text-brand-600 font-semibold text-sm">View →</span>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17 11V7a5 5 0 00-10 0v4H5v10h14V11h-2zm-6 7v-3.5a1.5 1.5 0 013 0V18h-3zm2-10H9V7a3 3 0 016 0v1h-2z"/></svg>
+            Members Only
+          </span>
+        </div>
+        <div class="members-overlay rounded-2xl">
+          <svg class="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+          <span class="text-sm font-semibold text-indigo-700">Login to access</span>
+        </div>
+      </div>
+
+      <!-- Card: Quest & Badge Guide (Members Only) -->
+      <div class="members-card card-hover relative bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4 cursor-pointer fade-up fade-up-5"
+           onclick="requireLogin('/portal/index.html')">
+        <div class="text-4xl">🎯</div>
+        <div class="flex-1">
+          <h3 class="font-bold text-gray-900 text-lg mb-1">Quest &amp; Badge Guide</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">How CP tiers work, what quests earn what, and how to level up your member status.</p>
+        </div>
+        <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+          <span class="text-brand-600 font-semibold text-sm">View →</span>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17 11V7a5 5 0 00-10 0v4H5v10h14V11h-2zm-6 7v-3.5a1.5 1.5 0 013 0V18h-3zm2-10H9V7a3 3 0 016 0v1h-2z"/></svg>
+            Members Only
+          </span>
+        </div>
+        <div class="members-overlay rounded-2xl">
+          <svg class="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path stroke-linecap="round" d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+          <span class="text-sm font-semibold text-indigo-700">Login to access</span>
+        </div>
+      </div>
+
+      <!-- Divider card / Coming Soon section header -->
+      <!-- Card: Investment Strategy (Coming Soon) -->
+      <div class="coming-soon-card card-hover relative bg-white rounded-2xl border border-dashed border-gray-200 shadow-none p-6 flex flex-col gap-4 fade-up fade-up-6">
+        <div class="text-4xl grayscale opacity-60">🏦</div>
+        <div class="flex-1">
+          <h3 class="font-semibold text-gray-400 text-lg mb-1">Investment Strategy</h3>
+          <p class="text-gray-300 text-sm leading-relaxed">How we pick funds, allocation rationale, and the rebalancing plan.</p>
+        </div>
+        <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+          <span class="text-gray-300 font-semibold text-sm">Coming soon</span>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded-full">
+            Coming Soon
+          </span>
+        </div>
+      </div>
+
+      <!-- Card: Property & Land Plan (Coming Soon) -->
+      <div class="coming-soon-card card-hover relative bg-white rounded-2xl border border-dashed border-gray-200 shadow-none p-6 flex flex-col gap-4 fade-up fade-up-7">
+        <div class="text-4xl grayscale opacity-60">🏠</div>
+        <div class="flex-1">
+          <h3 class="font-semibold text-gray-400 text-lg mb-1">Property &amp; Land Plan</h3>
+          <p class="text-gray-300 text-sm leading-relaxed">Container home strategy, loan structure, and our acquisition timeline.</p>
+        </div>
+        <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+          <span class="text-gray-300 font-semibold text-sm">Coming soon</span>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded-full">
+            Coming Soon
+          </span>
+        </div>
+      </div>
+
+      <!-- Card: Events Calendar (Coming Soon) -->
+      <div class="coming-soon-card card-hover relative bg-white rounded-2xl border border-dashed border-gray-200 shadow-none p-6 flex flex-col gap-4 fade-up fade-up-8">
+        <div class="text-4xl grayscale opacity-60">🗓️</div>
+        <div class="flex-1">
+          <h3 class="font-semibold text-gray-400 text-lg mb-1">Events Calendar</h3>
+          <p class="text-gray-300 text-sm leading-relaxed">Upcoming LLC events, RSVP links, and QR check-in — once the events system is live.</p>
+        </div>
+        <div class="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+          <span class="text-gray-300 font-semibold text-sm">Coming soon</span>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded-full">
+            Coming Soon
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Member Rules section (anchor target) -->
+    <section id="rules" class="mt-16 bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+      <h2 class="text-2xl font-bold text-gray-900 mb-1">Member Rules &amp; FAQ</h2>
+      <p class="text-gray-500 text-sm mb-8">The rules, no fine print. These apply to every member — today, and anyone who joins later.</p>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="pb-3 font-semibold text-gray-700 pr-8 whitespace-nowrap">Rule</th>
+              <th class="pb-3 font-semibold text-gray-700">What It Means</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            <tr>
+              <td class="py-3.5 pr-8 font-semibold text-brand-700 whitespace-nowrap">$30/month minimum</td>
+              <td class="py-3.5 text-gray-600">Non-negotiable — this keeps the fund funded.</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-8 font-semibold text-gray-900 whitespace-nowrap">No wage or income requirements</td>
+              <td class="py-3.5 text-gray-600">We will never ask for a percentage of your paycheck or raise. Ever.</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-8 font-semibold text-gray-900 whitespace-nowrap">Your contributions are yours</td>
+              <td class="py-3.5 text-gray-600">Permanently tracked and recorded under your name. Not pooled anonymously.</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-8 font-semibold text-gray-900 whitespace-nowrap">Voluntary above minimum</td>
+              <td class="py-3.5 text-gray-600">Contribute more whenever you want. It's always welcome, never required.</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-8 font-semibold text-gray-900 whitespace-nowrap">Windfalls are a culture</td>
+              <td class="py-3.5 text-gray-600">Got a tax refund? Drop some in if you want. No one tracks it or expects it.</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-8 font-semibold text-gray-900 whitespace-nowrap">Same rules for everyone</td>
+              <td class="py-3.5 text-gray-600">Cousins, aunts, extended family — when they join later, the bar is exactly the same.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <h3 class="font-semibold text-gray-900 mb-3">Frequently Asked Questions</h3>
+          <div class="space-y-4 text-sm text-gray-600">
+            <div>
+              <p class="font-medium text-gray-800">Can I pause my contributions?</p>
+              <p class="mt-0.5">Yes — contact Justin. Temporary pauses are handled case by case.</p>
+            </div>
+            <div>
+              <p class="font-medium text-gray-800">What happens if I leave?</p>
+              <p class="mt-0.5">Your contribution history is preserved. Withdrawal policy is still being formalized and will be documented clearly before rollout.</p>
+            </div>
+            <div>
+              <p class="font-medium text-gray-800">Who can see my information?</p>
+              <p class="mt-0.5">Your payment history is visible to you. The overall fund balance is visible to all members. Admins have limited oversight access for operational purposes.</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900 mb-3">&nbsp;</h3>
+          <div class="space-y-4 text-sm text-gray-600">
+            <div>
+              <p class="font-medium text-gray-800">Is this legal?</p>
+              <p class="mt-0.5">Yes. Justice McNeal LLC is a legally formed LLC. Contributions are treated as member investment. The Trust structure (Phase 7) will add an additional legal protection layer.</p>
+            </div>
+            <div>
+              <p class="font-medium text-gray-800">How do I get paid out?</p>
+              <p class="mt-0.5">Birthday payouts are automatic via Stripe. The lending program and major payouts are milestone-gated — they unlock as the fund grows.</p>
+            </div>
+            <div>
+              <p class="font-medium text-gray-800">How do I join?</p>
+              <p class="mt-0.5">Ask Justin for an invite. Setup takes less than 10 minutes from your phone.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ─── Footer ─── -->
+  <footer class="bg-brand-950 text-brand-300 text-center py-8 px-5 mt-10">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+      <span>© <span id="yr"></span> Justice McNeal LLC. All rights reserved.</span>
+      <a href="/portal/index.html" class="hover:text-white transition-colors font-medium">Member Portal →</a>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+
+    function requireLogin(dest) {
+      const ref = encodeURIComponent(window.location.href);
+      const loginUrl = '/index.html';
+      window.location.href = loginUrl + '?redirect=' + encodeURIComponent(dest);
+    }
+  </script>
+</body>
+</html>

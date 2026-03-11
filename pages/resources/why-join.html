@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why Join? | Justice McNeal LLC</title>
+  <meta name="description" content="The case for becoming a member of Justice McNeal LLC — benefits, the plan, and what $30/month actually builds for your family.">
+  <meta property="og:title" content="Why Join Justice McNeal LLC?">
+  <meta property="og:description" content="A family-owned investment company building generational wealth — one month at a time.">
+  <meta property="og:url" content="https://justicemcnealllc.com/pages/resources/why-join.html">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+              800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+            },
+            surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+
+    /* ── Animated orbs (hero background) ── */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0;
+      animation: orbFade 2s ease-out forwards;
+    }
+    .orb-1 { width: 520px; height: 520px; background: radial-gradient(circle, rgba(99,102,241,0.4), transparent 70%); top: -120px; right: -100px; animation-delay: 0.2s; }
+    .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(129,140,248,0.3), transparent 70%); bottom: -80px; left: -60px; animation-delay: 0.5s; }
+    .orb-3 { width: 260px; height: 260px; background: radial-gradient(circle, rgba(165,180,252,0.2), transparent 70%); top: 40%; left: 20%; animation-delay: 0.8s; }
+    @keyframes orbFade { to { opacity: 1; } }
+
+    /* ── Scroll-reveal ── */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── Benefit cards ── */
+    .benefit-card {
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .benefit-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+    }
+
+    /* ── Flow diagram ── */
+    .flow-arrow {
+      width: 2px;
+      height: 28px;
+      background: linear-gradient(to bottom, rgba(165,180,252,0.8), rgba(165,180,252,0.2));
+      margin: 0 auto;
+    }
+
+    /* ── Table stripes ── */
+    .stripe-row:nth-child(odd) { background: rgba(99,102,241,0.06); }
+
+    /* ── Checklist ── */
+    .check-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .check-item:last-child { border-bottom: none; }
+
+    /* ── Number emphasis ── */
+    .mono-num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+    /* ── Section sizing ── */
+    section { padding: 80px 24px; }
+    @media (max-width: 640px) { section { padding: 64px 20px; } }
+
+    /* ── Present mode ── */
+    body.present-mode { font-size: 120%; }
+    body.present-mode section { padding: 96px 40px; }
+    body.present-mode .present-hide { display: none; }
+  </style>
+</head>
+<body class="text-gray-900">
+
+  <!-- ─── Fixed Header ─── -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-brand-950/90 backdrop-blur-md border-b border-white/10">
+    <div class="max-w-6xl mx-auto px-5 py-3 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="/" class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-800 flex items-center justify-center flex-shrink-0">
+          <span class="text-white font-black text-xs">JM</span>
+        </div>
+        <span class="font-bold text-white text-sm leading-tight hidden sm:block">Justice McNeal LLC</span>
+      </a>
+
+      <!-- Section anchors (desktop) -->
+      <nav class="hidden md:flex items-center gap-5 text-xs font-semibold text-brand-300">
+        <a href="#problem" class="hover:text-white transition-colors">The Problem</a>
+        <a href="#ask" class="hover:text-white transition-colors">The Ask</a>
+        <a href="#benefits" class="hover:text-white transition-colors">Benefits</a>
+        <a href="#built" class="hover:text-white transition-colors">What's Built</a>
+        <a href="#timeline" class="hover:text-white transition-colors">Timeline</a>
+      </nav>
+
+      <!-- Right actions -->
+      <div class="flex items-center gap-3">
+        <button onclick="togglePresent()" title="Toggle presentation mode"
+          class="present-hide hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-brand-300 hover:text-white border border-white/10 hover:border-white/30 px-3 py-1.5 rounded-lg transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          Present
+        </button>
+        <a href="/portal/index.html" class="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 px-4 py-1.5 rounded-lg transition-colors">
+          Portal →
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════
+       SECTION 1 — HERO (Dark)
+  ════════════════════════════════════ -->
+  <section id="hero" class="relative bg-brand-950 text-white min-h-screen flex items-center justify-center text-center overflow-hidden pt-16">
+    <!-- Background orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="relative z-10 max-w-3xl mx-auto px-5">
+      <!-- Brand mark -->
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 shadow-2xl shadow-brand-400/30 mb-10">
+        <span class="text-white font-black text-3xl tracking-tight">JM</span>
+      </div>
+
+      <h1 class="text-5xl sm:text-7xl font-black leading-tight tracking-tight mb-6">
+        The McNeal Family<br><span class="text-brand-300">Is Building Something.</span>
+      </h1>
+
+      <p class="text-xl sm:text-2xl text-brand-200 leading-relaxed max-w-xl mx-auto mb-4">
+        A family-owned investment company.<br>
+        A growing fund. A real portal.<br>
+        A plan that compounds over time.
+      </p>
+
+      <p class="text-brand-400 font-bold tracking-widest text-sm uppercase mb-14">This is Justice McNeal LLC.</p>
+
+      <a href="#problem" class="inline-flex flex-col items-center gap-2 text-brand-400 hover:text-brand-200 transition-colors">
+        <span class="text-sm font-semibold">Scroll to learn more</span>
+        <svg class="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       SECTION 2 — THE PROBLEM (Light)
+  ════════════════════════════════════ -->
+  <section id="problem" class="bg-surface-50 text-gray-900">
+    <div class="max-w-4xl mx-auto text-center reveal">
+      <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-6">Why This Exists</p>
+      <h2 class="text-4xl sm:text-6xl font-black leading-tight mb-10">
+        Most families work their whole lives<br>
+        <span class="text-gray-400">and leave almost nothing behind.</span>
+      </h2>
+      <p class="text-lg sm:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto mb-10">
+        Not because they didn't work hard. Because money always went outward — bills, banks, landlords — and never had the chance to compound. The cycle resets every generation unless someone decides to break it.
+      </p>
+      <p class="text-3xl sm:text-4xl font-black text-brand-600">We decided to break it.</p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       SECTION 3 — WHAT THIS IS (Dark)
+  ════════════════════════════════════ -->
+  <section id="what" class="bg-brand-950 text-white">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-14 reveal">
+        <p class="text-brand-300 text-sm font-bold uppercase tracking-widest mb-4">What This Is</p>
+        <h2 class="text-4xl sm:text-5xl font-black leading-tight">
+          A family-owned investment company.<br>
+          <span class="text-brand-300">Not a bank. Not an app. Ours.</span>
+        </h2>
+      </div>
+
+      <!-- Money flow diagram -->
+      <div class="flex flex-col items-center gap-0 reveal max-w-sm mx-auto">
+        <div class="w-full bg-brand-800/60 border border-brand-700 rounded-2xl px-6 py-4 text-center">
+          <p class="text-brand-200 text-sm font-semibold uppercase tracking-wider mb-1">Step 1</p>
+          <p class="text-white font-bold text-lg">Monthly Contributions</p>
+          <p class="text-brand-400 text-sm">$30+ per member, per month</p>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="w-full bg-brand-800/60 border border-brand-700 rounded-2xl px-6 py-4 text-center">
+          <p class="text-brand-200 text-sm font-semibold uppercase tracking-wider mb-1">Step 2</p>
+          <p class="text-white font-bold text-lg">BlueVine Business Account</p>
+          <p class="text-brand-400 text-sm">FDIC insured — holds liquid cash</p>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="w-full bg-brand-800/60 border border-brand-700 rounded-2xl px-6 py-4 text-center">
+          <p class="text-brand-200 text-sm font-semibold uppercase tracking-wider mb-1">Step 3</p>
+          <p class="text-white font-bold text-lg">Fidelity LLC Brokerage</p>
+          <p class="text-brand-400 text-sm">Invested in diversified index funds</p>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="w-full bg-green-900/50 border border-green-700 rounded-2xl px-6 py-4 text-center">
+          <p class="text-green-300 text-sm font-semibold uppercase tracking-wider mb-1">Step 4</p>
+          <p class="text-white font-bold text-lg">VTI · VXUS · VIG · SPAXX</p>
+          <p class="text-green-400 text-sm">Grows for every member</p>
+        </div>
+      </div>
+
+      <p class="text-center text-brand-300 mt-10 text-lg reveal">
+        And you can see all of it, in real time, in the portal.
+      </p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       SECTION 4 — THE ASK (Light)
+  ════════════════════════════════════ -->
+  <section id="ask" class="bg-white text-gray-900 text-center">
+    <div class="max-w-3xl mx-auto reveal">
+      <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-8">What We Need From You</p>
+      <h2 class="text-4xl sm:text-5xl font-black mb-12">We're asking for one thing.</h2>
+
+      <div class="bg-gradient-to-br from-brand-50 to-indigo-50 border-2 border-brand-200 rounded-3xl py-16 px-8 mb-10">
+        <p class="mono-num text-[80px] sm:text-[120px] font-black text-brand-700 leading-none tracking-tight">$30</p>
+        <p class="text-3xl sm:text-4xl font-bold text-brand-500 mt-2">/ month</p>
+      </div>
+
+      <p class="text-xl sm:text-2xl text-gray-700 leading-relaxed mb-4">
+        That's the minimum. That's it.<br>
+        <span class="font-bold text-gray-900">No wage requirements. No income percentages.</span>
+      </p>
+      <p class="text-gray-500 text-lg">Just $30 a month, invested on your behalf, tracked and visible.</p>
+      <p class="text-gray-400 text-sm mt-4">Contribute more if you ever want to. Nobody will ever require it.</p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       SECTION 5 — WHAT YOU GET BACK (Dark)
+  ════════════════════════════════════ -->
+  <section id="benefits" class="bg-brand-950 text-white">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-14 reveal">
+        <p class="text-brand-300 text-sm font-bold uppercase tracking-widest mb-4">Member Benefits</p>
+        <h2 class="text-4xl sm:text-5xl font-black">What you get back.</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Card 1 -->
+        <div class="benefit-card reveal bg-brand-900/60 border border-brand-800 rounded-2xl p-7">
+          <div class="text-5xl mb-4">📈</div>
+          <h3 class="text-xl font-bold mb-2">Your Money Growing</h3>
+          <p class="text-brand-300 leading-relaxed">Invested in the U.S. stock market. Tracked. Visible. Yours. You can see your balance any time you open the app.</p>
+        </div>
+        <!-- Card 2 -->
+        <div class="benefit-card reveal bg-brand-900/60 border border-brand-800 rounded-2xl p-7">
+          <div class="text-5xl mb-4">🏦</div>
+          <h3 class="text-xl font-bold mb-2">Family Loans</h3>
+          <p class="text-brand-300 leading-relaxed">Borrow at 4–6% instead of paying a bank 10–25%. Interest stays in the family. Unlocks at $25k fund milestone.</p>
+        </div>
+        <!-- Card 3 -->
+        <div class="benefit-card reveal bg-brand-900/60 border border-brand-800 rounded-2xl p-7">
+          <div class="text-5xl mb-4">🎂</div>
+          <h3 class="text-xl font-bold mb-2">Birthday Payouts</h3>
+          <p class="text-brand-300 leading-relaxed">$10 auto-sent to your bank on your birthday. Runs today via Stripe Connect. No action required — it just shows up.</p>
+        </div>
+        <!-- Card 4 -->
+        <div class="benefit-card reveal bg-brand-900/60 border border-brand-800 rounded-2xl p-7">
+          <div class="text-5xl mb-4">🔓</div>
+          <h3 class="text-xl font-bold mb-2">Milestone Unlocks</h3>
+          <p class="text-brand-300 leading-relaxed">As the fund grows, everyone gains access to new programs. $25k → lending. $75k → Trust. $500k → family real estate.</p>
+        </div>
+        <!-- Card 5 -->
+        <div class="benefit-card reveal bg-brand-900/60 border border-brand-800 rounded-2xl p-7">
+          <div class="text-5xl mb-4">🏠</div>
+          <h3 class="text-xl font-bold mb-2">Family Housing</h3>
+          <p class="text-brand-300 leading-relaxed">Long-term: family-owned land where members live at below-market cost. Building the family's equity — not a stranger's.</p>
+        </div>
+        <!-- Card 6 -->
+        <div class="benefit-card reveal bg-brand-900/60 border border-brand-800 rounded-2xl p-7">
+          <div class="text-5xl mb-4">🛡️</div>
+          <h3 class="text-xl font-bold mb-2">Life Insurance</h3>
+          <p class="text-brand-300 leading-relaxed">Once the Trust forms: whole life policies for every member, funded by the LLC. Payout stays in the family, always.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       SECTION 6 — WHAT'S ALREADY BUILT (Light)
+  ════════════════════════════════════ -->
+  <section id="built" class="bg-surface-50 text-gray-900">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-14 reveal">
+        <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-4">Already Working</p>
+        <h2 class="text-4xl sm:text-5xl font-black">This isn't a promise.</h2>
+        <p class="text-xl text-gray-500 mt-3">It's already built and running.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-50 reveal">
+        <!-- Built items -->
+        <div class="check-item px-7 py-5">
+          <span class="text-green-500 text-2xl flex-shrink-0 mt-0.5">✅</span>
+          <div>
+            <p class="font-semibold text-gray-900">Member portal</p>
+            <p class="text-gray-500 text-sm mt-0.5">Login, profile, settings — live at justicemcnealllc.com</p>
+          </div>
+        </div>
+        <div class="check-item px-7 py-5">
+          <span class="text-green-500 text-2xl flex-shrink-0 mt-0.5">✅</span>
+          <div>
+            <p class="font-semibold text-gray-900">Monthly subscription</p>
+            <p class="text-gray-500 text-sm mt-0.5">Stripe-managed, with payment history and receipts for every transaction</p>
+          </div>
+        </div>
+        <div class="check-item px-7 py-5">
+          <span class="text-green-500 text-2xl flex-shrink-0 mt-0.5">✅</span>
+          <div>
+            <p class="font-semibold text-gray-900">Investment dashboard</p>
+            <p class="text-gray-500 text-sm mt-0.5">Portfolio value, allocation chart, and full growth history — updated live</p>
+          </div>
+        </div>
+        <div class="check-item px-7 py-5">
+          <span class="text-green-500 text-2xl flex-shrink-0 mt-0.5">✅</span>
+          <div>
+            <p class="font-semibold text-gray-900">Birthday payouts</p>
+            <p class="text-gray-500 text-sm mt-0.5">Auto-sent to your bank via Stripe Connect on your birthday every year</p>
+          </div>
+        </div>
+        <div class="check-item px-7 py-5">
+          <span class="text-green-500 text-2xl flex-shrink-0 mt-0.5">✅</span>
+          <div>
+            <p class="font-semibold text-gray-900">Quest &amp; badge system</p>
+            <p class="text-gray-500 text-sm mt-0.5">Earn Credit Points, unlock tiers, display badges on your member profile</p>
+          </div>
+        </div>
+        <div class="check-item px-7 py-5">
+          <span class="text-green-500 text-2xl flex-shrink-0 mt-0.5">✅</span>
+          <div>
+            <p class="font-semibold text-gray-900">Social feed</p>
+            <p class="text-gray-500 text-sm mt-0.5">Posts, reactions, comments, @mentions — a private family social layer</p>
+          </div>
+        </div>
+        <div class="check-item px-7 py-5">
+          <span class="text-green-500 text-2xl flex-shrink-0 mt-0.5">✅</span>
+          <div>
+            <p class="font-semibold text-gray-900">Family tree</p>
+            <p class="text-gray-500 text-sm mt-0.5">Interactive visualization of the whole family — filterable and zoomable</p>
+          </div>
+        </div>
+        <div class="check-item px-7 py-5">
+          <span class="text-green-500 text-2xl flex-shrink-0 mt-0.5">✅</span>
+          <div>
+            <p class="font-semibold text-gray-900">Mobile app (PWA)</p>
+            <p class="text-gray-500 text-sm mt-0.5">Installable to your home screen from any phone — works like a native app</p>
+          </div>
+        </div>
+        <!-- Coming soon items -->
+        <div class="check-item px-7 py-5 bg-amber-50/60">
+          <span class="text-2xl flex-shrink-0 mt-0.5">🔧</span>
+          <div>
+            <p class="font-semibold text-gray-700">Events system <span class="text-xs font-normal text-amber-600 ml-2">In progress</span></p>
+            <p class="text-gray-400 text-sm mt-0.5">Plan gatherings, manage RSVPs, QR code check-in, and cost splits</p>
+          </div>
+        </div>
+        <div class="check-item px-7 py-5 bg-amber-50/60">
+          <span class="text-2xl flex-shrink-0 mt-0.5">🔧</span>
+          <div>
+            <p class="font-semibold text-gray-700">Family messaging <span class="text-xs font-normal text-amber-600 ml-2">Coming soon</span></p>
+            <p class="text-gray-400 text-sm mt-0.5">Direct messages + disappearing stories — private family-only messaging</p>
+          </div>
+        </div>
+        <div class="check-item px-7 py-5 bg-amber-50/60">
+          <span class="text-2xl flex-shrink-0 mt-0.5">🔧</span>
+          <div>
+            <p class="font-semibold text-gray-700">Credit 101 hub <span class="text-xs font-normal text-amber-600 ml-2">Coming soon</span></p>
+            <p class="text-gray-400 text-sm mt-0.5">Financial education modules built right into the portal</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       SECTION 7 — FIDELITY CASHBACK (Dark)
+  ════════════════════════════════════ -->
+  <section id="cashback" class="bg-brand-950 text-white">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12 reveal">
+        <p class="text-brand-300 text-sm font-bold uppercase tracking-widest mb-4">Bonus Income Stream</p>
+        <h2 class="text-4xl sm:text-5xl font-black mb-4">2% cashback.<br><span class="text-brand-300">Zero extra spending.</span></h2>
+        <p class="text-brand-200 text-lg max-w-xl mx-auto">
+          The Fidelity Rewards Visa gives 2% on everything, deposited directly into the family fund. Use it for groceries, gas, and bills. Spend what you'd spend anyway.
+        </p>
+      </div>
+
+      <div class="bg-brand-900/60 border border-brand-800 rounded-2xl overflow-hidden reveal">
+        <table class="w-full text-center">
+          <thead>
+            <tr class="border-b border-brand-800">
+              <th class="py-4 px-6 text-brand-300 font-semibold text-sm uppercase tracking-wider text-left">Households using the card</th>
+              <th class="py-4 px-6 text-brand-300 font-semibold text-sm uppercase tracking-wider">Extra per month</th>
+              <th class="py-4 px-6 text-brand-300 font-semibold text-sm uppercase tracking-wider">Extra per year</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-brand-800/60 stripe-row">
+              <td class="py-4 px-6 text-left text-white font-medium">1 household</td>
+              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$30</td>
+              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$360</td>
+            </tr>
+            <tr class="border-b border-brand-800/60">
+              <td class="py-4 px-6 text-left text-white font-medium">2 households</td>
+              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$60</td>
+              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$720</td>
+            </tr>
+            <tr class="stripe-row">
+              <td class="py-4 px-6 text-left text-white font-medium">4 households</td>
+              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$120–$200</td>
+              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$1,440–$2,400</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-center text-brand-400 mt-6 text-sm reveal">Passive. Automatic. Already documented. Full setup guide available for members.</p>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       SECTION 8 — THE TIMELINE (Light)
+  ════════════════════════════════════ -->
+  <section id="timeline" class="bg-white text-gray-900">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-14 reveal">
+        <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-4">The Honest Math</p>
+        <h2 class="text-4xl sm:text-5xl font-black mb-4">Here's the timeline.</h2>
+        <p class="text-gray-500 text-lg max-w-xl mx-auto">
+          At $120/month (4 members × $30), reaching $200,000 for land + housing takes about <strong class="text-gray-900">24 years</strong>. That's too long. Here's what changes it.
+        </p>
+      </div>
+
+      <!-- Timeline table -->
+      <div class="bg-surface-50 rounded-2xl border border-gray-100 overflow-hidden reveal">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-100/80">
+              <th class="py-4 px-6 text-left font-semibold text-gray-600">Monthly</th>
+              <th class="py-4 px-6 text-left font-semibold text-gray-600 hidden sm:table-cell">Source</th>
+              <th class="py-4 px-6 text-left font-semibold text-gray-600">Est. years to $200k</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr class="bg-red-50/40">
+              <td class="py-4 px-6 mono-num font-bold text-red-600 text-lg">$120</td>
+              <td class="py-4 px-6 text-gray-500 hidden sm:table-cell">4 members × $30 (today)</td>
+              <td class="py-4 px-6 font-bold text-red-600">~24 years</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-6 mono-num font-bold text-amber-600 text-lg">$270</td>
+              <td class="py-4 px-6 text-gray-500 hidden sm:table-cell">9 members × $30 (immediate family)</td>
+              <td class="py-4 px-6 font-bold text-amber-600">~18 years</td>
+            </tr>
+            <tr class="bg-surface-50">
+              <td class="py-4 px-6 mono-num font-bold text-blue-600 text-lg">$450</td>
+              <td class="py-4 px-6 text-gray-500 hidden sm:table-cell">9 members × $50 avg</td>
+              <td class="py-4 px-6 font-bold text-blue-600">~13 years</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-6 mono-num font-bold text-indigo-600 text-lg">$600</td>
+              <td class="py-4 px-6 text-gray-500 hidden sm:table-cell">+ Fidelity cashback (4 households)</td>
+              <td class="py-4 px-6 font-bold text-indigo-600">~11 years</td>
+            </tr>
+            <tr class="bg-green-50">
+              <td class="py-4 px-6 mono-num font-bold text-green-700 text-xl">$1,000</td>
+              <td class="py-4 px-6 text-gray-600 font-medium hidden sm:table-cell">+ business income streams</td>
+              <td class="py-4 px-6 font-bold text-green-700 text-lg">~8 years</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-10 text-center reveal">
+        <p class="text-2xl sm:text-3xl font-black text-gray-900">
+          Every person who joins<br>
+          <span class="text-brand-600">moves the timeline for everyone.</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       SECTION 9 — TRANSPARENCY (Dark)
+  ════════════════════════════════════ -->
+  <section id="transparency" class="bg-brand-950 text-white">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="mb-12 reveal">
+        <p class="text-brand-300 text-sm font-bold uppercase tracking-widest mb-4">Accountability</p>
+        <h2 class="text-4xl sm:text-5xl font-black mb-6">Nothing is hidden.</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left reveal">
+        <div class="bg-brand-900/60 border border-brand-800 rounded-2xl p-7">
+          <div class="text-3xl mb-3">📊</div>
+          <p class="font-bold text-lg mb-2">Full portfolio visibility</p>
+          <p class="text-brand-300 leading-relaxed">Any member can log in and see the full portfolio, their personal history, and the family total — at any time.</p>
+        </div>
+        <div class="bg-brand-900/60 border border-brand-800 rounded-2xl p-7">
+          <div class="text-3xl mb-3">🔁</div>
+          <p class="font-bold text-lg mb-2">One-way, auditable flow</p>
+          <p class="text-brand-300 leading-relaxed">Money flows: Stripe → BlueVine (FDIC insured) → Fidelity brokerage → invested. It never touches a personal account.</p>
+        </div>
+        <div class="bg-brand-900/60 border border-brand-800 rounded-2xl p-7">
+          <div class="text-3xl mb-3">🏷️</div>
+          <p class="font-bold text-lg mb-2">Your contributions are labeled</p>
+          <p class="text-brand-300 leading-relaxed">Every payment is logged under your name with a timestamp and type. Your record exists independently — permanently.</p>
+        </div>
+        <div class="bg-brand-900/60 border border-brand-800 rounded-2xl p-7">
+          <div class="text-3xl mb-3">🔒</div>
+          <p class="font-bold text-lg mb-2">Admin can't redirect funds</p>
+          <p class="text-brand-300 leading-relaxed">The payment flow is structured so that funds move directly through the established channels. No manual overrides to personal accounts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       SECTION 10 — RULES (Light)
+  ════════════════════════════════════ -->
+  <section id="rules" class="bg-surface-50 text-gray-900">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12 reveal">
+        <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-4">The Fine Print</p>
+        <h2 class="text-4xl sm:text-5xl font-black">The rules, no fine print.</h2>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden reveal">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-surface-100 border-b border-gray-100">
+              <th class="py-4 px-7 text-left font-semibold text-gray-700">Rule</th>
+              <th class="py-4 px-7 text-left font-semibold text-gray-700">What It Means</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            <tr>
+              <td class="py-4 px-7 font-semibold text-brand-700 align-top whitespace-nowrap">$30/month minimum</td>
+              <td class="py-4 px-7 text-gray-600">Non-negotiable — this keeps the fund funded.</td>
+            </tr>
+            <tr class="bg-surface-50/60">
+              <td class="py-4 px-7 font-semibold text-gray-900 align-top whitespace-nowrap">No wage requirements</td>
+              <td class="py-4 px-7 text-gray-600">We will <strong>never</strong> ask for a percentage of your paycheck, your raise, or your salary. Not now, not ever.</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-7 font-semibold text-gray-900 align-top whitespace-nowrap">Your contributions are yours</td>
+              <td class="py-4 px-7 text-gray-600">Permanently recorded under your name. Not absorbed into an anonymous pool.</td>
+            </tr>
+            <tr class="bg-surface-50/60">
+              <td class="py-4 px-7 font-semibold text-gray-900 align-top whitespace-nowrap">Voluntary above minimum</td>
+              <td class="py-4 px-7 text-gray-600">Contribute more whenever you want. Always welcome. Never required.</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-7 font-semibold text-gray-900 align-top whitespace-nowrap">Windfalls are a culture</td>
+              <td class="py-4 px-7 text-gray-600">Got a tax refund or bonus? Drop some in if you want. No one tracks it or expects it. It's a vibe, not a rule.</td>
+            </tr>
+            <tr class="bg-surface-50/60">
+              <td class="py-4 px-7 font-semibold text-gray-900 align-top whitespace-nowrap">Same rules, always</td>
+              <td class="py-4 px-7 text-gray-600">Cousins, aunts, extended family — anyone who joins later joins under the exact same terms. No special exceptions.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════
+       SECTION 11 — CTA (Dark)
+  ════════════════════════════════════ -->
+  <section id="cta" class="bg-brand-950 text-white text-center min-h-[70vh] flex items-center justify-center">
+    <div class="max-w-3xl mx-auto px-5 reveal">
+      <p class="text-brand-300 text-sm font-bold uppercase tracking-widest mb-8">You've seen it. Now join it.</p>
+      <h2 class="text-5xl sm:text-7xl font-black leading-tight mb-6">
+        Ready to be<br>part of it?
+      </h2>
+      <p class="text-brand-200 text-xl mb-3">Ask Justin for an invite.</p>
+      <p class="text-brand-400 text-lg mb-14">Setup takes less than 10 minutes.</p>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <a href="/portal/index.html"
+           class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-lg px-10 py-4 rounded-2xl transition-colors shadow-lg shadow-brand-500/30">
+          Visit the Portal
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M6 12h12"/>
+          </svg>
+        </a>
+        <a href="/pages/resources/"
+           class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold text-lg px-10 py-4 rounded-2xl transition-colors border border-white/20">
+          See All Resources
+        </a>
+      </div>
+
+      <p class="text-brand-500 text-sm mt-16 italic">
+        "The best time to plant a tree was 20 years ago.<br>The second best time is now."
+      </p>
+
+      <p class="text-brand-700 text-xs mt-12">© <span id="yr2"></span> Justice McNeal LLC. All rights reserved.</p>
+    </div>
+  </section>
+
+  <script>
+    document.getElementById('yr2').textContent = new Date().getFullYear();
+
+    // ── Scroll reveal ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // ── Present mode toggle ──
+    function togglePresent() {
+      document.body.classList.toggle('present-mode');
+    }
+
+    // ── Keyboard shortcut: P for present mode ──
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'p' && !e.ctrlKey && !e.metaKey && e.target.tagName !== 'INPUT') {
+        togglePresent();
+      }
+    });
+  </script>
+</body>
+</html>
