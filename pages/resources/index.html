@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Resources &amp; Documents | Justice McNeal LLC</title>
   <meta name="description" content="Everything you need to understand the Justice McNeal LLC plan, benefits, and how to be part of it.">
   <meta property="og:title" content="McNeal Family Resources | Justice McNeal LLC">
@@ -63,6 +63,16 @@
     .coming-soon-card { opacity: 0.6; cursor: default; }
     .coming-soon-card:hover { transform: none; box-shadow: none; }
 
+    /* Touch devices: always show members overlay hint */
+    @media (hover: none) {
+      .card-hover:hover { transform: none; box-shadow: none; }
+      .members-card .members-overlay { display: none; } /* overlay replaced by badge */
+      .coming-soon-card { pointer-events: none; }
+    }
+
+    /* Prevent double-tap zoom on interactive elements */
+    a, button, [onclick] { touch-action: manipulation; }
+
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
@@ -104,16 +114,16 @@
   </header>
 
   <!-- ─── Hero ─── -->
-  <section class="bg-gradient-to-b from-brand-950 to-brand-900 text-white text-center py-16 px-5">
+  <section class="bg-gradient-to-b from-brand-950 to-brand-900 text-white text-center py-12 sm:py-16 px-5">
     <div class="max-w-2xl mx-auto">
       <p class="text-brand-300 text-sm font-semibold uppercase tracking-widest mb-3">Justice McNeal LLC</p>
-      <h1 class="text-4xl sm:text-5xl font-black leading-tight mb-4">McNeal Family<br>Resources</h1>
+      <h1 class="text-3xl sm:text-5xl font-black leading-tight mb-4">McNeal Family Resources</h1>
       <p class="text-brand-200 text-lg leading-relaxed">Everything you need to understand our plan, our mission, and how to be part of it.</p>
     </div>
   </section>
 
   <!-- ─── Card Grid ─── -->
-  <main class="max-w-5xl mx-auto px-5 py-14">
+  <main class="max-w-5xl mx-auto px-4 sm:px-5 py-10 sm:py-14">
 
     <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-7">Resources &amp; Documents</h2>
 
@@ -273,7 +283,7 @@
     </div>
 
     <!-- Member Rules section (anchor target) -->
-    <section id="rules" class="mt-16 bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+    <section id="rules" class="mt-12 sm:mt-16 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-8">
       <h2 class="text-2xl font-bold text-gray-900 mb-1">Member Rules &amp; FAQ</h2>
       <p class="text-gray-500 text-sm mb-8">The rules, no fine print. These apply to every member — today, and anyone who joins later.</p>
 
@@ -281,34 +291,34 @@
         <table class="w-full text-sm text-left">
           <thead>
             <tr class="border-b border-gray-100">
-              <th class="pb-3 font-semibold text-gray-700 pr-8 whitespace-nowrap">Rule</th>
+              <th class="pb-3 font-semibold text-gray-700 pr-4 sm:pr-8 w-2/5">Rule</th>
               <th class="pb-3 font-semibold text-gray-700">What It Means</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
             <tr>
-              <td class="py-3.5 pr-8 font-semibold text-brand-700 whitespace-nowrap">$30/month minimum</td>
-              <td class="py-3.5 text-gray-600">Non-negotiable — this keeps the fund funded.</td>
+              <td class="py-3 pr-3 sm:pr-8 font-semibold text-brand-700 align-top">$30/month minimum</td>
+              <td class="py-3 text-gray-600">Non-negotiable — this keeps the fund funded.</td>
             </tr>
             <tr>
-              <td class="py-3.5 pr-8 font-semibold text-gray-900 whitespace-nowrap">No wage or income requirements</td>
-              <td class="py-3.5 text-gray-600">We will never ask for a percentage of your paycheck or raise. Ever.</td>
+              <td class="py-3 pr-3 sm:pr-8 font-semibold text-gray-900 align-top">No wage or income requirements</td>
+              <td class="py-3 text-gray-600">We will never ask for a percentage of your paycheck or raise. Ever.</td>
             </tr>
             <tr>
-              <td class="py-3.5 pr-8 font-semibold text-gray-900 whitespace-nowrap">Your contributions are yours</td>
-              <td class="py-3.5 text-gray-600">Permanently tracked and recorded under your name. Not pooled anonymously.</td>
+              <td class="py-3 pr-3 sm:pr-8 font-semibold text-gray-900 align-top">Your contributions are yours</td>
+              <td class="py-3 text-gray-600">Permanently tracked and recorded under your name. Not pooled anonymously.</td>
             </tr>
             <tr>
-              <td class="py-3.5 pr-8 font-semibold text-gray-900 whitespace-nowrap">Voluntary above minimum</td>
-              <td class="py-3.5 text-gray-600">Contribute more whenever you want. It's always welcome, never required.</td>
+              <td class="py-3 pr-3 sm:pr-8 font-semibold text-gray-900 align-top">Voluntary above minimum</td>
+              <td class="py-3 text-gray-600">Contribute more whenever you want. It's always welcome, never required.</td>
             </tr>
             <tr>
-              <td class="py-3.5 pr-8 font-semibold text-gray-900 whitespace-nowrap">Windfalls are a culture</td>
-              <td class="py-3.5 text-gray-600">Got a tax refund? Drop some in if you want. No one tracks it or expects it.</td>
+              <td class="py-3 pr-3 sm:pr-8 font-semibold text-gray-900 align-top">Windfalls are a culture</td>
+              <td class="py-3 text-gray-600">Got a tax refund? Drop some in if you want. No one tracks it or expects it.</td>
             </tr>
             <tr>
-              <td class="py-3.5 pr-8 font-semibold text-gray-900 whitespace-nowrap">Same rules for everyone</td>
-              <td class="py-3.5 text-gray-600">Cousins, aunts, extended family — when they join later, the bar is exactly the same.</td>
+              <td class="py-3 pr-3 sm:pr-8 font-semibold text-gray-900 align-top">Same rules for everyone</td>
+              <td class="py-3 text-gray-600">Cousins, aunts, extended family — when they join later, the bar is exactly the same.</td>
             </tr>
           </tbody>
         </table>

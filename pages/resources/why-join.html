@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Why Join? | Justice McNeal LLC</title>
   <meta name="description" content="The case for becoming a member of Justice McNeal LLC — benefits, the plan, and what $30/month actually builds for your family.">
   <meta property="og:title" content="Why Join Justice McNeal LLC?">
@@ -89,6 +89,29 @@
     body.present-mode { font-size: 120%; }
     body.present-mode section { padding: 96px 40px; }
     body.present-mode .present-hide { display: none; }
+
+    /* ── Touch / pointer device handling ── */
+    @media (hover: none) {
+      .benefit-card:hover { transform: none; box-shadow: none; }
+      a, button, [onclick] { touch-action: manipulation; }
+    }
+
+    /* ── Mobile overrides ── */
+    @media (max-width: 640px) {
+      section { padding: 52px 16px; }
+      /* Check-list padding */
+      .check-item { padding-left: 1rem; padding-right: 1rem; padding-top: 0.875rem; padding-bottom: 0.875rem; }
+      /* Benefit & transparency cards */
+      .benefit-card { padding: 1.25rem; }
+      /* Cashback table */
+      #cashback table td, #cashback table th { padding-left: 0.625rem; padding-right: 0.625rem; font-size: 0.8rem; }
+      /* Rules table */
+      #rules table td, #rules table th { padding-left: 0.875rem; padding-right: 0.875rem; }
+      /* Transparency cards */
+      #transparency .grid > div { padding: 1.25rem; }
+      /* CTA buttons full width */
+      #cta .flex a { width: 100%; justify-content: center; }
+    }
   </style>
 </head>
 <body class="text-gray-900">
@@ -140,21 +163,21 @@
 
     <div class="relative z-10 max-w-3xl mx-auto px-5">
       <!-- Brand mark -->
-      <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 shadow-2xl shadow-brand-400/30 mb-10">
-        <span class="text-white font-black text-3xl tracking-tight">JM</span>
+      <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 shadow-2xl shadow-brand-400/30 mb-6 sm:mb-10">
+        <span class="text-white font-black text-2xl sm:text-3xl tracking-tight">JM</span>
       </div>
 
-      <h1 class="text-5xl sm:text-7xl font-black leading-tight tracking-tight mb-6">
+      <h1 class="text-4xl sm:text-6xl font-black leading-tight tracking-tight mb-5 sm:mb-6">
         The McNeal Family<br><span class="text-brand-300">Is Building Something.</span>
       </h1>
 
-      <p class="text-xl sm:text-2xl text-brand-200 leading-relaxed max-w-xl mx-auto mb-4">
+      <p class="text-lg sm:text-2xl text-brand-200 leading-relaxed max-w-xl mx-auto mb-4">
         A family-owned investment company.<br>
         A growing fund. A real portal.<br>
         A plan that compounds over time.
       </p>
 
-      <p class="text-brand-400 font-bold tracking-widest text-sm uppercase mb-14">This is Justice McNeal LLC.</p>
+      <p class="text-brand-400 font-bold tracking-widest text-sm uppercase mb-8 sm:mb-14">This is Justice McNeal LLC.</p>
 
       <a href="#problem" class="inline-flex flex-col items-center gap-2 text-brand-400 hover:text-brand-200 transition-colors">
         <span class="text-sm font-semibold">Scroll to learn more</span>
@@ -171,14 +194,14 @@
   <section id="problem" class="bg-surface-50 text-gray-900">
     <div class="max-w-4xl mx-auto text-center reveal">
       <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-6">Why This Exists</p>
-      <h2 class="text-4xl sm:text-6xl font-black leading-tight mb-10">
-        Most families work their whole lives<br>
+      <h2 class="text-3xl sm:text-5xl font-black leading-tight mb-8 sm:mb-10">
+        Most families work their whole lives<br class="hidden sm:block">
         <span class="text-gray-400">and leave almost nothing behind.</span>
       </h2>
-      <p class="text-lg sm:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto mb-10">
+      <p class="text-base sm:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto mb-8 sm:mb-10">
         Not because they didn't work hard. Because money always went outward — bills, banks, landlords — and never had the chance to compound. The cycle resets every generation unless someone decides to break it.
       </p>
-      <p class="text-3xl sm:text-4xl font-black text-brand-600">We decided to break it.</p>
+      <p class="text-2xl sm:text-4xl font-black text-brand-600">We decided to break it.</p>
     </div>
   </section>
 
@@ -189,8 +212,8 @@
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-14 reveal">
         <p class="text-brand-300 text-sm font-bold uppercase tracking-widest mb-4">What This Is</p>
-        <h2 class="text-4xl sm:text-5xl font-black leading-tight">
-          A family-owned investment company.<br>
+        <h2 class="text-3xl sm:text-5xl font-black leading-tight">
+          A family-owned investment company.<br class="hidden sm:block">
           <span class="text-brand-300">Not a bank. Not an app. Ours.</span>
         </h2>
       </div>
@@ -234,14 +257,14 @@
   <section id="ask" class="bg-white text-gray-900 text-center">
     <div class="max-w-3xl mx-auto reveal">
       <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-8">What We Need From You</p>
-      <h2 class="text-4xl sm:text-5xl font-black mb-12">We're asking for one thing.</h2>
+      <h2 class="text-3xl sm:text-5xl font-black mb-10 sm:mb-12">We're asking for one thing.</h2>
 
-      <div class="bg-gradient-to-br from-brand-50 to-indigo-50 border-2 border-brand-200 rounded-3xl py-16 px-8 mb-10">
-        <p class="mono-num text-[80px] sm:text-[120px] font-black text-brand-700 leading-none tracking-tight">$30</p>
-        <p class="text-3xl sm:text-4xl font-bold text-brand-500 mt-2">/ month</p>
+      <div class="bg-gradient-to-br from-brand-50 to-indigo-50 border-2 border-brand-200 rounded-3xl py-10 sm:py-16 px-6 sm:px-8 mb-8 sm:mb-10">
+        <p class="mono-num text-[72px] sm:text-[120px] font-black text-brand-700 leading-none tracking-tight">$30</p>
+        <p class="text-2xl sm:text-4xl font-bold text-brand-500 mt-2">/ month</p>
       </div>
 
-      <p class="text-xl sm:text-2xl text-gray-700 leading-relaxed mb-4">
+      <p class="text-lg sm:text-2xl text-gray-700 leading-relaxed mb-4">
         That's the minimum. That's it.<br>
         <span class="font-bold text-gray-900">No wage requirements. No income percentages.</span>
       </p>
@@ -257,7 +280,7 @@
     <div class="max-w-5xl mx-auto">
       <div class="text-center mb-14 reveal">
         <p class="text-brand-300 text-sm font-bold uppercase tracking-widest mb-4">Member Benefits</p>
-        <h2 class="text-4xl sm:text-5xl font-black">What you get back.</h2>
+        <h2 class="text-3xl sm:text-5xl font-black">What you get back.</h2>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -308,8 +331,8 @@
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-14 reveal">
         <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-4">Already Working</p>
-        <h2 class="text-4xl sm:text-5xl font-black">This isn't a promise.</h2>
-        <p class="text-xl text-gray-500 mt-3">It's already built and running.</p>
+        <h2 class="text-3xl sm:text-5xl font-black">This isn't a promise.</h2>
+        <p class="text-lg text-gray-500 mt-3">It's already built and running.</p>
       </div>
 
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-50 reveal">
@@ -403,8 +426,8 @@
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-12 reveal">
         <p class="text-brand-300 text-sm font-bold uppercase tracking-widest mb-4">Bonus Income Stream</p>
-        <h2 class="text-4xl sm:text-5xl font-black mb-4">2% cashback.<br><span class="text-brand-300">Zero extra spending.</span></h2>
-        <p class="text-brand-200 text-lg max-w-xl mx-auto">
+        <h2 class="text-3xl sm:text-5xl font-black mb-4">2% cashback.<br><span class="text-brand-300">Zero extra spending.</span></h2>
+        <p class="text-brand-200 text-base sm:text-lg max-w-xl mx-auto">
           The Fidelity Rewards Visa gives 2% on everything, deposited directly into the family fund. Use it for groceries, gas, and bills. Spend what you'd spend anyway.
         </p>
       </div>
@@ -413,26 +436,26 @@
         <table class="w-full text-center">
           <thead>
             <tr class="border-b border-brand-800">
-              <th class="py-4 px-6 text-brand-300 font-semibold text-sm uppercase tracking-wider text-left">Households using the card</th>
-              <th class="py-4 px-6 text-brand-300 font-semibold text-sm uppercase tracking-wider">Extra per month</th>
-              <th class="py-4 px-6 text-brand-300 font-semibold text-sm uppercase tracking-wider">Extra per year</th>
+              <th class="py-3 sm:py-4 px-3 sm:px-6 text-brand-300 font-semibold text-xs sm:text-sm uppercase tracking-wider text-left">Households</th>
+              <th class="py-3 sm:py-4 px-3 sm:px-6 text-brand-300 font-semibold text-xs sm:text-sm uppercase tracking-wider">/ month</th>
+              <th class="py-3 sm:py-4 px-3 sm:px-6 text-brand-300 font-semibold text-xs sm:text-sm uppercase tracking-wider">/ year</th>
             </tr>
           </thead>
           <tbody>
             <tr class="border-b border-brand-800/60 stripe-row">
-              <td class="py-4 px-6 text-left text-white font-medium">1 household</td>
-              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$30</td>
-              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$360</td>
+              <td class="py-3 sm:py-4 px-3 sm:px-6 text-left text-white font-medium text-sm">1 household</td>
+              <td class="py-3 sm:py-4 px-3 sm:px-6 mono-num text-green-400 font-bold text-base sm:text-lg">~$30</td>
+              <td class="py-3 sm:py-4 px-3 sm:px-6 mono-num text-green-400 font-bold text-base sm:text-lg">~$360</td>
             </tr>
             <tr class="border-b border-brand-800/60">
-              <td class="py-4 px-6 text-left text-white font-medium">2 households</td>
-              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$60</td>
-              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$720</td>
+              <td class="py-3 sm:py-4 px-3 sm:px-6 text-left text-white font-medium text-sm">2 households</td>
+              <td class="py-3 sm:py-4 px-3 sm:px-6 mono-num text-green-400 font-bold text-base sm:text-lg">~$60</td>
+              <td class="py-3 sm:py-4 px-3 sm:px-6 mono-num text-green-400 font-bold text-base sm:text-lg">~$720</td>
             </tr>
             <tr class="stripe-row">
-              <td class="py-4 px-6 text-left text-white font-medium">4 households</td>
-              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$120–$200</td>
-              <td class="py-4 px-6 mono-num text-green-400 font-bold text-lg">~$1,440–$2,400</td>
+              <td class="py-3 sm:py-4 px-3 sm:px-6 text-left text-white font-medium text-sm">4 households</td>
+              <td class="py-3 sm:py-4 px-3 sm:px-6 mono-num text-green-400 font-bold text-base sm:text-lg">~$120–$200</td>
+              <td class="py-3 sm:py-4 px-3 sm:px-6 mono-num text-green-400 font-bold text-base sm:text-lg">~$1,440–$2,400</td>
             </tr>
           </tbody>
         </table>
@@ -449,7 +472,7 @@
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-14 reveal">
         <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-4">The Honest Math</p>
-        <h2 class="text-4xl sm:text-5xl font-black mb-4">Here's the timeline.</h2>
+        <h2 class="text-3xl sm:text-5xl font-black mb-4">Here's the timeline.</h2>
         <p class="text-gray-500 text-lg max-w-xl mx-auto">
           At $120/month (4 members × $30), reaching $200,000 for land + housing takes about <strong class="text-gray-900">24 years</strong>. That's too long. Here's what changes it.
         </p>
@@ -511,7 +534,7 @@
     <div class="max-w-4xl mx-auto text-center">
       <div class="mb-12 reveal">
         <p class="text-brand-300 text-sm font-bold uppercase tracking-widest mb-4">Accountability</p>
-        <h2 class="text-4xl sm:text-5xl font-black mb-6">Nothing is hidden.</h2>
+        <h2 class="text-3xl sm:text-5xl font-black mb-6">Nothing is hidden.</h2>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left reveal">
@@ -546,41 +569,41 @@
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-12 reveal">
         <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-4">The Fine Print</p>
-        <h2 class="text-4xl sm:text-5xl font-black">The rules, no fine print.</h2>
+        <h2 class="text-3xl sm:text-5xl font-black">The rules, no fine print.</h2>
       </div>
 
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden reveal">
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-surface-100 border-b border-gray-100">
-              <th class="py-4 px-7 text-left font-semibold text-gray-700">Rule</th>
-              <th class="py-4 px-7 text-left font-semibold text-gray-700">What It Means</th>
+              <th class="py-3 sm:py-4 px-4 sm:px-7 text-left font-semibold text-gray-700 w-2/5">Rule</th>
+              <th class="py-3 sm:py-4 px-4 sm:px-7 text-left font-semibold text-gray-700">What It Means</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
             <tr>
-              <td class="py-4 px-7 font-semibold text-brand-700 align-top whitespace-nowrap">$30/month minimum</td>
-              <td class="py-4 px-7 text-gray-600">Non-negotiable — this keeps the fund funded.</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 font-semibold text-brand-700 align-top">$30/month minimum</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 text-gray-600">Non-negotiable — this keeps the fund funded.</td>
             </tr>
             <tr class="bg-surface-50/60">
-              <td class="py-4 px-7 font-semibold text-gray-900 align-top whitespace-nowrap">No wage requirements</td>
-              <td class="py-4 px-7 text-gray-600">We will <strong>never</strong> ask for a percentage of your paycheck, your raise, or your salary. Not now, not ever.</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 font-semibold text-gray-900 align-top">No wage requirements</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 text-gray-600">We will <strong>never</strong> ask for a percentage of your paycheck, your raise, or your salary. Not now, not ever.</td>
             </tr>
             <tr>
-              <td class="py-4 px-7 font-semibold text-gray-900 align-top whitespace-nowrap">Your contributions are yours</td>
-              <td class="py-4 px-7 text-gray-600">Permanently recorded under your name. Not absorbed into an anonymous pool.</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 font-semibold text-gray-900 align-top">Your contributions are yours</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 text-gray-600">Permanently recorded under your name. Not absorbed into an anonymous pool.</td>
             </tr>
             <tr class="bg-surface-50/60">
-              <td class="py-4 px-7 font-semibold text-gray-900 align-top whitespace-nowrap">Voluntary above minimum</td>
-              <td class="py-4 px-7 text-gray-600">Contribute more whenever you want. Always welcome. Never required.</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 font-semibold text-gray-900 align-top">Voluntary above minimum</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 text-gray-600">Contribute more whenever you want. Always welcome. Never required.</td>
             </tr>
             <tr>
-              <td class="py-4 px-7 font-semibold text-gray-900 align-top whitespace-nowrap">Windfalls are a culture</td>
-              <td class="py-4 px-7 text-gray-600">Got a tax refund or bonus? Drop some in if you want. No one tracks it or expects it. It's a vibe, not a rule.</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 font-semibold text-gray-900 align-top">Windfalls are a culture</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 text-gray-600">Got a tax refund or bonus? Drop some in if you want. No one tracks it or expects it. It's a vibe, not a rule.</td>
             </tr>
             <tr class="bg-surface-50/60">
-              <td class="py-4 px-7 font-semibold text-gray-900 align-top whitespace-nowrap">Same rules, always</td>
-              <td class="py-4 px-7 text-gray-600">Cousins, aunts, extended family — anyone who joins later joins under the exact same terms. No special exceptions.</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 font-semibold text-gray-900 align-top">Same rules, always</td>
+              <td class="py-3 sm:py-4 px-4 sm:px-7 text-gray-600">Cousins, aunts, extended family — anyone who joins later joins under the exact same terms. No special exceptions.</td>
             </tr>
           </tbody>
         </table>
@@ -594,22 +617,22 @@
   <section id="cta" class="bg-brand-950 text-white text-center min-h-[70vh] flex items-center justify-center">
     <div class="max-w-3xl mx-auto px-5 reveal">
       <p class="text-brand-300 text-sm font-bold uppercase tracking-widest mb-8">You've seen it. Now join it.</p>
-      <h2 class="text-5xl sm:text-7xl font-black leading-tight mb-6">
+      <h2 class="text-4xl sm:text-6xl font-black leading-tight mb-5 sm:mb-6">
         Ready to be<br>part of it?
       </h2>
-      <p class="text-brand-200 text-xl mb-3">Ask Justin for an invite.</p>
-      <p class="text-brand-400 text-lg mb-14">Setup takes less than 10 minutes.</p>
+      <p class="text-brand-200 text-lg sm:text-xl mb-3">Ask Justin for an invite.</p>
+      <p class="text-brand-400 text-base sm:text-lg mb-10 sm:mb-14">Setup takes less than 10 minutes.</p>
 
-      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+      <div class="flex flex-col gap-3 sm:flex-row sm:gap-4 justify-center items-center w-full max-w-sm sm:max-w-none mx-auto">
         <a href="/portal/index.html"
-           class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-lg px-10 py-4 rounded-2xl transition-colors shadow-lg shadow-brand-500/30">
+           class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-base sm:text-lg px-8 sm:px-10 py-4 rounded-2xl transition-colors shadow-lg shadow-brand-500/30">
           Visit the Portal
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M6 12h12"/>
           </svg>
         </a>
         <a href="/pages/resources/"
-           class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold text-lg px-10 py-4 rounded-2xl transition-colors border border-white/20">
+           class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold text-base sm:text-lg px-8 sm:px-10 py-4 rounded-2xl transition-colors border border-white/20">
           See All Resources
         </a>
       </div>
