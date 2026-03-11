@@ -32,33 +32,65 @@ These can be added with minimal effort and no major risk.
 
 **Current:** $30/person × 4 = $120/month
 
-**Improvement ideas:**
-- Raise the minimum by **$5 every 6 months** — gradual, painless
-- Add a rule: **10% of any raise or promotion goes toward increasing contribution**
-- Do a contribution review **twice a year** as a family check-in
-- Members can always contribute extra above their minimum
+**The real goal:** $1,000+/month. That requires either more people, higher individual contributions, or both.
 
-Even going from $30 → $50 per person adds $80/month = $960/year more into the fund.
+**Improvement ideas:**
+- Do a contribution review **twice a year** as a family check-in — see if people are in a position to increase
+- Members can always contribute extra above their minimum voluntarily
+- Frame higher contributions as a *conversation*, not a rule — "I raised mine to $75, are you in a place to match?"
+- Windfalls (tax refunds, bonuses) are the most natural opportunity to bump contributions temporarily or permanently
+
+**What NOT to do:**
+> Do not create a rule around paycheck raises or income percentages. You cannot track anyone's wages, it would be impossible to enforce, and framing it that way — especially to spouses and new members — will immediately create resistance. The moment someone hears "we need 10% of your raise" it sounds like a levy, not an investment. Keep it voluntary and anchored to the tangible benefits.
+
+**Growth by member count (at $30 minimum):**
+
+| Members | Monthly | Annual |
+|---------|---------|--------|
+| 4 (now) | $120 | $1,440 |
+| 6 | $180 | $2,160 |
+| 9 | $270 | $3,240 |
+
+**Growth by contribution level (9 members):**
+
+| Per Person | Monthly | Annual |
+|------------|---------|--------|
+| $30 (minimum) | $270 | $3,240 |
+| $50 | $450 | $5,400 |
+| $75 | $675 | $8,100 |
+| $100 | $900 | $10,800 |
+| Mixed ($75 core, $50 extended) | ~$550 | ~$6,600 |
+
+> The path to $1,000/month is either ~9 members at ~$111 each, or a mix: core members stepping up voluntarily while new members join at $30+ minimum. **Both levers matter — membership growth AND voluntary contribution growth.** Neither can be forced.
 
 ---
 
 ### 1B. Fidelity Credit Card Cashback
 
-**The idea:** Each family member gets a Fidelity Rewards Visa and directs cashback into an eligible Fidelity account tied to the wealth plan.
+**The idea:** Each household gets a Fidelity Rewards Visa and directs cashback into an eligible Fidelity account tied to the wealth plan.
 
 **How it works:**
-- Fidelity's Rewards Visa advertises 2% cash back when points are redeemed into an eligible Fidelity account
-- Fidelity's rewards pages confirm eligible accounts can be added for reward deposits
-- 4 members using this on their normal bills could quietly drip extra money into the fund
+- Fidelity's Rewards Visa earns 2% cash back when points are redeemed into an eligible Fidelity account
+- Every dollar of normal daily spending — groceries, gas, bills, subscriptions — earns 2% back
+- That cashback flows into the family fund with zero extra spending
 
-**Estimate:**
-If each person spends $1,000/month on normal bills through the card:
-- 2% = $20/person/month
-- 4 people = **$80/month → $960/year** extra into the fund
-- Zero extra spending required
+**Estimate across 4 households:**
+
+| Household spend/month | Cashback/month | Annual |  
+|-----------------------|---------------|--------|
+| $1,000/household | $20 | $240 |
+| $1,500/household | $30 | $360 |
+| $2,000/household | $40 | $480 |
+| **$1,500 avg × 4 households** | **$120/month** | **$1,440/year** |
+
+If all 4 households are running $2,000–$2,500/month through the card (very realistic for a household covering rent, groceries, gas, subscriptions, utilities):
+- **$160–$200/month extra** into the fund
+- **$1,920–$2,400/year** — from spending money you would have spent anyway
+
+> **This is entirely passive once set up.** No extra spending, no extra decisions. Real strategy detail is in `md/systems/memberFidelityCashback.md`.
 
 **The only rule:**
-> Never spend extra money just to earn cashback. Only use the card for existing spending.
+> Never carry a balance. Never spend extra money just to earn cashback. The card is a layer on top of existing spending — nothing more.
 
 ---
 
@@ -74,9 +106,9 @@ This is one of the easiest ways to increase inflow without it feeling painful.
 
 ---
 
-### 1D. Windfall Contribution Rule
+### 1D. Windfall Contribution (Voluntary Agreement)
 
-A family rule where a **fixed percentage of unexpected money** flows into the fund.
+A shared understanding — not a rule — that **when unexpected money comes in, consider putting some toward the fund.**
 
 **What counts as a windfall:**
 - Tax refunds
@@ -87,10 +119,10 @@ A family rule where a **fixed percentage of unexpected money** flows into the fu
 - Commissions
 - Any unexpected one-time income
 
-**Suggested rule:**
-> 20–30% of any windfall goes into the family fund.
+**Suggested approach:**
+> Talk about windfalls openly as a family. "I got my tax refund, I'm putting $200 in this month." That kind of culture — where people voluntarily share — is more durable than a rule you can't enforce.
 
-Not all of it — just a percentage. This keeps it fair and lets people still enjoy good news while the fund still benefits.
+There's no tracking mechanism for whether someone got a bonus. The culture has to do the work here. The goal is that members **want** to contribute more because they see the fund growing and feel ownership in it — not because they're required to.
 
 ---
 
@@ -231,41 +263,77 @@ The events page on the portal (currently being built) could tie directly into th
 
 ---
 
-## Layer 4 — Extended Family Participation (Future)
+## Layer 4 — Family Expansion (Two Waves)
 
-**Not now.** This is a Phase 3–4 move after:
-- Core family land/home mission is more stable
-- Rules and governance are documented
-- Ownership is clearly defined
+### Wave 1 — Immediate Family (Do This Now)
 
-### Tier System Idea
+The clearest path to meaningful income growth isn't complicated: **bring in the people who are already connected to us.**
 
-| Tier | Role | Rights |
-|---|---|---|
+**Current members (4):** Justin, [siblings × 3]
+
+**Immediate expansion targets (5 people):**
+- Brother's girlfriend/partner
+- Sister 1's husband
+- Sister 2's husband  
+- Mom
+- Dad
+
+**That's 9 total potential members → up to $270/month minimum at $30 each.**
+
+And critically — these are people who are **already tied to the family**. Their joining isn't a stranger entering a system, it's family protecting itself together. The pitch is different and easier than for extended family.
+
+**What this wave requires:**
+- A clear, confident pitch (see `md/docs/memberBenefits.md`)
+- Rules already set and documented (so they can trust it)
+- A portal they can see and use (already built ✅)
+- Patience — not everyone will jump in at once, and that's okay
+
+**Important:** The rules and expectations you set for this wave will carry forward forever. Spouses and parents are harder to convince than siblings who just trust you. That's actually good — it forces you to be clear and fair, which makes the system stronger for everyone, including the cousins and aunts who come later.
+
+> **No enforcement mechanisms around wages, raises, or income percentages.** The ask is simple: **$30/month minimum, contribute voluntarily beyond that when you can, and participate in the family system.** That's it. Anything more complex than that creates friction before they even start.
+
+### Wave 2 — Extended Family (Future — Phase 3+)
+
+**Not now.** This is a move for after:
+- Core immediate family is all in and system is stable
+- Rules and governance are fully documented
+- The portal has enough features to show real value
+- Ownership and decision-making structure is clearly settled
+
+**Targets:** Cousins, aunts, uncles, close family friends who want in
+
+### Tier System (Applies to Both Waves)
+
+| Tier | Who | Rights |
+|------|-----|--------|
 | **Core Members** | Original 4 siblings | Full voting, ownership participation |
-| **Supporting Members** | Extended family contributing | Contributions + event access, no voting |
-| **Donor / Supporter** | Friends or extended family | Donations only, no stakes |
+| **Full Members** | Spouses, parents who join | Same rights as core — they're family |
+| **Supporting Members** | Extended family (cousins, aunts) | Contributions + event access, limited voting |
+| **Donor / Supporter** | Friends or distant extended family | Donations only, no ownership stakes |
 
-This allows more money to flow in **without** giving everyone equal decision-making power — which is critical for avoiding future conflicts.
+This allows more money to flow in **without** giving everyone equal decision-making power — critical for avoiding future conflicts at scale.
 
 ---
 
 ## Income Stream Overview
 
-| Stream | Friction | Timeline | Impact |
-|---|---|---|---|
-| Contribution increases | Low | Now | Medium |
-| Fidelity card cashback | Low | Now | Low–Medium |
-| Weekly micro-sweeps | Low | Now | Medium |
-| Windfall rule | Low | Now | Medium |
-| Karry Kraze profit feed | Medium | 6–18 months | High (if scaled) |
-| Content engine income | Medium | 6–24 months | High (if scaled) |
-| Digital products | Medium | 3–12 months | Medium |
-| Affiliate income | Medium | 6–18 months | Low–Medium |
-| Family skill-based gigs | Medium | Ongoing | Low–Medium |
-| Events | High | Phase 3 | Medium |
-| Extended family tiers | High | Phase 3–4 | High |
-| Portfolio-backed borrowing | Very High | Phase 4+ | High |
+| Stream | Friction | Timeline | Impact | Enforceable? |
+|--------|----------|----------|--------|-------------|
+| Add immediate family members | Low | Now | High | Yes — invite + onboard |
+| Fidelity card cashback (4+ households) | Low | Now | Medium | Yes — trackable via portal |
+| Weekly micro-sweeps | Low | Now | Medium | No — voluntary, culture-driven |
+| Windfall contributions | Low | Now | Medium | No — voluntary, culture-driven |
+| Contribution review (voluntary increases) | Low | Every 6 months | Medium | No — voluntary |
+| Karry Kraze profit feed | Medium | 6–18 months | High (if scaled) | Yes — business accounting |
+| Content engine income | Medium | 6–24 months | High (if scaled) | Yes — business accounting |
+| Digital products | Medium | 3–12 months | Medium | Yes — Stripe/Gumroad |
+| Affiliate income | Medium | 6–18 months | Low–Medium | Partial |
+| Family skill-based gigs | Medium | Ongoing | Low–Medium | No — voluntary |
+| Events | High | Phase 3 | Medium | Partial |
+| Extended family tiers (wave 2) | High | Phase 3–4 | High | Yes — invite + onboard |
+| Portfolio-backed borrowing | Very High | Phase 4+ | High | Yes — fund mechanics |
+
+> **Key insight:** The enforceable streams are the most reliable ones. Cashback is trackable. Business profit feeds are accounting-based. New member contributions are contractual (via Stripe). Culture-based streams (windfalls, voluntary sweeps) are valuable but can't be counted on in projections.
 
 ---
 
