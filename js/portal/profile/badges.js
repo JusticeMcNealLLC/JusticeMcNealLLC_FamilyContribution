@@ -35,7 +35,7 @@ window.ProfileApp.loadBadges = async function loadBadges() {
     {
         const { data } = await supabaseClient
             .from('profiles')
-            .select('displayed_badge, cover_gradient, cover_photo_url, highlighted_badges')
+            .select('displayed_badge, cover_gradient, cover_photo_url, highlighted_badges, earned_banners')
             .eq('id', S.viewingUserId)
             .single();
         prof = data;
@@ -44,12 +44,11 @@ window.ProfileApp.loadBadges = async function loadBadges() {
     S.currentBannerGradient = prof?.cover_gradient || null;
     S.currentBannerPhotoUrl = prof?.cover_photo_url || null;
     S.currentHighlightedBadges = prof?.highlighted_badges || [];
-    // Earned banners — derive from current banner (earned_banners column not yet migrated)
-    const earnedRaw = [];
-    if (S.currentBannerGradient && !earnedRaw.includes(S.currentBannerGradient)) {
-        earnedRaw.push(S.currentBannerGradient);
+    // Earned banners — read from earned_banners column; always include the active banner as a safety fallback
+    S.earnedBannerKeys = prof?.earned_banners || [];
+    if (S.currentBannerGradient && !S.earnedBannerKeys.includes(S.currentBannerGradient)) {
+        S.earnedBannerKeys = [...S.earnedBannerKeys, S.currentBannerGradient];
     }
-    S.earnedBannerKeys = earnedRaw;
 
     S.earnedBadgeKeys = (badges || []).map(b => b.badge_key);
 
