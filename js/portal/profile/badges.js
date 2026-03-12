@@ -24,35 +24,57 @@ window.ProfileApp.BANNER_CATALOG = {
 window.ProfileApp.loadBadges = async function loadBadges() {
     const S = window.ProfileApp.state;
 
-    const { data: badges } = await supabaseClient
-        .from('member_badges')
-        .select('badge_key, earned_at')
-        .eq('user_id', S.viewingUserId)
-        .order('earned_at', { ascending: false });
-
-    // Get current displayed badge + banner info + highlights
-    let prof = null;
-    {
-        const { data } = await supabaseClient
+    // Single parallel fetch: all earned cosmetics from the new member_cosmetics table
+    // (badges + banners in one query) alongside the profile row for display settings.
+    const [cosmeticsResult, profileResult] = await Promise.all([
+        supabaseClient
+            .from('member_cosmetics')
+            .select('cosmetic_key, earned_at, cosmetics(type, name, emoji, rarity, preview_class, gradient, lottie_effect, is_animated)')
+            .eq('user_id', S.viewingUserId)
+            .order('earned_at', { ascending: false }),
+        supabaseClient
             .from('profiles')
-            .select('displayed_badge, cover_gradient, cover_photo_url, highlighted_badges, earned_banners')
+            .select('displayed_badge, cover_gradient, active_banner_key, cover_photo_url, highlighted_badges')
             .eq('id', S.viewingUserId)
-            .single();
-        prof = data;
-    }
-    S.currentDisplayedBadge = prof?.displayed_badge || null;
-    S.currentBannerGradient = prof?.cover_gradient || null;
-    S.currentBannerPhotoUrl = prof?.cover_photo_url || null;
+            .single()
+    ]);
+
+    const memberCosmetics = cosmeticsResult.data || [];
+    const prof = profileResult.data;
+
+    S.currentDisplayedBadge    = prof?.displayed_badge  || null;
+    // active_banner_key is the FK-backed column; fall back to legacy cover_gradient
+    S.currentBannerGradient    = prof?.active_banner_key || prof?.cover_gradient || null;
+    S.currentBannerPhotoUrl    = prof?.cover_photo_url   || null;
     S.currentHighlightedBadges = prof?.highlighted_badges || [];
-    // Earned banners — read from earned_banners column; always include the active banner as a safety fallback
-    S.earnedBannerKeys = prof?.earned_banners || [];
+
+    // Split cosmetics by type
+    const earnedBadges  = memberCosmetics.filter(c => c.cosmetics?.type === 'badge');
+    const earnedBanners = memberCosmetics.filter(c => c.cosmetics?.type === 'banner');
+
+    S.earnedBadgeKeys  = earnedBadges.map(c => c.cosmetic_key);
+    S.earnedBannerKeys = earnedBanners.map(c => c.cosmetic_key);
+
+    // Safety fallback: always include the active banner even if member_cosmetics is stale
     if (S.currentBannerGradient && !S.earnedBannerKeys.includes(S.currentBannerGradient)) {
         S.earnedBannerKeys = [...S.earnedBannerKeys, S.currentBannerGradient];
     }
 
-    S.earnedBadgeKeys = (badges || []).map(b => b.badge_key);
+    // Enrich local BANNER_CATALOG with any DB entries not yet in the hardcoded catalog
+    const BCATALOG = window.ProfileApp.BANNER_CATALOG || {};
+    earnedBanners.forEach(c => {
+        if (c.cosmetics && !BCATALOG[c.cosmetic_key]) {
+            BCATALOG[c.cosmetic_key] = {
+                name: c.cosmetics.name,
+                preview: c.cosmetics.preview_class,
+                gradient: c.cosmetics.gradient,
+                lottieEffect: c.cosmetics.lottie_effect,
+                isAnimated: c.cosmetics.is_animated,
+            };
+        }
+    });
 
-    const hasBadges = badges && badges.length > 0;
+    const hasBadges = earnedBadges.length > 0;
     const hasBanner = S.currentBannerGradient || S.currentBannerPhotoUrl;
 
     if (!hasBadges && !hasBanner) return;
@@ -63,12 +85,15 @@ window.ProfileApp.loadBadges = async function loadBadges() {
 
     if (hasBadges) {
         // Render earned badges with equip ability for own profile
-        grid.innerHTML = badges.map(b => {
-            const badge = (typeof BADGE_CATALOG !== 'undefined' && BADGE_CATALOG[b.badge_key]) || { emoji: '🏅', name: b.badge_key, rarity: 'common' };
-            const isEquipped = S.currentDisplayedBadge === b.badge_key;
+        // Prefer DB cosmetics metadata; fall back to local BADGE_CATALOG
+        grid.innerHTML = earnedBadges.map(c => {
+            const dbMeta = c.cosmetics || {};
+            const badge = (typeof BADGE_CATALOG !== 'undefined' && BADGE_CATALOG[c.cosmetic_key])
+                || { emoji: dbMeta.emoji || '🏅', name: dbMeta.name || c.cosmetic_key, rarity: dbMeta.rarity || 'common' };
+            const isEquipped = S.currentDisplayedBadge === c.cosmetic_key;
             const equipClass = S.isOwnProfile ? 'cursor-pointer hover:scale-110 transition-transform' : '';
             const ringClass = isEquipped ? 'ring-2 ring-brand-500 ring-offset-2' : '';
-            return `<div class="badge-chip badge-rarity-${badge.rarity || 'common'} w-10 h-10 text-lg ${equipClass} ${ringClass}" title="${badge.name}${S.isOwnProfile ? (isEquipped ? ' (equipped — tap to unequip)' : ' — tap to equip') : ''}" data-badge-key="${b.badge_key}" role="${S.isOwnProfile ? 'button' : 'img'}">${badge.emoji}</div>`;
+            return `<div class="badge-chip badge-rarity-${badge.rarity || 'common'} w-10 h-10 text-lg ${equipClass} ${ringClass}" title="${badge.name}${S.isOwnProfile ? (isEquipped ? ' (equipped — tap to unequip)' : ' — tap to equip') : ''}" data-badge-key="${c.cosmetic_key}" role="${S.isOwnProfile ? 'button' : 'img'}">${badge.emoji}</div>`;
         }).join('');
 
         // Wire up badge equip clicks (own profile only)
@@ -100,10 +125,14 @@ window.ProfileApp.loadBadges = async function loadBadges() {
             let bannerHtml = '';
             if (S.currentBannerPhotoUrl) {
                 bannerHtml = `<div class="rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><img src="${S.currentBannerPhotoUrl}" class="w-full h-full object-cover" alt="Banner"></div>`;
-            } else if (S.currentBannerGradient === 'founders-animated') {
-                bannerHtml = `<div class="relative rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><div class="founders-banner-preview w-full h-full"></div></div>`;
             } else if (S.currentBannerGradient) {
-                bannerHtml = `<div class="rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><div class="w-full h-full bg-gradient-to-r ${S.currentBannerGradient}"></div></div>`;
+                const bannerDef = BCATALOG[S.currentBannerGradient];
+                if (bannerDef?.isAnimated && bannerDef.preview) {
+                    bannerHtml = `<div class="relative rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><div class="${bannerDef.preview} w-full h-full"></div></div>`;
+                } else {
+                    const grad = bannerDef?.gradient || S.currentBannerGradient;
+                    bannerHtml = `<div class="rounded-xl overflow-hidden h-14 ring-2 ring-brand-500 ring-offset-1"><div class="w-full h-full bg-gradient-to-r ${grad}"></div></div>`;
+                }
             }
             earnedGrid.innerHTML = bannerHtml;
         }
