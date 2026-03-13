@@ -208,8 +208,10 @@ window.ProfileApp.applyBannerToPage = function applyBannerToPage(gradientKey) {
     coverSection.className = coverSection.className
         .replace(/from-\S+/g, '').replace(/to-\S+/g, '').replace(/bg-gradient-to-\S+/g, '').trim();
 
-    // Remove any old animated layer
-    coverSection.querySelectorAll('.founders-banner-preview, .cat-banner-preview, [class*="-banner-preview"]').forEach(el => el.remove());
+    // Remove old animated background layers (both -preview and -cover variants)
+    coverSection.querySelectorAll('[class*="-banner-preview"], [class*="-banner-cover"]').forEach(el => el.remove());
+    // Remove old Lottie overlay injected by LottieEffects.renderBannerEffect
+    coverSection.querySelectorAll('.lottie-banner-overlay').forEach(el => el.remove());
 
     if (!gradientKey) {
         coverSection.classList.add('bg-gradient-to-br', 'from-brand-500', 'to-brand-700');
@@ -220,8 +222,10 @@ window.ProfileApp.applyBannerToPage = function applyBannerToPage(gradientKey) {
     const def = CATALOG[gradientKey];
 
     if (def?.isAnimated && def.preview) {
+        // Use the -cover variant for the full-height profile banner
+        const coverClass = def.preview.replace('-preview', '-cover');
         const layer = document.createElement('div');
-        layer.className = def.preview + ' w-full h-full absolute inset-0';
+        layer.className = coverClass + ' absolute inset-0';
         coverSection.insertAdjacentElement('afterbegin', layer);
         if (def.lottieEffect && typeof LottieEffects !== 'undefined') {
             LottieEffects.renderBannerEffect(coverSection, def.lottieEffect);

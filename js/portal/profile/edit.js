@@ -168,7 +168,9 @@ window.ProfileApp.setupEditProfile = function setupEditProfile() {
         // Get selected banner from picker
         const selectedBannerEl = modal.querySelector('.edit-banner-option.ring-brand-500');
         if (selectedBannerEl && selectedBannerEl.dataset.bannerKey !== undefined) {
-            updates.cover_gradient = selectedBannerEl.dataset.bannerKey || null;
+            const newBannerKey = selectedBannerEl.dataset.bannerKey || null;
+            updates.cover_gradient = newBannerKey;
+            updates.active_banner_key = newBannerKey; // keep FK-backed column in sync
         }
 
         const { error } = await supabaseClient
@@ -290,29 +292,36 @@ window.ProfileApp.populateEditModalBanner = function populateEditModalBanner() {
 
     section.classList.remove('hidden');
 
+    // Helper: render the preview strip for a given banner key
+    function renderBannerPreview(key) {
+        if (!preview) return;
+        const def = CATALOG[key];
+        // Clear old lottie overlay in preview
+        preview.querySelectorAll('.lottie-banner-overlay').forEach(el => el.remove());
+        if (!key) {
+            preview.innerHTML = '';
+            return;
+        }
+        if (def?.isAnimated && def.preview) {
+            preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden relative';
+            preview.innerHTML = '<div class="' + def.preview + ' w-full h-full"></div>';
+        } else {
+            const grad = def?.gradient || key;
+            preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden';
+            preview.innerHTML = '<div class="w-full h-full bg-gradient-to-r ' + grad + '"></div>';
+        }
+        if (def?.lottieEffect && typeof LottieEffects !== 'undefined') {
+            LottieEffects.renderBannerEffect(preview, def.lottieEffect, { opacity: 0.7 });
+        }
+    }
+
     // Show current banner preview
     if (preview) {
         if (S.currentBannerPhotoUrl) {
             if (previewImg) { previewImg.src = S.currentBannerPhotoUrl; previewImg.classList.remove('hidden'); }
             preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden';
-        } else if (S.currentBannerGradient) {
-            const bannerCat = CATALOG[S.currentBannerGradient];
-            if (previewImg) previewImg.classList.add('hidden');
-            if (bannerCat?.isAnimated && bannerCat.preview) {
-                preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden relative';
-                preview.innerHTML = '<div class="' + bannerCat.preview + ' w-full h-full"></div><img id="editBannerPreviewImg" class="w-full h-full object-cover hidden" alt="">';
-            } else if (bannerCat?.gradient) {
-                preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden';
-                preview.innerHTML = '<div class="w-full h-full bg-gradient-to-r ' + bannerCat.gradient + '"></div>';
-            } else if (S.currentBannerGradient) {
-                preview.className = 'w-full h-20 rounded-xl mb-2 overflow-hidden';
-                preview.innerHTML = '<div class="w-full h-full bg-gradient-to-r ' + S.currentBannerGradient + '"></div>';
-            }
-            // Lottie effect on preview
-            const bannerInfo = CATALOG[S.currentBannerGradient];
-            if (bannerInfo?.lottieEffect && typeof LottieEffects !== 'undefined') {
-                LottieEffects.renderBannerEffect(preview, bannerInfo.lottieEffect, { opacity: 0.6 });
-            }
+        } else {
+            renderBannerPreview(S.currentBannerGradient);
         }
     }
 
@@ -330,10 +339,19 @@ window.ProfileApp.populateEditModalBanner = function populateEditModalBanner() {
                 innerHtml = '<div class="w-full h-full bg-gradient-to-r ' + grad + '"></div>';
             }
             const label = def?.name || key;
-            return `<button data-banner-key="${key}" class="edit-banner-option relative rounded-xl overflow-hidden h-12 ${ringCls} cursor-pointer transition hover:ring-brand-400" title="${label}">${innerHtml}</button>`;
+            return `<button data-banner-key="${key}" class="edit-banner-option relative rounded-xl overflow-hidden h-16 ${ringCls} cursor-pointer transition hover:ring-brand-400" title="${label}">${innerHtml}</button>`;
         }).join('');
 
-        // Wire clicks
+        // Fire Lottie on animated banner thumbnails in the picker
+        picker.querySelectorAll('.edit-banner-option').forEach(btn => {
+            const key = btn.dataset.bannerKey;
+            const def = CATALOG[key];
+            if (def?.lottieEffect && typeof LottieEffects !== 'undefined') {
+                LottieEffects.renderBannerEffect(btn, def.lottieEffect, { opacity: 0.7 });
+            }
+        });
+
+        // Wire clicks — update selection ring AND live preview
         picker.querySelectorAll('.edit-banner-option').forEach(btn => {
             btn.addEventListener('click', () => {
                 picker.querySelectorAll('.edit-banner-option').forEach(b => {
@@ -342,6 +360,8 @@ window.ProfileApp.populateEditModalBanner = function populateEditModalBanner() {
                 });
                 btn.classList.remove('ring-1', 'ring-gray-200');
                 btn.classList.add('ring-2', 'ring-brand-500', 'ring-offset-2');
+                // Live-update the preview strip
+                renderBannerPreview(btn.dataset.bannerKey);
             });
         });
     } else if (picker) {
