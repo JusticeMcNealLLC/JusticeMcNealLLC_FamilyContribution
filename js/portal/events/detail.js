@@ -92,6 +92,9 @@ async function evtOpenDetail(eventId) {
         .maybeSingle();
     const isHost = isCreator || !!hostRecord || evtCurrentUserRole === 'admin';
 
+    // Should show gated info?
+    const hasRsvp = rsvp && (rsvp.status === 'going' || rsvp.status === 'maybe');
+
     // Load documents HTML (async — for LLC events)
     const documentsHtml = await evtBuildDocumentsHtml(event, isHost, hasRsvp);
 
@@ -102,7 +105,7 @@ async function evtOpenDetail(eventId) {
     const competitionHtml = isComp ? await evtBuildCompetitionHtml(event, isHost) : '';
 
     // Build scrapbook HTML (completed events — photo gallery)
-    const scrapbookHtml = await evtBuildScrapbookHtml(event, !!(rsvp && (rsvp.status === 'going' || rsvp.status === 'maybe')));
+    const scrapbookHtml = await evtBuildScrapbookHtml(event, !!hasRsvp);
 
     // Transportation mode display (LLC)
     let transportHtml = '';
@@ -133,8 +136,7 @@ async function evtOpenDetail(eventId) {
         ? `background-image:url('${event.banner_url}');background-size:cover;background-position:center;`
         : `background:linear-gradient(135deg,#6366f1,#8b5cf6);`;
 
-    // Should show gated info?
-    const hasRsvp = rsvp && (rsvp.status === 'going' || rsvp.status === 'maybe');
+    // Gated info visibility
     const showTime = !event.gate_time || hasRsvp || isHost;
     const showLocation = !event.gate_location || hasRsvp || isHost;
     const showNotes = !event.gate_notes || hasRsvp || isHost;
