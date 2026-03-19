@@ -107,10 +107,8 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     const bannerEl = document.getElementById('eventBanner');
     if (event.banner_url) {
         bannerEl.style.backgroundImage = `url(${event.banner_url})`;
-        bannerEl.style.backgroundSize = 'cover';
-        bannerEl.style.backgroundPosition = 'center';
     } else {
-        bannerEl.classList.add('bg-gradient-to-br', 'from-brand-500', 'to-brand-700');
+        bannerEl.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
     }
 
     // Tags

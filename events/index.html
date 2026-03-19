@@ -46,6 +46,38 @@
             }
             body { padding-bottom: 64px; }
         }
+
+        /* Banner stays fixed behind scrolling content */
+        #eventBanner {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 55vh;
+            min-height: 260px;
+            max-height: 400px;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+        }
+        /* Spacer pushes content below the banner */
+        .banner-spacer {
+            height: 45vh;
+            min-height: 220px;
+            max-height: 360px;
+        }
+        /* Content card overlaps banner with rounded top */
+        .event-card {
+            position: relative;
+            z-index: 10;
+            background: #f8fafc;
+            border-radius: 1.25rem 1.25rem 0 0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,.08);
+            padding: 1.75rem 1rem 1.5rem;
+            max-width: 42rem;
+            margin: 0 auto;
+        }
+        @media (min-width: 640px) {
+            .event-card { padding: 2rem 1.5rem 2rem; }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-surface-50 antialiased">
@@ -71,12 +103,16 @@
 
     <!-- Event Content (hidden until loaded) -->
     <main id="eventContent" class="hidden">
-        <!-- Banner (sticky, edge-to-edge) -->
-        <div id="eventBanner" class="h-52 sm:h-64 sticky top-0 z-10 relative overflow-hidden">
-            <div class="absolute top-3 left-3 flex gap-1.5 z-20" id="eventTags"></div>
+        <!-- Banner (fixed behind content — stays while card scrolls over) -->
+        <div id="eventBanner">
+            <div class="absolute top-3 left-3 flex gap-1.5" style="z-index:2" id="eventTags"></div>
         </div>
 
-        <div class="relative z-20 max-w-2xl mx-auto px-4 pt-6 -mt-4 pb-6 sm:pb-8 bg-surface-50 rounded-t-2xl">
+        <!-- Spacer so content starts below visible banner -->
+        <div class="banner-spacer"></div>
+
+        <!-- Content card scrolls over banner -->
+        <div class="event-card">
 
         <!-- Title -->
         <h1 id="eventTitle" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight"></h1>
@@ -196,7 +232,7 @@
         <div class="mt-10 mb-6 text-center text-xs text-gray-400">
             &copy; Justice McNeal LLC · <a href="/" class="underline hover:text-brand-600">Home</a>
         </div>
-        </div><!-- end content wrapper -->
+        </div><!-- end event-card -->
     </main>
 
     <!-- Not Found -->
