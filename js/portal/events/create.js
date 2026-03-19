@@ -146,6 +146,20 @@ function evtRecalcCostSummary() {
 
 // ─── Main Create Handler ────────────────────────────────
 
+// Geocode a location text into lat/lng using OpenStreetMap Nominatim
+async function evtGeocodeAddress(address) {
+    try {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`, {
+            headers: { 'Accept-Language': 'en' }
+        });
+        const results = await resp.json();
+        if (results && results.length > 0) {
+            return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon), display: results[0].display_name };
+        }
+    } catch (err) { console.warn('Geocoding failed:', err); }
+    return null;
+}
+
 async function evtHandleCreate(e) {
     e.preventDefault();
 
@@ -223,6 +237,24 @@ async function evtHandleCreate(e) {
             raffle_enabled: raffleEnabled,
             status: 'open',
         };
+
+        // Geocode location → lat/lng for map
+        if (record.location_text) {
+            publishBtn.textContent = 'Validating address…';
+            const geo = await evtGeocodeAddress(record.location_text);
+            if (geo) {
+                record.location_lat = geo.lat;
+                record.location_lng = geo.lng;
+            } else {
+                // Address not found — ask user to continue anyway
+                if (!confirm('Could not verify that address on the map. The event will be created without a map pin.\n\nPublish anyway?')) {
+                    publishBtn.disabled = false;
+                    publishBtn.textContent = 'Publish Event';
+                    return;
+                }
+            }
+            publishBtn.textContent = 'Publishing…';
+        }
 
         // LLC-specific fields
         if (isLlc) {
@@ -379,13 +411,13 @@ function evtHandlePreview() {
         </div>
         <div class="p-5 sm:p-6">
             <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900">${evtEscapeHtml(title)}</h2>
-            <div class="mt-4 space-y-2 text-sm text-gray-600">
-                <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span>${dateStr}</span>
+            <div class="mt-4 space-y-2 text-gray-600">
+                <div class="flex items-center gap-2.5">
+                    <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span class="text-lg font-bold text-gray-900">${dateStr}</span>
                 </div>
-                ${!gateTime ? `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>${timeStr}</span></div>` : '<div class="flex items-center gap-2 text-gray-400 italic"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span>Time revealed after RSVP</span></div>'}
-                ${location && !gateLocation ? `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span>${evtEscapeHtml(location)}</span></div>` : location && gateLocation ? '<div class="flex items-center gap-2 text-gray-400 italic"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span>Location revealed after RSVP</span></div>' : ''}
+                ${!gateTime ? `<div class="flex items-center gap-2.5 ml-[30px]"><span class="text-base font-semibold text-gray-700">${timeStr}</span></div>` : '<div class="flex items-center gap-2 text-gray-400 italic text-sm"><svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span>Time revealed after RSVP</span></div>'}
+                ${location && !gateLocation ? `<div class="flex items-center gap-2.5 mt-1"><svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="text-base font-semibold text-gray-700">${evtEscapeHtml(location)}</span></div>` : location && gateLocation ? '<div class="flex items-center gap-2 text-gray-400 italic text-sm"><svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span>Location revealed after RSVP</span></div>' : ''}
             </div>
             <div class="mt-5"><p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">${evtEscapeHtml(desc)}</p></div>
             <div class="mt-6 p-4 bg-amber-50 rounded-xl text-center">

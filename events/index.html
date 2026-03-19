@@ -28,15 +28,30 @@
     <link rel="stylesheet" href="../css/shared.css">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#4f46e5">
+    <!-- Leaflet.js for event map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <style>
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         .type-tag { font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+
+        /* Desktop nav at top */
+        .pub-nav { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+
+        /* Mobile: move nav to bottom */
+        @media (max-width: 639px) {
+            .pub-nav {
+                position: fixed; bottom: 0; left: 0; right: 0;
+                border-bottom: none; border-top: 1px solid #e5e7eb;
+                z-index: 50; padding-bottom: max(12px, env(safe-area-inset-bottom));
+            }
+            body { padding-bottom: 64px; }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-surface-50 antialiased">
 
-    <!-- Top Bar -->
-    <nav class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <!-- Top Bar (bottom on mobile) -->
+    <nav class="pub-nav">
         <a href="/" class="flex items-center gap-2 text-lg font-extrabold text-gray-900">
             <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
                 <span class="text-white text-sm font-black">J</span>
@@ -55,17 +70,28 @@
     </div>
 
     <!-- Event Content (hidden until loaded) -->
-    <main id="eventContent" class="hidden max-w-2xl mx-auto px-4 py-6 sm:py-8">
-        <!-- Banner -->
-        <div id="eventBanner" class="h-48 sm:h-64 rounded-2xl relative overflow-hidden mb-6">
-            <div class="absolute top-3 left-3 flex gap-1.5" id="eventTags"></div>
+    <main id="eventContent" class="hidden">
+        <!-- Banner (sticky, edge-to-edge) -->
+        <div id="eventBanner" class="h-52 sm:h-64 sticky top-0 z-10 relative overflow-hidden">
+            <div class="absolute top-3 left-3 flex gap-1.5 z-20" id="eventTags"></div>
         </div>
+
+        <div class="relative z-20 max-w-2xl mx-auto px-4 pt-6 -mt-4 pb-6 sm:pb-8 bg-surface-50 rounded-t-2xl">
 
         <!-- Title -->
         <h1 id="eventTitle" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight"></h1>
 
         <!-- Meta -->
         <div class="mt-4 space-y-2.5 text-sm text-gray-600" id="eventMeta"></div>
+
+        <!-- Map (populated by JS when lat/lng available) -->
+        <div id="eventMapWrap" class="hidden mt-4">
+            <div id="eventMap" class="h-44 rounded-xl z-0"></div>
+            <a id="eventDirectionsBtn" href="#" target="_blank" rel="noopener" class="mt-2 w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Get Directions
+            </a>
+        </div>
 
         <!-- Description -->
         <div class="mt-6">
@@ -170,6 +196,7 @@
         <div class="mt-10 mb-6 text-center text-xs text-gray-400">
             &copy; Justice McNeal LLC · <a href="/" class="underline hover:text-brand-600">Home</a>
         </div>
+        </div><!-- end content wrapper -->
     </main>
 
     <!-- Not Found -->
@@ -184,6 +211,7 @@
 
     <!-- QR Library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
     <script src="../js/events/public.js"></script>

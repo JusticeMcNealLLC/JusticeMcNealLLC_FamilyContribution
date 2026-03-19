@@ -558,30 +558,40 @@ async function evtOpenDetail(eventId) {
             <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900">${evtEscapeHtml(event.title)}</h2>
 
             <!-- Date & Time -->
-            <div class="mt-4 space-y-2 text-sm text-gray-600">
-                <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span>${dateStr}</span>
+            <div class="mt-4 space-y-2 text-gray-600">
+                <div class="flex items-center gap-2.5">
+                    <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span class="text-lg font-bold text-gray-900">${dateStr}</span>
                 </div>
                 ${showTime ? `
-                <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span>${timeStr}</span>
+                <div class="flex items-center gap-2.5 ml-[30px]">
+                    <span class="text-base font-semibold text-gray-700">${timeStr}</span>
                 </div>` : `
-                <div class="flex items-center gap-2 text-gray-400 italic">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <div class="flex items-center gap-2 text-gray-400 italic text-sm">
+                    <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                     <span>Time revealed after RSVP</span>
                 </div>`}
                 ${showLocation && event.location_text ? `
-                <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <span>${evtEscapeHtml(event.location_text)}</span>
+                <div class="flex items-center gap-2.5 mt-1">
+                    <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span class="text-base font-semibold text-gray-700">${evtEscapeHtml(event.location_text)}</span>
                 </div>` : !showLocation && event.location_text ? `
-                <div class="flex items-center gap-2 text-gray-400 italic">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <div class="flex items-center gap-2 text-gray-400 italic text-sm">
+                    <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                     <span>Location revealed after RSVP</span>
                 </div>` : ''}
             </div>
+
+            <!-- Location Map -->
+            ${showLocation && event.location_lat && event.location_lng ? `
+            <div class="mt-3">
+                <div id="detailEventMap" class="h-40 rounded-xl z-0"></div>
+                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${event.location_lat},${event.location_lng}" target="_blank" rel="noopener"
+                   class="mt-2 w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Get Directions
+                </a>
+            </div>` : ''}
 
             <!-- Description -->
             <div class="mt-5">
@@ -671,6 +681,16 @@ async function evtOpenDetail(eventId) {
             if (canvas && typeof QRCode !== 'undefined') {
                 const venueUrl = `${window.location.origin}/events/?e=${event.slug}&checkin=1`;
                 QRCode.toCanvas(canvas, venueUrl, { width: 220, margin: 2 });
+            }
+        }
+        // Detail map
+        if (showLocation && event.location_lat && event.location_lng && typeof L !== 'undefined') {
+            const mapEl = document.getElementById('detailEventMap');
+            if (mapEl) {
+                const dMap = L.map('detailEventMap', { zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false }).setView([event.location_lat, event.location_lng], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(dMap);
+                L.marker([event.location_lat, event.location_lng]).addTo(dMap);
+                setTimeout(() => dMap.invalidateSize(), 100);
             }
         }
     }, 100);

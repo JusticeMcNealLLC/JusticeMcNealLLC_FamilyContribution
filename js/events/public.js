@@ -130,31 +130,43 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
 
     let metaHtml = '';
 
-    // Date/Time
+    // Date (large, bold, separated from time)
     if (isGatedDate) {
-        metaHtml += `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="text-gray-400 italic">Date & time visible after RSVP</span></div>`;
+        metaHtml += `<div class="flex items-center gap-2"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="text-gray-400 italic">Date & time visible after RSVP</span></div>`;
     } else {
         const dateStr = start.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
         const timeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
         const endStr  = end ? ` – ${end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}` : '';
-        metaHtml += `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span>${dateStr} · ${timeStr}${endStr}</span></div>`;
+        metaHtml += `
+            <div class="flex items-center gap-2.5">
+                <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span class="text-lg font-bold text-gray-900">${dateStr}</span>
+            </div>
+            <div class="flex items-center gap-2.5 ml-[30px]">
+                <span class="text-base font-semibold text-gray-700">${timeStr}${endStr}</span>
+            </div>`;
     }
 
-    // Location
+    // Location (larger text, below date/time)
     if (event.location_text) {
         if (isGatedLoc) {
-            metaHtml += `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="text-gray-400 italic">Location visible after RSVP</span></div>`;
+            metaHtml += `<div class="flex items-center gap-2.5 mt-1"><svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="text-gray-400 italic">Location visible after RSVP</span></div>`;
         } else {
-            metaHtml += `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>${pubEscapeHtml(event.location_text)}</span></div>`;
+            metaHtml += `<div class="flex items-center gap-2.5 mt-1"><svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="text-base font-semibold text-gray-700">${pubEscapeHtml(event.location_text)}</span></div>`;
         }
     }
 
     // Timezone
     if (event.timezone) {
-        metaHtml += `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-gray-500">${event.timezone}</span></div>`;
+        metaHtml += `<div class="flex items-center gap-2.5"><svg class="w-4 h-4 text-gray-400 ml-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-gray-500">${event.timezone}</span></div>`;
     }
 
     metaEl.innerHTML = metaHtml;
+
+    // Map (show if location + lat/lng available and not gated)
+    if (event.location_lat && event.location_lng && !isGatedLoc) {
+        pubShowMap(event.location_lat, event.location_lng, event.location_text);
+    }
 
     // Description
     document.getElementById('eventDesc').textContent = event.description || '';
@@ -961,6 +973,30 @@ function pubCopyUrl() {
         btn.textContent = 'Copied!';
         setTimeout(() => btn.textContent = 'Copy', 2000);
     });
+}
+
+/* ── Map ─────────────────────────────────── */
+function pubShowMap(lat, lng, label) {
+    const wrap = document.getElementById('eventMapWrap');
+    if (!wrap || typeof L === 'undefined') return;
+    wrap.classList.remove('hidden');
+
+    const map = L.map('eventMap', { zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false }).setView([lat, lng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    L.marker([lat, lng]).addTo(map).bindPopup(pubEscapeHtml(label || 'Event Location'));
+
+    // Directions button → opens preferred maps app
+    const dirBtn = document.getElementById('eventDirectionsBtn');
+    if (dirBtn) {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const mapsUrl = isIOS
+            ? `https://maps.apple.com/?daddr=${lat},${lng}`
+            : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+        dirBtn.href = mapsUrl;
+    }
+
+    // Fix tile rendering after hidden element becomes visible
+    setTimeout(() => map.invalidateSize(), 200);
 }
 
 // Expose for onclick handlers
