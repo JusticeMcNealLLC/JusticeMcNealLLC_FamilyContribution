@@ -216,19 +216,22 @@ async function evtOpenDetail(eventId) {
             </button>`;
     }
 
-    // ── Cost Breakdown Display (LLC only) ────────────────
+    // ── Cost Breakdown Display (LLC only — respects show_cost_breakdown toggle) ────────────────
     let costBreakdownHtml = '';
-    if (isLlc && costItems.length > 0) {
+    const showBreakdownToAttendees = event.show_cost_breakdown !== false; // default true for backwards compat
+    if (isLlc && costItems.length > 0 && (showBreakdownToAttendees || isHost)) {
         const CATEGORY_ICONS = { lodging: '🏠', transportation: '🚗', food: '🍕', gear: '🎿', entertainment: '🎭', other: '📦' };
         const included = costItems.filter(i => i.included_in_buyin);
         const oop = costItems.filter(i => !i.included_in_buyin);
         const totalIncluded = included.reduce((s, i) => s + (i.total_cost_cents || 0), 0);
         const totalOop = oop.reduce((s, i) => s + (i.avg_per_person_cents || 0), 0);
-        const maxP = event.max_participants || 0;
-        const baseBuyIn = maxP > 0 ? Math.ceil(totalIncluded / maxP) : 0;
+        // Use min_participants as divisor (financially safe — event funded at minimum attendance)
+        const minP = event.min_participants || event.max_participants || 0;
+        const baseBuyIn = minP > 0 ? Math.ceil(totalIncluded / minP) : 0;
         const llcCut = Math.round(baseBuyIn * (event.llc_cut_pct || 0) / 100);
         const finalBuyIn = baseBuyIn + llcCut;
         const lockedLabel = event.cost_breakdown_locked ? ' <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">🔒 Locked</span>' : '';
+        const hostOnlyLabel = !showBreakdownToAttendees ? ' <span class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Host Only</span>' : '';
 
         const itemRows = costItems.map(i => `
             <div class="flex items-center justify-between py-1.5 text-sm">
@@ -246,33 +249,43 @@ async function evtOpenDetail(eventId) {
         costBreakdownHtml = `
             <div class="mt-6 p-4 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
                 <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-sm font-bold text-gray-800">📊 Cost Breakdown${lockedLabel}</h4>
+                    <h4 class="text-sm font-bold text-gray-800">📊 Cost Breakdown${lockedLabel}${hostOnlyLabel}</h4>
                 </div>
                 <div class="divide-y divide-amber-100">${itemRows}</div>
                 <div class="border-t border-amber-300 mt-3 pt-3 space-y-1.5">
                     <div class="flex justify-between text-sm"><span class="text-gray-600">Total Included:</span><span class="font-bold">${formatCurrency(totalIncluded)}</span></div>
-                    <div class="flex justify-between text-sm"><span class="text-gray-600">Max Participants:</span><span class="font-bold">${maxP}</span></div>
+                    <div class="flex justify-between text-sm"><span class="text-gray-600">Min Participants:</span><span class="font-bold">${minP}</span></div>
                     <div class="border-t border-amber-200 my-1.5"></div>
-                    <div class="flex justify-between text-sm"><span class="text-gray-700 font-semibold">💳 RSVP Buy-In:</span><span class="font-extrabold text-brand-700">${formatCurrency(finalBuyIn)}/person</span></div>
+                    <div class="flex justify-between text-sm"><span class="text-gray-700 font-semibold">💡 Suggested Buy-In:</span><span class="font-extrabold text-brand-700">${formatCurrency(finalBuyIn)}/person</span></div>
+                    <div class="flex justify-between text-sm"><span class="text-gray-700 font-semibold">💳 Actual RSVP Price:</span><span class="font-extrabold text-brand-700">${formatCurrency(event.rsvp_cost_cents)}/person</span></div>
                     ${event.llc_cut_pct > 0 ? `<div class="flex justify-between text-xs text-gray-500"><span>Includes ${event.llc_cut_pct}% LLC contribution</span><span>+${formatCurrency(llcCut)}</span></div>` : ''}
                     <div class="flex justify-between text-sm"><span class="text-gray-600">✈ Est. Out-of-Pocket:</span><span class="font-bold">~${formatCurrency(totalOop)}/person</span></div>
                     <div class="border-t border-amber-200 my-1.5"></div>
-                    <div class="flex justify-between text-sm"><span class="font-semibold text-gray-700">💰 Est. Total/Person:</span><span class="font-extrabold">~${formatCurrency(finalBuyIn + totalOop)}</span></div>
+                    <div class="flex justify-between text-sm"><span class="font-semibold text-gray-700">💰 Est. Total/Person:</span><span class="font-extrabold">~${formatCurrency((event.rsvp_cost_cents || finalBuyIn) + totalOop)}</span></div>
                 </div>
             </div>`;
     }
 
-    // ── Minimum Threshold Progress (LLC only) ────────────
+    // ── Minimum Threshold / Social Proof (LLC only) ──────
+    // Hosts always see full progress bar.
+    // Non-hosts see encouraging text with smart social proof:
+    //   - Before 50% of min: "Spots available — be one of the first to RSVP!"
+    //   - After 50% of min: "X going · spots left"
+    //   - Minimum met: "✅ Event confirmed! X going"
     let thresholdHtml = '';
     if (isLlc && event.min_participants) {
         const currentGoing = goingList.length;
         const minNeeded = event.min_participants;
         const pct = Math.min(100, Math.round((currentGoing / minNeeded) * 100));
         const isMet = currentGoing >= minNeeded;
-        const barColor = isMet ? 'bg-emerald-500' : 'bg-amber-500';
         const deadlineStr = event.rsvp_deadline ? new Date(event.rsvp_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD';
+        const socialThreshold = Math.min(Math.floor(minNeeded * 0.5), 3); // 50% of min or 3, whichever is lower
+        const showExactCount = currentGoing >= socialThreshold;
 
-        thresholdHtml = `
+        if (isHost) {
+            // Host sees full progress bar with exact numbers
+            const barColor = isMet ? 'bg-emerald-500' : 'bg-amber-500';
+            thresholdHtml = `
             <div class="mt-4 p-4 ${isMet ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'} border rounded-xl">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-semibold ${isMet ? 'text-emerald-700' : 'text-amber-700'}">${isMet ? '✅ Minimum Met!' : '⚠️ Minimum Threshold'}</span>
@@ -283,6 +296,26 @@ async function evtOpenDetail(eventId) {
                 </div>
                 ${!isMet ? `<p class="text-xs text-amber-600 mt-1.5">If ${minNeeded - currentGoing} more spot${minNeeded - currentGoing > 1 ? 's aren\'t' : ' isn\'t'} filled by the deadline, the event auto-cancels and all RSVPs are refunded.</p>` : ''}
             </div>`;
+        } else {
+            // Non-host sees social-proof-friendly text (no progress bar)
+            let socialText = '';
+            let socialBg = '';
+            if (isMet) {
+                socialText = `<span class="text-sm font-semibold text-emerald-700">✅ Event confirmed!</span><span class="text-sm text-gray-600 ml-1">${currentGoing} going${event.max_participants ? ' · ' + (event.max_participants - currentGoing) + ' spots left' : ''}</span>`;
+                socialBg = 'bg-emerald-50 border-emerald-200';
+            } else if (showExactCount) {
+                socialText = `<span class="text-sm font-semibold text-gray-700">${currentGoing} going</span><span class="text-sm text-gray-500 ml-1">· spots remaining</span>`;
+                socialBg = 'bg-surface-50 border-gray-200';
+            } else {
+                socialText = `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="text-sm font-semibold text-gray-700">Spots available — be one of the first to RSVP!</span></div>`;
+                socialBg = 'bg-brand-50 border-brand-200';
+            }
+            thresholdHtml = `
+            <div class="mt-4 p-3 ${socialBg} border rounded-xl flex items-center justify-between">
+                <div>${socialText}</div>
+                ${event.rsvp_deadline ? `<span class="text-xs text-gray-400">RSVP by ${deadlineStr}</span>` : ''}
+            </div>`;
+        }
     }
 
     // ── Waitlist Section (LLC only — when full) ──────────

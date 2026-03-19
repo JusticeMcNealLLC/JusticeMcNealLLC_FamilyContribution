@@ -109,7 +109,8 @@ function evtRecalcCostSummary() {
     const summary = document.getElementById('costSummary');
     if (!summary) return;
 
-    const maxPart = parseInt(document.getElementById('eventMax').value) || 0;
+    // Use min_participants as price basis (guarantees event is funded at minimum attendance)
+    const minPart = parseInt(document.getElementById('eventMinParticipants')?.value) || 0;
     const llcCutPct = parseFloat(document.getElementById('eventLlcCut').value) || 0;
 
     const totalIncluded = evtCostItems.filter(i => i.included_in_buyin).reduce((sum, i) => sum + (i.total_cost_cents || 0), 0);
@@ -118,18 +119,18 @@ function evtRecalcCostSummary() {
     if (evtCostItems.length === 0) { summary.classList.add('hidden'); return; }
     summary.classList.remove('hidden');
 
-    const baseBuyIn = maxPart > 0 ? Math.ceil(totalIncluded / maxPart) : 0;
+    const baseBuyIn = minPart > 0 ? Math.ceil(totalIncluded / minPart) : 0;
     const llcCutAmount = Math.round(baseBuyIn * llcCutPct / 100);
     const finalBuyIn = baseBuyIn + llcCutAmount;
 
     document.getElementById('costTotalIncluded').textContent = formatCurrency(totalIncluded);
-    document.getElementById('costMaxPart').textContent = maxPart > 0 ? maxPart : '—';
-    document.getElementById('costBuyIn').textContent = maxPart > 0 ? `${formatCurrency(finalBuyIn)}/person` : 'Set max attendees';
+    document.getElementById('costMaxPart').textContent = minPart > 0 ? minPart : '—';
+    document.getElementById('costBuyIn').textContent = minPart > 0 ? `${formatCurrency(finalBuyIn)}/person` : 'Set min participants';
     document.getElementById('costOop').textContent = `~${formatCurrency(totalOop)}/person`;
-    document.getElementById('costGrandTotal').textContent = maxPart > 0 ? `~${formatCurrency(finalBuyIn + totalOop)}` : '—';
+    document.getElementById('costGrandTotal').textContent = minPart > 0 ? `~${formatCurrency(finalBuyIn + totalOop)}` : '—';
 
     const llcRow = document.getElementById('costLlcCutRow');
-    if (llcCutPct > 0 && maxPart > 0) {
+    if (llcCutPct > 0 && minPart > 0) {
         llcRow.classList.remove('hidden');
         document.getElementById('costLlcPct').textContent = llcCutPct;
         document.getElementById('costLlcAmount').textContent = `+${formatCurrency(llcCutAmount)}`;
@@ -137,10 +138,11 @@ function evtRecalcCostSummary() {
         llcRow.classList.add('hidden');
     }
 
-    // Auto-set the RSVP cost (hidden for LLC — derived from breakdown)
-    const rsvpInput = document.getElementById('rsvpCostDollars');
-    if (maxPart > 0 && rsvpInput) {
-        rsvpInput.value = Math.ceil(finalBuyIn / 100);
+    // Auto-fill the LLC RSVP override field with the suggested price (only if user hasn't typed a custom value)
+    const overrideInput = document.getElementById('llcRsvpOverride');
+    if (minPart > 0 && overrideInput && !overrideInput.dataset.userEdited) {
+        overrideInput.value = Math.ceil(finalBuyIn / 100);
+        overrideInput.placeholder = `Suggested: $${Math.ceil(finalBuyIn / 100)}`;
     }
 }
 
@@ -393,18 +395,29 @@ async function evtHandleCreate(e) {
         const raffleEnabled = document.getElementById('raffleEnabled').checked;
         const raffleEntryCostDollars = parseInt(document.getElementById('raffleEntryCostDollars').value) || 0;
 
-        // For LLC events, RSVP cost is auto-calculated from cost breakdown
+        // For LLC events, RSVP cost uses manual override or suggested from cost breakdown
         const maxPart = document.getElementById('eventMax').value ? parseInt(document.getElementById('eventMax').value) : null;
+        const minPart = document.getElementById('eventMinParticipants')?.value ? parseInt(document.getElementById('eventMinParticipants').value) : null;
         let rsvpCostCents = 0;
         let costBreakdownSummary = null;
-        if (isLlc && evtCostItems.length > 0 && maxPart) {
+        if (isLlc && evtCostItems.length > 0 && (minPart || maxPart)) {
             const llcCutPct = parseFloat(document.getElementById('eventLlcCut').value) || 0;
             const totalIncluded = evtCostItems.filter(i => i.included_in_buyin).reduce((sum, i) => sum + (i.total_cost_cents || 0), 0);
             const totalOop = evtCostItems.filter(i => !i.included_in_buyin).reduce((sum, i) => sum + (i.avg_per_person_cents || 0), 0);
-            const baseBuyIn = Math.ceil(totalIncluded / maxPart);
+            // Use min_participants as divisor (guarantees event fully funded at minimum attendance)
+            const divisor = minPart || maxPart;
+            const baseBuyIn = Math.ceil(totalIncluded / divisor);
             const llcCut = Math.round(baseBuyIn * llcCutPct / 100);
-            rsvpCostCents = baseBuyIn + llcCut;
-            costBreakdownSummary = { total_included_cents: totalIncluded, total_oop_per_person_cents: totalOop, base_buyin_cents: baseBuyIn, llc_cut_cents: llcCut, final_buyin_cents: rsvpCostCents };
+            const suggestedCents = baseBuyIn + llcCut;
+            costBreakdownSummary = { total_included_cents: totalIncluded, total_oop_per_person_cents: totalOop, base_buyin_cents: baseBuyIn, llc_cut_cents: llcCut, final_buyin_cents: suggestedCents };
+
+            // Check manual override
+            const overrideVal = parseInt(document.getElementById('llcRsvpOverride')?.value);
+            rsvpCostCents = overrideVal > 0 ? overrideVal * 100 : suggestedCents;
+        } else if (isLlc) {
+            // LLC event with no cost items — use manual override
+            const overrideVal = parseInt(document.getElementById('llcRsvpOverride')?.value) || 0;
+            rsvpCostCents = overrideVal * 100;
         } else if (!isLlc) {
             const rsvpCostDollars = parseInt(document.getElementById('rsvpCostDollars').value) || 0;
             rsvpCostCents = pricingMode === 'paid' ? rsvpCostDollars * 100 : 0;
@@ -465,6 +478,7 @@ async function evtHandleCreate(e) {
             record.min_participants = document.getElementById('eventMinParticipants').value ? parseInt(document.getElementById('eventMinParticipants').value) : null;
             record.llc_cut_pct = parseFloat(document.getElementById('eventLlcCut').value) || 0;
             record.invest_eligible = document.getElementById('investEligible').checked;
+            record.show_cost_breakdown = document.getElementById('showCostBreakdown').checked;
             record.member_only = true; // LLC events: member RSVP only (no guest RSVPs)
             record.cost_breakdown = costBreakdownSummary;
             record.transportation_mode = document.getElementById('eventTransportation').value;

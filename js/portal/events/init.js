@@ -140,8 +140,15 @@ function evtSetupListeners() {
     document.getElementById('addCostItemBtn')?.addEventListener('click', evtAddCostItem);
     document.getElementById('eventMax')?.addEventListener('change', evtRecalcCostSummary);
     document.getElementById('eventMax')?.addEventListener('input', evtRecalcCostSummary);
+    document.getElementById('eventMinParticipants')?.addEventListener('change', evtRecalcCostSummary);
+    document.getElementById('eventMinParticipants')?.addEventListener('input', evtRecalcCostSummary);
     document.getElementById('eventLlcCut')?.addEventListener('change', evtRecalcCostSummary);
     document.getElementById('eventLlcCut')?.addEventListener('input', evtRecalcCostSummary);
+
+    // Track manual edits to LLC RSVP override so auto-fill doesn't overwrite user input
+    const llcOverride = document.getElementById('llcRsvpOverride');
+    llcOverride?.addEventListener('input', () => { llcOverride.dataset.userEdited = 'true'; });
+    llcOverride?.addEventListener('change', () => { llcOverride.dataset.userEdited = 'true'; });
 
     // ── Transportation Mode Toggle ───────────────────────
     const transportEl = document.getElementById('eventTransportation');
