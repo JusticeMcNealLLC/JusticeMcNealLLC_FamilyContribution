@@ -504,12 +504,75 @@ async function pubHandleRsvp(status) {
 }
 
 /* ── QR Ticket ───────────────────────────── */
-function pubShowTicketQR(qrToken) {
+async function pubShowTicketQR(qrToken) {
     const ticketSection = document.getElementById('ticketSection');
     ticketSection.classList.remove('hidden');
     const canvas = document.getElementById('ticketQR');
     const ticketUrl = `${window.location.origin}/events/?e=${pubCurrentEvent.slug}&ticket=${qrToken}`;
     QRCode.toCanvas(canvas, ticketUrl, { width: 200, margin: 2, color: { dark: '#1e1b4b', light: '#ffffff' } });
+
+    // Check if already checked in
+    if (pubCurrentUser) {
+        const { data: ci } = await supabaseClient
+            .from('event_checkins')
+            .select('checked_in_at')
+            .eq('event_id', pubCurrentEvent.id)
+            .eq('user_id', pubCurrentUser.id)
+            .maybeSingle();
+        if (ci) pubShowCheckedInOverlay('ticketSection', 'ticketQR', ci.checked_in_at);
+    }
+}
+
+/* ── Checked-In Overlay (shared helper) ──── */
+function pubShowCheckedInOverlay(sectionId, canvasId, checkedInAt) {
+    const section = document.getElementById(sectionId);
+    const canvas = document.getElementById(canvasId);
+    if (!section || !canvas) return;
+
+    // Dim the QR code
+    canvas.style.opacity = '0.3';
+
+    // Add check overlay on top of QR
+    const wrapper = canvas.parentElement;
+    if (wrapper) {
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'inline-block';
+        const overlay = document.createElement('div');
+        overlay.className = 'absolute inset-0 flex items-center justify-center';
+        overlay.innerHTML = `
+            <div class="bg-emerald-500 rounded-full w-16 h-16 flex items-center justify-center shadow-lg animate-bounce" style="animation-iteration-count:2;">
+                <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>`;
+        wrapper.appendChild(overlay);
+    }
+
+    // Update section header + text
+    const header = section.querySelector('h3');
+    if (header) {
+        header.textContent = '✅ Checked In';
+        header.classList.remove('text-gray-700');
+        header.classList.add('text-emerald-700');
+    }
+
+    // Format the timestamp
+    const dt = new Date(checkedInAt);
+    const timeStr = dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    // Replace or add timestamp under the QR
+    const existingHint = section.querySelector('p.text-gray-400');
+    if (existingHint) {
+        existingHint.className = 'text-xs text-emerald-600 font-semibold mt-2';
+        existingHint.textContent = `Scanned at ${timeStr} · ${dateStr}`;
+    } else {
+        const ts = document.createElement('p');
+        ts.className = 'text-xs text-emerald-600 font-semibold mt-2';
+        ts.textContent = `Scanned at ${timeStr} · ${dateStr}`;
+        section.appendChild(ts);
+    }
+
+    // Vibrate the phone once (subtle confirmation)
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 }
 
 /* ── Venue Check-In ──────────────────────── */
@@ -619,6 +682,7 @@ async function pubDoVenueCheckin(eventId) {
         });
 
         result.innerHTML = '<p class="text-sm text-emerald-700 font-bold">🎉 Successfully checked in!</p>';
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         btn.remove();
     } catch (err) {
         console.error('Check-in error:', err);
@@ -656,6 +720,7 @@ async function pubDoGuestVenueCheckin(eventId, guestToken) {
         });
 
         result.innerHTML = '<p class="text-sm text-emerald-700 font-bold">🎉 Successfully checked in!</p>';
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         btn.remove();
     } catch (err) {
         console.error('Guest check-in error:', err);
@@ -742,6 +807,7 @@ async function pubHandleTicketScan(event, ticketToken) {
                 });
 
                 resultEl.innerHTML = `<p class="text-base text-emerald-700 font-bold">✅ Checked in — ${pubEscapeHtml(name)}</p>`;
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
                 return;
             }
 
@@ -774,6 +840,7 @@ async function pubHandleTicketScan(event, ticketToken) {
                 });
 
                 resultEl.innerHTML = `<p class="text-base text-emerald-700 font-bold">✅ Checked in — ${pubEscapeHtml(guestRsvp.guest_name)} (Guest)</p>`;
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
                 return;
             }
 
@@ -931,7 +998,7 @@ async function pubHandleGuestRsvp() {
 }
 
 /* ── Guest Ticket Display ────────────────── */
-function pubShowGuestTicket(guestRsvp) {
+async function pubShowGuestTicket(guestRsvp) {
     const section = document.getElementById('guestTicketSection');
     if (!section) return;
 
@@ -947,6 +1014,15 @@ function pubShowGuestTicket(guestRsvp) {
     // Hide the guest RSVP form since they already have a ticket
     const formSection = document.getElementById('guestRsvpSection');
     if (formSection) formSection.classList.add('hidden');
+
+    // Check if guest is already checked in
+    const { data: ci } = await supabaseClient
+        .from('event_checkins')
+        .select('checked_in_at')
+        .eq('event_id', pubCurrentEvent.id)
+        .eq('guest_token', guestRsvp.guest_token)
+        .maybeSingle();
+    if (ci) pubShowCheckedInOverlay('guestTicketSection', 'guestTicketQR', ci.checked_in_at);
 }
 
 /* ── Guest Lookup ────────────────────────── */

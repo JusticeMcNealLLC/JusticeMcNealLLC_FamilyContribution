@@ -142,14 +142,40 @@ async function evtOpenDetail(eventId) {
     const showLocation = !event.gate_location || hasRsvp || isHost;
     const showNotes = !event.gate_notes || hasRsvp || isHost;
 
-    // QR Code for attendee ticket mode
+    // QR Code for attendee ticket mode — check if already checked in
     let qrHtml = '';
+    let myCheckin = null;
     if (rsvp && rsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
+        const { data: ci } = await supabaseClient
+            .from('event_checkins')
+            .select('checked_in_at')
+            .eq('event_id', eventId)
+            .eq('user_id', evtCurrentUser.id)
+            .maybeSingle();
+        myCheckin = ci;
+
+        const checkedInTime = myCheckin
+            ? new Date(myCheckin.checked_in_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+            : null;
+        const checkedInDate = myCheckin
+            ? new Date(myCheckin.checked_in_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            : null;
+
         qrHtml = `
             <div class="mt-6 text-center">
-                <h4 class="text-sm font-bold text-gray-700 mb-2">Your Event Ticket</h4>
-                <canvas id="myTicketQR" class="mx-auto"></canvas>
-                <p class="text-xs text-gray-400 mt-2">Show this QR code at check-in</p>
+                <h4 class="text-sm font-bold text-gray-700 mb-2">${myCheckin ? '✅ Checked In' : 'Your Event Ticket'}</h4>
+                <div class="relative inline-block">
+                    <canvas id="myTicketQR" class="mx-auto ${myCheckin ? 'opacity-30' : ''}"></canvas>
+                    ${myCheckin ? `
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="bg-emerald-500 rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
+                            <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                    </div>` : ''}
+                </div>
+                ${myCheckin
+                    ? `<p class="text-xs text-emerald-600 font-semibold mt-2">Scanned at ${checkedInTime} · ${checkedInDate}</p>`
+                    : `<p class="text-xs text-gray-400 mt-2">Show this QR code at check-in</p>`}
             </div>`;
     }
 

@@ -132,6 +132,7 @@ async function evtProcessCheckin(eventId, qrToken, resultEl) {
 
             const name = `${rsvp.profiles?.first_name || ''} ${rsvp.profiles?.last_name || ''}`.trim();
             resultEl.innerHTML = `<span class="text-emerald-600 text-base">✅ Checked in — ${evtEscapeHtml(name)}</span>`;
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
             evtResumeScanner(3000);
             return;
         }
@@ -179,6 +180,7 @@ async function evtProcessCheckin(eventId, qrToken, resultEl) {
         if (gciErr) throw gciErr;
 
         resultEl.innerHTML = `<span class="text-emerald-600 text-base">✅ Checked in — ${evtEscapeHtml(guestRsvp.guest_name)} (Guest)</span>`;
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         evtResumeScanner(3000);
     } catch (err) {
         console.error('Check-in error:', err);
