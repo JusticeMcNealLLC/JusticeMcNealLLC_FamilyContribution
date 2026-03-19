@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
     const slug   = params.get('e');
     const isCheckin   = params.get('checkin') === '1';
+    const ticketToken  = params.get('ticket') || null;
     pubGuestToken     = params.get('guest_token') || null;
 
     if (!slug) return pubShowNotFound();
@@ -37,11 +38,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (session) pubCurrentUser = session.user;
     } catch (_) { /* not logged in */ }
 
-    await pubLoadEvent(slug, isCheckin);
+    await pubLoadEvent(slug, isCheckin, ticketToken);
 });
 
 /* ── Load Event ──────────────────────────── */
-async function pubLoadEvent(slug, isCheckin) {
+async function pubLoadEvent(slug, isCheckin, ticketToken) {
     const { data: event, error } = await supabaseClient
         .from('events')
         .select('*')
@@ -90,11 +91,11 @@ async function pubLoadEvent(slug, isCheckin) {
         pubGuestRsvp = gRsvp;
     }
 
-    pubRenderEvent(event, goingCount, isCheckin);
+    pubRenderEvent(event, goingCount, isCheckin, ticketToken);
 }
 
 /* ── Render ──────────────────────────────── */
-function pubRenderEvent(event, goingCount, isCheckin) {
+function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('eventContent').classList.remove('hidden');
 
@@ -203,6 +204,11 @@ function pubRenderEvent(event, goingCount, isCheckin) {
     // Venue Check-In mode
     if (isCheckin && event.checkin_mode === 'venue_scan') {
         pubRenderVenueCheckin(event);
+    }
+
+    // Attendee Ticket scanned with phone camera (ticket=TOKEN in URL)
+    if (ticketToken && event.checkin_mode === 'attendee_ticket') {
+        pubHandleTicketScan(event, ticketToken);
     }
 
     // Share URL
@@ -495,7 +501,8 @@ function pubShowTicketQR(qrToken) {
     const ticketSection = document.getElementById('ticketSection');
     ticketSection.classList.remove('hidden');
     const canvas = document.getElementById('ticketQR');
-    QRCode.toCanvas(canvas, JSON.stringify({ e: pubCurrentEvent.id, t: qrToken }), { width: 200, margin: 2, color: { dark: '#1e1b4b', light: '#ffffff' } });
+    const ticketUrl = `${window.location.origin}/events/?e=${pubCurrentEvent.slug}&ticket=${qrToken}`;
+    QRCode.toCanvas(canvas, ticketUrl, { width: 200, margin: 2, color: { dark: '#1e1b4b', light: '#ffffff' } });
 }
 
 /* ── Venue Check-In ──────────────────────── */
@@ -651,6 +658,139 @@ async function pubDoGuestVenueCheckin(eventId, guestToken) {
     }
 }
 
+/* ── Attendee Ticket Scan (phone camera) ─── */
+async function pubHandleTicketScan(event, ticketToken) {
+    // Someone scanned an attendee ticket QR with their phone camera.
+    // Determine who is scanning and act accordingly.
+
+    const container = document.getElementById('venueCheckin');
+    container.classList.remove('hidden');
+
+    // Check if the current user is the event creator or a host/admin
+    let isHost = false;
+    if (pubCurrentUser) {
+        if (event.created_by === pubCurrentUser.id) {
+            isHost = true;
+        } else {
+            const { data: hostRec } = await supabaseClient
+                .from('event_hosts')
+                .select('id')
+                .eq('event_id', event.id)
+                .eq('user_id', pubCurrentUser.id)
+                .maybeSingle();
+            if (hostRec) isHost = true;
+
+            // Also check for admin role
+            if (!isHost) {
+                const { data: prof } = await supabaseClient
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', pubCurrentUser.id)
+                    .single();
+                if (prof?.role === 'admin') isHost = true;
+            }
+        }
+    }
+
+    if (isHost) {
+        // Host/creator scanned an attendee's ticket → process check-in
+        container.innerHTML = `
+            <h3 class="text-sm font-bold text-brand-700 mb-2">🎟️ Scanning Attendee Ticket…</h3>
+            <div id="ticketScanResult" class="mt-3">
+                <span class="text-gray-500">Processing check-in…</span>
+            </div>`;
+
+        const resultEl = document.getElementById('ticketScanResult');
+
+        try {
+            // Try member RSVP first
+            const { data: rsvp } = await supabaseClient
+                .from('event_rsvps')
+                .select('id, user_id, status, profiles!event_rsvps_user_id_fkey(first_name, last_name)')
+                .eq('event_id', event.id)
+                .eq('qr_token', ticketToken)
+                .maybeSingle();
+
+            if (rsvp) {
+                const name = `${rsvp.profiles?.first_name || ''} ${rsvp.profiles?.last_name || ''}`.trim() || 'Member';
+
+                // Check if already checked in
+                const { data: existing } = await supabaseClient
+                    .from('event_checkins')
+                    .select('id')
+                    .eq('event_id', event.id)
+                    .eq('user_id', rsvp.user_id)
+                    .maybeSingle();
+
+                if (existing) {
+                    resultEl.innerHTML = `<p class="text-sm text-amber-600 font-semibold">✅ Already checked in — ${pubEscapeHtml(name)}</p>`;
+                    return;
+                }
+
+                await supabaseClient.from('event_checkins').insert({
+                    event_id: event.id,
+                    user_id: rsvp.user_id,
+                    checked_in_by: pubCurrentUser.id,
+                    checkin_mode: 'attendee_ticket'
+                });
+
+                resultEl.innerHTML = `<p class="text-base text-emerald-700 font-bold">✅ Checked in — ${pubEscapeHtml(name)}</p>`;
+                return;
+            }
+
+            // Try guest RSVP
+            const { data: guestRsvp } = await supabaseClient
+                .from('event_guest_rsvps')
+                .select('id, guest_name, guest_token, paid')
+                .eq('event_id', event.id)
+                .eq('guest_token', ticketToken)
+                .maybeSingle();
+
+            if (guestRsvp && guestRsvp.paid) {
+                const { data: gExisting } = await supabaseClient
+                    .from('event_checkins')
+                    .select('id')
+                    .eq('event_id', event.id)
+                    .eq('guest_token', guestRsvp.guest_token)
+                    .maybeSingle();
+
+                if (gExisting) {
+                    resultEl.innerHTML = `<p class="text-sm text-amber-600 font-semibold">✅ Already checked in — ${pubEscapeHtml(guestRsvp.guest_name)} (Guest)</p>`;
+                    return;
+                }
+
+                await supabaseClient.from('event_checkins').insert({
+                    event_id: event.id,
+                    guest_token: guestRsvp.guest_token,
+                    checked_in_by: pubCurrentUser.id,
+                    checkin_mode: 'attendee_ticket'
+                });
+
+                resultEl.innerHTML = `<p class="text-base text-emerald-700 font-bold">✅ Checked in — ${pubEscapeHtml(guestRsvp.guest_name)} (Guest)</p>`;
+                return;
+            }
+
+            resultEl.innerHTML = '<p class="text-sm text-red-600 font-semibold">❌ Invalid ticket — no matching RSVP found.</p>';
+        } catch (err) {
+            console.error('Ticket scan check-in error:', err);
+            resultEl.innerHTML = `<p class="text-sm text-red-600">Check-in failed: ${err.message}</p>`;
+        }
+    } else {
+        // Attendee scanning their own ticket, or someone else scanning it
+        // Show a friendly message to present the ticket to the event host
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <span class="text-3xl">🎟️</span>
+                </div>
+                <h3 class="text-base font-bold text-gray-900 mb-1">Event Ticket</h3>
+                <p class="text-sm text-gray-600 mb-4">Show this QR code to the event coordinator to check in.</p>
+                <p class="text-xs text-gray-400">The event host uses the in-app scanner to verify your ticket.</p>
+                ${!pubCurrentUser ? '<p class="text-xs text-gray-500 mt-3"><a href="/auth/login.html?redirect=' + encodeURIComponent(window.location.href) + '" class="text-brand-600 font-semibold hover:underline">Sign in</a> if you\'re the event host.</p>' : ''}
+            </div>`;
+    }
+}
+
 /* ── Guest RSVP Section Renderer ─────────── */
 function pubRenderGuestRsvpSection(event) {
     const section = document.getElementById('guestRsvpSection');
@@ -742,7 +882,8 @@ function pubShowGuestTicket(guestRsvp) {
     document.getElementById('guestTicketName').textContent = guestRsvp.guest_name || 'Guest';
 
     const canvas = document.getElementById('guestTicketQR');
-    QRCode.toCanvas(canvas, JSON.stringify({ e: pubCurrentEvent.id, t: guestRsvp.guest_token }), {
+    const guestTicketUrl = `${window.location.origin}/events/?e=${pubCurrentEvent.slug}&ticket=${guestRsvp.guest_token}`;
+    QRCode.toCanvas(canvas, guestTicketUrl, {
         width: 200, margin: 2, color: { dark: '#1e1b4b', light: '#ffffff' }
     });
 

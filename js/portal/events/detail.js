@@ -593,7 +593,8 @@ async function evtOpenDetail(eventId) {
         if (rsvp && rsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
             const canvas = document.getElementById('myTicketQR');
             if (canvas && typeof QRCode !== 'undefined') {
-                QRCode.toCanvas(canvas, JSON.stringify({ e: eventId, t: rsvp.qr_token }), { width: 180, margin: 2 });
+                const ticketUrl = `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`;
+                QRCode.toCanvas(canvas, ticketUrl, { width: 180, margin: 2 });
             }
         }
         if (isHost && event.checkin_mode === 'venue_scan' && event.venue_qr_token) {

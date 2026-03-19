@@ -3,6 +3,29 @@
 // Camera-based scanning using jsQR, processes check-ins.
 // ═══════════════════════════════════════════════════════════
 
+// Parse QR data from either URL format or legacy JSON format
+function evtParseQrData(raw) {
+    // URL format: https://…/events/?e={slug}&ticket={token}
+    try {
+        const url = new URL(raw);
+        const ticket = url.searchParams.get('ticket');
+        const slug = url.searchParams.get('e');
+        if (ticket && slug) {
+            // Resolve event_id from slug using the loaded events list
+            const evt = evtAllEvents.find(ev => ev.slug === slug);
+            if (evt) return { e: evt.id, t: ticket };
+            // If event not in cache, return slug so caller can handle
+            return { slug, t: ticket };
+        }
+    } catch (_) { /* not a URL */ }
+    // Legacy JSON format: {"e":"uuid","t":"token"}
+    try {
+        const obj = JSON.parse(raw);
+        if (obj.e && obj.t) return obj;
+    } catch (_) { /* not JSON */ }
+    return null;
+}
+
 async function evtOpenScanner(eventId) {
     evtToggleModal('scannerModal', true);
     const video = document.getElementById('scannerVideo');
@@ -28,13 +51,11 @@ async function evtOpenScanner(eventId) {
                 if (typeof jsQR !== 'undefined') {
                     const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
                     if (code) {
-                        try {
-                            const qrData = JSON.parse(code.data);
-                            if (qrData.e && qrData.t) {
-                                evtProcessCheckin(qrData.e, qrData.t, result);
-                                return; // stop scanning
-                            }
-                        } catch (_) { /* not our QR */ }
+                        const qrData = evtParseQrData(code.data);
+                        if (qrData && qrData.t) {
+                            evtProcessCheckin(qrData.e || eventId, qrData.t, result);
+                            return; // stop scanning
+                        }
                     }
                 }
             }
@@ -187,13 +208,11 @@ function evtResumeScanner(delay) {
                     if (typeof jsQR !== 'undefined') {
                         const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
                         if (code) {
-                            try {
-                                const qrData = JSON.parse(code.data);
-                                if (qrData.e && qrData.t) {
-                                    evtProcessCheckin(qrData.e, qrData.t, result);
-                                    return;
-                                }
-                            } catch (_) {}
+                            const qrData = evtParseQrData(code.data);
+                            if (qrData && qrData.t) {
+                                evtProcessCheckin(qrData.e || eventId, qrData.t, result);
+                                return;
+                            }
                         }
                     }
                 }
