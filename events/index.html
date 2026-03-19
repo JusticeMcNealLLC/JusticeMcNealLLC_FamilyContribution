@@ -57,22 +57,22 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Banner sticks at top of scroll container */
+        /* Banner sticks at top of scroll container — sits ABOVE content */
         #eventBanner {
             position: sticky;
             top: 0;
             height: 240px;
-            z-index: 0;
+            z-index: 10;
             background-size: cover;
             background-position: center;
         }
         @media (min-width: 640px) {
             #eventBanner { height: 300px; }
         }
-        /* Content card overlaps banner with rounded top */
+        /* Content card scrolls UNDER the sticky banner */
         .event-card {
             position: relative;
-            z-index: 10;
+            z-index: 1;
             background: #f8fafc;
             border-radius: 1.25rem 1.25rem 0 0;
             box-shadow: 0 -4px 20px rgba(0,0,0,.08);
