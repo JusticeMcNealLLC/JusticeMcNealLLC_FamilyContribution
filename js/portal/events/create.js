@@ -271,6 +271,93 @@ async function evtGeocodeAddress(address) {
     return null;
 }
 
+// ─── Live Address Validation ────────────────────────────
+// Validates as the user types (debounced) and on blur.
+// Caches the result so publish doesn't re-geocode.
+
+let _evtLocGeoCache = null;   // { address, result } or null
+let _evtLocDebounce = null;   // timeout id
+
+function evtSetLocationIcon(state) {
+    // state: 'spin' | 'check' | 'warn' | 'hide'
+    const wrap    = document.getElementById('locationIcon');
+    const spinner = document.getElementById('locIconSpinner');
+    const check   = document.getElementById('locIconCheck');
+    const warn    = document.getElementById('locIconWarn');
+    if (!wrap) return;
+
+    spinner.classList.add('hidden');
+    check.classList.add('hidden');
+    warn.classList.add('hidden');
+
+    if (state === 'hide') { wrap.classList.add('hidden'); return; }
+    wrap.classList.remove('hidden');
+    if (state === 'spin')  spinner.classList.remove('hidden');
+    if (state === 'check') check.classList.remove('hidden');
+    if (state === 'warn')  warn.classList.remove('hidden');
+}
+
+function evtSetLocationStatus(text, color) {
+    const el = document.getElementById('locationStatus');
+    if (!el) return;
+    if (!text) { el.classList.add('hidden'); el.textContent = ''; return; }
+    el.textContent = text;
+    el.className = `text-xs mt-1 ${color}`;
+    el.classList.remove('hidden');
+}
+
+async function evtValidateLocation() {
+    const input = document.getElementById('eventLocation');
+    const address = input ? input.value.trim() : '';
+
+    // Empty → clear everything
+    if (!address) {
+        _evtLocGeoCache = null;
+        evtSetLocationIcon('hide');
+        evtSetLocationStatus('', '');
+        return;
+    }
+
+    // Already validated this exact text
+    if (_evtLocGeoCache && _evtLocGeoCache.address === address) return;
+
+    evtSetLocationIcon('spin');
+    evtSetLocationStatus('Validating address…', 'text-gray-400');
+
+    const result = await evtGeocodeAddress(address);
+
+    // Make sure input hasn't changed while we were fetching
+    const current = input.value.trim();
+    if (current !== address) return;
+
+    _evtLocGeoCache = { address, result };
+
+    if (result) {
+        evtSetLocationIcon('check');
+        evtSetLocationStatus(`✓ ${result.display}`, 'text-green-600');
+    } else {
+        evtSetLocationIcon('warn');
+        evtSetLocationStatus('Address not found — event will have no map pin', 'text-amber-600');
+    }
+}
+
+function evtInitLocationValidation() {
+    const input = document.getElementById('eventLocation');
+    if (!input) return;
+
+    // Debounced input — fires 800ms after user stops typing
+    input.addEventListener('input', () => {
+        clearTimeout(_evtLocDebounce);
+        _evtLocDebounce = setTimeout(evtValidateLocation, 800);
+    });
+
+    // Also validate on blur (leaving the field)
+    input.addEventListener('blur', () => {
+        clearTimeout(_evtLocDebounce);
+        evtValidateLocation();
+    });
+}
+
 async function evtHandleCreate(e) {
     e.preventDefault();
 
@@ -349,10 +436,15 @@ async function evtHandleCreate(e) {
             status: 'open',
         };
 
-        // Geocode location → lat/lng for map
+        // Geocode location → lat/lng for map (use cached result from live validation)
         if (record.location_text) {
-            publishBtn.textContent = 'Validating address…';
-            const geo = await evtGeocodeAddress(record.location_text);
+            let geo = null;
+            if (_evtLocGeoCache && _evtLocGeoCache.address === record.location_text && _evtLocGeoCache.result) {
+                geo = _evtLocGeoCache.result;
+            } else {
+                publishBtn.textContent = 'Validating address…';
+                geo = await evtGeocodeAddress(record.location_text);
+            }
             if (geo) {
                 record.location_lat = geo.lat;
                 record.location_lng = geo.lng;
@@ -474,6 +566,9 @@ async function evtHandleCreate(e) {
         document.getElementById('createEventForm').reset();
         evtBannerFile = null;
         evtCostItems = [];
+        _evtLocGeoCache = null;
+        evtSetLocationIcon('hide');
+        evtSetLocationStatus('', '');
         document.getElementById('bannerPreviewWrap').classList.add('hidden');
         document.getElementById('bannerUploadHint').classList.remove('hidden');
         document.getElementById('llcFieldsSection')?.classList.add('hidden');

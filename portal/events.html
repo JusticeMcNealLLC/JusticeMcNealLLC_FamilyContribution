@@ -238,8 +238,20 @@
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Location</label>
-                        <input type="text" id="eventLocation" placeholder="Address or venue name"
-                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+                        <div class="relative">
+                            <input type="text" id="eventLocation" placeholder="Address or venue name"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+                            <!-- Inline spinner / check / warning icon -->
+                            <div id="locationIcon" class="absolute right-3 top-1/2 -translate-y-1/2 hidden">
+                                <!-- spinner -->
+                                <svg id="locIconSpinner" class="hidden animate-spin w-5 h-5 text-brand-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+                                <!-- checkmark -->
+                                <svg id="locIconCheck" class="hidden w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <!-- warning -->
+                                <svg id="locIconWarn" class="hidden w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                            </div>
+                        </div>
+                        <p id="locationStatus" class="text-xs mt-1 hidden"></p>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Max Attendees <span class="font-normal text-gray-400">(optional)</span></label>

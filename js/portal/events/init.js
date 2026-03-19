@@ -80,6 +80,9 @@ function evtSetupListeners() {
     // Create form
     document.getElementById('createEventForm')?.addEventListener('submit', evtHandleCreate);
 
+    // Live address validation (debounced input + blur)
+    evtInitLocationValidation();
+
     // Preview button
     document.getElementById('previewEventBtn')?.addEventListener('click', evtHandlePreview);
 
