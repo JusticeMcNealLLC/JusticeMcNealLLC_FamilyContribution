@@ -2,7 +2,7 @@
 // Cache-first for statics, network-first for API calls.
 // Push notification handler for native OS notifications.
 
-const CACHE_NAME = 'jm-portal-v12';
+const CACHE_NAME = 'jm-portal-v13';
 
 // Shell assets to pre-cache on install
 const SHELL_ASSETS = [
@@ -22,6 +22,18 @@ const SHELL_ASSETS = [
     '/assets/banner/founder1.webp',
     '/assets/banner/cat1.webp',
     '/manifest.json',
+];
+
+// External domains the SW should never intercept (network-only).
+// These either don't support CORS or shouldn't be cached.
+const NETWORK_ONLY_HOSTS = [
+    'geocoding.geo.census.gov',
+    'nominatim.openstreetmap.org',
+    'tile.openstreetmap.org',
+    'unpkg.com',
+    'cdnjs.cloudflare.com',
+    'js.stripe.com',
+    'api.stripe.com',
 ];
 
 // Install: cache shell assets
@@ -46,6 +58,11 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
     const url = new URL(e.request.url);
 
+    // Only handle http(s) GET requests (skip chrome-extension://, POSTs, etc.)
+    if (!url.protocol.startsWith('http') || e.request.method !== 'GET') {
+        return;
+    }
+
     // Network-only for Supabase API & auth
     if (url.hostname.includes('supabase') || url.pathname.startsWith('/auth/')) {
         return;
@@ -56,8 +73,8 @@ self.addEventListener('fetch', (e) => {
         return;
     }
 
-    // Only handle http(s) requests (skip chrome-extension://, etc.)
-    if (!url.protocol.startsWith('http')) {
+    // Network-only for external APIs that don't support CORS or shouldn't be cached
+    if (NETWORK_ONLY_HOSTS.includes(url.hostname)) {
         return;
     }
 
@@ -66,13 +83,16 @@ self.addEventListener('fetch', (e) => {
         caches.open(CACHE_NAME).then(cache =>
             cache.match(e.request).then(cached => {
                 const fetched = fetch(e.request).then(response => {
-                    if (response && response.status === 200) {
+                    if (response && response.ok) {
                         cache.put(e.request, response.clone());
                     }
                     return response;
-                }).catch(() => cached); // offline fallback
+                }).catch(() => cached);
 
-                return cached || fetched;
+                // Guard: never resolve with undefined — return offline fallback
+                return (cached || fetched).then(r =>
+                    r || new Response('Offline', { status: 503, statusText: 'Service Unavailable' })
+                );
             })
         )
     );
