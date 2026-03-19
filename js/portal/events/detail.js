@@ -609,54 +609,81 @@ async function evtOpenDetail(eventId) {
         </div>
 
         <div class="p-5 sm:p-6">
+            <!-- ═══ Two-column grid on md+ ═══ -->
+            <div class="md:grid md:grid-cols-2 md:gap-6">
 
-            <!-- Date & Time -->
-            <div class="mt-4 space-y-2 text-gray-600">
-                <div class="flex items-center gap-2.5">
-                    <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span class="text-lg font-bold text-gray-900">${dateStr}</span>
-                </div>
-                ${showTime ? `
-                <div class="flex items-center gap-2.5 ml-[30px]">
-                    <span class="text-base font-semibold text-gray-700">${timeStr}</span>
-                </div>` : `
-                <div class="flex items-center gap-2 text-gray-400 italic text-sm">
-                    <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    <span>Time revealed after RSVP</span>
-                </div>`}
-                ${showLocation && event.location_text ? `
-                <div class="flex items-center gap-2.5 mt-1">
-                    <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <span class="text-base font-semibold text-gray-700">${evtEscapeHtml(event.location_text)}</span>
-                </div>` : !showLocation && event.location_text ? `
-                <div class="flex items-center gap-2 text-gray-400 italic text-sm">
-                    <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    <span>Location revealed after RSVP</span>
-                </div>` : ''}
-            </div>
-
-            <!-- Location Map -->
-            ${showLocation && event.location_lat && event.location_lng ? `
-            <div class="mt-3">
-                <div id="detailEventMap" class="h-40 rounded-xl z-0 cursor-pointer relative group" onclick="evtOpenFullscreenMap(${event.location_lat}, ${event.location_lng}, '${evtEscapeHtml(event.location_text || '').replace(/'/g, "\\'")}')">
-                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition bg-black/10 rounded-xl z-[5] pointer-events-none sm:hidden" style="opacity:0;">
+                <!-- ── LEFT COLUMN: Date, Time, Location, Map ── -->
+                <div>
+                    <!-- Date & Time -->
+                    <div class="mt-4 md:mt-0 space-y-2 text-gray-600">
+                        <div class="flex items-center gap-2.5">
+                            <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span class="text-lg font-bold text-gray-900">${dateStr}</span>
+                        </div>
+                        ${showTime ? `
+                        <div class="flex items-center gap-2.5 ml-[30px]">
+                            <span class="text-base font-semibold text-gray-700">${timeStr}</span>
+                        </div>` : `
+                        <div class="flex items-center gap-2 text-gray-400 italic text-sm">
+                            <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            <span>Time revealed after RSVP</span>
+                        </div>`}
+                        ${showLocation && event.location_text ? `
+                        <div class="flex items-center gap-2.5 mt-1">
+                            <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <span class="text-base font-semibold text-gray-700">${evtEscapeHtml(event.location_text)}</span>
+                        </div>` : !showLocation && event.location_text ? `
+                        <div class="flex items-center gap-2 text-gray-400 italic text-sm">
+                            <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            <span>Location revealed after RSVP</span>
+                        </div>` : ''}
                     </div>
-                    <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[10px] font-semibold text-gray-600 shadow-sm z-[5] flex items-center gap-1 sm:hidden">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                        Tap to expand
-                    </div>
-                </div>
-                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener"
-                   class="mt-2 w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    Get Directions
-                </a>
-            </div>` : ''}
 
-            <!-- Description -->
-            <div class="mt-5">
-                <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">${evtEscapeHtml(event.description || '')}</p>
+                    <!-- Location Map -->
+                    ${showLocation && event.location_lat && event.location_lng ? `
+                    <div class="mt-3">
+                        <div id="detailEventMap" class="h-40 md:h-56 rounded-xl z-0 cursor-pointer relative group" onclick="evtOpenFullscreenMap(${event.location_lat}, ${event.location_lng}, '${evtEscapeHtml(event.location_text || '').replace(/'/g, "\\'")}')">
+                            <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[10px] font-semibold text-gray-600 shadow-sm z-[5] flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                Tap to expand
+                            </div>
+                        </div>
+                        <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener"
+                           class="mt-2 w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            Get Directions
+                        </a>
+                    </div>` : ''}
+                </div>
+                <!-- END LEFT COLUMN -->
+
+                <!-- ── RIGHT COLUMN: Description, RSVP, QR ── -->
+                <div>
+                    <!-- Description -->
+                    <div class="mt-5 md:mt-0">
+                        <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">${evtEscapeHtml(event.description || '')}</p>
+                    </div>
+
+                    <!-- Gated Notes -->
+                    ${showNotes && event.gated_notes ? `
+                    <div class="mt-4 p-4 bg-brand-50 rounded-xl">
+                        <h4 class="text-sm font-bold text-brand-700 mb-1">Attendee Details</h4>
+                        <p class="text-sm text-brand-600 whitespace-pre-line">${evtEscapeHtml(event.gated_notes)}</p>
+                    </div>` : ''}
+
+                    ${rsvpButtons}
+                    ${waitlistHtml}
+                    ${raffleHtml}
+                    ${qrHtml}
+                    ${venueQrHtml}
+                    ${scannerBtn}
+                </div>
+                <!-- END RIGHT COLUMN -->
+
             </div>
+            <!-- ═══ End two-column grid ═══ -->
+
+            <!-- ── FULL-WIDTH SECTIONS BELOW BOTH COLUMNS ── -->
 
             <!-- Event Creator -->
             ${creatorProfile ? (() => {
@@ -685,13 +712,6 @@ async function evtOpenDetail(eventId) {
                 </div>
             </div>`;
             })() : ''}
-
-            <!-- Gated Notes -->
-            ${showNotes && event.gated_notes ? `
-            <div class="mt-4 p-4 bg-brand-50 rounded-xl">
-                <h4 class="text-sm font-bold text-brand-700 mb-1">Attendee Details</h4>
-                <p class="text-sm text-brand-600 whitespace-pre-line">${evtEscapeHtml(event.gated_notes)}</p>
-            </div>` : ''}
 
             ${costBreakdownHtml}
             ${thresholdHtml}
@@ -723,13 +743,6 @@ async function evtOpenDetail(eventId) {
                     <div class="text-xs text-gray-500">Not Going</div>
                 </div>
             </div>` : ''}
-
-            ${rsvpButtons}
-            ${waitlistHtml}
-            ${raffleHtml}
-            ${qrHtml}
-            ${venueQrHtml}
-            ${scannerBtn}
 
             <!-- Attendee Breakdown (Host only) -->
             ${attendeeBreakdownHtml}
