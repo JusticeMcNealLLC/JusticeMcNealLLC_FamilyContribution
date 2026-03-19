@@ -47,22 +47,17 @@
             body { padding-bottom: 64px; }
         }
 
-        /* Banner stays fixed behind scrolling content */
+        /* Banner sticks at top while content scrolls over it */
         #eventBanner {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 55vh;
-            min-height: 260px;
-            max-height: 400px;
+            position: sticky;
+            top: 0;
+            height: 240px;
             z-index: 0;
             background-size: cover;
             background-position: center;
         }
-        /* Spacer pushes content below the banner */
-        .banner-spacer {
-            height: 45vh;
-            min-height: 220px;
-            max-height: 360px;
+        @media (min-width: 640px) {
+            #eventBanner { height: 300px; }
         }
         /* Content card overlaps banner with rounded top */
         .event-card {
@@ -71,9 +66,11 @@
             background: #f8fafc;
             border-radius: 1.25rem 1.25rem 0 0;
             box-shadow: 0 -4px 20px rgba(0,0,0,.08);
+            margin-top: -1.5rem;
             padding: 1.75rem 1rem 1.5rem;
             max-width: 42rem;
-            margin: 0 auto;
+            margin-left: auto;
+            margin-right: auto;
         }
         @media (min-width: 640px) {
             .event-card { padding: 2rem 1.5rem 2rem; }
@@ -107,9 +104,6 @@
         <div id="eventBanner">
             <div class="absolute top-3 left-3 flex gap-1.5" style="z-index:2" id="eventTags"></div>
         </div>
-
-        <!-- Spacer so content starts below visible banner -->
-        <div class="banner-spacer"></div>
 
         <!-- Content card scrolls over banner -->
         <div class="event-card">

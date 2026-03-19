@@ -198,12 +198,12 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     }
 
     // QR Ticket — guest (from URL token or lookup)
-    if (pubGuestRsvp && pubGuestRsvp.paid) {
+    if (pubGuestRsvp) {
         pubShowGuestTicket(pubGuestRsvp);
     }
 
-    // Guest lookup section (show for paid events when not signed in and no guest ticket showing)
-    if (!pubCurrentUser && !pubGuestRsvp && event.pricing_mode !== 'free' && !event.member_only) {
+    // Guest lookup section (show for public events when not signed in and no guest ticket showing)
+    if (!pubCurrentUser && !pubGuestRsvp && !event.member_only) {
         document.getElementById('guestLookupSection').classList.remove('hidden');
     }
 
@@ -243,14 +243,15 @@ function pubRenderRsvpSection(event) {
     }
 
     if (!pubCurrentUser) {
-        // If guest already has a paid RSVP, show confirmed state
-        if (pubGuestRsvp?.paid) {
+        // If guest already has an RSVP (paid or free), show confirmed state
+        if (pubGuestRsvp) {
+            const isPaidGuest = pubGuestRsvp.paid;
             section.innerHTML = `
                 <div class="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
                     <span class="text-2xl">✅</span>
                     <div>
                         <p class="text-sm font-bold text-emerald-700">Guest RSVP Confirmed</p>
-                        <p class="text-xs text-emerald-600">${pubEscapeHtml(pubGuestRsvp.guest_name)} · Non-refundable</p>
+                        <p class="text-xs text-emerald-600">${pubEscapeHtml(pubGuestRsvp.guest_name)}${isPaidGuest ? ' · Non-refundable' : ''}</p>
                     </div>
                 </div>`;
             return;
@@ -517,7 +518,7 @@ function pubRenderVenueCheckin(event) {
     el.classList.remove('hidden');
 
     // Guest check-in via token
-    if (pubGuestRsvp && pubGuestRsvp.paid) {
+    if (pubGuestRsvp) {
         el.innerHTML = `
             <h3 class="text-sm font-bold text-emerald-700 mb-2">📍 Venue Check-In</h3>
             <p class="text-xs text-emerald-600 mb-3">Tap below to check into this event</p>
@@ -802,8 +803,8 @@ function pubRenderGuestRsvpSection(event) {
     const section = document.getElementById('guestRsvpSection');
     if (!section) return;
 
-    // Only show for non-signed-in visitors on non-member-only, paid events
-    if (pubCurrentUser || event.member_only || pubGuestRsvp?.paid) {
+    // Only show for non-signed-in visitors on non-member-only events
+    if (pubCurrentUser || event.member_only || pubGuestRsvp) {
         section.classList.add('hidden');
         return;
     }
@@ -813,24 +814,24 @@ function pubRenderGuestRsvpSection(event) {
     const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
     if (isClosed || isPast || deadlinePassed) return;
 
-    // Only show for paid events (guests can't free-RSVP without account for now)
-    if (event.pricing_mode === 'free') return;
-
     section.classList.remove('hidden');
 
-    // Update button label with price
+    // Update button label with price (if paid)
     const btn = document.getElementById('guestRsvpBtn');
     if (btn) {
         const cost = event.rsvp_cost_cents || 0;
-        btn.textContent = cost > 0
-            ? `RSVP as Guest — ${pubFormatCurrency(cost)}`
-            : 'RSVP as Guest';
+        if (event.pricing_mode === 'paid' && cost > 0) {
+            btn.textContent = `RSVP as Guest — ${pubFormatCurrency(cost)}`;
+        } else {
+            btn.textContent = 'RSVP as Guest';
+        }
     }
 
-    // Show/hide no-refund checkbox for paid events
+    // Show/hide no-refund checkbox (only for paid events)
     const noRefundCheck = document.getElementById('guestNoRefundCheck');
     if (noRefundCheck) {
-        noRefundCheck.closest('label').classList.toggle('hidden', event.pricing_mode === 'free');
+        const isPaid = event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0;
+        noRefundCheck.closest('label').classList.toggle('hidden', !isPaid);
     }
 }
 
@@ -854,8 +855,9 @@ async function pubHandleGuestRsvp() {
         return;
     }
 
-    // Check no-refund policy checkbox
-    if (noRefund && !noRefund.closest('label').classList.contains('hidden') && !noRefund.checked) {
+    // Check no-refund policy checkbox (paid events only)
+    const isPaid = pubCurrentEvent.pricing_mode === 'paid' && pubCurrentEvent.rsvp_cost_cents > 0;
+    if (isPaid && noRefund && !noRefund.closest('label').classList.contains('hidden') && !noRefund.checked) {
         alert('Please accept the no-refund policy to continue.');
         return;
     }
@@ -864,18 +866,67 @@ async function pubHandleGuestRsvp() {
     btn.textContent = 'Processing...';
 
     try {
-        const { url } = await callEdgeFunctionPublic('create-event-checkout', {
-            event_id: pubCurrentEvent.id,
-            type: 'rsvp',
-            guest_name: name,
-            guest_email: email,
-        });
-        if (url) window.location.href = url;
+        if (isPaid) {
+            // Paid event → Stripe checkout
+            const { url } = await callEdgeFunctionPublic('create-event-checkout', {
+                event_id: pubCurrentEvent.id,
+                type: 'rsvp',
+                guest_name: name,
+                guest_email: email,
+            });
+            if (url) window.location.href = url;
+        } else {
+            // Free event → direct RSVP via edge function
+            const result = await callEdgeFunctionPublic('rsvp-guest-free', {
+                event_id: pubCurrentEvent.id,
+                guest_name: name,
+                guest_email: email,
+            });
+
+            if (result.guest_token) {
+                pubGuestToken = result.guest_token;
+                pubGuestRsvp = {
+                    guest_name: name,
+                    guest_email: email,
+                    guest_token: result.guest_token,
+                    status: result.status,
+                    paid: false,
+                };
+
+                // Show success + QR ticket
+                const section = document.getElementById('guestRsvpSection');
+                section.innerHTML = `
+                    <div class="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                        <span class="text-2xl">✅</span>
+                        <div>
+                            <p class="text-sm font-bold text-emerald-700">You're RSVP'd!</p>
+                            <p class="text-xs text-emerald-600">${pubEscapeHtml(name)} · ${pubEscapeHtml(email)}</p>
+                        </div>
+                    </div>`;
+
+                // Show gated notes if applicable
+                if (pubCurrentEvent.gated_notes) {
+                    document.getElementById('gatedSection').classList.remove('hidden');
+                    document.getElementById('gatedNotes').textContent = pubCurrentEvent.gated_notes;
+                }
+
+                // Show QR ticket if attendee_ticket mode
+                if (pubCurrentEvent.checkin_mode === 'attendee_ticket') {
+                    pubShowGuestTicket(pubGuestRsvp);
+                }
+
+                // Hide guest lookup since they just RSVP'd
+                const lookupSection = document.getElementById('guestLookupSection');
+                if (lookupSection) lookupSection.classList.add('hidden');
+            }
+        }
     } catch (err) {
         console.error('Guest RSVP error:', err);
-        alert(err.message || 'Failed to start checkout. Please try again.');
+        alert(err.message || 'Failed to complete RSVP. Please try again.');
         btn.disabled = false;
-        btn.textContent = `RSVP as Guest — ${pubFormatCurrency(pubCurrentEvent.rsvp_cost_cents)}`;
+        btn.textContent = isPaid
+            ? `RSVP as Guest — ${pubFormatCurrency(pubCurrentEvent.rsvp_cost_cents)}`
+            : 'RSVP as Guest';
     }
 }
 
@@ -925,11 +976,10 @@ async function pubLookupGuestTicket() {
             .select('*')
             .eq('event_id', pubCurrentEvent.id)
             .eq('guest_email', email)
-            .eq('paid', true)
             .maybeSingle();
 
         if (!gRsvp) {
-            resultEl.innerHTML = '<p class="text-xs text-red-600">No paid RSVP found for this email.</p>';
+            resultEl.innerHTML = '<p class="text-xs text-red-600">No RSVP found for this email.</p>';
         } else {
             pubGuestRsvp = gRsvp;
             pubGuestToken = gRsvp.guest_token;
