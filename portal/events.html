@@ -44,41 +44,6 @@
         @media (min-width: 768px) {
             #mainNav { position: fixed; top: 0; left: 0; right: 0; z-index: 40; }
         }
-        /* Make nav transparent over the hero gradient on events page */
-        body[data-active-page="events"] #mainNav {
-            background: rgba(79, 70, 229, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom-color: rgba(255, 255, 255, 0.15);
-            transition: background 0.3s ease, border-bottom-color 0.3s ease;
-        }
-        body[data-active-page="events"] #mainNav a,
-        body[data-active-page="events"] #mainNav span,
-        body[data-active-page="events"] #mainNav button {
-            color: #fff;
-            transition: color 0.3s ease;
-        }
-        body[data-active-page="events"] #mainNav .text-gray-900,
-        body[data-active-page="events"] #mainNav .text-gray-600,
-        body[data-active-page="events"] #mainNav .text-gray-500 { color: #fff !important; }
-        body[data-active-page="events"] #mainNav svg { stroke: #fff; transition: stroke 0.3s ease; }
-
-        /* Once scrolled past hero, revert to normal glass nav */
-        body[data-active-page="events"].nav-solid #mainNav {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom-color: rgba(229, 231, 235, 0.6);
-        }
-        body[data-active-page="events"].nav-solid #mainNav a,
-        body[data-active-page="events"].nav-solid #mainNav span,
-        body[data-active-page="events"].nav-solid #mainNav button {
-            color: inherit;
-        }
-        body[data-active-page="events"].nav-solid #mainNav .text-gray-900 { color: #111827 !important; }
-        body[data-active-page="events"].nav-solid #mainNav .text-gray-600 { color: #4b5563 !important; }
-        body[data-active-page="events"].nav-solid #mainNav .text-gray-500 { color: #6b7280 !important; }
-        body[data-active-page="events"].nav-solid #mainNav svg { stroke: currentColor; }
         .event-card { transition: transform .15s ease, box-shadow .15s ease; cursor: pointer; }
         .event-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(0,0,0,.08); }
         .tab-btn { position: relative; }
@@ -708,18 +673,5 @@
     <script src="../js/portal/events/scrapbook.js"></script>
     <script src="../js/portal/events/init.js"></script>
     <script src="../js/sw-register.js"></script>
-    <script>
-    // Toggle nav style when scrolled past the hero
-    (function() {
-        var hero = document.querySelector('main > .sticky, main > div:first-child');
-        if (!hero) return;
-        function onScroll() {
-            var bottom = hero.getBoundingClientRect().bottom;
-            document.body.classList.toggle('nav-solid', bottom <= 64);
-        }
-        window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll();
-    })();
-    </script>
 </body>
 </html>
