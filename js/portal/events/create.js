@@ -610,14 +610,22 @@ function evtHandlePreview() {
     const gateLocation = document.getElementById('gateLocation').checked;
 
     document.getElementById('detailContent').innerHTML = `
-        <div class="h-48 sm:h-56 relative" style="${bannerBg}">
-            <button onclick="evtToggleModal('detailModal',false)" class="absolute top-4 right-4 w-8 h-8 bg-black/30 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-black/50 transition">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-            <div class="absolute bottom-4 left-4"><span class="type-tag bg-amber-100 text-amber-700">PREVIEW</span></div>
+        <div class="relative" style="${bannerBg} min-height:280px;">
+            <!-- Gradient scrim for text readability -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 pointer-events-none"></div>
+            <!-- Close button — respects Dynamic Island -->
+            <div class="absolute top-0 right-0" style="padding-top:max(1rem, env(safe-area-inset-top)); padding-right:1rem;">
+                <button onclick="evtToggleModal('detailModal',false)" class="w-8 h-8 bg-black/30 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-black/50 transition">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <!-- Preview tag + Title at bottom of banner -->
+            <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+                <div class="mb-2"><span class="type-tag bg-amber-100 text-amber-700">PREVIEW</span></div>
+                <h2 class="text-xl sm:text-2xl font-extrabold text-white drop-shadow-lg">${evtEscapeHtml(title)}</h2>
+            </div>
         </div>
         <div class="p-5 sm:p-6">
-            <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900">${evtEscapeHtml(title)}</h2>
             <div class="mt-4 space-y-2 text-gray-600">
                 <div class="flex items-center gap-2.5">
                     <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>

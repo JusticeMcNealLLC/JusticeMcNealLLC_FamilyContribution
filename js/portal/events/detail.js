@@ -548,9 +548,12 @@ async function evtOpenDetail(eventId) {
     }
 
     document.getElementById('detailContent').innerHTML = `
-        <!-- Banner (sticky on mobile) -->
-        <div class="h-48 sm:h-56 relative sticky top-0 z-10" style="${bannerBg}">
-            <div class="absolute top-4 right-4 flex items-center gap-2">
+        <!-- Banner (sticky on mobile, taller with title overlay) -->
+        <div class="relative sticky top-0 z-10" style="${bannerBg} min-height:280px;">
+            <!-- Gradient scrim for text readability -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 pointer-events-none"></div>
+            <!-- Top buttons — respects Dynamic Island -->
+            <div class="absolute top-0 right-0 flex items-center gap-2" style="padding-top:max(1rem, env(safe-area-inset-top)); padding-right:1rem;">
                 <button onclick="evtCopyShareUrl('${event.slug}')" class="w-8 h-8 bg-black/30 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-black/50 transition" title="Copy share link">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                 </button>
@@ -558,14 +561,17 @@ async function evtOpenDetail(eventId) {
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div class="absolute bottom-4 left-4 flex gap-1.5">
-                <span class="type-tag ${tc.bg} ${tc.text}">${tc.label}</span>
-                <span class="type-tag ${STATUS_COLORS[event.status] || ''}">${event.status.toUpperCase()}</span>
+            <!-- Tags + Title at bottom of banner -->
+            <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+                <div class="flex gap-1.5 mb-2">
+                    <span class="type-tag ${tc.bg} ${tc.text}">${tc.label}</span>
+                    <span class="type-tag ${STATUS_COLORS[event.status] || ''}">${event.status.toUpperCase()}</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-extrabold text-white drop-shadow-lg">${evtEscapeHtml(event.title)}</h2>
             </div>
         </div>
 
         <div class="p-5 sm:p-6">
-            <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900">${evtEscapeHtml(event.title)}</h2>
 
             <!-- Date & Time -->
             <div class="mt-4 space-y-2 text-gray-600">
