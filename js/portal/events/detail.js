@@ -103,6 +103,11 @@ async function evtOpenDetail(eventId) {
             .single();
         creatorProfile = cp;
     }
+    // Pre-compute creator display vars for banner
+    const cpName = creatorProfile ? ([creatorProfile.first_name, creatorProfile.last_name].filter(Boolean).join(' ') || 'Member') : '';
+    const cpInitials = creatorProfile ? ((creatorProfile.first_name || '?')[0] + (creatorProfile.last_name || '')[0]).toUpperCase() : '';
+    const cpBadge = creatorProfile ? evtBadgeChip(creatorProfile.displayed_badge) : '';
+    const cpTitle = creatorProfile ? (creatorProfile.title || 'Member') : '';
 
     // Should show gated info?
     const hasRsvp = rsvp && (rsvp.status === 'going' || rsvp.status === 'maybe');
@@ -586,9 +591,9 @@ async function evtOpenDetail(eventId) {
 
     document.getElementById('detailContent').innerHTML = `
         <!-- Banner (sticky on mobile, taller with title overlay) -->
-        <div class="relative sticky top-0 z-10" style="${bannerBg} min-height:280px;">
+        <div class="relative sticky top-0 z-10" style="${bannerBg} min-height:220px;">
             <!-- Gradient scrim for text readability -->
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10 pointer-events-none"></div>
             <!-- Top buttons — respects Dynamic Island -->
             <div class="absolute top-0 right-0 flex items-center gap-2" style="padding-top:max(1rem, env(safe-area-inset-top)); padding-right:1rem;">
                 <button onclick="evtCopyShareUrl('${event.slug}')" class="w-8 h-8 bg-black/30 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-black/50 transition" title="Copy share link">
@@ -598,13 +603,25 @@ async function evtOpenDetail(eventId) {
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <!-- Tags + Title at bottom of banner -->
-            <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+            <!-- Tags + Title + Creator at bottom of banner -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
                 <div class="flex gap-1.5 mb-2">
                     <span class="type-tag ${tc.bg} ${tc.text}">${tc.label}</span>
                     <span class="type-tag ${STATUS_COLORS[event.status] || ''}">${event.status.toUpperCase()}</span>
                 </div>
-                <h2 class="text-xl sm:text-2xl font-extrabold text-white drop-shadow-lg">${evtEscapeHtml(event.title)}</h2>
+                <h2 class="text-lg sm:text-2xl font-extrabold text-white drop-shadow-lg leading-tight">${evtEscapeHtml(event.title)}</h2>
+                ${creatorProfile ? `
+                <a href="profile.html?id=${creatorProfile.id}" class="mt-2 flex items-center gap-2 group">
+                    <div class="relative flex-shrink-0">
+                        <div class="w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/40">
+                            ${creatorProfile.profile_picture_url ? `<img src="${creatorProfile.profile_picture_url}" class="w-full h-full object-cover" alt="">` : `<span class="text-white text-[10px] font-bold">${cpInitials}</span>`}
+                        </div>
+                        ${cpBadge ? `<div class="absolute -bottom-0.5 -right-0.5" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))">${cpBadge}</div>` : ''}
+                    </div>
+                    <span class="text-xs font-semibold text-white/90 group-hover:text-white transition drop-shadow">${evtEscapeHtml(cpName)}</span>
+                    <span class="text-[10px] text-white/60">·</span>
+                    <span class="text-[10px] text-white/60">${evtEscapeHtml(cpTitle)}</span>
+                </a>` : ''}
             </div>
         </div>
 
@@ -684,34 +701,6 @@ async function evtOpenDetail(eventId) {
             <!-- ═══ End two-column grid ═══ -->
 
             <!-- ── FULL-WIDTH SECTIONS BELOW BOTH COLUMNS ── -->
-
-            <!-- Event Creator -->
-            ${creatorProfile ? (() => {
-                const cpName = [creatorProfile.first_name, creatorProfile.last_name].filter(Boolean).join(' ') || 'Member';
-                const cpInitials = ((creatorProfile.first_name || '?')[0] + (creatorProfile.last_name || '')[0]).toUpperCase();
-                const cpBadge = evtBadgeChip(creatorProfile.displayed_badge);
-                const cpTitle = creatorProfile.title || 'Member';
-                return `
-            <div class="mt-5 p-4 bg-surface-50 rounded-xl border border-gray-100">
-                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2.5">Created by</p>
-                <div class="flex items-center gap-3">
-                    <a href="profile.html?id=${creatorProfile.id}" class="relative flex-shrink-0">
-                        <div class="w-11 h-11 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
-                            ${creatorProfile.profile_picture_url ? `<img src="${creatorProfile.profile_picture_url}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-sm font-bold">${cpInitials}</span>`}
-                        </div>
-                        ${cpBadge ? `<div class="absolute -bottom-0.5 -right-0.5">${cpBadge}</div>` : ''}
-                    </a>
-                    <div class="flex-1 min-w-0">
-                        <a href="profile.html?id=${creatorProfile.id}" class="text-sm font-bold text-gray-900 hover:text-brand-600 transition hover:underline">${evtEscapeHtml(cpName)}</a>
-                        <p class="text-xs text-gray-500">${evtEscapeHtml(cpTitle)}</p>
-                    </div>
-                    <a href="profile.html?id=${creatorProfile.id}" class="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition whitespace-nowrap">
-                        View Profile
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </a>
-                </div>
-            </div>`;
-            })() : ''}
 
             ${costBreakdownHtml}
             ${thresholdHtml}
