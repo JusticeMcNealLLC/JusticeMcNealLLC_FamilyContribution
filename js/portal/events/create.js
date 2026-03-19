@@ -146,19 +146,137 @@ function evtRecalcCostSummary() {
 
 // ─── Main Create Handler ────────────────────────────────
 
+// Common US street-type abbreviations → full words for better geocoding
+const STREET_ABBREVS = {
+    'crt':'court','ct':'court','dr':'drive','st':'street','ave':'avenue',
+    'blvd':'boulevard','ln':'lane','rd':'road','pl':'place','cir':'circle',
+    'pkwy':'parkway','hwy':'highway','trl':'trail','ter':'terrace',
+    'trce':'trace','cv':'cove','pt':'point','aly':'alley','way':'way'
+};
+// US state abbreviations → full names
+const STATE_ABBREVS = {
+    'al':'alabama','ak':'alaska','az':'arizona','ar':'arkansas','ca':'california',
+    'co':'colorado','ct':'connecticut','de':'delaware','fl':'florida','ga':'georgia',
+    'hi':'hawaii','id':'idaho','il':'illinois','in':'indiana','ia':'iowa',
+    'ks':'kansas','ky':'kentucky','la':'louisiana','me':'maine','md':'maryland',
+    'ma':'massachusetts','mi':'michigan','mn':'minnesota','ms':'mississippi',
+    'mo':'missouri','mt':'montana','ne':'nebraska','nv':'nevada','nh':'new hampshire',
+    'nj':'new jersey','nm':'new mexico','ny':'new york','nc':'north carolina',
+    'nd':'north dakota','oh':'ohio','ok':'oklahoma','or':'oregon','pa':'pennsylvania',
+    'ri':'rhode island','sc':'south carolina','sd':'south dakota','tn':'tennessee',
+    'tx':'texas','ut':'utah','vt':'vermont','va':'virginia','wa':'washington',
+    'wv':'west virginia','wi':'wisconsin','wy':'wyoming','dc':'district of columbia'
+};
+
+function evtExpandAddress(raw) {
+    // Expand abbreviations: "1283 lynx crt hampton ga 30228" → "1283 lynx court, hampton, georgia 30228"
+    let words = raw.trim().split(/\s+/);
+    const streetTypes = new Set(Object.values(STREET_ABBREVS));
+    // Track which index was a street type (so we can insert comma after it)
+    let streetTypeIdx = -1;
+    // Expand street type abbreviations
+    words = words.map((w, i) => {
+        const lower = w.toLowerCase();
+        if (STREET_ABBREVS[lower]) { streetTypeIdx = i; return STREET_ABBREVS[lower]; }
+        if (streetTypes.has(lower)) { streetTypeIdx = i; }
+        return w;
+    });
+    // Expand state abbreviations
+    words = words.map(w => STATE_ABBREVS[w.toLowerCase()] || w);
+    const expanded = words.join(' ');
+    // If user already used commas, return as-is
+    if (raw.includes(',')) return expanded;
+    // Try to structure: <street>, <city>, <state> <zip>
+    const zipMatch = expanded.match(/^(.+?)\s+(\d{5}(?:-\d{4})?)$/);
+    if (!zipMatch) return expanded;
+    const beforeZip = zipMatch[1];
+    const zip = zipMatch[2];
+    const bParts = beforeZip.split(' ');
+    // Identify state (1- or 2-word) at end
+    let stateStart = -1;
+    const stateVals = Object.values(STATE_ABBREVS);
+    if (bParts.length >= 3) {
+        const twoWord = (bParts[bParts.length - 2] + ' ' + bParts[bParts.length - 1]).toLowerCase();
+        if (stateVals.includes(twoWord)) stateStart = bParts.length - 2;
+    }
+    if (stateStart < 0 && bParts.length >= 2) {
+        if (stateVals.includes(bParts[bParts.length - 1].toLowerCase())) stateStart = bParts.length - 1;
+    }
+    if (stateStart < 0) return expanded;
+    const statePart = bParts.slice(stateStart).join(' ');
+    const preState = bParts.slice(0, stateStart);
+    // Now split preState into street + city using the street type position
+    if (streetTypeIdx >= 0 && streetTypeIdx < preState.length - 1) {
+        // Everything up to and including the street type is the street; the rest is the city
+        const street = preState.slice(0, streetTypeIdx + 1).join(' ');
+        const city = preState.slice(streetTypeIdx + 1).join(' ');
+        return `${street}, ${city}, ${statePart} ${zip}`;
+    }
+    // No street type found — just put comma before state
+    return preState.join(' ') + ', ' + statePart + ' ' + zip;
+}
+
+// Extract city / state / zip from address for fallback geocoding
+function evtExtractCityStateZip(address) {
+    const parts = address.split(',').map(s => s.trim());
+    if (parts.length >= 2) {
+        // "city, state zip" or "street, city, state zip"
+        return parts.slice(-1)[0].includes(' ') ? parts.slice(-2).join(', ') : parts.slice(-1)[0];
+    }
+    // No commas — try to grab city + state + zip from the end
+    const words = address.trim().split(/\s+/);
+    // Look for 5-digit zip at end
+    const hasZip = /^\d{5}(-\d{4})?$/.test(words[words.length - 1]);
+    if (hasZip && words.length >= 3) {
+        // Take last 3 tokens: city state zip (or last 4 for 2-word states)
+        return words.slice(-3).join(' ');
+    }
+    if (words.length >= 2) return words.slice(-2).join(' ');
+    return address;
+}
+
 // Geocode a location text into lat/lng using OpenStreetMap Nominatim
+// Falls back to city/zip-level geocoding if exact address isn't found
 async function evtGeocodeAddress(address) {
+    const headers = { 'Accept-Language': 'en' };
+    const base = 'https://nominatim.openstreetmap.org/search?format=json&countrycodes=us';
+
+    // 1. Try the expanded / cleaned-up address
+    const expanded = evtExpandAddress(address);
     try {
-        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=us&q=${encodeURIComponent(address)}`, {
-            headers: { 'Accept-Language': 'en' }
-        });
+        const resp = await fetch(`${base}&limit=5&q=${encodeURIComponent(expanded)}`, { headers });
         const results = await resp.json();
         if (results && results.length > 0) {
-            // Prefer results that are a house / building / place (class=place or class=building)
             const best = results.find(r => r.class === 'place' || r.class === 'building') || results[0];
             return { lat: parseFloat(best.lat), lng: parseFloat(best.lon), display: best.display_name };
         }
-    } catch (err) { console.warn('Geocoding failed:', err); }
+    } catch (err) { console.warn('Geocoding attempt 1 failed:', err); }
+
+    // 2. If expanded differs from raw, also try original (user might know better)
+    if (expanded !== address) {
+        try {
+            const resp = await fetch(`${base}&limit=5&q=${encodeURIComponent(address)}`, { headers });
+            const results = await resp.json();
+            if (results && results.length > 0) {
+                const best = results.find(r => r.class === 'place' || r.class === 'building') || results[0];
+                return { lat: parseFloat(best.lat), lng: parseFloat(best.lon), display: best.display_name };
+            }
+        } catch (err) { console.warn('Geocoding attempt 2 failed:', err); }
+    }
+
+    // 3. Fallback: geocode just the city / state / zip so the pin is at least in the right area
+    const fallback = evtExtractCityStateZip(expanded);
+    if (fallback && fallback.toLowerCase() !== expanded.toLowerCase()) {
+        try {
+            const resp = await fetch(`${base}&limit=1&q=${encodeURIComponent(fallback)}`, { headers });
+            const results = await resp.json();
+            if (results && results.length > 0) {
+                console.info('Geocoding: exact address not found, using city-level fallback:', results[0].display_name);
+                return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon), display: results[0].display_name, approximate: true };
+            }
+        } catch (err) { console.warn('Geocoding fallback failed:', err); }
+    }
+
     return null;
 }
 
@@ -244,11 +362,19 @@ async function evtHandleCreate(e) {
         if (record.location_text) {
             publishBtn.textContent = 'Validating address…';
             const geo = await evtGeocodeAddress(record.location_text);
-            if (geo) {
+            if (geo && !geo.approximate) {
                 record.location_lat = geo.lat;
                 record.location_lng = geo.lng;
+            } else if (geo && geo.approximate) {
+                // City-level only — let user decide
+                const useApprox = confirm(`Exact address not found. The map pin will be placed near:\n"${geo.display}"\n\nUse this approximate location?`);
+                if (useApprox) {
+                    record.location_lat = geo.lat;
+                    record.location_lng = geo.lng;
+                }
+                // If they decline, event is created without map pin — still publish
             } else {
-                // Address not found — ask user to continue anyway
+                // Address not found at all — ask user to continue anyway
                 if (!confirm('Could not verify that address on the map. The event will be created without a map pin.\n\nPublish anyway?')) {
                     publishBtn.disabled = false;
                     publishBtn.textContent = 'Publish Event';
