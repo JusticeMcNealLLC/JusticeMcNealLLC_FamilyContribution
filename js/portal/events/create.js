@@ -169,30 +169,23 @@ const STATE_ABBREVS = {
 };
 
 function evtExpandAddress(raw) {
-    // Expand abbreviations: "1283 lynx crt hampton ga 30228" → "1283 lynx court, hampton, georgia 30228"
     let words = raw.trim().split(/\s+/);
     const streetTypes = new Set(Object.values(STREET_ABBREVS));
-    // Track which index was a street type (so we can insert comma after it)
     let streetTypeIdx = -1;
-    // Expand street type abbreviations
     words = words.map((w, i) => {
         const lower = w.toLowerCase();
         if (STREET_ABBREVS[lower]) { streetTypeIdx = i; return STREET_ABBREVS[lower]; }
         if (streetTypes.has(lower)) { streetTypeIdx = i; }
         return w;
     });
-    // Expand state abbreviations
     words = words.map(w => STATE_ABBREVS[w.toLowerCase()] || w);
     const expanded = words.join(' ');
-    // If user already used commas, return as-is
     if (raw.includes(',')) return expanded;
-    // Try to structure: <street>, <city>, <state> <zip>
     const zipMatch = expanded.match(/^(.+?)\s+(\d{5}(?:-\d{4})?)$/);
     if (!zipMatch) return expanded;
     const beforeZip = zipMatch[1];
     const zip = zipMatch[2];
     const bParts = beforeZip.split(' ');
-    // Identify state (1- or 2-word) at end
     let stateStart = -1;
     const stateVals = Object.values(STATE_ABBREVS);
     if (bParts.length >= 3) {
@@ -205,76 +198,74 @@ function evtExpandAddress(raw) {
     if (stateStart < 0) return expanded;
     const statePart = bParts.slice(stateStart).join(' ');
     const preState = bParts.slice(0, stateStart);
-    // Now split preState into street + city using the street type position
     if (streetTypeIdx >= 0 && streetTypeIdx < preState.length - 1) {
-        // Everything up to and including the street type is the street; the rest is the city
         const street = preState.slice(0, streetTypeIdx + 1).join(' ');
         const city = preState.slice(streetTypeIdx + 1).join(' ');
         return `${street}, ${city}, ${statePart} ${zip}`;
     }
-    // No street type found — just put comma before state
     return preState.join(' ') + ', ' + statePart + ' ' + zip;
 }
 
-// Extract city / state / zip from address for fallback geocoding
-function evtExtractCityStateZip(address) {
-    const parts = address.split(',').map(s => s.trim());
-    if (parts.length >= 2) {
-        // "city, state zip" or "street, city, state zip"
-        return parts.slice(-1)[0].includes(' ') ? parts.slice(-2).join(', ') : parts.slice(-1)[0];
-    }
-    // No commas — try to grab city + state + zip from the end
-    const words = address.trim().split(/\s+/);
-    // Look for 5-digit zip at end
-    const hasZip = /^\d{5}(-\d{4})?$/.test(words[words.length - 1]);
-    if (hasZip && words.length >= 3) {
-        // Take last 3 tokens: city state zip (or last 4 for 2-word states)
-        return words.slice(-3).join(' ');
-    }
-    if (words.length >= 2) return words.slice(-2).join(' ');
-    return address;
+// ── Geocoding: US Census Bureau (primary) → Nominatim (fallback) ──
+// The Census geocoder has TIGER/Line data — virtually every US address.
+
+async function evtGeocodeCensus(address) {
+    // US Census Bureau Geocoder — free, no API key, excellent US address coverage
+    const url = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(address)}&benchmark=Public_AR_Current&format=json`;
+    try {
+        const resp = await fetch(url);
+        const data = await resp.json();
+        const matches = data?.result?.addressMatches;
+        if (matches && matches.length > 0) {
+            const m = matches[0];
+            return {
+                lat: m.coordinates.y,
+                lng: m.coordinates.x,
+                display: m.matchedAddress
+            };
+        }
+    } catch (err) { console.warn('Census geocoder failed:', err); }
+    return null;
 }
 
-// Geocode a location text into lat/lng using OpenStreetMap Nominatim
-// Falls back to city/zip-level geocoding if exact address isn't found
-async function evtGeocodeAddress(address) {
-    const headers = { 'Accept-Language': 'en' };
-    const base = 'https://nominatim.openstreetmap.org/search?format=json&countrycodes=us';
-
-    // 1. Try the expanded / cleaned-up address
-    const expanded = evtExpandAddress(address);
+async function evtGeocodeNominatim(address) {
+    // Nominatim / OpenStreetMap — good for non-US or when Census is down
     try {
-        const resp = await fetch(`${base}&limit=5&q=${encodeURIComponent(expanded)}`, { headers });
+        const resp = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=us&q=${encodeURIComponent(address)}`,
+            { headers: { 'Accept-Language': 'en' } }
+        );
         const results = await resp.json();
         if (results && results.length > 0) {
             const best = results.find(r => r.class === 'place' || r.class === 'building') || results[0];
             return { lat: parseFloat(best.lat), lng: parseFloat(best.lon), display: best.display_name };
         }
-    } catch (err) { console.warn('Geocoding attempt 1 failed:', err); }
+    } catch (err) { console.warn('Nominatim geocoder failed:', err); }
+    return null;
+}
 
-    // 2. If expanded differs from raw, also try original (user might know better)
+// Main geocode function — tries multiple sources until one succeeds
+async function evtGeocodeAddress(address) {
+    const expanded = evtExpandAddress(address);
+
+    // 1. US Census Bureau — best for exact US addresses
+    let result = await evtGeocodeCensus(address);
+    if (result) return result;
+
+    // 2. Census with expanded abbreviations
     if (expanded !== address) {
-        try {
-            const resp = await fetch(`${base}&limit=5&q=${encodeURIComponent(address)}`, { headers });
-            const results = await resp.json();
-            if (results && results.length > 0) {
-                const best = results.find(r => r.class === 'place' || r.class === 'building') || results[0];
-                return { lat: parseFloat(best.lat), lng: parseFloat(best.lon), display: best.display_name };
-            }
-        } catch (err) { console.warn('Geocoding attempt 2 failed:', err); }
+        result = await evtGeocodeCensus(expanded);
+        if (result) return result;
     }
 
-    // 3. Fallback: geocode just the city / state / zip so the pin is at least in the right area
-    const fallback = evtExtractCityStateZip(expanded);
-    if (fallback && fallback.toLowerCase() !== expanded.toLowerCase()) {
-        try {
-            const resp = await fetch(`${base}&limit=1&q=${encodeURIComponent(fallback)}`, { headers });
-            const results = await resp.json();
-            if (results && results.length > 0) {
-                console.info('Geocoding: exact address not found, using city-level fallback:', results[0].display_name);
-                return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon), display: results[0].display_name, approximate: true };
-            }
-        } catch (err) { console.warn('Geocoding fallback failed:', err); }
+    // 3. Nominatim with expanded address
+    result = await evtGeocodeNominatim(expanded);
+    if (result) return result;
+
+    // 4. Nominatim with original address
+    if (expanded !== address) {
+        result = await evtGeocodeNominatim(address);
+        if (result) return result;
     }
 
     return null;
@@ -362,19 +353,11 @@ async function evtHandleCreate(e) {
         if (record.location_text) {
             publishBtn.textContent = 'Validating address…';
             const geo = await evtGeocodeAddress(record.location_text);
-            if (geo && !geo.approximate) {
+            if (geo) {
                 record.location_lat = geo.lat;
                 record.location_lng = geo.lng;
-            } else if (geo && geo.approximate) {
-                // City-level only — let user decide
-                const useApprox = confirm(`Exact address not found. The map pin will be placed near:\n"${geo.display}"\n\nUse this approximate location?`);
-                if (useApprox) {
-                    record.location_lat = geo.lat;
-                    record.location_lng = geo.lng;
-                }
-                // If they decline, event is created without map pin — still publish
             } else {
-                // Address not found at all — ask user to continue anyway
+                // Address not found — ask user to continue anyway
                 if (!confirm('Could not verify that address on the map. The event will be created without a map pin.\n\nPublish anyway?')) {
                     publishBtn.disabled = false;
                     publishBtn.textContent = 'Publish Event';
