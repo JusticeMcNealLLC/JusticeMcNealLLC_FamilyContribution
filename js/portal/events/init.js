@@ -171,6 +171,7 @@ window.evtLeaveWaitlist = evtLeaveWaitlist;
 window.evtDuplicateEvent = evtDuplicateEvent;
 window.evtCancelEvent = evtCancelEvent;
 window.evtRescheduleEvent = evtRescheduleEvent;
+window.evtDeleteEvent = evtDeleteEvent;
 window.evtClaimWaitlistSpot = evtClaimWaitlistSpot;
 // Document management exports
 window.evtShowUploadForm = evtShowUploadForm;

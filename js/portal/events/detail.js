@@ -535,6 +535,11 @@ async function evtOpenDetail(eventId) {
         // Duplicate tool — available for any status
         buttons += `<button onclick="evtDuplicateEvent('${eventId}')" class="bg-brand-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-brand-700 transition">Duplicate Event</button>`;
 
+        // Delete — admin only, any status
+        if (evtCurrentUserRole === 'admin') {
+            buttons += `<button onclick="evtDeleteEvent('${eventId}')" class="bg-red-700 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-red-800 transition">🗑 Delete Event</button>`;
+        }
+
         hostControlsHtml = `
             <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
                 <h4 class="text-sm font-bold text-amber-700 mb-2">Host Controls</h4>

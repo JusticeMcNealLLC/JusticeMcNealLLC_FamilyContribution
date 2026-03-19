@@ -145,7 +145,7 @@ function renderEventsTable() {
 
     if (!filtered.length) {
         document.getElementById('eventsTableBody').innerHTML = `
-            <tr><td colspan="7" class="py-8 text-center text-gray-400">No events found</td></tr>`;
+            <tr><td colspan="8" class="py-8 text-center text-gray-400">No events found</td></tr>`;
         return;
     }
 
@@ -167,6 +167,12 @@ function renderEventsTable() {
                 <td class="py-3 px-4 text-center font-semibold">${rsvpCount}${e.max_participants ? `<span class="text-gray-400 font-normal">/${e.max_participants}</span>` : ''}</td>
                 <td class="py-3 px-4 text-center font-semibold text-emerald-600">${checkinCount}</td>
                 <td class="py-3 px-4 text-right font-semibold">${revenue > 0 ? formatCurrency(revenue) : '<span class="text-gray-300">—</span>'}</td>
+                <td class="py-3 px-4 text-center">
+                    <button onclick="adminDeleteEvent('${e.id}','${escapeHtml(e.title).replace(/'/g, "\\'")}')"
+                        class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition" title="Delete event">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </td>
             </tr>`;
     }).join('');
 }
@@ -321,3 +327,27 @@ async function adminAwardBanner() {
 }
 
 window.adminAwardBanner = adminAwardBanner;
+
+async function adminDeleteEvent(eventId, eventTitle) {
+    const typed = prompt(`This will permanently delete "${eventTitle}" and all associated data (RSVPs, check-ins, raffle entries, documents, photos).\n\nType the event title to confirm:`);
+    if (!typed || typed.trim() !== eventTitle.trim()) {
+        if (typed !== null) alert('Event title did not match. Deletion cancelled.');
+        return;
+    }
+
+    try {
+        const { error } = await supabaseClient
+            .from('events')
+            .delete()
+            .eq('id', eventId);
+        if (error) throw error;
+
+        alert('Event deleted successfully.');
+        await loadEventsDashboard();
+    } catch (err) {
+        console.error('Delete event error:', err);
+        alert('Failed to delete event: ' + (err.message || 'Unknown error'));
+    }
+}
+
+window.adminDeleteEvent = adminDeleteEvent;

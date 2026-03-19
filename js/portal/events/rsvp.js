@@ -359,6 +359,40 @@ async function evtRequestGraceRefund(eventId) {
 
 // ─── Duplicate Event ────────────────────────────────────
 
+async function evtDeleteEvent(eventId) {
+    const event = evtAllEvents.find(e => e.id === eventId);
+    if (!event) return;
+
+    // Only allow admins to delete
+    if (evtCurrentUserRole !== 'admin') {
+        alert('Only admins can delete events.');
+        return;
+    }
+
+    // Require typing the event title to confirm
+    const typed = prompt(`This will permanently delete "${event.title}" and all associated RSVPs, check-ins, raffle entries, documents, and photos.\n\nType the event title to confirm:`);
+    if (!typed || typed.trim() !== event.title.trim()) {
+        if (typed !== null) alert('Event title did not match. Deletion cancelled.');
+        return;
+    }
+
+    try {
+        // CASCADE on FK handles child records (rsvps, checkins, guest_rsvps, raffle_entries, raffle_winners, cost_items, documents, photos, waitlist, hosts, checkins, locations, competition tables)
+        const { error } = await supabaseClient
+            .from('events')
+            .delete()
+            .eq('id', eventId);
+        if (error) throw error;
+
+        alert('Event deleted successfully.');
+        evtToggleModal('detailModal', false);
+        await evtLoadEvents();
+    } catch (err) {
+        console.error('Delete event error:', err);
+        alert('Failed to delete event: ' + (err.message || 'Unknown error'));
+    }
+}
+
 async function evtDuplicateEvent(eventId) {
     const event = evtAllEvents.find(e => e.id === eventId);
     if (!event) return;
