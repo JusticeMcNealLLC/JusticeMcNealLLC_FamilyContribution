@@ -165,12 +165,8 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         document.getElementById('gatedNotes').textContent = event.gated_notes;
     }
 
-    // Stats
-    document.getElementById('goingCount').textContent = goingCount;
-    const spotsLeft = event.max_participants
-        ? Math.max(0, event.max_participants - goingCount)
-        : '∞';
-    document.getElementById('spotsLeft').textContent = spotsLeft;
+    // Stats hidden — attendee counts are internal only
+    // (goingCount and spotsLeft no longer shown to public)
 
     // Member-only notice
     if (event.member_only && !pubCurrentUser) {

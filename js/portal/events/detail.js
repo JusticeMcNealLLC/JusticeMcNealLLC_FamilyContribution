@@ -24,11 +24,12 @@ async function evtOpenDetail(eventId) {
 
     const goingList = (rsvps || []).filter(r => r.status === 'going');
     const maybeList = (rsvps || []).filter(r => r.status === 'maybe');
+    const notGoingList = (rsvps || []).filter(r => r.status === 'not_going');
 
-    // Load check-in count
-    const { count: checkinCount } = await supabaseClient
+    // Load check-ins with profile info (for host attendee breakdown)
+    const { data: checkins, count: checkinCount } = await supabaseClient
         .from('event_checkins')
-        .select('id', { count: 'exact', head: true })
+        .select('user_id, profiles!event_checkins_user_id_fkey(first_name, last_name, profile_picture_url)', { count: 'exact' })
         .eq('event_id', eventId);
 
     // Load cost items for LLC events
@@ -311,7 +312,20 @@ async function evtOpenDetail(eventId) {
     const canRsvp = ['open', 'confirmed', 'active'].includes(event.status);
     const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
 
-    if (canRsvp && !eventIsFull && event.pricing_mode === 'free') {
+    // Hosts/creators don't need RSVP buttons — they're automatically attending
+    if (isHost) {
+        rsvpButtons = `
+            <div class="mt-6">
+                <div class="flex items-center gap-3 p-3 bg-brand-50 border border-brand-200 rounded-xl">
+                    <span class="text-2xl">🎯</span>
+                    <div>
+                        <p class="text-sm font-bold text-brand-700">You're Hosting This Event</p>
+                        <p class="text-xs text-brand-500">You're automatically counted as attending</p>
+                    </div>
+                </div>
+            </div>`;
+
+    } else if (canRsvp && !eventIsFull && event.pricing_mode === 'free') {
         // ── Free RSVP: 3-button grid ──
         const goingActive = rsvp?.status === 'going' ? 'bg-emerald-600 text-white' : 'bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50';
         const maybeActive = rsvp?.status === 'maybe' ? 'bg-amber-500 text-white' : 'bg-white text-amber-600 border border-amber-200 hover:bg-amber-50';
@@ -439,15 +453,69 @@ async function evtOpenDetail(eventId) {
     // Shareable link
     const publicUrl = `${window.location.origin}/events/?e=${event.slug}`;
 
-    // Attendee list
-    const attendeeHtml = goingList.map(r => {
-        const p = r.profiles;
+    // Helper: build avatar + name row for a person
+    function buildPersonRow(p) {
         const initials = ((p?.first_name?.[0] || '') + (p?.last_name?.[0] || '')).toUpperCase() || '?';
         const avatar = p?.profile_picture_url
-            ? `<img src="${p.profile_picture_url}" class="w-8 h-8 rounded-full object-cover" alt="">`
-            : `<div class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xs font-bold">${initials}</div>`;
+            ? `<img src="${p.profile_picture_url}" class="w-7 h-7 rounded-full object-cover" alt="">`
+            : `<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xs font-bold">${initials}</div>`;
         return `<div class="flex items-center gap-2">${avatar}<span class="text-sm text-gray-700">${evtEscapeHtml(p?.first_name || '')} ${evtEscapeHtml(p?.last_name || '')}</span></div>`;
-    }).join('');
+    }
+
+    // Build categorized attendee breakdown (host-only)
+    let attendeeBreakdownHtml = '';
+    if (isHost) {
+        const checkinUserIds = new Set((checkins || []).map(c => c.user_id));
+
+        function buildSection(emoji, label, list, color) {
+            if (!list.length) return `<p class="text-xs text-gray-400 italic ml-6">None</p>`;
+            return list.map(r => buildPersonRow(r.profiles)).join('');
+        }
+
+        // Checked-in list from checkins data
+        const checkinRows = (checkins || []).map(c => buildPersonRow(c.profiles)).join('') || `<p class="text-xs text-gray-400 italic ml-6">None</p>`;
+
+        attendeeBreakdownHtml = `
+            <div class="mt-6 p-4 bg-surface-50 rounded-xl border border-gray-100">
+                <h4 class="text-sm font-bold text-gray-700 mb-4">📋 Attendee Breakdown</h4>
+
+                <!-- Going -->
+                <div class="mb-3">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <span class="text-sm">✅</span>
+                        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wide">Going (${goingList.length})</span>
+                    </div>
+                    <div class="space-y-1.5 ml-6">${goingList.length ? goingList.map(r => buildPersonRow(r.profiles)).join('') : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
+                </div>
+
+                <!-- Maybe -->
+                <div class="mb-3">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <span class="text-sm">🤔</span>
+                        <span class="text-xs font-bold text-amber-700 uppercase tracking-wide">Maybe (${maybeList.length})</span>
+                    </div>
+                    <div class="space-y-1.5 ml-6">${maybeList.length ? maybeList.map(r => buildPersonRow(r.profiles)).join('') : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
+                </div>
+
+                <!-- Checked In -->
+                <div class="mb-3">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <span class="text-sm">📍</span>
+                        <span class="text-xs font-bold text-violet-700 uppercase tracking-wide">Checked In (${checkinCount || 0})</span>
+                    </div>
+                    <div class="space-y-1.5 ml-6">${checkinRows}</div>
+                </div>
+
+                <!-- Not Going -->
+                <div>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <span class="text-sm">❌</span>
+                        <span class="text-xs font-bold text-red-600 uppercase tracking-wide">Not Going (${notGoingList.length})</span>
+                    </div>
+                    <div class="space-y-1.5 ml-6">${notGoingList.length ? notGoingList.map(r => buildPersonRow(r.profiles)).join('') : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
+                </div>
+            </div>`;
+    }
 
     // ── Host Controls (enhanced for LLC) ────────────────
     let hostControlsHtml = '';
@@ -537,8 +605,9 @@ async function evtOpenDetail(eventId) {
             ${competitionHtml}
             ${scrapbookHtml}
 
-            <!-- Stats Row -->
-            <div class="grid grid-cols-3 gap-3 mt-6">
+            <!-- Stats Row (Host only) -->
+            ${isHost ? `
+            <div class="grid grid-cols-4 gap-2 mt-6">
                 <div class="text-center p-3 bg-surface-50 rounded-xl">
                     <div class="text-lg font-extrabold text-gray-900">${goingList.length}${event.max_participants ? `<span class="text-xs font-normal text-gray-400">/${event.max_participants}</span>` : ''}</div>
                     <div class="text-xs text-gray-500">Going</div>
@@ -551,7 +620,11 @@ async function evtOpenDetail(eventId) {
                     <div class="text-lg font-extrabold text-emerald-600">${checkinCount || 0}</div>
                     <div class="text-xs text-gray-500">Checked In</div>
                 </div>
-            </div>
+                <div class="text-center p-3 bg-surface-50 rounded-xl">
+                    <div class="text-lg font-extrabold text-red-500">${notGoingList.length}</div>
+                    <div class="text-xs text-gray-500">Not Going</div>
+                </div>
+            </div>` : ''}
 
             ${rsvpButtons}
             ${waitlistHtml}
@@ -560,12 +633,8 @@ async function evtOpenDetail(eventId) {
             ${venueQrHtml}
             ${scannerBtn}
 
-            <!-- Attendee List -->
-            ${goingList.length ? `
-            <div class="mt-6">
-                <h4 class="text-sm font-bold text-gray-700 mb-3">Attendees (${goingList.length})</h4>
-                <div class="space-y-2">${attendeeHtml}</div>
-            </div>` : ''}
+            <!-- Attendee Breakdown (Host only) -->
+            ${attendeeBreakdownHtml}
 
             <!-- Share Link -->
             <div class="mt-6 p-4 bg-surface-50 rounded-xl">
