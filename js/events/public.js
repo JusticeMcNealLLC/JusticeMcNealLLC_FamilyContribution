@@ -990,9 +990,10 @@ function pubShowMap(lat, lng, label) {
     const dirBtn = document.getElementById('eventDirectionsBtn');
     if (dirBtn) {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const addr = encodeURIComponent(label || `${lat},${lng}`);
         const mapsUrl = isIOS
-            ? `https://maps.apple.com/?daddr=${lat},${lng}`
-            : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+            ? `https://maps.apple.com/?daddr=${addr}`
+            : `https://www.google.com/maps/dir/?api=1&destination=${addr}`;
         dirBtn.href = mapsUrl;
     }
 
