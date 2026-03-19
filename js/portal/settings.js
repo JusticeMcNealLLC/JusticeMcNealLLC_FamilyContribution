@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Set up push notification toggle
     setupPushToggle();
+
+    // Set up notification category preferences
+    setupNotifPrefs();
 });
 
 // ─── Profile Loading & Editing ──────────────────────────
@@ -929,5 +932,105 @@ async function setupPushToggle() {
                 ? 'Allow push notifications to stay in the loop'
                 : 'Disabled — tap to re-enable';
         }
+    }
+}
+
+// ─── Notification Category Preferences ──────────────────
+const NOTIF_PREF_FIELDS = [
+    { key: 'event_new',          label: 'New Events',           desc: 'When a new event is created' },
+    { key: 'event_reminders',    label: 'Event Reminders',      desc: '7-day, 3-day, and day-of reminders' },
+    { key: 'event_rsvp_updates', label: 'RSVP Updates',         desc: 'When someone RSVPs to your events' },
+    { key: 'event_rsvp_deadline',label: 'RSVP Deadline Alerts', desc: 'Reminders before RSVP closes' },
+    { key: 'raffle_results',     label: 'Raffle Results',       desc: 'When raffle winners are drawn' },
+    { key: 'competition_updates',label: 'Competitions',         desc: 'Competition updates and results' },
+    { key: 'checkin_alerts',     label: 'Check-In Alerts',      desc: 'When check-in opens for an event' },
+];
+
+async function setupNotifPrefs() {
+    const container = document.getElementById('notifPrefToggles');
+    if (!container) return;
+
+    try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
+
+        // Load or create default prefs
+        let { data: prefs } = await supabaseClient
+            .from('notification_preferences')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        if (!prefs) {
+            // Insert default row (all true)
+            const defaults = { user_id: user.id };
+            NOTIF_PREF_FIELDS.forEach(f => defaults[f.key] = true);
+            defaults.push_enabled = true;
+
+            const { data: inserted } = await supabaseClient
+                .from('notification_preferences')
+                .insert(defaults)
+                .select()
+                .single();
+            prefs = inserted;
+        }
+
+        if (!prefs) {
+            container.innerHTML = '<div class="text-xs text-red-500">Failed to load preferences</div>';
+            return;
+        }
+
+        // Render toggles
+        container.innerHTML = NOTIF_PREF_FIELDS.map(f => {
+            const isOn = prefs[f.key] !== false;
+            return `
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-sm font-medium text-gray-800">${f.label}</div>
+                        <div class="text-xs text-gray-400">${f.desc}</div>
+                    </div>
+                    <button type="button" data-pref="${f.key}" role="switch" aria-checked="${isOn}"
+                        class="notif-pref-toggle relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent ${isOn ? 'bg-brand-600' : 'bg-gray-200'} transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1">
+                        <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isOn ? 'translate-x-4' : 'translate-x-0'}"></span>
+                    </button>
+                </div>`;
+        }).join('');
+
+        // Attach click handlers
+        container.querySelectorAll('.notif-pref-toggle').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const key = btn.dataset.pref;
+                const knob = btn.querySelector('span');
+                const currentlyOn = btn.getAttribute('aria-checked') === 'true';
+                const newVal = !currentlyOn;
+
+                // Optimistic UI update
+                btn.setAttribute('aria-checked', String(newVal));
+                btn.classList.toggle('bg-brand-600', newVal);
+                btn.classList.toggle('bg-gray-200', !newVal);
+                knob.classList.toggle('translate-x-4', newVal);
+                knob.classList.toggle('translate-x-0', !newVal);
+
+                // Persist to DB
+                const { error } = await supabaseClient
+                    .from('notification_preferences')
+                    .update({ [key]: newVal })
+                    .eq('user_id', user.id);
+
+                if (error) {
+                    console.error('Failed to save pref:', error);
+                    // Revert
+                    btn.setAttribute('aria-checked', String(currentlyOn));
+                    btn.classList.toggle('bg-brand-600', currentlyOn);
+                    btn.classList.toggle('bg-gray-200', !currentlyOn);
+                    knob.classList.toggle('translate-x-4', currentlyOn);
+                    knob.classList.toggle('translate-x-0', !currentlyOn);
+                }
+            });
+        });
+
+    } catch (err) {
+        console.error('Notification prefs error:', err);
+        container.innerHTML = '<div class="text-xs text-red-500">Failed to load preferences</div>';
     }
 }

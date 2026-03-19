@@ -30,7 +30,29 @@ function getFunctionUrl(functionName) {
 
 // Helper to call Edge Functions with auth
 async function callEdgeFunction(functionName, body = {}) {
-    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+    // Try getSession first; if the token is expired, refresh it
+    let { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+
+    if (session) {
+        // Check if access_token is about to expire (within 60s)
+        try {
+            const payload = JSON.parse(atob(session.access_token.split('.')[1]));
+            if (payload.exp * 1000 < Date.now() + 60000) {
+                console.log('Token expiring soon, refreshing…');
+                const { data: refreshed, error: refreshErr } = await supabaseClient.auth.refreshSession();
+                if (refreshErr || !refreshed.session) {
+                    console.error('Refresh failed:', refreshErr);
+                    throw new Error('Session expired — please log in again');
+                }
+                session = refreshed.session;
+            }
+        } catch (e) {
+            if (e.message.includes('Session expired')) throw e;
+            // If token parsing fails, try refreshing as a fallback
+            const { data: refreshed } = await supabaseClient.auth.refreshSession();
+            if (refreshed?.session) session = refreshed.session;
+        }
+    }
     
     if (sessionError) {
         console.error('Session error:', sessionError);
@@ -57,6 +79,29 @@ async function callEdgeFunction(functionName, body = {}) {
     const data = await response.json();
     
     console.log('Function response:', response.status, data);
+
+    if (!response.ok) {
+        const err = new Error(data.error || 'Function call failed');
+        if (data.code) err.code = data.code;
+        throw err;
+    }
+
+    return data;
+}
+
+// Call edge function without auth (for guest / public flows)
+async function callEdgeFunctionPublic(functionName, body = {}) {
+    const response = await fetch(getFunctionUrl(functionName), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+    console.log('Public function response:', response.status, data);
 
     if (!response.ok) {
         const err = new Error(data.error || 'Function call failed');

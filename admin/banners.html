@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Banners | Admin | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JMLLC">
+    <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+    <style>
+        .rarity-common   { --r: #6b7280; }
+        .rarity-rare     { --r: #3b82f6; }
+        .rarity-epic     { --r: #8b5cf6; }
+        .rarity-legendary{ --r: #f59e0b; }
+        .rarity-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--r); display: inline-block; }
+        .rarity-pill { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+                       padding: 2px 8px; border-radius: 6px; border: 1.5px solid var(--r); color: var(--r); }
+        .banner-thumb { width: 100%; aspect-ratio: 5/2; border-radius: 12px; overflow: hidden; position: relative; }
+        .banner-thumb-sm { width: 80px; height: 32px; border-radius: 6px; overflow: hidden; position: relative; flex-shrink: 0; }
+        .preview-5-2 { aspect-ratio: 5/2; border-radius: 16px; overflow: hidden; position: relative; }
+        .color-swatch { width: 36px; height: 36px; border-radius: 10px; border: 2px solid #e5e7eb; cursor: pointer; transition: all .15s; }
+        .color-swatch:hover { border-color: #6366f1; transform: scale(1.08); }
+        .dir-btn { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+                   border: 2px solid #e5e7eb; cursor: pointer; font-size: 14px; transition: all .15s; background: #fff; }
+        .dir-btn:hover, .dir-btn.active { border-color: #6366f1; background: #eef2ff; }
+        .slider-track { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px;
+                        background: #e5e7eb; outline: none; }
+        .slider-track::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
+                        border-radius: 50%; background: #6366f1; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+        .fade-in { animation: fadeIn .25s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    </style>
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="admin" data-active-page="banners">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <!-- Header + Back -->
+        <div class="mb-6 sm:mb-8">
+            <a href="index.html" class="inline-flex items-center text-sm text-gray-500 hover:text-brand-600 mb-3 transition">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                Back to Hub
+            </a>
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Banner Management</h1>
+                    <p class="text-gray-500 mt-1 text-sm sm:text-base">Create, edit, and preview profile banners</p>
+                </div>
+                <button id="addBannerBtn" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 active:scale-[0.98] transition shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    New Banner
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-gray-900" id="statTotal"><div class="skeleton h-7 w-8 rounded-lg"></div></div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Legendary</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-amber-500" id="statLegendary"><div class="skeleton h-7 w-8 rounded-lg"></div></div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Epic</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-violet-500" id="statEpic"><div class="skeleton h-7 w-8 rounded-lg"></div></div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Awarded</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-brand-600" id="statAwarded"><div class="skeleton h-7 w-8 rounded-lg"></div></div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+            <div class="relative flex-1 min-w-[180px] max-w-xs">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input id="searchInput" type="text" placeholder="Search banners…" class="w-full pl-10 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition bg-white">
+            </div>
+            <select id="filterRarity" class="px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 outline-none">
+                <option value="">All Rarities</option>
+                <option value="legendary">Legendary</option>
+                <option value="epic">Epic</option>
+                <option value="rare">Rare</option>
+                <option value="common">Common</option>
+            </select>
+            <select id="filterLocked" class="px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 outline-none">
+                <option value="">All</option>
+                <option value="locked">Quest-Locked</option>
+                <option value="unlocked">Not Locked</option>
+            </select>
+        </div>
+
+        <!-- Messages -->
+        <div id="successMsg" class="hidden mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium"></div>
+        <div id="errorMsg" class="hidden mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm font-medium"></div>
+
+        <!-- Banner Grid -->
+        <div id="bannersGrid" class="grid gap-4">
+            <!-- Skeleton loading -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-200/80 animate-pulse">
+                <div class="h-24 bg-gray-200 rounded-xl mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+            <div class="bg-white rounded-2xl p-5 border border-gray-200/80 animate-pulse">
+                <div class="h-24 bg-gray-200 rounded-xl mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-16">
+            <div class="text-5xl mb-3">🎨</div>
+            <div class="text-lg font-bold text-gray-900 mb-1">No banners found</div>
+            <div class="text-sm text-gray-500">Create your first banner to get started</div>
+        </div>
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- Create / Edit Modal                                    -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div id="editorModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="editorBackdrop"></div>
+        <div class="absolute inset-0 sm:inset-4 md:inset-y-4 md:inset-x-auto md:max-w-3xl md:mx-auto bg-white sm:rounded-2xl overflow-y-auto shadow-2xl fade-in">
+            <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-5 py-4 flex items-center justify-between">
+                <h2 id="editorTitle" class="text-lg font-bold text-gray-900">New Banner</h2>
+                <button id="editorClose" class="p-2 hover:bg-gray-100 rounded-xl transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-6">
+
+                <!-- Live Preview -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Live Preview</label>
+                    <div id="previewContainer" class="preview-5-2 bg-gradient-to-br from-gray-200 to-gray-300 border border-gray-200">
+                        <div id="previewFg" style="display:none; position:absolute; pointer-events:none;"><img id="previewFgImg" style="width:100%; height:auto; opacity:1;"></div>
+                        <div id="previewLottie" style="position:absolute; inset:0; pointer-events:none; z-index:1;"></div>
+                    </div>
+                </div>
+
+                <!-- Name + Key -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Name</label>
+                        <input id="edName" type="text" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. Ocean Breeze">
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Key <span class="text-gray-400 font-normal">(auto)</span></label>
+                        <input id="edKey" type="text" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none bg-gray-50 font-mono text-xs" placeholder="ocean-breeze">
+                    </div>
+                </div>
+
+                <!-- Rarity -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Rarity</label>
+                    <div class="flex gap-2" id="rarityPicker">
+                        <button data-rarity="common" class="rarity-opt px-4 py-2 rounded-xl border-2 text-sm font-semibold transition border-gray-300 text-gray-600 hover:border-gray-500">Common</button>
+                        <button data-rarity="rare" class="rarity-opt px-4 py-2 rounded-xl border-2 text-sm font-semibold transition border-blue-300 text-blue-600 hover:border-blue-500">Rare</button>
+                        <button data-rarity="epic" class="rarity-opt px-4 py-2 rounded-xl border-2 text-sm font-semibold transition border-violet-300 text-violet-600 hover:border-violet-500">Epic</button>
+                        <button data-rarity="legendary" class="rarity-opt px-4 py-2 rounded-xl border-2 text-sm font-semibold transition border-amber-300 text-amber-600 hover:border-amber-500">Legendary</button>
+                    </div>
+                </div>
+
+                <!-- Background Section -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Background</label>
+                    <div class="flex gap-3 mb-3">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="bgType" value="gradient" checked class="accent-brand-600"> <span class="text-sm font-medium">Gradient</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="bgType" value="image" class="accent-brand-600"> <span class="text-sm font-medium">Upload Image</span>
+                        </label>
+                    </div>
+
+                    <!-- Gradient Controls -->
+                    <div id="gradientControls" class="bg-gray-50 rounded-xl p-4 space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-xs text-gray-500 mb-1 block">From Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input id="edColorFrom" type="color" value="#6366f1" class="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer">
+                                    <input id="edColorFromText" type="text" value="#6366f1" class="flex-1 px-2 py-1.5 text-xs font-mono border border-gray-200 rounded-lg">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 mb-1 block">To Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input id="edColorTo" type="color" value="#a855f7" class="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer">
+                                    <input id="edColorToText" type="text" value="#a855f7" class="flex-1 px-2 py-1.5 text-xs font-mono border border-gray-200 rounded-lg">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 mb-1 block">Direction</label>
+                            <div class="grid grid-cols-8 gap-1" id="dirPicker">
+                                <button data-dir="to-tl" class="dir-btn">↖</button>
+                                <button data-dir="to-t" class="dir-btn">↑</button>
+                                <button data-dir="to-tr" class="dir-btn">↗</button>
+                                <button data-dir="to-l" class="dir-btn">←</button>
+                                <div class="dir-btn bg-gray-100 border-gray-100 cursor-default text-gray-300">·</div>
+                                <button data-dir="to-r" class="dir-btn">→</button>
+                                <button data-dir="to-bl" class="dir-btn">↙</button>
+                                <button data-dir="to-b" class="dir-btn">↓</button>
+                                <button data-dir="to-br" class="dir-btn active">↘</button>
+                            </div>
+                        </div>
+                        <!-- Tailwind Swatches -->
+                        <div>
+                            <label class="text-xs text-gray-500 mb-1 block">Quick Swatches</label>
+                            <div id="swatches" class="flex flex-wrap gap-1.5"></div>
+                        </div>
+                    </div>
+
+                    <!-- Image Upload Controls -->
+                    <div id="imageControls" class="hidden bg-gray-50 rounded-xl p-4 space-y-3">
+                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-brand-400 transition cursor-pointer" id="bgDropZone">
+                            <div class="text-3xl mb-2">📁</div>
+                            <div class="text-sm text-gray-600 font-medium">Click or drag image here</div>
+                            <div class="text-xs text-gray-400 mt-1">.webp, .png, .jpg — recommended 1200×480</div>
+                            <input id="bgFileInput" type="file" accept="image/webp,image/png,image/jpeg" class="hidden">
+                        </div>
+                        <div id="bgFileName" class="hidden text-sm text-gray-600">
+                            <span class="font-medium">File:</span> <span id="bgFileLabel"></span>
+                            <button id="bgFileClear" class="text-red-500 hover:text-red-700 ml-2 text-xs font-semibold">Remove</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Foreground Image -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Foreground Image <span class="text-gray-400 font-normal">(optional overlay)</span></label>
+                    <div class="bg-gray-50 rounded-xl p-4 space-y-3">
+                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-brand-400 transition cursor-pointer" id="fgDropZone">
+                            <div class="text-2xl mb-1">🖼️</div>
+                            <div class="text-sm text-gray-600 font-medium">Upload foreground overlay</div>
+                            <div class="text-xs text-gray-400 mt-1">PNG with transparency recommended</div>
+                            <input id="fgFileInput" type="file" accept="image/webp,image/png,image/jpeg" class="hidden">
+                        </div>
+                        <div id="fgFileName" class="hidden text-sm text-gray-600">
+                            <span class="font-medium">File:</span> <span id="fgFileLabel"></span>
+                            <button id="fgFileClear" class="text-red-500 hover:text-red-700 ml-2 text-xs font-semibold">Remove</button>
+                        </div>
+                        <div id="fgPositionControls" class="hidden space-y-2">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs text-gray-500">X Position</label>
+                                    <div class="flex items-center gap-2">
+                                        <input id="edFgX" type="range" min="0" max="100" value="50" class="slider-track flex-1">
+                                        <span id="fgXVal" class="text-xs font-mono w-8 text-right">50%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500">Y Position</label>
+                                    <div class="flex items-center gap-2">
+                                        <input id="edFgY" type="range" min="0" max="100" value="50" class="slider-track flex-1">
+                                        <span id="fgYVal" class="text-xs font-mono w-8 text-right">50%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs text-gray-500">Width (%)</label>
+                                    <div class="flex items-center gap-2">
+                                        <input id="edFgW" type="range" min="10" max="100" value="40" class="slider-track flex-1">
+                                        <span id="fgWVal" class="text-xs font-mono w-8 text-right">40%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500">Opacity</label>
+                                    <div class="flex items-center gap-2">
+                                        <input id="edFgOp" type="range" min="0" max="100" value="100" class="slider-track flex-1">
+                                        <span id="fgOpVal" class="text-xs font-mono w-8 text-right">100%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lottie Overlay -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Lottie Overlay</label>
+                    <div class="bg-gray-50 rounded-xl p-4 space-y-3">
+                        <div>
+                            <label class="text-xs text-gray-500 mb-1 block">Effect</label>
+                            <select id="edLottie" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 outline-none">
+                                <option value="">None</option>
+                            </select>
+                        </div>
+                        <div id="lottieSliders" class="hidden space-y-2">
+                            <div>
+                                <label class="text-xs text-gray-500">Opacity</label>
+                                <div class="flex items-center gap-2">
+                                    <input id="edLottieOp" type="range" min="0" max="100" value="55" class="slider-track flex-1">
+                                    <span id="lottieOpVal" class="text-xs font-mono w-8 text-right">55%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Blend Mode</label>
+                                <select id="edLottieBlend" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white">
+                                    <option value="screen">Screen</option>
+                                    <option value="normal">Normal</option>
+                                    <option value="overlay">Overlay</option>
+                                    <option value="multiply">Multiply</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Scale</label>
+                                <div class="flex items-center gap-2">
+                                    <input id="edLottieScale" type="range" min="50" max="200" value="100" class="slider-track flex-1">
+                                    <span id="lottieScaleVal" class="text-xs font-mono w-10 text-right">100%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">X Offset</label>
+                                <div class="flex items-center gap-2">
+                                    <input id="edLottieX" type="range" min="-50" max="50" value="0" class="slider-track flex-1">
+                                    <span id="lottieXVal" class="text-xs font-mono w-10 text-right">0%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Y Offset</label>
+                                <div class="flex items-center gap-2">
+                                    <input id="edLottieY" type="range" min="-50" max="50" value="0" class="slider-track flex-1">
+                                    <span id="lottieYVal" class="text-xs font-mono w-10 text-right">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div>
+                    <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Settings</label>
+                    <div class="bg-gray-50 rounded-xl p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">Quest-Locked</span>
+                            <label class="relative inline-flex cursor-pointer">
+                                <input id="edQuestLocked" type="checkbox" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-brand-300 rounded-full peer peer-checked:bg-brand-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                            </label>
+                        </div>
+                        <div id="questKeyRow" class="hidden">
+                            <label class="text-xs text-gray-500 mb-1 block">Quest Unlock Key</label>
+                            <input id="edQuestKey" type="text" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl font-mono text-xs" placeholder="e.g. streak_6_months">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">Animated (legacy)</span>
+                            <label class="relative inline-flex cursor-pointer">
+                                <input id="edAnimated" type="checkbox" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-brand-300 rounded-full peer peer-checked:bg-brand-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 mb-1 block">Sort Order</label>
+                            <input id="edSortOrder" type="number" value="0" class="w-24 px-3 py-2 text-sm border border-gray-200 rounded-xl">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save / Cancel -->
+                <div class="flex gap-3 pt-2 pb-4">
+                    <button id="editorCancel" class="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Cancel</button>
+                    <button id="editorSave" class="flex-1 px-4 py-3 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 transition">
+                        <span id="saveLabel">Save Banner</span>
+                        <span id="saveSpinner" class="hidden"><svg class="animate-spin h-5 w-5 mx-auto" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- Delete Confirmation Modal                              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="deleteBackdrop"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 fade-in">
+            <div class="text-center">
+                <div class="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-1">Delete Banner?</h3>
+                <p id="deleteMsg" class="text-sm text-gray-500 mb-5">This will remove the banner from all members.</p>
+                <div class="flex gap-3">
+                    <button id="deleteCancelBtn" class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">Cancel</button>
+                    <button id="deleteConfirmBtn" class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- Award Modal                                            -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div id="awardModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="awardBackdrop"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Award Banner</h3>
+                <button id="awardClose" class="p-2 hover:bg-gray-100 rounded-xl transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <p class="text-sm text-gray-500 mb-3">Award <strong id="awardBannerName"></strong> to a member:</p>
+            <input id="awardSearch" type="text" placeholder="Search members…" class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl mb-3 focus:ring-2 focus:ring-brand-500 outline-none">
+            <div id="awardMemberList" class="max-h-60 overflow-y-auto space-y-1"></div>
+            <div id="awardMsg" class="hidden mt-3 p-2 rounded-lg text-sm font-medium"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- Members Panel Modal (who earned a banner)              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div id="membersModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="membersBackdrop"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900" id="membersTitle">Members</h3>
+                <button id="membersClose" class="p-2 hover:bg-gray-100 rounded-xl transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="membersList" class="max-h-72 overflow-y-auto space-y-2"></div>
+            <div id="membersEmpty" class="hidden text-center py-6 text-sm text-gray-400">No members have earned this banner yet</div>
+        </div>
+    </div>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/lottie-effects.js"></script>
+    <script src="../js/components/pageShell/icons.js"></script>
+    <script src="../js/components/pageShell/helpers.js"></script>
+    <script src="../js/components/pageShell/nav.js"></script>
+    <script src="../js/components/pageShell/dropdowns.js"></script>
+    <script src="../js/components/pageShell/drawer.js"></script>
+    <script src="../js/components/pageShell/profile-loader.js"></script>
+    <script src="../js/components/pageShell/index.js"></script>
+    <script src="../js/auth/shared.js"></script>
+    <script src="../js/admin/banners.js"></script>
+    <script src="../js/sw-register.js"></script>
+</body>
+</html>

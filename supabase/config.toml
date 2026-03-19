@@ -18,3 +18,30 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.send-payout]
+verify_jwt = false
+
+[functions.create-extra-deposit]
+verify_jwt = false
+
+[functions.create-connect-onboarding]
+verify_jwt = false
+
+[functions.verify-connect-status]
+verify_jwt = false
+
+[functions.sync-subscription]
+verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false
+
+[functions.backfill-receipt-urls]
+verify_jwt = false
+
+[functions.backfill-invoice-fees]
+verify_jwt = false
+
+[functions.birthday-payout]
+verify_jwt = false

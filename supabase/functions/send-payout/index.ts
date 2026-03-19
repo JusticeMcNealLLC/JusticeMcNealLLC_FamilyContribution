@@ -60,7 +60,7 @@ serve(async (req) => {
 
     const reserveCents: number = typeof settingsMap.payout_reserve_cents === 'number'
       ? settingsMap.payout_reserve_cents
-      : 20000 // default $200
+      : 0 // default $0 — auto-payouts sweep balance to bank
 
     // Parse request body
     const { user_id, amount_cents, payout_type, reason } = await req.json()
@@ -138,7 +138,7 @@ serve(async (req) => {
       })
 
       // Update payout with transfer ID and mark completed
-      await supabase
+      const { error: updateError } = await supabase
         .from('payouts')
         .update({
           stripe_transfer_id: transfer.id,
@@ -146,6 +146,10 @@ serve(async (req) => {
           completed_at: new Date().toISOString(),
         })
         .eq('id', payout.id)
+
+      if (updateError) {
+        console.error('Payout DB update failed (transfer already sent):', updateError)
+      }
 
       return new Response(
         JSON.stringify({

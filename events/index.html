@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Event | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .type-tag { font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    </style>
+</head>
+<body class="min-h-screen bg-surface-50 antialiased">
+
+    <!-- Top Bar -->
+    <nav class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2 text-lg font-extrabold text-gray-900">
+            <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
+                <span class="text-white text-sm font-black">J</span>
+            </div>
+            Justice McNeal LLC
+        </a>
+        <a href="/auth/login.html" class="text-sm font-medium text-brand-600 hover:text-brand-700 transition">Sign In</a>
+    </nav>
+
+    <!-- Loading -->
+    <div id="loading" class="max-w-2xl mx-auto px-4 py-12 text-center">
+        <div class="skeleton h-56 w-full rounded-2xl mb-6"></div>
+        <div class="skeleton h-8 w-3/4 rounded-lg mx-auto mb-4"></div>
+        <div class="skeleton h-4 w-1/2 rounded mx-auto mb-3"></div>
+        <div class="skeleton h-4 w-2/3 rounded mx-auto"></div>
+    </div>
+
+    <!-- Event Content (hidden until loaded) -->
+    <main id="eventContent" class="hidden max-w-2xl mx-auto px-4 py-6 sm:py-8">
+        <!-- Banner -->
+        <div id="eventBanner" class="h-48 sm:h-64 rounded-2xl relative overflow-hidden mb-6">
+            <div class="absolute top-3 left-3 flex gap-1.5" id="eventTags"></div>
+        </div>
+
+        <!-- Title -->
+        <h1 id="eventTitle" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight"></h1>
+
+        <!-- Meta -->
+        <div class="mt-4 space-y-2.5 text-sm text-gray-600" id="eventMeta"></div>
+
+        <!-- Description -->
+        <div class="mt-6">
+            <p id="eventDesc" class="text-sm text-gray-600 leading-relaxed whitespace-pre-line"></p>
+        </div>
+
+        <!-- Gated Notes (visible after RSVP only) -->
+        <div id="gatedSection" class="hidden mt-5 p-4 bg-brand-50 rounded-xl">
+            <h3 class="text-sm font-bold text-brand-700 mb-1">Attendee Details</h3>
+            <p id="gatedNotes" class="text-sm text-brand-600 whitespace-pre-line"></p>
+        </div>
+
+        <!-- RSVP Stats -->
+        <div class="grid grid-cols-2 gap-3 mt-6" id="statsRow">
+            <div class="text-center p-3 bg-white rounded-xl border border-gray-200/80">
+                <div class="text-lg font-extrabold text-gray-900" id="goingCount">0</div>
+                <div class="text-xs text-gray-500">Going</div>
+            </div>
+            <div class="text-center p-3 bg-white rounded-xl border border-gray-200/80">
+                <div class="text-lg font-extrabold text-gray-900" id="spotsLeft">∞</div>
+                <div class="text-xs text-gray-500">Spots Left</div>
+            </div>
+        </div>
+
+        <!-- RSVP Action -->
+        <div id="rsvpSection" class="mt-6">
+            <div id="rsvpPrompt" class="bg-white rounded-xl border border-gray-200/80 p-5 text-center">
+                <p class="text-sm text-gray-600 mb-3">Want to RSVP?</p>
+                <a href="/auth/login.html" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+                    Sign In to RSVP
+                </a>
+            </div>
+        </div>
+
+        <!-- Guest RSVP Form (for non-members on public events) -->
+        <div id="guestRsvpSection" class="hidden mt-6 bg-white rounded-xl border border-gray-200/80 p-5">
+            <h3 class="text-sm font-bold text-gray-700 mb-1">RSVP as a Guest</h3>
+            <p class="text-xs text-gray-500 mb-3">No account needed — just enter your name and email.</p>
+            <div class="space-y-3">
+                <input type="text" id="guestNameInput" placeholder="Your full name" class="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <input type="email" id="guestEmailInput" placeholder="Email address" class="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <label class="flex items-start gap-2">
+                    <input type="checkbox" id="guestNoRefundCheck" class="mt-0.5">
+                    <span class="text-xs text-gray-500">I understand this payment is non-refundable unless cancelled by staff.</span>
+                </label>
+                <button onclick="pubHandleGuestRsvp()" id="guestRsvpBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+                    RSVP as Guest
+                </button>
+            </div>
+        </div>
+
+        <!-- Already RSVP'd? Lookup -->
+        <div id="guestLookupSection" class="hidden mt-4">
+            <button onclick="pubToggleLookup()" class="text-xs text-brand-600 font-semibold hover:underline">Already RSVP'd? Look up your ticket</button>
+            <div id="guestLookupForm" class="hidden mt-3 bg-white rounded-xl border border-gray-200/80 p-4">
+                <div class="flex gap-2">
+                    <input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <button onclick="pubLookupGuestTicket()" id="lookupBtn" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition">Find</button>
+                </div>
+                <div id="lookupResult" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- Member-Only Notice -->
+        <div id="memberOnlyNotice" class="hidden mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-center">
+            <p class="text-sm text-amber-700 font-semibold">🔒 This is a members-only event.</p>
+            <p class="text-xs text-amber-600 mt-1">Sign in with your member account to RSVP.</p>
+        </div>
+
+        <!-- QR Ticket Section (post-RSVP — members) -->
+        <div id="ticketSection" class="hidden mt-6 bg-white rounded-xl border border-gray-200/80 p-5 text-center">
+            <h3 class="text-sm font-bold text-gray-700 mb-2">Your Event Ticket</h3>
+            <canvas id="ticketQR" class="mx-auto"></canvas>
+            <p class="text-xs text-gray-400 mt-2">Show this QR code at check-in</p>
+        </div>
+
+        <!-- Guest QR Ticket Section (post-payment return) -->
+        <div id="guestTicketSection" class="hidden mt-6 bg-white rounded-xl border border-gray-200/80 p-5 text-center">
+            <div class="text-3xl mb-2">🎉</div>
+            <h3 class="text-sm font-bold text-gray-700 mb-1">You're In!</h3>
+            <p id="guestTicketName" class="text-xs text-gray-500 mb-3"></p>
+            <canvas id="guestTicketQR" class="mx-auto"></canvas>
+            <p class="text-xs text-gray-400 mt-2">Show this QR code at check-in</p>
+            <p class="text-xs text-amber-600 mt-1 font-medium">📌 Bookmark this page — this is your ticket!</p>
+        </div>
+
+        <!-- Venue Check-In (if venue_scan mode + ?checkin=1) -->
+        <div id="venueCheckin" class="hidden mt-6 bg-emerald-50 rounded-xl border border-emerald-200 p-5 text-center">
+            <div id="checkinResult"></div>
+        </div>
+
+        <!-- Share -->
+        <div class="mt-8 p-4 bg-white rounded-xl border border-gray-200/80">
+            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Share This Event</h4>
+            <div class="flex items-center gap-2">
+                <input type="text" id="shareUrl" readonly class="flex-1 text-xs bg-surface-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-600">
+                <button onclick="pubCopyUrl()" id="copyBtn" class="bg-brand-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-brand-700 transition">Copy</button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-10 mb-6 text-center text-xs text-gray-400">
+            &copy; Justice McNeal LLC · <a href="/" class="underline hover:text-brand-600">Home</a>
+        </div>
+    </main>
+
+    <!-- Not Found -->
+    <div id="notFound" class="hidden max-w-md mx-auto px-4 py-16 text-center">
+        <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <h2 class="text-lg font-bold text-gray-900">Event Not Found</h2>
+        <p class="text-sm text-gray-500 mt-1">This event may have been removed or the link is incorrect.</p>
+        <a href="/" class="inline-block mt-4 text-sm font-medium text-brand-600 hover:underline">Back to Home</a>
+    </div>
+
+    <!-- QR Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/events/public.js"></script>
+</body>
+</html>

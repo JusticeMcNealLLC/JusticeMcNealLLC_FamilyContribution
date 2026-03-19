@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Tax Prep | Admin | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JMLLC">
+    <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="admin" data-active-page="tax-prep">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <!-- Header + Back -->
+        <div class="mb-6 sm:mb-8">
+            <a href="index.html" class="inline-flex items-center text-sm text-gray-500 hover:text-brand-600 mb-3 transition">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                Back to Hub
+            </a>
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Tax Preparation</h1>
+                    <p class="text-gray-500 mt-1 text-sm sm:text-base">Schedule C, SE tax, quarterly estimates, and filing checklist</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="yearFilter" class="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition appearance-none min-w-[120px]">
+                        <!-- Populated by JS -->
+                    </select>
+                    <button id="exportBtn" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 active:scale-[0.98] transition shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Export
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tax Filing Info Banner -->
+        <div class="bg-amber-50 border border-amber-200/80 rounded-2xl p-4 sm:p-5 mb-6 flex gap-3 items-start">
+            <div class="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div class="text-sm">
+                <p class="font-bold text-amber-800">Single-Member LLC — Schedule C Filing</p>
+                <p class="text-amber-700 mt-0.5">Income & expenses flow through to your personal Form 1040 via IRS Schedule C. Self-employment tax is calculated on Schedule SE.</p>
+            </div>
+        </div>
+
+        <!-- Hero Stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Gross Income</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-gray-900" id="statGrossIncome">
+                    <div class="skeleton h-7 w-20 rounded-lg"></div>
+                </div>
+                <div class="text-[10px] text-gray-400 mt-1">Schedule C, Line 7</div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Expenses</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-red-600" id="statTotalExpenses">
+                    <div class="skeleton h-7 w-20 rounded-lg"></div>
+                </div>
+                <div class="text-[10px] text-gray-400 mt-1">Schedule C, Line 28</div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-emerald-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-emerald-500 uppercase tracking-wider mb-1">Net Profit</div>
+                <div class="text-xl sm:text-2xl font-extrabold" id="statNetProfit">
+                    <div class="skeleton h-7 w-20 rounded-lg"></div>
+                </div>
+                <div class="text-[10px] text-gray-400 mt-1">Schedule C, Line 31</div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-orange-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-orange-500 uppercase tracking-wider mb-1">SE Tax Owed</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-orange-600" id="statSETax">
+                    <div class="skeleton h-7 w-20 rounded-lg"></div>
+                </div>
+                <div class="text-[10px] text-gray-400 mt-1">Schedule SE (15.3%)</div>
+            </div>
+        </div>
+
+        <!-- Full Schedule C -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden mb-6">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-gray-900">Schedule C — Profit or Loss From Business</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">IRS Form 1040, Schedule C | Tax Year <span id="scheduleCYear" class="font-semibold text-brand-600"></span></p>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-surface-50">
+                            <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">Line</th>
+                            <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Description</th>
+                            <th class="text-right px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleCBody">
+                        <tr><td colspan="3" class="px-5 py-8 text-center text-gray-400">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SE Tax Breakdown -->
+        <div class="bg-white rounded-2xl border border-orange-200/80 overflow-hidden mb-6">
+            <div class="px-5 py-4 border-b border-orange-100 flex items-center gap-3">
+                <div class="w-9 h-9 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-base font-bold text-gray-900">Self-Employment Tax (Schedule SE)</h2>
+                    <p class="text-xs text-gray-400">15.3% = 12.4% Social Security + 2.9% Medicare</p>
+                </div>
+            </div>
+            <table class="w-full text-sm">
+                <tbody id="seTaxBody">
+                    <tr><td colspan="2" class="px-5 py-6 text-center text-gray-400">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Quarterly Estimated Payments -->
+        <div class="bg-white rounded-2xl border border-brand-200/80 overflow-hidden mb-6">
+            <div class="px-5 py-4 border-b border-brand-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-brand-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-900">Quarterly Estimated Payments</h2>
+                        <p class="text-xs text-gray-400">IRS Form 1040-ES | Track payments to avoid underpayment penalty</p>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-surface-50">
+                            <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Quarter</th>
+                            <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Due Date</th>
+                            <th class="text-right px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Suggested</th>
+                            <th class="text-right px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paid</th>
+                            <th class="text-center px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quarterlyBody">
+                        <tr><td colspan="5" class="px-5 py-6 text-center text-gray-400">Loading...</td></tr>
+                    </tbody>
+                    <tfoot id="quarterlyFoot" class="hidden">
+                        <tr class="border-t-2 border-gray-200 bg-gray-50 font-bold">
+                            <td colspan="2" class="px-5 py-3 text-sm text-gray-900">Total</td>
+                            <td class="text-right px-5 py-3 text-sm text-gray-900" id="qSuggestedTotal"></td>
+                            <td class="text-right px-5 py-3 text-sm text-gray-900" id="qPaidTotal"></td>
+                            <td class="text-center px-5 py-3 text-sm" id="qRemainingBadge"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tax Calendar -->
+        <details class="bg-white rounded-2xl border border-gray-200/80 mb-6 group" open>
+            <summary class="flex items-center justify-between p-5 cursor-pointer select-none">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-900">Tax Calendar</h2>
+                        <p class="text-xs text-gray-400">Key dates and deadlines for <span id="calendarYear" class="font-semibold text-blue-600"></span></p>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="border-t border-gray-100 divide-y divide-gray-50" id="calendarBody">
+                <!-- Rendered by JS -->
+            </div>
+        </details>
+
+        <!-- Filing Checklist -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden mb-6">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-violet-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-900">Filing Checklist</h2>
+                        <p class="text-xs text-gray-400">Track your annual tax prep progress</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="text-sm font-bold" id="checklistProgress">0/0</span>
+                    <span class="text-xs text-gray-400 ml-1">complete</span>
+                </div>
+            </div>
+            <div class="divide-y divide-gray-50" id="checklistBody">
+                <div class="px-5 py-8 text-center text-gray-400 text-sm">Loading...</div>
+            </div>
+            <div class="px-5 py-3 bg-gray-50/50 border-t border-gray-100">
+                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div class="bg-violet-500 h-full rounded-full transition-all duration-500" id="checklistBar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- When to Level Up -->
+        <details class="bg-white rounded-2xl border border-emerald-200/80 mb-6 group">
+            <summary class="flex items-center justify-between p-5 cursor-pointer select-none">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-900">When to Level Up</h2>
+                        <p class="text-xs text-gray-400">Tax actions based on your revenue level</p>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="border-t border-emerald-100 p-5 space-y-3" id="levelUpBody">
+                <!-- Rendered by JS -->
+            </div>
+        </details>
+
+        <!-- Georgia State Info -->
+        <details class="bg-white rounded-2xl border border-gray-200/80 mb-6 group">
+            <summary class="flex items-center justify-between p-5 cursor-pointer select-none">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-rose-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <span class="text-sm">🍑</span>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-900">Georgia State Taxes</h2>
+                        <p class="text-xs text-gray-400">State-specific filing info</p>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="border-t border-gray-100">
+                <table class="w-full text-sm">
+                    <tbody>
+                        <tr class="border-b border-gray-50">
+                            <td class="px-5 py-3 text-gray-500 font-medium">GA Income Tax</td>
+                            <td class="px-5 py-3 text-right text-gray-900 font-semibold">1% – 5.49% (2026 rates)</td>
+                        </tr>
+                        <tr class="border-b border-gray-50">
+                            <td class="px-5 py-3 text-gray-500 font-medium">LLC Annual Registration</td>
+                            <td class="px-5 py-3 text-right text-gray-900 font-semibold">~$50/year</td>
+                        </tr>
+                        <tr class="border-b border-gray-50">
+                            <td class="px-5 py-3 text-gray-500 font-medium">State Return Form</td>
+                            <td class="px-5 py-3 text-right text-gray-900 font-semibold">GA Form 500</td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-3 text-gray-500 font-medium">Filing Note</td>
+                            <td class="px-5 py-3 text-right text-gray-700 text-xs">GA follows federal SMLLC treatment — no separate state LLC return needed</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </details>
+
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/components/pageShell/icons.js"></script>
+    <script src="../js/components/pageShell/helpers.js"></script>
+    <script src="../js/components/pageShell/nav.js"></script>
+    <script src="../js/components/pageShell/dropdowns.js"></script>
+    <script src="../js/components/pageShell/drawer.js"></script>
+    <script src="../js/components/pageShell/profile-loader.js"></script>
+    <script src="../js/components/pageShell/index.js"></script>
+    <script src="../js/auth/shared.js"></script>
+    <script src="../js/admin/tax-prep.js"></script>
+    <script src="../js/sw-register.js"></script>
+</body>
+</html>

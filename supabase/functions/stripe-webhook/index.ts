@@ -99,6 +99,31 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
     const paymentType = session.metadata?.payment_type
     console.log('One-time payment checkout, type:', paymentType)
 
+    // ── Event RSVP Payment ─────────────────────────────────
+    if (paymentType === 'event_rsvp') {
+      await handleEventRsvpPayment(supabase, session)
+      return
+    }
+
+    // ── Event Raffle Entry Payment ──────────────────────────
+    if (paymentType === 'event_raffle_entry') {
+      await handleEventRafflePayment(supabase, session)
+      return
+    }
+
+    // ── Competition Entry Fee Payment ───────────────────────
+    if (paymentType === 'event_competition_entry') {
+      await handleCompetitionEntryPayment(supabase, session)
+      return
+    }
+
+    // ── Prize Pool Contribution Payment ─────────────────────
+    if (paymentType === 'event_prize_pool') {
+      await handlePrizePoolPayment(supabase, session)
+      return
+    }
+
+    // ── Extra Deposit ───────────────────────────────────────
     if (paymentType !== 'extra_deposit') {
       console.log('Unknown one-time payment type, skipping')
       return
@@ -165,6 +190,296 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
     } else {
       console.log('Extra deposit recorded for user:', userId, 'amount:', amountPaid)
     }
+  }
+}
+
+// Handler: Event RSVP payment completed
+async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Session) {
+  const eventId = session.metadata?.event_id
+  if (!eventId) {
+    console.error('Missing event_id metadata for RSVP payment:', session.id)
+    return
+  }
+
+  const amountPaid = session.amount_total || 0
+  const paymentIntentId = session.payment_intent as string || null
+  const isGuest = !session.metadata?.supabase_user_id
+
+  if (isGuest) {
+    // ── Guest RSVP ────────────────────────────────────────
+    const guestName = session.metadata?.guest_name
+    const guestEmail = session.metadata?.guest_email
+    const guestToken = session.metadata?.guest_token
+
+    if (!guestName || !guestEmail || !guestToken) {
+      console.error('Missing guest metadata for RSVP payment:', session.id)
+      return
+    }
+
+    console.log(`Guest RSVP payment: email=${guestEmail}, event=${eventId}, amount=${amountPaid}`)
+
+    const { error } = await supabase.from('event_guest_rsvps').upsert({
+      event_id: eventId,
+      guest_name: guestName,
+      guest_email: guestEmail,
+      guest_token: guestToken,
+      status: 'going',
+      paid: true,
+      stripe_payment_intent_id: paymentIntentId,
+      amount_paid_cents: amountPaid,
+      accepted_no_refund_policy: true,
+      accepted_no_refund_at: new Date().toISOString(),
+    }, {
+      onConflict: 'event_id,guest_email',
+    })
+
+    if (error) {
+      console.error('Error upserting guest RSVP:', error)
+    } else {
+      console.log('Guest RSVP confirmed (paid) for:', guestEmail)
+    }
+
+    // Check for bundled raffle
+    const { data: event } = await supabase
+      .from('events')
+      .select('pricing_mode, raffle_enabled')
+      .eq('id', eventId)
+      .single()
+
+    if (event?.raffle_enabled && event.pricing_mode === 'paid') {
+      const { error: raffleErr } = await supabase.from('event_raffle_entries').insert({
+        event_id: eventId,
+        guest_token: guestToken,
+        paid: true,
+        stripe_payment_intent_id: paymentIntentId,
+        amount_paid_cents: 0,
+      })
+
+      if (raffleErr) {
+        console.error('Error creating bundled guest raffle entry:', raffleErr)
+      } else {
+        console.log('Bundled raffle entry created for guest:', guestEmail)
+      }
+    }
+  } else {
+    // ── Member RSVP ───────────────────────────────────────
+    const userId = session.metadata!.supabase_user_id
+
+    console.log(`Event RSVP payment: user=${userId}, event=${eventId}, amount=${amountPaid}`)
+
+    const { error } = await supabase.from('event_rsvps').upsert({
+      event_id: eventId,
+      user_id: userId,
+      status: 'going',
+      paid: true,
+      stripe_payment_intent_id: paymentIntentId,
+      amount_paid_cents: amountPaid,
+      accepted_no_refund_policy: true,
+      accepted_no_refund_at: new Date().toISOString(),
+      // LLC invest-eligible acknowledgment
+      ...(session.metadata?.invest_eligible_acknowledged === 'true' ? {
+        invest_eligible_acknowledged: true,
+        invest_eligible_acknowledged_at: new Date().toISOString(),
+      } : {}),
+    }, {
+      onConflict: 'event_id,user_id',
+    })
+
+    if (error) {
+      console.error('Error upserting event RSVP:', error)
+    } else {
+      console.log('Event RSVP confirmed (paid) for user:', userId)
+    }
+
+    // Lock cost breakdown after first payment (LLC events)
+    const { data: eventFull } = await supabase
+      .from('events')
+      .select('event_type, cost_breakdown_locked, pricing_mode, raffle_enabled')
+      .eq('id', eventId)
+      .single()
+
+    if (eventFull?.event_type === 'llc' && !eventFull.cost_breakdown_locked) {
+      await supabase
+        .from('events')
+        .update({ cost_breakdown_locked: true })
+        .eq('id', eventId)
+      console.log('Cost breakdown locked after first payment for event:', eventId)
+    }
+
+    // Handle waitlist claim: mark waitlist entry as completed
+    if (session.metadata?.from_waitlist === 'true') {
+      await supabase
+        .from('event_waitlist')
+        .update({ status: 'claimed' })
+        .eq('event_id', eventId)
+        .eq('user_id', userId)
+        .in('status', ['offered', 'claimed'])
+      console.log('Waitlist spot claimed for user:', userId)
+    }
+
+    // Check if event has bundled raffle (pricing_mode = 'paid' + raffle_enabled)
+    const event = eventFull
+
+    if (event?.raffle_enabled && event.pricing_mode === 'paid') {
+      const { error: raffleErr } = await supabase.from('event_raffle_entries').upsert({
+        event_id: eventId,
+        user_id: userId,
+        paid: true,
+        stripe_payment_intent_id: paymentIntentId,
+        amount_paid_cents: 0,
+      }, {
+        onConflict: 'event_id,user_id',
+      })
+
+      if (raffleErr) {
+        console.error('Error creating bundled raffle entry:', raffleErr)
+      } else {
+        console.log('Bundled raffle entry created for user:', userId)
+      }
+    }
+  }
+}
+
+// Handler: Event raffle entry payment completed
+async function handleEventRafflePayment(supabase: any, session: Stripe.Checkout.Session) {
+  const eventId = session.metadata?.event_id
+  if (!eventId) {
+    console.error('Missing event_id metadata for raffle payment:', session.id)
+    return
+  }
+
+  const amountPaid = session.amount_total || 0
+  const paymentIntentId = session.payment_intent as string || null
+  const isGuest = !session.metadata?.supabase_user_id
+
+  if (isGuest) {
+    const guestToken = session.metadata?.guest_token
+    const guestEmail = session.metadata?.guest_email
+
+    if (!guestToken) {
+      console.error('Missing guest_token for raffle payment:', session.id)
+      return
+    }
+
+    console.log(`Guest raffle entry payment: email=${guestEmail}, event=${eventId}, amount=${amountPaid}`)
+
+    const { error } = await supabase.from('event_raffle_entries').insert({
+      event_id: eventId,
+      guest_token: guestToken,
+      paid: true,
+      stripe_payment_intent_id: paymentIntentId,
+      amount_paid_cents: amountPaid,
+    })
+
+    if (error) {
+      console.error('Error inserting guest raffle entry:', error)
+    } else {
+      console.log('Guest raffle entry confirmed (paid) for:', guestEmail)
+    }
+  } else {
+    const userId = session.metadata!.supabase_user_id
+
+    console.log(`Event raffle entry payment: user=${userId}, event=${eventId}, amount=${amountPaid}`)
+
+    const { error } = await supabase.from('event_raffle_entries').upsert({
+      event_id: eventId,
+      user_id: userId,
+      paid: true,
+      stripe_payment_intent_id: paymentIntentId,
+      amount_paid_cents: amountPaid,
+    }, {
+      onConflict: 'event_id,user_id',
+    })
+
+    if (error) {
+      console.error('Error upserting raffle entry:', error)
+    } else {
+      console.log('Raffle entry confirmed (paid) for user:', userId)
+    }
+  }
+}
+
+// Handler: Competition entry fee payment completed
+async function handleCompetitionEntryPayment(supabase: any, session: Stripe.Checkout.Session) {
+  const eventId = session.metadata?.event_id
+  const userId = session.metadata?.supabase_user_id
+
+  if (!eventId || !userId) {
+    console.error('Missing metadata for competition entry payment:', session.id)
+    return
+  }
+
+  const amountPaid = session.amount_total || 0
+  const paymentIntentId = session.payment_intent as string || null
+
+  console.log(`Competition entry payment: user=${userId}, event=${eventId}, amount=${amountPaid}`)
+
+  // Register user as competitor (insert entry record)
+  const { error: entryErr } = await supabase
+    .from('competition_entries')
+    .upsert({
+      event_id: eventId,
+      user_id: userId,
+      title: 'Registered',
+      entry_type: 'text',
+      submitted_at: new Date().toISOString(),
+    }, {
+      onConflict: 'event_id,user_id',
+    })
+
+  if (entryErr) {
+    console.error('Error creating competition entry:', entryErr)
+  } else {
+    console.log('Competition entry created for user:', userId)
+  }
+
+  // Add entry fee to prize pool contributions
+  if (amountPaid > 0) {
+    const { error: poolErr } = await supabase
+      .from('prize_pool_contributions')
+      .insert({
+        event_id: eventId,
+        contributor_id: userId,
+        amount_cents: amountPaid,
+        stripe_payment_intent_id: paymentIntentId,
+      })
+
+    if (poolErr) {
+      console.error('Error recording entry fee as prize pool contribution:', poolErr)
+    } else {
+      console.log('Entry fee added to prize pool:', amountPaid)
+    }
+  }
+}
+
+// Handler: Prize pool contribution payment completed
+async function handlePrizePoolPayment(supabase: any, session: Stripe.Checkout.Session) {
+  const eventId = session.metadata?.event_id
+  const userId = session.metadata?.supabase_user_id
+
+  if (!eventId || !userId) {
+    console.error('Missing metadata for prize pool payment:', session.id)
+    return
+  }
+
+  const amountPaid = session.amount_total || 0
+  const paymentIntentId = session.payment_intent as string || null
+
+  console.log(`Prize pool contribution: user=${userId}, event=${eventId}, amount=${amountPaid}`)
+
+  const { error } = await supabase
+    .from('prize_pool_contributions')
+    .insert({
+      event_id: eventId,
+      contributor_id: userId,
+      amount_cents: amountPaid,
+      stripe_payment_intent_id: paymentIntentId,
+    })
+
+  if (error) {
+    console.error('Error recording prize pool contribution:', error)
+  } else {
+    console.log('Prize pool contribution recorded for user:', userId, 'amount:', amountPaid)
   }
 }
 

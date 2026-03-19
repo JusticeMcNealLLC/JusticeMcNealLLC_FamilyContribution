@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operating Agreement — JM Family Contribution LLC</title>
+    <style>
+        /* ── Print-Ready Legal Document Styles ── */
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Open+Sans:wght@400;600&display=swap');
+
+        :root {
+            --text: #1a1a1a;
+            --muted: #555;
+            --border: #ccc;
+            --accent: #0d3b66;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Merriweather', 'Georgia', serif;
+            font-size: 12pt;
+            line-height: 1.8;
+            color: var(--text);
+            background: #f5f5f5;
+            padding: 0;
+        }
+
+        .document {
+            max-width: 8.5in;
+            margin: 0 auto;
+            background: white;
+            padding: 1in 1.25in;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        /* ── Title Page ── */
+        .title-page {
+            text-align: center;
+            padding: 2in 0 1in;
+            page-break-after: always;
+        }
+
+        .title-page h1 {
+            font-size: 22pt;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 0.3in;
+            line-height: 1.3;
+        }
+
+        .title-page .llc-name {
+            font-size: 18pt;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5in;
+        }
+
+        .title-page .subtitle {
+            font-size: 12pt;
+            color: var(--muted);
+            margin-bottom: 0.15in;
+        }
+
+        .title-page .fill-line {
+            display: inline-block;
+            border-bottom: 1px solid var(--text);
+            width: 2.5in;
+            margin-left: 0.1in;
+        }
+
+        /* ── Section Headings ── */
+        h2 {
+            font-family: 'Open Sans', 'Arial', sans-serif;
+            font-size: 13pt;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.4in;
+            margin-bottom: 0.15in;
+            padding-bottom: 4px;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        h3 {
+            font-size: 12pt;
+            font-weight: 700;
+            margin-top: 0.25in;
+            margin-bottom: 0.1in;
+        }
+
+        /* ── Paragraphs & Lists ── */
+        p {
+            margin-bottom: 0.15in;
+            text-align: justify;
+        }
+
+        ol {
+            margin-left: 0.4in;
+            margin-bottom: 0.15in;
+        }
+
+        ol > li {
+            margin-bottom: 0.1in;
+            padding-left: 0.05in;
+        }
+
+        ul {
+            margin-left: 0.4in;
+            margin-bottom: 0.15in;
+            list-style-type: disc;
+        }
+
+        ul > li {
+            margin-bottom: 0.06in;
+        }
+
+        /* ── Special Elements ── */
+        .blank {
+            display: inline-block;
+            border-bottom: 1px solid var(--text);
+            min-width: 2in;
+            margin: 0 0.05in;
+        }
+
+        .blank.short { min-width: 1in; }
+        .blank.long { min-width: 3.5in; }
+
+        .highlight {
+            background: #fffde7;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-style: italic;
+            font-size: 10pt;
+            color: #7f6d00;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.15in 0 0.2in;
+        }
+
+        table th, table td {
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            text-align: left;
+            font-size: 11pt;
+        }
+
+        table th {
+            background: #f0f4f8;
+            font-family: 'Open Sans', sans-serif;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .indent { margin-left: 0.4in; }
+
+        /* ── Signature Block ── */
+        .signature-block {
+            margin-top: 0.6in;
+            page-break-inside: avoid;
+        }
+
+        .sig-line {
+            border-bottom: 1px solid var(--text);
+            width: 3.5in;
+            margin-top: 0.5in;
+            margin-bottom: 4px;
+        }
+
+        .sig-label {
+            font-size: 10pt;
+            color: var(--muted);
+        }
+
+        /* ── Footer ── */
+        .page-footer {
+            text-align: center;
+            font-size: 9pt;
+            color: var(--muted);
+            margin-top: 0.5in;
+            padding-top: 0.15in;
+            border-top: 1px solid #ddd;
+        }
+
+        /* ── Print Styles ── */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .document {
+                box-shadow: none;
+                padding: 0.75in 1in;
+                max-width: 100%;
+            }
+            .no-print { display: none !important; }
+            h2 { page-break-after: avoid; }
+            .signature-block { page-break-inside: avoid; }
+        }
+
+        /* ── Print Button (hidden on print) ── */
+        .print-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: var(--accent);
+            color: white;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            font-family: 'Open Sans', sans-serif;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .print-bar span { font-size: 14px; }
+
+        .print-bar button {
+            background: white;
+            color: var(--accent);
+            border: none;
+            padding: 8px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .print-bar button:hover { background: #e0e7ee; }
+
+        @media print {
+            .print-bar { display: none; }
+            body { padding-top: 0; }
+        }
+
+        body { padding-top: 56px; }
+        @media print { body { padding-top: 0; } }
+
+        /* ── Article Numbering ── */
+        .article-num {
+            font-family: 'Open Sans', sans-serif;
+            font-weight: 600;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Print Bar                                      -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="print-bar no-print">
+    <span>Operating Agreement — JM Family Contribution LLC</span>
+    <button onclick="window.print()">⬇ Save as PDF (Ctrl+P)</button>
+</div>
+
+<div class="document">
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Title Page                                     -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="title-page">
+    <h1>Operating Agreement</h1>
+    <div class="llc-name">JM Family Contribution LLC</div>
+    <p class="subtitle">A Georgia Single-Member Limited Liability Company</p>
+    <br><br>
+    <p class="subtitle">Effective Date: <span class="fill-line">&nbsp;</span></p>
+    <p class="subtitle">State of Organization: <strong>Georgia</strong></p>
+    <br><br><br>
+    <p class="subtitle" style="font-size: 10pt; color: #999;">
+        This document is the sole Operating Agreement of the Company and supersedes all prior agreements.
+    </p>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article I — Formation                          -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article I</span> — Formation</h2>
+
+<p><strong>1.1 Formation.</strong> JM Family Contribution LLC (the "<strong>Company</strong>") is a limited liability company organized under the Georgia Revised Uniform Limited Liability Company Act, O.C.G.A. § 14-11-100 et seq. (the "<strong>Act</strong>").</p>
+
+<p><strong>1.2 Articles of Organization.</strong> The Articles of Organization were (or shall be) filed with the Georgia Secretary of State on <span class="blank short">&nbsp;</span> <span class="highlight">← fill in date of filing</span>.</p>
+
+<p><strong>1.3 Name.</strong> The name of the Company is <strong>JM Family Contribution LLC</strong>. The Company may conduct business under this name or any other name approved by the Member.</p>
+
+<p><strong>1.4 Principal Office.</strong> The principal office of the Company is located at:</p>
+<p class="indent"><strong>1283 Lynx Court, Hampton, Georgia 30228</strong></p>
+<p>The Member may change the principal office at any time upon written record.</p>
+
+<p><strong>1.5 Registered Agent.</strong> The Company's initial registered agent and office for service of process in Georgia is:</p>
+<p class="indent"><strong>Justin Lamar McNeal</strong><br>1283 Lynx Court, Hampton, Georgia 30228</p>
+<p>The Member may change the registered agent at any time in accordance with the Act.</p>
+
+<p><strong>1.6 Term.</strong> The Company shall exist in perpetuity unless dissolved in accordance with this Agreement or the Act.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article II — Purpose                           -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article II</span> — Purpose</h2>
+
+<p><strong>2.1 Business Purpose.</strong> The purpose of the Company is to operate a family contribution and financial coordination platform, including but not limited to:</p>
+<ol type="a">
+    <li>Operating and maintaining the family contribution website and web application;</li>
+    <li>Collecting, managing, and distributing family member subscriptions and contributions;</li>
+    <li>Facilitating family investments, milestones, and financial planning;</li>
+    <li>Providing technology services related to family wealth-building; and</li>
+    <li>Engaging in any other lawful business activity permitted under the Act.</li>
+</ol>
+
+<p><strong>2.2 Powers.</strong> The Company shall have all powers permitted under Georgia law to carry out its purposes, including the power to own property, enter into contracts, open bank and brokerage accounts, hire employees or contractors, and take any other action necessary to fulfill its purposes.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article III — Member                           -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article III</span> — Member</h2>
+
+<p><strong>3.1 Sole Member.</strong> The Company has one (1) member:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Member Name</th>
+            <th>Membership Interest</th>
+            <th>Address</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Justin Lamar McNeal</strong></td>
+            <td>100%</td>
+            <td>1283 Lynx Court, Hampton, GA 30228</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><strong>3.2 Admission of Additional Members.</strong> Additional members may be admitted to the Company only with the written consent of the existing Member and upon execution of an amendment to this Agreement.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article IV — Capital Contributions             -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article IV</span> — Capital Contributions</h2>
+
+<p><strong>4.1 Initial Contribution.</strong> The Member has contributed the following assets to the Company as the initial capital contribution:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Asset Description</th>
+            <th>Type</th>
+            <th>Estimated Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Family Contribution web platform (codebase, design, architecture)</td>
+            <td>Intellectual Property</td>
+            <td>$5,000.00</td>
+        </tr>
+        <tr>
+            <td>Domain name (justicemcnealllc.com or successor)</td>
+            <td>Digital Asset</td>
+            <td>$50.00</td>
+        </tr>
+        <tr>
+            <td>Supabase project, Stripe account, and third-party service configurations</td>
+            <td>Digital Infrastructure</td>
+            <td>$200.00</td>
+        </tr>
+        <tr>
+            <td>Brand assets (logos, design system, content)</td>
+            <td>Intellectual Property</td>
+            <td>$250.00</td>
+        </tr>
+        <tr>
+            <td>Cash contribution</td>
+            <td>Cash</td>
+            <td><span class="blank short">&nbsp;</span> <span class="highlight">← fill in</span></td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="2" style="text-align: right; font-weight: 700;">Total Initial Contribution:</td>
+            <td><strong>$5,500.00 + cash</strong> <span class="highlight">← update total</span></td>
+        </tr>
+    </tfoot>
+</table>
+
+<p><strong>4.2 Additional Contributions.</strong> The Member is not required to make additional capital contributions but may do so at any time. Additional contributions shall be recorded in the Company's books.</p>
+
+<p><strong>4.3 No Interest on Capital.</strong> No interest shall be paid on any capital contribution.</p>
+
+<p><strong>4.4 Capital Account.</strong> The Company shall maintain a capital account for the Member in accordance with Treasury Regulation § 1.704-1(b)(2)(iv).</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article V — Allocations and Distributions      -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article V</span> — Allocations &amp; Distributions</h2>
+
+<p><strong>5.1 Profits and Losses.</strong> All profits, losses, and other tax items of the Company shall be allocated 100% to the Member.</p>
+
+<p><strong>5.2 Distributions.</strong> The Member may take distributions from the Company at any time and in any amount, provided that such distribution does not render the Company unable to pay its debts as they become due in the ordinary course of business.</p>
+
+<p><strong>5.3 Distribution Priority.</strong> Before any distribution, the Company should maintain adequate reserves for:</p>
+<ol type="a">
+    <li>Operating expenses (hosting, subscriptions, and service fees);</li>
+    <li>Stripe processing fees and anticipated refunds;</li>
+    <li>Quarterly estimated tax payments;</li>
+    <li>Planned business investments; and</li>
+    <li>A minimum operating reserve of at least one (1) month's operating expenses.</li>
+</ol>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article VI — Management                        -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article VI</span> — Management</h2>
+
+<p><strong>6.1 Member-Managed.</strong> The Company shall be <strong>member-managed</strong>. The Member shall have full and exclusive authority to manage the business and affairs of the Company.</p>
+
+<p><strong>6.2 Powers of the Member.</strong> The Member shall have the power to:</p>
+<ol type="a">
+    <li>Execute contracts, leases, and agreements on behalf of the Company;</li>
+    <li>Open and manage bank accounts and brokerage accounts;</li>
+    <li>Hire and terminate employees, contractors, and service providers;</li>
+    <li>Make investment decisions for the Company;</li>
+    <li>Acquire, hold, and dispose of property;</li>
+    <li>Borrow money and grant security interests in Company assets;</li>
+    <li>Commence or settle litigation;</li>
+    <li>Take any and all actions necessary to carry out the Company's purpose.</li>
+</ol>
+
+<p><strong>6.3 Compensation.</strong> The Member may receive reasonable compensation for services rendered to the Company, as determined by the Member, in addition to any distributions.</p>
+
+<p><strong>6.4 Standard of Care.</strong> The Member shall manage the Company in good faith and with the care an ordinarily prudent person in a similar position would exercise under similar circumstances.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article VII — Banking and Financial            -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article VII</span> — Banking &amp; Financial Accounts</h2>
+
+<p><strong>7.1 Bank Accounts.</strong> The Company shall maintain one or more bank accounts in the Company's name. All Company funds shall be deposited in such accounts and shall not be commingled with the personal funds of the Member.</p>
+
+<p><strong>7.2 Current Accounts.</strong></p>
+<table>
+    <thead>
+        <tr>
+            <th>Account</th>
+            <th>Institution</th>
+            <th>Purpose</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Payment Processor</td>
+            <td>Stripe</td>
+            <td>Member subscription payments, payouts, &amp; revenue collection</td>
+        </tr>
+        <tr>
+            <td>Business Checking (if opened)</td>
+            <td><span class="blank">&nbsp;</span> <span class="highlight">← fill in if/when opened</span></td>
+            <td>Operating expenses (optional — revenue may flow directly to Holding Company)</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><strong>7.3 Revenue Flow to Holding Company.</strong> The Company's primary revenue is collected through Stripe. Net revenue (after Stripe fees, platform expenses, and reserves) may be transferred directly to Justice McNeal Holding LLC (the "<strong>Holding Company</strong>") in accordance with an inter-company agreement. The Holding Company maintains the consolidated bank accounts (e.g., BlueVine) and investment accounts (e.g., Fidelity) for the enterprise.</p>
+
+<p><strong>7.4 Fiscal Year.</strong> The fiscal year of the Company shall be the calendar year (January 1 through December 31).</p>
+
+<p><strong>7.5 Records.</strong> The Company shall keep complete and accurate books and records at its principal office, including records of all transactions, contributions, distributions, and financial statements.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article VIII — Tax Treatment                   -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article VIII</span> — Tax Treatment</h2>
+
+<p><strong>8.1 Tax Classification.</strong> The Company shall be treated as a <strong>disregarded entity</strong> for federal income tax purposes. All income, deductions, and credits of the Company shall be reported on the Member's personal tax return (IRS Form 1040, Schedule C).</p>
+
+<p><strong>8.2 Tax Identification.</strong> The Company shall obtain its own Employer Identification Number (EIN) from the Internal Revenue Service. Until the EIN is obtained, the Member's Social Security Number may be used.</p>
+
+<p><strong>8.3 Tax Elections.</strong> The Member shall have sole authority to make all tax elections and decisions on behalf of the Company.</p>
+
+<p><strong>8.4 Self-Employment Tax.</strong> The Member acknowledges that net earnings from the Company are subject to self-employment tax under IRC § 1401, and the Member shall make quarterly estimated tax payments as required.</p>
+
+<p><strong>8.5 Georgia State Tax.</strong> The Company shall comply with all Georgia state tax obligations, including filing Georgia Form 700 (partnership return) if required, and paying Georgia income taxes through the Member's personal return.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article IX — Liability and Indemnification     -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article IX</span> — Liability &amp; Indemnification</h2>
+
+<p><strong>9.1 Limited Liability.</strong> The Member shall not be personally liable for any debts, obligations, or liabilities of the Company solely by reason of being a member, except as otherwise provided by the Act.</p>
+
+<p><strong>9.2 Indemnification.</strong> The Company shall indemnify the Member and any agents of the Company to the fullest extent permitted by the Act against any and all losses, claims, damages, or expenses (including reasonable attorneys' fees) arising from any action taken in good faith on behalf of the Company.</p>
+
+<p><strong>9.3 Insurance.</strong> The Company may, at its discretion, obtain and maintain liability insurance to protect the Company and its Member.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article X — Transfer of Interest               -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article X</span> — Transfer of Membership Interest</h2>
+
+<p><strong>10.1 Restriction on Transfer.</strong> The Member may transfer all or any portion of the membership interest in the Company at any time and to any person or entity, subject to applicable law.</p>
+
+<p><strong>10.2 Admission of Transferee.</strong> A transferee of the membership interest shall become a substituted member only upon the written consent of the existing Member and execution of an amendment to this Agreement.</p>
+
+<p><strong>10.3 Transfer to Holding Entity.</strong> The Member anticipates that the Company may be transferred to or reorganized under <strong>Justice McNeal Holding LLC</strong> (or successor holding entity) in the future. Upon such transfer, this Agreement shall be amended accordingly.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article XI — Dissolution                       -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article XI</span> — Dissolution</h2>
+
+<p><strong>11.1 Events of Dissolution.</strong> The Company shall dissolve upon the occurrence of any of the following:</p>
+<ol type="a">
+    <li>The written decision of the Member to dissolve the Company;</li>
+    <li>The sale or disposition of substantially all Company assets;</li>
+    <li>The death or incapacity of the Member, unless a successor is designated; or</li>
+    <li>Any event requiring dissolution under the Act.</li>
+</ol>
+
+<p><strong>11.2 Winding Up.</strong> Upon dissolution, the Company's affairs shall be wound up by the Member (or a designated representative). Company assets shall be distributed in the following order:</p>
+<ol>
+    <li>Payment of debts and liabilities of the Company, including debts owed to the Member;</li>
+    <li>Establishment of any reserves necessary for contingent or unforeseen liabilities;</li>
+    <li>Distribution of the remaining assets to the Member.</li>
+</ol>
+
+<p><strong>11.3 Articles of Dissolution.</strong> Upon completion of winding up, articles of dissolution or termination shall be filed with the Georgia Secretary of State.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article XII — Holding Company Integration      -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article XII</span> — Holding Company Integration</h2>
+
+<p><strong>12.1 Future Restructuring.</strong> The Member intends to integrate the Company into a multi-entity structure under <strong>Justice McNeal Holding LLC</strong> (the "<strong>Holding Company</strong>"). Upon formation of the Holding Company, revenue from this Company may flow upstream to the Holding Company in accordance with an inter-company operating agreement.</p>
+
+<p><strong>12.2 Amendment Upon Restructuring.</strong> When the Company is brought under the Holding Company, this Agreement shall be amended or replaced with a multi-member or subsidiary operating agreement as appropriate. Any such restructuring shall be documented in writing.</p>
+
+<p><strong>12.3 Related Entities.</strong> The Member also operates or plans to operate the following entities under the Holding Company umbrella. This Company's operations shall remain separate from these entities:</p>
+<ul>
+    <li>Karry Kraze LLC (e-commerce / brand)</li>
+    <li>[TBD] AI Content Generation LLC (AI content services)</li>
+</ul>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article XIII — Digital Assets and IP           -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article XIII</span> — Digital Assets &amp; Intellectual Property</h2>
+
+<p><strong>13.1 Ownership.</strong> All intellectual property created for or by the Company, including but not limited to source code, website designs, brand assets, logos, and written content, shall be the exclusive property of the Company.</p>
+
+<p><strong>13.2 Platform Assets.</strong> The following digital assets are owned by the Company:</p>
+<ul>
+    <li>The Family Contribution web application (source code repository);</li>
+    <li>Domain name(s) associated with the platform;</li>
+    <li>Supabase database and all stored data;</li>
+    <li>Stripe account and payment processing configuration;</li>
+    <li>All brand assets, including logos, design systems, and marketing materials;</li>
+    <li>GitHub repository and deployment infrastructure; and</li>
+    <li>All member data (subject to applicable privacy laws).</li>
+</ul>
+
+<p><strong>13.3 Licensing.</strong> The Member may license Company intellectual property to third parties or related entities with written documentation of the terms.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article XIV — Privacy and Data                 -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article XIV</span> — Privacy &amp; Member Data</h2>
+
+<p><strong>14.1 Data Responsibility.</strong> The Company collects and stores personal and financial data from family members who use the platform. The Company shall handle all data responsibly and in compliance with applicable federal and state privacy laws.</p>
+
+<p><strong>14.2 Data Retention.</strong> The Company shall maintain data only as long as necessary for business, legal, and tax purposes. Upon termination of a family member's account, their personal data shall be handled in accordance with the Company's privacy policy.</p>
+
+<p><strong>14.3 Security.</strong> The Company shall implement reasonable security measures, including but not limited to row-level security policies, encrypted storage, and access controls to protect member data.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Article XV — General Provisions                -->
+<!-- ══════════════════════════════════════════════ -->
+<h2><span class="article-num">Article XV</span> — General Provisions</h2>
+
+<p><strong>15.1 Entire Agreement.</strong> This Operating Agreement constitutes the entire agreement regarding the Company and supersedes all prior or contemporaneous agreements, understandings, or representations.</p>
+
+<p><strong>15.2 Amendment.</strong> This Agreement may be amended only by a written instrument signed by the Member.</p>
+
+<p><strong>15.3 Governing Law.</strong> This Agreement shall be governed by and construed in accordance with the laws of the State of Georgia, without regard to conflict of law principles.</p>
+
+<p><strong>15.4 Severability.</strong> If any provision of this Agreement is held to be invalid or unenforceable, the remaining provisions shall continue in full force and effect.</p>
+
+<p><strong>15.5 Headings.</strong> Section headings are for convenience only and shall not affect the interpretation of this Agreement.</p>
+
+<p><strong>15.6 Binding Effect.</strong> This Agreement shall be binding upon and inure to the benefit of the Member and the Member's heirs, executors, administrators, successors, and assigns.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Signature Block                                -->
+<!-- ══════════════════════════════════════════════ -->
+<h2>Execution</h2>
+
+<p><strong>IN WITNESS WHEREOF</strong>, the undersigned has executed this Operating Agreement as of the date first written above.</p>
+
+<div class="signature-block">
+    <p><strong>SOLE MEMBER:</strong></p>
+    <div class="sig-line"></div>
+    <p class="sig-label">Justin Lamar McNeal</p>
+    <br>
+    <p><strong>Date:</strong> <span class="blank">&nbsp;</span></p>
+</div>
+
+<br><br>
+
+<div class="signature-block">
+    <p><strong>COMPANY:</strong></p>
+    <p>JM Family Contribution LLC</p>
+    <p>By its Sole Member</p>
+    <div class="sig-line"></div>
+    <p class="sig-label">Justin Lamar McNeal, Member</p>
+    <br>
+    <p><strong>Date:</strong> <span class="blank">&nbsp;</span></p>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Exhibit A — Initial Contribution               -->
+<!-- ══════════════════════════════════════════════ -->
+<div style="page-break-before: always;"></div>
+<h2>Exhibit A — Initial Capital Contribution</h2>
+
+<p>The following assets were contributed by the Member upon formation of the Company:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Asset</th>
+            <th>Description</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>Web Platform</td>
+            <td>Family Contribution web application — full-stack codebase including HTML, CSS, JavaScript, Supabase functions, migrations, and PWA infrastructure</td>
+            <td>$5,000.00</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>Domain Name</td>
+            <td>justicemcnealllc.com (or successor domain for the platform)</td>
+            <td>$50.00</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>Infrastructure</td>
+            <td>Supabase project (database, auth, storage, edge functions), Stripe Connect account, GitHub Pages hosting, and all third-party service configurations</td>
+            <td>$200.00</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>Brand Assets</td>
+            <td>Logos, icons, Lottie animations, banner graphics, design system, color schemes, and all marketing/UI content</td>
+            <td>$250.00</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>Cash</td>
+            <td>Cash contribution to the Company's bank account</td>
+            <td><span class="blank short">&nbsp;</span></td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3" style="text-align: right; font-weight: 700;">Total:</td>
+            <td><strong>$5,500.00 + cash</strong></td>
+        </tr>
+    </tfoot>
+</table>
+
+<p class="highlight" style="margin-top: 0.2in;">Note: Asset valuations are good-faith estimates by the Member. The web platform valuation reflects development time, design work, and comparable SaaS platform costs. These valuations may be updated by the Member as appropriate.</p>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- Exhibit B — Revenue Model                      -->
+<!-- ══════════════════════════════════════════════ -->
+<div style="page-break-before: always;"></div>
+<h2>Exhibit B — Revenue Model Summary</h2>
+
+<p>For reference, the Company's primary revenue model upon formation:</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Revenue Source</th>
+            <th>Type</th>
+            <th>Current Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Family Member Subscriptions ($30/month)</td>
+            <td>Recurring</td>
+            <td>Active — ~$120/month</td>
+        </tr>
+        <tr>
+            <td>Extra Deposits (one-time contributions)</td>
+            <td>Variable</td>
+            <td>Active — portal built</td>
+        </tr>
+        <tr>
+            <td>Investment Returns</td>
+            <td>Variable</td>
+            <td>Planned — as portfolio grows</td>
+        </tr>
+        <tr>
+            <td>Family Lending Interest</td>
+            <td>Variable</td>
+            <td>Future — Phase 8</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><strong>Current projected annual revenue:</strong> $1,440.00</p>
+<p><strong>Revenue target:</strong> $5,000/year by end of 2026 – early 2027</p>
+
+<br>
+<div class="page-footer">
+    Operating Agreement — JM Family Contribution LLC — Page <span class="page-num"></span>
+    <br>
+    This document was prepared by the Sole Member and is not a substitute for professional legal counsel.
+</div>
+
+</div><!-- .document -->
+
+</body>
+</html>

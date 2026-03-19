@@ -8,7 +8,8 @@
 
 ## 📍 Infrastructure Overview
 
-- **Legal Entity:** Justice McNeal LLC (future plan: owned by a Family Trust)
+- **Holding Company:** Justice McNeal LLC (future plan: owned by a Family Trust)
+- **Website LLC:** TBD — JM Family Contribution LLC or JM Media LLC (single-member, owned by holding company)
 - **Website:** [justicemcnealllc.com](https://justicemcnealllc.com) — Family Contribution Portal
 - **Tech Stack:** Supabase (auth + database + realtime), Stripe (subscriptions + Connect), GitHub Pages (hosting), Tailwind CSS, Chart.js, Cytoscape.js, Leaflet.js
 
@@ -16,11 +17,16 @@
 ```
 Members (Monthly Subscription via Stripe)
     ↓
-BlueVine Business Bank Account
+[Website LLC] Bank Account
     ↓
-Fidelity LLC Brokerage Account
-    ↓
-Invested into VTI · VXUS · VIG · SPAXX
+├── Operating Expenses + Tax Reserve
+└── Distribution → Justice McNeal LLC (Holding)
+                        ↓
+                  BlueVine Business Bank Account
+                        ↓
+                  Fidelity LLC Brokerage Account
+                        ↓
+                  Invested into VTI · VXUS · VIG · SPAXX
 ```
 
 ---
@@ -39,6 +45,12 @@ Invested into VTI · VXUS · VIG · SPAXX
 | [phase8-lending.md](phase8-lending.md) | Phase 8 — Family Lending Program | 🔲 Not Started |
 | [phase9-member-benefits.md](phase9-member-benefits.md) | Phase 9 — Member Benefits Program | 🔲 Not Started |
 | [phase10-compound.md](phase10-compound.md) | Phase 10 — Family Compound / Real Estate | 🔲 Not Started |
+| — | **LLC & Financial Operations** | — |
+| [../llc/overview.md](../llc/overview.md) | LLC Restructuring — Separate Website LLC | ⚡ Planning |
+| [../llc/expenses.md](../llc/expenses.md) | Admin: Expense Tracking | 🔲 Not Started |
+| [../llc/profits.md](../llc/profits.md) | Admin: Profit Tracking | 🔲 Not Started |
+| [../llc/tax-prep.md](../llc/tax-prep.md) | Admin: Tax Prep (Schedule C) | 🔲 Not Started |
+| [../llc/documents.md](../llc/documents.md) | Admin: Documents Vault | 🔲 Not Started |
 
 ---
 
@@ -70,6 +82,11 @@ Invested into VTI · VXUS · VIG · SPAXX
 | 9A | Family Vehicle | 🟠 Medium-Low | Requires $250k milestone |
 | 9B | Life Insurance | 🟠 Medium-Low | Requires legal research |
 | 10 | Family Compound | 🔵 Low | Requires $500k milestone |
+| **LLC** | **LLC Restructuring** | 🔴 **High** | **Finalize by $5k/year revenue** |
+| LLC-A | Expense Tracking (Admin) | 🔴 High | Build before $5k/year |
+| LLC-B | Profit Tracking (Admin) | 🔴 High | Build before $5k/year |
+| LLC-C | Tax Prep Dashboard (Admin) | 🔴 High | Build before $5k/year |
+| LLC-D | Documents Vault (Admin) | 🔴 High | Build alongside LLC formation |
 
 ---
 
@@ -96,9 +113,11 @@ Invested into VTI · VXUS · VIG · SPAXX
 18. Phase 3B — Family Tree (Cytoscape.js)
 
 ### 🔧 Up Next
+19. **LLC Restructuring — Planning & Name Selection** *(Target: Q2 2026)*
 20. **Phase 3C — Credit 101 Education Hub**
 21. **Phase 3D — Budget Tracker + AI Coach**
-22. **Phase 4C — Private Messaging + Snaps**
+22. **Admin: Expenses + Profits + Tax Prep pages** *(Target: before $5k/year)*
+23. **Phase 4C — Private Messaging + Snaps**
 23. **Phase 4D — Push & SMS Notifications**
 24. **Phase 4E — Family Location Map**
 25. **Phase 4F — Family Business Directory**
@@ -123,6 +142,18 @@ Invested into VTI · VXUS · VIG · SPAXX
 4. **Rental income** → Property costs + fund contributions *(Phase 10)*
 5. **Investment returns** → Dividends and capital appreciation
 
+### 📊 Current Revenue & Growth Targets
+
+| Metric | Value |
+|--------|-------|
+| Current Monthly Revenue | $120/month |
+| Current Annual (projected) | $1,440/year |
+| Target | $5,000/year |
+| Timeline | End of 2026 — Early 2027 |
+| Trigger for LLC Finalization | $5,000/year milestone |
+
+> See `md/llc/profits.md` for detailed revenue tracking and growth milestones.
+
 ---
 
-*Last Updated: March 11, 2026 | Maintained By: Justin McNeal (Admin)*
+*Last Updated: March 13, 2026 | Maintained By: Justin McNeal (Admin)*

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Expenses | Admin | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JMLLC">
+    <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <style>
+        .drop-zone { transition: all 0.2s ease; }
+        .drop-zone.drag-over { border-color: #6366f1; background: #eef2ff; }
+    </style>
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="admin" data-active-page="expenses">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <!-- Header + Back -->
+        <div class="mb-6 sm:mb-8">
+            <a href="index.html" class="inline-flex items-center text-sm text-gray-500 hover:text-brand-600 mb-3 transition">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                Back to Hub
+            </a>
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Expense Tracker</h1>
+                    <p class="text-gray-500 mt-1 text-sm sm:text-base">Track LLC business expenses for tax deductions</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="exportBtn" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 active:scale-[0.98] transition shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Export CSV
+                    </button>
+                    <button id="addExpenseBtn" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 active:scale-[0.98] transition shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Add Expense
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">This Month</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-gray-900" id="statMonth">
+                    <div class="skeleton h-7 w-16 rounded-lg"></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">This Year</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-brand-600" id="statYear">
+                    <div class="skeleton h-7 w-20 rounded-lg"></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Entries</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-emerald-600" id="statCount">
+                    <div class="skeleton h-7 w-8 rounded-lg"></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Recurring</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-amber-600" id="statRecurring">
+                    <div class="skeleton h-7 w-8 rounded-lg"></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">🚗 YTD Miles</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-red-600" id="statMiles">
+                    <div class="skeleton h-7 w-12 rounded-lg"></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-yellow-200/80 stat-card hidden">
+                <div class="text-[10px] sm:text-xs font-semibold text-yellow-500 uppercase tracking-wider mb-1">⚠ No Receipt</div>
+                <div class="text-xl sm:text-2xl font-extrabold text-yellow-600" id="statMissingReceipts">0</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-3 mb-6">
+            <div class="relative flex-1 min-w-[200px]">
+                <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" id="searchInput" placeholder="Search expenses..." class="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+            </div>
+            <select id="filterCategory" class="px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition appearance-none min-w-[160px]">
+                <option value="">All Categories</option>
+            </select>
+            <select id="filterYear" class="px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition appearance-none min-w-[120px]">
+                <option value="">All Years</option>
+            </select>
+            <select id="filterMonth" class="px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition appearance-none min-w-[130px]">
+                <option value="">All Months</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+            </select>
+        </div>
+
+        <!-- Messages -->
+        <div id="successMsg" class="hidden mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm font-medium"></div>
+        <div id="errorMsg" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium"></div>
+
+        <!-- Chart Section -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-bold text-gray-900">Spending by Category</h2>
+                <div class="flex items-center gap-2">
+                    <button id="chartTogglePie" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-100 text-brand-700">Pie</button>
+                    <button id="chartToggleBar" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-500 hover:bg-gray-100 transition">Bar</button>
+                </div>
+            </div>
+            <div class="relative" style="height: 280px;">
+                <canvas id="expenseChart"></canvas>
+            </div>
+            <div id="chartEmpty" class="hidden absolute inset-0 flex items-center justify-center">
+                <p class="text-sm text-gray-400">No data to chart yet</p>
+            </div>
+        </div>
+
+        <!-- Schedule C Tax Summary (collapsible) -->
+        <details class="bg-white rounded-2xl border border-emerald-200/80 mb-6 group" open>
+            <summary class="flex items-center justify-between p-5 cursor-pointer select-none">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-900">Schedule C Summary — <span id="scheduleCYear" class="text-emerald-600">2026</span></h2>
+                        <p class="text-xs text-gray-400">IRS deduction totals by line • Grand total: <span id="scheduleCTotal" class="font-bold text-emerald-600">$0.00</span></p>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="border-t border-emerald-100 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-100 bg-emerald-50/40">
+                            <th class="text-left px-4 py-2.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider w-20">Line</th>
+                            <th class="text-left px-4 py-2.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Category</th>
+                            <th class="text-center px-4 py-2.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider w-16">#</th>
+                            <th class="text-right px-4 py-2.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider w-28">Spent</th>
+                            <th class="text-right px-4 py-2.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider w-28">Deductible</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleCBody">
+                        <tr><td colspan="5" class="px-4 py-6 text-center text-sm text-gray-400">Loading...</td></tr>
+                    </tbody>
+                </table>
+                <div class="px-4 py-3 bg-gray-50/50 border-t border-gray-100">
+                    <p class="text-[10px] text-gray-400">* Meals are only 50% deductible per IRS rules. All other categories are 100% deductible. Consult your CPA for final Schedule C filing.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- Expense Table -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-100">
+                            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Description</th>
+                            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Category</th>
+                            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Vendor</th>
+                            <th class="text-right px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Amount</th>
+                            <th class="text-right px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-24">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenseTableBody">
+                        <!-- Rendered by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Skeleton Rows -->
+            <div id="tableSkeleton" class="divide-y divide-gray-50">
+                <div class="px-4 py-3 flex items-center gap-4">
+                    <div class="skeleton h-4 w-20 rounded"></div>
+                    <div class="skeleton h-4 w-40 rounded flex-1"></div>
+                    <div class="skeleton h-4 w-20 rounded hidden sm:block"></div>
+                    <div class="skeleton h-4 w-16 rounded"></div>
+                </div>
+                <div class="px-4 py-3 flex items-center gap-4">
+                    <div class="skeleton h-4 w-20 rounded"></div>
+                    <div class="skeleton h-4 w-32 rounded flex-1"></div>
+                    <div class="skeleton h-4 w-20 rounded hidden sm:block"></div>
+                    <div class="skeleton h-4 w-16 rounded"></div>
+                </div>
+                <div class="px-4 py-3 flex items-center gap-4">
+                    <div class="skeleton h-4 w-20 rounded"></div>
+                    <div class="skeleton h-4 w-36 rounded flex-1"></div>
+                    <div class="skeleton h-4 w-20 rounded hidden sm:block"></div>
+                    <div class="skeleton h-4 w-16 rounded"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden mt-6">
+            <div class="bg-white rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-1">No expenses yet</h3>
+                <p class="text-gray-500 text-sm mb-4">Start tracking your LLC business expenses for tax deductions and bookkeeping.</p>
+                <button onclick="document.getElementById('addExpenseBtn').click()" class="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 transition">
+                    Add First Expense
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Add / Edit Expense Modal -->
+    <div id="expenseModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" id="expenseModalOverlay"></div>
+        <div class="flex items-center justify-center min-h-full p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 slide-up max-h-[90vh] overflow-y-auto">
+                <h3 class="text-lg font-bold text-gray-900 mb-4" id="modalTitle">Add Expense</h3>
+
+                <form id="expenseForm" class="space-y-4">
+                    <input type="hidden" id="expenseId" value="">
+
+                    <!-- Date + Amount Row -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Date</label>
+                            <input type="date" id="expDate" required class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Amount ($)</label>
+                            <input type="number" id="expAmount" required min="0.01" step="0.01" placeholder="0.00" class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                        </div>
+                    </div>
+
+                    <!-- Category -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Category</label>
+                        <select id="expCategory" required class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition appearance-none">
+                            <option value="">Select category...</option>
+                            <!-- Options populated by JS from CATEGORY_CONFIG -->
+                        </select>
+                        <p id="mealsHint" class="hidden mt-1.5 text-[11px] text-pink-600 font-medium">🍽️ Only 50% of meal expenses are tax-deductible. Enter the full amount — we’ll calculate the deduction automatically.</p>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Description</label>
+                        <input type="text" id="expDescription" required placeholder="e.g., Supabase Pro Plan — March 2026" class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                    </div>
+
+                    <!-- Vendor -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Vendor</label>
+                        <input type="text" id="expVendor" placeholder="e.g., Supabase, Stripe, Google" class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                    </div>
+
+                    <!-- Mileage Section (shown only for travel-mileage category) -->
+                    <div id="mileageSection" class="hidden space-y-3 p-4 bg-red-50/50 border border-red-200/60 rounded-xl">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-base">🚗</span>
+                            <span class="text-xs font-bold text-red-700 uppercase tracking-wider">Mileage Tracker</span>
+                            <span class="ml-auto text-[10px] text-red-400 font-medium">IRS Rate: $<span id="mileageRateDisplay">0.70</span>/mi</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Miles Driven</label>
+                                <input type="number" id="expMiles" min="0.1" step="0.1" placeholder="0.0" class="w-full px-4 py-3 bg-white border border-red-200 rounded-xl text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Deduction</label>
+                                <div id="mileageDeduction" class="px-4 py-3 bg-red-100/60 border border-red-200 rounded-xl text-sm font-bold text-red-700">$0.00</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">From</label>
+                                <input type="text" id="expTripFrom" placeholder="e.g., Home" class="w-full px-4 py-3 bg-white border border-red-200 rounded-xl text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">To</label>
+                                <input type="text" id="expTripTo" placeholder="e.g., Costco, Event venue" class="w-full px-4 py-3 bg-white border border-red-200 rounded-xl text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none transition">
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-red-400">Round trip? Enter total both ways. Amount auto-fills from miles × IRS rate.</p>
+                    </div>
+
+                    <!-- Recurring Toggle -->
+                    <div class="flex items-center gap-3 p-3 bg-surface-50 rounded-xl border border-gray-200">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="expRecurring" class="sr-only peer">
+                            <div class="w-10 h-5 bg-gray-300 peer-focus:ring-2 peer-focus:ring-brand-300 rounded-full peer peer-checked:bg-brand-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+                        </label>
+                        <div>
+                            <span class="text-sm font-medium text-gray-700">Recurring expense</span>
+                            <p class="text-xs text-gray-400">Automatically remind you each billing cycle</p>
+                        </div>
+                    </div>
+
+                    <!-- Recurrence Interval (shown when recurring) -->
+                    <div id="recurrenceRow" class="hidden">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Frequency</label>
+                        <select id="expRecurrenceInterval" class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition appearance-none">
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="annual">Annual</option>
+                        </select>
+                    </div>
+
+                    <!-- Receipt Upload -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Receipt (optional)</label>
+                        <div id="receiptDropZone" class="drop-zone border-2 border-dashed border-gray-300 rounded-xl p-4 text-center cursor-pointer hover:border-brand-400 hover:bg-brand-50/30 transition">
+                            <svg class="w-8 h-8 text-gray-300 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            <p class="text-xs text-gray-500">Drop receipt here or <span class="text-brand-600 font-medium">browse</span></p>
+                            <p class="text-[10px] text-gray-400 mt-0.5">PDF, PNG, JPG — Max 10MB</p>
+                            <input type="file" id="receiptInput" accept=".pdf,.png,.jpg,.jpeg,.webp" class="hidden">
+                        </div>
+                    </div>
+
+                    <!-- Receipt Preview -->
+                    <div id="receiptPreview" class="hidden flex items-center gap-3 p-3 bg-surface-50 rounded-xl border border-gray-200">
+                        <div class="w-10 h-10 bg-brand-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-gray-900 truncate" id="receiptName"></div>
+                            <div class="text-xs text-gray-400" id="receiptSize"></div>
+                        </div>
+                        <button type="button" id="clearReceiptBtn" class="text-gray-400 hover:text-red-500 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Notes (optional)</label>
+                        <textarea id="expNotes" rows="2" placeholder="Additional notes..." class="w-full px-4 py-3 bg-surface-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition resize-none"></textarea>
+                    </div>
+
+                    <!-- Upload progress -->
+                    <div id="uploadProgress" class="hidden">
+                        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div id="uploadProgressBar" class="h-full bg-brand-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1" id="uploadProgressText">Saving...</p>
+                    </div>
+
+                    <div class="flex gap-3 pt-2">
+                        <button type="submit" id="submitBtn" class="flex-1 px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 active:scale-[0.98] transition shadow-sm">Save Expense</button>
+                        <button type="button" id="cancelBtn" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" id="deleteModalOverlay"></div>
+        <div class="flex items-center justify-center min-h-full p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 slide-up">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Expense?</h3>
+                <p class="text-sm text-gray-500 mb-5" id="deleteModalText">This will permanently remove this expense record and any attached receipt.</p>
+                <div class="flex gap-3">
+                    <button id="deleteConfirmBtn" class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition">Delete</button>
+                    <button id="deleteCancelBtn" class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt View Modal -->
+    <div id="receiptViewModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="receiptViewOverlay"></div>
+        <div class="flex items-center justify-center min-h-full p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 slide-up max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Receipt</h3>
+                    <button id="receiptViewClose" class="text-gray-400 hover:text-gray-600 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div id="receiptViewContent" class="rounded-xl overflow-hidden bg-gray-100 min-h-[200px] flex items-center justify-center">
+                    <!-- Image or PDF embed -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/components/pageShell/icons.js"></script>
+    <script src="../js/components/pageShell/helpers.js"></script>
+    <script src="../js/components/pageShell/nav.js"></script>
+    <script src="../js/components/pageShell/dropdowns.js"></script>
+    <script src="../js/components/pageShell/drawer.js"></script>
+    <script src="../js/components/pageShell/profile-loader.js"></script>
+    <script src="../js/components/pageShell/index.js"></script>
+    <script src="../js/auth/shared.js"></script>
+    <script src="../js/admin/expenses.js"></script>
+    <script src="../js/sw-register.js"></script>
+</body>
+</html>
