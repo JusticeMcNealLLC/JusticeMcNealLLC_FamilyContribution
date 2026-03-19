@@ -206,22 +206,23 @@ function evtExpandAddress(raw) {
     return preState.join(' ') + ', ' + statePart + ' ' + zip;
 }
 
-// ── Geocoding: US Census Bureau (primary) → Nominatim (fallback) ──
+// ── Geocoding: US Census Bureau (via edge function) → Nominatim (fallback) ──
 // The Census geocoder has TIGER/Line data — virtually every US address.
+// It doesn't support CORS, so we proxy through a Supabase Edge Function.
 
 async function evtGeocodeCensus(address) {
-    // US Census Bureau Geocoder — free, no API key, excellent US address coverage
-    const url = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(address)}&benchmark=Public_AR_Current&format=json`;
+    // Proxy through our edge function to avoid CORS issues
+    const url = `${getFunctionUrl('geocode-address')}?address=${encodeURIComponent(address)}`;
     try {
-        const resp = await fetch(url);
+        const resp = await fetch(url, {
+            headers: { 'apikey': SUPABASE_ANON_KEY }
+        });
         const data = await resp.json();
-        const matches = data?.result?.addressMatches;
-        if (matches && matches.length > 0) {
-            const m = matches[0];
+        if (data?.found) {
             return {
-                lat: m.coordinates.y,
-                lng: m.coordinates.x,
-                display: m.matchedAddress
+                lat: data.lat,
+                lng: data.lng,
+                display: data.display
             };
         }
     } catch (err) { console.warn('Census geocoder failed:', err); }
