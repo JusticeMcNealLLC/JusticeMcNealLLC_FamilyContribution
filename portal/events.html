@@ -39,6 +39,10 @@
         @media (max-width: 767px) {
             body[data-active-page="events"] > nav { display: none !important; }
         }
+        /* Ensure desktop nav is sticky (injected dynamically by pageShell) */
+        @media (min-width: 768px) {
+            #mainNav { position: sticky; top: 0; z-index: 40; }
+        }
         .event-card { transition: transform .15s ease, box-shadow .15s ease; cursor: pointer; }
         .event-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(0,0,0,.08); }
         .tab-btn { position: relative; }
