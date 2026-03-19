@@ -54,6 +54,9 @@ function evtRenderEvents() {
     const filter = document.getElementById('typeFilter').value;
     const now = new Date();
 
+    // Update hero stats
+    evtUpdateHeroStats();
+
     let events = evtAllEvents.filter(e => {
         if (filter !== 'all' && e.event_type !== filter) return false;
         if (evtActiveTab === 'upcoming') return new Date(e.start_date) >= now || e.status === 'active' || e.status === 'open' || e.status === 'confirmed' || e.status === 'draft';
@@ -137,4 +140,21 @@ function evtRenderCard(event) {
             </div>
         </div>
     `;
+}
+
+// ─── Hero Stats ─────────────────────────────────────────
+
+function evtUpdateHeroStats() {
+    const now = new Date();
+    const upcoming = evtAllEvents.filter(e => new Date(e.start_date) >= now && e.status !== 'draft');
+    const rsvpCount = Object.values(evtAllRsvps).filter(r => r.status === 'going' || r.status === 'maybe').length;
+    const next = upcoming.sort((a, b) => new Date(a.start_date) - new Date(b.start_date))[0];
+
+    const elUp = document.getElementById('heroUpcomingCount');
+    const elRsvp = document.getElementById('heroRsvpCount');
+    const elNext = document.getElementById('heroNextEvent');
+
+    if (elUp) elUp.textContent = upcoming.length;
+    if (elRsvp) elRsvp.textContent = rsvpCount;
+    if (elNext) elNext.textContent = next ? next.title : 'None';
 }
