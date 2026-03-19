@@ -54,7 +54,7 @@
         .modal-overlay { backdrop-filter: blur(4px); }
         .modal-panel { max-height: 90vh; }
         @media (max-width: 640px) {
-            .modal-panel { max-height: 100dvh; max-height: -webkit-fill-available; }
+            .modal-panel { max-height: 100dvh; max-height: -webkit-fill-available; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
             #detailContent { padding-bottom: env(safe-area-inset-bottom, 0px); }
         }
         #scannerVideo { width: 100%; border-radius: 12px; }
@@ -107,7 +107,7 @@
             </div>
         </div>
 
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 sm:pb-6">
 
         <!-- Tabs + Filter -->
         <div class="flex items-center justify-between border-b border-gray-200 mb-6">
@@ -155,7 +155,7 @@
     </main>
 
     <!-- ─── Create Event Modal ────────────────────────────── -->
-    <div id="createModal" class="fixed inset-0 z-50 hidden">
+    <div id="createModal" class="fixed inset-0 z-[60] hidden">
         <div class="modal-overlay absolute inset-0 bg-black/40" id="createModalOverlay"></div>
         <div class="absolute inset-0 flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
             <div class="modal-panel bg-white w-full sm:max-w-2xl sm:rounded-2xl shadow-2xl overflow-y-auto min-h-screen sm:min-h-0">
@@ -589,7 +589,7 @@
     </div>
 
     <!-- ─── Event Detail Modal ────────────────────────────── -->
-    <div id="detailModal" class="fixed inset-0 z-50 hidden">
+    <div id="detailModal" class="fixed inset-0 z-[60] hidden">
         <div class="modal-overlay absolute inset-0 bg-black/40" id="detailModalOverlay"></div>
         <div class="absolute inset-0 flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
             <div class="modal-panel bg-white w-full sm:max-w-2xl sm:rounded-2xl shadow-2xl overflow-y-auto min-h-screen sm:min-h-0">
@@ -599,7 +599,7 @@
     </div>
 
     <!-- ─── QR Scanner Modal ────────────────────────────── -->
-    <div id="scannerModal" class="fixed inset-0 z-50 hidden">
+    <div id="scannerModal" class="fixed inset-0 z-[60] hidden">
         <div class="modal-overlay absolute inset-0 bg-black/40" id="scannerModalOverlay"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
@@ -622,7 +622,7 @@
     <div id="tabs-placeholder"></div>
 
     <!-- ─── Raffle Draw Modal ────────────────────────────── -->
-    <div id="raffleDrawModal" class="fixed inset-0 z-50 hidden">
+    <div id="raffleDrawModal" class="fixed inset-0 z-[60] hidden">
         <div class="modal-overlay absolute inset-0 bg-black/60 backdrop-blur-sm" id="raffleDrawOverlay"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
