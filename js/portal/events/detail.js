@@ -543,11 +543,16 @@ async function evtOpenDetail(eventId) {
     }
 
     document.getElementById('detailContent').innerHTML = `
-        <!-- Banner -->
-        <div class="h-48 sm:h-56 relative" style="${bannerBg}">
-            <button onclick="evtToggleModal('detailModal',false)" class="absolute top-4 right-4 w-8 h-8 bg-black/30 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-black/50 transition">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+        <!-- Banner (sticky on mobile) -->
+        <div class="h-48 sm:h-56 relative sticky top-0 z-10" style="${bannerBg}">
+            <div class="absolute top-4 right-4 flex items-center gap-2">
+                <button onclick="evtCopyShareUrl('${event.slug}')" class="w-8 h-8 bg-black/30 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-black/50 transition" title="Copy share link">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                </button>
+                <button onclick="evtToggleModal('detailModal',false)" class="w-8 h-8 bg-black/30 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-black/50 transition">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
             <div class="absolute bottom-4 left-4 flex gap-1.5">
                 <span class="type-tag ${tc.bg} ${tc.text}">${tc.label}</span>
                 <span class="type-tag ${STATUS_COLORS[event.status] || ''}">${event.status.toUpperCase()}</span>
@@ -646,15 +651,6 @@ async function evtOpenDetail(eventId) {
             <!-- Attendee Breakdown (Host only) -->
             ${attendeeBreakdownHtml}
 
-            <!-- Share Link -->
-            <div class="mt-6 p-4 bg-surface-50 rounded-xl">
-                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Share This Event</h4>
-                <div class="flex items-center gap-2">
-                    <input type="text" value="${publicUrl}" readonly class="flex-1 text-xs bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-600" id="shareUrl">
-                    <button onclick="evtCopyShareUrl()" class="bg-brand-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-brand-700 transition" id="copyShareBtn">Copy</button>
-                </div>
-            </div>
-
             ${hostControlsHtml}
 
             ${event.cancellation_note ? `
@@ -662,6 +658,9 @@ async function evtOpenDetail(eventId) {
                 <p class="text-sm font-semibold text-red-700">Cancellation Note</p>
                 <p class="text-xs text-red-600 mt-1">${evtEscapeHtml(event.cancellation_note)}</p>
             </div>` : ''}
+
+            <!-- Bottom padding for mobile nav -->
+            <div class="h-20 sm:hidden"></div>
         </div>
     `;
 

@@ -6,12 +6,17 @@
 function evtToggleModal(id, show) {
     const modal = document.getElementById(id);
     if (!modal) return;
+    const tabBar = document.getElementById('bottomTabBar');
     if (show) {
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+        // Bring bottom nav above the detail modal on mobile
+        if (id === 'detailModal' && tabBar) tabBar.style.zIndex = '70';
     } else {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
+        // Reset bottom nav z-index
+        if (id === 'detailModal' && tabBar) tabBar.style.zIndex = '';
         // Cleanup map when closing detail modal
         if (id === 'detailModal' && typeof evtCleanupMap === 'function') {
             evtCleanupMap();
@@ -52,12 +57,17 @@ function evtHandleBannerSelect() {
     reader.readAsDataURL(file);
 }
 
-function evtCopyShareUrl() {
-    const input = document.getElementById('shareUrl');
-    if (!input) return;
-    navigator.clipboard.writeText(input.value).then(() => {
-        const btn = document.getElementById('copyShareBtn');
-        btn.textContent = 'Copied!';
-        setTimeout(() => btn.textContent = 'Copy', 2000);
+function evtCopyShareUrl(slug) {
+    const url = slug
+        ? `${window.location.origin}/events/?e=${slug}`
+        : document.getElementById('shareUrl')?.value;
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => {
+        // Brief toast-style feedback
+        const toast = document.createElement('div');
+        toast.textContent = 'Link copied!';
+        toast.className = 'fixed top-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-lg z-[999] transition-opacity duration-300';
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 1500);
     });
 }
