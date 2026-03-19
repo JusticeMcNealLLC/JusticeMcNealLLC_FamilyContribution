@@ -114,8 +114,14 @@
         <!-- Content card scrolls over banner -->
         <div class="event-card">
 
-        <!-- Title -->
-        <h1 id="eventTitle" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight"></h1>
+        <!-- Title + Share -->
+        <div class="flex items-start justify-between gap-3">
+            <h1 id="eventTitle" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight"></h1>
+            <button onclick="pubCopyUrl()" id="copyBtn" title="Copy event link" class="mt-1 shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-brand-100 text-gray-500 hover:text-brand-600 transition" aria-label="Share event">
+                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+            </button>
+        </div>
+        <input type="hidden" id="shareUrl" value="">
 
         <!-- Meta -->
         <div class="mt-4 space-y-2.5 text-sm text-gray-600" id="eventMeta"></div>
@@ -219,14 +225,7 @@
             <div id="checkinResult"></div>
         </div>
 
-        <!-- Share -->
-        <div class="mt-8 p-4 bg-white rounded-xl border border-gray-200/80">
-            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Share This Event</h4>
-            <div class="flex items-center gap-2">
-                <input type="text" id="shareUrl" readonly class="flex-1 text-xs bg-surface-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-600">
-                <button onclick="pubCopyUrl()" id="copyBtn" class="bg-brand-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-brand-700 transition">Copy</button>
-            </div>
-        </div>
+
 
         <!-- Footer -->
         <div class="mt-10 mb-6 text-center text-xs text-gray-400">

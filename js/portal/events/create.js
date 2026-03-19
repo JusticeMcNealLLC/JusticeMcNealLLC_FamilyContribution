@@ -149,12 +149,14 @@ function evtRecalcCostSummary() {
 // Geocode a location text into lat/lng using OpenStreetMap Nominatim
 async function evtGeocodeAddress(address) {
     try {
-        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`, {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=us&q=${encodeURIComponent(address)}`, {
             headers: { 'Accept-Language': 'en' }
         });
         const results = await resp.json();
         if (results && results.length > 0) {
-            return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon), display: results[0].display_name };
+            // Prefer results that are a house / building / place (class=place or class=building)
+            const best = results.find(r => r.class === 'place' || r.class === 'building') || results[0];
+            return { lat: parseFloat(best.lat), lng: parseFloat(best.lon), display: best.display_name };
         }
     } catch (err) { console.warn('Geocoding failed:', err); }
     return null;
