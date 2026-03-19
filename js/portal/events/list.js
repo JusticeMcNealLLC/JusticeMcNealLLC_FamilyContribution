@@ -6,7 +6,7 @@ async function evtLoadEvents() {
     try {
         const { data: events, error } = await supabaseClient
             .from('events')
-            .select('*')
+            .select('*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)')
             .in('status', ['open', 'confirmed', 'active', 'completed'])
             .order('start_date', { ascending: true });
 
@@ -17,7 +17,7 @@ async function evtLoadEvents() {
         if (evtCurrentUserRole === 'admin') {
             const { data: drafts } = await supabaseClient
                 .from('events')
-                .select('*')
+                .select('*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)')
                 .eq('status', 'draft')
                 .eq('created_by', evtCurrentUser.id)
                 .order('created_at', { ascending: false });
@@ -113,6 +113,25 @@ function evtRenderCard(event) {
         statusTag = `<span class="type-tag bg-gray-200 text-gray-600">DRAFT</span>`;
     }
 
+    // Creator info
+    const cr = event.creator;
+    let creatorHtml = '';
+    if (cr && event.event_type === 'member') {
+        const crName = [cr.first_name, cr.last_name].filter(Boolean).join(' ') || 'Member';
+        const crInitials = ((cr.first_name || '?')[0] + (cr.last_name || '')[0]).toUpperCase();
+        const crBadge = evtBadgeChip(cr.displayed_badge);
+        creatorHtml = `
+            <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                <div class="relative flex-shrink-0">
+                    <div class="w-6 h-6 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border border-gray-200">
+                        ${cr.profile_picture_url ? `<img src="${cr.profile_picture_url}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-[9px] font-bold">${crInitials}</span>`}
+                    </div>
+                    ${crBadge ? `<div class="absolute -bottom-0.5 -right-0.5" style="transform:scale(.7);transform-origin:bottom right">${crBadge}</div>` : ''}
+                </div>
+                <span class="text-[11px] text-gray-500 truncate">by <span class="font-semibold text-gray-700">${evtEscapeHtml(crName)}</span></span>
+            </div>`;
+    }
+
     return `
         <div class="event-card bg-white rounded-2xl border border-gray-200/80 overflow-hidden cursor-pointer hover:shadow-md transition" data-event-id="${event.id}">
             <div class="h-36 relative" style="${bannerBg}">
@@ -137,6 +156,7 @@ function evtRenderCard(event) {
                         <span class="truncate">${evtEscapeHtml(event.location_text)}</span>
                     </div>` : ''}
                 </div>
+                ${creatorHtml}
             </div>
         </div>
     `;

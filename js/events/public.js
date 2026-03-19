@@ -1103,10 +1103,15 @@ function pubCopyUrl() {
 }
 
 /* ── Map ─────────────────────────────────── */
+let _pubMapCoords = null;
+
 function pubShowMap(lat, lng, label) {
     const wrap = document.getElementById('eventMapWrap');
     if (!wrap || typeof L === 'undefined') return;
     wrap.classList.remove('hidden');
+
+    // Store for fullscreen reuse
+    _pubMapCoords = { lat, lng, label };
 
     const map = L.map('eventMap', { zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false }).setView([lat, lng], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
@@ -1127,6 +1132,46 @@ function pubShowMap(lat, lng, label) {
     setTimeout(() => map.invalidateSize(), 200);
 }
 
+/* ── Fullscreen Map ──────────────────────── */
+let _pubFullscreenMap = null;
+
+function pubOpenFullscreenMap() {
+    if (!_pubMapCoords) return;
+    const { lat, lng, label } = _pubMapCoords;
+    const overlay = document.getElementById('fullscreenMapOverlay');
+    if (!overlay || typeof L === 'undefined') return;
+
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    // Directions link
+    const dirBtn = document.getElementById('fullscreenMapDirections');
+    if (dirBtn) {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const addr = encodeURIComponent(label || `${lat},${lng}`);
+        dirBtn.href = isIOS
+            ? `https://maps.apple.com/?daddr=${addr}`
+            : `https://www.google.com/maps/dir/?api=1&destination=${addr}`;
+    }
+
+    setTimeout(() => {
+        if (_pubFullscreenMap) { _pubFullscreenMap.remove(); _pubFullscreenMap = null; }
+        _pubFullscreenMap = L.map('fullscreenMapContainer', {
+            zoomControl: true, attributionControl: false, dragging: true, scrollWheelZoom: true
+        }).setView([lat, lng], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(_pubFullscreenMap);
+        L.marker([lat, lng]).addTo(_pubFullscreenMap).bindPopup(pubEscapeHtml(label || 'Event Location')).openPopup();
+        setTimeout(() => _pubFullscreenMap.invalidateSize(), 50);
+    }, 50);
+}
+
+function pubCloseFullscreenMap() {
+    const overlay = document.getElementById('fullscreenMapOverlay');
+    if (overlay) overlay.classList.add('hidden');
+    if (_pubFullscreenMap) { _pubFullscreenMap.remove(); _pubFullscreenMap = null; }
+    document.body.style.overflow = '';
+}
+
 // Expose for onclick handlers
 window.pubHandleRsvp = pubHandleRsvp;
 window.pubHandlePaidRsvp = pubHandlePaidRsvp;
@@ -1136,4 +1181,6 @@ window.pubDoVenueCheckin = pubDoVenueCheckin;
 window.pubDoGuestVenueCheckin = pubDoGuestVenueCheckin;
 window.pubToggleLookup = pubToggleLookup;
 window.pubLookupGuestTicket = pubLookupGuestTicket;
+window.pubOpenFullscreenMap = pubOpenFullscreenMap;
+window.pubCloseFullscreenMap = pubCloseFullscreenMap;
 window.pubCopyUrl = pubCopyUrl;

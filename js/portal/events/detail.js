@@ -93,6 +93,17 @@ async function evtOpenDetail(eventId) {
         .maybeSingle();
     const isHost = isCreator || !!hostRecord || evtCurrentUserRole === 'admin';
 
+    // Load creator profile for member-created events
+    let creatorProfile = null;
+    if (event.created_by) {
+        const { data: cp } = await supabaseClient
+            .from('profiles')
+            .select('id, first_name, last_name, profile_picture_url, displayed_badge, title, bio')
+            .eq('id', event.created_by)
+            .single();
+        creatorProfile = cp;
+    }
+
     // Should show gated info?
     const hasRsvp = rsvp && (rsvp.status === 'going' || rsvp.status === 'maybe');
 
@@ -627,7 +638,14 @@ async function evtOpenDetail(eventId) {
             <!-- Location Map -->
             ${showLocation && event.location_lat && event.location_lng ? `
             <div class="mt-3">
-                <div id="detailEventMap" class="h-40 rounded-xl z-0"></div>
+                <div id="detailEventMap" class="h-40 rounded-xl z-0 cursor-pointer relative group" onclick="evtOpenFullscreenMap(${event.location_lat}, ${event.location_lng}, '${evtEscapeHtml(event.location_text || '').replace(/'/g, "\\'")}')">
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition bg-black/10 rounded-xl z-[5] pointer-events-none sm:hidden" style="opacity:0;">
+                    </div>
+                    <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[10px] font-semibold text-gray-600 shadow-sm z-[5] flex items-center gap-1 sm:hidden">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                        Tap to expand
+                    </div>
+                </div>
                 <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener"
                    class="mt-2 w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -639,6 +657,34 @@ async function evtOpenDetail(eventId) {
             <div class="mt-5">
                 <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">${evtEscapeHtml(event.description || '')}</p>
             </div>
+
+            <!-- Event Creator -->
+            ${creatorProfile ? (() => {
+                const cpName = [creatorProfile.first_name, creatorProfile.last_name].filter(Boolean).join(' ') || 'Member';
+                const cpInitials = ((creatorProfile.first_name || '?')[0] + (creatorProfile.last_name || '')[0]).toUpperCase();
+                const cpBadge = evtBadgeChip(creatorProfile.displayed_badge);
+                const cpTitle = creatorProfile.title || 'Member';
+                return `
+            <div class="mt-5 p-4 bg-surface-50 rounded-xl border border-gray-100">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2.5">Created by</p>
+                <div class="flex items-center gap-3">
+                    <a href="profile.html?id=${creatorProfile.id}" class="relative flex-shrink-0">
+                        <div class="w-11 h-11 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
+                            ${creatorProfile.profile_picture_url ? `<img src="${creatorProfile.profile_picture_url}" class="w-full h-full object-cover" alt="">` : `<span class="text-brand-600 text-sm font-bold">${cpInitials}</span>`}
+                        </div>
+                        ${cpBadge ? `<div class="absolute -bottom-0.5 -right-0.5">${cpBadge}</div>` : ''}
+                    </a>
+                    <div class="flex-1 min-w-0">
+                        <a href="profile.html?id=${creatorProfile.id}" class="text-sm font-bold text-gray-900 hover:text-brand-600 transition hover:underline">${evtEscapeHtml(cpName)}</a>
+                        <p class="text-xs text-gray-500">${evtEscapeHtml(cpTitle)}</p>
+                    </div>
+                    <a href="profile.html?id=${creatorProfile.id}" class="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition whitespace-nowrap">
+                        View Profile
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>`;
+            })() : ''}
 
             <!-- Gated Notes -->
             ${showNotes && event.gated_notes ? `
@@ -731,3 +777,54 @@ async function evtOpenDetail(eventId) {
         }
     }, 100);
 }
+
+// ═══════════════════════════════════════════════════════════
+// Fullscreen Map (mobile)
+// ═══════════════════════════════════════════════════════════
+let _fullscreenMap = null;
+
+function evtOpenFullscreenMap(lat, lng, label) {
+    const overlay = document.getElementById('fullscreenMapOverlay');
+    if (!overlay || typeof L === 'undefined') return;
+
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    // Directions link
+    const dirBtn = document.getElementById('fullscreenMapDirections');
+    if (dirBtn) {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const addr = encodeURIComponent(label || `${lat},${lng}`);
+        dirBtn.href = isIOS
+            ? `https://maps.apple.com/?daddr=${addr}`
+            : `https://www.google.com/maps/dir/?api=1&destination=${addr}`;
+    }
+
+    // Init map after overlay is visible
+    setTimeout(() => {
+        if (_fullscreenMap) { _fullscreenMap.remove(); _fullscreenMap = null; }
+        _fullscreenMap = L.map('fullscreenMapContainer', {
+            zoomControl: true,
+            attributionControl: false,
+            dragging: true,
+            scrollWheelZoom: true
+        }).setView([lat, lng], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(_fullscreenMap);
+        L.marker([lat, lng]).addTo(_fullscreenMap).bindPopup(evtEscapeHtml(label || 'Event Location')).openPopup();
+        setTimeout(() => _fullscreenMap.invalidateSize(), 50);
+    }, 50);
+}
+
+function evtCloseFullscreenMap() {
+    const overlay = document.getElementById('fullscreenMapOverlay');
+    if (overlay) overlay.classList.add('hidden');
+    if (_fullscreenMap) { _fullscreenMap.remove(); _fullscreenMap = null; }
+    // Restore scroll only if detail modal is closed
+    const detailModal = document.getElementById('detailModal');
+    if (!detailModal || detailModal.classList.contains('hidden')) {
+        document.body.style.overflow = '';
+    }
+}
+
+window.evtOpenFullscreenMap = evtOpenFullscreenMap;
+window.evtCloseFullscreenMap = evtCloseFullscreenMap;

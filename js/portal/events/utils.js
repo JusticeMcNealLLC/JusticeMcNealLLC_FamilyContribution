@@ -3,6 +3,14 @@
 // Pure helpers shared across event modules.
 // ═══════════════════════════════════════════════════════════
 
+// ─── Badge chip helper (works even without quests/config.js) ──
+const EVT_BADGE_EMOJI = { founding_member:'🏅', shutterbug:'📸', streak_master:'🔥', streak_legend:'⚡', first_seed:'🌱', four_figures:'💵', quest_champion:'🎯', fidelity_linked:'🏦', birthday_vip:'🎂' };
+function evtBadgeChip(badgeKey) {
+    if (!badgeKey) return '';
+    if (typeof buildNavBadgeOverlay === 'function') return buildNavBadgeOverlay(badgeKey);
+    return `<div class="badge-chip-overlay">${EVT_BADGE_EMOJI[badgeKey] || '❓'}</div>`;
+}
+
 function evtToggleModal(id, show) {
     const modal = document.getElementById(id);
     if (!modal) return;
