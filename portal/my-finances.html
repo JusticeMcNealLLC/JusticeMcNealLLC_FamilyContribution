@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>My Finances | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JMLLC">
+    <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+
+    <!-- Chart.js for spending visuals -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+    <style>
+        .category-chip { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold cursor-pointer select-none transition; }
+        .category-chip.active { @apply ring-2 ring-brand-400; }
+        .stat-card { @apply bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5; }
+        .upload-zone { @apply border-2 border-dashed border-gray-300 rounded-2xl p-6 sm:p-8 text-center transition hover:border-brand-400 hover:bg-brand-50/30 cursor-pointer; }
+        .upload-zone.dragover { @apply border-brand-500 bg-brand-50/50; }
+        .txn-row { @apply flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50 transition cursor-default; }
+        .txn-row:not(:last-child) { @apply border-b border-gray-100; }
+        .account-tab { @apply px-4 py-2 text-sm font-medium rounded-lg transition cursor-pointer; }
+        .account-tab.active { @apply bg-brand-600 text-white shadow-sm; }
+        .account-tab:not(.active) { @apply text-gray-600 hover:bg-gray-100; }
+        @media (max-width: 639px) { .hide-mobile-nav { display: none !important; } }
+    </style>
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="finances">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">My Finances</h1>
+                <p class="text-gray-500 mt-1 text-sm">Upload statements · See where your money goes</p>
+            </div>
+            <button id="addAccountBtn" class="hidden sm:inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Add Account
+            </button>
+        </div>
+
+        <!-- No accounts — empty state -->
+        <div id="emptyState" class="hidden text-center py-16 sm:py-24">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-100 flex items-center justify-center">
+                <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900 mb-1">No Accounts Yet</h2>
+            <p class="text-gray-500 text-sm max-w-sm mx-auto mb-5">Add a bank account to start uploading statements and tracking your spending.</p>
+            <button id="emptyAddAccountBtn" class="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Add Your First Account
+            </button>
+        </div>
+
+        <!-- Main content (hidden until accounts exist) -->
+        <div id="mainContent" class="hidden space-y-6">
+
+            <!-- Account Tabs -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <div id="accountTabs" class="flex items-center gap-2"></div>
+                <button id="addAccountTabBtn" class="flex-shrink-0 w-8 h-8 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-brand-400 hover:text-brand-500 transition" title="Add account">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                </button>
+            </div>
+
+            <!-- Cross-account summary stats -->
+            <div id="summaryStats" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="stat-card">
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Income</p>
+                    <p id="statIncome" class="text-lg sm:text-xl font-bold text-emerald-600 mt-1">$0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Spending</p>
+                    <p id="statSpending" class="text-lg sm:text-xl font-bold text-red-500 mt-1">$0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Net</p>
+                    <p id="statNet" class="text-lg sm:text-xl font-bold text-gray-900 mt-1">$0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">LLC Contribution</p>
+                    <p id="statLLC" class="text-lg sm:text-xl font-bold text-brand-600 mt-1">$0</p>
+                </div>
+            </div>
+
+            <!-- Upload zone -->
+            <section class="fade-in">
+                <div id="uploadZone" class="upload-zone">
+                    <svg class="w-10 h-10 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <p class="text-sm font-semibold text-gray-700 mb-1">Drop a bank statement here</p>
+                    <p class="text-xs text-gray-400">CSV or PDF · Max 10 MB</p>
+                    <input type="file" id="fileInput" accept=".csv,.pdf" class="hidden">
+                    <button id="browseBtn" class="mt-3 text-sm font-semibold text-brand-600 hover:text-brand-700 transition">Browse files</button>
+                </div>
+                <div id="uploadProgress" class="hidden mt-3">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div id="uploadBar" class="h-full bg-brand-600 rounded-full transition-all duration-300" style="width:0%"></div>
+                        </div>
+                        <span id="uploadPct" class="text-xs font-medium text-gray-500">0%</span>
+                    </div>
+                    <p id="uploadStatus" class="text-xs text-gray-400 mt-1">Uploading…</p>
+                </div>
+            </section>
+
+            <!-- Month selector for viewing -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-sm font-bold text-gray-900">Spending Breakdown</h2>
+                <select id="monthSelect" class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none">
+                    <option value="latest">Latest Statement</option>
+                </select>
+            </div>
+
+            <!-- Category Breakdown Chart + List -->
+            <div class="grid md:grid-cols-2 gap-4">
+                <!-- Doughnut chart -->
+                <div class="stat-card flex flex-col items-center justify-center min-h-[280px]">
+                    <canvas id="categoryChart" class="max-w-[240px] max-h-[240px]"></canvas>
+                    <p id="chartEmpty" class="hidden text-sm text-gray-400 mt-4">Upload a statement to see your breakdown</p>
+                </div>
+
+                <!-- Category list -->
+                <div class="stat-card overflow-hidden">
+                    <div id="categoryList" class="divide-y divide-gray-100 max-h-[320px] overflow-y-auto">
+                        <p class="text-sm text-gray-400 text-center py-8">No data yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction detail (drill-down) -->
+            <section id="txnSection" class="hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-gray-900">
+                        <span id="txnCategoryLabel">All Transactions</span>
+                        <span id="txnCount" class="ml-1 text-gray-400 font-normal"></span>
+                    </h2>
+                    <button id="txnClearFilter" class="hidden text-xs font-semibold text-brand-600 hover:text-brand-700 transition">Clear filter</button>
+                </div>
+                <div class="stat-card">
+                    <div id="txnList" class="divide-y divide-gray-100 max-h-[400px] overflow-y-auto"></div>
+                </div>
+            </section>
+
+            <!-- Monthly Trend Chart -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-900 mb-3">Monthly Trend</h2>
+                <div class="stat-card">
+                    <canvas id="trendChart" height="180"></canvas>
+                    <p id="trendEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months to see trends</p>
+                </div>
+            </section>
+
+            <!-- Statement History -->
+            <section>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-gray-900">Statement History</h2>
+                </div>
+                <div id="stmtHistory" class="space-y-2">
+                    <p class="text-sm text-gray-400 text-center py-4">No statements uploaded yet</p>
+                </div>
+            </section>
+
+            <!-- Privacy notice -->
+            <div class="bg-brand-50 border border-brand-100 rounded-xl p-4 flex items-start gap-3">
+                <svg class="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <div>
+                    <p class="text-sm font-semibold text-brand-800">Your data is 100% private</p>
+                    <p class="text-xs text-brand-600 mt-0.5">Only you can see your financial data. No admin, no other member — no one. You can delete statements and accounts at any time.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <!-- ─── Add / Edit Account Modal ─── -->
+    <div id="accountModal" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" id="accountModalBackdrop"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+                <button id="accountModalClose" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h3 id="accountModalTitle" class="text-lg font-bold text-gray-900 mb-4">Add Account</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Account Name</label>
+                        <input type="text" id="acctLabel" placeholder="e.g. Chase Checking" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Institution</label>
+                        <input type="text" id="acctInstitution" placeholder="e.g. Chase, Wells Fargo" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Account Type</label>
+                        <select id="acctType" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                            <option value="checking">Checking</option>
+                            <option value="savings">Savings</option>
+                            <option value="credit">Credit Card</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="acctError" class="text-red-600 text-sm hidden mt-3"></div>
+                <div class="mt-5 flex items-center justify-between">
+                    <button id="acctDeleteBtn" class="hidden text-sm font-semibold text-red-500 hover:text-red-600 transition">Delete Account</button>
+                    <div class="flex items-center gap-2 ml-auto">
+                        <button id="acctCancelBtn" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition px-4 py-2">Cancel</button>
+                        <button id="acctSaveBtn" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">Save</button>
+                    </div>
+                </div>
+                <input type="hidden" id="acctEditId" value="">
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Edit Transaction Modal ─── -->
+    <div id="txnEditModal" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" id="txnEditBackdrop"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+                <button id="txnEditClose" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Edit Transaction</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
+                        <input type="text" id="txnEditDesc" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Category</label>
+                        <select id="txnEditCategory" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                            <option value="housing">🏠 Housing</option>
+                            <option value="groceries">🛒 Groceries</option>
+                            <option value="dining">🍽️ Dining</option>
+                            <option value="transportation">🚗 Transportation</option>
+                            <option value="entertainment">🎬 Entertainment</option>
+                            <option value="subscriptions">📱 Subscriptions</option>
+                            <option value="shopping">🛍️ Shopping</option>
+                            <option value="health">💊 Health</option>
+                            <option value="education">📚 Education</option>
+                            <option value="business">💼 Business</option>
+                            <option value="llc_contribution">💸 LLC Contribution</option>
+                            <option value="savings">💰 Savings / Transfers</option>
+                            <option value="income">💵 Income</option>
+                            <option value="other">🔁 Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Notes</label>
+                        <input type="text" id="txnEditNotes" placeholder="Optional" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div id="txnEditError" class="text-red-600 text-sm hidden mt-3"></div>
+                <div class="mt-5 flex items-center justify-end gap-2">
+                    <button id="txnEditCancelBtn" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition px-4 py-2">Cancel</button>
+                    <button id="txnEditSaveBtn" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">Save</button>
+                </div>
+                <input type="hidden" id="txnEditId" value="">
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" id="deleteModalBackdrop"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </div>
+                <h3 id="deleteTitle" class="text-lg font-bold text-gray-900 mb-1">Delete Statement?</h3>
+                <p id="deleteMsg" class="text-sm text-gray-500 mb-5">This will permanently remove this statement and all its transactions.</p>
+                <div class="flex items-center gap-3 justify-center">
+                    <button id="deleteCancelBtn" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition px-4 py-2">Cancel</button>
+                    <button id="deleteConfirmBtn" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase + shared -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+
+    <!-- Page Shell -->
+    <script src="../js/components/pageShell/icons.js"></script>
+    <script src="../js/components/pageShell/helpers.js"></script>
+    <script src="../js/components/pageShell/nav.js"></script>
+    <script src="../js/components/pageShell/dropdowns.js"></script>
+    <script src="../js/components/pageShell/drawer.js"></script>
+    <script src="../js/components/pageShell/profile-loader.js"></script>
+
+    <!-- Push notifications -->
+    <script src="../js/push.js"></script>
+    <script src="../js/sw-register.js"></script>
+
+    <!-- Page JS -->
+    <script src="../js/portal/finances.js"></script>
+</body>
+</html>

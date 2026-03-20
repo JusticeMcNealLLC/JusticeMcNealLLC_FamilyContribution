@@ -53,6 +53,8 @@
                 contextTitle = 'Settings'; break;
             case 'profile':
                 contextTitle = 'Profile'; break;
+            case 'finances':
+                contextTitle = 'My Finances'; break;
             default:
                 contextTitle = '';
         }
@@ -97,6 +99,8 @@
                         '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.trophy) + '</svg>Milestones</a>' +
                     '<a href="settings.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('settings' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
                         '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.gear) + p(SVG.gearDot) + '</svg>Settings</a>' +
+                    '<a href="my-finances.html" class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition ' + ('finances' === active ? 'text-brand-600 bg-brand-50 font-medium' : 'text-gray-700 hover:bg-gray-50') + '">' +
+                        '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' + p(SVG.wallet) + '</svg>My Finances</a>' +
                 '</div>' +
             '</div>';
 
@@ -261,6 +265,7 @@
             { href: 'family-tree.html',   page: 'family-tree',   icon: SVG.person,  label: 'Family Tree' },
             { href: 'team.html',        page: 'team',        icon: SVG.team,    label: 'Team' },
             { href: 'profile.html',     page: 'profile',     icon: SVG.person,  label: 'Profile' },
+            { href: 'my-finances.html',page: 'finances',    icon: SVG.wallet,  label: 'My Finances' },
         ];
 
         var gridItems = '';
