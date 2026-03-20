@@ -56,17 +56,19 @@ const MERCHANT_RULES = [
     // Entertainment
     { pattern: /netflix|hulu|disney\+?|hbo|peacock|paramount|apple\s?tv|spotify|youtube\s?(premium|music)|audible|twitch|steam|xbox|playstation|nintendo|amc|regal|cinema|ticket|concert|live nation|stubhub|fandango/i, category: 'entertainment' },
     // Subscriptions (catch after entertainment)
-    { pattern: /subscription|recurr|monthly|annual\s*fee|amazon\s*prime|membership|chatgpt|openai|adobe|dropbox|icloud|google\s?(one|storage)|microsoft\s*365|planet fitness|anytime fitness|la fitness|gym|crunch/i, category: 'subscriptions' },
-    // Shopping
-    { pattern: /amazon(?!\s*prime)|target|best buy|home depot|lowe'?s|ikea|wayfair|etsy|ebay|shein|zara|h&m|nike|adidas|foot locker|tj\s?maxx|marshalls|ross|nordstrom|macy|old navy|gap\s|kohls|five below|dollar|bath\s?&?\s?body/i, category: 'shopping' },
+    { pattern: /subscription|recurr|monthly|annual\s*fee|amazon\s*prime|membership|chatgpt|openai|adobe|dropbox|icloud|google\s?(one|storage)|microsoft\s*365|planet fitness|anytime fitness|la fitness|gym|crunch|supabase|elevenlabs|apple\.com\/bill|tmna\s*subscription/i, category: 'subscriptions' },
+    // Shopping — eBay, Amazon, Pirate Ship (shipping), etc.
+    { pattern: /amazon(?!\s*prime)|target|best buy|home depot|lowe'?s|ikea|wayfair|etsy|ebay|pirate\s*ship|shein|zara|h&m|nike|adidas|foot locker|tj\s?maxx|marshalls|ross|nordstrom|macy|old navy|gap\s|kohls|five below|dollar|bath\s?&?\s?body/i, category: 'shopping' },
     // Health
     { pattern: /cvs|walgreens|rite aid|pharmacy|doctor|hospital|clinic|dental|optom|urgent care|lab|quest diag|anthem|cigna|aetna|united\s?health|blue\s?cross|kaiser|copay|deductible|medical/i, category: 'health' },
     // Education
     { pattern: /tuition|university|college|school|udemy|coursera|skillshare|duolingo|chegg|textbook|student loan/i, category: 'education' },
+    // Business — tools, shipping, SaaS for business
+    { pattern: /karrykraze|pirate\s*ship/i, category: 'business' },
     // LLC Contribution
     { pattern: /justice\s?mcneal|jmllc|family\s?contribution/i, category: 'llc_contribution' },
-    // Savings
-    { pattern: /transfer\s*(to|from)\s*(savings|invest|brokerage|fidelity|vanguard|schwab|robinhood)|zelle|venmo|cashapp|paypal/i, category: 'savings' },
+    // Savings / Transfers — Zelle, Venmo, Cash App, Apple Cash, loan payments, share transfers, deposit transfers
+    { pattern: /zelle|venmo|cash\s?app|paypal|apple\s?cash|to\s+loan|from\s+loan|to\s+share|from\s+share|deposit\s+transfer|transfer\s+from|overdraft\s+transfer|foreign\s+transaction\s+fee/i, category: 'savings' },
 ];
 
 function finCategorize(description) {
@@ -500,29 +502,57 @@ function finParseCSV(text) {
     const lines = text.trim().split(/\r?\n/);
     if (lines.length < 2) return [];
 
-    // Parse header row
-    const headers = finCSVSplitRow(lines[0]).map(h => h.toLowerCase().trim());
+    // ── Auto-detect the header row ──────────────────────
+    // Banks often prepend metadata lines (account name, date range, etc.)
+    // Scan for the first line that looks like a CSV header with "date" in it.
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(lines.length, 10); i++) {
+        const lowerLine = lines[i].toLowerCase();
+        // Must contain "date" as a column name (not "Date Range :" metadata)
+        if (/,.*date|date.*,/.test(lowerLine) && /desc|memo|narr|amount|debit|credit/i.test(lowerLine)) {
+            headerIdx = i;
+            break;
+        }
+    }
+    if (headerIdx < 0) {
+        console.warn('CSV header row not found in first 10 lines.');
+        return [];
+    }
 
-    // Detect column indices — flexible enough for most banks
-    const dateIdx = headers.findIndex(h => /date|posted|trans(action)?\s*date/i.test(h));
-    const descIdx = headers.findIndex(h => /desc|narr|memo|detail|merchant|payee|transaction/i.test(h));
-    const amountIdx = headers.findIndex(h => /^amount$|^(net\s*)?amount/i.test(h));
+    const headers = finCSVSplitRow(lines[headerIdx]).map(h => h.toLowerCase().trim());
+
+    // ── Detect column indices — flexible for many bank formats ──
+    // Date: look for a column that is exactly/primarily "date"
+    const dateIdx = headers.findIndex(h => /^date$|^posted|^trans(action)?\s*date$/i.test(h));
+    // Description: prefer "description", then "narration", "detail", "merchant", "payee"
+    const descIdx = headers.findIndex(h => /^description$|^desc$|narr|detail|merchant|payee/i.test(h));
+    // Memo: separate column with extra merchant/payee info
+    const memoIdx = headers.findIndex(h => /^memo$|^reference$|^particulars$/i.test(h));
+    // Amount: single combined column
+    const amountIdx = headers.findIndex(h => /^amount$|^(net\s*)?amount$/i.test(h));
+    // Debit / Credit: split columns (also match "Amount Debit" / "Amount Credit")
     const debitIdx = headers.findIndex(h => /debit|withdrawal|charge/i.test(h));
-    const creditIdx = headers.findIndex(h => /credit|deposit|payment/i.test(h));
+    const creditIdx = headers.findIndex(h => /credit|deposit/i.test(h));
 
-    if (dateIdx < 0 || descIdx < 0) {
+    if (dateIdx < 0 || (descIdx < 0 && memoIdx < 0)) {
         console.warn('CSV columns not recognized. Headers:', headers);
         return [];
     }
 
     const transactions = [];
-    for (let i = 1; i < lines.length; i++) {
+    for (let i = headerIdx + 1; i < lines.length; i++) {
         const cols = finCSVSplitRow(lines[i]);
         if (!cols || cols.length < 2) continue;
 
         const rawDate = (cols[dateIdx] || '').trim();
-        const description = (cols[descIdx] || '').trim();
-        if (!rawDate || !description) continue;
+        if (!rawDate) continue;
+
+        // Build description: prefer memo (has merchant detail), fall back to description
+        const descVal = descIdx >= 0 ? (cols[descIdx] || '').trim() : '';
+        const memoVal = memoIdx >= 0 ? (cols[memoIdx] || '').trim() : '';
+        // Use memo if it's richer, otherwise description
+        const description = memoVal.length > descVal.length ? memoVal : (descVal || memoVal);
+        if (!description) continue;
 
         // Parse date (MM/DD/YYYY or YYYY-MM-DD)
         const date = finParseDate(rawDate);
@@ -530,21 +560,28 @@ function finParseCSV(text) {
 
         // Parse amount — either single column or debit/credit pair
         let amountCents = 0;
-        if (amountIdx >= 0) {
+        if (amountIdx >= 0 && amountIdx !== debitIdx && amountIdx !== creditIdx) {
             amountCents = finParseCents(cols[amountIdx]);
         } else if (debitIdx >= 0 || creditIdx >= 0) {
             const debit = debitIdx >= 0 ? finParseCents(cols[debitIdx]) : 0;
             const credit = creditIdx >= 0 ? finParseCents(cols[creditIdx]) : 0;
             // Debits are outflows (negative), credits are inflows (positive)
-            amountCents = credit > 0 ? credit : -Math.abs(debit);
+            if (credit > 0) {
+                amountCents = credit;
+            } else if (debit !== 0) {
+                amountCents = -Math.abs(debit);
+            }
         }
         if (amountCents === 0) continue;
+
+        // Categorize using the fullest text available (memo + description combined)
+        const catText = (memoVal + ' ' + descVal).trim();
 
         transactions.push({
             transaction_date: date,
             description,
             amount_cents: amountCents,
-            category: finCategorize(description),
+            category: finCategorize(catText),
         });
     }
 
