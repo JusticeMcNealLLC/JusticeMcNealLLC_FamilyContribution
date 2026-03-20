@@ -2,7 +2,7 @@
 // Cache-first for statics, network-first for API calls.
 // Push notification handler for native OS notifications.
 
-const CACHE_NAME = 'jm-portal-v13';
+const CACHE_NAME = 'jm-portal-v14';
 
 // Shell assets to pre-cache on install
 const SHELL_ASSETS = [
@@ -82,15 +82,21 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(
         caches.open(CACHE_NAME).then(cache =>
             cache.match(e.request).then(cached => {
-                const fetched = fetch(e.request).then(response => {
+                const fetchPromise = fetch(e.request).then(response => {
                     if (response && response.ok) {
                         cache.put(e.request, response.clone());
                     }
                     return response;
-                }).catch(() => cached);
+                }).catch(() => null);
 
-                // Guard: never resolve with undefined — return offline fallback
-                return (cached || fetched).then(r =>
+                if (cached) {
+                    // Return stale cache immediately; revalidate in background
+                    fetchPromise.catch(() => {});
+                    return cached;
+                }
+
+                // No cache hit — wait for network, fallback to 503
+                return fetchPromise.then(r =>
                     r || new Response('Offline', { status: 503, statusText: 'Service Unavailable' })
                 );
             })
