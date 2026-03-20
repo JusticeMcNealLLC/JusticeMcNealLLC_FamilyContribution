@@ -189,6 +189,21 @@
                 </div>
             </section>
 
+            <!-- My Rules -->
+            <section>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-gray-900">My Rules <span id="rulesCount" class="text-gray-400 font-normal">(0)</span></h2>
+                    <button id="addRuleBtn" class="text-xs font-semibold text-brand-600 hover:text-brand-700 transition flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Add Rule
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 mb-2">Custom rules auto-categorize your transactions. They run before the default rules, so your preferences always win.</p>
+                <div id="rulesList" class="space-y-2">
+                    <p class="text-sm text-gray-400 text-center py-4">No custom rules yet. Edit a transaction and choose "Always categorize this way" to create one.</p>
+                </div>
+            </section>
+
             <!-- Privacy notice -->
             <div class="bg-brand-50 border border-brand-100 rounded-xl p-4 flex items-start gap-3">
                 <svg class="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
@@ -281,6 +296,16 @@
                         <label class="block text-xs font-medium text-gray-500 mb-1">Notes</label>
                         <input type="text" id="txnEditNotes" placeholder="Optional" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
                     </div>
+                    <!-- Always categorize this way -->
+                    <div class="bg-brand-50 border border-brand-100 rounded-xl p-3">
+                        <label class="flex items-start gap-2.5 cursor-pointer">
+                            <input type="checkbox" id="txnAlwaysCheck" class="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            <div>
+                                <span class="text-sm font-medium text-brand-800">Always categorize this way</span>
+                                <p class="text-xs text-brand-600 mt-0.5">Creates a rule matching: "<span id="txnRuleMatchPreview" class="font-semibold"></span>"</p>
+                            </div>
+                        </label>
+                    </div>
                 </div>
                 <div id="txnEditError" class="text-red-600 text-sm hidden mt-3"></div>
                 <div class="mt-5 flex items-center justify-end gap-2">
@@ -306,6 +331,56 @@
                     <button id="deleteCancelBtn" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition px-4 py-2">Cancel</button>
                     <button id="deleteConfirmBtn" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">Delete</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Rule modal -->
+    <div id="ruleModal" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" id="ruleModalBackdrop"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+                <button id="ruleModalClose" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h3 id="ruleModalTitle" class="text-lg font-bold text-gray-900 mb-1">New Rule</h3>
+                <p class="text-xs text-gray-400 mb-4">When a transaction contains your match text, it will be auto-categorized.</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Match Text <span class="text-gray-300">(case-insensitive)</span></label>
+                        <input type="text" id="ruleMatchText" placeholder='e.g. "ZELLE YOLANDA MCNEAL" or "Loan 0090"' class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                        <p class="text-xs text-gray-400 mt-1">Tip: use the part that stays the same each time (person's name, loan number, etc.)</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Categorize As</label>
+                        <select id="ruleCategory" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                            <option value="housing">🏠 Housing</option>
+                            <option value="groceries">🛒 Groceries</option>
+                            <option value="dining">🍽️ Dining</option>
+                            <option value="transportation">🚗 Transportation</option>
+                            <option value="entertainment">🎬 Entertainment</option>
+                            <option value="subscriptions">📱 Subscriptions</option>
+                            <option value="shopping">🛍️ Shopping</option>
+                            <option value="health">💊 Health</option>
+                            <option value="education">📚 Education</option>
+                            <option value="business">💼 Business</option>
+                            <option value="llc_contribution">💸 LLC Contribution</option>
+                            <option value="savings">💰 Savings / Transfers</option>
+                            <option value="income">💵 Income</option>
+                            <option value="other">🔁 Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Label <span class="text-gray-300">(optional)</span></label>
+                        <input type="text" id="ruleLabel" placeholder='e.g. "Car Note" or "Rent to Mom"' class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div id="ruleError" class="text-red-600 text-sm hidden mt-3"></div>
+                <div class="mt-5 flex items-center justify-end gap-2">
+                    <button id="ruleCancelBtn" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition px-4 py-2">Cancel</button>
+                    <button id="ruleSaveBtn" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">Save Rule</button>
+                </div>
+                <input type="hidden" id="ruleEditId" value="">
             </div>
         </div>
     </div>

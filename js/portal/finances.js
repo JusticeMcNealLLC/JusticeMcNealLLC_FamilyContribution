@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     window._finTransactions = [];
     window._finCategoryChart = null;
     window._finTrendChart = null;
+    window._finCustomRules = [];
 
+    await finLoadCustomRules();
     await finLoadAccounts();
     finBindUI();
 });
@@ -72,11 +74,168 @@ const MERCHANT_RULES = [
 ];
 
 function finCategorize(description) {
-    const d = (description || '').trim();
+    const d = (description || '').trim().toLowerCase();
+
+    // ── Custom user rules run FIRST (highest priority wins) ──
+    for (const rule of window._finCustomRules || []) {
+        if (d.includes(rule.match_text.toLowerCase())) return rule.category;
+    }
+
+    // ── Default merchant rules ──
     for (const rule of MERCHANT_RULES) {
         if (rule.pattern.test(d)) return rule.category;
     }
     return 'other';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CUSTOM CATEGORIZATION RULES
+// ═══════════════════════════════════════════════════════════
+
+async function finLoadCustomRules() {
+    const { data, error } = await supabaseClient
+        .from('member_category_rules')
+        .select('*')
+        .eq('user_id', window._finUser.id)
+        .order('priority', { ascending: false });
+
+    if (error) { console.error('Load custom rules error:', error); return; }
+    window._finCustomRules = data || [];
+    finRenderRulesList();
+}
+
+function finRenderRulesList() {
+    const container = document.getElementById('rulesList');
+    const countEl = document.getElementById('rulesCount');
+    if (!container) return;
+
+    const rules = window._finCustomRules;
+    countEl.textContent = `(${rules.length})`;
+
+    if (rules.length === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">No custom rules yet. Edit a transaction and choose \"Always categorize this way\" to create one.</p>';
+        return;
+    }
+
+    container.innerHTML = rules.map(r => {
+        const c = FIN_CATEGORIES[r.category] || FIN_CATEGORIES.other;
+        return `
+        <div class="stat-card flex items-center justify-between gap-3">
+            <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium text-gray-900 truncate">${r.label || r.match_text}</p>
+                <p class="text-xs text-gray-400">Matches: "<span class="text-gray-600">${r.match_text}</span>" → ${c.emoji} ${c.label}</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button class="rule-edit-btn p-1.5 rounded-lg hover:bg-gray-100 transition text-gray-400 hover:text-brand-600" data-rule="${r.id}" title="Edit">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                </button>
+                <button class="rule-delete-btn p-1.5 rounded-lg hover:bg-red-50 transition text-gray-400 hover:text-red-500" data-rule="${r.id}" data-match="${r.match_text}" title="Delete">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+
+    container.querySelectorAll('.rule-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const rule = window._finCustomRules.find(r => r.id === btn.dataset.rule);
+            if (rule) finOpenRuleModal(rule);
+        });
+    });
+
+    container.querySelectorAll('.rule-delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => finConfirmDelete('rule', btn.dataset.rule, btn.dataset.match));
+    });
+}
+
+function finOpenRuleModal(existing = null) {
+    document.getElementById('ruleModalTitle').textContent = existing ? 'Edit Rule' : 'New Rule';
+    document.getElementById('ruleEditId').value = existing ? existing.id : '';
+    document.getElementById('ruleMatchText').value = existing ? existing.match_text : '';
+    document.getElementById('ruleCategory').value = existing ? existing.category : 'housing';
+    document.getElementById('ruleLabel').value = existing ? (existing.label || '') : '';
+    document.getElementById('ruleError').classList.add('hidden');
+    document.getElementById('ruleModal').classList.remove('hidden');
+}
+
+function finCloseRuleModal() {
+    document.getElementById('ruleModal').classList.add('hidden');
+}
+
+async function finSaveRule() {
+    const editId = document.getElementById('ruleEditId').value;
+    const matchText = document.getElementById('ruleMatchText').value.trim();
+    const category = document.getElementById('ruleCategory').value;
+    const label = document.getElementById('ruleLabel').value.trim();
+    const errorEl = document.getElementById('ruleError');
+
+    if (!matchText) { errorEl.textContent = 'Match text is required'; errorEl.classList.remove('hidden'); return; }
+    errorEl.classList.add('hidden');
+
+    if (editId) {
+        const { error } = await supabaseClient
+            .from('member_category_rules')
+            .update({ match_text: matchText, category, label })
+            .eq('id', editId)
+            .eq('user_id', window._finUser.id);
+        if (error) { errorEl.textContent = error.message; errorEl.classList.remove('hidden'); return; }
+    } else {
+        const { error } = await supabaseClient
+            .from('member_category_rules')
+            .insert({ user_id: window._finUser.id, match_text: matchText, category, label });
+        if (error) {
+            errorEl.textContent = error.code === '23505' ? 'A rule with this match text already exists' : error.message;
+            errorEl.classList.remove('hidden');
+            return;
+        }
+    }
+
+    finCloseRuleModal();
+    await finLoadCustomRules();
+
+    // Offer to re-categorize existing transactions
+    await finRecategorizeByRule(matchText, category);
+}
+
+async function finRecategorizeByRule(matchText, newCategory) {
+    // Find matching transactions in the current view
+    const matchLower = matchText.toLowerCase();
+    const matching = window._finTransactions.filter(t =>
+        t.description.toLowerCase().includes(matchLower) && t.category !== newCategory
+    );
+
+    if (matching.length === 0) return;
+
+    const doIt = confirm(`${matching.length} existing transaction(s) match this rule. Re-categorize them now?`);
+    if (!doIt) return;
+
+    // Batch update in DB
+    const ids = matching.map(t => t.id);
+    const { error } = await supabaseClient
+        .from('member_transactions')
+        .update({ category: newCategory })
+        .in('id', ids)
+        .eq('user_id', window._finUser.id);
+
+    if (error) { console.error('Re-categorize error:', error); return; }
+
+    // Update local data
+    for (const t of matching) t.category = newCategory;
+    finRenderSummaryStats();
+    finRenderCategoryChart();
+    finRenderCategoryList();
+    finRenderTxnList();
+}
+
+async function finDeleteRule(ruleId) {
+    const { error } = await supabaseClient
+        .from('member_category_rules')
+        .delete()
+        .eq('id', ruleId)
+        .eq('user_id', window._finUser.id);
+
+    if (error) { alert('Error: ' + error.message); return; }
+    await finLoadCustomRules();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -858,6 +1017,13 @@ function finBindUI() {
     document.getElementById('deleteCancelBtn').addEventListener('click', finCloseDeleteModal);
     document.getElementById('deleteConfirmBtn').addEventListener('click', finExecuteDelete);
 
+    // Rules modal
+    document.getElementById('addRuleBtn').addEventListener('click', () => finOpenRuleModal());
+    document.getElementById('ruleModalBackdrop').addEventListener('click', finCloseRuleModal);
+    document.getElementById('ruleModalClose').addEventListener('click', finCloseRuleModal);
+    document.getElementById('ruleCancelBtn').addEventListener('click', finCloseRuleModal);
+    document.getElementById('ruleSaveBtn').addEventListener('click', finSaveRule);
+
     // Double-tap on account tab opens edit modal
     document.getElementById('accountTabs').addEventListener('dblclick', (e) => {
         const tab = e.target.closest('[data-acct]');
@@ -957,7 +1123,28 @@ function finOpenTxnEdit(txnId) {
     document.getElementById('txnEditCategory').value = txn.category || 'other';
     document.getElementById('txnEditNotes').value = txn.notes || '';
     document.getElementById('txnEditError').classList.add('hidden');
+    document.getElementById('txnAlwaysCheck').checked = false;
+    document.getElementById('txnRuleMatchPreview').textContent = finSuggestMatchText(txn.description);
     document.getElementById('txnEditModal').classList.remove('hidden');
+}
+
+// Suggest a good match text from a transaction description
+function finSuggestMatchText(desc) {
+    // For Zelle: extract the name (ZELLE FIRSTNAME LASTNAME)
+    const zelle = desc.match(/zelle\s+([a-z]+\s+[a-z]+)/i);
+    if (zelle) return 'ZELLE ' + zelle[1].toUpperCase();
+    // For loan payments: extract "To Loan XXXX" or "From Loan XXXX"
+    const loan = desc.match(/((?:to|from)\s+loan\s+\d+)/i);
+    if (loan) return loan[1].toUpperCase();
+    // For share transfers: "To Share XXXX" or "From Share XXXX"
+    const share = desc.match(/((?:to|from)\s+share\s+\d+)/i);
+    if (share) return share[1].toUpperCase();
+    // For deposit transfers
+    const depTransfer = desc.match(/(deposit\s+transfer\s+(?:from|to)\s+\w+\s+\d+)/i);
+    if (depTransfer) return depTransfer[1].toUpperCase();
+    // For common merchants, use first 2-3 words
+    const words = desc.replace(/\d{2}\/\d{2}\/\d{2,4}.*$/, '').trim().split(/\s+/);
+    return words.slice(0, Math.min(3, words.length)).join(' ').toUpperCase();
 }
 
 function finCloseTxnEdit() {
@@ -969,6 +1156,7 @@ async function finSaveTxnEdit() {
     const description = document.getElementById('txnEditDesc').value.trim();
     const category = document.getElementById('txnEditCategory').value;
     const notes = document.getElementById('txnEditNotes').value.trim();
+    const alwaysCheck = document.getElementById('txnAlwaysCheck').checked;
     const errorEl = document.getElementById('txnEditError');
 
     if (!description) { errorEl.textContent = 'Description is required'; errorEl.classList.remove('hidden'); return; }
@@ -990,6 +1178,26 @@ async function finSaveTxnEdit() {
         txn.category = category;
         txn.notes = notes;
     }
+
+    // If "Always categorize this way" is checked, create a custom rule
+    if (alwaysCheck) {
+        const matchText = document.getElementById('txnRuleMatchPreview').textContent.trim();
+        if (matchText) {
+            const label = notes || description.slice(0, 40);
+            const { error: ruleError } = await supabaseClient
+                .from('member_category_rules')
+                .upsert({ user_id: window._finUser.id, match_text: matchText, category, label }, { onConflict: 'user_id,match_text' });
+
+            if (!ruleError) {
+                await finLoadCustomRules();
+                // Re-categorize other matching transactions
+                await finRecategorizeByRule(matchText, category);
+            } else {
+                console.warn('Could not create rule:', ruleError);
+            }
+        }
+    }
+
     finRenderCategoryChart();
     finRenderCategoryList();
     finRenderTxnList();
@@ -1037,6 +1245,10 @@ async function finExecuteDelete() {
             .eq('user_id', window._finUser.id);
 
         if (error) { alert('Error: ' + error.message); return; }
+    } else if (target.type === 'rule') {
+        await finDeleteRule(target.id);
+        finCloseDeleteModal();
+        return;
     }
 
     finCloseDeleteModal();
