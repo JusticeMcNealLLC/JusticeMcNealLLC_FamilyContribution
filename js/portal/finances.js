@@ -77,8 +77,9 @@ function finCategorize(description, amountCents = 0) {
     const d = (description || '').trim().toLowerCase();
 
     // ── Custom user rules run FIRST (highest priority wins) ──
+    const dNorm = finNormalizeForMatch(d);
     for (const rule of window._finCustomRules || []) {
-        if (d.includes(rule.match_text.toLowerCase())) return rule.category;
+        if (dNorm.includes(finNormalizeForMatch(rule.match_text))) return rule.category;
     }
 
     // ── Amount-aware rules: same merchant, different direction ──
@@ -90,12 +91,125 @@ function finCategorize(description, amountCents = 0) {
     if (/ebay/i.test(d)) {
         return amountCents > 0 ? 'income' : 'business';
     }
+    // KarryKraze deposits (ecommerce income) = income; expenses = business
+    if (/karrykraze/i.test(d)) {
+        return amountCents > 0 ? 'income' : 'business';
+    }
 
     // ── Default merchant rules ──
     for (const rule of MERCHANT_RULES) {
         if (rule.pattern.test(d)) return rule.category;
     }
     return 'other';
+}
+
+// Normalize text for rule matching: strip separators and special chars
+function finNormalizeForMatch(str) {
+    return (str || '').toLowerCase().replace(/[\u00B7·\-–—\/\\.,;:!?'"()\[\]{}*#@]/g, ' ').replace(/\s{2,}/g, ' ').trim();
+}
+
+// Clean up raw bank descriptions into human-readable text
+function finCleanDescription(raw, amountCents = 0) {
+    let d = (raw || '').trim();
+    if (!d) return d;
+
+    // ── Pattern-specific handlers ──
+
+    // Zelle: "Journal Voucher ZELLE FIRSTNAME LASTNAME 800-xxx ZTID#xxx"
+    const zelle = d.match(/zelle\s+([a-z]+(?:\s+[a-z]+){0,2})/i);
+    if (zelle) {
+        const name = zelle[1].replace(/\b\w/g, c => c.toUpperCase());
+        return 'Zelle \u00B7 ' + name;
+    }
+
+    // Cash App: "CASH APP *NAME*ACTION..."
+    const cashApp = d.match(/cash\s*app\s*\*([^*]+)\*/i);
+    if (cashApp) {
+        const name = cashApp[1].trim().replace(/\b\w/g, c => c.toUpperCase());
+        return 'Cash App \u00B7 ' + name;
+    }
+
+    // Apple Cash
+    if (/apple\s*cash/i.test(d)) {
+        return amountCents >= 0 ? 'Apple Cash \u00B7 Received' : 'Apple Cash \u00B7 Sent';
+    }
+
+    // Loan transfers: "To Loan 0090" or "Deposit Transfer From Loan 0090"
+    const loan = d.match(/^(?:deposit\s+transfer\s+)?(to|from)\s+loan\s+(\d+)/i);
+    if (loan) {
+        return loan[1].toLowerCase() === 'to'
+            ? 'Payment to Loan ' + loan[2]
+            : 'Transfer from Loan ' + loan[2];
+    }
+
+    // Savings/share transfers: "To Share 0000" or "From Share 0000"
+    const share = d.match(/^(?:deposit\s+transfer\s+)?(to|from)\s+share\s+(\d+)/i);
+    if (share) {
+        return share[1].toLowerCase() === 'to'
+            ? 'Transfer to Savings ' + share[2]
+            : 'Transfer from Savings ' + share[2];
+    }
+
+    // Bank fees: strip date/card noise
+    if (/^(overdraft|foreign|insufficient|nsf|late\s+fee|service\s+charge)/i.test(d)) {
+        return d.replace(/\s+date\s+\d.*/i, '').replace(/\s+card\s+\d+$/i, '').trim();
+    }
+
+    // ── General noise stripping ──
+    d = d
+        .replace(/^journal\s+voucher\s+/i, '')
+        .replace(/\s+date\s+\d{2}\/\d{2}\/\d{2,4}.*$/i, '')
+        .replace(/\s+\d{3}[-.]?\d{3,4}[-.]?\d{4}/g, '')
+        .replace(/\s+ZTID#[A-Z0-9]+/gi, '')
+        .replace(/\s+\d{11,}\s+\d{4}\s+card\s+\d+$/i, '')
+        .replace(/\s+card\s+\d+$/i, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
+    // Strip trailing 2-letter state/country codes
+    d = d.replace(/\s+[A-Z]{2}$/, '').trim();
+
+    // ── Brand normalization ──
+    const BRANDS = [
+        [/^openai\s*\*\s*chatgpt\s*subscr/i, 'OpenAI \u00B7 ChatGPT Sub'],
+        [/^openai\b/i, 'OpenAI'],
+        [/^elevenlabs/i, 'ElevenLabs'],
+        [/^supabase\b/i, 'Supabase'],
+        [/^adobe\b/i, 'Adobe'],
+        [/^tmna\s+subscription/i, 'TMNA Subscription'],
+        [/^apple\.com\/bill/i, 'Apple \u00B7 Subscription'],
+        [/^amazon\.\w+$/i, '__amount__'],
+        [/^ebay\b/i, '__amount__'],
+        [/^karrykraze/i, '__amount__'],
+        [/^pirate\s*ship\b/i, 'Pirate Ship'],
+        [/^justice\s*mcneal/i, 'Justice McNeal LLC'],
+    ];
+    for (const [pattern, clean] of BRANDS) {
+        if (pattern.test(d)) {
+            if (clean !== '__amount__') return clean;
+            if (/^amazon/i.test(d)) return amountCents > 0 ? 'Amazon \u00B7 Seller Payout' : 'Amazon';
+            if (/^ebay/i.test(d)) return amountCents > 0 ? 'eBay \u00B7 Seller Payout' : 'eBay \u00B7 Seller Fee';
+            if (/^karrykraze/i.test(d)) return amountCents > 0 ? 'KarryKraze \u00B7 Payout' : 'KarryKraze';
+            return d;
+        }
+    }
+
+    // Dedupe repeated words/domains (e.g., "ELEVENLABS.IO ELEVENLABS.IO")
+    const words = d.split(/\s+/);
+    if (words.length > 1) {
+        const seen = new Set();
+        const deduped = [];
+        for (const w of words) {
+            const key = w.replace(/\.(com|io|co|net|org)$/i, '').toLowerCase();
+            if (!seen.has(key)) { seen.add(key); deduped.push(w); }
+        }
+        d = deduped.join(' ');
+    }
+
+    // Strip trailing domain extensions
+    d = d.replace(/\.(com|io|co|net|org)$/i, '').trim();
+
+    return d || raw.trim();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -209,9 +323,9 @@ async function finSaveRule() {
 
 async function finRecategorizeByRule(matchText, newCategory) {
     // Find matching transactions in the current view
-    const matchLower = matchText.toLowerCase();
+    const matchNorm = finNormalizeForMatch(matchText);
     const matching = window._finTransactions.filter(t =>
-        t.description.toLowerCase().includes(matchLower) && t.category !== newCategory
+        finNormalizeForMatch(t.description).includes(matchNorm) && t.category !== newCategory
     );
 
     if (matching.length === 0) return;
@@ -815,7 +929,7 @@ function finParseCSV(text) {
 
         transactions.push({
             transaction_date: date,
-            description,
+            description: finCleanDescription(description, amountCents),
             amount_cents: amountCents,
             category: finCategorize(catText, amountCents),
         });
@@ -1028,6 +1142,16 @@ async function finHandleUpload(file) {
         // Reload data
         await finLoadStatements();
 
+        // Check for uncategorized transactions and show review banner
+        const otherCount = transactions.filter(t => t.category === 'other').length;
+        const reviewBanner = document.getElementById('reviewBanner');
+        if (otherCount > 0 && reviewBanner) {
+            document.getElementById('reviewBannerCount').textContent = otherCount;
+            reviewBanner.classList.remove('hidden');
+        } else if (reviewBanner) {
+            reviewBanner.classList.add('hidden');
+        }
+
         // Hide progress after a moment
         setTimeout(() => { progressEl.classList.add('hidden'); }, 2500);
 
@@ -1113,6 +1237,16 @@ function finBindUI() {
     document.getElementById('ruleModalClose').addEventListener('click', finCloseRuleModal);
     document.getElementById('ruleCancelBtn').addEventListener('click', finCloseRuleModal);
     document.getElementById('ruleSaveBtn').addEventListener('click', finSaveRule);
+
+    // Review banner — scroll to "other" transactions
+    const reviewBtn = document.getElementById('reviewBannerBtn');
+    if (reviewBtn) {
+        reviewBtn.addEventListener('click', () => {
+            finFilterByCategory('other');
+            document.getElementById('reviewBanner').classList.add('hidden');
+            document.getElementById('txnSection').scrollIntoView({ behavior: 'smooth' });
+        });
+    }
 
     // Double-tap on account tab opens edit modal
     document.getElementById('accountTabs').addEventListener('dblclick', (e) => {
@@ -1225,21 +1359,28 @@ function finOpenTxnEdit(txnId) {
 
 // Suggest a good match text from a transaction description
 function finSuggestMatchText(desc) {
-    // For Zelle: extract the name (ZELLE FIRSTNAME LASTNAME)
-    const zelle = desc.match(/zelle\s+([a-z]+\s+[a-z]+)/i);
-    if (zelle) return 'ZELLE ' + zelle[1].toUpperCase();
-    // For loan payments: extract "To Loan XXXX" or "From Loan XXXX"
-    const loan = desc.match(/((?:to|from)\s+loan\s+\d+)/i);
-    if (loan) return loan[1].toUpperCase();
-    // For share transfers: "To Share XXXX" or "From Share XXXX"
-    const share = desc.match(/((?:to|from)\s+share\s+\d+)/i);
-    if (share) return share[1].toUpperCase();
-    // For deposit transfers
-    const depTransfer = desc.match(/(deposit\s+transfer\s+(?:from|to)\s+\w+\s+\d+)/i);
-    if (depTransfer) return depTransfer[1].toUpperCase();
-    // For common merchants, use first 2-3 words
+    // Zelle: "Zelle · Name" (cleaned) or "ZELLE NAME..." (raw)
+    const zelleClean = desc.match(/zelle\s*[\u00B7·]\s*([a-z]+(?:\s+[a-z]+){0,2})/i);
+    if (zelleClean) return 'zelle ' + zelleClean[1].toLowerCase();
+    const zelleRaw = desc.match(/zelle\s+([a-z]+\s+[a-z]+)/i);
+    if (zelleRaw) return 'zelle ' + zelleRaw[1].toLowerCase();
+    // Cash App: "Cash App · Name" or "CASH APP *NAME*..."
+    const cashClean = desc.match(/cash\s*app\s*[\u00B7·]\s*(\w+)/i);
+    if (cashClean) return 'cash app ' + cashClean[1].toLowerCase();
+    const cashRaw = desc.match(/cash\s*app\s*\*([^*]+)\*/i);
+    if (cashRaw) return 'cash app ' + cashRaw[1].trim().toLowerCase();
+    // Loan payments: "Payment to Loan 0090" or "To Loan 0090"
+    const loan = desc.match(/((?:payment\s+to|transfer\s+from|to|from)\s+loan\s+\d+)/i);
+    if (loan) return loan[1].toLowerCase();
+    // Savings/share transfers
+    const savings = desc.match(/((?:transfer\s+(?:to|from)|to|from)\s+(?:savings|share)\s+\d+)/i);
+    if (savings) return savings[1].toLowerCase();
+    // For cleaned descriptions with separator, use part before ·
+    const beforeSep = desc.split(/\s*[\u00B7·]\s*/)[0].trim();
+    if (beforeSep.length <= 25 && beforeSep.split(/\s+/).length <= 3) return beforeSep.toLowerCase();
+    // Default: first 2-3 words
     const words = desc.replace(/\d{2}\/\d{2}\/\d{2,4}.*$/, '').trim().split(/\s+/);
-    return words.slice(0, Math.min(3, words.length)).join(' ').toUpperCase();
+    return words.slice(0, Math.min(3, words.length)).join(' ').toLowerCase();
 }
 
 function finCloseTxnEdit() {
