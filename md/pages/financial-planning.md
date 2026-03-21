@@ -346,10 +346,10 @@ All tables enforce Row-Level Security — only the owning member can read/write 
 
 ### Phase 4 — Trends & History (partially complete)
 - [x] Monthly trend bar chart (income vs spending)
-- [ ] Subscription cost over time
-- [ ] Income vs spending line chart
-- [ ] Month-over-month delta
-- [ ] Spending by category over time (stacked bar)
+- [x] Subscription cost over time (line chart — subscriptions+entertainment per month)
+- [x] Income vs spending line chart (dual-line with net dashed, 3-dataset)
+- [x] Month-over-month delta (3-card grid: income/spending/net with arrows + percentage)
+- [x] Spending by category over time (stacked bar — top 6 categories + Other)
 
 ### Phase 5 — Goals & Coaching
 - [ ] Set a personal budget target per category
@@ -366,7 +366,7 @@ All tables enforce Row-Level Security — only the owning member can read/write 
 - Mobile-first: statement cards are collapsible/scrollable on mobile
 - Account tabs across the top with "All Accounts" combined view
 - All uploads go to Supabase Storage (RLS enforced — private per user)
-- Charts use Chart.js CDN (doughnut for categories, bar for trends)
+- Charts use Chart.js CDN (doughnut for categories, bar for trends, line for income/spending + subscriptions, stacked bar for category breakdown over time)
 - 14 spending categories with consistent color coding across all views
 - Transaction rows: colored circle background (category color at 20% opacity) + emoji + category label text
 - Custom rules: case-insensitive normalized matching, runs before built-in merchant rules
@@ -376,4 +376,4 @@ All tables enforce Row-Level Security — only the owning member can read/write 
 ---
 
 **Last Updated:** March 20, 2026
-**Status:** ✅ Phase 1-3 Complete — Phase 4 Next
+**Status:** ✅ Phase 1-4 Complete — Phase 5 Next

@@ -219,6 +219,41 @@
                 </div>
             </section>
 
+            <!-- Income vs Spending Line Chart -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-900 mb-3">Income vs Spending</h2>
+                <div class="stat-card" style="height:220px">
+                    <canvas id="incomeLineChart"></canvas>
+                    <p id="incomeLineEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months to compare income & spending</p>
+                </div>
+            </section>
+
+            <!-- Month-over-Month Delta -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-900 mb-3">Month-over-Month</h2>
+                <div id="monthDeltaCards">
+                    <p class="text-sm text-gray-400 text-center py-6">Need 2+ months to show changes</p>
+                </div>
+            </section>
+
+            <!-- Subscription Cost Over Time -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-900 mb-3">Subscription & Entertainment Trend</h2>
+                <div class="stat-card" style="height:200px">
+                    <canvas id="subTrendChart"></canvas>
+                    <p id="subTrendEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months with subscriptions to see trends</p>
+                </div>
+            </section>
+
+            <!-- Spending by Category (Stacked Bar) -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-900 mb-3">Spending by Category Over Time</h2>
+                <div class="stat-card" style="height:260px">
+                    <canvas id="catStackChart"></canvas>
+                    <p id="catStackEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months to see category breakdown over time</p>
+                </div>
+            </section>
+
             <!-- Statement History -->
             <section>
                 <div class="flex items-center justify-between mb-3">

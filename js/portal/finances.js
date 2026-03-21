@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     window._finTransactions = [];
     window._finCategoryChart = null;
     window._finTrendChart = null;
+    window._finSubTrendChart = null;
+    window._finIncomeLineChart = null;
+    window._finCatStackChart = null;
     window._finCustomRules = [];
 
     await finLoadCustomRules();
@@ -469,6 +472,10 @@ async function finLoadStatements() {
         finRenderCategoryList();
         finRenderTrendChart();
         finRenderTxnList();
+        finRenderIncomeLineChart();
+        finRenderMonthDelta();
+        finRenderSubTrendChart();
+        finRenderCatStackChart();
     }
 }
 
@@ -612,6 +619,10 @@ async function finLoadTransactions(value) {
     finRenderCategoryList();
     finRenderTxnList();
     await finRenderTrendChart();
+    await finRenderIncomeLineChart();
+    finRenderMonthDelta();
+    await finRenderSubTrendChart();
+    await finRenderCatStackChart();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1194,6 +1205,316 @@ async function finRenderTrendChart() {
                 tooltip: {
                     callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })}` }
                 }
+            }
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SUBSCRIPTION COST OVER TIME (line chart) — Phase 4
+// ═══════════════════════════════════════════════════════════
+
+async function finRenderSubTrendChart() {
+    const canvas = document.getElementById('subTrendChart');
+    const emptyEl = document.getElementById('subTrendEmpty');
+    if (!canvas) return;
+
+    const stmts = window._finStatements;
+    if (stmts.length < 2) {
+        canvas.style.display = 'none';
+        emptyEl?.classList.remove('hidden');
+        if (window._finSubTrendChart) { window._finSubTrendChart.destroy(); window._finSubTrendChart = null; }
+        return;
+    }
+
+    // Load all transactions across all statements for this account
+    const stmtIds = stmts.map(s => s.id);
+    const { data: allTxns, error } = await supabaseClient
+        .from('member_transactions')
+        .select('transaction_date, category, amount_cents, statement_id')
+        .in('statement_id', stmtIds)
+        .eq('user_id', window._finUser.id);
+    if (error || !allTxns) { console.error('Sub trend load error:', error); return; }
+
+    // Group sub+entertainment spend by month
+    const subByMonth = {};
+    for (const t of allTxns) {
+        if (t.amount_cents >= 0) continue;
+        if (t.category !== 'subscriptions' && t.category !== 'entertainment') continue;
+        const month = t.transaction_date?.slice(0, 7);
+        if (!month) continue;
+        subByMonth[month] = (subByMonth[month] || 0) + Math.abs(t.amount_cents);
+    }
+
+    const sortedMonths = Object.keys(subByMonth).sort();
+    if (sortedMonths.length < 2) {
+        canvas.style.display = 'none';
+        emptyEl?.classList.remove('hidden');
+        if (window._finSubTrendChart) { window._finSubTrendChart.destroy(); window._finSubTrendChart = null; }
+        return;
+    }
+
+    canvas.style.display = '';
+    emptyEl?.classList.add('hidden');
+
+    const labels = sortedMonths.map(m => {
+        const d = new Date(m + '-01T00:00:00');
+        return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    });
+    const data = sortedMonths.map(m => (subByMonth[m] || 0) / 100);
+
+    if (window._finSubTrendChart) window._finSubTrendChart.destroy();
+    window._finSubTrendChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Subscriptions & Entertainment',
+                data,
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139,92,246,0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#8b5cf6',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { callback: v => '$' + v.toLocaleString() } },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ` $${ctx.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })}` } }
+            }
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INCOME VS SPENDING LINE CHART — Phase 4
+// ═══════════════════════════════════════════════════════════
+
+async function finRenderIncomeLineChart() {
+    const canvas = document.getElementById('incomeLineChart');
+    const emptyEl = document.getElementById('incomeLineEmpty');
+    if (!canvas) return;
+
+    const stmts = window._finStatements;
+    if (stmts.length < 2) {
+        canvas.style.display = 'none';
+        emptyEl?.classList.remove('hidden');
+        if (window._finIncomeLineChart) { window._finIncomeLineChart.destroy(); window._finIncomeLineChart = null; }
+        return;
+    }
+
+    canvas.style.display = '';
+    emptyEl?.classList.add('hidden');
+
+    const last12 = stmts.slice(0, 12).reverse();
+    const labels = last12.map(s => {
+        const d = new Date(s.statement_month + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    });
+    const incData = last12.map(s => (s.total_inflow_cents || 0) / 100);
+    const spendData = last12.map(s => (s.total_outflow_cents || 0) / 100);
+    const netData = last12.map(s => ((s.total_inflow_cents || 0) - (s.total_outflow_cents || 0)) / 100);
+
+    if (window._finIncomeLineChart) window._finIncomeLineChart.destroy();
+    window._finIncomeLineChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                { label: 'Income', data: incData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)', fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#10b981' },
+                { label: 'Spending', data: spendData, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#ef4444' },
+                { label: 'Net', data: netData, borderColor: '#6366f1', borderDash: [5, 3], fill: false, tension: 0.3, pointRadius: 3, pointBackgroundColor: '#6366f1' },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { ticks: { callback: v => '$' + v.toLocaleString() } },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })}` } }
+            }
+        }
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MONTH-OVER-MONTH DELTA — Phase 4
+// ═══════════════════════════════════════════════════════════
+
+function finRenderMonthDelta() {
+    const container = document.getElementById('monthDeltaCards');
+    if (!container) return;
+
+    const stmts = window._finStatements;
+    if (stmts.length < 2) {
+        container.innerHTML = '<p class="text-sm text-gray-400 text-center py-6">Need 2+ months to show changes</p>';
+        return;
+    }
+
+    // Compare most recent two months
+    const current = stmts[0];
+    const previous = stmts[1];
+
+    const curIncome = current.total_inflow_cents || 0;
+    const prevIncome = previous.total_inflow_cents || 0;
+    const curSpend = current.total_outflow_cents || 0;
+    const prevSpend = previous.total_outflow_cents || 0;
+    const curNet = curIncome - curSpend;
+    const prevNet = prevIncome - prevSpend;
+
+    const incomeDelta = curIncome - prevIncome;
+    const spendDelta = curSpend - prevSpend;
+    const netDelta = curNet - prevNet;
+
+    function deltaCard(label, emoji, current, delta) {
+        const pct = delta !== 0 && (current - delta) !== 0
+            ? Math.round((delta / Math.abs(current - delta)) * 100) : 0;
+        const isUp = delta > 0;
+        const arrow = isUp ? '↑' : delta < 0 ? '↓' : '→';
+        // For income: up is good. For spending: down is good. For net: up is good.
+        let color;
+        if (label === 'Spending') {
+            color = delta > 0 ? 'text-red-500' : delta < 0 ? 'text-emerald-600' : 'text-gray-400';
+        } else {
+            color = delta > 0 ? 'text-emerald-600' : delta < 0 ? 'text-red-500' : 'text-gray-400';
+        }
+        return `
+        <div class="bg-white rounded-xl border border-gray-200/80 p-3 text-center">
+            <span class="text-lg">${emoji}</span>
+            <p class="text-[10px] uppercase tracking-wider text-gray-400 mt-1">${label}</p>
+            <p class="text-sm font-bold text-gray-900">${finFmtCents(current)}</p>
+            <p class="text-xs font-semibold ${color} mt-0.5">${arrow} ${finFmtCents(Math.abs(delta))} ${pct !== 0 ? '(' + (delta > 0 ? '+' : '') + pct + '%)' : ''}</p>
+        </div>`;
+    }
+
+    const curMonthLabel = new Date(current.statement_month + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' });
+    const prevMonthLabel = new Date(previous.statement_month + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' });
+
+    container.innerHTML = `
+        <p class="text-[10px] text-gray-400 text-center mb-2">${curMonthLabel} vs ${prevMonthLabel}</p>
+        <div class="grid grid-cols-3 gap-2">
+            ${deltaCard('Income', '💵', curIncome, incomeDelta)}
+            ${deltaCard('Spending', '🔴', curSpend, spendDelta)}
+            ${deltaCard('Net', '📊', curNet, netDelta)}
+        </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SPENDING BY CATEGORY OVER TIME (stacked bar) — Phase 4
+// ═══════════════════════════════════════════════════════════
+
+async function finRenderCatStackChart() {
+    const canvas = document.getElementById('catStackChart');
+    const emptyEl = document.getElementById('catStackEmpty');
+    if (!canvas) return;
+
+    const stmts = window._finStatements;
+    if (stmts.length < 2) {
+        canvas.style.display = 'none';
+        emptyEl?.classList.remove('hidden');
+        if (window._finCatStackChart) { window._finCatStackChart.destroy(); window._finCatStackChart = null; }
+        return;
+    }
+
+    // Load all transactions across all statements
+    const stmtIds = stmts.map(s => s.id);
+    const { data: allTxns, error } = await supabaseClient
+        .from('member_transactions')
+        .select('transaction_date, category, amount_cents, statement_id')
+        .in('statement_id', stmtIds)
+        .eq('user_id', window._finUser.id);
+    if (error || !allTxns) { console.error('Cat stack load error:', error); return; }
+
+    // Group outflows by month × category
+    const monthCatMap = {};
+    const allCats = new Set();
+    for (const t of allTxns) {
+        if (t.amount_cents >= 0) continue; // outflows only
+        const month = t.transaction_date?.slice(0, 7);
+        if (!month) continue;
+        const cat = t.category || 'other';
+        allCats.add(cat);
+        if (!monthCatMap[month]) monthCatMap[month] = {};
+        monthCatMap[month][cat] = (monthCatMap[month][cat] || 0) + Math.abs(t.amount_cents);
+    }
+
+    const sortedMonths = Object.keys(monthCatMap).sort().slice(-12);
+    if (sortedMonths.length < 2) {
+        canvas.style.display = 'none';
+        emptyEl?.classList.remove('hidden');
+        if (window._finCatStackChart) { window._finCatStackChart.destroy(); window._finCatStackChart = null; }
+        return;
+    }
+
+    canvas.style.display = '';
+    emptyEl?.classList.add('hidden');
+
+    const labels = sortedMonths.map(m => {
+        const d = new Date(m + '-01T00:00:00');
+        return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    });
+
+    // Sort categories by total spend (biggest first) — show top 6 + combine rest into "Other"
+    const catTotals = {};
+    for (const month of sortedMonths) {
+        for (const [cat, cents] of Object.entries(monthCatMap[month] || {})) {
+            catTotals[cat] = (catTotals[cat] || 0) + cents;
+        }
+    }
+    const rankedCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+    const topCats = rankedCats.slice(0, 6).map(([k]) => k);
+    const hasOther = rankedCats.length > 6;
+
+    const datasets = topCats.map(cat => {
+        const c = FIN_CATEGORIES[cat] || FIN_CATEGORIES.other;
+        return {
+            label: c.label,
+            data: sortedMonths.map(m => ((monthCatMap[m]?.[cat] || 0) / 100)),
+            backgroundColor: c.color,
+            borderRadius: 2,
+        };
+    });
+
+    if (hasOther) {
+        const otherCats = rankedCats.slice(6).map(([k]) => k);
+        datasets.push({
+            label: 'Other',
+            data: sortedMonths.map(m => {
+                let sum = 0;
+                for (const cat of otherCats) sum += (monthCatMap[m]?.[cat] || 0);
+                return sum / 100;
+            }),
+            backgroundColor: '#94a3b8',
+            borderRadius: 2,
+        });
+    }
+
+    if (window._finCatStackChart) window._finCatStackChart.destroy();
+    window._finCatStackChart = new Chart(canvas, {
+        type: 'bar',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { stacked: true, beginAtZero: true, ticks: { callback: v => '$' + v.toLocaleString() } },
+                x: { stacked: true, grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 10 } } },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })}` } }
             }
         }
     });
