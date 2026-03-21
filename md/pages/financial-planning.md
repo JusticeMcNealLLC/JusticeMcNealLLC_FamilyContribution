@@ -333,11 +333,11 @@ All tables enforce Row-Level Security — only the owning member can read/write 
 - [x] Navigation integrated (desktop More dropdown + mobile drawer)
 
 ### Phase 2 — Insights Panel
-- [ ] Subscription audit surfaced automatically
-- [ ] Cashback opportunity estimate shown
-- [ ] Income vs spending net summary
-- [ ] One-time deposit prompt based on net surplus
-- [ ] "Ways to Save" intelligence panel
+- [x] Subscription audit surfaced automatically (recurring detection, monthly cost, per-service breakdown)
+- [x] Cashback opportunity estimate shown (2% and 5% tiers on eligible spending)
+- [x] Income vs spending net summary (savings rate calculation, contextual advice)
+- [x] One-time deposit prompt based on net surplus (10% suggestion with link to contribute)
+- [x] "Ways to Save" intelligence panel (dining/grocery ratio, high subs alert, top splurge, transfer awareness)
 
 ### Phase 3 — PDF Support
 - [ ] PDF statement parsing (pdf.js text extraction)
@@ -370,8 +370,10 @@ All tables enforce Row-Level Security — only the owning member can read/write 
 - 14 spending categories with consistent color coding across all views
 - Transaction rows: colored circle background (category color at 20% opacity) + emoji + category label text
 - Custom rules: case-insensitive normalized matching, runs before built-in merchant rules
+- Insights Panel: auto-generated cards analyzing current transaction set — subscription audit, cashback estimate, net summary with savings rate, surplus deposit prompt, Ways to Save tips
+- Insights use color-coded cards (purple=subscriptions, emerald=cashback/positive, red=negative, amber=tips, brand=deposit prompt)
 
 ---
 
 **Last Updated:** March 20, 2026
-**Status:** ✅ Phase 1 Complete — Phase 2 Next
+**Status:** ✅ Phase 1 & 2 Complete — Phase 3 Next

@@ -360,6 +360,7 @@ async function finRecategorizeByRule(matchText, newCategory) {
     // Update local data
     for (const t of matching) t.category = newCategory;
     finRenderSummaryStats();
+    finRenderInsights();
     finRenderCategoryChart();
     finRenderCategoryList();
     finRenderTxnList();
@@ -463,6 +464,7 @@ async function finLoadStatements() {
     } else {
         window._finTransactions = [];
         finRenderSummaryStats();
+        finRenderInsights();
         finRenderCategoryChart();
         finRenderCategoryList();
         finRenderTrendChart();
@@ -605,10 +607,249 @@ async function finLoadTransactions(value) {
     }
 
     finRenderSummaryStats();
+    finRenderInsights();
     finRenderCategoryChart();
     finRenderCategoryList();
     finRenderTxnList();
     await finRenderTrendChart();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INSIGHTS PANEL (Phase 2)
+// ═══════════════════════════════════════════════════════════
+
+function finRenderInsights() {
+    const container = document.getElementById('insightsPanel');
+    if (!container) return;
+
+    const txns = window._finTransactions;
+    if (txns.length === 0) {
+        container.classList.add('hidden');
+        return;
+    }
+
+    const cards = [];
+
+    // ── 1. Subscription Audit ──────────────────────────────
+    const subTxns = txns.filter(t => t.amount_cents < 0 && (t.category === 'subscriptions' || t.category === 'entertainment'));
+    if (subTxns.length > 0) {
+        // Group by description to find recurring charges
+        const subGroups = {};
+        for (const t of subTxns) {
+            const key = t.description.toLowerCase().replace(/\s*[\u00B7·]\s*.*$/, '').trim();
+            if (!subGroups[key]) subGroups[key] = { desc: t.description, total: 0, count: 0, months: new Set() };
+            subGroups[key].total += Math.abs(t.amount_cents);
+            subGroups[key].count++;
+            subGroups[key].months.add(t.transaction_date?.slice(0, 7));
+        }
+        const subList = Object.values(subGroups).sort((a, b) => b.total - a.total);
+        const subTotal = subList.reduce((s, g) => s + g.total, 0);
+        const monthCount = new Set(txns.map(t => t.transaction_date?.slice(0, 7))).size || 1;
+        const subMonthly = Math.round(subTotal / monthCount);
+
+        let subHTML = `
+        <div class="insight-card bg-purple-50 border border-purple-200">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-xl">📱</span>
+                <h3 class="text-sm font-bold text-purple-900">Subscription Audit</h3>
+                <span class="ml-auto text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">${finFmtCents(subMonthly)}/mo</span>
+            </div>
+            <p class="text-xs text-purple-700 mb-2">${subList.length} service${subList.length !== 1 ? 's' : ''} · ${finFmtCents(subTotal)} total in this period</p>
+            <div class="space-y-1.5">`;
+        for (const g of subList.slice(0, 6)) {
+            const recurring = g.months.size > 1 ? '<span class="text-[10px] bg-purple-200 text-purple-800 px-1.5 py-0.5 rounded-full ml-1.5">recurring</span>' : '';
+            subHTML += `
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-purple-800 truncate">${g.desc}${recurring}</span>
+                    <span class="font-semibold text-purple-900 flex-shrink-0 ml-2">${finFmtCents(g.total)}</span>
+                </div>`;
+        }
+        if (subList.length > 6) subHTML += `<p class="text-[10px] text-purple-500 mt-1">+ ${subList.length - 6} more</p>`;
+        subHTML += `</div></div>`;
+        cards.push(subHTML);
+    }
+
+    // ── 2. Cashback Opportunity ─────────────────────────────
+    const eligibleCategories = ['groceries', 'dining', 'transportation', 'entertainment', 'subscriptions', 'shopping', 'health', 'education', 'business', 'other'];
+    const eligibleSpend = txns
+        .filter(t => t.amount_cents < 0 && eligibleCategories.includes(t.category))
+        .reduce((s, t) => s + Math.abs(t.amount_cents), 0);
+    if (eligibleSpend > 0) {
+        const cashback2 = Math.round(eligibleSpend * 0.02);
+        const cashback5 = Math.round(eligibleSpend * 0.05);
+        cards.push(`
+        <div class="insight-card bg-emerald-50 border border-emerald-200">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-xl">💳</span>
+                <h3 class="text-sm font-bold text-emerald-900">Cashback Opportunity</h3>
+            </div>
+            <p class="text-xs text-emerald-700 mb-3">With a cashback card on ${finFmtCents(eligibleSpend)} of eligible spending:</p>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="bg-emerald-100/60 rounded-lg p-2.5 text-center">
+                    <p class="text-lg font-bold text-emerald-700">${finFmtCents(cashback2)}</p>
+                    <p class="text-[10px] text-emerald-600 mt-0.5">at 2% cashback</p>
+                </div>
+                <div class="bg-emerald-100/60 rounded-lg p-2.5 text-center">
+                    <p class="text-lg font-bold text-emerald-700">${finFmtCents(cashback5)}</p>
+                    <p class="text-[10px] text-emerald-600 mt-0.5">at 5% (rotating)</p>
+                </div>
+            </div>
+        </div>`);
+    }
+
+    // ── 3. Income vs Spending Net Summary ────────────────────
+    let income = 0, spending = 0;
+    for (const t of txns) {
+        if (t.amount_cents > 0) income += t.amount_cents;
+        else spending += Math.abs(t.amount_cents);
+    }
+    const net = income - spending;
+    const savingsRate = income > 0 ? Math.round((net / income) * 100) : 0;
+    const monthSpan = new Set(txns.map(t => t.transaction_date?.slice(0, 7))).size || 1;
+
+    let netColor, netBg, netBorder, netIcon, netMessage;
+    if (net > 0) {
+        netColor = 'emerald'; netBg = 'bg-emerald-50'; netBorder = 'border-emerald-200'; netIcon = '📈';
+        if (savingsRate >= 20) netMessage = `Great job! You're saving ${savingsRate}% of your income.`;
+        else if (savingsRate >= 10) netMessage = `You're saving ${savingsRate}% — aim for 20%+ to build wealth faster.`;
+        else netMessage = `You're saving ${savingsRate}% — look for ways to cut spending below.`;
+    } else {
+        netColor = 'red'; netBg = 'bg-red-50'; netBorder = 'border-red-200'; netIcon = '📉';
+        netMessage = `You spent ${finFmtCents(Math.abs(net))} more than you earned. Check the "Ways to Save" tips below.`;
+    }
+
+    cards.push(`
+    <div class="insight-card ${netBg} border ${netBorder}">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="text-xl">${netIcon}</span>
+            <h3 class="text-sm font-bold text-${netColor}-900">Net Summary</h3>
+            <span class="ml-auto text-xs font-semibold text-${netColor}-700 bg-${netColor}-100 px-2 py-0.5 rounded-full">${net >= 0 ? '+' : ''}${finFmtCents(net)}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <div class="text-center">
+                <p class="text-xs text-${netColor}-600">Earned</p>
+                <p class="text-sm font-bold text-${netColor}-800">${finFmtCents(income)}</p>
+            </div>
+            <div class="text-center">
+                <p class="text-xs text-${netColor}-600">Spent</p>
+                <p class="text-sm font-bold text-${netColor}-800">${finFmtCents(spending)}</p>
+            </div>
+        </div>
+        <p class="text-xs text-${netColor}-700">${netMessage}</p>
+    </div>`);
+
+    // ── 4. One-time Deposit Prompt ──────────────────────────
+    if (net > 10000) { // surplus > $100
+        const suggestedDeposit = Math.round(net * 0.1); // suggest 10% of surplus
+        const suggestedStr = finFmtCents(suggestedDeposit);
+        cards.push(`
+        <div class="insight-card bg-brand-50 border border-brand-200">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-xl">💸</span>
+                <h3 class="text-sm font-bold text-brand-900">Boost Your LLC Contribution</h3>
+            </div>
+            <p class="text-xs text-brand-700 mb-3">You have a ${finFmtCents(net)} surplus this period. Consider putting some toward your family investment.</p>
+            <div class="flex items-center gap-2">
+                <a href="contribution.html" class="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                    Contribute ${suggestedStr}
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </a>
+                <span class="text-[10px] text-brand-500">~10% of your surplus</span>
+            </div>
+        </div>`);
+    }
+
+    // ── 5. Ways to Save ─────────────────────────────────────
+    const tips = [];
+
+    // Dining vs Groceries
+    const diningSpend = txns.filter(t => t.category === 'dining' && t.amount_cents < 0).reduce((s, t) => s + Math.abs(t.amount_cents), 0);
+    const grocerySpend = txns.filter(t => t.category === 'groceries' && t.amount_cents < 0).reduce((s, t) => s + Math.abs(t.amount_cents), 0);
+    if (diningSpend > 0 && grocerySpend > 0 && diningSpend > grocerySpend) {
+        const ratio = (diningSpend / grocerySpend).toFixed(1);
+        tips.push({
+            icon: '🍽️',
+            title: 'Dining exceeds groceries',
+            text: `You spent ${ratio}x more on dining (${finFmtCents(diningSpend)}) than groceries (${finFmtCents(grocerySpend)}). Cooking more could save ${finFmtCents(Math.round(diningSpend * 0.3))}+/period.`
+        });
+    }
+
+    // High subscription spend
+    const subSpend = txns.filter(t => (t.category === 'subscriptions' || t.category === 'entertainment') && t.amount_cents < 0).reduce((s, t) => s + Math.abs(t.amount_cents), 0);
+    const subPerMonth = monthSpan > 0 ? Math.round(subSpend / monthSpan) : subSpend;
+    if (subPerMonth > 10000) { // >$100/mo
+        tips.push({
+            icon: '📱',
+            title: 'Subscription costs are high',
+            text: `You're spending ~${finFmtCents(subPerMonth)}/mo on subscriptions & entertainment. Review unused services above.`
+        });
+    }
+
+    // Identify biggest discretionary category
+    const discretionary = ['dining', 'entertainment', 'shopping', 'subscriptions'];
+    const byCat = {};
+    for (const t of txns.filter(t => t.amount_cents < 0 && discretionary.includes(t.category))) {
+        byCat[t.category] = (byCat[t.category] || 0) + Math.abs(t.amount_cents);
+    }
+    const topCat = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
+    if (topCat && topCat[1] > 5000) { // > $50
+        const catInfo = FIN_CATEGORIES[topCat[0]] || FIN_CATEGORIES.other;
+        tips.push({
+            icon: catInfo.emoji,
+            title: `${catInfo.label} is your #1 splurge`,
+            text: `${finFmtCents(topCat[1])} went to ${catInfo.label.toLowerCase()}. Setting a budget could help you stay on track.`
+        });
+    }
+
+    // Transfer/savings awareness
+    const transferSpend = txns.filter(t => t.category === 'savings' && t.amount_cents < 0).reduce((s, t) => s + Math.abs(t.amount_cents), 0);
+    if (transferSpend > 20000) { // > $200
+        tips.push({
+            icon: '💰',
+            title: 'Large transfers detected',
+            text: `${finFmtCents(transferSpend)} in outgoing transfers (Zelle, loans, etc.). Make sure these are intentional.`
+        });
+    }
+
+    // No income detected
+    if (income === 0 && spending > 0) {
+        tips.push({
+            icon: '💵',
+            title: 'No income in this period',
+            text: 'Upload your payroll account statement too — it helps calculate your true savings rate.'
+        });
+    }
+
+    if (tips.length > 0) {
+        let tipsHTML = `
+        <div class="insight-card bg-amber-50 border border-amber-200">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-xl">💡</span>
+                <h3 class="text-sm font-bold text-amber-900">Ways to Save</h3>
+            </div>
+            <div class="space-y-3">`;
+        for (const tip of tips) {
+            tipsHTML += `
+                <div class="flex items-start gap-2.5">
+                    <span class="text-base flex-shrink-0 mt-0.5">${tip.icon}</span>
+                    <div>
+                        <p class="text-xs font-semibold text-amber-800">${tip.title}</p>
+                        <p class="text-xs text-amber-700 mt-0.5">${tip.text}</p>
+                    </div>
+                </div>`;
+        }
+        tipsHTML += `</div></div>`;
+        cards.push(tipsHTML);
+    }
+
+    // ── Render ──────────────────────────────────────────────
+    if (cards.length === 0) {
+        container.classList.add('hidden');
+        return;
+    }
+
+    container.classList.remove('hidden');
+    document.getElementById('insightsCards').innerHTML = cards.join('');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1462,6 +1703,7 @@ async function finSaveTxnEdit() {
     finRenderCategoryList();
     finRenderTxnList();
     finRenderSummaryStats();
+    finRenderInsights();
 }
 
 // ═══════════════════════════════════════════════════════════
