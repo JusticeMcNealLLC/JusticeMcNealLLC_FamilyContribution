@@ -73,12 +73,22 @@ const MERCHANT_RULES = [
     { pattern: /zelle|venmo|cash\s?app|paypal|apple\s?cash|to\s+loan|from\s+loan|to\s+share|from\s+share|deposit\s+transfer|transfer\s+from|overdraft\s+transfer|foreign\s+transaction\s+fee/i, category: 'savings' },
 ];
 
-function finCategorize(description) {
+function finCategorize(description, amountCents = 0) {
     const d = (description || '').trim().toLowerCase();
 
     // ── Custom user rules run FIRST (highest priority wins) ──
     for (const rule of window._finCustomRules || []) {
         if (d.includes(rule.match_text.toLowerCase())) return rule.category;
+    }
+
+    // ── Amount-aware rules: same merchant, different direction ──
+    // Amazon deposits (seller payouts) = income; Amazon purchases = shopping
+    if (/amazon/i.test(d) && !/prime/i.test(d)) {
+        return amountCents > 0 ? 'income' : 'shopping';
+    }
+    // eBay deposits (seller payouts) = income; eBay fees/purchases = business
+    if (/ebay/i.test(d)) {
+        return amountCents > 0 ? 'income' : 'business';
     }
 
     // ── Default merchant rules ──
@@ -807,7 +817,7 @@ function finParseCSV(text) {
             transaction_date: date,
             description,
             amount_cents: amountCents,
-            category: finCategorize(catText),
+            category: finCategorize(catText, amountCents),
         });
     }
 
