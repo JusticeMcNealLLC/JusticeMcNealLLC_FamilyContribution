@@ -59,8 +59,8 @@ const MERCHANT_RULES = [
     { pattern: /netflix|hulu|disney\+?|hbo|peacock|paramount|apple\s?tv|spotify|youtube\s?(premium|music)|audible|twitch|steam|xbox|playstation|nintendo|amc|regal|cinema|ticket|concert|live nation|stubhub|fandango/i, category: 'entertainment' },
     // Subscriptions (catch after entertainment)
     { pattern: /subscription|recurr|monthly|annual\s*fee|amazon\s*prime|membership|chatgpt|openai|adobe|dropbox|icloud|google\s?(one|storage)|microsoft\s*365|planet fitness|anytime fitness|la fitness|gym|crunch|supabase|elevenlabs|apple\.com\/bill|tmna\s*subscription/i, category: 'subscriptions' },
-    // Shopping — eBay, Amazon, Pirate Ship (shipping), etc.
-    { pattern: /amazon(?!\s*prime)|target|best buy|home depot|lowe'?s|ikea|wayfair|etsy|ebay|pirate\s*ship|shein|zara|h&m|nike|adidas|foot locker|tj\s?maxx|marshalls|ross|nordstrom|macy|old navy|gap\s|kohls|five below|dollar|bath\s?&?\s?body/i, category: 'shopping' },
+    // Shopping — eBay, Amazon, etc.
+    { pattern: /amazon(?!\s*prime)|target|best buy|home depot|lowe'?s|ikea|wayfair|etsy|ebay|shein|zara|h&m|nike|adidas|foot locker|tj\s?maxx|marshalls|ross|nordstrom|macy|old navy|gap\s|kohls|five below|dollar|bath\s?&?\s?body/i, category: 'shopping' },
     // Health
     { pattern: /cvs|walgreens|rite aid|pharmacy|doctor|hospital|clinic|dental|optom|urgent care|lab|quest diag|anthem|cigna|aetna|united\s?health|blue\s?cross|kaiser|copay|deductible|medical/i, category: 'health' },
     // Education
@@ -709,8 +709,11 @@ function finParseCSV(text) {
         // Build description: prefer memo (has merchant detail), fall back to description
         const descVal = descIdx >= 0 ? (cols[descIdx] || '').trim() : '';
         const memoVal = memoIdx >= 0 ? (cols[memoIdx] || '').trim() : '';
-        // Use memo if it's richer, otherwise description
-        const description = memoVal.length > descVal.length ? memoVal : (descVal || memoVal);
+        // Generic bank descriptions are useless — always prefer memo when desc is generic
+        const isGenericDesc = /^(check card purchase|ach (with)?draw(al)?|ach deposit|online (transfer|payment)|fee withdrawal|pos deposit|transfer|debit|credit|deposit|withdrawal|payment)$/i.test(descVal);
+        const description = (isGenericDesc && memoVal) ? memoVal
+            : memoVal.length > descVal.length ? memoVal
+            : (descVal || memoVal);
         if (!description) continue;
 
         // Parse date (MM/DD/YYYY or YYYY-MM-DD)
