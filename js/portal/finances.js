@@ -1160,20 +1160,25 @@ async function finSaveAccount() {
     if (!label) { errorEl.textContent = 'Account name is required'; errorEl.classList.remove('hidden'); return; }
     errorEl.classList.add('hidden');
 
+    // Refresh session to ensure auth token is current
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) { errorEl.textContent = 'Session expired — please log in again'; errorEl.classList.remove('hidden'); return; }
+    const userId = session.user.id;
+
     if (editId) {
         // Update
         const { error } = await supabaseClient
             .from('member_accounts')
             .update({ label, institution, account_type: accountType })
             .eq('id', editId)
-            .eq('user_id', window._finUser.id);
+            .eq('user_id', userId);
         if (error) { errorEl.textContent = error.message; errorEl.classList.remove('hidden'); return; }
     } else {
         // Insert
         const { error } = await supabaseClient
             .from('member_accounts')
-            .insert({ user_id: window._finUser.id, label, institution, account_type: accountType });
-        if (error) { errorEl.textContent = error.message; errorEl.classList.remove('hidden'); return; }
+            .insert({ user_id: userId, label, institution, account_type: accountType });
+        if (error) { console.error('Insert account error:', error, 'userId:', userId); errorEl.textContent = error.message; errorEl.classList.remove('hidden'); return; }
     }
 
     finCloseAccountModal();
