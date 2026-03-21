@@ -208,96 +208,148 @@ Bank statement data is personal. It lives only on the member's account and is ne
 
 ---
 
-## How Statement Parsing Would Work (Technical)
+## How Statement Parsing Works (Technical)
 
-### File Types to Support
-- **PDF** — most bank statements come this way
-- **CSV** — most banks allow CSV export; cleaner to parse
+### File Types Supported
+- **CSV** — fully supported; auto-detects header row and column formats from various banks (Delta Community Credit Union, Chase, etc.)
+- **PDF** — planned for Phase 3
 
 ### Parsing Approach
-- PDF parsing: extract text from PDF, find transaction rows (date, description, amount)
-- CSV parsing: map columns to date, description, debit/credit fields
-- Pattern matching: identify merchant names → auto-assign categories
-- Machine learning / rule-based: over time, the system learns what "NFLX" means (Netflix) and auto-categorizes it
+- CSV parsing: auto-detects header row (scans first 10 lines for date/description/amount columns), handles quoted fields with embedded commas
+- Generic bank description detection: identifies useless descriptions like "ACH Withdrawal", "Check Card Purchase", "Online Transfer" and prioritizes the Memo column instead
+- Multi-month support: a single CSV spanning multiple months is automatically split into separate per-month statements
+- Description cleaner (`finCleanDescription`): transforms raw bank noise into clean, readable text:
+  - `"Journal Voucher ZELLE YOLANDA MCNEAL 800-544-3328 ZTID#607400N07OJ0"` → **Zelle · Yolanda McNeal**
+  - `"CASH APP *SMOJO*ADD CASH Oakland CA Date 02/24/26..."` → **Cash App · Smojo**
+  - `"OPENAI OPENAI.COM CA Date 03/15/26 24492166..."` → **OpenAI**
+  - `"APPLE CASH INST XFER CUPERTINO CA Card 8281"` → **Apple Cash · Received**
+  - `"To Loan 0090"` → **Payment to Loan 0090**
+  - `"From Share 0000"` → **Transfer from Savings 0000**
+  - `"AMAZON.CWPYLZKDC"` (deposit) → **Amazon · Seller Payout**
+  - Strips dates, card numbers, phone numbers, tracking IDs, state codes, duplicate domains
+- Amount-aware categorization: same merchant categorized differently based on money direction (e.g., Amazon deposit = Income, Amazon purchase = Shopping; eBay deposit = Income, eBay fee = Business; KarryKraze deposit = Income)
+- Custom rules engine: members create personal rules that override defaults (e.g., "zelle yolanda" → Housing). Rules persist in the database and run before built-in merchant matching
+- Normalized matching: rule matching strips separators (·, -, /) so rules work across cleaned and raw descriptions
 
 ### Data Storage (Supabase)
 ```sql
 -- Linked bank accounts per member
 CREATE TABLE member_accounts (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id     UUID REFERENCES profiles(id),
-    label       TEXT NOT NULL,              -- "Chase Checking", "BofA Savings"
-    account_type TEXT,                      -- 'checking' | 'savings' | 'credit'
-    institution TEXT,                       -- "Chase", "Bank of America"
-    created_at  TIMESTAMPTZ DEFAULT NOW()
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id      UUID REFERENCES profiles(id),
+    label        TEXT NOT NULL,              -- "Free Checking ****702"
+    account_type TEXT DEFAULT 'checking',    -- 'checking' | 'savings' | 'credit'
+    institution  TEXT,                       -- "Delta Community Credit Union"
+    created_at   TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Uploaded bank statements
+-- Uploaded bank statements (one per account per month)
 CREATE TABLE member_statements (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    account_id  UUID REFERENCES member_accounts(id) ON DELETE CASCADE,
-    user_id     UUID REFERENCES profiles(id),
-    statement_date DATE NOT NULL,           -- period this statement covers
-    file_url    TEXT,                       -- Supabase Storage URL
-    parsed      BOOLEAN DEFAULT FALSE,
-    total_inflow_cents INT DEFAULT 0,
-    total_outflow_cents INT DEFAULT 0,
-    uploaded_at TIMESTAMPTZ DEFAULT NOW()
+    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    account_id           UUID REFERENCES member_accounts(id) ON DELETE CASCADE,
+    user_id              UUID REFERENCES profiles(id),
+    statement_month      DATE NOT NULL,      -- first of month, e.g. 2026-03-01
+    file_url             TEXT,               -- Supabase Storage URL
+    original_filename    TEXT,
+    parsed               BOOLEAN DEFAULT FALSE,
+    total_inflow_cents   INT DEFAULT 0,
+    total_outflow_cents  INT DEFAULT 0,
+    net_cents            INT DEFAULT 0,
+    created_at           TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(account_id, statement_month)
 );
 
 -- Individual transactions from parsed statements
 CREATE TABLE member_transactions (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    statement_id    UUID REFERENCES member_statements(id) ON DELETE CASCADE,
-    user_id         UUID REFERENCES profiles(id),
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    statement_id     UUID REFERENCES member_statements(id) ON DELETE CASCADE,
+    user_id          UUID REFERENCES profiles(id),
     transaction_date DATE NOT NULL,
-    description     TEXT NOT NULL,
-    amount_cents    INT NOT NULL,
-    flow            TEXT NOT NULL,          -- 'debit' | 'credit'
-    category        TEXT,                   -- auto-assigned, editable by member
-    is_llc_contribution BOOLEAN DEFAULT FALSE,
-    created_at      TIMESTAMPTZ DEFAULT NOW()
+    description      TEXT NOT NULL,          -- cleaned by finCleanDescription
+    amount_cents     INT NOT NULL,           -- negative = outflow, positive = inflow
+    category         TEXT,                   -- auto-assigned, editable by member
+    notes            TEXT,                   -- optional member notes
+    created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Cashback estimates per statement
 CREATE TABLE member_cashback_estimates (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    statement_id    UUID REFERENCES member_statements(id) ON DELETE CASCADE,
-    user_id         UUID REFERENCES profiles(id),
-    eligible_spend_cents INT DEFAULT 0,
-    estimated_cashback_cents INT DEFAULT 0, -- eligible_spend * 0.02
-    has_fidelity_card BOOLEAN DEFAULT FALSE,
-    created_at      TIMESTAMPTZ DEFAULT NOW()
+    id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    statement_id             UUID REFERENCES member_statements(id) ON DELETE CASCADE,
+    user_id                  UUID REFERENCES profiles(id),
+    eligible_spend_cents     INT DEFAULT 0,
+    estimated_cashback_cents INT DEFAULT 0,  -- eligible_spend * 0.02
+    created_at               TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(statement_id)
+);
+
+-- Custom categorization rules per member
+CREATE TABLE member_category_rules (
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id    UUID REFERENCES profiles(id),
+    match_text TEXT NOT NULL,                -- case-insensitive substring match
+    category   TEXT NOT NULL,                -- target category key
+    label      TEXT,                         -- optional display label
+    priority   INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, match_text)
 );
 ```
+
+All tables enforce Row-Level Security — only the owning member can read/write their own data. Explicit GRANTs ensure the `authenticated` role has full CRUD access through RLS policies.
 
 ---
 
 ## Implementation Phases
 
-### Phase 1 — CSV Upload (Simplest First)
-- [ ] Member account setup (add account, label, institution)
-- [ ] CSV upload and parser
-- [ ] Transaction categorization (rule-based, editable)
-- [ ] Per-statement summary view
-- [ ] Category drill-down with line items
+### Phase 1 — CSV Upload + Dashboard ✅ COMPLETE
+- [x] Member account setup (add/edit/delete accounts with label, institution, type)
+- [x] Multi-account tabs with "All Accounts" combined view
+- [x] CSV upload with drag-and-drop + progress bar
+- [x] Auto-detect CSV header row and columns (flexible for various bank formats)
+- [x] Generic bank description detection (prefers Memo over useless descriptions)
+- [x] Multi-month CSV auto-split (single file → separate monthly statements)
+- [x] Smart description cleaner (strips bank noise, normalizes brand names)
+- [x] Transaction categorization (14 categories, rule-based, amount-aware)
+- [x] Amount-aware categorization (Amazon/eBay/KarryKraze deposits = Income)
+- [x] Per-statement summary (income, spending, net, LLC contribution)
+- [x] Doughnut chart — spending breakdown by category (Chart.js)
+- [x] Category list with percentages and progress bars
+- [x] Category drill-down — click category to filter transaction list
+- [x] Transaction list with colored emoji circles + category labels
+- [x] Transaction editing (description, category, notes)
+- [x] "Always categorize this way" — creates custom rule from transaction edit
+- [x] Custom rules management (add/edit/delete rules, priority ordering)
+- [x] Rules auto-recategorize existing matching transactions
+- [x] Post-upload review banner for uncategorized ("Other") transactions
+- [x] Date range filters (Last 30 Days, Last 3 Months, Last 12 Months, All Time)
+- [x] Monthly trend bar chart (income vs spending, Chart.js)
+- [x] Statement history with view/delete per statement
+- [x] File storage in Supabase Storage (private per user)
+- [x] Centralized auth refresh (`finEnsureAuth`) for all write operations
+- [x] RLS + explicit GRANTs on all finance tables
+- [x] Privacy notice on page — "Your data is 100% private"
+- [x] Service worker caching (stale-while-revalidate)
+- [x] Navigation integrated (desktop More dropdown + mobile drawer)
 
 ### Phase 2 — Insights Panel
 - [ ] Subscription audit surfaced automatically
 - [ ] Cashback opportunity estimate shown
 - [ ] Income vs spending net summary
 - [ ] One-time deposit prompt based on net surplus
+- [ ] "Ways to Save" intelligence panel
 
 ### Phase 3 — PDF Support
-- [ ] PDF statement parsing
+- [ ] PDF statement parsing (pdf.js text extraction)
 - [ ] Merchant name recognition improvements
 - [ ] Manual re-categorization improvements
 
-### Phase 4 — Trends & History
-- [ ] Monthly trend charts (Chart.js)
+### Phase 4 — Trends & History (partially complete)
+- [x] Monthly trend bar chart (income vs spending)
 - [ ] Subscription cost over time
 - [ ] Income vs spending line chart
 - [ ] Month-over-month delta
+- [ ] Spending by category over time (stacked bar)
 
 ### Phase 5 — Goals & Coaching
 - [ ] Set a personal budget target per category
@@ -309,15 +361,17 @@ CREATE TABLE member_cashback_estimates (
 
 ## Page Design Notes
 
-- Lives at `portal/financial-planning.html` (or `portal/budget.html`)
+- Lives at `portal/my-finances.html`
 - Uses the same PageShell nav system as other portal pages
 - Mobile-first: statement cards are collapsible/scrollable on mobile
-- Desktop: sidebar account list + main content area
+- Account tabs across the top with "All Accounts" combined view
 - All uploads go to Supabase Storage (RLS enforced — private per user)
-- Charts use Chart.js (already in the project)
-- Colors: spending categories get consistent color coding across views
+- Charts use Chart.js CDN (doughnut for categories, bar for trends)
+- 14 spending categories with consistent color coding across all views
+- Transaction rows: colored circle background (category color at 20% opacity) + emoji + category label text
+- Custom rules: case-insensitive normalized matching, runs before built-in merchant rules
 
 ---
 
-**Last Updated:** March 11, 2026
-**Status:** 📋 Spec Complete — Not Started
+**Last Updated:** March 20, 2026
+**Status:** ✅ Phase 1 Complete — Phase 2 Next
