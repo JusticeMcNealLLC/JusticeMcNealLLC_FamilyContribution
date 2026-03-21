@@ -54,31 +54,31 @@ const FIN_CATEGORIES = {
 
 const MERCHANT_RULES = [
     // Income
-    { pattern: /payroll|direct dep|salary|paychex|adp|gusto/i, category: 'income' },
+    { pattern: /payroll|direct dep|salary|paychex|adp|gusto|employer|wages|net pay|commission|bonus\s*pay/i, category: 'income' },
     // Housing
-    { pattern: /rent|mortgage|hoa|property tax|renters? ins/i, category: 'housing' },
+    { pattern: /rent|mortgage|hoa|property tax|renters? ins|homeowner|escrow|landlord|apt\s*mgmt|realty|property mgmt/i, category: 'housing' },
     // Groceries
-    { pattern: /walmart\s*(supercenter|grocery)?|kroger|publix|aldi|trader joe|whole foods|costco|sam'?s club|h-?e-?b|safeway|wegmans|food lion|piggly|giant eagle|meijer|target\s*grocery/i, category: 'groceries' },
+    { pattern: /walmart\s*(supercenter|grocery)?|kroger|publix|aldi|trader joe|whole foods|costco|sam'?s club|h-?e-?b|safeway|wegmans|food lion|piggly|giant eagle|meijer|target\s*grocery|sprouts|winco|food\s*depot|grocery|food\s*mart|market\s*basket|shoprite|stop\s*&?\s*shop|harris\s*teeter/i, category: 'groceries' },
     // Dining
-    { pattern: /mcdonald|wendy|chick-?fil-?a|starbucks|dunkin|burger king|taco bell|chipotle|panera|domino|pizza hut|papa john|subway|popeye|sonic|chili'?s|olive garden|applebee|ihop|waffle house|grubhub|doordash|uber\s?eats|postmates|dine|restaurant|cafe|coffee|bistro|grill|kitchen/i, category: 'dining' },
+    { pattern: /mcdonald|wendy|chick-?fil-?a|starbucks|dunkin|burger king|taco bell|chipotle|panera|domino|pizza hut|papa john|subway|popeye|sonic|chili'?s|olive garden|applebee|ihop|waffle house|grubhub|doordash|uber\s?eats|postmates|dine|restaurant|cafe|coffee|bistro|grill|kitchen|wingstop|raising\s*cane|zaxby|panda\s*express|five\s*guys|shake\s*shack|jack\s*in.*box|little\s*caesar|wings?\s*(stop|zone)|smoothie|juice\s*bar|bakery|deli\b/i, category: 'dining' },
     // Transportation
-    { pattern: /shell|exxon|chevron|bp\s|marathon|speedway|racetrac|wawa|quiktrip|geico|allstate|state farm|progressive|auto|uber(?!\s?eat)|lyft|parking|toll|ez\s?pass|car wash|jiffy lube|tire|valvoline/i, category: 'transportation' },
+    { pattern: /shell|exxon|chevron|bp\s|marathon|speedway|racetrac|wawa|quiktrip|geico|allstate|state farm|progressive|auto|uber(?!\s?eat)|lyft|parking|toll|ez\s?pass|car wash|jiffy lube|tire|valvoline|sunoco|circle\s*k|pilot\s*(flying|travel)|love'?s\s*travel|carmax|autozone|o'?reilly|advance\s*auto|napa\s*auto|discount\s*tire|meineke|maaco|midas|firestone/i, category: 'transportation' },
     // Entertainment
-    { pattern: /netflix|hulu|disney\+?|hbo|peacock|paramount|apple\s?tv|spotify|youtube\s?(premium|music)|audible|twitch|steam|xbox|playstation|nintendo|amc|regal|cinema|ticket|concert|live nation|stubhub|fandango/i, category: 'entertainment' },
+    { pattern: /netflix|hulu|disney\+?|hbo|peacock|paramount|apple\s?tv|spotify|youtube\s?(premium|music)|audible|twitch|steam|xbox|playstation|nintendo|amc|regal|cinema|ticket|concert|live nation|stubhub|fandango|dave\s*&?\s*buster|topgolf|bowling|arcade|crunchyroll|funimation/i, category: 'entertainment' },
     // Subscriptions (catch after entertainment)
-    { pattern: /subscription|recurr|monthly|annual\s*fee|amazon\s*prime|membership|chatgpt|openai|adobe|dropbox|icloud|google\s?(one|storage)|microsoft\s*365|planet fitness|anytime fitness|la fitness|gym|crunch|supabase|elevenlabs|apple\.com\/bill|tmna\s*subscription/i, category: 'subscriptions' },
+    { pattern: /subscription|recurr|monthly|annual\s*fee|amazon\s*prime|membership|chatgpt|openai|adobe|dropbox|icloud|google\s?(one|storage)|microsoft\s*365|planet fitness|anytime fitness|la fitness|gym|crunch|supabase|elevenlabs|apple\.com\/bill|tmna\s*subscription|notion|canva|grammarly|1password|lastpass|nordvpn|expressvpn|linkedin\s*prem/i, category: 'subscriptions' },
     // Shopping — eBay, Amazon, etc.
-    { pattern: /amazon(?!\s*prime)|target|best buy|home depot|lowe'?s|ikea|wayfair|etsy|ebay|shein|zara|h&m|nike|adidas|foot locker|tj\s?maxx|marshalls|ross|nordstrom|macy|old navy|gap\s|kohls|five below|dollar|bath\s?&?\s?body/i, category: 'shopping' },
+    { pattern: /amazon(?!\s*prime)|target|best buy|home depot|lowe'?s|ikea|wayfair|etsy|ebay|shein|zara|h&m|nike|adidas|foot locker|tj\s?maxx|marshalls|ross|nordstrom|macy|old navy|gap\s|kohls|five below|dollar|bath\s?&?\s?body|michaels|hobby\s*lobby|bed\s*bath|pottery\s*barn|crate\s*&?\s*barrel|pier\s*1|burlington|goodwill|salvation\s*army|temu|wish\.com/i, category: 'shopping' },
     // Health
-    { pattern: /cvs|walgreens|rite aid|pharmacy|doctor|hospital|clinic|dental|optom|urgent care|lab|quest diag|anthem|cigna|aetna|united\s?health|blue\s?cross|kaiser|copay|deductible|medical/i, category: 'health' },
+    { pattern: /cvs|walgreens|rite aid|pharmacy|doctor|hospital|clinic|dental|optom|urgent care|lab|quest diag|anthem|cigna|aetna|united\s?health|blue\s?cross|kaiser|copay|deductible|medical|labcorp|humana|rx\b|prescription|chiro|physi(cal)?\s*therapy|mental\s*health|therapist|counseling/i, category: 'health' },
     // Education
-    { pattern: /tuition|university|college|school|udemy|coursera|skillshare|duolingo|chegg|textbook|student loan/i, category: 'education' },
+    { pattern: /tuition|university|college|school|udemy|coursera|skillshare|duolingo|chegg|textbook|student loan|khan\s*academy|masterclass|brilliant\.org|linkedin\s*learn|pluralsight/i, category: 'education' },
     // Business — tools, shipping, SaaS for business
-    { pattern: /karrykraze|pirate\s*ship/i, category: 'business' },
+    { pattern: /karrykraze|pirate\s*ship|stripe|square\s*(pos|payment)|shopify|wix|godaddy|namecheap|digital\s*ocean|aws|heroku|vercel|netlify|twilio|mailchimp|constant\s*contact|quickbook|freshbook|xero/i, category: 'business' },
     // LLC Contribution
     { pattern: /justice\s?mcneal|jmllc|family\s?contribution/i, category: 'llc_contribution' },
     // Savings / Transfers — Zelle, Venmo, Cash App, Apple Cash, loan payments, share transfers, deposit transfers
-    { pattern: /zelle|venmo|cash\s?app|paypal|apple\s?cash|to\s+loan|from\s+loan|to\s+share|from\s+share|deposit\s+transfer|transfer\s+from|overdraft\s+transfer|foreign\s+transaction\s+fee/i, category: 'savings' },
+    { pattern: /zelle|venmo|cash\s?app|paypal|apple\s?cash|to\s+loan|from\s+loan|to\s+share|from\s+share|deposit\s+transfer|transfer\s+from|overdraft\s+transfer|foreign\s+transaction\s+fee|wire\s*transfer|ach\s*transfer/i, category: 'savings' },
 ];
 
 function finCategorize(description, amountCents = 0) {
@@ -987,6 +987,12 @@ function finFilterByCategory(cat) {
     document.getElementById('txnCategoryLabel').textContent = `${c.emoji} ${c.label}`;
     document.getElementById('txnClearFilter').classList.remove('hidden');
     document.getElementById('txnSection').classList.remove('hidden');
+    // Show bulk categorize button when filtering "other"
+    const bulkBtn = document.getElementById('txnBulkCategorize');
+    if (bulkBtn) {
+        if (cat === 'other') bulkBtn.classList.remove('hidden');
+        else bulkBtn.classList.add('hidden');
+    }
     finRenderTxnList();
 }
 
@@ -1012,19 +1018,35 @@ function finRenderTxnList() {
     section.classList.remove('hidden');
     countEl.textContent = `(${txns.length})`;
 
+    // Build quick-category chips for "other" category transactions
+    const showQuickChips = filter === 'other';
+    const quickChipCats = ['dining', 'groceries', 'shopping', 'transportation', 'entertainment', 'subscriptions', 'health', 'business', 'housing', 'income', 'savings'];
+
     container.innerHTML = txns.map(t => {
         const c = FIN_CATEGORIES[t.category] || FIN_CATEGORIES.other;
         const d = new Date(t.transaction_date + 'T00:00:00');
         const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         const amtColor = t.amount_cents >= 0 ? 'text-emerald-600' : 'text-gray-900';
         const amtStr = (t.amount_cents >= 0 ? '+' : '') + finFmtCents(t.amount_cents);
+
+        // Quick-category chips row (only for "other" filtered view)
+        let chipsHTML = '';
+        if (showQuickChips) {
+            chipsHTML = `<div class="flex flex-wrap gap-1 mt-1 quick-cat-row" data-txn="${t.id}">` +
+                quickChipCats.map(cat => {
+                    const ci = FIN_CATEGORIES[cat];
+                    return `<span class="quick-cat-chip bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800" data-cat="${cat}" title="${ci.label}">${ci.emoji}</span>`;
+                }).join('') + '</div>';
+        }
+
         return `
         <div class="txn-row group" data-txn="${t.id}">
             <div class="flex items-center gap-3 min-w-0 flex-1">
                 <div class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-lg" style="background:${c.color}20">${c.emoji}</div>
-                <div class="min-w-0">
+                <div class="min-w-0 flex-1">
                     <p class="text-sm text-gray-900 truncate">${t.description}</p>
                     <p class="text-xs text-gray-400">${dateStr} · <span style="color:${c.color}" class="font-medium">${c.label}</span>${t.notes ? ' · ' + t.notes : ''}</p>
+                    ${chipsHTML}
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
@@ -1042,6 +1064,84 @@ function finRenderTxnList() {
             finOpenTxnEdit(btn.dataset.txn);
         });
     });
+
+    // Quick-category chip click handlers
+    container.querySelectorAll('.quick-cat-chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const txnId = chip.closest('.quick-cat-row').dataset.txn;
+            const newCat = chip.dataset.cat;
+            finQuickCategorize(txnId, newCat);
+        });
+    });
+}
+
+// Quick-categorize a single transaction (inline chip click)
+async function finQuickCategorize(txnId, newCategory) {
+    let userId;
+    try { userId = await finEnsureAuth(); } catch (e) { console.error(e); return; }
+
+    const { error } = await supabaseClient
+        .from('member_transactions')
+        .update({ category: newCategory })
+        .eq('id', txnId)
+        .eq('user_id', userId);
+
+    if (error) { console.error('Quick categorize error:', error); return; }
+
+    // Update local data
+    const txn = window._finTransactions.find(t => t.id === txnId);
+    if (txn) txn.category = newCategory;
+
+    finRenderSummaryStats();
+    finRenderInsights();
+    finRenderCategoryChart();
+    finRenderCategoryList();
+    finRenderTxnList();
+}
+
+// Bulk categorize all "other" transactions via a category picker
+async function finBulkCategorize() {
+    const otherTxns = window._finTransactions.filter(t => t.category === 'other');
+    if (otherTxns.length === 0) return;
+
+    // Build category options for user selection
+    const cats = Object.entries(FIN_CATEGORIES).filter(([k]) => k !== 'other');
+    const catOptions = cats.map(([k, v]) => `${v.emoji} ${v.label}`).join('\n');
+    const choice = prompt(
+        `Choose a category for all ${otherTxns.length} uncategorized transactions:\n\n` +
+        cats.map(([k, v], i) => `${i + 1}. ${v.emoji} ${v.label}`).join('\n') +
+        '\n\nEnter a number (1-' + cats.length + '):'
+    );
+
+    if (!choice) return;
+    const idx = parseInt(choice, 10) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= cats.length) { alert('Invalid selection.'); return; }
+
+    const newCategory = cats[idx][0];
+    const catLabel = FIN_CATEGORIES[newCategory].label;
+
+    if (!confirm(`Re-categorize ${otherTxns.length} transactions as "${catLabel}"?`)) return;
+
+    let userId;
+    try { userId = await finEnsureAuth(); } catch (e) { alert(e.message); return; }
+
+    const ids = otherTxns.map(t => t.id);
+    const { error } = await supabaseClient
+        .from('member_transactions')
+        .update({ category: newCategory })
+        .in('id', ids)
+        .eq('user_id', userId);
+
+    if (error) { alert('Error: ' + error.message); return; }
+
+    // Update local
+    for (const t of otherTxns) t.category = newCategory;
+    finRenderSummaryStats();
+    finRenderInsights();
+    finRenderCategoryChart();
+    finRenderCategoryList();
+    finRenderTxnList();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1233,6 +1333,156 @@ function finParseCents(raw) {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  PDF PARSER (Phase 3)
+// ═══════════════════════════════════════════════════════════
+
+async function finParsePDF(arrayBuffer) {
+    const pdfjsLib = window._pdfjs;
+    if (!pdfjsLib) {
+        alert('PDF library failed to load. Try refreshing the page, or use CSV export instead.');
+        return [];
+    }
+
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const allLines = [];
+
+    // Extract text from all pages
+    for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        // Group items by y-position to reconstruct lines
+        const lineMap = {};
+        for (const item of content.items) {
+            const y = Math.round(item.transform[5]); // y-position
+            if (!lineMap[y]) lineMap[y] = [];
+            lineMap[y].push({ x: item.transform[4], text: item.str });
+        }
+        // Sort lines top-to-bottom (PDF y is bottom-up)
+        const sortedYs = Object.keys(lineMap).sort((a, b) => b - a);
+        for (const y of sortedYs) {
+            const items = lineMap[y].sort((a, b) => a.x - b.x);
+            const lineText = items.map(i => i.text).join(' ').trim();
+            if (lineText) allLines.push(lineText);
+        }
+    }
+
+    if (allLines.length === 0) return [];
+
+    // ── Try to detect transaction lines ──
+    // Most bank PDFs have lines like: "03/15 STARBUCKS #12345 ATLANTA GA  -$4.75"
+    // or "03/15/2026 STARBUCKS 4.75" or tabular layouts
+    const transactions = [];
+    const dateAmountPattern = /^(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)\s+(.+?)\s+([\-]?\$?[\d,]+\.\d{2})\s*$/;
+    const dateDescPattern = /^(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)\s+(.+)/;
+    const amountOnlyPattern = /^\s*([\-]?\$?[\d,]+\.\d{2})\s*$/;
+
+    // Pass 1: Try date + description + amount on same line
+    for (let i = 0; i < allLines.length; i++) {
+        const line = allLines[i];
+        const m = line.match(dateAmountPattern);
+        if (m) {
+            const rawDate = m[1];
+            const description = m[2].trim();
+            const amount = m[3];
+            const date = finParsePDFDate(rawDate);
+            if (!date) continue;
+            const amountCents = finParseCents(amount);
+            if (amountCents === 0) continue;
+
+            transactions.push({
+                transaction_date: date,
+                description: finCleanDescription(description, amountCents),
+                amount_cents: amountCents,
+                category: finCategorize(description, amountCents),
+            });
+            continue;
+        }
+
+        // Pass 2: Date + description on one line, amount on the next or in the line with spacing
+        const dm = line.match(dateDescPattern);
+        if (dm) {
+            const rawDate = dm[1];
+            const date = finParsePDFDate(rawDate);
+            if (!date) continue;
+
+            let description = dm[2].trim();
+            let amountCents = 0;
+
+            // Check if amount is embedded at end of description
+            const embeddedAmt = description.match(/([\-]?\$?[\d,]+\.\d{2})\s*$/);
+            if (embeddedAmt) {
+                amountCents = finParseCents(embeddedAmt[1]);
+                description = description.replace(/([\-]?\$?[\d,]+\.\d{2})\s*$/, '').trim();
+            }
+
+            // If no amount found, check next line
+            if (amountCents === 0 && i + 1 < allLines.length) {
+                const nextAmt = allLines[i + 1].match(amountOnlyPattern);
+                if (nextAmt) {
+                    amountCents = finParseCents(nextAmt[1]);
+                    i++; // skip next line
+                }
+            }
+
+            // Still look for a continuation description line (merchant detail on line below date)
+            if (amountCents === 0 && i + 1 < allLines.length) {
+                const nextLine = allLines[i + 1];
+                if (!nextLine.match(/^\d{1,2}[\/\-]/) && !nextLine.match(amountOnlyPattern)) {
+                    description += ' ' + nextLine.trim();
+                    i++;
+                    // Now check the line after that for amount
+                    if (i + 1 < allLines.length) {
+                        const nextAmt = allLines[i + 1].match(amountOnlyPattern);
+                        if (nextAmt) {
+                            amountCents = finParseCents(nextAmt[1]);
+                            i++;
+                        }
+                    }
+                }
+            }
+
+            if (amountCents === 0) continue;
+
+            // Strip trailing balance amounts (some PDFs show: amount   balance)
+            description = description.replace(/\s+[\-]?\$?[\d,]+\.\d{2}\s*$/, '').trim();
+            if (!description) continue;
+
+            transactions.push({
+                transaction_date: date,
+                description: finCleanDescription(description, amountCents),
+                amount_cents: amountCents,
+                category: finCategorize(description, amountCents),
+            });
+        }
+    }
+
+    return transactions;
+}
+
+// Parse dates commonly found in PDFs (MM/DD, MM/DD/YY, MM/DD/YYYY)
+function finParsePDFDate(raw) {
+    // MM/DD/YYYY
+    let m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (m) {
+        return `${m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+    }
+    // MM/DD/YY
+    m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
+    if (m) {
+        const year = parseInt(m[3], 10);
+        const fullYear = year >= 50 ? 1900 + year : 2000 + year;
+        return `${fullYear}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+    }
+    // MM/DD (assume current year)
+    m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+    if (m) {
+        const year = new Date().getFullYear();
+        return `${year}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+    }
+    return null;
+}
+
+// ═══════════════════════════════════════════════════════════
 //  FILE UPLOAD HANDLER
 // ═══════════════════════════════════════════════════════════
 
@@ -1270,12 +1520,17 @@ async function finHandleUpload(file) {
             barEl.style.width = '30%'; pctEl.textContent = '30%';
             statusEl.textContent = 'Parsing CSV…';
             transactions = finParseCSV(text);
-        } else {
-            // PDF — simple text extraction with pdf.js would go here
-            // For Phase 1, show a helpful message
-            alert('PDF parsing is coming in Phase 3. For now, export your statement as CSV from your bank app.');
-            progressEl.classList.add('hidden');
-            return;
+        } else if (ext === 'pdf') {
+            const buffer = await file.arrayBuffer();
+            barEl.style.width = '20%'; pctEl.textContent = '20%';
+            statusEl.textContent = 'Extracting text from PDF…';
+            transactions = await finParsePDF(buffer);
+            if (transactions.length === 0) {
+                // Fallback message
+                alert('Could not extract transactions from this PDF. If it\'s a scanned image, try exporting as CSV from your bank instead.');
+                progressEl.classList.add('hidden');
+                return;
+            }
         }
 
         if (transactions.length === 0) {
@@ -1478,8 +1733,12 @@ function finBindUI() {
         window._finCategoryFilter = null;
         document.getElementById('txnCategoryLabel').textContent = 'All Transactions';
         document.getElementById('txnClearFilter').classList.add('hidden');
+        document.getElementById('txnBulkCategorize').classList.add('hidden');
         finRenderTxnList();
     });
+
+    // Bulk categorize button
+    document.getElementById('txnBulkCategorize').addEventListener('click', finBulkCategorize);
 
     // Transaction edit modal
     document.getElementById('txnEditBackdrop').addEventListener('click', finCloseTxnEdit);

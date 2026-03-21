@@ -36,6 +36,17 @@
     <!-- Chart.js for spending visuals -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 
+    <!-- pdf.js for bank statement PDF parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+    <script>
+        // Pre-load pdf.js as global so finances.js can use it
+        window._pdfjs = null;
+        import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs').then(m => {
+            m.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
+            window._pdfjs = m;
+        }).catch(e => console.warn('pdf.js load failed:', e));
+    </script>
+
     <style>
         .category-chip { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold cursor-pointer select-none transition; }
         .category-chip.active { @apply ring-2 ring-brand-400; }
@@ -48,6 +59,7 @@
         .account-tab.active { @apply bg-brand-600 text-white shadow-sm; }
         .account-tab:not(.active) { @apply text-gray-600 hover:bg-gray-100; }
         .insight-card { @apply rounded-xl p-4; }
+        .quick-cat-chip { @apply text-[10px] px-2 py-0.5 rounded-full font-semibold cursor-pointer transition opacity-0 group-hover:opacity-100; }
         @media (max-width: 639px) { .hide-mobile-nav { display: none !important; } }
     </style>
 </head>
@@ -188,7 +200,10 @@
                         <span id="txnCategoryLabel">All Transactions</span>
                         <span id="txnCount" class="ml-1 text-gray-400 font-normal"></span>
                     </h2>
-                    <button id="txnClearFilter" class="hidden text-xs font-semibold text-brand-600 hover:text-brand-700 transition">Clear filter</button>
+                    <div class="flex items-center gap-2">
+                        <button id="txnBulkCategorize" class="hidden text-xs font-semibold text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition">Categorize All</button>
+                        <button id="txnClearFilter" class="hidden text-xs font-semibold text-brand-600 hover:text-brand-700 transition">Clear filter</button>
+                    </div>
                 </div>
                 <div class="stat-card">
                     <div id="txnList" class="divide-y divide-gray-100 max-h-[400px] overflow-y-auto"></div>

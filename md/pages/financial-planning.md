@@ -339,10 +339,10 @@ All tables enforce Row-Level Security — only the owning member can read/write 
 - [x] One-time deposit prompt based on net surplus (10% suggestion with link to contribute)
 - [x] "Ways to Save" intelligence panel (dining/grocery ratio, high subs alert, top splurge, transfer awareness)
 
-### Phase 3 — PDF Support
-- [ ] PDF statement parsing (pdf.js text extraction)
-- [ ] Merchant name recognition improvements
-- [ ] Manual re-categorization improvements
+### Phase 3 — PDF Support & Re-categorization
+- [x] PDF statement parsing (pdf.js text extraction — multi-page, line reconstruction, date+amount detection)
+- [x] Merchant name recognition improvements (60+ new merchants across all categories)
+- [x] Manual re-categorization improvements (inline quick-category chips on "Other" view, bulk categorize button)
 
 ### Phase 4 — Trends & History (partially complete)
 - [x] Monthly trend bar chart (income vs spending)
@@ -376,4 +376,4 @@ All tables enforce Row-Level Security — only the owning member can read/write 
 ---
 
 **Last Updated:** March 20, 2026
-**Status:** ✅ Phase 1 & 2 Complete — Phase 3 Next
+**Status:** ✅ Phase 1-3 Complete — Phase 4 Next
