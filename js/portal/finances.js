@@ -639,10 +639,10 @@ function finRenderTxnList() {
         return `
         <div class="txn-row group" data-txn="${t.id}">
             <div class="flex items-center gap-3 min-w-0 flex-1">
-                <span class="text-base flex-shrink-0">${c.emoji}</span>
+                <div class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-lg" style="background:${c.color}20">${c.emoji}</div>
                 <div class="min-w-0">
                     <p class="text-sm text-gray-900 truncate">${t.description}</p>
-                    <p class="text-xs text-gray-400">${dateStr}${t.notes ? ' · ' + t.notes : ''}</p>
+                    <p class="text-xs text-gray-400">${dateStr} · <span style="color:${c.color}" class="font-medium">${c.label}</span>${t.notes ? ' · ' + t.notes : ''}</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
