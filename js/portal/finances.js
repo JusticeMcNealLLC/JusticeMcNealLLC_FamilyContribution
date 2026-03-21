@@ -839,25 +839,26 @@ async function finHandleUpload(file) {
         }
 
         barEl.style.width = '50%'; pctEl.textContent = '50%';
-        statusEl.textContent = `Found ${transactions.length} transactions. Saving…`;
+        statusEl.textContent = `Found ${transactions.length} transactions. Splitting by month…`;
 
-        // Determine statement month from the first transaction
-        const dates = transactions.map(t => new Date(t.transaction_date + 'T00:00:00'));
-        const firstDate = new Date(Math.min(...dates));
-        const statementMonth = `${firstDate.getFullYear()}-${String(firstDate.getMonth() + 1).padStart(2, '0')}-01`;
-
-        // Calculate totals
-        let inflow = 0, outflow = 0;
+        // ── Group transactions by month ────────────────────────
+        const monthBuckets = {};
         for (const t of transactions) {
-            if (t.amount_cents > 0) inflow += t.amount_cents;
-            else outflow += Math.abs(t.amount_cents);
+            const d = new Date(t.transaction_date + 'T00:00:00');
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+            if (!monthBuckets[key]) monthBuckets[key] = [];
+            monthBuckets[key].push(t);
         }
+        const sortedMonths = Object.keys(monthBuckets).sort();
+        const totalMonths = sortedMonths.length;
 
-        // Upload raw file to storage
-        barEl.style.width = '60%'; pctEl.textContent = '60%';
+        statusEl.textContent = `Found ${transactions.length} transactions across ${totalMonths} month${totalMonths > 1 ? 's' : ''}. Saving…`;
+
+        // Upload raw file to storage once
+        barEl.style.width = '55%'; pctEl.textContent = '55%';
         statusEl.textContent = 'Uploading file…';
 
-        const storagePath = `${window._finUser.id}/${window._finActiveAccount}/${statementMonth}_${Date.now()}.${ext}`;
+        const storagePath = `${window._finUser.id}/${window._finActiveAccount}/${sortedMonths[0]}_${Date.now()}.${ext}`;
         const { error: uploadError } = await supabaseClient.storage
             .from('member-statements')
             .upload(storagePath, file, { upsert: false });
@@ -870,73 +871,85 @@ async function finHandleUpload(file) {
             console.warn('File upload failed (proceeding without raw file):', uploadError);
         }
 
-        barEl.style.width = '70%'; pctEl.textContent = '70%';
-        statusEl.textContent = 'Creating statement record…';
+        // ── Process each month separately ──────────────────────
+        let processedTxns = 0;
+        for (let mi = 0; mi < sortedMonths.length; mi++) {
+            const statementMonth = sortedMonths[mi];
+            const monthTxns = monthBuckets[statementMonth];
+            const monthLabel = new Date(statementMonth + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
-        // Create statement record (upsert on account + month)
-        const { data: stmt, error: stmtError } = await supabaseClient
-            .from('member_statements')
-            .upsert({
-                account_id: window._finActiveAccount,
-                user_id: window._finUser.id,
-                statement_month: statementMonth,
-                file_url: fileUrl,
-                original_filename: file.name,
-                parsed: true,
-                total_inflow_cents: inflow,
-                total_outflow_cents: outflow,
-                net_cents: inflow - outflow,
-            }, { onConflict: 'account_id,statement_month' })
-            .select()
-            .single();
+            const basePct = 60 + Math.round((mi / totalMonths) * 35);
+            barEl.style.width = basePct + '%'; pctEl.textContent = basePct + '%';
+            statusEl.textContent = `Saving ${monthLabel} (${monthTxns.length} txns)…`;
 
-        if (stmtError) throw stmtError;
+            // Calculate totals for this month
+            let inflow = 0, outflow = 0;
+            for (const t of monthTxns) {
+                if (t.amount_cents > 0) inflow += t.amount_cents;
+                else outflow += Math.abs(t.amount_cents);
+            }
 
-        barEl.style.width = '80%'; pctEl.textContent = '80%';
-        statusEl.textContent = 'Saving transactions…';
+            // Create / update statement record for this month
+            const { data: stmt, error: stmtError } = await supabaseClient
+                .from('member_statements')
+                .upsert({
+                    account_id: window._finActiveAccount,
+                    user_id: window._finUser.id,
+                    statement_month: statementMonth,
+                    file_url: mi === 0 ? fileUrl : null, // only first month gets the file link
+                    original_filename: file.name,
+                    parsed: true,
+                    total_inflow_cents: inflow,
+                    total_outflow_cents: outflow,
+                    net_cents: inflow - outflow,
+                }, { onConflict: 'account_id,statement_month' })
+                .select()
+                .single();
 
-        // Delete existing transactions for this statement (re-upload overwrites)
-        await supabaseClient
-            .from('member_transactions')
-            .delete()
-            .eq('statement_id', stmt.id)
-            .eq('user_id', window._finUser.id);
+            if (stmtError) throw stmtError;
 
-        // Insert transactions in batches of 100
-        const rows = transactions.map(t => ({
-            statement_id: stmt.id,
-            user_id: window._finUser.id,
-            transaction_date: t.transaction_date,
-            description: t.description,
-            amount_cents: t.amount_cents,
-            category: t.category,
-        }));
-
-        for (let i = 0; i < rows.length; i += 100) {
-            const batch = rows.slice(i, i + 100);
-            const { error: batchError } = await supabaseClient
+            // Delete existing transactions for this month (re-upload overwrites)
+            await supabaseClient
                 .from('member_transactions')
-                .insert(batch);
-            if (batchError) throw batchError;
+                .delete()
+                .eq('statement_id', stmt.id)
+                .eq('user_id', window._finUser.id);
 
-            const pct = Math.round(80 + ((i + batch.length) / rows.length) * 15);
-            barEl.style.width = pct + '%'; pctEl.textContent = pct + '%';
-        }
-
-        // Generate cashback estimate
-        const eligibleSpend = outflow; // simplified — all spending eligible for 2% flat
-        const cashback = Math.round(eligibleSpend * 0.02);
-        await supabaseClient
-            .from('member_cashback_estimates')
-            .upsert({
+            // Insert transactions in batches of 100
+            const rows = monthTxns.map(t => ({
                 statement_id: stmt.id,
                 user_id: window._finUser.id,
-                eligible_spend_cents: eligibleSpend,
-                estimated_cashback_cents: cashback,
-            }, { onConflict: 'statement_id' });
+                transaction_date: t.transaction_date,
+                description: t.description,
+                amount_cents: t.amount_cents,
+                category: t.category,
+            }));
+
+            for (let i = 0; i < rows.length; i += 100) {
+                const batch = rows.slice(i, i + 100);
+                const { error: batchError } = await supabaseClient
+                    .from('member_transactions')
+                    .insert(batch);
+                if (batchError) throw batchError;
+            }
+
+            processedTxns += monthTxns.length;
+
+            // Generate cashback estimate for this month
+            const eligibleSpend = outflow;
+            const cashback = Math.round(eligibleSpend * 0.02);
+            await supabaseClient
+                .from('member_cashback_estimates')
+                .upsert({
+                    statement_id: stmt.id,
+                    user_id: window._finUser.id,
+                    eligible_spend_cents: eligibleSpend,
+                    estimated_cashback_cents: cashback,
+                }, { onConflict: 'statement_id' });
+        }
 
         barEl.style.width = '100%'; pctEl.textContent = '100%';
-        statusEl.textContent = `✅ ${transactions.length} transactions imported!`;
+        statusEl.textContent = `✅ ${transactions.length} transactions imported across ${totalMonths} month${totalMonths > 1 ? 's' : ''}!`;
 
         // Reload data
         await finLoadStatements();
