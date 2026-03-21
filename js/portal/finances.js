@@ -19,6 +19,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     finBindUI();
 });
 
+// ── Centralized session refresh — call before any write operation ──
+async function finEnsureAuth() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) throw new Error('Session expired — please log in again');
+    window._finUser = session.user;
+    return session.user.id;
+}
+
 // ═══════════════════════════════════════════════════════════
 //  CATEGORY DEFINITIONS
 // ═══════════════════════════════════════════════════════════
@@ -296,17 +304,20 @@ async function finSaveRule() {
     if (!matchText) { errorEl.textContent = 'Match text is required'; errorEl.classList.remove('hidden'); return; }
     errorEl.classList.add('hidden');
 
+    let userId;
+    try { userId = await finEnsureAuth(); } catch (e) { errorEl.textContent = e.message; errorEl.classList.remove('hidden'); return; }
+
     if (editId) {
         const { error } = await supabaseClient
             .from('member_category_rules')
             .update({ match_text: matchText, category, label })
             .eq('id', editId)
-            .eq('user_id', window._finUser.id);
+            .eq('user_id', userId);
         if (error) { errorEl.textContent = error.message; errorEl.classList.remove('hidden'); return; }
     } else {
         const { error } = await supabaseClient
             .from('member_category_rules')
-            .insert({ user_id: window._finUser.id, match_text: matchText, category, label });
+            .insert({ user_id: userId, match_text: matchText, category, label });
         if (error) {
             errorEl.textContent = error.code === '23505' ? 'A rule with this match text already exists' : error.message;
             errorEl.classList.remove('hidden');
@@ -333,13 +344,16 @@ async function finRecategorizeByRule(matchText, newCategory) {
     const doIt = confirm(`${matching.length} existing transaction(s) match this rule. Re-categorize them now?`);
     if (!doIt) return;
 
+    let userId;
+    try { userId = await finEnsureAuth(); } catch (e) { console.error(e); return; }
+
     // Batch update in DB
     const ids = matching.map(t => t.id);
     const { error } = await supabaseClient
         .from('member_transactions')
         .update({ category: newCategory })
         .in('id', ids)
-        .eq('user_id', window._finUser.id);
+        .eq('user_id', userId);
 
     if (error) { console.error('Re-categorize error:', error); return; }
 
@@ -352,11 +366,14 @@ async function finRecategorizeByRule(matchText, newCategory) {
 }
 
 async function finDeleteRule(ruleId) {
+    let userId;
+    try { userId = await finEnsureAuth(); } catch (e) { alert(e.message); return; }
+
     const { error } = await supabaseClient
         .from('member_category_rules')
         .delete()
         .eq('id', ruleId)
-        .eq('user_id', window._finUser.id);
+        .eq('user_id', userId);
 
     if (error) { alert('Error: ' + error.message); return; }
     await finLoadCustomRules();
@@ -1042,11 +1059,14 @@ async function finHandleUpload(file) {
 
         statusEl.textContent = `Found ${transactions.length} transactions across ${totalMonths} month${totalMonths > 1 ? 's' : ''}. Saving…`;
 
+        // Refresh auth before all the writes
+        const uploadUserId = await finEnsureAuth();
+
         // Upload raw file to storage once
         barEl.style.width = '55%'; pctEl.textContent = '55%';
         statusEl.textContent = 'Uploading file…';
 
-        const storagePath = `${window._finUser.id}/${window._finActiveAccount}/${sortedMonths[0]}_${Date.now()}.${ext}`;
+        const storagePath = `${uploadUserId}/${window._finActiveAccount}/${sortedMonths[0]}_${Date.now()}.${ext}`;
         const { error: uploadError } = await supabaseClient.storage
             .from('member-statements')
             .upload(storagePath, file, { upsert: false });
@@ -1082,7 +1102,7 @@ async function finHandleUpload(file) {
                 .from('member_statements')
                 .upsert({
                     account_id: window._finActiveAccount,
-                    user_id: window._finUser.id,
+                    user_id: uploadUserId,
                     statement_month: statementMonth,
                     file_url: mi === 0 ? fileUrl : null, // only first month gets the file link
                     original_filename: file.name,
@@ -1101,12 +1121,12 @@ async function finHandleUpload(file) {
                 .from('member_transactions')
                 .delete()
                 .eq('statement_id', stmt.id)
-                .eq('user_id', window._finUser.id);
+                .eq('user_id', uploadUserId);
 
             // Insert transactions in batches of 100
             const rows = monthTxns.map(t => ({
                 statement_id: stmt.id,
-                user_id: window._finUser.id,
+                user_id: uploadUserId,
                 transaction_date: t.transaction_date,
                 description: t.description,
                 amount_cents: t.amount_cents,
@@ -1130,7 +1150,7 @@ async function finHandleUpload(file) {
                 .from('member_cashback_estimates')
                 .upsert({
                     statement_id: stmt.id,
-                    user_id: window._finUser.id,
+                    user_id: uploadUserId,
                     eligible_spend_cents: eligibleSpend,
                     estimated_cashback_cents: cashback,
                 }, { onConflict: 'statement_id' });
@@ -1294,10 +1314,8 @@ async function finSaveAccount() {
     if (!label) { errorEl.textContent = 'Account name is required'; errorEl.classList.remove('hidden'); return; }
     errorEl.classList.add('hidden');
 
-    // Refresh session to ensure auth token is current
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) { errorEl.textContent = 'Session expired — please log in again'; errorEl.classList.remove('hidden'); return; }
-    const userId = session.user.id;
+    let userId;
+    try { userId = await finEnsureAuth(); } catch (e) { errorEl.textContent = e.message; errorEl.classList.remove('hidden'); return; }
 
     if (editId) {
         // Update
@@ -1326,11 +1344,14 @@ async function finDeleteAccount() {
     const acct = window._finAccounts.find(a => a.id === editId);
     if (!confirm(`Delete "${acct?.label || 'this account'}" and all its statements? This cannot be undone.`)) return;
 
+    let userId;
+    try { userId = await finEnsureAuth(); } catch (e) { alert(e.message); return; }
+
     const { error } = await supabaseClient
         .from('member_accounts')
         .delete()
         .eq('id', editId)
-        .eq('user_id', window._finUser.id);
+        .eq('user_id', userId);
 
     if (error) { alert('Error: ' + error.message); return; }
 
@@ -1397,11 +1418,14 @@ async function finSaveTxnEdit() {
 
     if (!description) { errorEl.textContent = 'Description is required'; errorEl.classList.remove('hidden'); return; }
 
+    let userId;
+    try { userId = await finEnsureAuth(); } catch (e) { errorEl.textContent = e.message; errorEl.classList.remove('hidden'); return; }
+
     const { error } = await supabaseClient
         .from('member_transactions')
         .update({ description, category, notes })
         .eq('id', txnId)
-        .eq('user_id', window._finUser.id);
+        .eq('user_id', userId);
 
     if (error) { errorEl.textContent = error.message; errorEl.classList.remove('hidden'); return; }
 
@@ -1422,7 +1446,7 @@ async function finSaveTxnEdit() {
             const label = notes || description.slice(0, 40);
             const { error: ruleError } = await supabaseClient
                 .from('member_category_rules')
-                .upsert({ user_id: window._finUser.id, match_text: matchText, category, label }, { onConflict: 'user_id,match_text' });
+                .upsert({ user_id: userId, match_text: matchText, category, label }, { onConflict: 'user_id,match_text' });
 
             if (!ruleError) {
                 await finLoadCustomRules();
@@ -1474,11 +1498,14 @@ async function finExecuteDelete() {
             } catch (e) { console.warn('Could not delete file from storage:', e); }
         }
 
+        let userId;
+        try { userId = await finEnsureAuth(); } catch (e) { alert(e.message); return; }
+
         const { error } = await supabaseClient
             .from('member_statements')
             .delete()
             .eq('id', target.id)
-            .eq('user_id', window._finUser.id);
+            .eq('user_id', userId);
 
         if (error) { alert('Error: ' + error.message); return; }
     } else if (target.type === 'rule') {
