@@ -315,10 +315,10 @@ async function finLoadStatements() {
     finRenderMonthSelect();
     finRenderStatementHistory();
 
-    // Load transactions for latest statement
+    // Load transactions for current selection
     if (window._finStatements.length > 0) {
-        const latestId = document.getElementById('monthSelect').value;
-        await finLoadTransactions(latestId === 'latest' ? window._finStatements[0].id : latestId);
+        const val = document.getElementById('monthSelect').value;
+        await finLoadTransactions(val);
     } else {
         window._finTransactions = [];
         finRenderSummaryStats();
@@ -331,13 +331,32 @@ async function finLoadStatements() {
 
 function finRenderMonthSelect() {
     const select = document.getElementById('monthSelect');
-    const opts = window._finStatements.map(s => {
+    if (window._finStatements.length === 0) {
+        select.innerHTML = '<option value="">No statements</option>';
+        return;
+    }
+
+    // Time range options
+    let html = '<optgroup label="Date Ranges">';
+    html += '<option value="range:30">Last 30 Days</option>';
+    html += '<option value="range:90">Last 3 Months</option>';
+    html += '<option value="range:365">Last 12 Months</option>';
+    html += '<option value="range:all">All Time</option>';
+    html += '</optgroup>';
+
+    // Individual month options
+    html += '<optgroup label="By Month">';
+    for (const s of window._finStatements) {
         const d = new Date(s.statement_month + 'T00:00:00');
         const label = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
         const acctLabel = s.member_accounts ? ` · ${s.member_accounts.label}` : '';
-        return `<option value="${s.id}">${label}${acctLabel}</option>`;
-    }).join('');
-    select.innerHTML = opts || '<option value="">No statements</option>';
+        html += `<option value="${s.id}">${label}${acctLabel}</option>`;
+    }
+    html += '</optgroup>';
+    select.innerHTML = html;
+
+    // Default to latest individual month
+    select.value = window._finStatements[0].id;
 }
 
 function finRenderStatementHistory() {
@@ -387,17 +406,62 @@ function finRenderStatementHistory() {
 //  TRANSACTIONS
 // ═══════════════════════════════════════════════════════════
 
-async function finLoadTransactions(statementId) {
-    if (!statementId) return;
-    const { data, error } = await supabaseClient
-        .from('member_transactions')
-        .select('*')
-        .eq('statement_id', statementId)
-        .eq('user_id', window._finUser.id)
-        .order('transaction_date', { ascending: false });
+async function finLoadTransactions(value) {
+    if (!value) return;
 
-    if (error) { console.error('Load txns error:', error); return; }
-    window._finTransactions = data || [];
+    // ── Date range mode: load across multiple statements ──
+    if (typeof value === 'string' && value.startsWith('range:')) {
+        const range = value.replace('range:', '');
+        const stmtIds = [];
+
+        if (range === 'all') {
+            // All statements for this account
+            stmtIds.push(...window._finStatements.map(s => s.id));
+        } else {
+            const days = parseInt(range, 10);
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - days);
+            const cutoffStr = cutoff.toISOString().slice(0, 10);
+            // Include statements whose month is >= cutoff month
+            for (const s of window._finStatements) {
+                if (s.statement_month >= cutoffStr.slice(0, 7) + '-01') stmtIds.push(s.id);
+            }
+        }
+
+        if (stmtIds.length === 0) {
+            window._finTransactions = [];
+        } else {
+            const { data, error } = await supabaseClient
+                .from('member_transactions')
+                .select('*')
+                .in('statement_id', stmtIds)
+                .eq('user_id', window._finUser.id)
+                .order('transaction_date', { ascending: false });
+            if (error) { console.error('Load txns error:', error); return; }
+
+            // For day-based ranges, further filter to exact day cutoff
+            if (range !== 'all') {
+                const days = parseInt(range, 10);
+                const cutoff = new Date();
+                cutoff.setDate(cutoff.getDate() - days);
+                const cutoffStr = cutoff.toISOString().slice(0, 10);
+                window._finTransactions = (data || []).filter(t => t.transaction_date >= cutoffStr);
+            } else {
+                window._finTransactions = data || [];
+            }
+        }
+    } else {
+        // ── Single statement mode (original) ──
+        const { data, error } = await supabaseClient
+            .from('member_transactions')
+            .select('*')
+            .eq('statement_id', value)
+            .eq('user_id', window._finUser.id)
+            .order('transaction_date', { ascending: false });
+
+        if (error) { console.error('Load txns error:', error); return; }
+        window._finTransactions = data || [];
+    }
 
     finRenderSummaryStats();
     finRenderCategoryChart();
