@@ -383,96 +383,75 @@ async function evtOpenDetail(eventId) {
             </div>`;
     }
 
-    // RSVP buttons
+    // RSVP buttons (Airbnb-inspired)
     let rsvpButtons = '';
-    const rsvpEnabled = event.rsvp_enabled !== false; // default true for backward compat
+    const rsvpEnabled = event.rsvp_enabled !== false;
     const canRsvp = rsvpEnabled && ['open', 'confirmed', 'active'].includes(event.status);
     const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
 
     if (!rsvpEnabled) {
         rsvpButtons = `
-            <div class="mt-6">
-                <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                    <span class="text-2xl">ℹ️</span>
-                    <div>
-                        <p class="text-sm font-bold text-gray-700">Informational Event</p>
-                        <p class="text-xs text-gray-500">RSVP is not required for this event</p>
-                    </div>
+            <div class="evt-info-card">
+                <span class="evt-info-card-icon">ℹ️</span>
+                <div>
+                    <p class="evt-info-card-title">Informational Event</p>
+                    <p class="evt-info-card-sub">RSVP is not required for this event</p>
                 </div>
             </div>`;
     } else if (isHost) {
         rsvpButtons = `
-            <div class="mt-6">
-                <div class="flex items-center gap-3 p-3 bg-brand-50 border border-brand-200 rounded-xl">
-                    <span class="text-2xl">🎯</span>
-                    <div>
-                        <p class="text-sm font-bold text-brand-700">You're Hosting This Event</p>
-                        <p class="text-xs text-brand-500">You're automatically counted as attending</p>
-                    </div>
+            <div class="evt-info-card">
+                <span class="evt-info-card-icon">🎯</span>
+                <div>
+                    <p class="evt-info-card-title">You're Hosting This Event</p>
+                    <p class="evt-info-card-sub">You're automatically counted as attending</p>
                 </div>
             </div>`;
 
     } else if (canRsvp && !eventIsFull && event.pricing_mode === 'free') {
-        // ── Free RSVP: 3-button grid ──
-        const goingActive = rsvp?.status === 'going' ? 'bg-emerald-600 text-white' : 'bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50';
-        const maybeActive = rsvp?.status === 'maybe' ? 'bg-amber-500 text-white' : 'bg-white text-amber-600 border border-amber-200 hover:bg-amber-50';
-        const notActive = rsvp?.status === 'not_going' ? 'bg-gray-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50';
+        const goingActive = rsvp?.status === 'going' ? ' active-going' : '';
+        const maybeActive = rsvp?.status === 'maybe' ? ' active-maybe' : '';
+        const notActive = rsvp?.status === 'not_going' ? ' active-not' : '';
         rsvpButtons = `
-            <div class="mt-6">
-                <h4 class="text-sm font-bold text-gray-700 mb-2">RSVP</h4>
-                <div class="grid grid-cols-3 gap-2">
-                    <button onclick="evtHandleRsvp('${eventId}','going')" class="px-3 py-2 rounded-xl text-sm font-semibold transition ${goingActive}">Going</button>
-                    <button onclick="evtHandleRsvp('${eventId}','maybe')" class="px-3 py-2 rounded-xl text-sm font-semibold transition ${maybeActive}">Maybe</button>
-                    <button onclick="evtHandleRsvp('${eventId}','not_going')" class="px-3 py-2 rounded-xl text-sm font-semibold transition ${notActive}">Can't Go</button>
-                </div>
+            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#717171;margin-bottom:12px">RSVP</p>
+            <div class="evt-rsvp-grid">
+                <button onclick="evtHandleRsvp('${eventId}','going')" class="evt-rsvp-btn${goingActive}">Going</button>
+                <button onclick="evtHandleRsvp('${eventId}','maybe')" class="evt-rsvp-btn${maybeActive}">Maybe</button>
+                <button onclick="evtHandleRsvp('${eventId}','not_going')" class="evt-rsvp-btn${notActive}">Can't Go</button>
             </div>`;
 
     } else if (canRsvp && !eventIsFull && (event.pricing_mode === 'paid' || event.pricing_mode === 'free_paid_raffle')) {
-        // ── Paid RSVP or Free-event-with-paid-raffle ──
         const isPaid = event.pricing_mode === 'paid';
         const costCents = isPaid ? event.rsvp_cost_cents : 0;
 
         if (rsvp?.paid) {
-            // Already paid — show confirmed badge
             rsvpButtons = `
-            <div class="mt-6">
-                <h4 class="text-sm font-bold text-gray-700 mb-2">RSVP</h4>
-                <div class="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                    <span class="text-2xl">✅</span>
-                    <div>
-                        <p class="text-sm font-bold text-emerald-700">RSVP Confirmed &amp; Paid</p>
-                        <p class="text-xs text-emerald-600">Non-refundable • Contact admin for changes</p>
-                    </div>
+            <div class="evt-info-card">
+                <span class="evt-info-card-icon">✅</span>
+                <div>
+                    <p class="evt-info-card-title">RSVP Confirmed &amp; Paid</p>
+                    <p class="evt-info-card-sub">Non-refundable · Contact admin for changes</p>
                 </div>
             </div>`;
         } else if (isPaid) {
-            // Paid event — single checkout button
             rsvpButtons = `
-            <div class="mt-6">
-                <h4 class="text-sm font-bold text-gray-700 mb-2">RSVP</h4>
-                <button onclick="evtHandleRsvp('${eventId}','going')" class="w-full bg-brand-600 hover:bg-brand-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                    RSVP — ${formatCurrency(costCents)}
-                </button>
-                <p class="text-xs text-gray-400 text-center mt-1">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' • Includes raffle entry' : ''}</p>
-            </div>`;
+            <button onclick="evtHandleRsvp('${eventId}','going')" class="evt-rsvp-pay">
+                RSVP — ${formatCurrency(costCents)}
+            </button>
+            <p style="font-size:12px;color:#717171;text-align:center;margin-top:8px">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' · Includes raffle entry' : ''}</p>`;
         } else {
-            // free_paid_raffle — free RSVP buttons (raffle is separate payment below)
-            const goingActive = rsvp?.status === 'going' ? 'bg-emerald-600 text-white' : 'bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50';
-            const maybeActive = rsvp?.status === 'maybe' ? 'bg-amber-500 text-white' : 'bg-white text-amber-600 border border-amber-200 hover:bg-amber-50';
-            const notActive = rsvp?.status === 'not_going' ? 'bg-gray-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50';
+            const goingActive = rsvp?.status === 'going' ? ' active-going' : '';
+            const maybeActive = rsvp?.status === 'maybe' ? ' active-maybe' : '';
+            const notActive = rsvp?.status === 'not_going' ? ' active-not' : '';
             rsvpButtons = `
-            <div class="mt-6">
-                <h4 class="text-sm font-bold text-gray-700 mb-2">RSVP (Free)</h4>
-                <div class="grid grid-cols-3 gap-2">
-                    <button onclick="evtHandleRsvp('${eventId}','going')" class="px-3 py-2 rounded-xl text-sm font-semibold transition ${goingActive}">Going</button>
-                    <button onclick="evtHandleRsvp('${eventId}','maybe')" class="px-3 py-2 rounded-xl text-sm font-semibold transition ${maybeActive}">Maybe</button>
-                    <button onclick="evtHandleRsvp('${eventId}','not_going')" class="px-3 py-2 rounded-xl text-sm font-semibold transition ${notActive}">Can't Go</button>
-                </div>
+            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#717171;margin-bottom:12px">RSVP (Free)</p>
+            <div class="evt-rsvp-grid">
+                <button onclick="evtHandleRsvp('${eventId}','going')" class="evt-rsvp-btn${goingActive}">Going</button>
+                <button onclick="evtHandleRsvp('${eventId}','maybe')" class="evt-rsvp-btn${maybeActive}">Maybe</button>
+                <button onclick="evtHandleRsvp('${eventId}','not_going')" class="evt-rsvp-btn${notActive}">Can't Go</button>
             </div>`;
         }
     }
-
     // ── Raffle Section ──────────────────────────────────
     let raffleHtml = '';
     if (event.raffle_enabled) {
@@ -604,193 +583,219 @@ async function evtOpenDetail(eventId) {
             </div>`;
     }
 
-    // ── Host Controls (enhanced for LLC) ────────────────
+    // ── Host Controls ────────────────────────────────────
     let hostControlsHtml = '';
     if (isHost) {
         let buttons = '';
         if (event.status === 'draft') {
-            buttons += `<button onclick="evtUpdateStatus('${eventId}','open')" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition">Publish Event</button>`;
+            buttons += `<button onclick="evtUpdateStatus('${eventId}','open')" class="evt-host-btn primary">Publish Event</button>`;
         }
         if (['open', 'confirmed', 'active'].includes(event.status)) {
-            buttons += `<button onclick="evtUpdateStatus('${eventId}','completed')" class="bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-gray-700 transition">Mark Completed</button>`;
-            buttons += `<button onclick="evtCancelEvent('${eventId}')" class="bg-red-500 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-red-600 transition">Cancel Event</button>`;
-
+            buttons += `<button onclick="evtUpdateStatus('${eventId}','completed')" class="evt-host-btn">Mark Completed</button>`;
+            buttons += `<button onclick="evtCancelEvent('${eventId}')" class="evt-host-btn danger">Cancel Event</button>`;
             if (isLlc) {
-                buttons += `<button onclick="evtRescheduleEvent('${eventId}')" class="bg-orange-500 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-orange-600 transition">Reschedule</button>`;
+                buttons += `<button onclick="evtRescheduleEvent('${eventId}')" class="evt-host-btn">Reschedule</button>`;
             }
         }
-        // Duplicate tool — available for any status
-        buttons += `<button onclick="evtDuplicateEvent('${eventId}')" class="bg-brand-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-brand-700 transition">Duplicate Event</button>`;
-
-        // Delete — admin only, any status
+        buttons += `<button onclick="evtDuplicateEvent('${eventId}')" class="evt-host-btn">Duplicate Event</button>`;
         if (evtCurrentUserRole === 'admin') {
-            buttons += `<button onclick="evtDeleteEvent('${eventId}')" class="bg-red-700 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-red-800 transition">🗑 Delete Event</button>`;
+            buttons += `<button onclick="evtDeleteEvent('${eventId}')" class="evt-host-btn danger">Delete Event</button>`;
         }
 
         hostControlsHtml = `
-            <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                <h4 class="text-sm font-bold text-amber-700 mb-2">Host Controls</h4>
-                <div class="flex flex-wrap gap-2">${buttons}</div>
-            </div>`;
+            <h3 class="evt-section-title">Host Controls</h3>
+            <div class="evt-host-controls">${buttons}</div>`;
     }
 
+    // ── Attendee Preview (visible to all) ────────────────
+    let attendeePreviewHtml = '';
+    if (goingList.length > 0 || maybeList.length > 0) {
+        const displayList = goingList.slice(0, 6);
+        const avatarHtml = displayList.map(r => {
+            const p = r.profiles;
+            if (p?.profile_picture_url) {
+                return `<div class="evt-avatar-item"><img src="${p.profile_picture_url}" alt=""></div>`;
+            }
+            const ini = ((p?.first_name?.[0] || '') + (p?.last_name?.[0] || '')).toUpperCase() || '?';
+            return `<div class="evt-avatar-item"><span>${ini}</span></div>`;
+        }).join('');
+        const moreCount = goingList.length - displayList.length;
+        const moreHtml = moreCount > 0 ? `<div class="evt-avatar-more">+${moreCount}</div>` : '';
+        const parts = [];
+        if (goingList.length) parts.push(`${goingList.length} going`);
+        if (maybeList.length) parts.push(`${maybeList.length} maybe`);
+        attendeePreviewHtml = `
+            <div style="display:flex;align-items:center;gap:14px">
+                <div class="evt-avatar-stack">${avatarHtml}${moreHtml}</div>
+                <span style="font-size:14px;color:#717171">${parts.join(' · ')}</span>
+            </div>`;
+    }
     document.getElementById('detailContent').innerHTML = `
-        <!-- Banner (sticky on mobile, taller with title overlay) -->
-        <div class="relative sticky top-0 z-10" style="${bannerBg} min-height:220px;">
-            <!-- Gradient scrim for text readability -->
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10 pointer-events-none"></div>
-            <!-- Top buttons — respects Dynamic Island -->
-            <div class="absolute top-0 right-0 flex items-center gap-2" style="padding-top:max(1rem, env(safe-area-inset-top)); padding-right:1rem;">
-                <button onclick="evtCopyShareUrl('${event.slug}')" class="w-8 h-8 bg-black/30 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-black/50 transition" title="Copy share link">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+        <!-- Hero Banner -->
+        <div class="evt-hero" style="${bannerBg} min-height:300px;">
+            <div class="evt-hero-scrim"></div>
+            <div class="evt-hero-actions">
+                <button onclick="evtCopyShareUrl('${event.slug}')" class="evt-hero-btn" title="Share">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                 </button>
-                <button onclick="evtToggleModal('detailModal',false)" class="w-8 h-8 bg-black/30 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-black/50 transition">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button onclick="evtToggleModal('detailModal',false)" class="evt-hero-btn">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <!-- Tags + Title + Creator at bottom of banner -->
-            <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-                <div class="flex gap-1.5 mb-2">
-                    <span class="type-tag ${tc.bg} ${tc.text}">${tc.label}</span>
-                    <span class="type-tag ${STATUS_COLORS[event.status] || ''}">${event.status.toUpperCase()}</span>
+            <div class="evt-hero-content">
+                <div class="flex gap-2 mb-2.5">
+                    <span class="evt-tag ${tc.bg} ${tc.text}">${tc.label}</span>
+                    <span class="evt-tag ${STATUS_COLORS[event.status] || ''}">${event.status.toUpperCase()}</span>
                 </div>
-                <h2 class="text-lg sm:text-2xl font-extrabold text-white drop-shadow-lg leading-tight">${evtEscapeHtml(event.title)}</h2>
-                ${creatorProfile ? `
-                <a href="profile.html?id=${creatorProfile.id}" class="mt-2 flex items-center gap-2 group">
-                    <div class="relative flex-shrink-0">
-                        <div class="w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/40">
-                            ${creatorProfile.profile_picture_url ? `<img src="${creatorProfile.profile_picture_url}" class="w-full h-full object-cover" alt="">` : `<span class="text-white text-[10px] font-bold">${cpInitials}</span>`}
-                        </div>
-                        ${cpBadge ? `<div class="absolute -bottom-0.5 -right-0.5" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))">${cpBadge}</div>` : ''}
-                    </div>
-                    <span class="text-xs font-semibold text-white/90 group-hover:text-white transition drop-shadow">${evtEscapeHtml(cpName)}</span>
-                    <span class="text-[10px] text-white/60">·</span>
-                    <span class="text-[10px] text-white/60">${evtEscapeHtml(cpTitle)}</span>
-                </a>` : ''}
+                <h1 class="evt-hero-title">${evtEscapeHtml(event.title)}</h1>
             </div>
         </div>
 
-        <div class="p-5 sm:p-6">
-            <!-- ═══ Two-column grid on md+ ═══ -->
-            <div class="md:grid md:grid-cols-2 md:gap-6">
+        <div class="evt-body">
 
-                <!-- ── LEFT COLUMN: Date, Time, Location, Map ── -->
-                <div>
-                    <!-- Date & Time -->
-                    <div class="mt-4 md:mt-0 space-y-2 text-gray-600">
-                        <div class="flex items-center gap-2.5">
-                            <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <span class="text-lg font-bold text-gray-900">${dateStr}</span>
-                        </div>
-                        ${showTime ? `
-                        <div class="flex items-center gap-2.5 ml-[30px]">
-                            <span class="text-base font-semibold text-gray-700">${timeStr}</span>
-                        </div>` : `
-                        <div class="flex items-center gap-2 text-gray-400 italic text-sm">
-                            <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            <span>Time revealed after RSVP</span>
-                        </div>`}
-                        ${showLocation && event.location_text ? `
-                        <div class="flex items-center gap-2.5 mt-1">
-                            <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            <span class="text-base font-semibold text-gray-700">${evtEscapeHtml(event.location_text)}</span>
-                        </div>` : !showLocation && event.location_text ? `
-                        <div class="flex items-center gap-2 text-gray-400 italic text-sm">
-                            <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            <span>Location revealed after RSVP</span>
-                        </div>` : ''}
+            <!-- Host -->
+            ${creatorProfile ? `
+            <div class="evt-section">
+                <a href="profile.html?id=${creatorProfile.id}" class="evt-host-link">
+                    <div class="evt-host-avatar">
+                        ${creatorProfile.profile_picture_url
+                            ? `<img src="${creatorProfile.profile_picture_url}" alt="">`
+                            : `<span>${cpInitials}</span>`}
                     </div>
-
-                    <!-- Location Map -->
-                    ${showLocation && event.location_lat && event.location_lng ? `
-                    <div class="mt-3">
-                        <div id="detailEventMap" class="h-40 md:h-56 rounded-xl z-0 cursor-pointer relative group" onclick="evtOpenFullscreenMap(${event.location_lat}, ${event.location_lng}, '${evtEscapeHtml(event.location_text || '').replace(/'/g, "\\'")}')">
-                            <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[10px] font-semibold text-gray-600 shadow-sm z-[5] flex items-center gap-1">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                                Tap to expand
-                            </div>
-                        </div>
-                        <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener"
-                           class="mt-2 w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            Get Directions
-                        </a>
-                    </div>` : ''}
-                </div>
-                <!-- END LEFT COLUMN -->
-
-                <!-- ── RIGHT COLUMN: Description, RSVP, QR ── -->
-                <div>
-                    <!-- Description -->
-                    <div class="mt-5 md:mt-0">
-                        <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">${evtEscapeHtml(event.description || '')}</p>
+                    <div>
+                        <p class="evt-host-name">Hosted by ${evtEscapeHtml(cpName)}</p>
+                        <div class="evt-host-meta">${evtEscapeHtml(cpTitle)} ${cpBadge}</div>
                     </div>
-
-                    <!-- Gated Notes -->
-                    ${showNotes && event.gated_notes ? `
-                    <div class="mt-4 p-4 bg-brand-50 rounded-xl">
-                        <h4 class="text-sm font-bold text-brand-700 mb-1">Attendee Details</h4>
-                        <p class="text-sm text-brand-600 whitespace-pre-line">${evtEscapeHtml(event.gated_notes)}</p>
-                    </div>` : ''}
-
-                    ${rsvpButtons}
-                    ${waitlistHtml}
-                    ${raffleHtml}
-                    ${qrHtml}
-                    ${venueQrHtml}
-                    ${scannerBtn}
-                </div>
-                <!-- END RIGHT COLUMN -->
-
+                </a>
             </div>
-            <!-- ═══ End two-column grid ═══ -->
+            <hr class="evt-divider">` : ''}
 
-            <!-- ── FULL-WIDTH SECTIONS BELOW BOTH COLUMNS ── -->
+            <!-- Event Details -->
+            <div class="evt-section">
+                <div class="evt-info-row">
+                    <div class="evt-info-icon">
+                        <svg viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+                    </div>
+                    <div>
+                        <p class="evt-info-primary">${dateStr}</p>
+                        ${showTime
+                            ? `<p class="evt-info-secondary">${timeStr}</p>`
+                            : `<p class="evt-info-gated"><svg style="width:14px;height:14px;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg> Time revealed after RSVP</p>`}
+                    </div>
+                </div>
+                ${event.location_text ? `
+                <div class="evt-info-row">
+                    <div class="evt-info-icon">
+                        <svg viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg>
+                    </div>
+                    <div>
+                        ${showLocation
+                            ? `<p class="evt-info-primary">${evtEscapeHtml(event.location_text)}</p>`
+                            : `<p class="evt-info-gated"><svg style="width:14px;height:14px;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg> Location revealed after RSVP</p>`}
+                    </div>
+                </div>` : ''}
+                ${event.max_participants ? `
+                <div class="evt-info-row">
+                    <div class="evt-info-icon">
+                        <svg viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="evt-info-primary">${goingList.length} / ${event.max_participants} spots filled</p>
+                    </div>
+                </div>` : ''}
+            </div>
 
-            ${costBreakdownHtml}
-            ${thresholdHtml}
-            ${transportHtml}
-            ${locationReqHtml}
-            ${graceHtml}
-            ${documentsHtml}
-            ${mapHtml}
-            ${competitionHtml}
-            ${scrapbookHtml}
+            <hr class="evt-divider">
 
-            <!-- Stats Row (Host only) -->
+            <!-- About -->
+            <div class="evt-section">
+                <h3 class="evt-section-title">About this event</h3>
+                <p style="font-size:15px;line-height:1.7;color:#484848" class="whitespace-pre-line">${evtEscapeHtml(event.description || 'No description provided.')}</p>
+            </div>
+
+            ${showNotes && event.gated_notes ? `
+            <hr class="evt-divider">
+            <div class="evt-section">
+                <h3 class="evt-section-title">Attendee Details</h3>
+                <p style="font-size:15px;line-height:1.7;color:#484848" class="whitespace-pre-line">${evtEscapeHtml(event.gated_notes)}</p>
+            </div>` : ''}
+
+            <!-- Where you'll be -->
+            ${showLocation && event.location_lat && event.location_lng ? `
+            <hr class="evt-divider">
+            <div class="evt-section">
+                <h3 class="evt-section-title">Where you'll be</h3>
+                <div id="detailEventMap" class="evt-map" onclick="evtOpenFullscreenMap(${event.location_lat}, ${event.location_lng}, '${evtEscapeHtml(event.location_text || '').replace(/'/g, "\\'")}')">
+                    <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-600 shadow-sm z-[5] flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                        Expand
+                    </div>
+                </div>
+                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="evt-directions-btn">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Get Directions
+                </a>
+            </div>` : ''}
+
+            <!-- Who's Going -->
+            ${attendeePreviewHtml ? `
+            <hr class="evt-divider">
+            <div class="evt-section">
+                <h3 class="evt-section-title">Who's going</h3>
+                ${attendeePreviewHtml}
+            </div>` : ''}
+
+            <!-- RSVP -->
+            <hr class="evt-divider">
+            <div class="evt-section">
+                ${rsvpButtons}
+            </div>
+
+            <!-- Dynamic sections -->
+            ${[waitlistHtml, qrHtml, venueQrHtml, scannerBtn, thresholdHtml, costBreakdownHtml, transportHtml, locationReqHtml, graceHtml, raffleHtml, documentsHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => '<hr class="evt-divider"><div class="evt-section">' + s + '</div>').join('')}
+
+            <!-- Stats (Host) -->
             ${isHost ? `
-            <div class="grid grid-cols-4 gap-2 mt-6">
-                <div class="text-center p-3 bg-surface-50 rounded-xl">
-                    <div class="text-lg font-extrabold text-gray-900">${goingList.length}${event.max_participants ? `<span class="text-xs font-normal text-gray-400">/${event.max_participants}</span>` : ''}</div>
-                    <div class="text-xs text-gray-500">Going</div>
-                </div>
-                <div class="text-center p-3 bg-surface-50 rounded-xl">
-                    <div class="text-lg font-extrabold text-gray-900">${maybeList.length}</div>
-                    <div class="text-xs text-gray-500">Maybe</div>
-                </div>
-                <div class="text-center p-3 bg-surface-50 rounded-xl">
-                    <div class="text-lg font-extrabold text-emerald-600">${checkinCount || 0}</div>
-                    <div class="text-xs text-gray-500">Checked In</div>
-                </div>
-                <div class="text-center p-3 bg-surface-50 rounded-xl">
-                    <div class="text-lg font-extrabold text-red-500">${notGoingList.length}</div>
-                    <div class="text-xs text-gray-500">Not Going</div>
+            <hr class="evt-divider">
+            <div class="evt-section">
+                <h3 class="evt-section-title">Event Stats</h3>
+                <div class="evt-stats-grid">
+                    <div class="evt-stat">
+                        <div class="evt-stat-value">${goingList.length}${event.max_participants ? `<span style="font-size:12px;font-weight:400;color:#717171">/${event.max_participants}</span>` : ''}</div>
+                        <div class="evt-stat-label">Going</div>
+                    </div>
+                    <div class="evt-stat">
+                        <div class="evt-stat-value">${maybeList.length}</div>
+                        <div class="evt-stat-label">Maybe</div>
+                    </div>
+                    <div class="evt-stat">
+                        <div class="evt-stat-value" style="color:#059669">${checkinCount || 0}</div>
+                        <div class="evt-stat-label">Checked In</div>
+                    </div>
+                    <div class="evt-stat">
+                        <div class="evt-stat-value" style="color:#dc2626">${notGoingList.length}</div>
+                        <div class="evt-stat-label">Not Going</div>
+                    </div>
                 </div>
             </div>` : ''}
 
-            <!-- Attendee Breakdown (Host only) -->
-            ${attendeeBreakdownHtml}
+            <!-- Attendee Breakdown (Host) -->
+            ${attendeeBreakdownHtml ? `<hr class="evt-divider"><div class="evt-section">${attendeeBreakdownHtml}</div>` : ''}
 
-            ${hostControlsHtml}
+            <!-- Host Controls -->
+            ${hostControlsHtml ? `<hr class="evt-divider"><div class="evt-section">${hostControlsHtml}</div>` : ''}
 
             ${event.cancellation_note ? `
-            <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl">
-                <p class="text-sm font-semibold text-red-700">Cancellation Note</p>
-                <p class="text-xs text-red-600 mt-1">${evtEscapeHtml(event.cancellation_note)}</p>
+            <hr class="evt-divider">
+            <div class="evt-section">
+                <div style="padding:20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca">
+                    <p style="font-size:15px;font-weight:600;color:#b91c1c">Cancellation Note</p>
+                    <p style="font-size:14px;color:#dc2626;margin-top:6px">${evtEscapeHtml(event.cancellation_note)}</p>
+                </div>
             </div>` : ''}
 
-            <!-- Bottom padding for mobile nav -->
-            <div class="h-20 sm:hidden"></div>
+            <div style="height:80px" class="sm:hidden"></div>
+            <div style="height:32px" class="hidden sm:block"></div>
         </div>
     `;
 
