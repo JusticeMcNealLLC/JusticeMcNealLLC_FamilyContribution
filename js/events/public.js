@@ -11,9 +11,9 @@ const PUB_CATEGORY_EMOJI = {
 };
 
 const PUB_TYPE_COLORS = {
-    llc:         { bg: 'bg-indigo-100', text: 'text-indigo-700', label: 'LLC Event' },
-    member:      { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Member Event' },
-    competition: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Competition' }
+    llc:         { bg: '#f7f7f7', color: '#222', label: 'LLC Event' },
+    member:      { bg: '#f7f7f7', color: '#222', label: 'Member Event' },
+    competition: { bg: '#f7f7f7', color: '#222', label: 'Competition' }
 };
 
 let pubCurrentEvent = null;
@@ -108,16 +108,17 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     if (event.banner_url) {
         bannerEl.style.backgroundImage = `url(${event.banner_url})`;
     } else {
-        bannerEl.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+        bannerEl.style.background = 'linear-gradient(135deg, #222, #444)';
     }
 
-    // Tags
+    // Tags (frosted glass pills on hero)
     const tagsEl = document.getElementById('eventTags');
     const tc = PUB_TYPE_COLORS[event.event_type] || PUB_TYPE_COLORS.llc;
-    tagsEl.innerHTML = `<span class="type-tag ${tc.bg} ${tc.text}">${tc.label}</span>`;
+    let tagsHtml = `<span class="evt-tag" style="background:rgba(255,255,255,.18);backdrop-filter:blur(6px);color:#fff">${tc.label}</span>`;
     if (event.category) {
-        tagsEl.innerHTML += `<span class="type-tag bg-white/90 text-gray-700">${PUB_CATEGORY_EMOJI[event.category] || '📌'} ${event.category}</span>`;
+        tagsHtml += `<span class="evt-tag" style="background:rgba(255,255,255,.18);backdrop-filter:blur(6px);color:#fff">${PUB_CATEGORY_EMOJI[event.category] || '📌'} ${event.category}</span>`;
     }
+    tagsEl.innerHTML = tagsHtml;
 
     // Meta (date, time, location — respect gating)
     const metaEl = document.getElementById('eventMeta');
@@ -128,35 +129,38 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
 
     let metaHtml = '';
 
-    // Date (large, bold, separated from time)
+    // Date & Time
     if (isGatedDate) {
-        metaHtml += `<div class="flex items-center gap-2"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="text-gray-400 italic">Date & time visible after RSVP</span></div>`;
+        metaHtml += `<div class="evt-info-row">
+            <div class="evt-info-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+            <div><p class="evt-info-gated">🔒 Date & time visible after RSVP</p></div>
+        </div>`;
     } else {
         const dateStr = start.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
         const timeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
         const endStr  = end ? ` – ${end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}` : '';
-        metaHtml += `
-            <div class="flex items-center gap-2.5">
-                <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <span class="text-lg font-bold text-gray-900">${dateStr}</span>
+        metaHtml += `<div class="evt-info-row">
+            <div class="evt-info-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+            <div>
+                <p class="evt-info-primary">${dateStr}</p>
+                <p class="evt-info-secondary">${timeStr}${endStr}${event.timezone ? ' · ' + event.timezone : ''}</p>
             </div>
-            <div class="flex items-center gap-2.5 ml-[30px]">
-                <span class="text-base font-semibold text-gray-700">${timeStr}${endStr}</span>
-            </div>`;
+        </div>`;
     }
 
-    // Location (larger text, below date/time)
+    // Location
     if (event.location_text) {
         if (isGatedLoc) {
-            metaHtml += `<div class="flex items-center gap-2.5 mt-1"><svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="text-gray-400 italic">Location visible after RSVP</span></div>`;
+            metaHtml += `<div class="evt-info-row">
+                <div class="evt-info-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                <div><p class="evt-info-gated">🔒 Location visible after RSVP</p></div>
+            </div>`;
         } else {
-            metaHtml += `<div class="flex items-center gap-2.5 mt-1"><svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="text-base font-semibold text-gray-700">${pubEscapeHtml(event.location_text)}</span></div>`;
+            metaHtml += `<div class="evt-info-row">
+                <div class="evt-info-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                <div><p class="evt-info-primary">${pubEscapeHtml(event.location_text)}</p></div>
+            </div>`;
         }
-    }
-
-    // Timezone
-    if (event.timezone) {
-        metaHtml += `<div class="flex items-center gap-2.5"><svg class="w-4 h-4 text-gray-400 ml-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-gray-500">${event.timezone}</span></div>`;
     }
 
     metaEl.innerHTML = metaHtml;
@@ -236,8 +240,11 @@ function pubRenderRsvpSection(event) {
     const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
 
     if (isClosed || isPast || deadlinePassed) {
-        section.innerHTML = `<div class="bg-gray-50 rounded-xl border border-gray-200 p-4 text-center">
-            <p class="text-sm text-gray-500 font-medium">${isClosed ? 'This event has ' + event.status : deadlinePassed ? 'RSVP deadline has passed' : 'This event has already started'}</p>
+        section.innerHTML = `<div class="evt-notice-card">
+            <span class="evt-notice-icon">${isClosed ? '❌' : '⏰'}</span>
+            <div>
+                <p class="evt-notice-title">${isClosed ? 'This event has ' + event.status : deadlinePassed ? 'RSVP deadline has passed' : 'This event has already started'}</p>
+            </div>
         </div>`;
         return;
     }
@@ -247,11 +254,11 @@ function pubRenderRsvpSection(event) {
         if (pubGuestRsvp) {
             const isPaidGuest = pubGuestRsvp.paid;
             section.innerHTML = `
-                <div class="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                    <span class="text-2xl">✅</span>
+                <div class="evt-info-card">
+                    <span class="evt-info-card-icon">✅</span>
                     <div>
-                        <p class="text-sm font-bold text-emerald-700">Guest RSVP Confirmed</p>
-                        <p class="text-xs text-emerald-600">${pubEscapeHtml(pubGuestRsvp.guest_name)}${isPaidGuest ? ' · Non-refundable' : ''}</p>
+                        <p class="evt-info-card-title">Guest RSVP Confirmed</p>
+                        <p class="evt-info-card-sub">${pubEscapeHtml(pubGuestRsvp.guest_name)}${isPaidGuest ? ' · Non-refundable' : ''}</p>
                     </div>
                 </div>`;
             return;
@@ -259,23 +266,22 @@ function pubRenderRsvpSection(event) {
 
         // For member-only events, show sign-in prompt
         if (event.member_only) {
-            section.innerHTML = `<div class="bg-white rounded-xl border border-gray-200/80 p-5 text-center">
-                <p class="text-sm text-gray-600 mb-3">Sign in to RSVP for this members-only event</p>
-                <a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+            section.innerHTML = `<div style="text-align:center">
+                <p style="font-size:15px;color:#717171;margin-bottom:16px">Sign in to RSVP for this members-only event</p>
+                <a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-action-btn" style="display:inline-flex;width:auto;padding:14px 32px;text-decoration:none">
                     Sign In to RSVP
                 </a>
             </div>`;
             return;
         }
 
-        // For public (non-member-only) events — guest RSVP form is shown separately
-        // Just show the sign-in option for members
+        // For public (non-member-only) events
         const costHint = event.pricing_mode === 'paid' && event.rsvp_cost_cents
             ? ` (${pubFormatCurrency(event.rsvp_cost_cents)})`
             : '';
-        section.innerHTML = `<div class="bg-white rounded-xl border border-gray-200/80 p-5 text-center">
-            <p class="text-sm text-gray-600 mb-3">Have an account?</p>
-            <a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+        section.innerHTML = `<div style="text-align:center">
+            <p style="font-size:15px;color:#717171;margin-bottom:16px">Have an account?</p>
+            <a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-action-btn" style="display:inline-flex;width:auto;padding:14px 32px;text-decoration:none">
                 Sign In to RSVP${costHint}
             </a>
         </div>`;
@@ -286,48 +292,44 @@ function pubRenderRsvpSection(event) {
     if (event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
         if (pubCurrentRsvp?.paid) {
             section.innerHTML = `
-                <div class="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                    <span class="text-2xl">✅</span>
+                <div class="evt-info-card">
+                    <span class="evt-info-card-icon">✅</span>
                     <div>
-                        <p class="text-sm font-bold text-emerald-700">RSVP Confirmed &amp; Paid</p>
-                        <p class="text-xs text-emerald-600">Non-refundable • Contact admin for changes</p>
+                        <p class="evt-info-card-title">RSVP Confirmed &amp; Paid</p>
+                        <p class="evt-info-card-sub">Non-refundable • Contact admin for changes</p>
                     </div>
                 </div>`;
         } else {
             section.innerHTML = `
-                <div class="text-center">
-                    <button onclick="pubHandlePaidRsvp()" class="w-full bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                        RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}
+                <div style="text-align:center">
+                    <button onclick="pubHandlePaidRsvp()" class="evt-rsvp-pay">
+                        💳 RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}
                     </button>
-                    <p class="text-xs text-gray-400 mt-2">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' • Includes raffle entry' : ''}</p>
+                    <p style="font-size:13px;color:#b0b0b0;margin-top:10px">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' • Includes raffle entry' : ''}</p>
                 </div>`;
         }
         return;
     }
 
     // ── Free RSVP (including free_paid_raffle) ──────────
-    const goingActive = pubCurrentRsvp?.status === 'going' ? 'ring-2 ring-emerald-500 bg-emerald-50' : 'bg-white hover:bg-emerald-50';
-    const maybeActive = pubCurrentRsvp?.status === 'maybe' ? 'ring-2 ring-amber-500 bg-amber-50' : 'bg-white hover:bg-amber-50';
-    const cantActive  = pubCurrentRsvp?.status === 'not_going' ? 'ring-2 ring-red-400 bg-red-50' : 'bg-white hover:bg-red-50';
+    const goingCls = pubCurrentRsvp?.status === 'going' ? ' active-going' : '';
+    const maybeCls = pubCurrentRsvp?.status === 'maybe' ? ' active-maybe' : '';
+    const cantCls  = pubCurrentRsvp?.status === 'not_going' ? ' active-not' : '';
 
     section.innerHTML = `
-        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Your RSVP</p>
-        <div class="grid grid-cols-3 gap-2">
-            <button onclick="pubHandleRsvp('going')" class="p-3 rounded-xl border border-gray-200 text-center transition ${goingActive}">
-                <span class="text-lg">✅</span>
-                <div class="text-xs font-semibold mt-1 text-gray-700">Going</div>
+        <p style="font-size:12px;font-weight:700;color:#717171;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Your RSVP</p>
+        <div class="evt-rsvp-grid">
+            <button onclick="pubHandleRsvp('going')" class="evt-rsvp-btn${goingCls}">
+                <span style="font-size:20px;display:block;margin-bottom:4px">✅</span> Going
             </button>
-            <button onclick="pubHandleRsvp('maybe')" class="p-3 rounded-xl border border-gray-200 text-center transition ${maybeActive}">
-                <span class="text-lg">🤔</span>
-                <div class="text-xs font-semibold mt-1 text-gray-700">Maybe</div>
+            <button onclick="pubHandleRsvp('maybe')" class="evt-rsvp-btn${maybeCls}">
+                <span style="font-size:20px;display:block;margin-bottom:4px">🤔</span> Maybe
             </button>
-            <button onclick="pubHandleRsvp('not_going')" class="p-3 rounded-xl border border-gray-200 text-center transition ${cantActive}">
-                <span class="text-lg">❌</span>
-                <div class="text-xs font-semibold mt-1 text-gray-700">Can't Go</div>
+            <button onclick="pubHandleRsvp('not_going')" class="evt-rsvp-btn${cantCls}">
+                <span style="font-size:20px;display:block;margin-bottom:4px">❌</span> Can't Go
             </button>
         </div>
-        ${pubCurrentRsvp ? '<p class="text-xs text-gray-400 text-center mt-2">Click your current response to cancel</p>' : ''}
+        ${pubCurrentRsvp ? '<p style="font-size:13px;color:#b0b0b0;text-align:center;margin-top:10px">Click your current response to cancel</p>' : ''}
     `;
 }
 
@@ -348,9 +350,9 @@ async function pubRenderRaffleSection(event) {
 
     const prizes = event.raffle_prizes || [];
     const prizesHtml = prizes.map((p, i) => `
-        <div class="flex items-center gap-2 text-sm">
-            <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">${i + 1}</span>
-            <span class="text-gray-700">${pubEscapeHtml(p.label || p)}</span>
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
+            <div class="evt-raffle-rank">${i + 1}</div>
+            <span style="font-size:14px;color:#222;font-weight:500">${pubEscapeHtml(p.label || p)}</span>
         </div>`).join('');
 
     // Check if current user has raffle entry
@@ -364,16 +366,16 @@ async function pubRenderRaffleSection(event) {
             .maybeSingle();
 
         if (myEntry?.paid) {
-            myEntryHtml = `<div class="flex items-center gap-2 p-2 bg-emerald-50 rounded-lg mt-3"><span>🎟️</span><span class="text-sm font-semibold text-emerald-700">You're entered!</span></div>`;
+            myEntryHtml = `<div class="evt-info-card" style="margin-top:16px"><span class="evt-info-card-icon">🎟️</span><div><p class="evt-info-card-title">You're entered!</p><p class="evt-info-card-sub">Good luck in the draw</p></div></div>`;
         } else {
             myEntryHtml = `
-                <button onclick="pubHandlePaidRaffle()" class="w-full mt-3 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+                <button onclick="pubHandlePaidRaffle()" class="evt-raffle-buy" style="margin-top:16px">
                     🎟️ Buy Raffle Entry — ${pubFormatCurrency(event.raffle_entry_cost_cents)}
                 </button>
-                <p class="text-xs text-gray-400 text-center mt-1">Non-refundable raffle ticket</p>`;
+                <p style="font-size:13px;color:#b0b0b0;text-align:center;margin-top:8px">Non-refundable raffle ticket</p>`;
         }
     } else if (event.pricing_mode === 'paid') {
-        myEntryHtml = `<p class="text-xs text-gray-500 italic mt-2">Raffle entry included with paid RSVP</p>`;
+        myEntryHtml = `<p style="font-size:13px;color:#717171;font-style:italic;margin-top:12px">Raffle entry included with paid RSVP</p>`;
     }
 
     // Load winners
@@ -386,29 +388,27 @@ async function pubRenderRaffleSection(event) {
     let winnersHtml = '';
     if (winners && winners.length > 0) {
         winnersHtml = `
-        <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-            <h5 class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">🏆 Winners</h5>
+        <div style="margin-top:16px">
+            <h5 style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px">🏆 Winners</h5>
             ${winners.map(w => {
                 const name = w.profiles ? `${w.profiles.first_name || ''} ${w.profiles.last_name || ''}`.trim() : 'Guest';
-                return `<div class="flex items-center gap-2 text-sm py-1">
-                    <span class="w-5 h-5 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center text-xs font-bold">${w.place}</span>
-                    <span class="font-semibold text-gray-800">${pubEscapeHtml(name)}</span>
-                    ${w.prize_description ? `<span class="text-gray-500">— ${pubEscapeHtml(w.prize_description)}</span>` : ''}
+                return `<div style="display:flex;align-items:center;gap:12px;padding:6px 0">
+                    <div class="evt-raffle-rank">${w.place}</div>
+                    <span style="font-size:14px;font-weight:600;color:#222">${pubEscapeHtml(name)}</span>
+                    ${w.prize_description ? `<span style="font-size:13px;color:#717171">— ${pubEscapeHtml(w.prize_description)}</span>` : ''}
                 </div>`;
             }).join('')}
         </div>`;
     }
 
     el.innerHTML = `
-        <div class="mt-4 p-4 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
-            <div class="flex items-center gap-2 mb-3">
-                <span class="text-lg">🎲</span>
-                <h4 class="text-sm font-bold text-gray-800">Raffle</h4>
-            </div>
-            ${prizesHtml ? `<div class="space-y-1.5 mb-2">${prizesHtml}</div>` : ''}
+        <div class="evt-section">
+            <h4 class="evt-section-title" style="font-size:18px">🎲 Raffle</h4>
+            ${prizesHtml ? `<div style="margin-bottom:8px">${prizesHtml}</div>` : ''}
             ${myEntryHtml}
             ${winnersHtml}
-        </div>`;
+        </div>
+        <hr class="evt-divider">`;
 }
 
 /* ── Paid RSVP Handler (Public Page) ─────── */
@@ -538,10 +538,10 @@ function pubShowCheckedInOverlay(sectionId, canvasId, checkedInAt) {
         wrapper.style.position = 'relative';
         wrapper.style.display = 'inline-block';
         const overlay = document.createElement('div');
-        overlay.className = 'absolute inset-0 flex items-center justify-center';
+        overlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center';
         overlay.innerHTML = `
-            <div class="bg-emerald-500 rounded-full w-16 h-16 flex items-center justify-center shadow-lg animate-bounce" style="animation-iteration-count:2;">
-                <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <div style="width:64px;height:64px;border-radius:50%;background:#059669;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(5,150,105,.3)">
+                <svg style="width:36px;height:36px;color:#fff" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             </div>`;
         wrapper.appendChild(overlay);
     }
@@ -550,8 +550,7 @@ function pubShowCheckedInOverlay(sectionId, canvasId, checkedInAt) {
     const header = section.querySelector('h3');
     if (header) {
         header.textContent = '✅ Checked In';
-        header.classList.remove('text-gray-700');
-        header.classList.add('text-emerald-700');
+        header.style.color = '#059669';
     }
 
     // Format the timestamp
@@ -560,13 +559,13 @@ function pubShowCheckedInOverlay(sectionId, canvasId, checkedInAt) {
     const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
     // Replace or add timestamp under the QR
-    const existingHint = section.querySelector('p.text-gray-400');
+    const existingHint = section.querySelector('.evt-qr-sub');
     if (existingHint) {
-        existingHint.className = 'text-xs text-emerald-600 font-semibold mt-2';
+        existingHint.style.cssText = 'font-size:13px;color:#059669;font-weight:600;margin-top:10px';
         existingHint.textContent = `Scanned at ${timeStr} · ${dateStr}`;
     } else {
         const ts = document.createElement('p');
-        ts.className = 'text-xs text-emerald-600 font-semibold mt-2';
+        ts.style.cssText = 'font-size:13px;color:#059669;font-weight:600;margin-top:10px';
         ts.textContent = `Scanned at ${timeStr} · ${dateStr}`;
         section.appendChild(ts);
     }
@@ -583,28 +582,37 @@ function pubRenderVenueCheckin(event) {
     // Guest check-in via token
     if (pubGuestRsvp) {
         el.innerHTML = `
-            <h3 class="text-sm font-bold text-emerald-700 mb-2">📍 Venue Check-In</h3>
-            <p class="text-xs text-emerald-600 mb-3">Tap below to check into this event</p>
-            <button onclick="pubDoGuestVenueCheckin('${event.id}','${pubGuestRsvp.guest_token}')" id="guestCheckinBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition">
-                ✅ Check In Now
-            </button>
-            <div id="guestCheckinResult" class="mt-3"></div>`;
+            <div class="evt-qr-card">
+                <h3 class="evt-qr-title">📍 Venue Check-In</h3>
+                <p class="evt-qr-sub" style="margin-bottom:16px">Tap below to check into this event</p>
+                <button onclick="pubDoGuestVenueCheckin('${event.id}','${pubGuestRsvp.guest_token}')" id="guestCheckinBtn" class="evt-action-btn" style="background:#059669">
+                    ✅ Check In Now
+                </button>
+                <div id="guestCheckinResult" style="margin-top:12px"></div>
+            </div>`;
         return;
     }
 
     if (!pubCurrentUser) {
-        el.innerHTML = `<p class="text-sm text-emerald-700">Sign in to check in to this event.</p>
-            <a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="inline-block mt-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Sign In</a>`;
+        el.innerHTML = `<div class="evt-notice-card">
+            <span class="evt-notice-icon">📍</span>
+            <div>
+                <p class="evt-notice-title">Sign in to check in</p>
+                <a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-action-btn" style="display:inline-flex;width:auto;padding:10px 24px;margin-top:10px;text-decoration:none">Sign In</a>
+            </div>
+        </div>`;
         return;
     }
 
     el.innerHTML = `
-        <h3 class="text-sm font-bold text-emerald-700 mb-2">📍 Venue Check-In</h3>
-        <p class="text-xs text-emerald-600 mb-3">Tap below to check into this event</p>
-        <button onclick="pubDoVenueCheckin('${event.id}')" id="checkinBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition">
-            ✅ Check In Now
-        </button>
-        <div id="checkinResult" class="mt-3"></div>`;
+        <div class="evt-qr-card">
+            <h3 class="evt-qr-title">📍 Venue Check-In</h3>
+            <p class="evt-qr-sub" style="margin-bottom:16px">Tap below to check into this event</p>
+            <button onclick="pubDoVenueCheckin('${event.id}')" id="checkinBtn" class="evt-action-btn" style="background:#059669">
+                ✅ Check In Now
+            </button>
+            <div id="checkinResult" style="margin-top:12px"></div>
+        </div>`;
 }
 
 async function pubDoVenueCheckin(eventId) {
@@ -639,7 +647,7 @@ async function pubDoVenueCheckin(eventId) {
                     updated_at: new Date().toISOString(),
                 }, { onConflict: 'event_id,user_id' });
             } catch (locErr) {
-                result.innerHTML = '<p class="text-sm text-red-600 font-semibold">📍 Location sharing is required for this event. Please allow location access and try again.</p>';
+                result.innerHTML = '<p style="font-size:14px;color:#dc2626;font-weight:600">📍 Location sharing is required for this event. Please allow location access and try again.</p>';
                 btn.disabled = false;
                 btn.textContent = '✅ Check In Now';
                 return;
@@ -655,7 +663,7 @@ async function pubDoVenueCheckin(eventId) {
             .maybeSingle();
 
         if (!rsvp) {
-            result.innerHTML = '<p class="text-sm text-red-600 font-semibold">❌ You must RSVP "Going" before checking in.</p>';
+            result.innerHTML = '<p style="font-size:14px;color:#dc2626;font-weight:600">❌ You must RSVP "Going" before checking in.</p>';
             btn.disabled = false;
             btn.textContent = '✅ Check In Now';
             return;
@@ -669,7 +677,7 @@ async function pubDoVenueCheckin(eventId) {
             .maybeSingle();
 
         if (existing) {
-            result.innerHTML = '<p class="text-sm text-amber-600 font-semibold">⚠️ You are already checked in!</p>';
+            result.innerHTML = '<p style="font-size:14px;color:#f59e0b;font-weight:600">⚠️ You are already checked in!</p>';
             btn.remove();
             return;
         }
@@ -681,12 +689,12 @@ async function pubDoVenueCheckin(eventId) {
             checkin_mode: 'venue_scan'
         });
 
-        result.innerHTML = '<p class="text-sm text-emerald-700 font-bold">🎉 Successfully checked in!</p>';
+        result.innerHTML = '<p style="font-size:14px;color:#059669;font-weight:700">🎉 Successfully checked in!</p>';
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         btn.remove();
     } catch (err) {
         console.error('Check-in error:', err);
-        result.innerHTML = '<p class="text-sm text-red-600">Check-in failed. Please try again.</p>';
+        result.innerHTML = '<p style="font-size:14px;color:#dc2626">Check-in failed. Please try again.</p>';
         btn.disabled = false;
         btn.textContent = '✅ Check In Now';
     }
@@ -708,7 +716,7 @@ async function pubDoGuestVenueCheckin(eventId, guestToken) {
             .maybeSingle();
 
         if (existing) {
-            result.innerHTML = '<p class="text-sm text-amber-600 font-semibold">⚠️ You are already checked in!</p>';
+            result.innerHTML = '<p style="font-size:14px;color:#f59e0b;font-weight:600">⚠️ You are already checked in!</p>';
             btn.remove();
             return;
         }
@@ -719,12 +727,12 @@ async function pubDoGuestVenueCheckin(eventId, guestToken) {
             checkin_mode: 'venue_scan'
         });
 
-        result.innerHTML = '<p class="text-sm text-emerald-700 font-bold">🎉 Successfully checked in!</p>';
+        result.innerHTML = '<p style="font-size:14px;color:#059669;font-weight:700">🎉 Successfully checked in!</p>';
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         btn.remove();
     } catch (err) {
         console.error('Guest check-in error:', err);
-        result.innerHTML = '<p class="text-sm text-red-600">Check-in failed. Please try again.</p>';
+        result.innerHTML = '<p style="font-size:14px;color:#dc2626">Check-in failed. Please try again.</p>';
         btn.disabled = false;
         btn.textContent = '✅ Check In Now';
     }
@@ -767,9 +775,11 @@ async function pubHandleTicketScan(event, ticketToken) {
     if (isHost) {
         // Host/creator scanned an attendee's ticket → process check-in
         container.innerHTML = `
-            <h3 class="text-sm font-bold text-brand-700 mb-2">🎟️ Scanning Attendee Ticket…</h3>
-            <div id="ticketScanResult" class="mt-3">
-                <span class="text-gray-500">Processing check-in…</span>
+            <div class="evt-qr-card">
+                <h3 class="evt-qr-title">🎟️ Scanning Attendee Ticket…</h3>
+                <div id="ticketScanResult" style="margin-top:12px">
+                    <span style="font-size:14px;color:#717171">Processing check-in…</span>
+                </div>
             </div>`;
 
         const resultEl = document.getElementById('ticketScanResult');
@@ -795,7 +805,7 @@ async function pubHandleTicketScan(event, ticketToken) {
                     .maybeSingle();
 
                 if (existing) {
-                    resultEl.innerHTML = `<p class="text-sm text-amber-600 font-semibold">✅ Already checked in — ${pubEscapeHtml(name)}</p>`;
+                    resultEl.innerHTML = `<p style="font-size:14px;color:#f59e0b;font-weight:600">✅ Already checked in — ${pubEscapeHtml(name)}</p>`;
                     return;
                 }
 
@@ -806,7 +816,7 @@ async function pubHandleTicketScan(event, ticketToken) {
                     checkin_mode: 'attendee_ticket'
                 });
 
-                resultEl.innerHTML = `<p class="text-base text-emerald-700 font-bold">✅ Checked in — ${pubEscapeHtml(name)}</p>`;
+                resultEl.innerHTML = `<p style="font-size:16px;color:#059669;font-weight:700">✅ Checked in — ${pubEscapeHtml(name)}</p>`;
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
                 return;
             }
@@ -828,7 +838,7 @@ async function pubHandleTicketScan(event, ticketToken) {
                     .maybeSingle();
 
                 if (gExisting) {
-                    resultEl.innerHTML = `<p class="text-sm text-amber-600 font-semibold">✅ Already checked in — ${pubEscapeHtml(guestRsvp.guest_name)} (Guest)</p>`;
+                    resultEl.innerHTML = `<p style="font-size:14px;color:#f59e0b;font-weight:600">✅ Already checked in — ${pubEscapeHtml(guestRsvp.guest_name)} (Guest)</p>`;
                     return;
                 }
 
@@ -839,28 +849,27 @@ async function pubHandleTicketScan(event, ticketToken) {
                     checkin_mode: 'attendee_ticket'
                 });
 
-                resultEl.innerHTML = `<p class="text-base text-emerald-700 font-bold">✅ Checked in — ${pubEscapeHtml(guestRsvp.guest_name)} (Guest)</p>`;
+                resultEl.innerHTML = `<p style="font-size:16px;color:#059669;font-weight:700">✅ Checked in — ${pubEscapeHtml(guestRsvp.guest_name)} (Guest)</p>`;
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
                 return;
             }
 
-            resultEl.innerHTML = '<p class="text-sm text-red-600 font-semibold">❌ Invalid ticket — no matching RSVP found.</p>';
+            resultEl.innerHTML = '<p style="font-size:14px;color:#dc2626;font-weight:600">❌ Invalid ticket — no matching RSVP found.</p>';
         } catch (err) {
             console.error('Ticket scan check-in error:', err);
-            resultEl.innerHTML = `<p class="text-sm text-red-600">Check-in failed: ${err.message}</p>`;
+            resultEl.innerHTML = `<p style="font-size:14px;color:#dc2626">Check-in failed: ${err.message}</p>`;
         }
     } else {
-        // Attendee scanning their own ticket, or someone else scanning it
-        // Show a friendly message to present the ticket to the event host
+        // Attendee scanning their own ticket
         container.innerHTML = `
-            <div class="text-center py-4">
-                <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                    <span class="text-3xl">🎟️</span>
+            <div class="evt-qr-card">
+                <div style="width:64px;height:64px;background:#f7f7f7;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+                    <span style="font-size:32px">🎟️</span>
                 </div>
-                <h3 class="text-base font-bold text-gray-900 mb-1">Event Ticket</h3>
-                <p class="text-sm text-gray-600 mb-4">Show this QR code to the event coordinator to check in.</p>
-                <p class="text-xs text-gray-400">The event host uses the in-app scanner to verify your ticket.</p>
-                ${!pubCurrentUser ? '<p class="text-xs text-gray-500 mt-3"><a href="/auth/login.html?redirect=' + encodeURIComponent(window.location.href) + '" class="text-brand-600 font-semibold hover:underline">Sign in</a> if you\'re the event host.</p>' : ''}
+                <h3 class="evt-qr-title">Event Ticket</h3>
+                <p style="font-size:14px;color:#717171;margin-bottom:16px">Show this QR code to the event coordinator to check in.</p>
+                <p style="font-size:13px;color:#b0b0b0">The event host uses the in-app scanner to verify your ticket.</p>
+                ${!pubCurrentUser ? '<p style="font-size:13px;color:#717171;margin-top:14px"><a href="/auth/login.html?redirect=' + encodeURIComponent(window.location.href) + '" style="color:#222;font-weight:600">Sign in</a> if you\'re the event host.</p>' : ''}
             </div>`;
     }
 }
@@ -963,11 +972,11 @@ async function pubHandleGuestRsvp() {
                 // Show success + QR ticket
                 const section = document.getElementById('guestRsvpSection');
                 section.innerHTML = `
-                    <div class="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                        <span class="text-2xl">✅</span>
+                    <div class="evt-info-card">
+                        <span style="font-size:1.5rem">✅</span>
                         <div>
-                            <p class="text-sm font-bold text-emerald-700">You're RSVP'd!</p>
-                            <p class="text-xs text-emerald-600">${pubEscapeHtml(name)} · ${pubEscapeHtml(email)}</p>
+                            <p style="font-size:14px;font-weight:700;color:#059669">You're RSVP'd!</p>
+                            <p style="font-size:13px;color:#059669">${pubEscapeHtml(name)} · ${pubEscapeHtml(email)}</p>
                         </div>
                     </div>`;
 
@@ -1039,7 +1048,7 @@ async function pubLookupGuestTicket() {
     const btn = document.getElementById('lookupBtn');
 
     if (!email) {
-        resultEl.innerHTML = '<p class="text-xs text-red-600">Please enter your email.</p>';
+        resultEl.innerHTML = '<p style="font-size:13px;color:#dc2626">Please enter your email.</p>';
         return;
     }
 
@@ -1055,7 +1064,7 @@ async function pubLookupGuestTicket() {
             .maybeSingle();
 
         if (!gRsvp) {
-            resultEl.innerHTML = '<p class="text-xs text-red-600">No RSVP found for this email.</p>';
+            resultEl.innerHTML = '<p style="font-size:13px;color:#dc2626">No RSVP found for this email.</p>';
         } else {
             pubGuestRsvp = gRsvp;
             pubGuestToken = gRsvp.guest_token;
@@ -1067,11 +1076,11 @@ async function pubLookupGuestTicket() {
                 document.getElementById('gatedNotes').textContent = pubCurrentEvent.gated_notes;
             }
 
-            resultEl.innerHTML = '<p class="text-xs text-emerald-600 font-semibold">✅ Ticket found! Scroll up to see your QR code.</p>';
+            resultEl.innerHTML = '<p style="font-size:13px;color:#059669;font-weight:600">✅ Ticket found! Scroll up to see your QR code.</p>';
         }
     } catch (err) {
         console.error('Lookup error:', err);
-        resultEl.innerHTML = '<p class="text-xs text-red-600">Lookup failed. Please try again.</p>';
+        resultEl.innerHTML = '<p style="font-size:13px;color:#dc2626">Lookup failed. Please try again.</p>';
     }
 
     btn.disabled = false;
@@ -1093,11 +1102,11 @@ function pubEscapeHtml(text) {
 function pubCopyUrl() {
     const input = document.getElementById('shareUrl');
     navigator.clipboard.writeText(input.value).then(() => {
-        const btn = document.getElementById('copyBtn');
+        const btn = document.getElementById('copyBtnBanner');
         // Swap icon to checkmark briefly
-        btn.innerHTML = '<svg class="w-4.5 h-4.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+        btn.innerHTML = '<svg style="width:18px;height:18px;color:#059669" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
         setTimeout(() => {
-            btn.innerHTML = '<svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>';
+            btn.innerHTML = '<svg style="width:18px;height:18px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>';
         }, 2000);
     });
 }
