@@ -273,8 +273,8 @@
 
                         <!-- Min Participants -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Minimum Participants <span class="font-normal text-gray-400">(auto-cancel if not met by deadline)</span></label>
-                            <input type="number" id="eventMinParticipants" min="1" max="200" placeholder="e.g. 3"
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Minimum Participants <span class="font-normal text-gray-400">(0 or blank = no minimum)</span></label>
+                            <input type="number" id="eventMinParticipants" min="0" max="200" placeholder="0 = no minimum"
                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
                         </div>
 
@@ -342,17 +342,29 @@
                             </label>
                         </div>
 
-                        <!-- Transportation Mode -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Transportation</label>
-                            <select id="eventTransportation" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-                                <option value="llc_provides">LLC Provides (tickets uploaded to portal)</option>
-                                <option value="self_arranged">Self-Arranged (members buy their own)</option>
-                            </select>
-                            <div id="transportEstimateGroup" class="hidden mt-2">
-                                <label class="text-xs text-gray-500">Avg. Ticket Estimate ($)</label>
-                                <input type="number" id="eventTransportEstimate" min="0" step="1" placeholder="e.g. 350"
-                                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+                        <!-- Transportation Toggle + Section -->
+                        <div class="flex items-center justify-between bg-surface-50 rounded-xl p-4">
+                            <div>
+                                <div class="text-sm font-semibold text-gray-800">✈️ Transportation</div>
+                                <div class="text-xs text-gray-500 mt-0.5">Enable for trips/retreats — disable for local events like cookouts</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="transportationEnabled" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                            </label>
+                        </div>
+                        <div id="transportationSection" class="hidden space-y-3">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Transportation Mode</label>
+                                <select id="eventTransportation" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+                                    <option value="llc_provides">LLC Provides (tickets uploaded to portal)</option>
+                                    <option value="self_arranged">Self-Arranged (members buy their own)</option>
+                                </select>
+                                <div id="transportEstimateGroup" class="hidden mt-2">
+                                    <label class="text-xs text-gray-500">Avg. Ticket Estimate ($)</label>
+                                    <input type="number" id="eventTransportEstimate" min="0" step="1" placeholder="e.g. 350"
+                                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+                                </div>
                             </div>
                         </div>
 
@@ -494,7 +506,18 @@
                         </div>
                     </div>
 
-                    <div>
+                    <!-- QR Check-In Toggle + Mode -->
+                    <div class="flex items-center justify-between bg-surface-50 rounded-xl p-4">
+                        <div>
+                            <div class="text-sm font-semibold text-gray-800">📱 QR Check-In</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Enable QR code scanning for event check-in</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="checkinEnabled" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                        </label>
+                    </div>
+                    <div id="checkinModeSection">
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">QR Check-In Mode</label>
                         <div class="grid grid-cols-2 gap-3">
                             <label class="flex items-start gap-3 bg-surface-50 border border-gray-200 rounded-xl p-3 cursor-pointer has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 transition">
@@ -524,7 +547,20 @@
                         </label>
                     </div>
 
-                    <!-- ─── Pricing Mode ─────────────────────────────── -->
+                    <!-- ─── RSVP Toggle ───────────────────────────── -->
+                    <div class="flex items-center justify-between bg-surface-50 rounded-xl p-4">
+                        <div>
+                            <div class="text-sm font-semibold text-gray-800">🎟️ Enable RSVP</div>
+                            <div class="text-xs text-gray-500 mt-0.5">Allow members to RSVP. Disable for informational-only events.</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="rsvpEnabled" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                        </label>
+                    </div>
+
+                    <!-- ─── Pricing Mode (hidden when RSVP disabled) ── -->
+                    <div id="rsvpSettingsGroup">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Pricing Mode</label>
                         <select id="pricingMode" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
@@ -539,6 +575,7 @@
                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
                         <p class="text-xs text-gray-400 mt-1">Flat amount each attendee pays to RSVP</p>
                     </div>
+                    </div><!-- /rsvpSettingsGroup -->
 
                     <!-- ─── Raffle / Giveaway ────────────────────────── -->
                     <div class="flex items-center justify-between bg-surface-50 rounded-xl p-4">

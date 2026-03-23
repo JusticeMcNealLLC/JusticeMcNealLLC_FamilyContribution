@@ -156,6 +156,27 @@ function evtSetupListeners() {
         const group = document.getElementById('transportEstimateGroup');
         if (group) group.classList.toggle('hidden', transportEl.value !== 'self_arranged');
     });
+
+    // ── Transportation Enable Toggle ─────────────────────
+    const transportToggle = document.getElementById('transportationEnabled');
+    transportToggle?.addEventListener('change', () => {
+        const section = document.getElementById('transportationSection');
+        if (section) section.classList.toggle('hidden', !transportToggle.checked);
+    });
+
+    // ── RSVP Enable Toggle ───────────────────────────────
+    const rsvpToggle = document.getElementById('rsvpEnabled');
+    rsvpToggle?.addEventListener('change', () => {
+        const settings = document.getElementById('rsvpSettingsGroup');
+        if (settings) settings.classList.toggle('hidden', !rsvpToggle.checked);
+    });
+
+    // ── QR Check-In Enable Toggle ────────────────────────
+    const checkinToggle = document.getElementById('checkinEnabled');
+    checkinToggle?.addEventListener('change', () => {
+        const section = document.getElementById('checkinModeSection');
+        if (section) section.classList.toggle('hidden', !checkinToggle.checked);
+    });
 }
 
 // ─── Global Exports (for onclick handlers in HTML) ──────

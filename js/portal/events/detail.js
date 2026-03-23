@@ -126,7 +126,7 @@ async function evtOpenDetail(eventId) {
 
     // Transportation mode display (LLC)
     let transportHtml = '';
-    if (isLlc && event.transportation_mode) {
+    if (isLlc && event.transportation_enabled !== false && event.transportation_mode) {
         const isProvided = event.transportation_mode === 'llc_provides';
         transportHtml = `
             <div class="mt-4 flex items-center gap-2 p-3 ${isProvided ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'} border rounded-xl">
@@ -161,7 +161,8 @@ async function evtOpenDetail(eventId) {
     // QR Code for attendee ticket mode — check if already checked in
     let qrHtml = '';
     let myCheckin = null;
-    if (rsvp && rsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
+    const checkinEnabled = event.checkin_enabled !== false; // default true for backward compat
+    if (checkinEnabled && rsvp && rsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
         const { data: ci } = await supabaseClient
             .from('event_checkins')
             .select('checked_in_at')
@@ -197,7 +198,7 @@ async function evtOpenDetail(eventId) {
 
     // Venue QR (if host and venue_scan mode)
     let venueQrHtml = '';
-    if (isHost && event.checkin_mode === 'venue_scan' && event.venue_qr_token) {
+    if (checkinEnabled && isHost && event.checkin_mode === 'venue_scan' && event.venue_qr_token) {
         venueQrHtml = `
             <div class="mt-6 p-4 bg-amber-50 rounded-xl text-center">
                 <h4 class="text-sm font-bold text-amber-700 mb-2">Venue QR Code</h4>
@@ -208,7 +209,7 @@ async function evtOpenDetail(eventId) {
 
     // Scanner button (for hosts in attendee_ticket mode)
     let scannerBtn = '';
-    if (isHost && event.checkin_mode === 'attendee_ticket' && ['open', 'confirmed', 'active'].includes(event.status)) {
+    if (checkinEnabled && isHost && event.checkin_mode === 'attendee_ticket' && ['open', 'confirmed', 'active'].includes(event.status)) {
         scannerBtn = `
             <button onclick="evtOpenScanner('${eventId}')" class="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition mt-3">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
@@ -384,11 +385,22 @@ async function evtOpenDetail(eventId) {
 
     // RSVP buttons
     let rsvpButtons = '';
-    const canRsvp = ['open', 'confirmed', 'active'].includes(event.status);
+    const rsvpEnabled = event.rsvp_enabled !== false; // default true for backward compat
+    const canRsvp = rsvpEnabled && ['open', 'confirmed', 'active'].includes(event.status);
     const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
 
-    // Hosts/creators don't need RSVP buttons — they're automatically attending
-    if (isHost) {
+    if (!rsvpEnabled) {
+        rsvpButtons = `
+            <div class="mt-6">
+                <div class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                    <span class="text-2xl">ℹ️</span>
+                    <div>
+                        <p class="text-sm font-bold text-gray-700">Informational Event</p>
+                        <p class="text-xs text-gray-500">RSVP is not required for this event</p>
+                    </div>
+                </div>
+            </div>`;
+    } else if (isHost) {
         rsvpButtons = `
             <div class="mt-6">
                 <div class="flex items-center gap-3 p-3 bg-brand-50 border border-brand-200 rounded-xl">

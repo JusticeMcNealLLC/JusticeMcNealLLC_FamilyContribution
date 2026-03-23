@@ -29,6 +29,9 @@ function evtToggleLlcFields() {
         const pm = document.getElementById('pricingMode');
         pm.value = 'paid';
         pm.dispatchEvent(new Event('change'));
+        // Hide general RSVP cost group — LLC events use llcRsvpOverride instead
+        const rsvpCostGroup = document.getElementById('rsvpCostGroup');
+        if (rsvpCostGroup) rsvpCostGroup.classList.add('hidden');
     }
     // For competitions, force member-only
     if (isComp) {
@@ -374,6 +377,8 @@ async function evtHandleCreate(e) {
         const checkinMode = document.querySelector('input[name="checkinMode"]:checked').value;
         const eventType = document.getElementById('eventType').value;
         const isLlc = eventType === 'llc';
+        const checkinEnabled = document.getElementById('checkinEnabled').checked;
+        const rsvpEnabled = document.getElementById('rsvpEnabled').checked;
 
         // Upload banner if selected
         let bannerUrl = null;
@@ -438,7 +443,9 @@ async function evtHandleCreate(e) {
             location_text: document.getElementById('eventLocation').value.trim() || null,
             max_participants: maxPart,
             rsvp_deadline: document.getElementById('eventRsvpDeadline').value ? new Date(document.getElementById('eventRsvpDeadline').value).toISOString() : null,
-            checkin_mode: checkinMode,
+            checkin_mode: checkinEnabled ? checkinMode : null,
+            checkin_enabled: checkinEnabled,
+            rsvp_enabled: rsvpEnabled,
             member_only: document.getElementById('memberOnly').checked,
             gate_time: document.getElementById('gateTime').checked,
             gate_location: document.getElementById('gateLocation').checked,
@@ -475,14 +482,16 @@ async function evtHandleCreate(e) {
 
         // LLC-specific fields
         if (isLlc) {
-            record.min_participants = document.getElementById('eventMinParticipants').value ? parseInt(document.getElementById('eventMinParticipants').value) : null;
+            record.min_participants = parseInt(document.getElementById('eventMinParticipants').value) || null;
             record.llc_cut_pct = parseFloat(document.getElementById('eventLlcCut').value) || 0;
             record.invest_eligible = document.getElementById('investEligible').checked;
             record.show_cost_breakdown = document.getElementById('showCostBreakdown').checked;
             record.member_only = true; // LLC events: member RSVP only (no guest RSVPs)
             record.cost_breakdown = costBreakdownSummary;
-            record.transportation_mode = document.getElementById('eventTransportation').value;
-            record.transportation_estimate_cents = record.transportation_mode === 'self_arranged'
+            const transportEnabled = document.getElementById('transportationEnabled').checked;
+            record.transportation_enabled = transportEnabled;
+            record.transportation_mode = transportEnabled ? document.getElementById('eventTransportation').value : null;
+            record.transportation_estimate_cents = transportEnabled && document.getElementById('eventTransportation').value === 'self_arranged'
                 ? Math.round((parseFloat(document.getElementById('eventTransportEstimate').value) || 0) * 100)
                 : null;
             record.location_required = document.getElementById('locationRequired').checked;
@@ -516,8 +525,8 @@ async function evtHandleCreate(e) {
             record.rsvp_cost_cents = 0; // Competition entry fee handled separately
         }
 
-        // Generate venue QR token if venue_scan mode
-        if (checkinMode === 'venue_scan') {
+        // Generate venue QR token if venue_scan mode and QR check-in enabled
+        if (checkinEnabled && checkinMode === 'venue_scan') {
             record.venue_qr_token = crypto.randomUUID();
         }
 
