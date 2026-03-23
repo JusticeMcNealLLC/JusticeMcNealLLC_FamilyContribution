@@ -66,9 +66,16 @@ function evtHandleBannerSelect() {
 }
 
 function evtCopyShareUrl(slug) {
-    const url = slug
-        ? `${window.location.origin}/events/?e=${slug}`
-        : document.getElementById('shareUrl')?.value;
+    let url;
+    if (slug) {
+        url = `${APP_CONFIG.FUNCTIONS_URL}/event-og?e=${slug}`;
+        // Append ref for personalized OG preview ("Name invited you to …")
+        if (typeof evtCurrentUser !== 'undefined' && evtCurrentUser?.id) {
+            url += `&ref=${evtCurrentUser.id.slice(0, 8)}`;
+        }
+    } else {
+        url = document.getElementById('shareUrl')?.value;
+    }
     if (!url) return;
     navigator.clipboard.writeText(url).then(() => {
         // Brief toast-style feedback

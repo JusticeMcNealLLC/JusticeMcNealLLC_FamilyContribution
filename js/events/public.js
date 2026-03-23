@@ -337,8 +337,8 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         pubHandleTicketScan(event, ticketToken);
     }
 
-    // Share URL (clean domain URL — OG tags are in events/index.html <head>)
-    const baseShareUrl = `${window.location.origin}/events/?e=${event.slug}`;
+    // Share URL — edge function returns XHTML/XML with dynamic OG tags for previews
+    const baseShareUrl = `${APP_CONFIG.FUNCTIONS_URL}/event-og?e=${event.slug}`;
     if (pubCurrentUser) {
         document.getElementById('shareUrl').value = baseShareUrl + '&ref=' + pubCurrentUser.id.slice(0, 8);
     } else if (pubGuestRsvp && pubGuestRsvp.guest_token) {

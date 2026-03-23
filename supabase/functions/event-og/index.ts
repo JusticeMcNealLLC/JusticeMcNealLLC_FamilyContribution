@@ -1,13 +1,10 @@
 // Supabase Edge Function: event-og
-// Provides rich Open Graph meta tags for event link previews (iMessage, Facebook, etc).
+// Generates rich Open Graph link previews for shared event links.
 //
-// How it works:
-//   - Crawlers (iMessage, Facebook, Twitter, etc.) → 200 HTML with OG meta tags
-//   - Real browsers → instant 302 redirect to the actual event page
-//
-// Supabase sandboxes HTML responses with strict CSP (default-src 'none'),
-// which blocks JS, meta-refresh, images, and styles. So we can't serve an
-// HTML page that redirects — we must use HTTP 302 for real users instead.
+// Problem: Supabase converts text/html responses to text/plain + sandbox CSP.
+// Discovery: text/xml passes through Supabase UNSANDBOXED.
+// Solution: Serve valid XHTML as text/xml. Crawlers parse OG meta tags from it.
+//           Browsers get JS redirect to the real event page.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -16,45 +13,13 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
 const SITE_URL = 'https://justicemcneal.com'
 
-// Known social/link-preview crawler User-Agent substrings
-const CRAWLER_PATTERNS = [
-  'facebookexternalhit', 'Facebot',
-  'Twitterbot',
-  'LinkedInBot',
-  'Slackbot', 'Slack-ImgProxy',
-  'Discordbot',
-  'WhatsApp',
-  'Applebot',           // Apple search / Siri
-  'Googlebot',
-  'bingbot',
-  'TelegramBot',
-  'Pinterestbot',
-  'Redditbot',
-  'vkShare',
-  'Embedly',
-  'Quora Link Preview',
-  'Showyoubot',
-  'outbrain',
-  'Swiftbot',
-  'SkypeUriPreview',
-  'iMessageBot',
-  'YandexBot',
-]
-
-function isCrawler(userAgent: string): boolean {
-  if (!userAgent) return false
-  const ua = userAgent.toLowerCase()
-  return CRAWLER_PATTERNS.some(p => ua.includes(p.toLowerCase()))
-}
-
 serve(async (req) => {
   try {
     const url = new URL(req.url)
     const slug = url.searchParams.get('e')
     const ref = url.searchParams.get('ref') || ''
-    const userAgent = req.headers.get('user-agent') || ''
 
-    // Build canonical URL to the real event page
+    // Build canonical URL
     const canonicalParams = new URLSearchParams()
     if (slug) canonicalParams.set('e', slug)
     if (ref) canonicalParams.set('ref', ref)
@@ -69,20 +34,12 @@ serve(async (req) => {
       })
     }
 
-    // ── Real browsers: skip DB lookup, just redirect ──
-    if (!isCrawler(userAgent)) {
-      return new Response(null, {
-        status: 302,
-        headers: { Location: canonicalUrl },
-      })
-    }
-
-    // ── Crawlers: fetch event, return OG HTML ──
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Fetch event data
     const { data: event } = await supabase
       .from('events')
-      .select('title, description, banner_url, start_date, end_date, location_text, event_type, category, slug, status')
+      .select('title, description, banner_url, start_date, end_date, location_text, slug')
       .eq('slug', slug)
       .maybeSingle()
 
@@ -93,7 +50,21 @@ serve(async (req) => {
       })
     }
 
-    // Format date for display
+    // Look up inviter name from ref
+    let inviterName = ''
+    if (ref && !ref.startsWith('g_')) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('first_name')
+        .ilike('id', `${ref}%`)
+        .limit(1)
+
+      if (profiles && profiles.length > 0 && profiles[0].first_name) {
+        inviterName = profiles[0].first_name
+      }
+    }
+
+    // Format date
     const startDate = new Date(event.start_date)
     const dateStr = startDate.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -107,54 +78,63 @@ serve(async (req) => {
       hour12: true,
     })
 
-    // Build OG description: date + location + snippet
+    // Build OG fields
+    const ogTitle = inviterName
+      ? `${inviterName} invited you to ${event.title}`
+      : `You're invited to ${event.title}!`
+
+    const descParts: string[] = [`${dateStr} at ${timeStr}`]
+    if (event.location_text) descParts.push(event.location_text)
     const rawDesc = event.description || ''
-    const descSnippet = rawDesc.length > 200 ? rawDesc.slice(0, 197) + '...' : rawDesc
-    const parts: string[] = [`${dateStr} at ${timeStr}`]
-    if (event.location_text) parts.push(event.location_text)
-    if (descSnippet) parts.push(descSnippet)
-    const ogDescription = parts.join(' - ')
+    if (rawDesc) descParts.push(rawDesc.length > 150 ? rawDesc.slice(0, 147) + '...' : rawDesc)
+    const ogDescription = descParts.join(' \u2014 ')
 
-    // Fallback banner
-    const ogImage = event.banner_url || `${SITE_URL}/assets/icons/icon-512x512.png`
+    const ogImage = event.banner_url || `${SITE_URL}/assets/icons/icon-512.png`
 
-    // Escape HTML entities
+    // XML-safe escape
     const esc = (s: string) =>
-      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
 
-    // Minimal HTML — only needs to be parsed, never rendered in a browser
-    const html = `<!DOCTYPE html>
-<html lang="en">
+    // Valid XHTML served as text/xml — Supabase passes this through unsandboxed.
+    // Crawlers (iMessage, Facebook, Twitter) parse OG meta from it.
+    // Browsers render it as XML/XHTML and execute the JS redirect.
+    const xhtml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<meta charset="UTF-8">
-<title>${esc(event.title)} | Justice McNeal LLC</title>
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Justice McNeal LLC">
-<meta property="og:title" content="${esc(event.title)}">
-<meta property="og:description" content="${esc(ogDescription)}">
-<meta property="og:image" content="${esc(ogImage)}">
-<meta property="og:url" content="${esc(canonicalUrl)}">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="${esc(event.title)}">
-<meta name="twitter:description" content="${esc(ogDescription)}">
-<meta name="twitter:image" content="${esc(ogImage)}">
-<meta name="description" content="${esc(ogDescription)}">
-<link rel="canonical" href="${esc(canonicalUrl)}">
+<title>${esc(ogTitle)} | Justice McNeal LLC</title>
+<meta name="description" content="${esc(ogDescription)}" />
+<meta property="og:title" content="${esc(ogTitle)}" />
+<meta property="og:description" content="${esc(ogDescription)}" />
+<meta property="og:image" content="${esc(ogImage)}" />
+<meta property="og:url" content="${esc(canonicalUrl)}" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Justice McNeal LLC" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${esc(ogTitle)}" />
+<meta name="twitter:description" content="${esc(ogDescription)}" />
+<meta name="twitter:image" content="${esc(ogImage)}" />
+<script type="text/javascript"><![CDATA[
+window.location.replace("${canonicalUrl.replace(/"/g, '\\"')}");
+]]></script>
 </head>
-<body></body>
+<body>
+<p>Redirecting to <a href="${esc(canonicalUrl)}">event page</a>...</p>
+</body>
 </html>`
 
-    return new Response(html, {
+    return new Response(xhtml, {
       status: 200,
       headers: {
-        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Type': 'text/xml; charset=utf-8',
         'Cache-Control': 'public, max-age=300, s-maxage=300',
       },
     })
   } catch (_err) {
+    const slug = new URL(req.url).searchParams.get('e')
     return new Response(null, {
       status: 302,
-      headers: { Location: `${SITE_URL}/events/` },
+      headers: { Location: slug ? `${SITE_URL}/events/?e=${slug}` : `${SITE_URL}/events/` },
     })
   }
 })
