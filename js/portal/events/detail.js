@@ -580,6 +580,12 @@ async function evtOpenDetail(eventId) {
 
         raffleHtml = `
             <h3 class="evt-section-title">🎲 Raffle</h3>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+                ${event.raffle_type ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_type === 'digital' ? '💻' : '🎁'} ${event.raffle_type === 'digital' ? 'Digital Prize' : 'Physical Prize'}</span>` : ''}
+                ${event.raffle_draw_trigger ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_draw_trigger === 'auto' ? '⚡ Auto Draw' : '🎰 Manual Draw'}</span>` : ''}
+                ${event.pricing_mode === 'free_paid_raffle' && event.raffle_entry_cost_cents > 0 ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">🎟️ Entry: ${formatCurrency(event.raffle_entry_cost_cents)}</span>` : ''}
+                ${event.pricing_mode === 'paid' ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">✅ Included with RSVP</span>` : ''}
+            </div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
                 <span style="font-size:14px;color:#717171">${raffleEntryCount} ${raffleEntryCount === 1 ? 'entry' : 'entries'}</span>
             </div>
@@ -731,23 +737,6 @@ async function evtOpenDetail(eventId) {
 
         <div class="evt-body">
 
-            <!-- Host -->
-            ${creatorProfile ? `
-            <div class="evt-section">
-                <a href="profile.html?id=${creatorProfile.id}" class="evt-host-link">
-                    <div class="evt-host-avatar">
-                        ${creatorProfile.profile_picture_url
-                            ? `<img src="${creatorProfile.profile_picture_url}" alt="">`
-                            : `<span>${cpInitials}</span>`}
-                    </div>
-                    <div>
-                        <p class="evt-host-name">Hosted by ${evtEscapeHtml(cpName)}</p>
-                        <div class="evt-host-meta">${evtEscapeHtml(cpTitle)} ${cpBadge}</div>
-                    </div>
-                </a>
-            </div>
-            <hr class="evt-divider">` : ''}
-
             <!-- Event Details -->
             <div class="evt-section">
                 <div class="evt-info-row">
@@ -783,8 +772,8 @@ async function evtOpenDetail(eventId) {
                 </div>` : ''}
             </div>
 
-            <!-- Add to Calendar (only when date is visible and event not ended) -->
-            ${showTime && !isClosed && !isPast ? (() => {
+            <!-- Add to Calendar (when date is visible) -->
+            ${showTime ? (() => {
                 const calStart = start.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
                 const calEndDate = event.end_date ? new Date(event.end_date) : new Date(start.getTime() + 7200000);
                 const calEnd = calEndDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
@@ -818,6 +807,20 @@ async function evtOpenDetail(eventId) {
                 <h3 class="evt-section-title">Attendee Details</h3>
                 <p style="font-size:15px;line-height:1.7;color:#484848" class="whitespace-pre-line">${evtEscapeHtml(event.gated_notes)}</p>
             </div>` : ''}
+
+            <!-- Host / Organizer -->
+            ${(() => {
+                if (isLlc) {
+                    return `<hr class="evt-divider"><div class="evt-section"><div class="evt-info-row"><div class="evt-info-icon" style="background:#222"><svg viewBox="0 0 24 24" stroke-width="2" style="stroke:#fff"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div><div><p class="evt-info-primary">Justice McNeal LLC</p><p class="evt-info-secondary">Organizer</p></div></div></div>`;
+                }
+                if (creatorProfile) {
+                    const avatarHtml = creatorProfile.profile_picture_url
+                        ? `<img src="${creatorProfile.profile_picture_url}" style="width:48px;height:48px;border-radius:12px;object-fit:cover" alt="${evtEscapeHtml(cpName)}">`
+                        : `<div class="evt-info-icon" style="background:#222;color:#fff;font-size:16px;font-weight:700">${cpInitials}</div>`;
+                    return `<hr class="evt-divider"><div class="evt-section"><a href="profile.html?id=${creatorProfile.id}" style="text-decoration:none"><div class="evt-info-row">${avatarHtml}<div><p class="evt-info-primary">${evtEscapeHtml(cpName)}</p><p class="evt-info-secondary">Organizer</p></div></div></a></div>`;
+                }
+                return '';
+            })()}
 
             <!-- Where you'll be -->
             ${showLocation && event.location_lat && event.location_lng ? `
@@ -1051,12 +1054,23 @@ async function evtLoadComments(eventId) {
     const list = document.getElementById('portalCommentsList');
     if (!list) return;
 
-    const { data: comments } = await supabaseClient
-        .from('event_comments')
-        .select('*, profile:profiles!event_comments_user_id_fkey(first_name, last_name, profile_picture_url)')
-        .eq('event_id', eventId)
-        .order('created_at', { ascending: true })
-        .limit(100);
+    let comments = null;
+    try {
+        const { data, error } = await supabaseClient
+            .from('event_comments')
+            .select('*, profile:profiles!event_comments_user_id_fkey(first_name, last_name, profile_picture_url)')
+            .eq('event_id', eventId)
+            .order('created_at', { ascending: true })
+            .limit(100);
+        if (error) throw error;
+        comments = data;
+    } catch (err) {
+        // Table may not exist yet — hide section silently
+        console.warn('Comments unavailable:', err.message || err);
+        const section = document.getElementById('portalCommentsSection');
+        if (section) section.style.display = 'none';
+        return;
+    }
 
     if (!comments || comments.length === 0) {
         list.innerHTML = '<p style="font-size:14px;color:#b0b0b0;text-align:center">No comments yet — be the first!</p>';
