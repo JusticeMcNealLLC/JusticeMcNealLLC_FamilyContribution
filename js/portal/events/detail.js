@@ -129,11 +129,11 @@ async function evtOpenDetail(eventId) {
     if (isLlc && event.transportation_enabled !== false && event.transportation_mode) {
         const isProvided = event.transportation_mode === 'llc_provides';
         transportHtml = `
-            <div class="mt-4 flex items-center gap-2 p-3 ${isProvided ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'} border rounded-xl">
-                <span class="text-base">${isProvided ? '✈️' : '🧳'}</span>
+            <div class="evt-notice-card">
+                <span class="evt-notice-icon">${isProvided ? '✈️' : '🧳'}</span>
                 <div>
-                    <p class="text-sm font-semibold ${isProvided ? 'text-emerald-700' : 'text-amber-700'}">${isProvided ? 'LLC Provides Transportation' : 'Self-Arranged Transportation'}</p>
-                    <p class="text-xs ${isProvided ? 'text-emerald-600' : 'text-amber-600'}">${isProvided ? 'Tickets will be uploaded to your documents' : `Members book their own travel${event.transportation_estimate_cents ? ` — est. ~${formatCurrency(event.transportation_estimate_cents)}` : ''}`}</p>
+                    <p class="evt-notice-title">${isProvided ? 'LLC Provides Transportation' : 'Self-Arranged Transportation'}</p>
+                    <p class="evt-notice-sub">${isProvided ? 'Tickets will be uploaded to your documents' : `Members book their own travel${event.transportation_estimate_cents ? ` — est. ~${formatCurrency(event.transportation_estimate_cents)}` : ''}`}</p>
                 </div>
             </div>`;
     }
@@ -142,9 +142,12 @@ async function evtOpenDetail(eventId) {
     let locationReqHtml = '';
     if (isLlc && event.location_required) {
         locationReqHtml = `
-            <div class="mt-3 flex items-center gap-2 p-2.5 bg-blue-50 border border-blue-200 rounded-xl">
-                <span class="text-base">📍</span>
-                <p class="text-xs text-blue-700"><strong>Location sharing required</strong> — you'll need to enable location sharing at check-in.</p>
+            <div class="evt-notice-card">
+                <span class="evt-notice-icon">📍</span>
+                <div>
+                    <p class="evt-notice-title">Location sharing required</p>
+                    <p class="evt-notice-sub">You'll need to enable location sharing at check-in</p>
+                </div>
             </div>`;
     }
 
@@ -179,20 +182,20 @@ async function evtOpenDetail(eventId) {
             : null;
 
         qrHtml = `
-            <div class="mt-6 text-center">
-                <h4 class="text-sm font-bold text-gray-700 mb-2">${myCheckin ? '✅ Checked In' : 'Your Event Ticket'}</h4>
-                <div class="relative inline-block">
-                    <canvas id="myTicketQR" class="mx-auto ${myCheckin ? 'opacity-30' : ''}"></canvas>
+            <div class="evt-qr-card">
+                <h4 class="evt-qr-title">${myCheckin ? '✅ Checked In' : '🎫 Your Event Ticket'}</h4>
+                <div style="position:relative;display:inline-block">
+                    <canvas id="myTicketQR" style="display:block;margin:0 auto;${myCheckin ? 'opacity:.3' : ''}"></canvas>
                     ${myCheckin ? `
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="bg-emerald-500 rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
-                            <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+                        <div style="width:56px;height:56px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.15)">
+                            <svg style="width:28px;height:28px;color:#fff" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                         </div>
                     </div>` : ''}
                 </div>
                 ${myCheckin
-                    ? `<p class="text-xs text-emerald-600 font-semibold mt-2">Scanned at ${checkedInTime} · ${checkedInDate}</p>`
-                    : `<p class="text-xs text-gray-400 mt-2">Show this QR code at check-in</p>`}
+                    ? `<p class="evt-qr-sub" style="color:#222;font-weight:600">Scanned at ${checkedInTime} · ${checkedInDate}</p>`
+                    : `<p class="evt-qr-sub">Show this QR code at check-in</p>`}
             </div>`;
     }
 
@@ -200,10 +203,10 @@ async function evtOpenDetail(eventId) {
     let venueQrHtml = '';
     if (checkinEnabled && isHost && event.checkin_mode === 'venue_scan' && event.venue_qr_token) {
         venueQrHtml = `
-            <div class="mt-6 p-4 bg-amber-50 rounded-xl text-center">
-                <h4 class="text-sm font-bold text-amber-700 mb-2">Venue QR Code</h4>
-                <canvas id="venueQR" class="mx-auto"></canvas>
-                <p class="text-xs text-amber-600 mt-2">Display this at the entrance for attendees to scan</p>
+            <div class="evt-qr-card">
+                <h4 class="evt-qr-title">📍 Venue QR Code</h4>
+                <canvas id="venueQR" style="display:block;margin:0 auto"></canvas>
+                <p class="evt-qr-sub">Display this at the entrance for attendees to scan</p>
             </div>`;
     }
 
@@ -211,8 +214,8 @@ async function evtOpenDetail(eventId) {
     let scannerBtn = '';
     if (checkinEnabled && isHost && event.checkin_mode === 'attendee_ticket' && ['open', 'confirmed', 'active'].includes(event.status)) {
         scannerBtn = `
-            <button onclick="evtOpenScanner('${eventId}')" class="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition mt-3">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+            <button onclick="evtOpenScanner('${eventId}')" class="evt-action-btn">
+                <svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                 Scan Attendee QR
             </button>`;
     }
@@ -231,39 +234,35 @@ async function evtOpenDetail(eventId) {
         const baseBuyIn = minP > 0 ? Math.ceil(totalIncluded / minP) : 0;
         const llcCut = Math.round(baseBuyIn * (event.llc_cut_pct || 0) / 100);
         const finalBuyIn = baseBuyIn + llcCut;
-        const lockedLabel = event.cost_breakdown_locked ? ' <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">🔒 Locked</span>' : '';
-        const hostOnlyLabel = !showBreakdownToAttendees ? ' <span class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Host Only</span>' : '';
+        const lockedLabel = event.cost_breakdown_locked ? ' <span style="font-size:11px;background:#f7f7f7;color:#717171;padding:2px 8px;border-radius:6px;font-weight:600">🔒 Locked</span>' : '';
+        const hostOnlyLabel = !showBreakdownToAttendees ? ' <span style="font-size:11px;background:#f7f7f7;color:#717171;padding:2px 8px;border-radius:6px;font-weight:600">Host Only</span>' : '';
 
         const itemRows = costItems.map(i => `
-            <div class="flex items-center justify-between py-1.5 text-sm">
-                <div class="flex items-center gap-2">
-                    <span>${CATEGORY_ICONS[i.category] || '📦'}</span>
-                    <span class="text-gray-700">${evtEscapeHtml(i.name)}</span>
+            <div class="evt-cost-row" style="padding:10px 0">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:16px">${CATEGORY_ICONS[i.category] || '📦'}</span>
+                    <span style="font-size:15px;color:#222">${evtEscapeHtml(i.name)}</span>
                 </div>
-                <div class="text-right">
+                <div style="text-align:right">
                     ${i.included_in_buyin
-                        ? `<span class="font-semibold text-gray-900">${formatCurrency(i.total_cost_cents)}</span><span class="text-xs text-emerald-600 ml-2">INCLUDED</span>`
-                        : `<span class="text-gray-500">~${formatCurrency(i.avg_per_person_cents)}/person</span><span class="text-xs text-amber-600 ml-2">OUT OF POCKET</span>`}
+                        ? `<span style="font-weight:600;color:#222">${formatCurrency(i.total_cost_cents)}</span><span style="font-size:11px;font-weight:700;color:#222;margin-left:8px;background:#f7f7f7;padding:2px 8px;border-radius:6px">INCLUDED</span>`
+                        : `<span style="color:#717171">~${formatCurrency(i.avg_per_person_cents)}/person</span><span style="font-size:11px;font-weight:700;color:#717171;margin-left:8px;background:#f7f7f7;padding:2px 8px;border-radius:6px">OOP</span>`}
                 </div>
             </div>`).join('');
 
         costBreakdownHtml = `
-            <div class="mt-6 p-4 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-sm font-bold text-gray-800">📊 Cost Breakdown${lockedLabel}${hostOnlyLabel}</h4>
-                </div>
-                <div class="divide-y divide-amber-100">${itemRows}</div>
-                <div class="border-t border-amber-300 mt-3 pt-3 space-y-1.5">
-                    <div class="flex justify-between text-sm"><span class="text-gray-600">Total Included:</span><span class="font-bold">${formatCurrency(totalIncluded)}</span></div>
-                    <div class="flex justify-between text-sm"><span class="text-gray-600">Min Participants:</span><span class="font-bold">${minP}</span></div>
-                    <div class="border-t border-amber-200 my-1.5"></div>
-                    <div class="flex justify-between text-sm"><span class="text-gray-700 font-semibold">💡 Suggested Buy-In:</span><span class="font-extrabold text-brand-700">${formatCurrency(finalBuyIn)}/person</span></div>
-                    <div class="flex justify-between text-sm"><span class="text-gray-700 font-semibold">💳 Actual RSVP Price:</span><span class="font-extrabold text-brand-700">${formatCurrency(event.rsvp_cost_cents)}/person</span></div>
-                    ${event.llc_cut_pct > 0 ? `<div class="flex justify-between text-xs text-gray-500"><span>Includes ${event.llc_cut_pct}% LLC contribution</span><span>+${formatCurrency(llcCut)}</span></div>` : ''}
-                    <div class="flex justify-between text-sm"><span class="text-gray-600">✈ Est. Out-of-Pocket:</span><span class="font-bold">~${formatCurrency(totalOop)}/person</span></div>
-                    <div class="border-t border-amber-200 my-1.5"></div>
-                    <div class="flex justify-between text-sm"><span class="font-semibold text-gray-700">💰 Est. Total/Person:</span><span class="font-extrabold">~${formatCurrency((event.rsvp_cost_cents || finalBuyIn) + totalOop)}</span></div>
-                </div>
+            <h3 class="evt-section-title">📊 Cost Breakdown${lockedLabel}${hostOnlyLabel}</h3>
+            <div style="border-top:1px solid #ebebeb">${itemRows}</div>
+            <div style="border-top:2px solid #222;margin-top:16px;padding-top:16px">
+                <div class="evt-cost-row"><span>Total Included</span><span class="evt-cost-val">${formatCurrency(totalIncluded)}</span></div>
+                <div class="evt-cost-row"><span>Min Participants</span><span class="evt-cost-val">${minP}</span></div>
+                <div style="border-top:1px solid #ebebeb;margin:10px 0"></div>
+                <div class="evt-cost-row"><span>💡 Suggested Buy-In</span><span class="evt-cost-val evt-cost-highlight">${formatCurrency(finalBuyIn)}/person</span></div>
+                <div class="evt-cost-row"><span>💳 Actual RSVP Price</span><span class="evt-cost-val evt-cost-highlight">${formatCurrency(event.rsvp_cost_cents)}/person</span></div>
+                ${event.llc_cut_pct > 0 ? `<div class="evt-cost-row" style="font-size:13px;color:#717171"><span>Includes ${event.llc_cut_pct}% LLC contribution</span><span>+${formatCurrency(llcCut)}</span></div>` : ''}
+                <div class="evt-cost-row"><span>✈ Est. Out-of-Pocket</span><span class="evt-cost-val">~${formatCurrency(totalOop)}/person</span></div>
+                <div style="border-top:2px solid #222;margin:12px 0"></div>
+                <div class="evt-cost-row" style="font-size:16px"><span style="font-weight:700">💰 Est. Total/Person</span><span style="font-weight:800">~${formatCurrency((event.rsvp_cost_cents || finalBuyIn) + totalOop)}</span></div>
             </div>`;
     }
 
@@ -285,36 +284,36 @@ async function evtOpenDetail(eventId) {
 
         if (isHost) {
             // Host sees full progress bar with exact numbers
-            const barColor = isMet ? 'bg-emerald-500' : 'bg-amber-500';
             thresholdHtml = `
-            <div class="mt-4 p-4 ${isMet ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'} border rounded-xl">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-semibold ${isMet ? 'text-emerald-700' : 'text-amber-700'}">${isMet ? '✅ Minimum Met!' : '⚠️ Minimum Threshold'}</span>
-                    <span class="text-xs text-gray-500">${currentGoing} / ${minNeeded} needed by ${deadlineStr}</span>
+            <div class="evt-notice-card">
+                <div style="width:100%">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                        <span style="font-size:14px;font-weight:600;color:#222">${isMet ? '✅ Minimum Met!' : '⚠️ Minimum Threshold'}</span>
+                        <span style="font-size:13px;color:#717171">${currentGoing} / ${minNeeded} by ${deadlineStr}</span>
+                    </div>
+                    <div class="evt-progress-track">
+                        <div class="evt-progress-fill${isMet ? ' met' : ''}" style="width:${pct}%"></div>
+                    </div>
+                    ${!isMet ? `<p style="font-size:13px;color:#717171;margin-top:8px">If ${minNeeded - currentGoing} more spot${minNeeded - currentGoing > 1 ? 's aren\'t' : ' isn\'t'} filled by the deadline, the event auto-cancels and all RSVPs are refunded.</p>` : ''}
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                    <div class="${barColor} h-2.5 rounded-full transition-all" style="width:${pct}%"></div>
-                </div>
-                ${!isMet ? `<p class="text-xs text-amber-600 mt-1.5">If ${minNeeded - currentGoing} more spot${minNeeded - currentGoing > 1 ? 's aren\'t' : ' isn\'t'} filled by the deadline, the event auto-cancels and all RSVPs are refunded.</p>` : ''}
             </div>`;
         } else {
             // Non-host sees social-proof-friendly text (no progress bar)
             let socialText = '';
             let socialBg = '';
             if (isMet) {
-                socialText = `<span class="text-sm font-semibold text-emerald-700">✅ Event confirmed!</span><span class="text-sm text-gray-600 ml-1">${currentGoing} going${event.max_participants ? ' · ' + (event.max_participants - currentGoing) + ' spots left' : ''}</span>`;
-                socialBg = 'bg-emerald-50 border-emerald-200';
+                socialText = `<span style="font-size:14px;font-weight:600;color:#222">✅ Event confirmed!</span><span style="font-size:14px;color:#717171;margin-left:6px">${currentGoing} going${event.max_participants ? ' · ' + (event.max_participants - currentGoing) + ' spots left' : ''}</span>`;
             } else if (showExactCount) {
-                socialText = `<span class="text-sm font-semibold text-gray-700">${currentGoing} going</span><span class="text-sm text-gray-500 ml-1">· spots remaining</span>`;
-                socialBg = 'bg-surface-50 border-gray-200';
+                socialText = `<span style="font-size:14px;font-weight:600;color:#222">${currentGoing} going</span><span style="font-size:14px;color:#717171;margin-left:6px">· spots remaining</span>`;
             } else {
-                socialText = `<div class="flex items-center gap-2"><svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="text-sm font-semibold text-gray-700">Spots available — be one of the first to RSVP!</span></div>`;
-                socialBg = 'bg-brand-50 border-brand-200';
+                socialText = `<span style="font-size:14px;font-weight:600;color:#222">Spots available — be one of the first to RSVP!</span>`;
             }
             thresholdHtml = `
-            <div class="mt-4 p-3 ${socialBg} border rounded-xl flex items-center justify-between">
-                <div>${socialText}</div>
-                ${event.rsvp_deadline ? `<span class="text-xs text-gray-400">RSVP by ${deadlineStr}</span>` : ''}
+            <div class="evt-notice-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                    <div>${socialText}</div>
+                    ${event.rsvp_deadline ? `<span style="font-size:12px;color:#b0b0b0">RSVP by ${deadlineStr}</span>` : ''}
+                </div>
             </div>`;
         }
     }
@@ -335,39 +334,36 @@ async function evtOpenDetail(eventId) {
             if (hasOffer) {
                 const expiresStr = new Date(myWaitlistEntry.offer_expires_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
                 waitlistAction = `
-                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                        <p class="text-sm font-bold text-emerald-700">🎉 A spot opened up for you!</p>
-                        <p class="text-xs text-emerald-600 mt-1">Complete your RSVP by ${expiresStr} to claim it.</p>
-                        <button onclick="evtClaimWaitlistSpot('${eventId}')" class="mt-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">Claim Spot — ${formatCurrency(event.rsvp_cost_cents)}</button>
+                    <div class="evt-info-card">
+                        <span class="evt-info-card-icon">🎉</span>
+                        <div style="flex:1">
+                            <p class="evt-info-card-title">A spot opened up for you!</p>
+                            <p class="evt-info-card-sub">Complete your RSVP by ${expiresStr}</p>
+                            <button onclick="evtClaimWaitlistSpot('${eventId}')" class="evt-rsvp-pay" style="margin-top:10px">Claim Spot — ${formatCurrency(event.rsvp_cost_cents)}</button>
+                        </div>
                     </div>`;
             } else if (isWaiting) {
                 const pos = activeWaitlist.findIndex(w => w.user_id === evtCurrentUser.id) + 1;
                 waitlistAction = `
-                    <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div class="evt-info-card" style="justify-content:space-between">
                         <div>
-                            <p class="text-sm font-semibold text-blue-700">You're #${pos} on the waitlist</p>
-                            <p class="text-xs text-blue-500">We'll notify you if a spot opens.</p>
+                            <p class="evt-info-card-title">You're #${pos} on the waitlist</p>
+                            <p class="evt-info-card-sub">We'll notify you if a spot opens</p>
                         </div>
-                        <button onclick="evtLeaveWaitlist('${eventId}')" class="text-xs text-red-500 hover:text-red-700 font-medium">Leave</button>
+                        <button onclick="evtLeaveWaitlist('${eventId}')" style="font-size:13px;color:#dc2626;font-weight:600;background:none;border:none;cursor:pointer">Leave</button>
                     </div>`;
             } else if (!rsvp?.paid) {
                 waitlistAction = `
-                    <button onclick="evtJoinWaitlist('${eventId}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    <button onclick="evtJoinWaitlist('${eventId}')" class="evt-action-btn">
                         Join Waitlist
                     </button>
-                    <p class="text-xs text-gray-400 text-center mt-1">No payment required to join the waitlist</p>`;
+                    <p style="font-size:12px;color:#717171;text-align:center;margin-top:8px">No payment required to join the waitlist</p>`;
             }
 
             waitlistHtml = `
-                <div class="mt-4 p-4 bg-blue-50/50 border border-blue-200 rounded-xl">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="text-lg">⏳</span>
-                        <h4 class="text-sm font-bold text-gray-800">Event Full — Waitlist</h4>
-                        <span class="ml-auto text-xs text-gray-500">${activeWaitlist.length} waiting</span>
-                    </div>
-                    ${waitlistAction}
-                </div>`;
+                <h3 class="evt-section-title">⏳ Waitlist</h3>
+                <p style="font-size:14px;color:#717171;margin-bottom:14px">${activeWaitlist.length} waiting</p>
+                ${waitlistAction}`;
         }
     }
 
@@ -376,10 +372,13 @@ async function evtOpenDetail(eventId) {
     if (event.rescheduled_at && event.grace_window_end && new Date(event.grace_window_end) > new Date()) {
         const graceEnd = new Date(event.grace_window_end).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
         graceHtml = `
-            <div class="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-xl">
-                <p class="text-sm font-semibold text-orange-700">📅 This event was rescheduled</p>
-                <p class="text-xs text-orange-600 mt-1">If the new date doesn't work for you, you can request a full refund until <strong>${graceEnd}</strong>.</p>
-                ${rsvp?.paid ? `<button onclick="evtRequestGraceRefund('${eventId}')" class="mt-2 text-sm text-red-600 hover:text-red-700 font-semibold underline">Request Full Refund</button>` : ''}
+            <div class="evt-notice-card">
+                <span class="evt-notice-icon">📅</span>
+                <div>
+                    <p class="evt-notice-title">This event was rescheduled</p>
+                    <p class="evt-notice-sub">Request a full refund until <strong>${graceEnd}</strong> if the new date doesn't work.</p>
+                    ${rsvp?.paid ? `<button onclick="evtRequestGraceRefund('${eventId}')" style="margin-top:8px;font-size:14px;color:#dc2626;font-weight:600;text-decoration:underline;background:none;border:none;cursor:pointer">Request Full Refund</button>` : ''}
+                </div>
             </div>`;
     }
 
@@ -457,37 +456,44 @@ async function evtOpenDetail(eventId) {
     if (event.raffle_enabled) {
         const prizes = event.raffle_prizes || [];
         const prizesHtml = prizes.map((p, i) => `
-            <div class="flex items-center gap-2 text-sm">
-                <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">${i + 1}</span>
-                <span class="text-gray-700">${evtEscapeHtml(p.label || p.description || p)}</span>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0">
+                <div class="evt-raffle-rank">${i + 1}</div>
+                <span style="font-size:15px;color:#222">${evtEscapeHtml(p.label || p.description || p)}</span>
             </div>`).join('');
 
         // Raffle entry status
         let entryStatusHtml = '';
         if (myRaffleEntry) {
-            entryStatusHtml = `<div class="flex items-center gap-2 p-2 bg-emerald-50 rounded-lg"><span>🎟️</span><span class="text-sm font-semibold text-emerald-700">You're entered!</span></div>`;
+            entryStatusHtml = `
+                <div class="evt-info-card">
+                    <span class="evt-info-card-icon">🎟️</span>
+                    <div>
+                        <p class="evt-info-card-title">You're entered!</p>
+                        <p class="evt-info-card-sub">Good luck in the drawing</p>
+                    </div>
+                </div>`;
         } else if (event.pricing_mode === 'free_paid_raffle' && event.raffle_entry_cost_cents > 0 && canRsvp) {
             entryStatusHtml = `
-                <button onclick="evtHandleRaffleEntry('${eventId}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+                <button onclick="evtHandleRaffleEntry('${eventId}')" class="evt-raffle-buy">
                     🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}
                 </button>
-                <p class="text-xs text-gray-400 text-center mt-1">Non-refundable raffle ticket</p>`;
+                <p style="font-size:12px;color:#717171;text-align:center;margin-top:8px">Non-refundable raffle ticket</p>`;
         } else if (event.pricing_mode === 'paid' && !rsvp?.paid && canRsvp) {
-            entryStatusHtml = `<p class="text-xs text-gray-500 italic">Raffle entry included with paid RSVP</p>`;
+            entryStatusHtml = `<p style="font-size:13px;color:#717171;font-style:italic">Raffle entry included with paid RSVP</p>`;
         }
 
         // Winners display
         let winnersHtml = '';
         if (raffleWinners.length > 0) {
             winnersHtml = `
-            <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                <h5 class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">🏆 Winners</h5>
+            <div style="margin-top:16px">
+                <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#717171;margin-bottom:10px">🏆 Winners</p>
                 ${raffleWinners.map(w => {
                     const name = w.profiles ? `${w.profiles.first_name || ''} ${w.profiles.last_name || ''}`.trim() : (w.guest_token ? 'Guest' : 'Unknown');
-                    return `<div class="flex items-center gap-2 text-sm py-1">
-                        <span class="w-5 h-5 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center text-xs font-bold">${w.place}</span>
-                        <span class="font-semibold text-gray-800">${evtEscapeHtml(name)}</span>
-                        ${w.prize_description ? `<span class="text-gray-500">— ${evtEscapeHtml(w.prize_description)}</span>` : ''}
+                    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+                        <div class="evt-raffle-rank">${w.place}</div>
+                        <span style="font-size:15px;font-weight:600;color:#222">${evtEscapeHtml(name)}</span>
+                        ${w.prize_description ? `<span style="font-size:14px;color:#717171">— ${evtEscapeHtml(w.prize_description)}</span>` : ''}
                     </div>`;
                 }).join('')}
             </div>`;
@@ -497,23 +503,20 @@ async function evtOpenDetail(eventId) {
         let drawBtnHtml = '';
         if (isHost && canRsvp && raffleWinners.length === 0) {
             drawBtnHtml = `
-                <button onclick="evtOpenRaffleDraw('${eventId}')" class="mt-2 w-full bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+                <button onclick="evtOpenRaffleDraw('${eventId}')" class="evt-action-btn" style="margin-top:12px">
                     🎰 Draw Raffle Winners
                 </button>`;
         }
 
         raffleHtml = `
-            <div class="mt-6 p-4 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
-                <div class="flex items-center gap-2 mb-3">
-                    <span class="text-lg">🎲</span>
-                    <h4 class="text-sm font-bold text-gray-800">Raffle</h4>
-                    <span class="ml-auto text-xs text-gray-500">${raffleEntryCount} entries</span>
-                </div>
-                ${prizesHtml ? `<div class="space-y-1.5 mb-3">${prizesHtml}</div>` : ''}
-                ${entryStatusHtml}
-                ${winnersHtml}
-                ${drawBtnHtml}
-            </div>`;
+            <h3 class="evt-section-title">🎲 Raffle</h3>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <span style="font-size:14px;color:#717171">${raffleEntryCount} ${raffleEntryCount === 1 ? 'entry' : 'entries'}</span>
+            </div>
+            ${prizesHtml ? `<div style="border-top:1px solid #ebebeb">${prizesHtml}</div>` : ''}
+            <div style="margin-top:16px">${entryStatusHtml}</div>
+            ${winnersHtml}
+            ${drawBtnHtml}`;
     }
 
     // Shareable link
@@ -542,8 +545,8 @@ async function evtOpenDetail(eventId) {
         const checkinRows = (checkins || []).map(c => buildPersonRow(c.profiles)).join('') || `<p class="text-xs text-gray-400 italic ml-6">None</p>`;
 
         attendeeBreakdownHtml = `
-            <div class="mt-6 p-4 bg-surface-50 rounded-xl border border-gray-100">
-                <h4 class="text-sm font-bold text-gray-700 mb-4">📋 Attendee Breakdown</h4>
+            <div>
+                <h3 class="evt-section-title">📋 Attendee Breakdown</h3>
 
                 <!-- Going -->
                 <div class="mb-3">
@@ -644,6 +647,7 @@ async function evtOpenDetail(eventId) {
             </div>
             <div class="evt-hero-content">
                 <div class="flex gap-2 mb-2.5">
+                    ${event.category ? `<span class="evt-tag" style="background:rgba(255,255,255,.2);color:#fff;backdrop-filter:blur(4px)">${CATEGORY_EMOJI[event.category] || '📌'} ${(event.category || '').replace(/_/g,' ')}</span>` : ''}
                     <span class="evt-tag ${tc.bg} ${tc.text}">${tc.label}</span>
                     <span class="evt-tag ${STATUS_COLORS[event.status] || ''}">${event.status.toUpperCase()}</span>
                 </div>
