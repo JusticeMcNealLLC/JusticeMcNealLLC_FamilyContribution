@@ -165,25 +165,39 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
 
     metaEl.innerHTML = metaHtml;
 
-    // ── Status Banner (next to date/time) ──────────────
-    const statusBanner = document.getElementById('eventStatusBanner');
+    // ── Hero Status Badge (right side of title) ──────
+    const heroBadge = document.getElementById('heroStatusBadge');
     const isClosed = event.status === 'completed' || event.status === 'cancelled';
     const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
     const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
 
-    if (isClosed) {
-        const label = event.status === 'cancelled' ? '❌ Event Cancelled' : '✅ Event Completed';
-        const cls = event.status === 'cancelled' ? 'evt-status-cancelled' : 'evt-status-past';
-        statusBanner.innerHTML = `<span class="evt-status-banner ${cls}">${label}</span>`;
-        statusBanner.classList.remove('hidden');
+    // Determine status
+    let badgeLabel = '', badgeCls = '', dotPulse = false;
+    if (event.status === 'cancelled') {
+        badgeLabel = 'Cancelled'; badgeCls = 'evt-status-cancelled'; dotPulse = false;
+    } else if (event.status === 'completed') {
+        badgeLabel = 'Ended'; badgeCls = 'evt-status-ended'; dotPulse = false;
     } else if (isPast) {
-        statusBanner.innerHTML = `<span class="evt-status-banner evt-status-past">⏰ Event has started</span>`;
-        statusBanner.classList.remove('hidden');
-    } else if (deadlinePassed) {
-        statusBanner.innerHTML = `<span class="evt-status-banner evt-status-past">🔒 RSVP deadline passed</span>`;
-        statusBanner.classList.remove('hidden');
+        badgeLabel = 'Ended'; badgeCls = 'evt-status-ended'; dotPulse = false;
     } else if (event.status === 'active') {
-        statusBanner.innerHTML = `<span class="evt-status-banner evt-status-live">🟢 Happening now</span>`;
+        badgeLabel = 'Live'; badgeCls = 'evt-status-live'; dotPulse = true;
+    } else {
+        // Upcoming — check how soon
+        const msUntil = new Date(event.start_date) - new Date();
+        const hoursUntil = msUntil / (1000 * 60 * 60);
+        if (hoursUntil <= 24) {
+            badgeLabel = 'Soon'; badgeCls = 'evt-status-soon'; dotPulse = true;
+        } else {
+            badgeLabel = 'Upcoming'; badgeCls = 'evt-status-soon'; dotPulse = false;
+        }
+    }
+
+    heroBadge.innerHTML = `<span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>`;
+
+    // Also show body-level status banner for deadline-passed (not reflected in hero)
+    const statusBanner = document.getElementById('eventStatusBanner');
+    if (deadlinePassed && !isClosed && !isPast) {
+        statusBanner.innerHTML = `<span class="evt-status-banner evt-status-past-body">🔒 RSVP deadline passed</span>`;
         statusBanner.classList.remove('hidden');
     }
 
@@ -383,9 +397,18 @@ async function pubRenderRaffleSection(event) {
 
     // Check if current user has raffle entry
     let myEntryHtml = '';
+    let lockedBtnHtml = '';
+
     if (entriesClosed) {
-        // Event is past — don't show buy/entry buttons
-        myEntryHtml = '';
+        // Show greyed-out locked button
+        const reason = isClosed
+            ? (event.status === 'cancelled' ? 'Event cancelled' : 'Event ended')
+            : isPast ? 'Event in progress' : 'RSVP deadline passed';
+        lockedBtnHtml = `
+            <button class="evt-raffle-locked" disabled style="margin-top:16px">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                ${reason}
+            </button>`;
     } else if (pubCurrentUser && event.pricing_mode === 'free_paid_raffle' && event.raffle_entry_cost_cents > 0) {
         const { data: myEntry } = await supabaseClient
             .from('event_raffle_entries')
@@ -433,8 +456,26 @@ async function pubRenderRaffleSection(event) {
     el.innerHTML = `
         <div class="evt-section">
             <h4 class="evt-section-title" style="font-size:18px">🎲 Raffle</h4>
-            ${prizesHtml ? `<div style="margin-bottom:8px">${prizesHtml}</div>` : ''}
+
+            <!-- Details -->
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+                ${event.raffle_type ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_type === 'digital' ? '💻' : '🎁'} ${event.raffle_type === 'digital' ? 'Digital Prize' : 'Physical Prize'}</span>` : ''}
+                ${event.raffle_draw_trigger ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_draw_trigger === 'auto' ? '⚡ Auto Draw' : '🎰 Manual Draw'}</span>` : ''}
+                ${event.pricing_mode === 'free_paid_raffle' && event.raffle_entry_cost_cents > 0 ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">🎟️ Entry: ${pubFormatCurrency(event.raffle_entry_cost_cents)}</span>` : ''}
+                ${event.pricing_mode === 'paid' ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">✅ Included with RSVP</span>` : ''}
+            </div>
+
+            <!-- Prizes -->
+            ${prizes.length > 0 ? `
+                <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#717171;margin-bottom:8px">Prizes</p>
+                <div style="margin-bottom:12px">${prizesHtml}</div>
+            ` : ''}
+
+            <!-- Entry status / Locked button -->
             ${myEntryHtml}
+            ${lockedBtnHtml}
+
+            <!-- Winners -->
             ${winnersHtml}
         </div>
         <hr class="evt-divider">`;
