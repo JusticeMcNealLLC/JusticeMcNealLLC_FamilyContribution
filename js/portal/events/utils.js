@@ -68,8 +68,8 @@ function evtHandleBannerSelect() {
 function evtCopyShareUrl(slug) {
     let url;
     if (slug) {
-        url = `${APP_CONFIG.FUNCTIONS_URL}/event-og?e=${slug}`;
-        // Append ref for personalized OG preview ("Name invited you to …")
+        url = `https://justicemcneal.com/events/?e=${slug}`;
+        // Append ref so the event page shows "invited by" banner
         if (typeof evtCurrentUser !== 'undefined' && evtCurrentUser?.id) {
             url += `&ref=${evtCurrentUser.id.slice(0, 8)}`;
         }

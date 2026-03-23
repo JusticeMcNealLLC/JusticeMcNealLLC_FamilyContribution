@@ -337,8 +337,8 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         pubHandleTicketScan(event, ticketToken);
     }
 
-    // Share URL — edge function returns XHTML/XML with dynamic OG tags for previews
-    const baseShareUrl = `${APP_CONFIG.FUNCTIONS_URL}/event-og?e=${event.slug}`;
+    // Share URL — clean domain link (static OG tags on events/index.html)
+    const baseShareUrl = `https://justicemcneal.com/events/?e=${event.slug}`;
     if (pubCurrentUser) {
         document.getElementById('shareUrl').value = baseShareUrl + '&ref=' + pubCurrentUser.id.slice(0, 8);
     } else if (pubGuestRsvp && pubGuestRsvp.guest_token) {
