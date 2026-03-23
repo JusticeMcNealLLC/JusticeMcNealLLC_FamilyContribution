@@ -241,19 +241,14 @@
         <!-- Status banner (shown when event is started/ended/cancelled) -->
         <div id="eventStatusBanner" class="hidden" style="padding:0 0 20px"></div>
 
-        <!-- Map -->
-        <div id="eventMapWrap" class="hidden evt-section">
-            <div id="eventMap" class="evt-map" onclick="pubOpenFullscreenMap()">
-                <div style="position:absolute;bottom:8px;right:8px;background:rgba(255,255,255,.9);backdrop-filter:blur(4px);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;color:#717171;z-index:5;display:flex;align-items:center;gap:4px;">
-                    <svg style="width:12px;height:12px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                    Tap to expand
-                </div>
-            </div>
-            <a id="eventDirectionsBtn" href="#" target="_blank" rel="noopener" class="evt-directions-btn">
-                <svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                Get Directions
-            </a>
-        </div>
+        <!-- Event Details (date, time, location) -->
+        <div class="evt-section" id="eventMeta"></div>
+        <!-- Attendee Count -->
+        <div id="attendeeCount" class="hidden" style="padding:0 0 16px"></div>
+        <!-- Add to Calendar -->
+        <div id="calendarSection" class="hidden" style="padding:0 0 20px"></div>
+
+        <hr class="evt-divider">
 
         <!-- Description -->
         <div class="evt-section">
@@ -266,15 +261,6 @@
         <!-- Host / Organizer -->
         <div id="hostSection" class="hidden evt-section"></div>
         <hr id="hostDivider" class="evt-divider hidden">
-
-        <!-- Event Details (date, time, location) -->
-        <div class="evt-section" id="eventMeta"></div>
-        <!-- Attendee Count -->
-        <div id="attendeeCount" class="hidden" style="padding:0 0 16px"></div>
-        <!-- Add to Calendar -->
-        <div id="calendarSection" class="hidden" style="padding:0 0 20px"></div>
-
-        <hr class="evt-divider">
 
         <!-- Gated Notes -->
         <div id="gatedSection" class="hidden evt-section">
@@ -291,6 +277,20 @@
         <div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div>
 
         <hr class="evt-divider">
+
+        <!-- Map -->
+        <div id="eventMapWrap" class="hidden evt-section">
+            <div id="eventMap" class="evt-map" onclick="pubOpenFullscreenMap()">
+                <div style="position:absolute;bottom:8px;right:8px;background:rgba(255,255,255,.9);backdrop-filter:blur(4px);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;color:#717171;z-index:5;display:flex;align-items:center;gap:4px;">
+                    <svg style="width:12px;height:12px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                    Tap to expand
+                </div>
+            </div>
+            <a id="eventDirectionsBtn" href="#" target="_blank" rel="noopener" class="evt-directions-btn">
+                <svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Get Directions
+            </a>
+        </div>
 
         <!-- Guest RSVP Form -->
         <div id="guestRsvpSection" class="hidden evt-section">

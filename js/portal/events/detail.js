@@ -740,43 +740,6 @@ async function evtOpenDetail(eventId) {
             <!-- Status banner for deadline-passed -->
             ${deadlinePassed && !isClosed && !isPast ? '<div style="padding:16px 0 0"><span class="evt-status-banner evt-status-past-body">🔒 RSVP deadline passed</span></div>' : ''}
 
-            <!-- Map -->
-            ${showLocation && event.location_lat && event.location_lng ? `
-            <div class="evt-section">
-                <div id="detailEventMap" class="evt-map" onclick="evtOpenFullscreenMap(${event.location_lat}, ${event.location_lng}, '${evtEscapeHtml(event.location_text || '').replace(/'/g, "\\'")}')">
-                    <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-600 shadow-sm z-[5] flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                        Expand
-                    </div>
-                </div>
-                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="evt-directions-btn">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    Get Directions
-                </a>
-            </div>` : ''}
-
-            <!-- About -->
-            <div class="evt-section">
-                <h3 class="evt-section-title">About this event</h3>
-                <p style="font-size:15px;line-height:1.7;color:#484848" class="whitespace-pre-line">${evtEscapeHtml(event.description || 'No description provided.')}</p>
-            </div>
-
-            <hr class="evt-divider">
-
-            <!-- Host / Organizer -->
-            ${(() => {
-                if (isLlc) {
-                    return `<div class="evt-section"><div class="evt-info-row"><div class="evt-info-icon" style="background:#222"><svg viewBox="0 0 24 24" stroke-width="2" style="stroke:#fff"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div><div><p class="evt-info-primary">Justice McNeal LLC</p><p class="evt-info-secondary">Organizer</p></div></div></div><hr class="evt-divider">`;
-                }
-                if (creatorProfile) {
-                    const avatarHtml = creatorProfile.profile_picture_url
-                        ? `<img src="${creatorProfile.profile_picture_url}" style="width:48px;height:48px;border-radius:12px;object-fit:cover" alt="${evtEscapeHtml(cpName)}">`
-                        : `<div class="evt-info-icon" style="background:#222;color:#fff;font-size:16px;font-weight:700">${cpInitials}</div>`;
-                    return `<div class="evt-section"><a href="profile.html?id=${creatorProfile.id}" style="text-decoration:none"><div class="evt-info-row">${avatarHtml}<div><p class="evt-info-primary">${evtEscapeHtml(cpName)}</p><p class="evt-info-secondary">Organizer</p></div></div></a></div><hr class="evt-divider">`;
-                }
-                return '';
-            })()}
-
             <!-- Event Details -->
             <div class="evt-section">
                 <h3 class="evt-section-title" style="font-size:18px">Event Details</h3>
@@ -833,6 +796,28 @@ async function evtOpenDetail(eventId) {
 
             <hr class="evt-divider">
 
+            <!-- About -->
+            <div class="evt-section">
+                <h3 class="evt-section-title">About this event</h3>
+                <p style="font-size:15px;line-height:1.7;color:#484848" class="whitespace-pre-line">${evtEscapeHtml(event.description || 'No description provided.')}</p>
+            </div>
+
+            <hr class="evt-divider">
+
+            <!-- Host / Organizer -->
+            ${(() => {
+                if (isLlc) {
+                    return `<div class="evt-section"><div class="evt-info-row"><div class="evt-info-icon" style="background:#222"><svg viewBox="0 0 24 24" stroke-width="2" style="stroke:#fff"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div><div><p class="evt-info-primary">Justice McNeal LLC</p><p class="evt-info-secondary">Organizer</p></div></div></div><hr class="evt-divider">`;
+                }
+                if (creatorProfile) {
+                    const avatarHtml = creatorProfile.profile_picture_url
+                        ? `<img src="${creatorProfile.profile_picture_url}" style="width:48px;height:48px;border-radius:12px;object-fit:cover" alt="${evtEscapeHtml(cpName)}">`
+                        : `<div class="evt-info-icon" style="background:#222;color:#fff;font-size:16px;font-weight:700">${cpInitials}</div>`;
+                    return `<div class="evt-section"><a href="profile.html?id=${creatorProfile.id}" style="text-decoration:none"><div class="evt-info-row">${avatarHtml}<div><p class="evt-info-primary">${evtEscapeHtml(cpName)}</p><p class="evt-info-secondary">Organizer</p></div></div></a></div><hr class="evt-divider">`;
+                }
+                return '';
+            })()}
+
             ${showNotes && event.gated_notes ? `
             <div class="evt-section">
                 <h3 class="evt-section-title">Attendee Details</h3>
@@ -853,6 +838,22 @@ async function evtOpenDetail(eventId) {
             <div class="evt-section">
                 ${rsvpButtons}
             </div>
+
+            <!-- Map -->
+            ${showLocation && event.location_lat && event.location_lng ? `
+            <hr class="evt-divider">
+            <div class="evt-section">
+                <div id="detailEventMap" class="evt-map" onclick="evtOpenFullscreenMap(${event.location_lat}, ${event.location_lng}, '${evtEscapeHtml(event.location_text || '').replace(/'/g, "\\'")}')">
+                    <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-600 shadow-sm z-[5] flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                        Expand
+                    </div>
+                </div>
+                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="evt-directions-btn">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Get Directions
+                </a>
+            </div>` : ''}
 
             <!-- Dynamic sections -->
             ${[waitlistHtml, qrHtml, venueQrHtml, scannerBtn, thresholdHtml, costBreakdownHtml, transportHtml, locationReqHtml, graceHtml, raffleHtml, documentsHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => '<hr class="evt-divider"><div class="evt-section">' + s + '</div>').join('')}
