@@ -663,9 +663,9 @@ CREATE TABLE events (
 
     -- Visibility & pricing
     member_only     BOOLEAN DEFAULT FALSE,   -- true = login required to RSVP
-    pricing_mode    TEXT DEFAULT 'free',      -- 'free' | 'paid' | 'free_paid_raffle'
+    pricing_mode    TEXT DEFAULT 'free',      -- 'free' | 'paid' (legacy: 'free_paid_raffle' treated as 'free')
     rsvp_cost_cents INT DEFAULT 0,           -- 0 = free RSVP
-    raffle_entry_cost_cents INT DEFAULT 0,   -- only used in 'free_paid_raffle' mode
+    raffle_entry_cost_cents INT DEFAULT 0,   -- standalone raffle cost (only when pricing_mode != 'paid')
 
     -- Info gating (which fields are hidden until post-RSVP/payment)
     gate_time       BOOLEAN DEFAULT FALSE,   -- hide exact time until RSVP'd/paid

@@ -33,6 +33,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     await evtLoadEvents();
 });
 
+// ─── Raffle Cost Hint Helper ────────────────────────────
+
+function evtUpdateRaffleCostHint() {
+    const costGroup = document.getElementById('raffleEntryCostGroup');
+    const hint = document.getElementById('raffleCostHint');
+    const mode = document.getElementById('pricingMode')?.value || 'free';
+    const raffleOn = document.getElementById('raffleEnabled')?.checked;
+
+    if (!costGroup) return;
+
+    if (mode === 'paid') {
+        // Paid RSVP → raffle included, hide cost input
+        costGroup.classList.add('hidden');
+        if (hint) hint.textContent = 'Raffle entry is included free with paid RSVP.';
+    } else {
+        // Free or RSVP-disabled → show cost input for standalone raffle ticket
+        costGroup.classList.remove('hidden');
+        if (hint) hint.textContent = 'This is the price for a standalone raffle ticket.';
+    }
+}
+
 // ─── Event Listeners ────────────────────────────────────
 
 function evtSetupListeners() {
@@ -91,13 +112,12 @@ function evtSetupListeners() {
     pricingModeEl?.addEventListener('change', () => {
         const mode = pricingModeEl.value;
         const rsvpCostGroup = document.getElementById('rsvpCostGroup');
-        const raffleEntryCostGroup = document.getElementById('raffleEntryCostGroup');
 
         // Show RSVP cost only for 'paid' mode
         if (rsvpCostGroup) rsvpCostGroup.classList.toggle('hidden', mode !== 'paid');
 
-        // Show raffle entry cost field only for free_paid_raffle
-        if (raffleEntryCostGroup) raffleEntryCostGroup.classList.toggle('hidden', mode !== 'free_paid_raffle');
+        // Update raffle entry cost hint / visibility based on pricing mode
+        evtUpdateRaffleCostHint();
     });
 
     // ── Raffle Toggle ────────────────────────────────────
@@ -105,6 +125,7 @@ function evtSetupListeners() {
     raffleToggle?.addEventListener('change', () => {
         const config = document.getElementById('raffleConfig');
         if (config) config.classList.toggle('hidden', !raffleToggle.checked);
+        evtUpdateRaffleCostHint();
     });
 
     // ── Winner Count → Prize Inputs ──────────────────────

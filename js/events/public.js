@@ -447,7 +447,7 @@ function pubRenderRsvpSection(event) {
         return;
     }
 
-    // ── Free RSVP (including free_paid_raffle) ──────────
+    // ── Free RSVP (any non-paid event) ──────────────────
     const goingCls = pubCurrentRsvp?.status === 'going' ? ' active-going' : '';
     const maybeCls = pubCurrentRsvp?.status === 'maybe' ? ' active-maybe' : '';
     const cantCls  = pubCurrentRsvp?.status === 'not_going' ? ' active-not' : '';
@@ -510,7 +510,7 @@ async function pubRenderRaffleSection(event) {
                 <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
                 ${reason}
             </button>`;
-    } else if (pubCurrentUser && event.pricing_mode === 'free_paid_raffle' && event.raffle_entry_cost_cents > 0) {
+    } else if (pubCurrentUser && event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0) {
         const { data: myEntry } = await supabaseClient
             .from('event_raffle_entries')
             .select('id, paid')
@@ -562,7 +562,7 @@ async function pubRenderRaffleSection(event) {
             <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
                 ${event.raffle_type ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_type === 'digital' ? '💻' : '🎁'} ${event.raffle_type === 'digital' ? 'Digital Prize' : 'Physical Prize'}</span>` : ''}
                 ${event.raffle_draw_trigger ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_draw_trigger === 'auto' ? '⚡ Auto Draw' : '🎰 Manual Draw'}</span>` : ''}
-                ${event.pricing_mode === 'free_paid_raffle' && event.raffle_entry_cost_cents > 0 ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">🎟️ Entry: ${pubFormatCurrency(event.raffle_entry_cost_cents)}</span>` : ''}
+                ${event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0 ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">🎟️ Entry: ${pubFormatCurrency(event.raffle_entry_cost_cents)}</span>` : ''}
                 ${event.pricing_mode === 'paid' ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">✅ Included with RSVP</span>` : ''}
             </div>
 

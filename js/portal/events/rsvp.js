@@ -113,7 +113,7 @@ async function evtHandleRaffleEntry(eventId) {
             return;
         }
 
-        if (event.pricing_mode !== 'free_paid_raffle' || !event.raffle_entry_cost_cents) {
+        if (event.pricing_mode === 'paid' || !event.raffle_entry_cost_cents) {
             alert('Raffle entry is included with your RSVP for this event.');
             return;
         }

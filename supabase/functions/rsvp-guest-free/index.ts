@@ -46,7 +46,7 @@ serve(async (req) => {
       throw new Error('This event is not accepting RSVPs')
     }
 
-    // Must be a free event (or free_paid_raffle where RSVP is free)
+    // Must be a free event (any non-paid pricing mode)
     if (event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
       throw new Error('This is a paid event — use the checkout flow instead')
     }

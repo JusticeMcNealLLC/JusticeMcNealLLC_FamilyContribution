@@ -153,8 +153,8 @@ serve(async (req) => {
         throw new Error('This event does not have a raffle')
       }
 
-      if (event.pricing_mode !== 'free_paid_raffle') {
-        throw new Error('Raffle entry is not a separate purchase for this event')
+      if (event.pricing_mode === 'paid') {
+        throw new Error('Raffle entry is included with paid RSVP — no separate purchase needed')
       }
 
       // Check for existing raffle entry

@@ -434,7 +434,25 @@ async function evtOpenDetail(eventId) {
                 </div>
             </div>`;
 
-    } else if (canRsvp && !eventIsFull && event.pricing_mode === 'free') {
+    } else if (canRsvp && !eventIsFull && event.pricing_mode === 'paid') {
+        if (rsvp?.paid) {
+            rsvpButtons = `
+            <div class="evt-info-card">
+                <span class="evt-info-card-icon">✅</span>
+                <div>
+                    <p class="evt-info-card-title">RSVP Confirmed &amp; Paid</p>
+                    <p class="evt-info-card-sub">Non-refundable · Contact admin for changes</p>
+                </div>
+            </div>`;
+        } else {
+            rsvpButtons = `
+            <button onclick="evtHandleRsvp('${eventId}','going')" class="evt-rsvp-pay">
+                RSVP — ${formatCurrency(event.rsvp_cost_cents)}
+            </button>
+            <p style="font-size:12px;color:#717171;text-align:center;margin-top:8px">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' · Includes raffle entry' : ''}</p>`;
+        }
+
+    } else if (canRsvp && !eventIsFull) {
         const goingActive = rsvp?.status === 'going' ? ' active-going' : '';
         const maybeActive = rsvp?.status === 'maybe' ? ' active-maybe' : '';
         const notActive = rsvp?.status === 'not_going' ? ' active-not' : '';
@@ -445,38 +463,6 @@ async function evtOpenDetail(eventId) {
                 <button onclick="evtHandleRsvp('${eventId}','maybe')" class="evt-rsvp-btn${maybeActive}">Maybe</button>
                 <button onclick="evtHandleRsvp('${eventId}','not_going')" class="evt-rsvp-btn${notActive}">Can't Go</button>
             </div>`;
-
-    } else if (canRsvp && !eventIsFull && (event.pricing_mode === 'paid' || event.pricing_mode === 'free_paid_raffle')) {
-        const isPaid = event.pricing_mode === 'paid';
-        const costCents = isPaid ? event.rsvp_cost_cents : 0;
-
-        if (rsvp?.paid) {
-            rsvpButtons = `
-            <div class="evt-info-card">
-                <span class="evt-info-card-icon">✅</span>
-                <div>
-                    <p class="evt-info-card-title">RSVP Confirmed &amp; Paid</p>
-                    <p class="evt-info-card-sub">Non-refundable · Contact admin for changes</p>
-                </div>
-            </div>`;
-        } else if (isPaid) {
-            rsvpButtons = `
-            <button onclick="evtHandleRsvp('${eventId}','going')" class="evt-rsvp-pay">
-                RSVP — ${formatCurrency(costCents)}
-            </button>
-            <p style="font-size:12px;color:#717171;text-align:center;margin-top:8px">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' · Includes raffle entry' : ''}</p>`;
-        } else {
-            const goingActive = rsvp?.status === 'going' ? ' active-going' : '';
-            const maybeActive = rsvp?.status === 'maybe' ? ' active-maybe' : '';
-            const notActive = rsvp?.status === 'not_going' ? ' active-not' : '';
-            rsvpButtons = `
-            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#717171;margin-bottom:12px">RSVP (Free)</p>
-            <div class="evt-rsvp-grid">
-                <button onclick="evtHandleRsvp('${eventId}','going')" class="evt-rsvp-btn${goingActive}">Going</button>
-                <button onclick="evtHandleRsvp('${eventId}','maybe')" class="evt-rsvp-btn${maybeActive}">Maybe</button>
-                <button onclick="evtHandleRsvp('${eventId}','not_going')" class="evt-rsvp-btn${notActive}">Can't Go</button>
-            </div>`;
-        }
     }
 
     // ── RSVP closed state (event started / deadline passed) ──
@@ -542,13 +528,13 @@ async function evtOpenDetail(eventId) {
                     <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
                     Entries Closed — ${lockedReason}
                 </button>`;
-        } else if (event.pricing_mode === 'free_paid_raffle' && event.raffle_entry_cost_cents > 0 && canRsvp) {
+        } else if (event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0 && !entriesClosed) {
             entryStatusHtml = `
                 <button onclick="evtHandleRaffleEntry('${eventId}')" class="evt-raffle-buy">
                     🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}
                 </button>
                 <p style="font-size:12px;color:#717171;text-align:center;margin-top:8px">Non-refundable raffle ticket</p>`;
-        } else if (event.pricing_mode === 'paid' && !rsvp?.paid && canRsvp) {
+        } else if (event.pricing_mode === 'paid' && !rsvp?.paid) {
             entryStatusHtml = `<p style="font-size:13px;color:#717171;font-style:italic">Raffle entry included with paid RSVP</p>`;
         }
 
@@ -571,7 +557,7 @@ async function evtOpenDetail(eventId) {
 
         // Host draw button
         let drawBtnHtml = '';
-        if (isHost && canRsvp && raffleWinners.length === 0) {
+        if (isHost && !entriesClosed && raffleWinners.length === 0) {
             drawBtnHtml = `
                 <button onclick="evtOpenRaffleDraw('${eventId}')" class="evt-action-btn" style="margin-top:12px">
                     🎰 Draw Raffle Winners
@@ -583,7 +569,7 @@ async function evtOpenDetail(eventId) {
             <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
                 ${event.raffle_type ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_type === 'digital' ? '💻' : '🎁'} ${event.raffle_type === 'digital' ? 'Digital Prize' : 'Physical Prize'}</span>` : ''}
                 ${event.raffle_draw_trigger ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_draw_trigger === 'auto' ? '⚡ Auto Draw' : '🎰 Manual Draw'}</span>` : ''}
-                ${event.pricing_mode === 'free_paid_raffle' && event.raffle_entry_cost_cents > 0 ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">🎟️ Entry: ${formatCurrency(event.raffle_entry_cost_cents)}</span>` : ''}
+                ${event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0 ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">🎟️ Entry: ${formatCurrency(event.raffle_entry_cost_cents)}</span>` : ''}
                 ${event.pricing_mode === 'paid' ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">✅ Included with RSVP</span>` : ''}
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">

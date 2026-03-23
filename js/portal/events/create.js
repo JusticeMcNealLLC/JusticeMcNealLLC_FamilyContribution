@@ -452,7 +452,7 @@ async function evtHandleCreate(e) {
             gate_notes: document.getElementById('gateNotes').checked,
             pricing_mode: pricingMode,
             rsvp_cost_cents: rsvpCostCents,
-            raffle_entry_cost_cents: pricingMode === 'free_paid_raffle' ? raffleEntryCostDollars * 100 : 0,
+            raffle_entry_cost_cents: (raffleEnabled && pricingMode !== 'paid') ? raffleEntryCostDollars * 100 : 0,
             raffle_enabled: raffleEnabled,
             status: 'open',
         };
