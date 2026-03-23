@@ -169,6 +169,15 @@ function evtSetupListeners() {
     rsvpToggle?.addEventListener('change', () => {
         const settings = document.getElementById('rsvpSettingsGroup');
         if (settings) settings.classList.toggle('hidden', !rsvpToggle.checked);
+        // Clear gated details when RSVP is off (they depend on RSVP)
+        if (!rsvpToggle.checked) {
+            ['gateTime', 'gateLocation', 'gateNotes'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.checked = false;
+            });
+            const notes = document.getElementById('eventGatedNotes');
+            if (notes) notes.value = '';
+        }
     });
 
     // ── QR Check-In Enable Toggle ────────────────────────
