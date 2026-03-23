@@ -352,7 +352,7 @@ async function pubRenderRaffleSection(event) {
     const prizesHtml = prizes.map((p, i) => `
         <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
             <div class="evt-raffle-rank">${i + 1}</div>
-            <span style="font-size:14px;color:#222;font-weight:500">${pubEscapeHtml(p.label || p)}</span>
+            <span style="font-size:14px;color:#222;font-weight:500">${pubEscapeHtml(p.label || p.description || p)}</span>
         </div>`).join('');
 
     // Check if current user has raffle entry

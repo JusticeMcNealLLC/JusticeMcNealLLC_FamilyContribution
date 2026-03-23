@@ -486,7 +486,7 @@ async function evtHandleCreate(e) {
             record.llc_cut_pct = parseFloat(document.getElementById('eventLlcCut').value) || 0;
             record.invest_eligible = document.getElementById('investEligible').checked;
             record.show_cost_breakdown = document.getElementById('showCostBreakdown').checked;
-            record.member_only = true; // LLC events: member RSVP only (no guest RSVPs)
+            // member_only already set from checkbox above — LLC events respect user's choice
             record.cost_breakdown = costBreakdownSummary;
             const transportEnabled = document.getElementById('transportationEnabled').checked;
             record.transportation_enabled = transportEnabled;
