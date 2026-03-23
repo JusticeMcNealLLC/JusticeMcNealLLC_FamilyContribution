@@ -45,3 +45,6 @@ verify_jwt = false
 
 [functions.birthday-payout]
 verify_jwt = false
+
+[functions.event-og]
+verify_jwt = false
