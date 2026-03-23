@@ -46,7 +46,8 @@ const FIN_CATEGORIES = {
     education:        { emoji: '📚', label: 'Education',        color: '#06b6d4' },
     business:         { emoji: '💼', label: 'Business',          color: '#64748b' },
     llc_contribution: { emoji: '💸', label: 'LLC Contribution',  color: '#4f46e5' },
-    savings:          { emoji: '💰', label: 'Savings / Transfers', color: '#22c55e' },
+    savings:          { emoji: '💰', label: 'Savings / P2P',     color: '#22c55e' },
+    transfer:         { emoji: '🔄', label: 'Transfer',          color: '#a3a3a3' },
     income:           { emoji: '💵', label: 'Income',            color: '#059669' },
     other:            { emoji: '🔁', label: 'Other',             color: '#94a3b8' },
 };
@@ -80,8 +81,10 @@ const MERCHANT_RULES = [
     { pattern: /karrykraze|pirate\s*ship|stripe|square\s*(pos|payment)|shopify|wix|godaddy|namecheap|digital\s*ocean|aws|heroku|vercel|netlify|twilio|mailchimp|constant\s*contact|quickbook|freshbook|xero/i, category: 'business' },
     // LLC Contribution
     { pattern: /justice\s?mcneal|jmllc|family\s?contribution/i, category: 'llc_contribution' },
-    // Savings / Transfers — Zelle, Venmo, Cash App, Apple Cash, loan payments, share transfers, deposit transfers
-    { pattern: /zelle|venmo|cash\s?app|paypal|apple\s?cash|to\s+loan|from\s+loan|to\s+share|from\s+share|deposit\s+transfer|transfer\s+from|overdraft\s+transfer|foreign\s+transaction\s+fee|wire\s*transfer|ach\s*transfer/i, category: 'savings' },
+    // Transfers (share-to-share, loan, ACH, overdraft — excluded from income/spending)
+    { pattern: /to\s+loan|from\s+loan|to\s+share|from\s+share|deposit\s+transfer|transfer\s+from|overdraft\s+transfer|wire\s*transfer|ach\s*transfer|share\s*transfer|internal\s*transfer|xfer\b|transferred\s+(from|to)/i, category: 'transfer' },
+    // Savings / P2P — Zelle, Venmo, Cash App, Apple Cash, PayPal (real money movement)
+    { pattern: /zelle|venmo|cash\s?app|paypal|apple\s?cash|foreign\s+transaction\s+fee/i, category: 'savings' },
 ];
 
 function finCategorize(description, amountCents = 0) {
@@ -719,6 +722,7 @@ function finRenderInsights() {
     // ── 3. Income vs Spending Net Summary ────────────────────
     let income = 0, spending = 0;
     for (const t of txns) {
+        if (t.category === 'transfer') continue; // transfers are zero-sum
         if (t.amount_cents > 0) income += t.amount_cents;
         else spending += Math.abs(t.amount_cents);
     }
@@ -913,6 +917,7 @@ function finRenderSummaryStats() {
     const txns = window._finTransactions;
     let income = 0, spending = 0, llc = 0;
     for (const t of txns) {
+        if (t.category === 'transfer') continue; // transfers are zero-sum, skip
         if (t.amount_cents > 0) income += t.amount_cents;
         else spending += Math.abs(t.amount_cents);
         if (t.category === 'llc_contribution') llc += Math.abs(t.amount_cents);
@@ -930,7 +935,7 @@ function finRenderSummaryStats() {
 // ═══════════════════════════════════════════════════════════
 
 function finRenderCategoryChart() {
-    const txns = window._finTransactions.filter(t => t.amount_cents < 0); // outflows only
+    const txns = window._finTransactions.filter(t => t.amount_cents < 0 && t.category !== 'transfer'); // outflows, skip transfers
     const canvas = document.getElementById('categoryChart');
     const emptyEl = document.getElementById('chartEmpty');
 
@@ -990,7 +995,7 @@ function finRenderCategoryChart() {
 
 function finRenderCategoryList() {
     const container = document.getElementById('categoryList');
-    const txns = window._finTransactions.filter(t => t.amount_cents < 0);
+    const txns = window._finTransactions.filter(t => t.amount_cents < 0 && t.category !== 'transfer');
     if (txns.length === 0) {
         container.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">No spending data</p>';
         return;
@@ -1073,7 +1078,7 @@ function finRenderTxnList() {
 
     // Build quick-category chips for "other" category transactions
     const showQuickChips = filter === 'other';
-    const quickChipCats = ['dining', 'groceries', 'shopping', 'transportation', 'entertainment', 'subscriptions', 'health', 'business', 'housing', 'income', 'savings'];
+    const quickChipCats = ['dining', 'groceries', 'shopping', 'transportation', 'entertainment', 'subscriptions', 'health', 'business', 'housing', 'income', 'savings', 'transfer'];
 
     container.innerHTML = txns.map(t => {
         const c = FIN_CATEGORIES[t.category] || FIN_CATEGORIES.other;
@@ -1483,6 +1488,7 @@ async function finRenderCatStackChart() {
     const monthCatMap = {};
     const allCats = new Set();
     for (const t of allTxns) {
+        if (t.category === 'transfer') continue; // transfers are zero-sum
         if (t.amount_cents >= 0) continue; // outflows only
         const month = t.transaction_date?.slice(0, 7);
         if (!month) continue;
@@ -1952,6 +1958,7 @@ async function finHandleUpload(file) {
             // Calculate totals for this month
             let inflow = 0, outflow = 0;
             for (const t of monthTxns) {
+                if (t.category === 'transfer') continue; // transfers are zero-sum
                 if (t.amount_cents > 0) inflow += t.amount_cents;
                 else outflow += Math.abs(t.amount_cents);
             }
