@@ -138,7 +138,7 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     const isGatedDate = event.gate_time && !pubCurrentRsvp;
     const isGatedLoc  = event.gate_location && !pubCurrentRsvp;
 
-    let metaHtml = '';
+    let metaHtml = '<h3 class="evt-section-title" style="font-size:18px">Event Details</h3>';
 
     // Date & Time
     if (isGatedDate) {
