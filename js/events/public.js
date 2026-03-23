@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function pubLoadEvent(slug, isCheckin, ticketToken) {
     const { data: event, error } = await supabaseClient
         .from('events')
-        .select('*')
+        .select('*, creator:profiles!events_created_by_fkey(first_name, last_name, profile_picture_url)')
         .eq('slug', slug)
         .not('status', 'eq', 'draft')
         .single();
@@ -97,7 +97,18 @@ async function pubLoadEvent(slug, isCheckin, ticketToken) {
 /* ── Render ──────────────────────────────── */
 function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     document.getElementById('loading').classList.add('hidden');
-    document.getElementById('eventContent').classList.remove('hidden');
+    const content = document.getElementById('eventContent');
+    content.classList.remove('hidden');
+    content.classList.add('evt-fade-in');
+
+    // ── Open Graph meta tags (for link previews) ──
+    const ogTitle = document.createElement('meta'); ogTitle.setAttribute('property', 'og:title'); ogTitle.content = event.title;
+    const ogDesc  = document.createElement('meta'); ogDesc.setAttribute('property', 'og:description'); ogDesc.content = (event.description || '').slice(0, 200);
+    const ogImage = document.createElement('meta'); ogImage.setAttribute('property', 'og:image'); ogImage.content = event.banner_url || '';
+    const ogUrl   = document.createElement('meta'); ogUrl.setAttribute('property', 'og:url'); ogUrl.content = window.location.href;
+    const ogType  = document.createElement('meta'); ogType.setAttribute('property', 'og:type'); ogType.content = 'event';
+    const twCard  = document.createElement('meta'); twCard.name = 'twitter:card'; twCard.content = 'summary_large_image';
+    [ogTitle, ogDesc, ogImage, ogUrl, ogType, twCard].forEach(m => document.head.appendChild(m));
 
     // Title
     document.title = `${event.title} | Justice McNeal LLC`;
@@ -182,23 +193,103 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     } else if (event.status === 'active') {
         badgeLabel = 'Live'; badgeCls = 'evt-status-live'; dotPulse = true;
     } else {
-        // Upcoming — check how soon
+        // Upcoming — show countdown
         const msUntil = new Date(event.start_date) - new Date();
-        const hoursUntil = msUntil / (1000 * 60 * 60);
-        if (hoursUntil <= 24) {
-            badgeLabel = 'Soon'; badgeCls = 'evt-status-soon'; dotPulse = true;
+        const d = Math.floor(msUntil / 86400000);
+        const h = Math.floor((msUntil % 86400000) / 3600000);
+        const m = Math.floor((msUntil % 3600000) / 60000);
+        if (d > 0) {
+            badgeLabel = `${d}d ${h}h`; badgeCls = 'evt-status-soon'; dotPulse = d === 0;
+        } else if (h > 0) {
+            badgeLabel = `${h}h ${m}m`; badgeCls = 'evt-status-soon'; dotPulse = true;
         } else {
-            badgeLabel = 'Upcoming'; badgeCls = 'evt-status-soon'; dotPulse = false;
+            badgeLabel = `${m}m`; badgeCls = 'evt-status-soon'; dotPulse = true;
         }
     }
 
     heroBadge.innerHTML = `<span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>`;
+
+    // Live countdown updater (update badge every 60s for upcoming events)
+    if (!isClosed && !isPast && event.status !== 'active') {
+        setInterval(() => {
+            const ms = new Date(event.start_date) - new Date();
+            if (ms <= 0) { heroBadge.innerHTML = `<span class="evt-status-badge evt-status-live"><span class="evt-status-dot pulse"></span>Live</span>`; return; }
+            const dd = Math.floor(ms / 86400000);
+            const hh = Math.floor((ms % 86400000) / 3600000);
+            const mm = Math.floor((ms % 3600000) / 60000);
+            const lbl = dd > 0 ? `${dd}d ${hh}h` : hh > 0 ? `${hh}h ${mm}m` : `${mm}m`;
+            heroBadge.querySelector('.evt-status-badge').innerHTML = `<span class="evt-status-dot${dd === 0 ? ' pulse' : ''}"></span>${lbl}`;
+        }, 60000);
+    }
 
     // Also show body-level status banner for deadline-passed (not reflected in hero)
     const statusBanner = document.getElementById('eventStatusBanner');
     if (deadlinePassed && !isClosed && !isPast) {
         statusBanner.innerHTML = `<span class="evt-status-banner evt-status-past-body">🔒 RSVP deadline passed</span>`;
         statusBanner.classList.remove('hidden');
+    }
+
+    // ── Attendee Count (show only when ≥ 3) ─────────
+    if (goingCount >= 3) {
+        const countEl = document.getElementById('attendeeCount');
+        countEl.innerHTML = `
+            <div class="evt-info-row">
+                <div class="evt-info-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                <div>
+                    <p class="evt-info-primary">${goingCount} going</p>
+                    ${event.max_participants ? `<p class="evt-info-secondary">${event.max_participants - goingCount > 0 ? (event.max_participants - goingCount) + ' spots left' : 'Sold out'}</p>` : ''}
+                </div>
+            </div>`;
+        countEl.classList.remove('hidden');
+    }
+
+    // ── Host / Organizer ────────────────────────────
+    const hostEl = document.getElementById('hostSection');
+    if (event.event_type === 'llc') {
+        hostEl.innerHTML = `
+            <div class="evt-info-row">
+                <div class="evt-info-icon" style="background:#222"><svg viewBox="0 0 24 24" stroke-width="2" style="stroke:#fff"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>
+                <div>
+                    <p class="evt-info-primary">Justice McNeal LLC</p>
+                    <p class="evt-info-secondary">Organizer</p>
+                </div>
+            </div>`;
+    } else if (event.creator) {
+        const c = event.creator;
+        const fullName = `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Member';
+        const initials = ((c.first_name?.[0] || '') + (c.last_name?.[0] || '')).toUpperCase();
+        const avatarHtml = c.profile_picture_url
+            ? `<img src="${c.profile_picture_url}" style="width:48px;height:48px;border-radius:12px;object-fit:cover" alt="${pubEscapeHtml(fullName)}">`
+            : `<div class="evt-info-icon" style="background:#222;color:#fff;font-size:16px;font-weight:700">${initials}</div>`;
+        hostEl.innerHTML = `
+            <div class="evt-info-row">
+                ${avatarHtml}
+                <div>
+                    <p class="evt-info-primary">${pubEscapeHtml(fullName)}</p>
+                    <p class="evt-info-secondary">Organizer</p>
+                </div>
+            </div>`;
+    }
+    hostEl.classList.remove('hidden');
+
+    // ── Add to Calendar ─────────────────────────────
+    if (!isGatedDate) {
+        const calEl = document.getElementById('calendarSection');
+        const calStart = start.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+        const calEnd = end ? end.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '') : new Date(start.getTime() + 7200000).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+        const gcalUrl = `https://calendar.google.com/calendar/r/eventedit?text=${encodeURIComponent(event.title)}&dates=${calStart}/${calEnd}&details=${encodeURIComponent(event.description || '')}&location=${encodeURIComponent(event.location_text || '')}`;
+        calEl.innerHTML = `
+            <div style="display:flex;gap:10px">
+                <button onclick="pubDownloadIcs()" class="evt-action-btn" style="flex:1;background:#f7f7f7;color:#222">
+                    <svg style="width:18px;height:18px;stroke:#222" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Add to Calendar
+                </button>
+                <a href="${gcalUrl}" target="_blank" rel="noopener" class="evt-action-btn" style="flex:1;background:#f7f7f7;color:#222;text-decoration:none">
+                    <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none"><path d="M18.316 5.684L24 0H18.316V5.684z" fill="#EA4335"/><path d="M18.316 0H5.684v5.684h7.263L18.316 0z" fill="#4285F4" opacity=".6"/><path d="M5.684 5.684H0V18.316h5.684V5.684z" fill="#34A853"/><path d="M18.316 5.684v12.632H24V5.684h-5.684z" fill="#FBBC05"/><path d="M18.316 18.316H5.684V24h12.632v-5.684z" fill="#EA4335" opacity=".6"/><path d="M5.684 0H0v5.684h5.684V0z" fill="#188038"/><path d="M5.684 18.316H0V24h5.684v-5.684z" fill="#1967D2"/><path d="M8 16.5v-9h2v9H8zm3-9h2v9h-2v-9zm3 0h2v9h-2v-9z" fill="#4285F4"/></svg>
+                    Google Calendar
+                </a>
+            </div>`;
+        calEl.classList.remove('hidden');
     }
 
     // Map (show if location + lat/lng available and not gated)
@@ -214,9 +305,6 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         document.getElementById('gatedSection').classList.remove('hidden');
         document.getElementById('gatedNotes').textContent = event.gated_notes;
     }
-
-    // Stats hidden — attendee counts are internal only
-    // (goingCount and spotsLeft no longer shown to public)
 
     // Member-only notice
     if (event.member_only && !pubCurrentUser) {
@@ -257,8 +345,26 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         pubHandleTicketScan(event, ticketToken);
     }
 
-    // Share URL
-    document.getElementById('shareUrl').value = window.location.href.split('?')[0] + '?e=' + event.slug;
+    // Share URL (personalized with ref param)
+    const baseShareUrl = window.location.href.split('?')[0] + '?e=' + event.slug;
+    if (pubCurrentUser) {
+        document.getElementById('shareUrl').value = baseShareUrl + '&ref=' + pubCurrentUser.id.slice(0, 8);
+    } else if (pubGuestRsvp && pubGuestRsvp.guest_token) {
+        document.getElementById('shareUrl').value = baseShareUrl + '&ref=g_' + pubGuestRsvp.guest_token.slice(0, 8);
+    } else {
+        document.getElementById('shareUrl').value = baseShareUrl;
+    }
+
+    // Invite banner (detect ref param)
+    pubRenderInviteBanner(event);
+
+    // Comments section
+    pubRenderComments(event);
+
+    // Host section divider
+    if (!hostEl.classList.contains('hidden')) {
+        document.getElementById('hostDivider').classList.remove('hidden');
+    }
 
     // Update sign-in link to redirect back after login
     const loginLinks = document.querySelectorAll('a[href="/auth/login.html"]');
@@ -353,14 +459,14 @@ function pubRenderRsvpSection(event) {
 
     section.innerHTML = `
         <p style="font-size:12px;font-weight:700;color:#717171;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Your RSVP</p>
-        <div class="evt-rsvp-grid">
-            <button onclick="pubHandleRsvp('going')" class="evt-rsvp-btn${goingCls}">
+        <div class="evt-rsvp-grid" role="group" aria-label="RSVP options">
+            <button onclick="pubHandleRsvp('going')" class="evt-rsvp-btn${goingCls}" aria-pressed="${pubCurrentRsvp?.status === 'going'}">
                 <span style="font-size:20px;display:block;margin-bottom:4px">✅</span> Going
             </button>
-            <button onclick="pubHandleRsvp('maybe')" class="evt-rsvp-btn${maybeCls}">
+            <button onclick="pubHandleRsvp('maybe')" class="evt-rsvp-btn${maybeCls}" aria-pressed="${pubCurrentRsvp?.status === 'maybe'}">
                 <span style="font-size:20px;display:block;margin-bottom:4px">🤔</span> Maybe
             </button>
-            <button onclick="pubHandleRsvp('not_going')" class="evt-rsvp-btn${cantCls}">
+            <button onclick="pubHandleRsvp('not_going')" class="evt-rsvp-btn${cantCls}" aria-pressed="${pubCurrentRsvp?.status === 'not_going'}">
                 <span style="font-size:20px;display:block;margin-bottom:4px">❌</span> Can't Go
             </button>
         </div>
@@ -1251,6 +1357,184 @@ function pubCloseFullscreenMap() {
     document.body.style.overflow = '';
 }
 
+/* ── ICS Calendar Download ────────────────── */
+function pubDownloadIcs() {
+    if (!pubCurrentEvent) return;
+    const e = pubCurrentEvent;
+    const start = new Date(e.start_date);
+    const end   = e.end_date ? new Date(e.end_date) : new Date(start.getTime() + 7200000);
+    const fmt = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const uid  = `${e.id}@justicemcnealllc.com`;
+
+    const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//JusticeMcNealLLC//Events//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `UID:${uid}`,
+        `DTSTART:${fmt(start)}`,
+        `DTEND:${fmt(end)}`,
+        `SUMMARY:${e.title.replace(/[,;\\]/g, '')}`,
+        `DESCRIPTION:${(e.description || '').replace(/\n/g, '\\n').slice(0, 500)}`,
+        `LOCATION:${(e.location_text || '').replace(/[,;\\]/g, '')}`,
+        `URL:${window.location.href}`,
+        'STATUS:CONFIRMED',
+        'END:VEVENT',
+        'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${e.slug || 'event'}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+/* ── Personalized Invite Banner ──────────── */
+async function pubRenderInviteBanner(event) {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (!ref) return;
+
+    const banner = document.getElementById('inviteBanner');
+    if (!banner) return;
+
+    let inviterName = null;
+
+    if (ref.startsWith('g_')) {
+        // Guest referrer — look up guest name
+        const gToken = ref.slice(2);
+        const { data: gRsvp } = await supabaseClient
+            .from('event_guest_rsvps')
+            .select('guest_name')
+            .eq('event_id', event.id)
+            .ilike('guest_token', gToken + '%')
+            .maybeSingle();
+        if (gRsvp) inviterName = gRsvp.guest_name;
+    } else {
+        // Member referrer — look up profile
+        const { data: profiles } = await supabaseClient
+            .from('profiles')
+            .select('first_name, last_name')
+            .ilike('id', ref + '%')
+            .limit(1);
+        if (profiles && profiles[0]) {
+            inviterName = `${profiles[0].first_name || ''} ${profiles[0].last_name || ''}`.trim();
+        }
+    }
+
+    if (inviterName) {
+        banner.innerHTML = `
+            <div class="evt-invite-banner">
+                <div>
+                    <p>🎉 ${pubEscapeHtml(inviterName)} invited you!</p>
+                    <span>Join them at this event</span>
+                </div>
+            </div>`;
+        banner.classList.remove('hidden');
+    }
+}
+
+/* ── Comments / Discussion ───────────────── */
+async function pubRenderComments(event) {
+    const section = document.getElementById('commentsSection');
+    const list    = document.getElementById('commentsList');
+    const form    = document.getElementById('commentForm');
+    const prompt  = document.getElementById('commentLoginPrompt');
+
+    // Load comments
+    const { data: comments } = await supabaseClient
+        .from('event_comments')
+        .select('*, profile:profiles!event_comments_user_id_fkey(first_name, last_name, profile_picture_url)')
+        .eq('event_id', event.id)
+        .order('created_at', { ascending: true })
+        .limit(100);
+
+    // Show section if there are comments or user can post
+    const canPost = pubCurrentRsvp || pubGuestRsvp;
+
+    if ((!comments || comments.length === 0) && !canPost) return;
+
+    section.classList.remove('hidden');
+
+    // Render comments
+    if (comments && comments.length > 0) {
+        list.innerHTML = comments.map(c => {
+            const isGuest = !c.user_id;
+            const name = isGuest ? pubEscapeHtml(c.guest_name || 'Guest') : pubEscapeHtml(`${c.profile?.first_name || ''} ${c.profile?.last_name || ''}`.trim() || 'Member');
+            const avatarUrl = !isGuest && c.profile?.profile_picture_url;
+            const initials = isGuest ? (c.guest_name || 'G')[0].toUpperCase() : ((c.profile?.first_name?.[0] || '') + (c.profile?.last_name?.[0] || '')).toUpperCase();
+            const timeAgo = pubTimeAgo(c.created_at);
+
+            return `<div class="evt-comment">
+                <div class="evt-comment-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="">` : initials}</div>
+                <div class="evt-comment-body">
+                    <span class="evt-comment-name">${name}</span><span class="evt-comment-time">${timeAgo}</span>
+                    <p class="evt-comment-text">${pubEscapeHtml(c.body)}</p>
+                </div>
+            </div>`;
+        }).join('');
+    } else {
+        list.innerHTML = '<p style="font-size:14px;color:#b0b0b0;text-align:center">No comments yet — be the first!</p>';
+    }
+
+    // Show form or prompt
+    if (canPost) {
+        form.classList.remove('hidden');
+    } else {
+        prompt.classList.remove('hidden');
+    }
+}
+
+async function pubPostComment() {
+    const input = document.getElementById('commentInput');
+    const body  = (input.value || '').trim();
+    if (!body || !pubCurrentEvent) return;
+
+    const payload = {
+        event_id: pubCurrentEvent.id,
+        body: body
+    };
+
+    if (pubCurrentUser) {
+        payload.user_id = pubCurrentUser.id;
+    } else if (pubGuestRsvp) {
+        payload.guest_name  = pubGuestRsvp.guest_name;
+        payload.guest_token = pubGuestRsvp.guest_token;
+    } else {
+        return; // Can't post without identity
+    }
+
+    const { error } = await supabaseClient.from('event_comments').insert(payload);
+    if (error) {
+        console.error('Comment error:', error);
+        return;
+    }
+
+    input.value = '';
+    // Refresh comments
+    await pubRenderComments(pubCurrentEvent);
+}
+
+/* ── Time Ago Helper ─────────────────────── */
+function pubTimeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins  = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days  = Math.floor(diff / 86400000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 // Expose for onclick handlers
 window.pubHandleRsvp = pubHandleRsvp;
 window.pubHandlePaidRsvp = pubHandlePaidRsvp;
@@ -1263,3 +1547,5 @@ window.pubLookupGuestTicket = pubLookupGuestTicket;
 window.pubOpenFullscreenMap = pubOpenFullscreenMap;
 window.pubCloseFullscreenMap = pubCloseFullscreenMap;
 window.pubCopyUrl = pubCopyUrl;
+window.pubDownloadIcs = pubDownloadIcs;
+window.pubPostComment = pubPostComment;

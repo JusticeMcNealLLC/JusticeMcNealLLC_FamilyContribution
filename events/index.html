@@ -170,6 +170,24 @@
         #eventContent [class*="bg-brand-50"] { background:#f7f7f7 !important; }
         #eventContent [class*="border-amber-200"] { border-color:#e5e5e5 !important; }
         #eventContent [class*="border-emerald-200"] { border-color:#e5e5e5 !important; }
+
+        /* ═══ Skeleton Fade-in ═══ */
+        @keyframes evtFadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        #eventContent.evt-fade-in { animation: evtFadeIn .45s cubic-bezier(.16,1,.3,1) forwards; }
+
+        /* ═══ Invite Banner ═══ */
+        .evt-invite-banner { display:flex; align-items:center; gap:14px; padding:16px 20px; border-radius:14px; background:linear-gradient(135deg,#fef3c7,#fef9c3); border:1px solid #fde68a; }
+        .evt-invite-banner p { font-size:14px; color:#92400e; font-weight:600; margin:0; }
+        .evt-invite-banner span { font-size:13px; color:#a16207; margin-top:2px; display:block; font-weight:400; }
+
+        /* ═══ Comments ═══ */
+        .evt-comment { display:flex; gap:12px; }
+        .evt-comment-avatar { width:36px; height:36px; border-radius:50%; background:#ebebeb; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:13px; font-weight:700; color:#717171; overflow:hidden; }
+        .evt-comment-avatar img { width:100%; height:100%; object-fit:cover; }
+        .evt-comment-body { flex:1; min-width:0; }
+        .evt-comment-name { font-size:13px; font-weight:600; color:#222; }
+        .evt-comment-time { font-size:11px; color:#b0b0b0; margin-left:6px; }
+        .evt-comment-text { font-size:14px; color:#717171; line-height:1.5; margin-top:3px; word-break:break-word; }
     </style>
 </head>
 <body class="antialiased">
@@ -194,7 +212,7 @@
     </div>
 
     <!-- Event Content (hidden until loaded) -->
-    <main id="eventContent" class="hidden">
+    <main id="eventContent" class="hidden" role="main" aria-label="Event details">
         <!-- Hero Banner -->
         <div id="eventBanner" class="evt-hero">
             <div class="evt-hero-scrim"></div>
@@ -209,7 +227,7 @@
                     <div class="evt-hero-left">
                         <h1 id="eventTitle" class="evt-hero-title"></h1>
                     </div>
-                    <div id="heroStatusBadge"></div>
+                    <div id="heroStatusBadge" aria-live="polite" aria-atomic="true"></div>
                 </div>
             </div>
         </div>
@@ -217,8 +235,15 @@
         <div class="evt-body">
         <input type="hidden" id="shareUrl" value="">
 
+        <!-- Invite Banner (personalized share link) -->
+        <div id="inviteBanner" class="hidden" style="padding:16px 0 0"></div>
+
         <!-- Meta (date, time, location) -->
         <div class="evt-section" id="eventMeta"></div>
+        <!-- Attendee Count -->
+        <div id="attendeeCount" class="hidden" style="padding:0 0 16px"></div>
+        <!-- Add to Calendar -->
+        <div id="calendarSection" class="hidden" style="padding:0 0 20px"></div>
         <!-- Status banner (shown when event is started/ended/cancelled) -->
         <div id="eventStatusBanner" class="hidden" style="padding:0 0 20px"></div>
 
@@ -246,6 +271,10 @@
 
         <hr class="evt-divider">
 
+        <!-- Host / Organizer -->
+        <div id="hostSection" class="hidden evt-section"></div>
+        <hr id="hostDivider" class="evt-divider hidden">
+
         <!-- Gated Notes -->
         <div id="gatedSection" class="hidden evt-section">
             <div class="evt-info-card">
@@ -258,7 +287,7 @@
         </div>
 
         <!-- RSVP Action -->
-        <div id="rsvpSection" class="evt-section"></div>
+        <div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div>
 
         <hr class="evt-divider">
 
@@ -267,8 +296,8 @@
             <h3 class="evt-section-title" style="font-size:18px">RSVP as a Guest</h3>
             <p style="font-size:14px;color:#717171;margin-bottom:16px">No account needed — just enter your name and email.</p>
             <div style="display:flex;flex-direction:column;gap:12px">
-                <input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input">
-                <input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input">
+                <input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name">
+                <input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address">
                 <label class="evt-checkbox-label">
                     <input type="checkbox" id="guestNoRefundCheck">
                     <span>I understand this payment is non-refundable unless cancelled by staff.</span>
@@ -284,7 +313,7 @@
             <button onclick="pubToggleLookup()" style="font-size:13px;color:#222;font-weight:600;background:none;border:none;cursor:pointer;text-decoration:underline">Already RSVP'd? Look up your ticket</button>
             <div id="guestLookupForm" class="hidden" style="margin-top:12px">
                 <div style="display:flex;gap:8px">
-                    <input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" style="flex:1">
+                    <input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" style="flex:1" aria-label="Email used for RSVP">
                     <button onclick="pubLookupGuestTicket()" id="lookupBtn" class="evt-action-btn" style="width:auto;padding:14px 20px">Find</button>
                 </div>
                 <div id="lookupResult" style="margin-top:12px"></div>
@@ -330,6 +359,21 @@
         <!-- Venue Check-In -->
         <div id="venueCheckin" class="hidden evt-section">
             <div id="checkinResult"></div>
+        </div>
+
+        <!-- Comments / Discussion -->
+        <div id="commentsSection" class="hidden evt-section" role="region" aria-label="Discussion">
+            <h3 class="evt-section-title" style="font-size:18px">Discussion</h3>
+            <div id="commentsList" style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px"></div>
+            <div id="commentForm" class="hidden">
+                <div style="display:flex;gap:10px">
+                    <input type="text" id="commentInput" placeholder="Write a comment..." class="evt-input" style="flex:1" aria-label="Write a comment">
+                    <button onclick="pubPostComment()" class="evt-action-btn" style="width:auto;padding:14px 20px">Post</button>
+                </div>
+            </div>
+            <div id="commentLoginPrompt" class="hidden" style="text-align:center;padding:12px 0">
+                <p style="font-size:14px;color:#717171">RSVP to join the discussion</p>
+            </div>
         </div>
 
         <!-- Footer -->
