@@ -382,10 +382,37 @@ async function evtOpenDetail(eventId) {
             </div>`;
     }
 
-    // RSVP buttons (Airbnb-inspired)
+    // ── Time-based locks (matches public page logic) ──────
+    const isClosed = event.status === 'completed' || event.status === 'cancelled';
+    const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
+    const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
+    const entriesClosed = isClosed || isPast || deadlinePassed;
+
+    // ── Hero Status Badge (countdown / Live / Ended) ─────
+    let heroBadgeHtml = '';
+    {
+        let badgeLabel = '', badgeCls = '', dotPulse = false;
+        if (event.status === 'cancelled') {
+            badgeLabel = 'Cancelled'; badgeCls = 'evt-status-cancelled';
+        } else if (event.status === 'completed' || isPast) {
+            badgeLabel = 'Ended'; badgeCls = 'evt-status-ended';
+        } else if (event.status === 'active') {
+            badgeLabel = 'Live'; badgeCls = 'evt-status-live'; dotPulse = true;
+        } else {
+            const msUntil = new Date(event.start_date) - new Date();
+            const d = Math.floor(msUntil / 86400000);
+            const h = Math.floor((msUntil % 86400000) / 3600000);
+            const m = Math.floor((msUntil % 3600000) / 60000);
+            if (d > 0) { badgeLabel = `${d}d ${h}h`; } else if (h > 0) { badgeLabel = `${h}h ${m}m`; } else { badgeLabel = `${m}m`; }
+            badgeCls = 'evt-status-soon'; dotPulse = d === 0;
+        }
+        heroBadgeHtml = `<span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>`;
+    }
+
+    // ── RSVP buttons (Airbnb-inspired) — now respects time-based locks ──
     let rsvpButtons = '';
     const rsvpEnabled = event.rsvp_enabled !== false;
-    const canRsvp = rsvpEnabled && ['open', 'confirmed', 'active'].includes(event.status);
+    const canRsvp = rsvpEnabled && ['open', 'confirmed', 'active'].includes(event.status) && !entriesClosed;
     const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
 
     if (!rsvpEnabled) {
@@ -451,6 +478,38 @@ async function evtOpenDetail(eventId) {
             </div>`;
         }
     }
+
+    // ── RSVP closed state (event started / deadline passed) ──
+    if (rsvpEnabled && !isHost && entriesClosed && !rsvpButtons) {
+        let closedReason = '';
+        if (isClosed) closedReason = event.status === 'cancelled' ? 'Event cancelled' : 'Event ended';
+        else if (isPast) closedReason = 'Event has already started';
+        else if (deadlinePassed) closedReason = 'RSVP deadline passed';
+
+        if (rsvp) {
+            // Show existing RSVP status
+            const statusEmoji = rsvp.status === 'going' ? '✅' : rsvp.status === 'maybe' ? '🤔' : '❌';
+            const statusLabel = rsvp.status === 'going' ? 'Going' : rsvp.status === 'maybe' ? 'Maybe' : 'Not Going';
+            rsvpButtons = `
+            <div class="evt-info-card">
+                <span class="evt-info-card-icon">${statusEmoji}</span>
+                <div>
+                    <p class="evt-info-card-title">Your RSVP: ${statusLabel}</p>
+                    <p class="evt-info-card-sub">${closedReason}</p>
+                </div>
+            </div>`;
+        } else {
+            rsvpButtons = `
+            <div class="evt-info-card">
+                <span class="evt-info-card-icon">🔒</span>
+                <div>
+                    <p class="evt-info-card-title">RSVP Closed</p>
+                    <p class="evt-info-card-sub">${closedReason}</p>
+                </div>
+            </div>`;
+        }
+    }
+
     // ── Raffle Section ──────────────────────────────────
     let raffleHtml = '';
     if (event.raffle_enabled) {
@@ -472,6 +531,17 @@ async function evtOpenDetail(eventId) {
                         <p class="evt-info-card-sub">Good luck in the drawing</p>
                     </div>
                 </div>`;
+        } else if (entriesClosed && !myRaffleEntry) {
+            // Locked reason
+            let lockedReason = '';
+            if (isClosed) lockedReason = event.status === 'cancelled' ? 'Event cancelled' : 'Event ended';
+            else if (isPast) lockedReason = 'Event in progress';
+            else if (deadlinePassed) lockedReason = 'RSVP deadline passed';
+            entryStatusHtml = `
+                <button class="evt-raffle-locked" disabled>
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                    Entries Closed — ${lockedReason}
+                </button>`;
         } else if (event.pricing_mode === 'free_paid_raffle' && event.raffle_entry_cost_cents > 0 && canRsvp) {
             entryStatusHtml = `
                 <button onclick="evtHandleRaffleEntry('${eventId}')" class="evt-raffle-buy">
@@ -638,10 +708,10 @@ async function evtOpenDetail(eventId) {
         <div class="evt-hero" style="${bannerBg} min-height:300px;">
             <div class="evt-hero-scrim"></div>
             <div class="evt-hero-actions">
-                <button onclick="evtCopyShareUrl('${event.slug}')" class="evt-hero-btn" title="Share">
+                <button onclick="evtCopyShareUrl('${event.slug}')" class="evt-hero-btn" title="Share" aria-label="Share event">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                 </button>
-                <button onclick="evtToggleModal('detailModal',false)" class="evt-hero-btn">
+                <button onclick="evtToggleModal('detailModal',false)" class="evt-hero-btn" aria-label="Close">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -649,9 +719,13 @@ async function evtOpenDetail(eventId) {
                 <div class="flex gap-2 mb-2.5">
                     ${event.category ? `<span class="evt-tag" style="background:rgba(255,255,255,.2);color:#fff;backdrop-filter:blur(4px)">${CATEGORY_EMOJI[event.category] || '📌'} ${(event.category || '').replace(/_/g,' ')}</span>` : ''}
                     <span class="evt-tag ${tc.bg} ${tc.text}">${tc.label}</span>
-                    <span class="evt-tag ${STATUS_COLORS[event.status] || ''}">${event.status.toUpperCase()}</span>
                 </div>
-                <h1 class="evt-hero-title">${evtEscapeHtml(event.title)}</h1>
+                <div class="evt-hero-bottom">
+                    <div class="evt-hero-left">
+                        <h1 class="evt-hero-title">${evtEscapeHtml(event.title)}</h1>
+                    </div>
+                    <div aria-live="polite">${heroBadgeHtml}</div>
+                </div>
             </div>
         </div>
 
@@ -708,6 +782,27 @@ async function evtOpenDetail(eventId) {
                     </div>
                 </div>` : ''}
             </div>
+
+            <!-- Add to Calendar (only when date is visible and event not ended) -->
+            ${showTime && !isClosed && !isPast ? (() => {
+                const calStart = start.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+                const calEndDate = event.end_date ? new Date(event.end_date) : new Date(start.getTime() + 7200000);
+                const calEnd = calEndDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+                const gcalUrl = 'https://calendar.google.com/calendar/r/eventedit?text=' + encodeURIComponent(event.title) + '&dates=' + calStart + '/' + calEnd + '&details=' + encodeURIComponent(event.description || '') + '&location=' + encodeURIComponent(event.location_text || '');
+                return '<div style="display:flex;gap:10px;padding:0 0 20px">' +
+                    '<button onclick="evtDownloadIcs(\'' + eventId + '\')" class="evt-action-btn" style="flex:1;background:#f7f7f7;color:#222">' +
+                        '<svg style="width:18px;height:18px;stroke:#222" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' +
+                        'Add to Calendar' +
+                    '</button>' +
+                    '<a href="' + gcalUrl + '" target="_blank" rel="noopener" class="evt-action-btn" style="flex:1;background:#f7f7f7;color:#222;text-decoration:none">' +
+                        '<svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#fff"/><path d="M8 16.5v-9h2v9H8zm3-9h2v9h-2v-9zm3 0h2v9h-2v-9z" fill="#4285F4"/></svg>' +
+                        'Google Calendar' +
+                    '</a>' +
+                '</div>';
+            })() : ''}
+
+            <!-- Status banner for deadline-passed -->
+            ${deadlinePassed && !isClosed && !isPast ? '<div style="padding:0 0 20px"><span class="evt-status-banner evt-status-past-body">🔒 RSVP deadline passed</span></div>' : ''}
 
             <hr class="evt-divider">
 
@@ -786,6 +881,17 @@ async function evtOpenDetail(eventId) {
             <!-- Attendee Breakdown (Host) -->
             ${attendeeBreakdownHtml ? `<hr class="evt-divider"><div class="evt-section">${attendeeBreakdownHtml}</div>` : ''}
 
+            <!-- Comments / Discussion -->
+            <hr class="evt-divider">
+            <div class="evt-section" id="portalCommentsSection" role="region" aria-label="Discussion">
+                <h3 class="evt-section-title">Discussion</h3>
+                <div id="portalCommentsList" style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px"></div>
+                <div style="display:flex;gap:10px">
+                    <input type="text" id="portalCommentInput" placeholder="Write a comment..." class="w-full text-sm p-3 border border-gray-200 rounded-xl outline-none focus:border-gray-900 transition" aria-label="Write a comment">
+                    <button onclick="evtPostComment('${eventId}')" class="evt-action-btn" style="width:auto;padding:12px 20px;font-size:14px">Post</button>
+                </div>
+            </div>
+
             <!-- Host Controls -->
             ${hostControlsHtml ? `<hr class="evt-divider"><div class="evt-section">${hostControlsHtml}</div>` : ''}
 
@@ -804,6 +910,9 @@ async function evtOpenDetail(eventId) {
     `;
 
     evtToggleModal('detailModal', true);
+
+    // Load comments
+    evtLoadComments(eventId);
 
     // Generate QR codes after modal is visible
     setTimeout(() => {
@@ -882,5 +991,112 @@ function evtCloseFullscreenMap() {
     }
 }
 
+// ═══════════════════════════════════════════════════════════
+// Download ICS
+// ═══════════════════════════════════════════════════════════
+function evtDownloadIcs(eventId) {
+    const e = (evtAllEvents || []).find(ev => ev.id === eventId);
+    if (!e) return;
+    const start = new Date(e.start_date);
+    const end   = e.end_date ? new Date(e.end_date) : new Date(start.getTime() + 7200000);
+    const fmt   = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const uid   = `${e.id}@justicemcnealllc.com`;
+
+    const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//JusticeMcNealLLC//Events//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `UID:${uid}`,
+        `DTSTART:${fmt(start)}`,
+        `DTEND:${fmt(end)}`,
+        `SUMMARY:${e.title.replace(/[,;\\]/g, '')}`,
+        `DESCRIPTION:${(e.description || '').replace(/\n/g, '\\n').slice(0, 500)}`,
+        `LOCATION:${(e.location_text || '').replace(/[,;\\]/g, '')}`,
+        `URL:${window.location.origin}/events/?e=${e.slug}`,
+        'STATUS:CONFIRMED',
+        'END:VEVENT',
+        'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${e.slug || 'event'}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════════
+// Comments / Discussion
+// ═══════════════════════════════════════════════════════════
+function evtTimeAgo(dateStr) {
+    const diff  = Date.now() - new Date(dateStr).getTime();
+    const mins  = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days  = Math.floor(diff / 86400000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+async function evtLoadComments(eventId) {
+    const list = document.getElementById('portalCommentsList');
+    if (!list) return;
+
+    const { data: comments } = await supabaseClient
+        .from('event_comments')
+        .select('*, profile:profiles!event_comments_user_id_fkey(first_name, last_name, profile_picture_url)')
+        .eq('event_id', eventId)
+        .order('created_at', { ascending: true })
+        .limit(100);
+
+    if (!comments || comments.length === 0) {
+        list.innerHTML = '<p style="font-size:14px;color:#b0b0b0;text-align:center">No comments yet — be the first!</p>';
+        return;
+    }
+
+    list.innerHTML = comments.map(c => {
+        const name = evtEscapeHtml(`${c.profile?.first_name || ''} ${c.profile?.last_name || ''}`.trim() || 'Member');
+        const avatarUrl = c.profile?.profile_picture_url;
+        const initials  = ((c.profile?.first_name?.[0] || '') + (c.profile?.last_name?.[0] || '')).toUpperCase() || '?';
+        const timeAgo   = evtTimeAgo(c.created_at);
+
+        return `<div class="evt-comment">
+            <div class="evt-comment-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : initials}</div>
+            <div class="evt-comment-body">
+                <span class="evt-comment-name">${name}</span><span class="evt-comment-time">${timeAgo}</span>
+                <p class="evt-comment-text">${evtEscapeHtml(c.body)}</p>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function evtPostComment(eventId) {
+    const input = document.getElementById('portalCommentInput');
+    const body  = (input?.value || '').trim();
+    if (!body || !eventId || !evtCurrentUser) return;
+
+    const { error } = await supabaseClient
+        .from('event_comments')
+        .insert({ event_id: eventId, user_id: evtCurrentUser.id, body });
+
+    if (error) {
+        console.error('Comment error:', error);
+        return;
+    }
+    input.value = '';
+    await evtLoadComments(eventId);
+}
+
+window.evtDownloadIcs = evtDownloadIcs;
+window.evtPostComment = evtPostComment;
 window.evtOpenFullscreenMap = evtOpenFullscreenMap;
 window.evtCloseFullscreenMap = evtCloseFullscreenMap;

@@ -163,6 +163,39 @@
         #detailContent [class*="bg-red-50"] { background:#fef2f2 !important; }
         #detailContent [class*="border-red-200"] { border-color:#fecaca !important; }
         @media(max-width:640px){ .evt-stats-grid { grid-template-columns:repeat(2,1fr); } }
+
+        /* ═══ Hero Status Badge (matches public page) ═══ */
+        .evt-hero-bottom { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
+        .evt-hero-left { flex:1; min-width:0; }
+        .evt-status-badge { display:inline-flex; align-items:center; gap:7px; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); flex-shrink:0; }
+        .evt-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+        .evt-status-dot.pulse { animation:dotPulse 1.5s ease-in-out infinite; }
+        @keyframes dotPulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.4; transform:scale(.7); } }
+        .evt-status-ended   { background:rgba(113,113,113,.35); color:#e0e0e0; }
+        .evt-status-ended .evt-status-dot { background:#999; }
+        .evt-status-live     { background:rgba(5,150,105,.3); color:#6ee7b7; }
+        .evt-status-live .evt-status-dot { background:#34d399; }
+        .evt-status-soon     { background:rgba(245,158,11,.3); color:#fcd34d; }
+        .evt-status-soon .evt-status-dot { background:#fbbf24; }
+        .evt-status-cancelled{ background:rgba(220,38,38,.3); color:#fca5a5; }
+        .evt-status-cancelled .evt-status-dot { background:#f87171; }
+
+        /* Locked raffle button */
+        .evt-raffle-locked { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:16px; border-radius:12px; background:#ebebeb; color:#999; font-size:15px; font-weight:600; border:none; cursor:not-allowed; }
+        .evt-raffle-locked svg { width:16px; height:16px; stroke:#999; }
+
+        /* Status banner */
+        .evt-status-banner { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; }
+        .evt-status-past-body { background:#f7f7f7; color:#717171; }
+
+        /* Comments */
+        .evt-comment { display:flex; gap:12px; }
+        .evt-comment-avatar { width:36px; height:36px; border-radius:50%; background:#ebebeb; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:13px; font-weight:700; color:#717171; overflow:hidden; }
+        .evt-comment-avatar img { width:100%; height:100%; object-fit:cover; }
+        .evt-comment-body { flex:1; min-width:0; }
+        .evt-comment-name { font-size:13px; font-weight:600; color:#222; }
+        .evt-comment-time { font-size:11px; color:#b0b0b0; margin-left:6px; }
+        .evt-comment-text { font-size:14px; color:#717171; line-height:1.5; margin-top:3px; word-break:break-word; }
     </style>
 </head>
 <body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="events">

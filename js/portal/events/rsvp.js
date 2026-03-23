@@ -7,7 +7,19 @@ async function evtHandleRsvp(eventId, status) {
     try {
         // Look up event to check pricing mode
         const event = evtAllEvents.find(e => e.id === eventId);
-        const isPaid = event && event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0;
+        if (!event) return;
+
+        // ── Time-based guard (defense-in-depth) ─────────────
+        const now = new Date();
+        const isClosed  = event.status === 'completed' || event.status === 'cancelled';
+        const isPast    = new Date(event.start_date) < now && event.status !== 'active';
+        const deadlined = event.rsvp_deadline && new Date(event.rsvp_deadline) < now;
+        if (isClosed || isPast || deadlined) {
+            alert('RSVPs are closed for this event.');
+            return;
+        }
+
+        const isPaid = event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0;
         const existing = evtAllRsvps[eventId];
 
         // ── Paid RSVP path ──────────────────────────────────
@@ -90,6 +102,16 @@ async function evtHandleRaffleEntry(eventId) {
     try {
         const event = evtAllEvents.find(e => e.id === eventId);
         if (!event || !event.raffle_enabled) return;
+
+        // ── Time-based guard (defense-in-depth) ─────────────
+        const now = new Date();
+        const isClosed  = event.status === 'completed' || event.status === 'cancelled';
+        const isPast    = new Date(event.start_date) < now && event.status !== 'active';
+        const deadlined = event.rsvp_deadline && new Date(event.rsvp_deadline) < now;
+        if (isClosed || isPast || deadlined) {
+            alert('Raffle entries are closed for this event.');
+            return;
+        }
 
         if (event.pricing_mode !== 'free_paid_raffle' || !event.raffle_entry_cost_cents) {
             alert('Raffle entry is included with your RSVP for this event.');
