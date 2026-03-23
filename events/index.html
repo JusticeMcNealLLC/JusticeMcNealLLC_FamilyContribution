@@ -125,6 +125,12 @@
         .evt-raffle-buy:hover { opacity:.9; }
         .evt-raffle-rank { width:28px; height:28px; border-radius:50%; background:#222; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
 
+        /* Status banner (shown next to date when event is past/cancelled) */
+        .evt-status-banner { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; margin-top:16px; }
+        .evt-status-live { background:#ecfdf5; color:#059669; }
+        .evt-status-past { background:#f7f7f7; color:#717171; }
+        .evt-status-cancelled { background:#fef2f2; color:#dc2626; }
+
         /* Guest form */
         .evt-input { width:100%; font-size:15px; padding:14px 16px; border:1.5px solid #ddd; border-radius:12px; outline:none; transition:border-color .2s; box-sizing:border-box; }
         .evt-input:focus { border-color:#222; }
@@ -192,6 +198,8 @@
 
         <!-- Meta (date, time, location) -->
         <div class="evt-section" id="eventMeta"></div>
+        <!-- Status banner (shown when event is started/ended/cancelled) -->
+        <div id="eventStatusBanner" class="hidden" style="padding:0 0 20px"></div>
 
         <hr class="evt-divider">
 

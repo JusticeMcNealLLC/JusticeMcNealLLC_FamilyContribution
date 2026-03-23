@@ -165,6 +165,28 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
 
     metaEl.innerHTML = metaHtml;
 
+    // ── Status Banner (next to date/time) ──────────────
+    const statusBanner = document.getElementById('eventStatusBanner');
+    const isClosed = event.status === 'completed' || event.status === 'cancelled';
+    const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
+    const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
+
+    if (isClosed) {
+        const label = event.status === 'cancelled' ? '❌ Event Cancelled' : '✅ Event Completed';
+        const cls = event.status === 'cancelled' ? 'evt-status-cancelled' : 'evt-status-past';
+        statusBanner.innerHTML = `<span class="evt-status-banner ${cls}">${label}</span>`;
+        statusBanner.classList.remove('hidden');
+    } else if (isPast) {
+        statusBanner.innerHTML = `<span class="evt-status-banner evt-status-past">⏰ Event has started</span>`;
+        statusBanner.classList.remove('hidden');
+    } else if (deadlinePassed) {
+        statusBanner.innerHTML = `<span class="evt-status-banner evt-status-past">🔒 RSVP deadline passed</span>`;
+        statusBanner.classList.remove('hidden');
+    } else if (event.status === 'active') {
+        statusBanner.innerHTML = `<span class="evt-status-banner evt-status-live">🟢 Happening now</span>`;
+        statusBanner.classList.remove('hidden');
+    }
+
     // Map (show if location + lat/lng available and not gated)
     if (event.location_lat && event.location_lng && !isGatedLoc) {
         pubShowMap(event.location_lat, event.location_lng, event.location_text);
@@ -240,12 +262,11 @@ function pubRenderRsvpSection(event) {
     const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
 
     if (isClosed || isPast || deadlinePassed) {
-        section.innerHTML = `<div class="evt-notice-card">
-            <span class="evt-notice-icon">${isClosed ? '❌' : '⏰'}</span>
-            <div>
-                <p class="evt-notice-title">${isClosed ? 'This event has ' + event.status : deadlinePassed ? 'RSVP deadline has passed' : 'This event has already started'}</p>
-            </div>
-        </div>`;
+        // Status is already shown in the banner near the date — hide RSVP section entirely
+        section.classList.add('hidden');
+        // Also hide the divider above it
+        const prevDivider = section.previousElementSibling;
+        if (prevDivider && prevDivider.tagName === 'HR') prevDivider.classList.add('hidden');
         return;
     }
 
@@ -337,6 +358,11 @@ function pubRenderRsvpSection(event) {
 async function pubRenderRaffleSection(event) {
     if (!event.raffle_enabled) return;
 
+    const isClosed = event.status === 'completed' || event.status === 'cancelled';
+    const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
+    const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
+    const entriesClosed = isClosed || isPast || deadlinePassed;
+
     // Get or create raffle container
     let el = document.getElementById('raffleSection');
     if (!el) {
@@ -357,7 +383,10 @@ async function pubRenderRaffleSection(event) {
 
     // Check if current user has raffle entry
     let myEntryHtml = '';
-    if (pubCurrentUser && event.pricing_mode === 'free_paid_raffle' && event.raffle_entry_cost_cents > 0) {
+    if (entriesClosed) {
+        // Event is past — don't show buy/entry buttons
+        myEntryHtml = '';
+    } else if (pubCurrentUser && event.pricing_mode === 'free_paid_raffle' && event.raffle_entry_cost_cents > 0) {
         const { data: myEntry } = await supabaseClient
             .from('event_raffle_entries')
             .select('id, paid')
