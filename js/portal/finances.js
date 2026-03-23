@@ -659,23 +659,29 @@ function finRenderInsights() {
         const subMonthly = Math.round(subTotal / monthCount);
 
         let subHTML = `
-        <div class="insight-card bg-purple-50 border border-purple-200">
-            <div class="flex items-center gap-2 mb-2">
-                <span class="text-xl">📱</span>
-                <h3 class="text-sm font-bold text-purple-900">Subscription Audit</h3>
-                <span class="ml-auto text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">${finFmtCents(subMonthly)}/mo</span>
+        <div class="insight-card insight-purple">
+            <div class="flex items-center gap-2.5 mb-3">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-purple-200/60 text-xl">📱</span>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-bold text-purple-900">Subscription Audit</h3>
+                    <p class="text-[10px] text-purple-600 mt-0.5">${subList.length} service${subList.length !== 1 ? 's' : ''} · ${finFmtCents(subTotal)} total</p>
+                </div>
+                <span class="text-xs font-bold text-purple-800 bg-purple-200/70 px-2.5 py-1 rounded-full">${finFmtCents(subMonthly)}/mo</span>
             </div>
-            <p class="text-xs text-purple-700 mb-2">${subList.length} service${subList.length !== 1 ? 's' : ''} · ${finFmtCents(subTotal)} total in this period</p>
-            <div class="space-y-1.5">`;
-        for (const g of subList.slice(0, 6)) {
-            const recurring = g.months.size > 1 ? '<span class="text-[10px] bg-purple-200 text-purple-800 px-1.5 py-0.5 rounded-full ml-1.5">recurring</span>' : '';
+            <div class="space-y-2">`;
+        for (const g of subList.slice(0, 5)) {
+            const pctOfTotal = Math.round((g.total / subTotal) * 100);
+            const recurring = g.months.size > 1 ? '<span class="text-[9px] bg-purple-300/50 text-purple-800 px-1.5 py-0.5 rounded-full ml-1">recurring</span>' : '';
             subHTML += `
-                <div class="flex items-center justify-between text-xs">
-                    <span class="text-purple-800 truncate">${g.desc}${recurring}</span>
-                    <span class="font-semibold text-purple-900 flex-shrink-0 ml-2">${finFmtCents(g.total)}</span>
+                <div>
+                    <div class="flex items-center justify-between text-xs mb-0.5">
+                        <span class="text-purple-800 truncate font-medium">${g.desc}${recurring}</span>
+                        <span class="font-bold text-purple-900 flex-shrink-0 ml-2">${finFmtCents(g.total)}</span>
+                    </div>
+                    <div class="w-full h-1 bg-purple-200/50 rounded-full overflow-hidden"><div class="h-full bg-purple-400 rounded-full" style="width:${pctOfTotal}%"></div></div>
                 </div>`;
         }
-        if (subList.length > 6) subHTML += `<p class="text-[10px] text-purple-500 mt-1">+ ${subList.length - 6} more</p>`;
+        if (subList.length > 5) subHTML += `<p class="text-[10px] text-purple-500 mt-1">+ ${subList.length - 5} more</p>`;
         subHTML += `</div></div>`;
         cards.push(subHTML);
     }
@@ -689,20 +695,22 @@ function finRenderInsights() {
         const cashback2 = Math.round(eligibleSpend * 0.02);
         const cashback5 = Math.round(eligibleSpend * 0.05);
         cards.push(`
-        <div class="insight-card bg-emerald-50 border border-emerald-200">
-            <div class="flex items-center gap-2 mb-2">
-                <span class="text-xl">💳</span>
-                <h3 class="text-sm font-bold text-emerald-900">Cashback Opportunity</h3>
-            </div>
-            <p class="text-xs text-emerald-700 mb-3">With a cashback card on ${finFmtCents(eligibleSpend)} of eligible spending:</p>
-            <div class="grid grid-cols-2 gap-2">
-                <div class="bg-emerald-100/60 rounded-lg p-2.5 text-center">
-                    <p class="text-lg font-bold text-emerald-700">${finFmtCents(cashback2)}</p>
-                    <p class="text-[10px] text-emerald-600 mt-0.5">at 2% cashback</p>
+        <div class="insight-card insight-emerald">
+            <div class="flex items-center gap-2.5 mb-3">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-200/60 text-xl">💳</span>
+                <div>
+                    <h3 class="text-sm font-bold text-emerald-900">Cashback Opportunity</h3>
+                    <p class="text-[10px] text-emerald-600 mt-0.5">${finFmtCents(eligibleSpend)} eligible spend</p>
                 </div>
-                <div class="bg-emerald-100/60 rounded-lg p-2.5 text-center">
-                    <p class="text-lg font-bold text-emerald-700">${finFmtCents(cashback5)}</p>
-                    <p class="text-[10px] text-emerald-600 mt-0.5">at 5% (rotating)</p>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="bg-emerald-200/40 rounded-xl p-3 text-center">
+                    <p class="text-xl font-extrabold text-emerald-700">${finFmtCents(cashback2)}</p>
+                    <p class="text-[10px] text-emerald-600 mt-1 font-medium">at 2% cashback</p>
+                </div>
+                <div class="bg-emerald-200/40 rounded-xl p-3 text-center">
+                    <p class="text-xl font-extrabold text-emerald-700">${finFmtCents(cashback5)}</p>
+                    <p class="text-[10px] text-emerald-600 mt-1 font-medium">at 5% rotating</p>
                 </div>
             </div>
         </div>`);
@@ -718,35 +726,38 @@ function finRenderInsights() {
     const savingsRate = income > 0 ? Math.round((net / income) * 100) : 0;
     const monthSpan = new Set(txns.map(t => t.transaction_date?.slice(0, 7))).size || 1;
 
-    let netColor, netBg, netBorder, netIcon, netMessage;
+    let netColor, netTheme, netIcon, netMessage;
     if (net > 0) {
-        netColor = 'emerald'; netBg = 'bg-emerald-50'; netBorder = 'border-emerald-200'; netIcon = '📈';
+        netColor = 'emerald'; netTheme = 'insight-emerald'; netIcon = '📈';
         if (savingsRate >= 20) netMessage = `Great job! You're saving ${savingsRate}% of your income.`;
         else if (savingsRate >= 10) netMessage = `You're saving ${savingsRate}% — aim for 20%+ to build wealth faster.`;
         else netMessage = `You're saving ${savingsRate}% — look for ways to cut spending below.`;
     } else {
-        netColor = 'red'; netBg = 'bg-red-50'; netBorder = 'border-red-200'; netIcon = '📉';
+        netColor = 'red'; netTheme = 'insight-red'; netIcon = '📉';
         netMessage = `You spent ${finFmtCents(Math.abs(net))} more than you earned. Check the "Ways to Save" tips below.`;
     }
 
     cards.push(`
-    <div class="insight-card ${netBg} border ${netBorder}">
-        <div class="flex items-center gap-2 mb-2">
-            <span class="text-xl">${netIcon}</span>
-            <h3 class="text-sm font-bold text-${netColor}-900">Net Summary</h3>
-            <span class="ml-auto text-xs font-semibold text-${netColor}-700 bg-${netColor}-100 px-2 py-0.5 rounded-full">${net >= 0 ? '+' : ''}${finFmtCents(net)}</span>
-        </div>
-        <div class="grid grid-cols-2 gap-2 mb-2">
-            <div class="text-center">
-                <p class="text-xs text-${netColor}-600">Earned</p>
-                <p class="text-sm font-bold text-${netColor}-800">${finFmtCents(income)}</p>
+    <div class="insight-card ${netTheme}">
+        <div class="flex items-center gap-2.5 mb-3">
+            <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-${netColor}-200/60 text-xl">${netIcon}</span>
+            <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-bold text-${netColor}-900">Net Summary</h3>
+                <p class="text-[10px] text-${netColor}-600 mt-0.5">${monthSpan} month${monthSpan !== 1 ? 's' : ''} analyzed</p>
             </div>
-            <div class="text-center">
-                <p class="text-xs text-${netColor}-600">Spent</p>
-                <p class="text-sm font-bold text-${netColor}-800">${finFmtCents(spending)}</p>
+            <span class="text-sm font-extrabold text-${netColor}-800 bg-${netColor}-200/50 px-3 py-1 rounded-full">${net >= 0 ? '+' : ''}${finFmtCents(net)}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+            <div class="bg-${netColor}-200/30 rounded-xl p-2.5 text-center">
+                <p class="text-[10px] text-${netColor}-600 font-medium uppercase tracking-wider">Earned</p>
+                <p class="text-base font-extrabold text-${netColor}-800">${finFmtCents(income)}</p>
+            </div>
+            <div class="bg-${netColor}-200/30 rounded-xl p-2.5 text-center">
+                <p class="text-[10px] text-${netColor}-600 font-medium uppercase tracking-wider">Spent</p>
+                <p class="text-base font-extrabold text-${netColor}-800">${finFmtCents(spending)}</p>
             </div>
         </div>
-        <p class="text-xs text-${netColor}-700">${netMessage}</p>
+        <p class="text-xs text-${netColor}-700 leading-relaxed">${netMessage}</p>
     </div>`);
 
     // ── 4. One-time Deposit Prompt ──────────────────────────
@@ -754,19 +765,19 @@ function finRenderInsights() {
         const suggestedDeposit = Math.round(net * 0.1); // suggest 10% of surplus
         const suggestedStr = finFmtCents(suggestedDeposit);
         cards.push(`
-        <div class="insight-card bg-brand-50 border border-brand-200">
-            <div class="flex items-center gap-2 mb-2">
-                <span class="text-xl">💸</span>
-                <h3 class="text-sm font-bold text-brand-900">Boost Your LLC Contribution</h3>
+        <div class="insight-card insight-brand">
+            <div class="flex items-center gap-2.5 mb-3">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-brand-200/60 text-xl">💸</span>
+                <div>
+                    <h3 class="text-sm font-bold text-brand-900">Boost Your LLC Contribution</h3>
+                    <p class="text-[10px] text-brand-600 mt-0.5">~10% of your surplus</p>
+                </div>
             </div>
-            <p class="text-xs text-brand-700 mb-3">You have a ${finFmtCents(net)} surplus this period. Consider putting some toward your family investment.</p>
-            <div class="flex items-center gap-2">
-                <a href="contribution.html" class="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
-                    Contribute ${suggestedStr}
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                </a>
-                <span class="text-[10px] text-brand-500">~10% of your surplus</span>
-            </div>
+            <p class="text-xs text-brand-700 mb-3 leading-relaxed">You have a <strong>${finFmtCents(net)}</strong> surplus this period. Consider putting some toward your family investment.</p>
+            <a href="contribution.html" class="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm">
+                Contribute ${suggestedStr}
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+            </a>
         </div>`);
     }
 
@@ -833,19 +844,22 @@ function finRenderInsights() {
 
     if (tips.length > 0) {
         let tipsHTML = `
-        <div class="insight-card bg-amber-50 border border-amber-200">
-            <div class="flex items-center gap-2 mb-3">
-                <span class="text-xl">💡</span>
-                <h3 class="text-sm font-bold text-amber-900">Ways to Save</h3>
+        <div class="insight-card insight-amber">
+            <div class="flex items-center gap-2.5 mb-3">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-200/60 text-xl">💡</span>
+                <div>
+                    <h3 class="text-sm font-bold text-amber-900">Ways to Save</h3>
+                    <p class="text-[10px] text-amber-600 mt-0.5">${tips.length} tip${tips.length !== 1 ? 's' : ''} for you</p>
+                </div>
             </div>
             <div class="space-y-3">`;
         for (const tip of tips) {
             tipsHTML += `
-                <div class="flex items-start gap-2.5">
+                <div class="flex items-start gap-2.5 bg-amber-200/25 rounded-xl p-2.5">
                     <span class="text-base flex-shrink-0 mt-0.5">${tip.icon}</span>
                     <div>
-                        <p class="text-xs font-semibold text-amber-800">${tip.title}</p>
-                        <p class="text-xs text-amber-700 mt-0.5">${tip.text}</p>
+                        <p class="text-xs font-bold text-amber-800">${tip.title}</p>
+                        <p class="text-[11px] text-amber-700 mt-0.5 leading-relaxed">${tip.text}</p>
                     </div>
                 </div>`;
         }
@@ -860,7 +874,35 @@ function finRenderInsights() {
     }
 
     container.classList.remove('hidden');
-    document.getElementById('insightsCards').innerHTML = cards.join('');
+    const cardsEl = document.getElementById('insightsCards');
+    cardsEl.innerHTML = cards.join('');
+
+    // ── Scroll indicator dots (mobile only) ─────────────
+    const dotsEl = document.getElementById('insightsDots');
+    if (dotsEl && cards.length > 1) {
+        dotsEl.innerHTML = cards.map((_, i) =>
+            `<span class="scroll-dot${i === 0 ? ' active' : ''}"></span>`
+        ).join('');
+
+        // Observe scroll position to update active dot
+        let ticking = false;
+        cardsEl.addEventListener('scroll', () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(() => {
+                const scrollLeft = cardsEl.scrollLeft;
+                const cardWidth = cardsEl.querySelector('.insight-card')?.offsetWidth || 1;
+                const gap = 12;
+                const activeIdx = Math.round(scrollLeft / (cardWidth + gap));
+                dotsEl.querySelectorAll('.scroll-dot').forEach((d, i) => {
+                    d.classList.toggle('active', i === activeIdx);
+                });
+                ticking = false;
+            });
+        }, { passive: true });
+    } else if (dotsEl) {
+        dotsEl.innerHTML = '';
+    }
 }
 
 // ═══════════════════════════════════════════════════════════

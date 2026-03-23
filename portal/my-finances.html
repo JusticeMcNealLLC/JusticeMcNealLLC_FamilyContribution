@@ -53,13 +53,85 @@
         .stat-card { @apply bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5; }
         .upload-zone { @apply border-2 border-dashed border-gray-300 rounded-2xl p-6 sm:p-8 text-center transition hover:border-brand-400 hover:bg-brand-50/30 cursor-pointer; }
         .upload-zone.dragover { @apply border-brand-500 bg-brand-50/50; }
-        .txn-row { @apply flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50 transition cursor-default; }
+        .txn-row { @apply flex items-center justify-between py-2.5 px-2 sm:px-3 rounded-lg hover:bg-gray-50 transition cursor-default; }
         .txn-row:not(:last-child) { @apply border-b border-gray-100; }
-        .account-tab { @apply px-4 py-2 text-sm font-medium rounded-lg transition cursor-pointer; }
+        .account-tab { @apply px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition cursor-pointer whitespace-nowrap; }
         .account-tab.active { @apply bg-brand-600 text-white shadow-sm; }
         .account-tab:not(.active) { @apply text-gray-600 hover:bg-gray-100; }
-        .insight-card { @apply rounded-xl p-4; }
-        .quick-cat-chip { @apply text-[10px] px-2 py-0.5 rounded-full font-semibold cursor-pointer transition opacity-0 group-hover:opacity-100; }
+
+        /* ── Insight cards — glassmorphism + gradient ── */
+        .insight-card {
+            @apply rounded-2xl p-4 sm:p-5 relative overflow-hidden;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 2px 16px rgba(0,0,0,0.04), 0 0 0 1px rgba(255,255,255,0.6) inset;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .insight-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.6) inset; }
+        .insight-card::before {
+            content: '';
+            position: absolute; top: 0; right: 0;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            opacity: 0.12;
+            pointer-events: none;
+        }
+        .insight-card.insight-purple { background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 60%, #ddd6fe 100%); border: 1px solid rgba(167,139,250,0.3); }
+        .insight-card.insight-purple::before { background: radial-gradient(circle, #8b5cf6, transparent 70%); }
+        .insight-card.insight-emerald { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 60%, #a7f3d0 100%); border: 1px solid rgba(52,211,153,0.3); }
+        .insight-card.insight-emerald::before { background: radial-gradient(circle, #10b981, transparent 70%); }
+        .insight-card.insight-red { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 60%, #fecaca 100%); border: 1px solid rgba(252,165,165,0.3); }
+        .insight-card.insight-red::before { background: radial-gradient(circle, #ef4444, transparent 70%); }
+        .insight-card.insight-brand { background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 60%, #c7d2fe 100%); border: 1px solid rgba(129,140,248,0.3); }
+        .insight-card.insight-brand::before { background: radial-gradient(circle, #6366f1, transparent 70%); }
+        .insight-card.insight-amber { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 60%, #fde68a 100%); border: 1px solid rgba(252,211,77,0.3); }
+        .insight-card.insight-amber::before { background: radial-gradient(circle, #f59e0b, transparent 70%); }
+
+        /* ── Insights horizontal scroll on mobile ── */
+        .insights-scroll { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+        @media (max-width: 639px) {
+            .insights-scroll {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                gap: 12px;
+                padding-bottom: 8px;
+                scrollbar-width: none;
+            }
+            .insights-scroll::-webkit-scrollbar { display: none; }
+            .insights-scroll > .insight-card {
+                flex: 0 0 85vw;
+                max-width: 320px;
+                scroll-snap-align: start;
+            }
+        }
+
+        /* ── Quick-cat chips — always visible on touch ── */
+        .quick-cat-chip { @apply text-[10px] px-2 py-0.5 rounded-full font-semibold cursor-pointer transition; }
+        @media (hover: hover) and (pointer: fine) {
+            .quick-cat-chip { opacity: 0; }
+            .group:hover .quick-cat-chip { opacity: 1; }
+        }
+        @media (hover: none) {
+            .quick-cat-chip { opacity: 1; }
+        }
+
+        /* ── Mobile chart height overrides ── */
+        @media (max-width: 639px) {
+            .chart-container-sm { height: 180px !important; }
+            .chart-container-md { height: 200px !important; }
+            .chart-container-lg { height: 220px !important; }
+        }
+
+        /* ── Scroll-indicator dots for insights ── */
+        .scroll-dots { display: none; }
+        @media (max-width: 639px) {
+            .scroll-dots { display: flex; justify-content: center; gap: 6px; padding-top: 4px; }
+            .scroll-dot { width: 6px; height: 6px; border-radius: 50%; background: #d1d5db; transition: background 0.2s; }
+            .scroll-dot.active { background: #6366f1; }
+        }
+
         @media (max-width: 639px) { .hide-mobile-nav { display: none !important; } }
     </style>
 </head>
@@ -70,14 +142,15 @@
     <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
 
         <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-4 sm:mb-6">
             <div>
                 <h1 class="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">My Finances</h1>
-                <p class="text-gray-500 mt-1 text-sm">Upload statements · See where your money goes</p>
+                <p class="text-gray-500 mt-0.5 sm:mt-1 text-xs sm:text-sm">Upload statements · See where your money goes</p>
             </div>
-            <button id="addAccountBtn" class="hidden sm:inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-sm">
+            <button id="addAccountBtn" class="hidden items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                Add Account
+                <span class="hidden sm:inline">Add Account</span>
+                <span class="sm:hidden">Add</span>
             </button>
         </div>
 
@@ -106,22 +179,22 @@
             </div>
 
             <!-- Cross-account summary stats -->
-            <div id="summaryStats" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div id="summaryStats" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                 <div class="stat-card">
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Income</p>
-                    <p id="statIncome" class="text-lg sm:text-xl font-bold text-emerald-600 mt-1">$0</p>
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Income</p>
+                    <p id="statIncome" class="text-base sm:text-xl font-bold text-emerald-600 mt-0.5 sm:mt-1">$0</p>
                 </div>
                 <div class="stat-card">
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Spending</p>
-                    <p id="statSpending" class="text-lg sm:text-xl font-bold text-red-500 mt-1">$0</p>
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Spending</p>
+                    <p id="statSpending" class="text-base sm:text-xl font-bold text-red-500 mt-0.5 sm:mt-1">$0</p>
                 </div>
                 <div class="stat-card">
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Net</p>
-                    <p id="statNet" class="text-lg sm:text-xl font-bold text-gray-900 mt-1">$0</p>
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Net</p>
+                    <p id="statNet" class="text-base sm:text-xl font-bold text-gray-900 mt-0.5 sm:mt-1">$0</p>
                 </div>
                 <div class="stat-card">
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">LLC Contribution</p>
-                    <p id="statLLC" class="text-lg sm:text-xl font-bold text-brand-600 mt-1">$0</p>
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">LLC Contribution</p>
+                    <p id="statLLC" class="text-base sm:text-xl font-bold text-brand-600 mt-0.5 sm:mt-1">$0</p>
                 </div>
             </div>
 
@@ -169,25 +242,28 @@
             <section id="insightsPanel" class="hidden">
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                        Insights
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-brand-100">
+                            <svg class="w-3.5 h-3.5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        </span>
+                        Smart Insights
                     </h2>
-                    <button id="insightsToggle" class="text-xs text-gray-400 hover:text-gray-600 transition" onclick="document.getElementById('insightsCards').classList.toggle('hidden'); this.textContent = this.textContent === 'Hide' ? 'Show' : 'Hide'">Hide</button>
+                    <button id="insightsToggle" class="text-xs text-gray-400 hover:text-gray-600 transition" onclick="const c=document.getElementById('insightsCards');const d=document.getElementById('insightsDots');c.classList.toggle('hidden');d?.classList.toggle('hidden'); this.textContent = this.textContent === 'Hide' ? 'Show' : 'Hide'">Hide</button>
                 </div>
-                <div id="insightsCards" class="grid sm:grid-cols-2 gap-3"></div>
+                <div id="insightsCards" class="insights-scroll"></div>
+                <div id="insightsDots" class="scroll-dots"></div>
             </section>
 
             <!-- Category Breakdown Chart + List -->
-            <div class="grid md:grid-cols-2 gap-4">
+            <div class="grid sm:grid-cols-2 gap-3 sm:gap-4">
                 <!-- Doughnut chart -->
-                <div class="stat-card flex flex-col items-center justify-center min-h-[280px]">
-                    <canvas id="categoryChart" class="max-w-[240px] max-h-[240px]"></canvas>
+                <div class="stat-card flex flex-col items-center justify-center min-h-[200px] sm:min-h-[280px]">
+                    <canvas id="categoryChart" class="max-w-[200px] max-h-[200px] sm:max-w-[240px] sm:max-h-[240px]"></canvas>
                     <p id="chartEmpty" class="hidden text-sm text-gray-400 mt-4">Upload a statement to see your breakdown</p>
                 </div>
 
                 <!-- Category list -->
                 <div class="stat-card overflow-hidden">
-                    <div id="categoryList" class="divide-y divide-gray-100 max-h-[320px] overflow-y-auto">
+                    <div id="categoryList" class="divide-y divide-gray-100 max-h-[260px] sm:max-h-[320px] overflow-y-auto">
                         <p class="text-sm text-gray-400 text-center py-8">No data yet</p>
                     </div>
                 </div>
@@ -213,8 +289,8 @@
             <!-- Monthly Trend Chart -->
             <section>
                 <h2 class="text-sm font-bold text-gray-900 mb-3">Monthly Trend</h2>
-                <div class="stat-card">
-                    <canvas id="trendChart" height="180"></canvas>
+                <div class="stat-card chart-container-sm" style="height:200px">
+                    <canvas id="trendChart"></canvas>
                     <p id="trendEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months to see trends</p>
                 </div>
             </section>
@@ -222,7 +298,7 @@
             <!-- Income vs Spending Line Chart -->
             <section>
                 <h2 class="text-sm font-bold text-gray-900 mb-3">Income vs Spending</h2>
-                <div class="stat-card" style="height:220px">
+                <div class="stat-card chart-container-md" style="height:240px">
                     <canvas id="incomeLineChart"></canvas>
                     <p id="incomeLineEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months to compare income & spending</p>
                 </div>
@@ -239,7 +315,7 @@
             <!-- Subscription Cost Over Time -->
             <section>
                 <h2 class="text-sm font-bold text-gray-900 mb-3">Subscription & Entertainment Trend</h2>
-                <div class="stat-card" style="height:200px">
+                <div class="stat-card chart-container-sm" style="height:220px">
                     <canvas id="subTrendChart"></canvas>
                     <p id="subTrendEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months with subscriptions to see trends</p>
                 </div>
@@ -248,7 +324,7 @@
             <!-- Spending by Category (Stacked Bar) -->
             <section>
                 <h2 class="text-sm font-bold text-gray-900 mb-3">Spending by Category Over Time</h2>
-                <div class="stat-card" style="height:260px">
+                <div class="stat-card chart-container-lg" style="height:280px">
                     <canvas id="catStackChart"></canvas>
                     <p id="catStackEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months to see category breakdown over time</p>
                 </div>
