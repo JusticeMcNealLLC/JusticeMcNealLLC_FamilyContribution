@@ -250,31 +250,12 @@
 
         <hr class="evt-divider">
 
-        <!-- Description -->
+        <!-- About this event (organizer + description) -->
         <div class="evt-section">
             <h2 class="evt-section-title">About this event</h2>
+            <div id="hostSection" class="hidden" style="margin-bottom:12px"></div>
             <p id="eventDesc" style="font-size:15px;color:#717171;line-height:1.7;white-space:pre-line;margin:0"></p>
         </div>
-
-        <hr class="evt-divider">
-
-        <!-- Host / Organizer -->
-        <div id="hostSection" class="hidden evt-section"></div>
-        <hr id="hostDivider" class="evt-divider hidden">
-
-        <!-- Gated Notes -->
-        <div id="gatedSection" class="hidden evt-section">
-            <div class="evt-info-card">
-                <span class="evt-info-card-icon">🔓</span>
-                <div>
-                    <p class="evt-info-card-title">Attendee Details</p>
-                    <p id="gatedNotes" class="evt-info-card-sub" style="white-space:pre-line"></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- RSVP Action -->
-        <div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div>
 
         <hr class="evt-divider">
 
@@ -291,6 +272,22 @@
                 Get Directions
             </a>
         </div>
+
+        <!-- Gated Notes -->
+        <div id="gatedSection" class="hidden evt-section">
+            <div class="evt-info-card">
+                <span class="evt-info-card-icon">🔓</span>
+                <div>
+                    <p class="evt-info-card-title">Attendee Details</p>
+                    <p id="gatedNotes" class="evt-info-card-sub" style="white-space:pre-line"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- RSVP Action -->
+        <div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div>
+
+        <hr class="evt-divider">
 
         <!-- Guest RSVP Form -->
         <div id="guestRsvpSection" class="hidden evt-section">

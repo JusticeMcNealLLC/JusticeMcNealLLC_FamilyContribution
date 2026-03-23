@@ -361,11 +361,6 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     // Comments section
     pubRenderComments(event);
 
-    // Host section divider
-    if (!hostEl.classList.contains('hidden')) {
-        document.getElementById('hostDivider').classList.remove('hidden');
-    }
-
     // Update sign-in link to redirect back after login
     const loginLinks = document.querySelectorAll('a[href="/auth/login.html"]');
     const returnUrl = encodeURIComponent(window.location.href);
