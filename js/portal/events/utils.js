@@ -67,7 +67,7 @@ function evtHandleBannerSelect() {
 
 function evtCopyShareUrl(slug) {
     const url = slug
-        ? `${window.location.origin}/events/?e=${slug}`
+        ? `${APP_CONFIG.FUNCTIONS_URL}/event-og?e=${slug}`
         : document.getElementById('shareUrl')?.value;
     if (!url) return;
     navigator.clipboard.writeText(url).then(() => {

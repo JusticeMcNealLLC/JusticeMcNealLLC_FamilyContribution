@@ -101,16 +101,8 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     content.classList.remove('hidden');
     content.classList.add('evt-fade-in');
 
-    // ── Open Graph meta tags (for link previews) ──
-    const ogTitle = document.createElement('meta'); ogTitle.setAttribute('property', 'og:title'); ogTitle.content = event.title;
-    const ogDesc  = document.createElement('meta'); ogDesc.setAttribute('property', 'og:description'); ogDesc.content = (event.description || '').slice(0, 200);
-    const ogImage = document.createElement('meta'); ogImage.setAttribute('property', 'og:image'); ogImage.content = event.banner_url || '';
-    const ogUrl   = document.createElement('meta'); ogUrl.setAttribute('property', 'og:url'); ogUrl.content = window.location.href;
-    const ogType  = document.createElement('meta'); ogType.setAttribute('property', 'og:type'); ogType.content = 'event';
-    const twCard  = document.createElement('meta'); twCard.name = 'twitter:card'; twCard.content = 'summary_large_image';
-    [ogTitle, ogDesc, ogImage, ogUrl, ogType, twCard].forEach(m => document.head.appendChild(m));
-
-    // Title
+    // ── OG meta tags handled by event-og edge function (crawlers hit that URL) ──
+    // Set page title for the browser tab
     document.title = `${event.title} | Justice McNeal LLC`;
     document.getElementById('eventTitle').textContent = event.title;
 
@@ -345,8 +337,8 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         pubHandleTicketScan(event, ticketToken);
     }
 
-    // Share URL (personalized with ref param)
-    const baseShareUrl = window.location.href.split('?')[0] + '?e=' + event.slug;
+    // Share URL — routed through edge function for OG meta tags (link previews)
+    const baseShareUrl = `${APP_CONFIG.FUNCTIONS_URL}/event-og?e=${event.slug}`;
     if (pubCurrentUser) {
         document.getElementById('shareUrl').value = baseShareUrl + '&ref=' + pubCurrentUser.id.slice(0, 8);
     } else if (pubGuestRsvp && pubGuestRsvp.guest_token) {
