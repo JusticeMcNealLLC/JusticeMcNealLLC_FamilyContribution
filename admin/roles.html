@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Roles & Permissions | Admin | Justice McNeal LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
+                        },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/shared.css">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JMLLC">
+    <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+    <style>
+        /* Drag handle cursor */
+        .drag-handle { cursor: grab; touch-action: none; }
+        .drag-handle:active { cursor: grabbing; }
+        .role-row.dragging { opacity: .5; }
+        .role-row.drag-over { border-top: 2px solid #6366f1; }
+
+        /* Slide-out panel */
+        .role-panel-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 50; opacity: 0; pointer-events: none; transition: opacity .2s; }
+        .role-panel-backdrop.open { opacity: 1; pointer-events: auto; }
+        .role-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 100%; max-width: 520px; background: #fff; z-index: 51; transform: translateX(100%); transition: transform .25s ease; overflow-y: auto; box-shadow: -4px 0 24px rgba(0,0,0,.1); }
+        .role-panel.open { transform: translateX(0); }
+
+        /* Color swatch */
+        .color-swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform .12s, border-color .12s; }
+        .color-swatch:hover { transform: scale(1.15); }
+        .color-swatch.selected { border-color: #1e1b4b; transform: scale(1.15); }
+
+        /* Toggle switch */
+        .perm-toggle { position: relative; width: 40px; height: 22px; border-radius: 999px; background: #d1d5db; transition: background .15s; cursor: pointer; flex-shrink: 0; }
+        .perm-toggle.on { background: #6366f1; }
+        .perm-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+        .perm-toggle.on::after { transform: translateX(18px); }
+
+        /* Mobile: panel full-screen */
+        @media (max-width: 640px) {
+            .role-panel { max-width: 100%; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="admin" data-active-page="roles">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <!-- Header + Back -->
+        <div class="mb-6 sm:mb-8">
+            <a href="index.html" class="inline-flex items-center text-sm text-gray-500 hover:text-brand-600 mb-3 transition">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                Admin Hub
+            </a>
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Roles & Permissions</h1>
+                    <p class="text-gray-500 mt-1 text-sm sm:text-base">Discord-style roles with granular permission control</p>
+                </div>
+                <button id="btnCreateRole" class="inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-2.5 px-5 rounded-xl transition shadow-sm shadow-brand-200 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Create Role
+                </button>
+            </div>
+        </div>
+
+        <!-- Role List -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden">
+            <div id="roleList" class="divide-y divide-gray-100">
+                <!-- Skeleton rows -->
+                <div class="p-5 flex items-center gap-4"><div class="skeleton h-5 w-40 rounded-lg"></div></div>
+                <div class="p-5 flex items-center gap-4"><div class="skeleton h-5 w-36 rounded-lg"></div></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Slide-out Editor Panel -->
+    <div id="panelBackdrop" class="role-panel-backdrop"></div>
+    <div id="rolePanel" class="role-panel">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between z-10">
+            <h2 id="panelTitle" class="text-lg font-bold text-gray-900">Create Role</h2>
+            <button id="btnClosePanel" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
+                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="p-5 space-y-6" id="panelBody">
+            <!-- Name -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Role Name</label>
+                <input id="roleName" type="text" maxlength="32" class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="e.g. Event Manager">
+            </div>
+
+            <!-- Color -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Color</label>
+                <div id="colorSwatches" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Icon / Emoji -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Icon (emoji)</label>
+                <input id="roleIcon" type="text" maxlength="4" class="w-20 px-3.5 py-2.5 border border-gray-300 rounded-xl text-center text-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="🛡️">
+            </div>
+
+            <!-- Permissions -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Permissions</label>
+                <div id="permAccordion" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- Panel Footer -->
+        <div class="sticky bottom-0 bg-white border-t border-gray-200 px-5 py-4 flex items-center gap-3">
+            <button id="btnDeleteRole" class="mr-auto text-sm font-medium text-red-600 hover:text-red-700 transition hidden">Delete Role</button>
+            <button id="btnCancelPanel" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition">Cancel</button>
+            <button id="btnSaveRole" class="px-5 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-sm">Save</button>
+        </div>
+    </div>
+
+    <!-- Delete Confirm Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 hidden">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm mx-4 p-6 space-y-4">
+            <h3 class="text-lg font-bold text-gray-900">Delete Role</h3>
+            <p id="deleteMsg" class="text-sm text-gray-600"></p>
+            <div class="flex justify-end gap-3">
+                <button id="btnDeleteCancel" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition">Cancel</button>
+                <button id="btnDeleteConfirm" class="px-5 py-2.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl transition">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/components/pageShell/icons.js"></script>
+    <script src="../js/components/pageShell/helpers.js"></script>
+    <script src="../js/components/pageShell/nav.js"></script>
+    <script src="../js/components/pageShell/dropdowns.js"></script>
+    <script src="../js/components/pageShell/drawer.js"></script>
+    <script src="../js/components/pageShell/profile-loader.js"></script>
+    <script src="../js/components/pageShell/index.js"></script>
+    <script src="../js/auth/shared.js"></script>
+    <script src="../js/admin/roles.js"></script>
+    <script src="../js/sw-register.js"></script>
+</body>
+</html>

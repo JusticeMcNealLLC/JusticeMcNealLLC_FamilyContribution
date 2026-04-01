@@ -105,29 +105,29 @@ Roles are named groups with a set of **permissions** (boolean flags). Members ca
 - [x] `is_admin()` function stays working during transition — no RLS policies need to change yet
 - [x] Update `checkAuth()` to also fetch user's roles + permissions and expose `userPermissions` globally
 
-### Step 3 — Admin Page: Roles Management UI
-- [ ] Create `admin/roles.html` — protected by `checkAuth(true)` + `admin.roles` permission
-- [ ] Create `js/admin/roles.js` — page controller
-- [ ] **Role list view:**
-  - [ ] List all roles ordered by position (drag-to-reorder)
-  - [ ] Show role name, color dot, member count, system badge (if system role)
-  - [ ] "Create Role" button at top
-- [ ] **Role editor (slide-out panel or modal):**
-  - [ ] Name field (text input)
-  - [ ] Color picker (hex color for the role chip)
-  - [ ] Icon/emoji picker (optional)
-  - [ ] Permission toggles — grouped by category (Administration, Finances, Events, Content)
-  - [ ] Each permission is a toggle switch with description
-  - [ ] "Select All" / "Deselect All" per category
-  - [ ] System roles: name + permissions are read-only, can't be deleted
-- [ ] **Role deletion:**
-  - [ ] Confirm modal: "X members have this role. They will lose these permissions."
-  - [ ] Cascade: remove from `member_roles`, delete `role_permissions`, delete role
-  - [ ] Cannot delete system roles (Owner, Member)
-- [ ] **Role ordering:**
-  - [ ] Drag-and-drop reorder (higher position = higher priority)
-  - [ ] Owner always at top, Member always at bottom
-  - [ ] Position determines hierarchy display in member profiles
+### Step 3 — Admin Page: Roles Management UI ✅
+- [x] Create `admin/roles.html` — protected by `checkAuth(true)` + `admin.roles` permission
+- [x] Create `js/admin/roles.js` — page controller
+- [x] **Role list view:**
+  - [x] List all roles ordered by position (drag-to-reorder)
+  - [x] Show role name, color dot, member count, system badge (if system role)
+  - [x] "Create Role" button at top
+- [x] **Role editor (slide-out panel or modal):**
+  - [x] Name field (text input)
+  - [x] Color picker (hex color for the role chip)
+  - [x] Icon/emoji picker (optional)
+  - [x] Permission toggles — grouped by category (Administration, Finances, Events, Content)
+  - [x] Each permission is a toggle switch with description
+  - [x] "Select All" / "Deselect All" per category
+  - [x] System roles: name + permissions are read-only, can't be deleted
+- [x] **Role deletion:**
+  - [x] Confirm modal: "X members have this role. They will lose these permissions."
+  - [x] Cascade: remove from `member_roles`, delete `role_permissions`, delete role
+  - [x] Cannot delete system roles (Owner, Member)
+- [x] **Role ordering:**
+  - [x] Drag-and-drop reorder (higher position = higher priority)
+  - [x] Owner always at top, Member always at bottom
+  - [x] Position determines hierarchy display in member profiles
 
 ### Step 4 — Admin Page: Member Role Assignment
 - [ ] Add "Roles" column to existing `admin/members.html` table
