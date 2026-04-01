@@ -535,8 +535,11 @@ async function evtHandleCreate(e) {
             record.raffle_type = document.getElementById('raffleType').value;
             record.raffle_draw_trigger = document.getElementById('raffleDrawTrigger').value;
 
-            // Build prizes array from inputs
-            const prizeInputs = document.querySelectorAll('input[name="rafflePrize"]');
+            // Build prizes array from inputs (search within the prizes container)
+            const prizesContainer = document.getElementById('rafflePrizesList');
+            const prizeInputs = prizesContainer
+                ? prizesContainer.querySelectorAll('input[type="text"]')
+                : document.querySelectorAll('input[name="rafflePrize"]');
             const prizes = [];
             prizeInputs.forEach((input, i) => {
                 const desc = input.value.trim();
