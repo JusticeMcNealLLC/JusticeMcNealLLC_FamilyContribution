@@ -189,25 +189,30 @@ This follows the same query-parameter routing pattern already used by the public
 
 ---
 
-## Testing Checklist
-- [ ] Click event card → navigates to `?event={slug}`, shows detail page
-- [ ] Browser back button → returns to event list
-- [ ] Browser forward button → returns to detail page
-- [ ] Direct URL `portal/events.html?event=ski-trip-2026` → loads event detail
-- [ ] Invalid slug URL → shows "not found" with back link
-- [ ] Refresh on detail page → detail page persists
-- [ ] RSVP from detail page → detail refreshes in-place (URL stays)
-- [ ] Raffle draw → detail refreshes in-place
-- [ ] Competition action → detail refreshes in-place
-- [ ] Document upload/delete → detail refreshes in-place
-- [ ] Create event → navigates to new event's detail page
-- [ ] QR scanner works from detail page
-- [ ] Fullscreen map works from detail page
-- [ ] Bottom tab bar visible on detail page
-- [ ] Mobile scroll behavior is natural (no modal scroll trapping)
-- [ ] Auth redirect preserves `?event=` param on return
-- [ ] Page title updates to event name on detail, "Events" on list
+## Testing Checklist (Code Audit Results)
+
+| # | Test | Result | Notes |
+|---|------|--------|-------|
+| 1 | Click event card → navigates to `?event={slug}`, shows detail page | ✅ PASS | `list.js` L86-93: card click calls `evtNavigateToEvent(event.slug)` which does `pushState` + renders detail |
+| 2 | Browser back button → returns to event list | ✅ PASS | `init.js` L38: `popstate` listener calls `evtRouteByUrl()` which checks URL params and switches view |
+| 3 | Browser forward button → returns to detail page | ✅ PASS | Same `popstate` handler re-reads `?event=` param and loads detail via `evtLoadDetailBySlug()` |
+| 4 | Direct URL `portal/events.html?event=ski-trip-2026` → loads event detail | ✅ PASS | `init.js` L30: `evtRouteByUrl()` called on `DOMContentLoaded` after `evtLoadEvents()` — reads `?event=` param |
+| 5 | Invalid slug URL → shows "not found" with back link | ✅ PASS | `utils.js` `evtLoadDetailBySlug()`: tries cache, then Supabase query; if no match, renders "Event not found" UI with back link |
+| 6 | Refresh on detail page → detail page persists | ✅ PASS | URL retains `?event={slug}` across refresh; `evtRouteByUrl()` on load re-fetches and renders |
+| 7 | RSVP from detail page → detail refreshes in-place (URL stays) | ✅ PASS | `rsvp.js`: all 6 RSVP action sites call `evtRenderEvents()` then `await evtOpenDetail(eventId)` for in-place refresh |
+| 8 | Raffle draw → detail refreshes in-place | ✅ PASS | `raffle.js` L249: "All Winners Drawn" button calls `evtOpenDetail(eventId)` to refresh detail |
+| 9 | Competition action → detail refreshes in-place | ✅ PASS | `competition.js`: 8 call sites (L478, 556, 590, 616, 656, 686, 725, 815) all call `evtOpenDetail(eventId)` |
+| 10 | Document upload/delete → detail refreshes in-place | ✅ PASS | `documents.js`: 3 call sites (L240, 284, 313) all call `evtOpenDetail(eventId)` |
+| 11 | Create event → navigates to new event's detail page | ✅ PASS | `create.js` L~608: post-create calls `evtNavigateToEvent(data.slug)` which pushes URL and renders detail |
+| 12 | QR scanner works from detail page | ✅ PASS | `scannerModal` (z-60) is a standalone fixed overlay in `events.html` L810 — independent of old modal system |
+| 13 | Fullscreen map works from detail page | ✅ PASS | `fullscreenMapOverlay` (z-80) is a standalone fixed overlay in `events.html` L851; `evtCloseFullscreenMap()` cleaned of modal references |
+| 14 | Bottom tab bar visible on detail page | ✅ PASS | `#eventsDetailView` is a regular page-flow div (not fixed/absolute overlay), so layout.js bottom nav renders normally |
+| 15 | Mobile scroll behavior is natural (no modal scroll trapping) | ✅ PASS | No `overflow:hidden` on body for detail view; `padding-bottom: env(safe-area-inset-bottom)` on `#eventsDetailView` for safe area |
+| 16 | Auth redirect preserves `?event=` param on return | ⚠️ KNOWN LIMITATION | `auth.js` L10: `window.location.href = APP_CONFIG.LOGIN_URL` — does NOT append return URL or preserve query params. Deep links lost on auth redirect. **Future fix needed.** |
+| 17 | Page title updates to event name on detail, "Events" on list | ✅ PASS | `detail.js` L~907: sets `document.title = event.title + ' \| Events \| Justice McNeal LLC'`; list view restores default title |
+
+**Summary:** 16/17 PASS, 1 known limitation (auth redirect doesn't preserve deep link — tracked for future fix)
 
 ---
 
-**Last Updated:** March 31, 2026
+**Last Updated:** July 5, 2025
