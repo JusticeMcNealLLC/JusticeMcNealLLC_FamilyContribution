@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
-// Portal Events — Detail Modal
-// Opens the full event detail view with attendee list,
-// QR codes, host controls, cost breakdown, waitlist, etc.
+// Portal Events — Detail Page View
+// Renders the full event detail into the page (not a modal)
+// with attendee list, QR codes, host controls, cost breakdown, etc.
 // ═══════════════════════════════════════════════════════════
 
 async function evtOpenDetail(eventId) {
@@ -695,16 +695,21 @@ async function evtOpenDetail(eventId) {
                 <span style="font-size:14px;color:#717171">${parts.join(' · ')}</span>
             </div>`;
     }
-    document.getElementById('detailContent').innerHTML = `
+    document.getElementById('eventsDetailView').innerHTML = `
+        <!-- Back Navigation -->
+        <div style="max-width:900px;margin:0 auto;padding:16px 16px 0">
+            <button onclick="evtNavigateToList()" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition mb-2" aria-label="Back to events">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                Back to Events
+            </button>
+        </div>
+
         <!-- Hero Banner -->
         <div class="evt-hero" style="${bannerBg} min-height:300px;">
             <div class="evt-hero-scrim"></div>
             <div class="evt-hero-actions">
                 <button onclick="evtCopyShareUrl('${event.slug}')" class="evt-hero-btn" title="Share" aria-label="Share event">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                </button>
-                <button onclick="evtToggleModal('detailModal',false)" class="evt-hero-btn" aria-label="Close">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             <div class="evt-hero-content">
@@ -897,12 +902,14 @@ async function evtOpenDetail(eventId) {
         </div>
     `;
 
-    evtToggleModal('detailModal', true);
+    // Update page title
+    document.title = `${event.title} | Events | Justice McNeal LLC`;
+    window.scrollTo({ top: 0, behavior: 'instant' });
 
     // Load comments
     evtLoadComments(eventId);
 
-    // Generate QR codes after modal is visible
+    // Generate QR codes after DOM render
     setTimeout(() => {
         if (rsvp && rsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
             const canvas = document.getElementById('myTicketQR');

@@ -82,9 +82,14 @@ function evtRenderEvents() {
     empty.classList.add('hidden');
     grid.innerHTML = events.map(e => evtRenderCard(e)).join('');
 
-    // Card click → detail modal
+    // Card click → detail page
     grid.querySelectorAll('[data-event-id]').forEach(card => {
-        card.addEventListener('click', () => evtOpenDetail(card.dataset.eventId));
+        const event = evtAllEvents.find(e => e.id === card.dataset.eventId);
+        if (event && event.slug) {
+            card.addEventListener('click', () => evtNavigateToEvent(event.slug));
+        } else {
+            card.addEventListener('click', () => evtOpenDetail(card.dataset.eventId));
+        }
     });
 }
 

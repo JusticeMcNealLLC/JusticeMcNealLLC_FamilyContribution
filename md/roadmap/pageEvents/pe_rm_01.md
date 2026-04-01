@@ -1,7 +1,7 @@
 # PE-RM-01: Convert Event Modal → Full Event Page
 
 **Created:** March 31, 2026
-**Status:** Planning
+**Status:** In Progress (Step 2 Complete)
 **Priority:** High
 **Scope:** Portal events — detail view only (public event page is unaffected)
 
@@ -107,17 +107,17 @@ This follows the same query-parameter routing pattern already used by the public
 *Refactor `evtOpenDetail()` to render into the main content area instead of a modal.*
 
 - [ ] Rename `evtOpenDetail()` → `evtRenderDetailPage(eventId)` (or accept slug)
-- [ ] Change render target from `#detailContent` (modal) → main content area (hide event list, show detail)
-- [ ] Replace the modal close button (×) with a **back button** (← Back to Events) that calls `evtNavigateToList()`
-- [ ] Remove `evtToggleModal('detailModal', true/false)` calls from the detail flow
-- [ ] Keep the existing data-fetching logic and HTML layout — just change the container target
-- [ ] Add slug-based lookup: if called with slug (from URL), query `events` by slug first to get the UUID
-- [ ] Ensure the detail view uses the full page width (no modal panel constraints)
+- [x] Change render target from `#detailContent` (modal) → main content area (hide event list, show detail)
+- [x] Replace the modal close button (×) with a **back button** (← Back to Events) that calls `evtNavigateToList()`
+- [x] Remove `evtToggleModal('detailModal', true/false)` calls from the detail flow
+- [x] Keep the existing data-fetching logic and HTML layout — just change the container target
+- [x] Add slug-based lookup: if called with slug (from URL), query `events` by slug first to get the UUID
+- [x] Ensure the detail view uses the full page width (no modal panel constraints)
 
 ### Step 3 — Update All Call Sites
 *Replace every `evtOpenDetail(eventId)` call with the new navigation or refresh pattern.*
 
-- [ ] `list.js` — card click: change to `evtNavigateToEvent(event.slug)` (need slug on the card `data-` attribute)
+- [x] `list.js` — card click: change to `evtNavigateToEvent(event.slug)` (need slug on the card `data-` attribute)
 - [ ] `create.js` — after creation: navigate to the new event's slug
 - [ ] `rsvp.js` — after RSVP actions: call `evtRenderDetailPage(eventId)` in-place (no navigation, just refresh)
 - [ ] `competition.js` — after competition actions: call `evtRenderDetailPage(eventId)` in-place
