@@ -696,18 +696,13 @@ async function evtOpenDetail(eventId) {
             </div>`;
     }
     document.getElementById('eventsDetailView').innerHTML = `
-        <!-- Back Navigation -->
-        <div style="max-width:900px;margin:0 auto;padding:16px 16px 0">
-            <button onclick="evtNavigateToList()" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition mb-2" aria-label="Back to events">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Back to Events
-            </button>
-        </div>
-
         <!-- Hero Banner -->
         <div class="evt-hero" style="${bannerBg} min-height:300px;">
             <div class="evt-hero-scrim"></div>
             <div class="evt-hero-actions">
+                <button onclick="evtNavigateToList()" class="evt-hero-btn evt-hero-back-btn" title="Back" aria-label="Back to events">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                </button>
                 <button onclick="evtCopyShareUrl('${event.slug}')" class="evt-hero-btn" title="Share" aria-label="Share event">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                 </button>
@@ -726,14 +721,14 @@ async function evtOpenDetail(eventId) {
             </div>
         </div>
 
-        <div class="evt-body">
+        <div class="evt-body max-w-5xl mx-auto">
 
             <!-- Status banner for deadline-passed -->
             ${deadlinePassed && !isClosed && !isPast ? '<div style="padding:16px 0 0"><span class="evt-status-banner evt-status-past-body">🔒 RSVP deadline passed</span></div>' : ''}
 
             <!-- Event Details -->
             <div class="evt-section">
-                <h3 class="evt-section-title" style="font-size:18px">Event Details</h3>
+                <h3 class="evt-section-title">Event Details</h3>
                 <div class="evt-info-row">
                     <div class="evt-info-icon">
                         <svg viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
@@ -795,10 +790,14 @@ async function evtOpenDetail(eventId) {
                     return `<div class="evt-info-row" style="margin-bottom:12px"><div class="evt-info-icon" style="background:#222"><svg viewBox="0 0 24 24" stroke-width="2" style="stroke:#fff"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div><div><p class="evt-info-primary">Justice McNeal LLC</p><p class="evt-info-secondary">Organizer</p></div></div>`;
                 }
                 if (creatorProfile) {
-                    const avatarHtml = creatorProfile.profile_picture_url
+                    const avatarImg = creatorProfile.profile_picture_url
                         ? `<img src="${creatorProfile.profile_picture_url}" style="width:48px;height:48px;border-radius:12px;object-fit:cover" alt="${evtEscapeHtml(cpName)}">`
-                        : `<div class="evt-info-icon" style="background:#222;color:#fff;font-size:16px;font-weight:700">${cpInitials}</div>`;
-                    return `<a href="profile.html?id=${creatorProfile.id}" style="text-decoration:none"><div class="evt-info-row" style="margin-bottom:12px">${avatarHtml}<div><p class="evt-info-primary">${evtEscapeHtml(cpName)}</p><p class="evt-info-secondary">Organizer</p></div></div></a>`;
+                        : `<div style="width:48px;height:48px;border-radius:12px;background:#222;color:#fff;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center">${cpInitials}</div>`;
+                    const avatarHtml = cpBadge
+                        ? `<div style="position:relative;flex-shrink:0">${avatarImg}<div style="position:absolute;bottom:-2px;right:-2px;transform:scale(.65);transform-origin:bottom right">${cpBadge}</div></div>`
+                        : avatarImg;
+                    const titleLabel = cpTitle || 'Member';
+                    return `<a href="profile.html?id=${creatorProfile.id}" style="text-decoration:none"><div class="evt-info-row" style="margin-bottom:12px">${avatarHtml}<div><p class="evt-info-primary">${evtEscapeHtml(cpName)}</p><p class="evt-info-secondary">${evtEscapeHtml(titleLabel)} · Organizer</p></div></div></a>`;
                 }
                 return '';
             })()}
