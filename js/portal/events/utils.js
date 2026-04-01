@@ -65,6 +65,78 @@ function evtHandleBannerSelect() {
     reader.readAsDataURL(file);
 }
 
+// ─── Page Navigation (list ↔ detail) ────────────────────
+
+function evtNavigateToEvent(slug) {
+    const url = new URL(window.location);
+    url.searchParams.set('event', slug);
+    history.pushState({ view: 'detail', slug }, '', url);
+    evtRouteByUrl();
+}
+
+function evtNavigateToList() {
+    const url = new URL(window.location);
+    url.searchParams.delete('event');
+    history.pushState({ view: 'list' }, '', url);
+    evtRouteByUrl();
+}
+
+function evtRouteByUrl() {
+    const slug = new URLSearchParams(window.location.search).get('event');
+    const listView = document.getElementById('eventsListView');
+    const detailView = document.getElementById('eventsDetailView');
+    if (!listView || !detailView) return;
+
+    if (slug) {
+        // Show detail, hide list
+        listView.classList.add('hidden');
+        detailView.classList.remove('hidden');
+        detailView.innerHTML = '<div class="flex items-center justify-center py-20"><div class="animate-spin rounded-full h-8 w-8 border-2 border-brand-600 border-t-transparent"></div></div>';
+        evtLoadDetailBySlug(slug);
+    } else {
+        // Show list, hide detail
+        detailView.classList.add('hidden');
+        detailView.innerHTML = '';
+        listView.classList.remove('hidden');
+        document.title = 'Events | Justice McNeal LLC';
+    }
+}
+
+async function evtLoadDetailBySlug(slug) {
+    // Find event in cache first, otherwise query by slug
+    let event = evtAllEvents.find(e => e.slug === slug);
+    if (event) {
+        evtOpenDetail(event.id);
+        return;
+    }
+    // Not in cache — direct query
+    const { data, error } = await supabaseClient
+        .from('events')
+        .select('id, slug')
+        .eq('slug', slug)
+        .maybeSingle();
+    if (error || !data) {
+        const detailView = document.getElementById('eventsDetailView');
+        if (detailView) {
+            detailView.innerHTML = `
+                <div class="max-w-md mx-auto text-center py-20 px-4">
+                    <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-900 mb-1">Event not found</h2>
+                    <p class="text-sm text-gray-500 mb-6">This event may have been removed or the link is incorrect.</p>
+                    <button onclick="evtNavigateToList()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        Back to Events
+                    </button>
+                </div>`;
+        }
+        document.title = 'Event Not Found | Justice McNeal LLC';
+        return;
+    }
+    evtOpenDetail(data.id);
+}
+
 function evtCopyShareUrl(slug) {
     let url;
     if (slug) {

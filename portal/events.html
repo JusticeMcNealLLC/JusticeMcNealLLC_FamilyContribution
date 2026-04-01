@@ -203,6 +203,9 @@
     <div id="nav-placeholder"></div>
 
     <main class="flex-1 w-full">
+
+        <!-- ═══ List View (hero + tabs + grid) ═══ -->
+        <div id="eventsListView">
         <!-- Events hero: full-bleed bg on desktop, sticky on mobile -->
         <div class="sticky top-0 z-30 md:static">
             <div class="bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 text-white relative overflow-hidden fade-in"
@@ -290,6 +293,11 @@
             </div>
         </div>
         </div>
+        </div><!-- /eventsListView -->
+
+        <!-- ═══ Detail View (loaded dynamically by evtRouteByUrl) ═══ -->
+        <div id="eventsDetailView" class="hidden"></div>
+
     </main>
 
     <!-- ─── Create Event Modal ────────────────────────────── -->

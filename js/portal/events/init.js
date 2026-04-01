@@ -31,6 +31,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     evtSetupListeners();
     await evtLoadEvents();
+
+    // ── URL Routing: check for ?event={slug} on initial load ──
+    evtRouteByUrl();
+
+    // ── Browser back/forward support ──
+    window.addEventListener('popstate', () => evtRouteByUrl());
 });
 
 // ─── Raffle Cost Hint Helper ────────────────────────────
@@ -255,3 +261,6 @@ window.evtRecalcCompTiers = evtRecalcCompTiers;
 window.evtUploadPhoto = evtHandlePhotoSelect;
 window.evtDeletePhoto = evtDeletePhoto;
 window.evtViewPhoto = evtViewPhoto;
+// Navigation exports
+window.evtNavigateToEvent = evtNavigateToEvent;
+window.evtNavigateToList = evtNavigateToList;

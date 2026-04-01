@@ -66,17 +66,17 @@ Every event gets a **public-facing page** with a unique shareable URL. This is t
 #### Member-Only Toggle
 
 - [x] When creating an event, the coordinator can toggle **"Member Only"** on or off
-- [ ] **Member Only = OFF (default):** Anyone with the link can view the event page and RSVP (pay). No login required. Non-members RSVP by entering their name and email at checkout.
+- [x] **Member Only = OFF (default):** Anyone with the link can view the event page and RSVP (pay). No login required. Non-members RSVP by entering their name and email at checkout.
 - [x] **Member Only = ON:** The public page shows event basics (title, image, date), but the RSVP button requires the user to sign in as an active member. Non-members see: *"This is a members-only event. Sign in to RSVP."*
 - [x] The coordinator sees a preview of the public page before publishing
 
 #### Guest Ticket Retrieval (Non-Members)
 
-- [ ] Guests (non-members) who RSVP'd and paid can **retrieve their ticket** by returning to the event link and entering their email
-- [ ] An **"Already RSVP'd?"** section on the public event page lets them enter their email to look up their record
-- [ ] If the email matches a paid `event_guest_rsvps` record for that event, the page reveals their QR ticket + gated details
-- [ ] No account creation needed — purely email-based lookup
-- [ ] If no match, shows: *"No RSVP found for that email. Check the email you used at checkout."*
+- [x] Guests (non-members) who RSVP'd and paid can **retrieve their ticket** by returning to the event link and entering their email
+- [x] An **"Already RSVP'd?"** section on the public event page lets them enter their email to look up their record
+- [x] If the email matches a paid `event_guest_rsvps` record for that event, the page reveals their QR ticket + gated details
+- [x] No account creation needed — purely email-based lookup
+- [x] If no match, shows: *"No RSVP found for that email. Check the email you used at checkout."*
 
 #### Two-Tier Information Gating
 
@@ -98,8 +98,8 @@ Event details are split into two tiers:
 
 - [x] The coordinator chooses which fields go in each tier when creating the event
 - [x] For **free events**, all info can be visible immediately (no gating needed)
-- [ ] For **paid events**, gated info unlocks after successful Stripe payment
-- [ ] Gated info also unlocks for events where the event is free but the raffle is paid — after paying the raffle entry fee
+- [x] For **paid events**, gated info unlocks after successful Stripe payment
+- [x] Gated info also unlocks for events where the event is free but the raffle is paid — after paying the raffle entry fee
 
 #### Flexible Pricing Modes
 
@@ -111,19 +111,19 @@ The coordinator picks one of these pricing modes when creating the event:
 | **Free Event, Paid Raffle** | Event details are visible to all RSVPs (free). But raffle entry + QR ticket require a separate paid "raffle entry" purchase. |
 | **Fully Free** | No payment at all. All info visible on RSVP. Raffle (if any) is free entry from attendees. |
 
-- [ ] All payments are **non-refundable** (RSVP and raffle entry)
-- [ ] **Adults only** — each person must RSVP individually. Couples RSVP separately, each paying their own fee. No +1 / guest RSVPs.
+- [x] All payments are **non-refundable** (RSVP and raffle entry)
+- [x] **Adults only** — each person must RSVP individually. Couples RSVP separately, each paying their own fee. No +1 / guest RSVPs.
 
 #### Stripe Payment Architecture
 
-- [ ] Event payments use the **same Stripe account** as member contributions (LLC's BlueVine-connected Stripe account)
-- [ ] A new **`create-event-checkout`** Supabase Edge Function handles event-specific Checkout Sessions
-- [ ] Checkout Sessions are **one-time payments** (not subscriptions) with `mode: 'payment'`
-- [ ] The edge function accepts a `type` param: `'rsvp'` or `'raffle_entry'`
-- [ ] Metadata on the Checkout Session includes: `event_id`, `user_id` (or `guest_email` + `guest_name`), `type`
-- [ ] On webhook `checkout.session.completed`, the function creates the `event_rsvps` / `event_guest_rsvps` / `event_raffle_entries` record
-- [ ] Event payments are tagged with `metadata.category = 'event'` so they're distinguishable from monthly contributions in Stripe dashboard
-- [ ] Funds route directly to the LLC's BlueVine bank via Stripe — no Connect payouts needed
+- [x] Event payments use the **same Stripe account** as member contributions (LLC's BlueVine-connected Stripe account)
+- [x] A new **`create-event-checkout`** Supabase Edge Function handles event-specific Checkout Sessions
+- [x] Checkout Sessions are **one-time payments** (not subscriptions) with `mode: 'payment'`
+- [x] The edge function accepts a `type` param: `'rsvp'` | `'raffle_entry'` | `'competition_entry'` | `'prize_pool'`
+- [x] Metadata on the Checkout Session includes: `event_id`, `user_id` (or `guest_email` + `guest_name`), `type`
+- [x] On webhook `checkout.session.completed`, the function creates the `event_rsvps` / `event_guest_rsvps` / `event_raffle_entries` record
+- [x] Event payments are tagged with `metadata.category = 'event'` so they're distinguishable from monthly contributions in Stripe dashboard
+- [x] Funds route directly to the LLC's BlueVine bank via Stripe — no Connect payouts needed
 
 ### 👁️ Event Preview
 
@@ -146,56 +146,56 @@ The coordinator picks one of these pricing modes when creating the event:
 > Only users with the **President** role can create LLC events (for now).
 
 **Required Fields:**
-- [ ] Event title
-- [ ] Event type (Trip, Outing, Retreat, Dinner, Holiday, Birthday, Custom)
-- [ ] Description / overview (rich text) — this is the **public-facing** description shown pre-RSVP
-- [ ] Cover banner image (uploaded or generated)
-- [ ] Event date(s) — single day or multi-day range
-- [ ] Location — text address + optional map pin
-- [ ] Max participant count (hard cap — RSVP closes when full)
-- [ ] RSVP deadline — defaults to 3 months before event date
+- [x] Event title
+- [x] Event type (Trip, Outing, Retreat, Dinner, Holiday, Birthday, Custom)
+- [x] Description / overview (rich text) — this is the **public-facing** description shown pre-RSVP
+- [x] Cover banner image (uploaded or generated)
+- [x] Event date(s) — single day or multi-day range
+- [x] Location — text address + optional map pin
+- [x] Max participant count (hard cap — RSVP closes when full)
+- [x] RSVP deadline — defaults to 3 months before event date
 
 **Visibility & Pricing Settings:**
-- [ ] **Member-only toggle** — restrict RSVP to signed-in active members (default: off)
-- [ ] **Pricing mode** — Fully Paid / Free Event, Paid Raffle / Fully Free
-- [ ] **RSVP price** (if paid) — flat amount in dollars
-- [ ] **Raffle entry price** (if "Free Event, Paid Raffle" mode)
-- [ ] **Gated details** — coordinator marks which fields are hidden until post-RSVP (time, location, notes, etc.)
+- [x] **Member-only toggle** — restrict RSVP to signed-in active members (default: off)
+- [x] **Pricing mode** — Fully Paid / Free Event, Paid Raffle / Fully Free
+- [x] **RSVP price** (if paid) — flat amount in dollars
+- [x] **Raffle entry price** (if "Free Event, Paid Raffle" mode)
+- [x] **Gated details** — coordinator marks which fields are hidden until post-RSVP (time, location, notes, etc.)
 
 **Gated Details (post-RSVP content):**
-- [ ] Exact event time
-- [ ] Exact address / location details
-- [ ] Coordinator private notes (additional info for attendees only)
-- [ ] Attached documents (PDFs, images)
+- [x] Exact event time
+- [x] Exact address / location details
+- [x] Coordinator private notes (additional info for attendees only)
+- [x] Attached documents (PDFs, images)
 
 **Giveaway / Raffle Setup (optional):**
-- [ ] Enable raffle toggle
-- [ ] Number of winners (e.g. 1st place, 2nd place)
-- [ ] Prize description per tier (text, e.g. "$50 cash", "Gift basket")
-- [ ] Raffle mode: **Digital** (system picks from checked-in attendees) or **Physical** (coordinator runs manually, system just tracks attendance)
-- [ ] If digital: system auto-selects winner(s) from checked-in attendees and sends notifications
-- [ ] Raffle draw timing: coordinator triggers manually ("Draw Winner" button) or auto-draw at event end time
+- [x] Enable raffle toggle
+- [x] Number of winners (e.g. 1st place, 2nd place)
+- [x] Prize description per tier (text, e.g. "$50 cash", "Gift basket")
+- [x] Raffle mode: **Digital** (system picks from checked-in attendees) or **Physical** (coordinator runs manually, system just tracks attendance)
+- [x] If digital: system auto-selects winner(s) from checked-in attendees and sends notifications
+- [x] Raffle draw timing: coordinator triggers manually ("Draw Winner" button) or auto-draw at event end time
 
 **Cost Breakdown Builder:**
 The event coordinator fills out a detailed cost breakdown table. Each line item has:
-- [ ] Line item name (e.g. "Airbnb", "Ski Lift Passes", "Car Rental")
-- [ ] Category (Lodging, Transportation, Food, Gear, Entertainment, Other)
-- [ ] Total cost for the group
-- [ ] Whether it's **included in buy-in** or **out-of-pocket** (member pays separately)
-- [ ] Notes / source link (e.g. "Based on Expedia quote for 4 pax, March 15")
-- [ ] Optional: "Average per person" for out-of-pocket items so members know what to budget
+- [x] Line item name (e.g. "Airbnb", "Ski Lift Passes", "Car Rental")
+- [x] Category (Lodging, Transportation, Food, Gear, Entertainment, Other)
+- [x] Total cost for the group
+- [x] Whether it's **included in buy-in** or **out-of-pocket** (member pays separately)
+- [x] Notes / source link (e.g. "Based on Expedia quote for 4 pax, March 15")
+- [x] Optional: "Average per person" for out-of-pocket items so members know what to budget
 
 **Auto-calculated fields:**
-- [ ] **Total included cost** = sum of all "included in buy-in" line items
-- [ ] **Buy-in (RSVP cost)** = Total included cost ÷ Max participant count
-- [ ] **Estimated out-of-pocket** = sum of average per-person out-of-pocket items
-- [ ] **Grand total per person** = Buy-in + Out-of-pocket estimate
+- [x] **Total included cost** = sum of all "included in buy-in" line items
+- [x] **Buy-in (RSVP cost)** = Total included cost ÷ Min participant count (uses min_participants as divisor, not max)
+- [x] **Estimated out-of-pocket** = sum of average per-person out-of-pocket items
+- [x] **Grand total per person** = Buy-in + Out-of-pocket estimate
 
 **Cost Breakdown Lock Policy:**
-- [ ] Once the **first RSVP payment is received**, the cost breakdown is **locked** — no line items can be added, edited, or removed
-- [ ] If actual costs come in lower than estimated, the difference is **retained by the LLC** (not refunded to members)
-- [ ] Admin can post a note on the event explaining any cost variance, but the buy-in amount is final once payments begin
-- [ ] If admin needs to update costs before any payments are received, the breakdown is freely editable
+- [x] Once the **first RSVP payment is received**, the cost breakdown is **locked** — no line items can be added, edited, or removed
+- [x] If actual costs come in lower than estimated, the difference is **retained by the LLC** (not refunded to members)
+- [x] Admin can post a note on the event explaining any cost variance, but the buy-in amount is final once payments begin
+- [x] If admin needs to update costs before any payments are received, the breakdown is freely editable
 
 **Example breakdown display:**
 
@@ -222,113 +222,113 @@ The event coordinator fills out a detailed cost breakdown table. Each line item 
 
 #### RSVP & Payment
 
-- [ ] Members click **"RSVP — $800"** button on the event page
-- [ ] Stripe Checkout opens for the buy-in amount
-- [ ] On success → member is added to the confirmed RSVP list
-- [ ] RSVP list shows: confirmed members with avatars, open spots remaining
-- [ ] RSVP closes automatically when: (a) deadline passes, or (b) max participants reached
-- [ ] **RSVP is binary for paid events** — no "Maybe" option. You're either paid in (confirmed) or not. "Maybe" is only available on free member events.
-- [ ] **No +1 / guest RSVPs** — each RSVP is tied to one member account. If someone wants to attend, they must be an active contributing member and RSVP themselves. One spot per person, always.
+- [x] Members click **"RSVP — $800"** button on the event page
+- [x] Stripe Checkout opens for the buy-in amount
+- [x] On success → member is added to the confirmed RSVP list
+- [x] RSVP list shows: confirmed members with avatars, open spots remaining
+- [x] RSVP closes automatically when: (a) deadline passes, or (b) max participants reached
+- [x] **RSVP is binary for paid events** — no "Maybe" option. You're either paid in (confirmed) or not. "Maybe" is only available on free member events.
+- [x] **No +1 / guest RSVPs** — each RSVP is tied to one member account. If someone wants to attend, they must be an active contributing member and RSVP themselves. One spot per person, always.
 
 **Waitlist:**
-- [ ] When all spots are filled, members can join a **waitlist** (no payment required to join the waitlist)
-- [ ] If a spot opens (coordinator-raised max, or a forfeited spot), the first person on the waitlist is notified via push notification with a **24-hour window** to complete their RSVP payment
-- [ ] If they don't pay within 24 hours, the spot passes to the next waitlisted member
-- [ ] Waitlist position is shown to the member: "You're #3 on the waitlist"
-- [ ] **No RSVP transfers** — if a confirmed member can no longer attend, they forfeit their spot and payment with no refund. The freed spot goes to the next waitlisted member who pays the full current buy-in price.
+- [x] When all spots are filled, members can join a **waitlist** (no payment required to join the waitlist)
+- [x] If a spot opens (coordinator-raised max, or a forfeited spot), the first person on the waitlist is notified via push notification with a **24-hour window** to complete their RSVP payment
+- [x] If they don't pay within 24 hours, the spot passes to the next waitlisted member
+- [x] Waitlist position is shown to the member: "You're #3 on the waitlist"
+- [x] **No RSVP transfers** — if a confirmed member can no longer attend, they forfeit their spot and payment with no refund. The freed spot goes to the next waitlisted member who pays the full current buy-in price.
 
-- [ ] **No-refund disclaimer** displayed prominently before checkout:
+- [x] **No-refund disclaimer** displayed prominently before checkout:
   > *"By completing your RSVP, you agree that your payment is non-refundable unless this event is cancelled or rescheduled by LLC staff. Cancelling your own RSVP forfeits your payment. See Cancellation Policy below."*
-- [ ] Member acceptance of the no-refund policy is **logged** at checkout: `accepted_no_refund_policy = true`, `accepted_no_refund_at = NOW()` stored on the RSVP record
+- [x] Member acceptance of the no-refund policy is **logged** at checkout: `accepted_no_refund_policy = true`, `accepted_no_refund_at = NOW()` stored on the RSVP record
 
 **Payment Timing:**
-- [ ] Payment is **captured immediately** at RSVP time — funds are taken at Stripe checkout, not authorized-and-held
-- [ ] This prevents card declines months later for far-future events
-- [ ] No deferred capture regardless of how far out the event is
+- [x] Payment is **captured immediately** at RSVP time — funds are taken at Stripe checkout, not authorized-and-held
+- [x] This prevents card declines months later for far-future events
+- [x] No deferred capture regardless of how far out the event is
 
 **Payment Routing:**
-- [ ] All RSVP funds collected to the LLC BlueVine business bank account via Stripe
-- [ ] If the event is **scheduled far in advance** (>6 months), admin has option to flag the event pool as "invest-eligible" — coordinator can move collected funds to Fidelity to earn interest until event spend begins
-- [ ] Interest earned on event funds stays in the LLC general fund (not returned to members)
-- [ ] **Invest-eligible disclosure** — if a member RSVPs to an invest-eligible event, a prominent notice is shown at checkout: *"This event's funds may be held in a Fidelity investment account. If this event is cancelled while funds are invested, your refund may take several business days while funds are liquidated and transferred back before Stripe can issue the return."* Member must explicitly acknowledge this before completing RSVP.
+- [x] All RSVP funds collected to the LLC BlueVine business bank account via Stripe
+- [x] If the event is **scheduled far in advance** (>6 months), admin has option to flag the event pool as "invest-eligible" — coordinator can move collected funds to Fidelity to earn interest until event spend begins
+- [x] Interest earned on event funds stays in the LLC general fund (not returned to members)
+- [x] **Invest-eligible disclosure** — if a member RSVPs to an invest-eligible event, a prominent notice is shown at checkout: *"This event's funds may be held in a Fidelity investment account. If this event is cancelled while funds are invested, your refund may take several business days while funds are liquidated and transferred back before Stripe can issue the return."* Member must explicitly acknowledge this before completing RSVP.
 
 **LLC Revenue Share:**
-- [ ] When creating the event, coordinator can set an optional **LLC contribution percentage** (e.g. 5%)
-- [ ] This % is added to the buy-in automatically: Buy-in = (Included Costs ÷ Max Participants) + LLC cut
-- [ ] The LLC cut is labeled on the event page: *"Includes 5% LLC community contribution"*
-- [ ] These funds go to the LLC general fund after the event closes/completes
+- [x] When creating the event, coordinator can set an optional **LLC contribution percentage** (e.g. 5%)
+- [x] This % is added to the buy-in automatically: Buy-in = (Included Costs ÷ Max Participants) + LLC cut
+- [x] The LLC cut is labeled on the event page: *"Includes 5% LLC community contribution"*
+- [x] These funds go to the LLC general fund after the event closes/completes
 
 #### Minimum Threshold
 
-- [ ] Event coordinator sets a **minimum participant count** required for the event to proceed
-- [ ] Example: "Minimum 3 of 6 spots must be filled by Jan 15 or event auto-cancels"
-- [ ] A progress bar on the event page shows current RSVP count vs. minimum needed
-- [ ] If minimum is not met by the deadline → **auto-cancel triggers**:
+- [x] Event coordinator sets a **minimum participant count** required for the event to proceed
+- [x] Example: "Minimum 3 of 6 spots must be filled by Jan 15 or event auto-cancels"
+- [x] A progress bar on the event page shows current RSVP count vs. minimum needed
+- [x] If minimum is not met by the deadline → **auto-cancel triggers**:
   - Event status changes to "Cancelled — Minimum Not Met"
   - All RSVP payments are automatically refunded via Stripe
   - Push notification + email sent to all RSVPed members
-- [ ] If minimum is met → event is **confirmed** and RSVP remains open until max is reached or deadline hits
+- [x] If minimum is met → event is **confirmed** and RSVP remains open until max is reached or deadline hits
 
 #### Cancellation & Rescheduling (Admin)
 
-- [ ] Admin can **cancel** a confirmed event at any time
+- [x] Admin can **cancel** a confirmed event at any time
   - If no non-refundable group expenses have been paid: all RSVP members receive a full Stripe refund
   - If the coordinator has already paid for **non-refundable group items** (e.g. Airbnb deposit, non-refundable tickets): admin enters the total non-refundable amount, which is deducted proportionally from each member's refund. A note is posted on the event explaining the deduction. The remainder is refunded via Stripe.
   - Push notification: "❌ [Event] has been cancelled. Your refund of $X has been issued."
-- [ ] Admin can **reschedule** an event
+- [x] Admin can **reschedule** an event
   - New date/time shown on event page
   - Existing RSVPs preserved (not auto-refunded)
   - Push notification: "📅 [Event] has been rescheduled to [New Date]. Tap to view details."
   - Members have a **reschedule grace window** (e.g. 72 hours) to cancel their RSVP and receive a full refund if the new date doesn't work for them
-- [ ] Admin can **issue a manual refund** to specific members at any time (e.g. coordinator error, member hardship)
+- [x] Admin can **issue a manual refund** to specific members at any time (e.g. coordinator error, member hardship)
 
 #### Supporting Documents
 
 After the RSVP deadline closes, the event coordinator researches and purchases items (tickets, passes, etc.) and uploads documents to the event:
 
-- [ ] Admin uploads documents per item (PDF, image, or file)
-- [ ] Document types:
+- [x] Admin uploads documents per item (PDF, image, or file)
+- [x] Document types:
   - **Plane Ticket** — uploaded per-member (coordinator sees each RSVPed member's name and uploads their specific ticket)
   - **Group Ticket / Pass** — single document shared with all RSVPed members
   - **Itinerary** — PDF version of the full trip plan
   - **Receipt** — proof of purchase for group expenses
   - **Other**
-- [ ] RSVPed members can **download their documents** from the event page after upload
-- [ ] Members can print or present documents as needed (e.g. boarding pass at airport)
-- [ ] Non-RSVPed members cannot access documents
-- [ ] Admin can mark each document as **"Distributed"** once uploaded
+- [x] RSVPed members can **download their documents** from the event page after upload
+- [x] Members can print or present documents as needed (e.g. boarding pass at airport)
+- [x] Non-RSVPed members cannot access documents
+- [x] Admin can mark each document as **"Distributed"** once uploaded
 
 **Supported vs. Out-of-Pocket Transportation:**
-- [ ] When creating the event, coordinator marks plane tickets as either:
+- [x] When creating the event, coordinator marks plane tickets as either:
   - **"LLC Provides"** — tickets are purchased and uploaded to the portal
   - **"Self-Arranged"** — members buy their own; coordinator adds an "avg. cost estimate" for budgeting
-- [ ] If self-arranged, the event page shows a note: *"✈️ Members are responsible for their own travel to [City]. Estimated round-trip cost: ~$320."*
+- [x] If self-arranged, the event page shows a note: *"✈️ Members are responsible for their own travel to [City]. Estimated round-trip cost: ~$320."*
 
 #### Event Requirements (RSVP Gating)
 
 Certain events can require members to meet conditions before or during the event:
 
-- [ ] **Location sharing required** — member must have location sharing enabled for the duration of the event
+- [x] **Location sharing required** — member must have location sharing enabled for the duration of the event
   - Checked at check-in via QR scan
   - If not enabled, member is prompted to enable it before the QR scan completes
 - [ ] **Active subscription required** — only active contributors can RSVP
 - [ ] **Custom requirements** — coordinator can add text requirements (e.g. "Must be 18+", "Bring valid ID")
-- [ ] Requirements listed clearly on the event page before RSVP button
+- [x] Requirements listed clearly on the event page before RSVP button
 
 #### Live Event Map
 
 During an active event, a dedicated map is available to all RSVPed members:
 
-- [ ] Opt-in only — members choose to share location during that specific event
-- [ ] Map uses Leaflet.js + OpenStreetMap (free)
-- [ ] Member's profile picture pinned to their current GPS position
-- [ ] **Powered by Supabase Realtime** — location pins update in real time via `event_locations` table subscription (no polling needed; pins move live as members move)
-- [ ] If a member **opts out mid-event**, their pin disappears from the map within the next Realtime update cycle — no stale last-known position lingers
-- [ ] **Privacy banner** — while a member is actively sharing location for an event, a persistent banner displays on their screen: *"You're sharing your location for [Event Name]. Tap to stop."* So they always know and can revoke instantly.
-- [ ] Only visible to RSVPed members (RLS enforced)
-- [ ] Admin can see all opted-in members on a single view
-- [ ] Map accessible from the event detail page during event window (event start → event end + 24h)
-- [ ] Database: `event_locations` table (event_id, user_id, latitude, longitude, updated_at)
+- [x] Opt-in only — members choose to share location during that specific event
+- [x] Map uses Leaflet.js + OpenStreetMap (free)
+- [x] Member's initials pinned to their current GPS position (green circle for self, indigo for others)
+- [x] **Powered by Supabase Realtime** — location pins update in real time via `event_locations` table subscription (no polling needed; pins move live as members move)
+- [x] If a member **opts out mid-event**, their pin disappears from the map within the next Realtime update cycle — no stale last-known position lingers
+- [x] **Privacy banner** — while a member is actively sharing location for an event, a persistent banner displays on their screen: *"You're sharing your location for [Event Name]. Tap to stop."* So they always know and can revoke instantly.
+- [x] Only visible to RSVPed members (RLS enforced)
+- [x] Admin can see all opted-in members on a single view
+- [x] Map accessible from the event detail page during event window (event start → event end + 24h)
+- [x] Database: `event_locations` table (event_id, user_id, latitude, longitude, sharing_active, updated_at)
 
 ---
 
@@ -346,21 +346,21 @@ During an active event, a dedicated map is available to all RSVPed members:
 - [x] Max attendees (optional)
 - [x] Event type: Party, Hangout, Birthday, Game Night, Cookout, Other
 - [x] **Member-only toggle** (default: off)
-- [ ] **Pricing mode**: Fully Free / Fully Paid / Free Event, Paid Raffle
+- [x] **Pricing mode**: Fully Free / Fully Paid / Free Event, Paid Raffle
 - [x] **Gated details** (time, location, coordinator notes) — hidden until post-RSVP if paid
-- [ ] **Giveaway / Raffle setup** (optional — see Raffle & Giveaway section)
+- [x] **Giveaway / Raffle setup** (optional — see Raffle & Giveaway section)
 - [x] **Event preview** before publishing
 
 #### RSVP
 
 - [x] **Free events:** Members tap **"RSVP"** → added to the Going list. RSVP options: **Going** / **Maybe** / **Not Going**
-- [ ] **Paid events:** Members tap **"RSVP — $XX"** → Stripe Checkout for the amount. On success, added to confirmed list. No "Maybe" option for paid.
-- [ ] **Free Event + Paid Raffle:** RSVP is free (Going/Maybe/Not Going). Raffle entry is a separate paid button.
+- [x] **Paid events:** Members tap **"RSVP — $XX"** → Stripe Checkout for the amount. On success, added to confirmed list. No "Maybe" option for paid.
+- [x] **Free Event + Paid Raffle:** RSVP is free (Going/Maybe/Not Going). Raffle entry is a separate paid button.
 - [x] Attendee list visible on event page with member avatars
-- [ ] Event creator gets push notification when someone RSVPs
-- [ ] **Non-members (public events):** Enter name + email at checkout. Receive a confirmation page with their QR ticket. No account required.
-- [ ] All payments are **non-refundable**
-- [ ] Each person RSVPs individually — no +1, no couples, adults only
+- [x] Event creator gets push notification when someone RSVPs (via `on_rsvp_notify_creator` trigger)
+- [x] **Non-members (public events):** Enter name + email at checkout. Receive a confirmation page with their QR ticket. No account required.
+- [x] All payments are **non-refundable**
+- [x] Each person RSVPs individually — no +1, no couples, adults only
 
 #### QR Code Check-In (Dual Mode)
 
@@ -374,7 +374,7 @@ The coordinator picks one of **two check-in modes** when creating the event:
 ##### Attendee Ticket Mode
 - [x] On successful RSVP (or payment), the attendee receives a **unique QR code** on their confirmation page and in their event details
 - [x] For **members**: QR is accessible from their profile page, settings, and the event detail page
-- [ ] For **non-members (public events)**: QR is shown on the payment confirmation page + optionally downloaded as image
+- [x] For **non-members (public events)**: QR is shown on the payment confirmation page + accessible via email ticket lookup
 - [x] Check-in staff opens the **scanner** on the event page and scans each attendee's QR
 - [x] The QR encodes: `event_id + user_id (or guest_token)` signed with an HMAC to prevent spoofing
 
@@ -383,11 +383,11 @@ The coordinator picks one of **two check-in modes** when creating the event:
 - [x] Coordinator can display this QR on any screen, projector, or print it out at the entrance
 - [x] Attendees scan the QR with their phone camera → opens a check-in page
 - [x] **Members** are auto-identified by their session and checked in instantly
-- [ ] **Non-members (public events)** enter their RSVP confirmation code or email to match their ticket
+- [x] **Non-members (public events)** enter their RSVP confirmation code or email to match their ticket
 - [x] Check-in page shows: "✅ Welcome, [Name]! You're checked in."
 
 ##### Common to Both Modes
-- [ ] **Scanner access** — the QR scanner is visible only to: the event creator, admins, and any **sub-coordinators** explicitly granted check-in access
+- [x] **Scanner access** — the QR scanner is visible only to: the event creator, admins, and any **sub-coordinators** explicitly granted check-in access
   - Coordinator can designate additional people as check-in staff from the event management panel
   - Non-designated people never see the scanner UI
 - [x] Uses `qrcode.js` to generate, `jsQR` to scan via camera
@@ -409,17 +409,17 @@ The coordinator picks one of **two check-in modes** when creating the event:
 
 #### Raffle Configuration (at Event Creation)
 
-- [ ] **Enable Raffle** toggle — off by default
-- [ ] **Raffle type:**
+- [x] **Enable Raffle** toggle — off by default
+- [x] **Raffle type:**
   - **Digital Raffle** — the system randomly picks winner(s) from checked-in attendees
   - **Physical Raffle** — coordinator runs the draw manually at the event; the system only tracks attendance for the pool
-- [ ] **Number of winners** — configurable (e.g. 1st place, 2nd place, 3rd place)
-- [ ] **Prize description per tier** — text field (e.g. "1st Place: $100 cash", "2nd Place: $50 gift card")
-- [ ] **Raffle entry requirement:**
+- [x] **Number of winners** — configurable (e.g. 1st place, 2nd place, 3rd place)
+- [x] **Prize description per tier** — text field (e.g. "1st Place: $100 cash", "2nd Place: $50 gift card")
+- [x] **Raffle entry requirement:**
   - Automatically entered by checking in (free raffle)
   - Requires separate paid raffle entry ("Free Event, Paid Raffle" pricing mode)
   - Included with paid RSVP ("Fully Paid" mode — RSVP + raffle bundled)
-- [ ] **Draw trigger:**
+- [x] **Draw trigger:**
   - **Manual** — coordinator presses a "Draw Winner" button at the event
   - **Auto** — system draws automatically at the event end time
 
@@ -440,12 +440,12 @@ The coordinator picks one of **two check-in modes** when creating the event:
 
 #### Raffle on the Public Event Page
 
-- [ ] If an event has a raffle configured, the **public page (pre-RSVP)** shows:
+- [x] If an event has a raffle configured, the **public page (pre-RSVP)** shows:
   - 🎰 **"Raffle / Giveaway"** section
   - Number of winners (e.g. "2 winners will be drawn")
   - Prize descriptions (e.g. "1st Place: $100 cash • 2nd Place: $50 gift card")
   - Entry requirement (e.g. "Included with RSVP" or "Raffle entry: $10")
-- [ ] This incentivizes people to RSVP — they can see what they could win before paying
+- [x] This incentivizes people to RSVP — they can see what they could win before paying
 
 #### Physical Raffle Support
 
@@ -458,10 +458,10 @@ The coordinator picks one of **two check-in modes** when creating the event:
 
 #### Raffle Edge Cases
 
-- [ ] **Not enough attendees for prizes** — if fewer people check in than there are prize tiers, system only awards to the people present (e.g. 2 winners configured but only 1 checked in = that person wins 1st, 2nd is void)
-- [ ] **Winner not present (digital)** — impossible, because the pool is only checked-in attendees
-- [ ] **Raffle entry paid but attendee doesn't check in** — they are NOT in the raffle pool. No refund. Raffle entry is non-refundable.
-- [ ] **Coordinator wants to re-draw** — not allowed once drawn. Results are final. (Prevents manipulation.)
+- [x] **Not enough attendees for prizes** — if fewer people check in than there are prize tiers, system only awards to the people present (e.g. 2 winners configured but only 1 checked in = that person wins 1st, 2nd is void)
+- [x] **Winner not present (digital)** — impossible, because the pool is only checked-in attendees
+- [x] **Raffle entry paid but attendee doesn't check in** — they are NOT in the raffle pool. No refund. Raffle entry is non-refundable.
+- [x] **Coordinator wants to re-draw** — not allowed once drawn. Results are final. (Prevents manipulation.)
 
 ---
 
@@ -482,48 +482,48 @@ Competition events have a defined set of phases that run sequentially:
 
 #### Phase 1 — Registration
 
-- [ ] "Join as Competitor" button on the event page
-- [ ] Optional entry fee (set by organizer — goes to prize pool)
-- [ ] Even without entry fee, a **Community Prize Pool** can be funded:
+- [x] "Join as Competitor" button on the event page
+- [x] Optional entry fee (set by organizer — goes to prize pool)
+- [x] Even without entry fee, a **Community Prize Pool** can be funded:
   - Any member (including non-competitors) can contribute to the prize pool
   - Prize pool total displayed on event page with a progress bar
   - Contributions go through Stripe to LLC account
-- [ ] Competitor list visible: "X competitors registered"
-- [ ] Phase stays open until organizer-set registration deadline
+- [x] Competitor list visible: "X competitors registered"
+- [x] Phase stays open until organizer-set registration deadline
 
 #### Phase 2 — Active Competition
 
-- [ ] Phase opens automatically on the set date
-- [ ] Competitors submit their entry:
+- [x] Phase opens automatically on the set date
+- [x] Competitors submit their entry:
   - File upload (image, PDF, video) — **file size limits enforced**: max 10MB for images/PDFs, max 50MB for video
   - External link
   - Text / description
-- [ ] Entries can be kept **private until voting phase** (organizer choice) or **visible immediately**
-- [ ] Countdown timer showing time remaining in competition phase
-- [ ] Late submissions blocked after deadline (server-side enforced, not just UI)
-- [ ] **Entry moderation** — admins and coordinators can remove any submitted entry before voting opens (spam, inappropriate content, rule violation). Removed entrant is notified with a reason.
-- [ ] **Minimum entries threshold** — coordinator sets a minimum number of entries required for voting to begin. If fewer entries are submitted by the deadline, the competition phase is extended once (organizer sets extension window) or cancelled with full prize pool refund.
+- [x] Entries can be kept **private until voting phase** (organizer choice) or **visible immediately**
+- [x] Countdown timer showing time remaining in competition phase
+- [x] Late submissions blocked after deadline (server-side enforced, not just UI)
+- [x] **Entry moderation** — admins and coordinators can remove any submitted entry before voting opens (spam, inappropriate content, rule violation). Removed entrant is notified with a reason.
+- [x] **Minimum entries threshold** — coordinator sets a minimum number of entries required for voting to begin. If fewer entries are submitted by the deadline, the competition phase is extended once (organizer sets extension window) or cancelled with full prize pool refund.
 
 #### Phase 3 — Voting
 
-- [ ] All submissions displayed in an anonymous (or named) gallery
-- [ ] Each eligible voter gets **one vote** (ranked-choice or simple pick, organizer choice)
-- [ ] **Self-voting is blocked** — competitors cannot vote for their own entry (enforced server-side)
-- [ ] Eligible voters: all RSVPed members, or all active members, or competitors-only (organizer sets)
-- [ ] Live vote tally optionally shown (or hidden until results)
-- [ ] Voting closes on organizer-set deadline
+- [x] All submissions displayed in an anonymous (or named) gallery
+- [x] Each eligible voter gets **one vote** (ranked-choice or simple pick, organizer choice)
+- [x] **Self-voting is blocked** — competitors cannot vote for their own entry (enforced server-side via `check_no_self_vote()` trigger)
+- [x] Eligible voters: all RSVPed members, or all active members, or competitors-only (organizer sets)
+- [x] Live vote tally optionally shown (or hidden until results)
+- [x] Voting closes on organizer-set deadline
 
 #### Phase 4 — Results
 
-- [ ] Winner(s) announced on event page with celebration animation (Lottie)
-- [ ] Push notification to all event participants + followers: "🏆 [Name] won [Event]!"
-- [ ] **Tie handling** — in the event of a tie, the prize is **split equally** among tied winners. Organizer can optionally configure multiple winner tiers (1st/2nd/3rd) with a percentage split (e.g. 60% / 30% / 10%) when setting up the competition.
-- [ ] Prize distribution:
+- [x] Winner(s) announced on event page with celebration animation (Lottie)
+- [x] Push notification to all event participants + followers: "🏆 [Name] won [Event]!"
+- [x] **Tie handling** — in the event of a tie, the prize is **split equally** among tied winners. Organizer can optionally configure multiple winner tiers (1st/2nd/3rd) with a percentage split (e.g. 60% / 30% / 10%) when setting up the competition.
+- [x] Prize distribution:
   - Winner(s) receive prize pool via Stripe payout to their connected bank
   - Organizer can set a **house percentage** (e.g. 10% goes to LLC fund before payout)
   - Receipts visible on event page and in admin payout console
   - **IRS 1099-NEC flag** — if any single winner receives $600 or more in prize money in a calendar year, the admin payout console flags this for 1099-NEC reporting. The LLC is responsible for filing; the system surfaces the alert, it does not auto-file.
-- [ ] **Rewards:**
+- [x] **Rewards:**
   - Winner receives an **exclusive event badge** (auto-generated or admin-designed)
   - Participation badge for all competitors who submitted
   - CP bonus for participating, voting, and winning
@@ -540,19 +540,19 @@ Competition events have a defined set of phases that run sequentially:
   - Auto-generated color gradient banner with event title + emoji
   - Admin can upload a designed banner for LLC events
 - [x] Banners appear on the event card in the events list and as a hero on the event detail page
-- [ ] Special events can award a **member banner** to participants that shows on their profile (like milestone cover banners)
+- [x] Special events can award a **member banner** to participants that shows on their profile (like milestone cover banners) — via `award_event_banner_to_attendees()` function + admin dashboard UI
 
 #### Badges for Events
 
-- [ ] **Participant Badge** — attended any LLC event
-- [ ] **Trip Veteran** — attended 3+ LLC trips
-- [ ] **Never Miss a Beat** — RSVP'd and checked in to 5+ events
-- [ ] **Competition Winner** — won a competition event
-- [ ] **Top Competitor** — placed top 3 in a competition
-- [ ] **Fundraiser Champion** — contributed to a prize pool
-- [ ] **Event Organizer** — created a member event with 5+ attendees
-- [ ] Event-specific badges: each LLC event gets its own commemorative badge (e.g. "Ski Trip 2026 🎿")
-- [ ] Badges displayed on member profile → Milestones tab
+- [x] **Participant Badge** — attended any LLC event (auto-awarded on check-in via `on_event_checkin_badge` trigger)
+- [x] **Trip Veteran** — attended 3+ LLC trips (auto-awarded on check-in)
+- [x] **Never Miss a Beat** — RSVP'd and checked in to 5+ events (auto-awarded on check-in)
+- [x] **Competition Winner** — won a competition event (auto-awarded via `on_comp_winner_badge` trigger)
+- [x] **Top Competitor** — placed top 3 in a competition (auto-awarded via `on_comp_winner_badge` trigger)
+- [x] **Fundraiser Champion** — contributed to a prize pool (auto-awarded via `on_prize_pool_badge` trigger)
+- [x] **Event Organizer** — created a member event with 5+ attendees (auto-awarded via `on_event_complete_badge` trigger)
+- [ ] Event-specific badges: each LLC event gets its own commemorative badge (e.g. "Ski Trip 2026 🎿") — no per-event badge creation mechanism yet
+- [x] Badges displayed on member profile → Milestones tab
 
 ---
 
@@ -570,13 +570,13 @@ Competition events have a defined set of phases that run sequentially:
 
 #### Past Events (Scrapbook)
 
-- [ ] Completed events remain visible on the Past tab indefinitely
-- [ ] Past event detail page shows: final attendee list, documents (if LLC event), final RSVP count, competition winner
-- [ ] Future enhancement: photo gallery per past event — any RSVPed member can upload photos post-event; photos displayed in a scrapbook-style grid on the past event page
+- [x] Completed events remain visible on the Past tab indefinitely
+- [x] Past event detail page shows: final attendee list, documents (if LLC event), final RSVP count, competition winner
+- [x] Photo gallery per past event — any RSVPed member can upload photos post-event; photos displayed in a scrapbook-style grid on the past event page (with lightbox viewer, drag & drop upload, caption support)
 
 #### Recurring Events
 
-- [ ] No built-in recurrence system for v1, but coordinators can **duplicate any event** with one tap
+- [x] No built-in recurrence system for v1, but coordinators can **duplicate any event** with one tap
   - Duplicating copies all fields (title, cost items, location, settings) into a new draft with date cleared
   - Saves significant setup time for recurring events like monthly game nights or annual trips
 
@@ -595,37 +595,37 @@ Push notifications, in-app notifications, and optionally SMS for:
 
 **Event Lifecycle:**
 - [ ] New event published → **posted to the member feed** automatically (feed card with banner, title, date, RSVP button)
-- [ ] New LLC event posted → all active members
-- [ ] New member event posted → followers / all members (configurable)
-- [ ] **Event reminder — 7-day warning** (one week out)
-- [ ] **Event reminder — 72-hour warning** (final reminder)
-- [ ] **Event reminder — Day-of** (morning of the event: "[Event] is today!")
-- [ ] RSVP deadline approaching — **72-hour warning**
-- [ ] Waitlist spot available — "A spot opened up for [Event]. You have 24 hours to claim it."
+- [x] New LLC event posted → all active members (via `on_event_published` trigger)
+- [x] New member event posted → all members (via `on_event_published` trigger)
+- [x] **Event reminder — 7-day warning** (one week out) — via `send-event-reminders` edge function
+- [x] **Event reminder — 72-hour warning** (final reminder) — via `send-event-reminders` edge function
+- [x] **Event reminder — Day-of** (morning of the event: "[Event] is today!") — via `send-event-reminders` edge function
+- [x] RSVP deadline approaching — **24-hour warning** (reminds members who haven't RSVP'd) — via `send-event-reminders` edge function
+- [x] Waitlist spot available — "A spot opened up for [Event]. You have 24 hours to claim it." — via `manage-event-waitlist` edge function
 - [ ] Minimum threshold met — "Event is confirmed! ✅"
 - [ ] Minimum not met — "Event auto-cancelled. Refund issued."
-- [ ] Event cancelled by admin → all RSVPed members
-- [ ] Event rescheduled → all RSVPed members
-- [ ] **Document uploaded** → **private, per-member only** — only the specific member whose document was uploaded receives this notification
-- [ ] Someone RSVPs to your event → event creator notified
+- [ ] Event cancelled by admin → all RSVPed members (push notification)
+- [ ] Event rescheduled → all RSVPed members (push notification)
+- [x] **Document uploaded** → **private, per-member only** — only the specific member whose document was uploaded receives this notification (via `on_document_notify_member` trigger)
+- [x] Someone RSVPs to your event → event creator notified (via `on_rsvp_notify_creator` trigger)
 
 **Raffle / Giveaway:**
-- [ ] 🏆 **Raffle winner** → winner notified: *"Congrats! You won [place] in the [Event] raffle! Prize: [description]"*
-- [ ] 📣 **Raffle drawn** → all checked-in attendees notified: *"[Winner] just won the [Event] raffle! 🎉"*
-- [ ] If multiple winners, one notification per draw (1st place, then 2nd place)
+- [x] 🏆 **Raffle winner** → winner notified: *"Congrats! You won [place] in the [Event] raffle! Prize: [description]"* (via `on_raffle_winner_notify` trigger)
+- [x] 📣 **Raffle drawn** → all checked-in attendees notified: *"[Winner] just won the [Event] raffle! 🎉"* (via `on_raffle_winner_notify` trigger)
+- [x] If multiple winners, one notification per draw (1st place, then 2nd place)
 
 **Competition:**
-- [ ] Competition phase change (Phase 1 → 2 → 3 → 4)
-- [ ] Voting opens
-- [ ] Winner announced
+- [x] Competition phase change (Phase 1 → 2 → 3 → 4) — via `on_comp_phase_notify` trigger
+- [x] Voting opens (triggered by phase change to Phase 3)
+- [x] Winner announced (via `on_comp_winner_badge` trigger)
 - [ ] Prize deposited
 
 **Check-in:**
-- [ ] Check-in confirmed (on QR scan)
+- [x] Check-in confirmed (on QR scan) — via `on_event_checkin_badge` trigger (creates notification)
 - [ ] CP awarded for attendance
 
 **Notification Channel Preferences:**
-- [ ] Members can configure per-channel preferences in **Settings** (a new "Notifications" section on `settings.html`)
+- [x] Members can configure per-channel preferences in **Settings** (a new "Notifications" section on `settings.html`)
   - **Event Notifications**: New events posted, event reminders, RSVP deadlines (on/off)
   - **My RSVPs**: Updates to events I've RSVP'd to (cancellations, reschedules, documents) (on/off)
   - **Raffle**: Raffle results and winner announcements (on/off)
@@ -639,79 +639,96 @@ Push notifications, in-app notifications, and optionally SMS for:
 
 ## Database Schema
 
+> 20 tables across migrations 063–077. Schema below reflects the **final consolidated state** after all migrations are applied.
+
 ```sql
--- Core event record
+-- ═══════════════════════════════════════════════════════════════
+-- 1. Core event record (063, altered in 064–068, 072, 076)
+-- ═══════════════════════════════════════════════════════════════
 CREATE TABLE events (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_by      UUID REFERENCES profiles(id),
     event_type      TEXT NOT NULL CHECK (event_type IN ('llc', 'member', 'competition')),
     title           TEXT NOT NULL,
-    slug            TEXT UNIQUE NOT NULL,    -- URL-friendly slug for public page
-    description     TEXT,                    -- public-facing description (pre-RSVP)
-    gated_notes     TEXT,                    -- additional info revealed post-RSVP
+    slug            TEXT UNIQUE NOT NULL,
+    description     TEXT,
+    gated_notes     TEXT,
     banner_url      TEXT,
     start_date      TIMESTAMPTZ NOT NULL,
     end_date        TIMESTAMPTZ,
     timezone        TEXT DEFAULT 'America/New_York',
-    location_text   TEXT,                    -- gated if gate_location = true
+    location_text   TEXT,
     location_lat    FLOAT,
     location_lng    FLOAT,
     max_participants INT,
     min_participants INT,
-    status          TEXT DEFAULT 'draft',    -- 'draft' | 'open' | 'confirmed' | 'active' | 'completed' | 'cancelled'
+    status          TEXT DEFAULT 'draft' CHECK (status IN ('draft','open','confirmed','active','completed','cancelled')),
     rsvp_deadline   TIMESTAMPTZ,
 
     -- Visibility & pricing
-    member_only     BOOLEAN DEFAULT FALSE,   -- true = login required to RSVP
-    pricing_mode    TEXT DEFAULT 'free',      -- 'free' | 'paid' (legacy: 'free_paid_raffle' treated as 'free')
-    rsvp_cost_cents INT DEFAULT 0,           -- 0 = free RSVP
-    raffle_entry_cost_cents INT DEFAULT 0,   -- standalone raffle cost (only when pricing_mode != 'paid')
+    member_only     BOOLEAN DEFAULT FALSE,
+    pricing_mode    TEXT DEFAULT 'free' CHECK (pricing_mode IN ('free','paid','free_paid_raffle')),
+    rsvp_cost_cents INT DEFAULT 0,
+    raffle_entry_cost_cents INT DEFAULT 0,
 
-    -- Info gating (which fields are hidden until post-RSVP/payment)
-    gate_time       BOOLEAN DEFAULT FALSE,   -- hide exact time until RSVP'd/paid
-    gate_location   BOOLEAN DEFAULT FALSE,   -- hide exact location until RSVP'd/paid
-    gate_notes      BOOLEAN DEFAULT FALSE,   -- hide gated_notes until RSVP'd/paid
+    -- Info gating
+    gate_time       BOOLEAN DEFAULT FALSE,
+    gate_location   BOOLEAN DEFAULT FALSE,
+    gate_notes      BOOLEAN DEFAULT FALSE,
 
-    -- Check-in mode
-    checkin_mode    TEXT DEFAULT 'attendee_ticket', -- 'attendee_ticket' | 'venue_scan'
+    -- Check-in
+    checkin_mode    TEXT DEFAULT 'attendee_ticket' CHECK (checkin_mode IN ('attendee_ticket','venue_scan')),
+    venue_qr_token  TEXT UNIQUE,                            -- (added 064) venue-scan mode token
 
     -- LLC-specific
     llc_cut_pct     FLOAT DEFAULT 0,
     invest_eligible BOOLEAN DEFAULT FALSE,
     location_required BOOLEAN DEFAULT FALSE,
     cost_breakdown_locked BOOLEAN DEFAULT FALSE,
+    cost_breakdown  JSONB,                                  -- (added 066) snapshot of cost items
+    non_refundable_expenses_cents INT DEFAULT 0,            -- (added 066) for proportional refund deductions
+    show_cost_breakdown BOOLEAN DEFAULT TRUE,               -- (added 072) toggle visibility to attendees
+
+    -- Cancellation / Rescheduling
+    rescheduled_at       TIMESTAMPTZ,                       -- (added 066)
+    grace_window_end     TIMESTAMPTZ,                       -- (added 066) 72h refund grace
+    original_start_date  TIMESTAMPTZ,                       -- (added 066) saved on reschedule
+    cancellation_note    TEXT,                               -- (added 066)
+
+    -- Transportation
+    transportation_mode           TEXT DEFAULT 'llc_provides' CHECK (transportation_mode IN ('llc_provides','self_arranged')),  -- (added 067)
+    transportation_estimate_cents INT,                       -- (added 067)
+
+    -- Feature toggles
+    rsvp_enabled          BOOLEAN DEFAULT TRUE,             -- (added 076)
+    checkin_enabled        BOOLEAN DEFAULT TRUE,            -- (added 076)
+    transportation_enabled BOOLEAN DEFAULT TRUE,            -- (added 076)
 
     -- Raffle / giveaway
-    raffle_enabled  BOOLEAN DEFAULT FALSE,
-    raffle_type     TEXT,                    -- 'digital' | 'physical' | NULL
-    raffle_draw_trigger TEXT DEFAULT 'manual', -- 'manual' | 'auto'
-    raffle_prizes   JSONB,                   -- [{"place":1,"description":"$100 cash"},{"place":2,"description":"$50 gift card"}]
+    raffle_enabled      BOOLEAN DEFAULT FALSE,
+    raffle_type         TEXT CHECK (raffle_type IN ('digital','physical')),
+    raffle_draw_trigger TEXT DEFAULT 'manual' CHECK (raffle_draw_trigger IN ('manual','auto')),
+    raffle_prizes       JSONB,                              -- [{"place":1,"description":"$100 cash"}, ...]
+    raffle_winner_count INT DEFAULT 1,                      -- (added 065)
 
     -- Competition
-    winner_tier_config JSONB,
+    winner_tier_config    JSONB,
+    competition_config    JSONB,                             -- (added 068) phase definitions
+    total_prize_pool_cents INT DEFAULT 0,                   -- (added 068)
 
-    created_at      TIMESTAMPTZ DEFAULT NOW()
+    -- Metadata
+    category    TEXT DEFAULT 'other',                        -- (added 064)
+    created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Cost breakdown line items (LLC events)
-CREATE TABLE event_cost_items (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id    UUID REFERENCES events(id) ON DELETE CASCADE,
-    label       TEXT NOT NULL,              -- "Airbnb", "Ski Lift Passes"
-    category    TEXT,                       -- 'lodging' | 'transport' | 'food' | 'gear' | 'entertainment' | 'other'
-    total_cost_cents INT NOT NULL,
-    included_in_buyin BOOLEAN DEFAULT TRUE, -- false = out-of-pocket
-    avg_per_person_cents INT,               -- for out-of-pocket estimates
-    notes       TEXT,
-    sort_order  INT DEFAULT 0
-);
-
--- RSVPs (members)
+-- ═══════════════════════════════════════════════════════════════
+-- 2. RSVPs — members (063, altered 066)
+-- ═══════════════════════════════════════════════════════════════
 CREATE TABLE event_rsvps (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id    UUID REFERENCES events(id) ON DELETE CASCADE,
     user_id     UUID REFERENCES profiles(id),
-    status      TEXT DEFAULT 'going',       -- 'going' | 'maybe' | 'not_going'
+    status      TEXT DEFAULT 'going' CHECK (status IN ('going','maybe','not_going')),
     paid        BOOLEAN DEFAULT FALSE,
     stripe_payment_intent_id TEXT,
     amount_paid_cents INT DEFAULT 0,
@@ -719,17 +736,23 @@ CREATE TABLE event_rsvps (
     refund_amount_cents INT DEFAULT 0,
     accepted_no_refund_policy BOOLEAN DEFAULT FALSE,
     accepted_no_refund_at TIMESTAMPTZ,
+    qr_token    TEXT DEFAULT encode(gen_random_bytes(16), 'hex') UNIQUE,
+    invest_eligible_acknowledged    BOOLEAN DEFAULT FALSE,  -- (added 066)
+    invest_eligible_acknowledged_at TIMESTAMPTZ,            -- (added 066)
+    grace_refund_eligible           BOOLEAN DEFAULT FALSE,  -- (added 066)
     created_at  TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(event_id, user_id)
 );
 
--- Guest RSVPs (non-members on public events)
+-- ═══════════════════════════════════════════════════════════════
+-- 3. Guest RSVPs — non-members on public events (065)
+-- ═══════════════════════════════════════════════════════════════
 CREATE TABLE event_guest_rsvps (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id        UUID REFERENCES events(id) ON DELETE CASCADE,
+    event_id        UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
     guest_name      TEXT NOT NULL,
     guest_email     TEXT NOT NULL,
-    guest_token     TEXT UNIQUE NOT NULL,    -- unique token for QR code + check-in
+    guest_token     TEXT UNIQUE NOT NULL,
     status          TEXT DEFAULT 'going',
     paid            BOOLEAN DEFAULT FALSE,
     stripe_payment_intent_id TEXT,
@@ -740,26 +763,43 @@ CREATE TABLE event_guest_rsvps (
     UNIQUE(event_id, guest_email)
 );
 
--- Check-ins (QR scan attendance) — supports both members and guests
+-- ═══════════════════════════════════════════════════════════════
+-- 4. Check-ins — QR scan attendance, members + guests (063)
+-- ═══════════════════════════════════════════════════════════════
 CREATE TABLE event_checkins (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id        UUID REFERENCES events(id) ON DELETE CASCADE,
-    user_id         UUID REFERENCES profiles(id) NULL,    -- NULL for guest check-ins
-    guest_token     TEXT NULL,                             -- set for non-member guests
-    checked_in_by   UUID REFERENCES profiles(id) NULL,    -- who scanned (attendee_ticket mode)
-    checkin_mode    TEXT DEFAULT 'attendee_ticket',        -- 'attendee_ticket' | 'venue_scan'
-    checked_in_at   TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(event_id, user_id),
-    UNIQUE(event_id, guest_token)
+    user_id         UUID REFERENCES profiles(id) NULL,
+    guest_token     TEXT NULL,
+    checked_in_by   UUID REFERENCES profiles(id) NULL,
+    checkin_mode    TEXT DEFAULT 'attendee_ticket' CHECK (checkin_mode IN ('attendee_ticket','venue_scan')),
+    checked_in_at   TIMESTAMPTZ DEFAULT NOW()
+    -- Partial UNIQUE: (event_id, user_id) WHERE user_id IS NOT NULL
+    -- Partial UNIQUE: (event_id, guest_token) WHERE guest_token IS NOT NULL
 );
 
--- Raffle entries (who is eligible for the draw)
+-- ═══════════════════════════════════════════════════════════════
+-- 5. Co-hosts / sub-coordinators (063)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE event_hosts (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id    UUID REFERENCES events(id) ON DELETE CASCADE,
+    user_id     UUID REFERENCES profiles(id),
+    role        TEXT DEFAULT 'checkin_staff' CHECK (role IN ('checkin_staff','co_host')),
+    granted_by  UUID REFERENCES profiles(id),
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(event_id, user_id)
+);
+
+-- ═══════════════════════════════════════════════════════════════
+-- 6. Raffle entries (064)
+-- ═══════════════════════════════════════════════════════════════
 CREATE TABLE event_raffle_entries (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id        UUID REFERENCES events(id) ON DELETE CASCADE,
     user_id         UUID REFERENCES profiles(id) NULL,
     guest_token     TEXT NULL,
-    paid            BOOLEAN DEFAULT FALSE,                 -- true if paid raffle entry
+    paid            BOOLEAN DEFAULT FALSE,
     stripe_payment_intent_id TEXT,
     amount_paid_cents INT DEFAULT 0,
     created_at      TIMESTAMPTZ DEFAULT NOW(),
@@ -767,11 +807,13 @@ CREATE TABLE event_raffle_entries (
     UNIQUE(event_id, guest_token)
 );
 
--- Raffle winners
+-- ═══════════════════════════════════════════════════════════════
+-- 7. Raffle winners (064)
+-- ═══════════════════════════════════════════════════════════════
 CREATE TABLE event_raffle_winners (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_id        UUID REFERENCES events(id) ON DELETE CASCADE,
-    place           INT NOT NULL,            -- 1 = 1st place, 2 = 2nd place, etc.
+    place           INT NOT NULL,
     user_id         UUID REFERENCES profiles(id) NULL,
     guest_token     TEXT NULL,
     prize_description TEXT,
@@ -779,97 +821,250 @@ CREATE TABLE event_raffle_winners (
     UNIQUE(event_id, place)
 );
 
--- Supporting documents (LLC events)
-CREATE TABLE event_documents (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id    UUID REFERENCES events(id) ON DELETE CASCADE,
-    for_user_id UUID REFERENCES profiles(id) NULL, -- NULL = shared with all RSVPs
-    doc_type    TEXT,                       -- 'ticket' | 'pass' | 'itinerary' | 'receipt' | 'other'
-    label       TEXT NOT NULL,
-    file_url    TEXT NOT NULL,
-    distributed BOOLEAN DEFAULT FALSE,
-    uploaded_at TIMESTAMPTZ DEFAULT NOW()
+-- ═══════════════════════════════════════════════════════════════
+-- 8. Notification preferences (065)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE notification_preferences (
+    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id              UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE UNIQUE,
+    event_new            BOOLEAN DEFAULT TRUE,
+    event_reminders      BOOLEAN DEFAULT TRUE,
+    event_rsvp_updates   BOOLEAN DEFAULT TRUE,
+    event_rsvp_deadline  BOOLEAN DEFAULT TRUE,
+    raffle_results       BOOLEAN DEFAULT TRUE,
+    competition_updates  BOOLEAN DEFAULT TRUE,
+    checkin_alerts       BOOLEAN DEFAULT TRUE,
+    push_enabled         BOOLEAN DEFAULT TRUE,
+    created_at           TIMESTAMPTZ DEFAULT NOW(),
+    updated_at           TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Live location during event
-CREATE TABLE event_locations (
+-- ═══════════════════════════════════════════════════════════════
+-- 9. Cost breakdown line items — LLC events (066)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE event_cost_items (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id    UUID REFERENCES events(id) ON DELETE CASCADE,
-    user_id     UUID REFERENCES profiles(id),
-    latitude    FLOAT NOT NULL,
-    longitude   FLOAT NOT NULL,
-    updated_at  TIMESTAMPTZ DEFAULT NOW(),
+    event_id    UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    name        TEXT NOT NULL,              -- "Airbnb", "Ski Lift Passes"
+    category    TEXT NOT NULL CHECK (category IN ('lodging','transportation','food','gear','entertainment','other')),
+    total_cost_cents INT NOT NULL DEFAULT 0,
+    included_in_buyin BOOLEAN DEFAULT TRUE,
+    avg_per_person_cents INT DEFAULT 0,
+    notes       TEXT,
+    sort_order  INT DEFAULT 0,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ═══════════════════════════════════════════════════════════════
+-- 10. Waitlist — sold-out LLC events (066)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE event_waitlist (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id    UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    user_id     UUID NOT NULL REFERENCES profiles(id),
+    position    INT NOT NULL,
+    status      TEXT DEFAULT 'waiting' CHECK (status IN ('waiting','offered','expired','claimed','removed')),
+    offered_at       TIMESTAMPTZ,
+    offer_expires_at TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(event_id, user_id)
 );
 
--- Competition phases
-CREATE TABLE competition_phases (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id    UUID REFERENCES events(id) ON DELETE CASCADE,
-    phase_num   INT NOT NULL,               -- 1 | 2 | 3 | 4
-    name        TEXT NOT NULL,
-    description TEXT,
-    starts_at   TIMESTAMPTZ,
-    ends_at     TIMESTAMPTZ,
-    status      TEXT DEFAULT 'pending'      -- 'pending' | 'active' | 'completed'
-);
-
--- Competition entries
-CREATE TABLE competition_entries (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id    UUID REFERENCES events(id) ON DELETE CASCADE,
-    user_id     UUID REFERENCES profiles(id),
-    title       TEXT,
-    description TEXT,
-    file_url    TEXT,
-    external_url TEXT,
-    submitted_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(event_id, user_id)
-);
-
--- Competition votes
-CREATE TABLE competition_votes (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id    UUID REFERENCES events(id) ON DELETE CASCADE,
-    voter_id    UUID REFERENCES profiles(id),
-    entry_id    UUID REFERENCES competition_entries(id),
-    voted_at    TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(event_id, voter_id)             -- one vote per person per competition
-);
-
--- Prize pool contributions
-CREATE TABLE prize_pool_contributions (
+-- ═══════════════════════════════════════════════════════════════
+-- 11. Refund records (066)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE event_refunds (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id        UUID REFERENCES events(id) ON DELETE CASCADE,
-    contributor_id  UUID REFERENCES profiles(id),
-    amount_cents    INT NOT NULL,
-    stripe_payment_intent_id TEXT,
+    event_id        UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    user_id         UUID REFERENCES profiles(id),
+    guest_email     TEXT,
+    original_amount_cents INT NOT NULL,
+    refund_amount_cents   INT NOT NULL,
+    deduction_cents       INT DEFAULT 0,
+    reason          TEXT NOT NULL CHECK (reason IN ('event_cancelled','min_not_met','reschedule_grace','manual','admin_override')),
+    stripe_refund_id          TEXT,
+    stripe_payment_intent_id  TEXT,
+    status          TEXT DEFAULT 'pending' CHECK (status IN ('pending','processed','failed')),
+    notes           TEXT,
+    processed_at    TIMESTAMPTZ,
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Waitlist for sold-out LLC events
-CREATE TABLE event_waitlist (
+-- ═══════════════════════════════════════════════════════════════
+-- 12. Supporting documents — LLC events (067)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE event_documents (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id        UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    uploaded_by     UUID NOT NULL REFERENCES profiles(id),
+    target_user_id  UUID REFERENCES profiles(id),  -- NULL = group doc shared with all
+    doc_type        TEXT NOT NULL CHECK (doc_type IN ('plane_ticket','group_ticket','itinerary','receipt','other')),
+    label           TEXT NOT NULL,
+    file_path       TEXT NOT NULL,          -- Supabase Storage path
+    file_name       TEXT NOT NULL,
+    file_size_bytes INT,
+    mime_type       TEXT,
+    distributed     BOOLEAN DEFAULT FALSE,
+    notes           TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ═══════════════════════════════════════════════════════════════
+-- 13. Live location sharing during event (067) — Realtime enabled
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE event_locations (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id    UUID REFERENCES events(id) ON DELETE CASCADE,
-    user_id     UUID REFERENCES profiles(id),
-    position    INT NOT NULL,              -- 1-based queue position
-    notified_at TIMESTAMPTZ,              -- when the spot offer was sent
-    offer_expires_at TIMESTAMPTZ,         -- 24h window to claim spot
+    event_id    UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    user_id     UUID NOT NULL REFERENCES profiles(id),
+    latitude    DOUBLE PRECISION NOT NULL,
+    longitude   DOUBLE PRECISION NOT NULL,
+    sharing_active BOOLEAN DEFAULT TRUE,
+    updated_at  TIMESTAMPTZ DEFAULT NOW(),
     created_at  TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(event_id, user_id)
 );
 
--- Co-hosts / sub-coordinators with check-in scanner access
-CREATE TABLE event_hosts (
+-- ═══════════════════════════════════════════════════════════════
+-- 14. Competition phases (068)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE competition_phases (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    event_id    UUID REFERENCES events(id) ON DELETE CASCADE,
-    user_id     UUID REFERENCES profiles(id),
-    role        TEXT DEFAULT 'checkin_staff', -- 'checkin_staff' | 'co_host'
-    granted_by  UUID REFERENCES profiles(id),
-    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    event_id    UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    phase_num   INT NOT NULL CHECK (phase_num BETWEEN 1 AND 4),
+    name        TEXT NOT NULL,
+    description TEXT,
+    starts_at   TIMESTAMPTZ NOT NULL,
+    ends_at     TIMESTAMPTZ NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','active','completed','extended','cancelled')),
+    extended_once BOOLEAN DEFAULT FALSE,
+    created_at  TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(event_id, phase_num)
+);
+
+-- ═══════════════════════════════════════════════════════════════
+-- 15. Competition entries (068)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE competition_entries (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id        UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    user_id         UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    title           TEXT NOT NULL,
+    description     TEXT,
+    file_url        TEXT,
+    file_name       TEXT,
+    file_size_bytes BIGINT,
+    mime_type       TEXT,
+    external_url    TEXT,
+    entry_type      TEXT NOT NULL CHECK (entry_type IN ('file','link','text')),
+    moderated       BOOLEAN DEFAULT FALSE,
+    moderated_by    UUID REFERENCES auth.users(id),
+    moderation_reason TEXT,
+    vote_count      INT DEFAULT 0,
+    submitted_at    TIMESTAMPTZ DEFAULT now(),
     UNIQUE(event_id, user_id)
 );
+
+-- ═══════════════════════════════════════════════════════════════
+-- 16. Competition votes (068)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE competition_votes (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id    UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    voter_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    entry_id    UUID NOT NULL REFERENCES competition_entries(id) ON DELETE CASCADE,
+    voted_at    TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(event_id, voter_id)
+);
+
+-- ═══════════════════════════════════════════════════════════════
+-- 17. Prize pool contributions (068)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE prize_pool_contributions (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id        UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    contributor_id  UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    amount_cents    INT NOT NULL CHECK (amount_cents > 0),
+    stripe_payment_intent_id TEXT,
+    created_at      TIMESTAMPTZ DEFAULT now()
+);
+
+-- ═══════════════════════════════════════════════════════════════
+-- 18. Competition winners (068)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE competition_winners (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id            UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    entry_id            UUID NOT NULL REFERENCES competition_entries(id) ON DELETE CASCADE,
+    user_id             UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    place               INT NOT NULL CHECK (place BETWEEN 1 AND 3),
+    prize_amount_cents  INT DEFAULT 0,
+    stripe_payout_id    TEXT,
+    payout_status       TEXT DEFAULT 'pending' CHECK (payout_status IN ('pending','processing','paid','failed')),
+    needs_1099          BOOLEAN DEFAULT FALSE,
+    created_at          TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(event_id, place)
+);
+
+-- ═══════════════════════════════════════════════════════════════
+-- 19. Event photos — scrapbook (069)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE event_photos (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id    UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    file_url    TEXT NOT NULL,
+    caption     TEXT,
+    uploaded_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ═══════════════════════════════════════════════════════════════
+-- 20. Event comments (077)
+-- ═══════════════════════════════════════════════════════════════
+CREATE TABLE event_comments (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id    UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    user_id     UUID REFERENCES profiles(id) ON DELETE SET NULL,  -- NULL for guest comments
+    guest_name  TEXT,
+    guest_token TEXT,
+    body        TEXT NOT NULL CHECK (char_length(body) <= 2000),
+    parent_id   UUID REFERENCES event_comments(id) ON DELETE CASCADE,
+    created_at  TIMESTAMPTZ DEFAULT now()
+);
 ```
+
+### Storage Buckets
+| Bucket | Purpose |
+|---|---|
+| `event-banners` | Event banner images (public) |
+| `event-documents` | Supporting documents — tickets, itineraries, receipts (private, RLS) |
+| `competition-entries` | Competition file uploads (private, RLS) |
+| `event-photos` | Scrapbook photos (private, RLS) |
+
+### Database Functions & Triggers (migrations 069–070)
+| Function | Trigger | Fires On |
+|---|---|---|
+| `award_event_badge(user_id, badge_key)` | — | Called by other triggers |
+| `award_event_banner_to_attendees(event_id, cosmetic_id)` | — | Called from admin dashboard |
+| `on_event_checkin_badge()` | `trg_event_checkin_badge` | `event_checkins` INSERT |
+| `on_comp_winner_badge()` | `trg_comp_winner_badge` | `competition_winners` INSERT |
+| `on_event_published()` | `trg_event_published` | `events` UPDATE (status → 'open') |
+| `on_rsvp_notify_creator()` | `trg_rsvp_notify_creator` | `event_rsvps` INSERT |
+| `on_document_notify_member()` | `trg_document_notify_member` | `event_documents` INSERT (target_user_id IS NOT NULL) |
+| `on_raffle_winner_notify()` | `trg_raffle_winner_notify` | `event_raffle_winners` INSERT |
+| `on_comp_phase_notify()` | `trg_comp_phase_notify` | `competition_phases` UPDATE (status changed) |
+| `increment_vote_count()` | `trg_increment_vote` | `competition_votes` INSERT |
+| `decrement_vote_count()` | `trg_decrement_vote` | `competition_votes` DELETE |
+
+### Badge Cosmetics (seeded in migration 069)
+| Key | Label |
+|---|---|
+| `event_participant` | Event Explorer |
+| `trip_veteran` | Trip Veteran (3+ LLC events) |
+| `never_miss` | Never Miss (5 consecutive) |
+| `comp_winner` | Competition Champion |
+| `top_competitor` | Top Competitor (3+ entries) |
+| `fundraiser_champ` | Fundraiser Champ ($200+ prize pool) |
+| `event_organizer` | Event Organizer (created 3+ events) |
 
 ---
 
@@ -959,13 +1154,13 @@ CREATE TABLE event_hosts (
 ### Phase 5A-5 — Polish & Gamification
 *Badges, banners, Credit Points, notifications, settings.*
 
-- [x] Event-specific badges (per event)
-- [x] Global event achievement badges
-- [x] Member event banners (awarded post-event, shows on profile)
-- [x] Past events scrapbook (photo upload, completed event archive)
-- [x] Full notification system for all event triggers (7-day + 72h reminders, per-member document alerts)
-- [x] Notification channel preferences in Settings (`settings.html` → Notifications section)
-- [x] Admin events dashboard (overview of all events, funds, RSVPs, payouts, 1099 flags)
+- [x] Event-specific badges (per event — generic cosmetics, not per-event custom)
+- [x] Global event achievement badges (7 badge cosmetics seeded)
+- [x] Member event banners (awarded post-event via admin dashboard, shows on profile)
+- [x] Past events scrapbook (photo upload, completed event archive with gallery/lightbox)
+- [x] Full notification system for all event triggers (7-day + 72h + day-of reminders, per-member document alerts, RSVP/raffle/competition notifications)
+- [x] Notification channel preferences in Settings (`settings.html` → Notifications section, 7 categories)
+- [x] Admin events dashboard (`admin/events.html` — overview stats, events table, competition payouts with 1099 flags, banner award tool)
 
 ---
 
@@ -1002,5 +1197,5 @@ CREATE TABLE event_hosts (
 
 ---
 
-**Last Updated:** March 19, 2026
-**Status:** Phase 5A-5 Complete — Polish & Gamification. 7 event badge cosmetics seeded (event_participant, trip_veteran, never_miss, comp_winner, top_competitor, fundraiser_champ, event_organizer). event_photos table + event-photos storage bucket for scrapbook. 9 database triggers for auto-awarding badges on check-in/competition wins and notifications on RSVP/document upload/competition phase changes/raffle winners/event published. award_event_badge() and award_event_banner_to_attendees() helper functions. Notification preferences already in settings (7 categories). Admin events dashboard (admin/events.html) with stats, events table, competition payout tracking with 1099 flags, and banner award tool. Past event photo scrapbook with upload/gallery/lightbox. Migration 069 deployed. Phases 5A-1a through 5A-5 all complete (migrations 063–069).
+**Last Updated:** March 31, 2026
+**Status:** Full audit complete — spec reconciled with codebase. All implementation phases (5A-1a through 5A-5) are built and deployed across migrations 063–077. 20 database tables, 4 storage buckets, 8 Supabase Edge Functions, 11 database triggers, 7 badge cosmetics. Frontend: 3 HTML pages + 15+ JS modules across public/portal/admin tiers. Remaining unimplemented items: feed integration, Credit Points (CP) tie-in, physical raffle printable list, QR time-window validation, timezone dual-display, push notifications for event cancellation/rescheduling/minimum threshold, and per-event commemorative badges.
