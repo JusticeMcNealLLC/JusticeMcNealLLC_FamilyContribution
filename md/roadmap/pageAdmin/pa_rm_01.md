@@ -87,19 +87,19 @@ Roles are named groups with a set of **permissions** (boolean flags). Members ca
 
 ## Implementation Roadmap
 
-### Step 1 — Database: Roles & Permissions Tables
-- [ ] Create `roles` table (`id UUID`, `name TEXT`, `color TEXT`, `icon TEXT`, `position INT`, `is_system BOOL`, `created_at`, `updated_at`)
-- [ ] Create `role_permissions` table (`role_id UUID`, `permission TEXT`, `PRIMARY KEY(role_id, permission)`)
-- [ ] Create `member_roles` table (`user_id UUID`, `role_id UUID`, `granted_by UUID`, `granted_at TIMESTAMPTZ`, `PRIMARY KEY(user_id, role_id)`)
-- [ ] Create `role_audit_log` table (`id UUID`, `actor_id UUID`, `action TEXT`, `target_user_id UUID`, `role_id UUID`, `details JSONB`, `created_at`)
-- [ ] Seed system roles: **Owner** (all permissions, undeletable, position 0) and **Member** (default, basic portal access, undeletable)
-- [ ] Create `public.has_permission(permission_key TEXT)` SQL function (SECURITY DEFINER) — checks if `auth.uid()` holds any role with the given permission
-- [ ] Create `public.is_owner()` SQL function — checks if user has the Owner system role
-- [ ] Add indexes: `member_roles(user_id)`, `member_roles(role_id)`, `role_permissions(permission)`
+### Step 1 — Database: Roles & Permissions Tables ✅
+- [x] Create `roles` table (`id UUID`, `name TEXT`, `color TEXT`, `icon TEXT`, `position INT`, `is_system BOOL`, `created_at`, `updated_at`)
+- [x] Create `role_permissions` table (`role_id UUID`, `permission TEXT`, `PRIMARY KEY(role_id, permission)`)
+- [x] Create `member_roles` table (`user_id UUID`, `role_id UUID`, `granted_by UUID`, `granted_at TIMESTAMPTZ`, `PRIMARY KEY(user_id, role_id)`)
+- [x] Create `role_audit_log` table (`id UUID`, `actor_id UUID`, `action TEXT`, `target_user_id UUID`, `role_id UUID`, `details JSONB`, `created_at`)
+- [x] Seed system roles: **Owner** (all permissions, undeletable, position 0) and **Member** (default, basic portal access, undeletable)
+- [x] Create `public.has_permission(permission_key TEXT)` SQL function (SECURITY DEFINER) — checks if `auth.uid()` holds any role with the given permission
+- [x] Create `public.is_owner()` SQL function — checks if user has the Owner system role
+- [x] Add indexes: `member_roles(user_id)`, `member_roles(role_id)`, `role_permissions(permission)`
 
 ### Step 2 — Migration Bridge: Backward Compatibility
-- [ ] Migrate existing `admin` users → assign them the **Owner** role in `member_roles`
-- [ ] Migrate existing `member` users → assign them the **Member** role in `member_roles`
+- [x] Migrate existing `admin` users → assign them the **Owner** role in `member_roles`
+- [x] Migrate existing `member` users → assign them the **Member** role in `member_roles`
 - [ ] Keep `profiles.role` column for now (read-only, synced via trigger on `member_roles` changes)
 - [ ] Create trigger: when `member_roles` changes, update `profiles.role` to `'admin'` if user has any role with `admin.dashboard`, else `'member'`
 - [ ] `is_admin()` function stays working during transition — no RLS policies need to change yet

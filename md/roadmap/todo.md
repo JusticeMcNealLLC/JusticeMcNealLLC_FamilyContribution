@@ -47,9 +47,9 @@ These directly impact how your platform works long-term.
 ---
 
 ### 📅 Events System (Upgrade)
-- [ ] Convert Event Modal → Full Event Page
-- [ ] Add Event ID system
-- [ ] Add creator info (profile + cosmetics)
+- [x] Convert Event Modal → Full Event Page
+- [x] Add Event ID system
+- [x] Add creator info (profile + cosmetics)
 - [ ] Add RSVP state ("You're going")
 - [ ] Improve share link behavior
 - [ ] Add invite flow:
