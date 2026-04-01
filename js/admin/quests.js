@@ -9,7 +9,7 @@ let _allProfiles = [];
 let _currentTab = 'submissions';
 
 document.addEventListener('DOMContentLoaded', async function () {
-    const user = await checkAuth(true);
+    const user = await checkAuth({ permission: 'content.quests' });
     if (!user) return;
 
     document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);

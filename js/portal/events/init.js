@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     evtCurrentUser = await checkAuth();
     if (!evtCurrentUser) return;
 
-    // Get role to decide if "Create" button shows
+    // Get role for backward compat, show "Create" button based on permission
     const { data: profile } = await supabaseClient
         .from('profiles')
         .select('role')
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .single();
     evtCurrentUserRole = profile?.role;
 
-    if (evtCurrentUserRole === 'admin') {
+    if (hasPermission('events.create') || evtCurrentUserRole === 'admin') {
         document.getElementById('createEventBtn').classList.remove('hidden');
         document.getElementById('createEventBtn').classList.add('flex');
     }

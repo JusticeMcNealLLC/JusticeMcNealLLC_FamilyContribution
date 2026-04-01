@@ -10,7 +10,7 @@
     'use strict';
 
     /* ── Auth Guard ──────────────────────────────────────── */
-    await checkAuth(true);
+    await checkAuth({ permission: 'content.banners' });
 
     /* ── DOM refs ─────────────────────────────────────────── */
     const $ = id => document.getElementById(id);

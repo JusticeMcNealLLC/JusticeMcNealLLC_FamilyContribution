@@ -70,7 +70,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
             <!-- Members Dashboard -->
-            <a href="members.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="members.html" data-permission="admin.members" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition">
                     <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </div>
@@ -84,7 +84,7 @@
             </a>
 
             <!-- Invite Members -->
-            <a href="invite.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="invite.html" data-permission="admin.invite" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-brand-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-200 transition">
                     <svg class="w-7 h-7 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                 </div>
@@ -98,7 +98,7 @@
             </a>
 
             <!-- Investment Dashboard -->
-            <a href="investments.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="investments.html" data-permission="finance.investments" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-200 transition">
                     <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                 </div>
@@ -112,7 +112,7 @@
             </a>
 
             <!-- Manual Deposits -->
-            <a href="deposits.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="deposits.html" data-permission="finance.deposits" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-teal-100 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-200 transition">
                     <svg class="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                 </div>
@@ -126,7 +126,7 @@
             </a>
 
             <!-- Transaction Log -->
-            <a href="transactions.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="transactions.html" data-permission="finance.transactions" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-violet-100 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-200 transition">
                     <svg class="w-7 h-7 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                 </div>
@@ -140,7 +140,7 @@
             </a>
 
             <!-- Quest Management -->
-            <a href="quests.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="quests.html" data-permission="content.quests" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-rose-100 flex items-center justify-center flex-shrink-0 group-hover:bg-rose-200 transition">
                     <svg class="w-7 h-7 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
                 </div>
@@ -154,7 +154,7 @@
             </a>
 
             <!-- Brand Settings -->
-            <a href="brand.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="brand.html" data-permission="admin.brand" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-fuchsia-100 flex items-center justify-center flex-shrink-0 group-hover:bg-fuchsia-200 transition">
                     <svg class="w-7 h-7 text-fuchsia-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
@@ -168,7 +168,7 @@
             </a>
 
             <!-- Banners -->
-            <a href="banners.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="banners.html" data-permission="content.banners" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-pink-100 flex items-center justify-center flex-shrink-0 group-hover:bg-pink-200 transition">
                     <svg class="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
                 </div>
@@ -182,7 +182,7 @@
             </a>
 
             <!-- Notifications -->
-            <a href="notifications.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="notifications.html" data-permission="admin.notifications" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-200 transition">
                     <svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"></path></svg>
                 </div>
@@ -196,7 +196,7 @@
             </a>
 
             <!-- Payouts -->
-            <a href="payouts.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="payouts.html" data-permission="finance.payouts" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center flex-shrink-0 group-hover:bg-green-200 transition">
                     <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"></path></svg>
                 </div>
@@ -210,7 +210,7 @@
             </a>
 
             <!-- Expenses -->
-            <a href="expenses.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="expenses.html" data-permission="finance.expenses" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center flex-shrink-0 group-hover:bg-red-200 transition">
                     <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
                 </div>
@@ -224,7 +224,7 @@
             </a>
 
             <!-- Tax Prep -->
-            <a href="tax-prep.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="tax-prep.html" data-permission="finance.tax_prep" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-200 transition">
                     <svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                 </div>
@@ -238,7 +238,7 @@
             </a>
 
             <!-- Profits -->
-            <a href="profits.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="profits.html" data-permission="finance.profits" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition">
                     <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                 </div>
@@ -252,7 +252,7 @@
             </a>
 
             <!-- Documents Vault -->
-            <a href="documents.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="documents.html" data-permission="content.documents" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-cyan-100 flex items-center justify-center flex-shrink-0 group-hover:bg-cyan-200 transition">
                     <svg class="w-7 h-7 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
                 </div>
@@ -266,7 +266,7 @@
             </a>
 
             <!-- Events Dashboard -->
-            <a href="events.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="events.html" data-permission="events.manage_all" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-violet-100 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-200 transition">
                     <svg class="w-7 h-7 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
@@ -280,7 +280,7 @@
             </a>
 
             <!-- Family Approvals -->
-            <a href="family-approvals.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="family-approvals.html" data-permission="content.family_approvals" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-200 transition">
                     <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </div>
@@ -294,7 +294,7 @@
             </a>
 
             <!-- Roles & Permissions -->
-            <a href="roles.html" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
+            <a href="roles.html" data-permission="admin.roles" class="group bg-white rounded-2xl border border-gray-200/80 p-6 card-hover flex flex-col gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-yellow-100 flex items-center justify-center flex-shrink-0 group-hover:bg-yellow-200 transition">
                     <svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                 </div>

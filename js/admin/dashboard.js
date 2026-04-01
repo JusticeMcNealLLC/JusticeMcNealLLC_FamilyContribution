@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', async function () {
     // Check admin authentication
-    const user = await checkAuth(true);
+    const user = await checkAuth({ permission: 'admin.members' });
     if (!user) return;
 
     // Mobile menu toggle

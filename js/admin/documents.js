@@ -35,7 +35,7 @@ let pendingShareFilePath = null;
 let selectedFile = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
-    currentUser = await checkAuth(true);
+    currentUser = await checkAuth({ permission: 'content.documents' });
     if (!currentUser) return;
 
     // Logout

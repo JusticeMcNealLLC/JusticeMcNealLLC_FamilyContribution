@@ -7,7 +7,7 @@ let memberMap = {}; // id → { email, name }
 let pendingDeleteId = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
-    currentUser = await checkAuth(true);
+    currentUser = await checkAuth({ permission: 'finance.deposits' });
     if (!currentUser) return;
 
     // Logout

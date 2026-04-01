@@ -7,7 +7,7 @@ let currentPage = 1;
 let memberMap = {};
 
 document.addEventListener('DOMContentLoaded', async function () {
-    const user = await checkAuth(true);
+    const user = await checkAuth({ permission: 'finance.transactions' });
     if (!user) return;
 
     document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);

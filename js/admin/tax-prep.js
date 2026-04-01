@@ -86,7 +86,7 @@ let selectedYear = new Date().getFullYear();
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', async function () {
-    const user = await checkAuth(true);
+    const user = await checkAuth({ permission: 'finance.tax_prep' });
     if (!user) return;
 
     const { data: profile } = await supabaseClient

@@ -21,7 +21,7 @@ let parsedCsvData = [];
 let currentUser = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
-    currentUser = await checkAuth(true);
+    currentUser = await checkAuth({ permission: 'finance.investments' });
     if (!currentUser) return;
 
     // Logout

@@ -142,33 +142,33 @@ Roles are named groups with a set of **permissions** (boolean flags). Members ca
   - [ ] Select multiple members → "Assign Role" / "Remove Role" dropdown
   - [ ] Confirmation: "Apply [Role] to X members?"
 
-### Step 5 — Permission Enforcement: Frontend
-- [ ] Create `js/auth/permissions.js` — utility module
-  - [ ] `hasPermission('finance.expenses')` → checks cached permissions
-  - [ ] `hasAnyPermission(['finance.expenses', 'finance.transactions'])` → OR check
-  - [ ] `hasAllPermissions([...])` → AND check
-- [ ] Update `checkAuth()` to accept permission string: `checkAuth({ permission: 'finance.expenses' })`
-  - [ ] Keep backward compat: `checkAuth(true)` still works (checks `admin.dashboard`)
-- [ ] Update each admin page to require its specific permission:
-  - [ ] `admin/deposits.html` → `finance.deposits`
-  - [ ] `admin/expenses.html` → `finance.expenses`
-  - [ ] `admin/events.html` → `events.manage_all`
-  - [ ] `admin/investments.html` → `finance.investments`
-  - [ ] `admin/documents.html` → `content.documents`
-  - [ ] `admin/quests.html` → `content.quests`
-  - [ ] `admin/members.html` → `admin.members`
-  - [ ] `admin/notifications.html` → `admin.notifications`
-  - [ ] `admin/payouts.html` → `finance.payouts`
-  - [ ] `admin/profits.html` → `finance.profits`
-  - [ ] `admin/tax-prep.html` → `finance.tax_prep`
-  - [ ] `admin/transactions.html` → `finance.transactions`
-  - [ ] `admin/banners.html` → `content.banners`
-  - [ ] `admin/brand.html` → `admin.brand`
-  - [ ] `admin/invite.html` → `admin.invite`
-  - [ ] `admin/family-approvals.html` → `content.family_approvals`
-  - [ ] `admin/roles.html` → `admin.roles`
-- [ ] Update admin nav/sidebar to only show links for pages user has permission for
-- [ ] Update portal "Create Event" button: show if user has `events.create` (not just `role === 'admin'`)
+### Step 5 — Permission Enforcement: Frontend ✅
+- [x] Create `js/auth/permissions.js` — utility module
+  - [x] `hasPermission('finance.expenses')` → checks cached permissions
+  - [x] `hasAnyPermission(['finance.expenses', 'finance.transactions'])` → OR check
+  - [x] `hasAllPermissions([...])` → AND check
+- [x] Update `checkAuth()` to accept permission string: `checkAuth({ permission: 'finance.expenses' })`
+  - [x] Keep backward compat: `checkAuth(true)` still works (checks `admin.dashboard`)
+- [x] Update each admin page to require its specific permission:
+  - [x] `admin/deposits.html` → `finance.deposits`
+  - [x] `admin/expenses.html` → `finance.expenses`
+  - [x] `admin/events.html` → `events.manage_all`
+  - [x] `admin/investments.html` → `finance.investments`
+  - [x] `admin/documents.html` → `content.documents`
+  - [x] `admin/quests.html` → `content.quests`
+  - [x] `admin/members.html` → `admin.members`
+  - [x] `admin/notifications.html` → `admin.notifications`
+  - [x] `admin/payouts.html` → `finance.payouts`
+  - [x] `admin/profits.html` → `finance.profits`
+  - [x] `admin/tax-prep.html` → `finance.tax_prep`
+  - [x] `admin/transactions.html` → `finance.transactions`
+  - [x] `admin/banners.html` → `content.banners`
+  - [x] `admin/brand.html` → `admin.brand`
+  - [x] `admin/invite.html` → `admin.invite`
+  - [x] `admin/family-approvals.html` → `content.family_approvals`
+  - [x] `admin/roles.html` → `admin.roles`
+- [x] Update admin nav/sidebar to only show links for pages user has permission for
+- [x] Update portal "Create Event" button: show if user has `events.create` (not just `role === 'admin'`)
 
 ### Step 6 — Permission Enforcement: Database (RLS)
 - [ ] Create `has_permission(TEXT)` Postgres function (SECURITY DEFINER, SET search_path = public)

@@ -1,20 +1,8 @@
 // Admin Payouts page functionality
 
 document.addEventListener('DOMContentLoaded', async function() {
-    const user = await checkAuth();
+    const user = await checkAuth({ permission: 'finance.payouts' });
     if (!user) return;
-
-    // Verify admin
-    const { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-    if (!profile || profile.role !== 'admin') {
-        window.location.href = '/portal/index.html';
-        return;
-    }
 
     // Load everything
     await Promise.all([

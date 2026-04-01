@@ -1,12 +1,17 @@
 // Admin Hub - Quick Stats + Navigation
 
 document.addEventListener('DOMContentLoaded', async function () {
-    const user = await checkAuth(true);
+    const user = await checkAuth({ permission: 'admin.dashboard' });
     if (!user) return;
 
     // Logout
     document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
     document.getElementById('logoutBtnMobile')?.addEventListener('click', handleLogout);
+
+    // Hide hub tiles the user lacks permission for
+    document.querySelectorAll('[data-permission]').forEach(el => {
+        if (!hasPermission(el.dataset.permission)) el.remove();
+    });
 
     // Load all stats in parallel
     await Promise.all([

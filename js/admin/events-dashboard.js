@@ -9,22 +9,8 @@ let adminRsvps = [];
 let adminCheckins = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const user = await checkAuth();
+    const user = await checkAuth({ permission: 'events.manage_all' });
     if (!user) return;
-
-    // Verify admin
-    const { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-    if (profile?.role !== 'admin') {
-        document.querySelector('main').innerHTML = `
-            <div class="text-center py-20">
-                <p class="text-red-500 font-semibold">Access denied. Admin only.</p>
-            </div>`;
-        return;
-    }
 
     setupAdminTabs();
     await loadEventsDashboard();

@@ -17,9 +17,8 @@
 
     // ─── Init ───────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', async function () {
-        var { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session) { window.location.href = '../login.html'; return; }
-        currentAdmin = session.user;
+        currentAdmin = await checkAuth({ permission: 'admin.notifications' });
+        if (!currentAdmin) return;
 
         await Promise.all([loadMembers(), loadStats(), loadSubscribers(), loadLog()]);
         wireUI();

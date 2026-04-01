@@ -41,7 +41,7 @@ let chartType = 'pie';
 // Init
 // ══════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async function () {
-    currentUser = await checkAuth(true);
+    currentUser = await checkAuth({ permission: 'finance.expenses' });
     if (!currentUser) return;
 
     // Logout

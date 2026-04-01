@@ -24,7 +24,7 @@ let expenseChart = null;
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', async function () {
-    const user = await checkAuth(true);
+    const user = await checkAuth({ permission: 'finance.profits' });
     if (!user) return;
 
     // Verify admin

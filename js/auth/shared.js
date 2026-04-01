@@ -57,8 +57,23 @@ function hasAllPermissions(keys) {
 }
 
 // Check if user is logged in
+// Usage:
+//   checkAuth()                               — portal page, no admin check
+//   checkAuth(true)                           — legacy: requires admin.dashboard
+//   checkAuth({ permission: 'finance.expenses' }) — requires specific permission
 // skipOnboardingCheck: set true on the onboarding page itself to avoid redirect loops
 async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
+    // Normalise arg: true → { permission: 'admin.dashboard' }, object stays as-is
+    let permissionKey = null;
+    let needsAdmin = false;
+    if (requireAdmin === true) {
+        needsAdmin = true;
+        permissionKey = 'admin.dashboard';
+    } else if (requireAdmin && typeof requireAdmin === 'object' && requireAdmin.permission) {
+        needsAdmin = true;
+        permissionKey = requireAdmin.permission;
+    }
+
     const { data: { session } } = await supabaseClient.auth.getSession();
     
     if (!session) {
@@ -67,8 +82,8 @@ async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
         return null;
     }
 
-    // If admin required, check role
-    if (requireAdmin) {
+    // If admin required, check role (backward compat gate)
+    if (needsAdmin) {
         const { data: profile } = await supabaseClient
             .from('profiles')
             .select('role, setup_completed')
@@ -83,7 +98,7 @@ async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
     }
 
     // Check onboarding status for non-admin portal pages
-    if (!requireAdmin && !skipOnboardingCheck) {
+    if (!needsAdmin && !skipOnboardingCheck) {
         const isOnboardingPage = window.location.pathname.includes('/onboarding');
         if (!isOnboardingPage) {
             const { data: profile } = await supabaseClient
@@ -103,6 +118,12 @@ async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
     // Load roles + permissions into global cache
     await loadUserPermissions(session.user.id);
 
+    // Granular permission gate — redirect if user lacks the specific permission
+    if (permissionKey && !hasPermission(permissionKey)) {
+        window.location.href = APP_CONFIG.PORTAL_URL;
+        return null;
+    }
+
     return session.user;
 }
 
@@ -113,17 +134,17 @@ async function addAdminDashboardLink() {
         return;
     }
 
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) return;
-
-    // Check if user is admin
-    const { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
-
-    if (profile?.role !== 'admin') return;
+    // Use cached permissions if available, else check profile role
+    if (!hasPermission('admin.dashboard')) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) return;
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+        if (profile?.role !== 'admin') return;
+    }
 
     // ── Desktop nav: insert "Admin Hub" before the divider ──
     const logoutBtn = document.getElementById('logoutBtn');

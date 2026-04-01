@@ -50,7 +50,7 @@ let panelPermissions = {};    // { 'admin.dashboard': true, ... }
 // ─── Init ────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
-    currentUser = await checkAuth(true);
+    currentUser = await checkAuth({ permission: 'admin.roles' });
     if (!currentUser) return;
 
     document.getElementById('btnCreateRole').addEventListener('click', () => openPanel(null));

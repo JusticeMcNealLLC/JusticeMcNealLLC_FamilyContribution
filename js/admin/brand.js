@@ -8,7 +8,7 @@ const BUCKET = 'profile-pictures';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 document.addEventListener('DOMContentLoaded', async function () {
-    const user = await checkAuth(true);
+    const user = await checkAuth({ permission: 'admin.brand' });
     if (!user) return;
 
     // Load existing logos

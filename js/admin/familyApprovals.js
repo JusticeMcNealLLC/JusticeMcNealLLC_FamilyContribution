@@ -119,6 +119,8 @@
     function escapeHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     document.addEventListener('DOMContentLoaded', async function(){
+        const user = await checkAuth({ permission: 'content.family_approvals' });
+        if (!user) return;
         await loadPending();
     });
 })();
