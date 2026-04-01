@@ -34,15 +34,14 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     if (userError || !user) throw new Error('Invalid token')
 
-    // Verify admin role
-    const { data: adminProfile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Check permission via RBAC
+    const { data: hasPerm } = await supabase.rpc('user_has_permission', {
+      uid: user.id,
+      perm: 'finance.payouts',
+    })
 
-    if (!adminProfile || adminProfile.role !== 'admin') {
-      throw new Error('Admin access required')
+    if (!hasPerm) {
+      throw new Error('Requires finance.payouts permission')
     }
 
     // Check global payouts toggle + reserve setting

@@ -170,15 +170,33 @@ Roles are named groups with a set of **permissions** (boolean flags). Members ca
 - [x] Update admin nav/sidebar to only show links for pages user has permission for
 - [x] Update portal "Create Event" button: show if user has `events.create` (not just `role === 'admin'`)
 
-### Step 6 — Permission Enforcement: Database (RLS)
-- [ ] Create `has_permission(TEXT)` Postgres function (SECURITY DEFINER, SET search_path = public)
-- [ ] Gradually migrate RLS policies from `is_admin()` → `has_permission('...')`
-  - [ ] Start with low-risk tables: `llc_expenses`, `llc_documents`
-  - [ ] Then financial tables: `manual_deposits`, `investment_*`
-  - [ ] Then event tables: `events`, `event_cost_items`
-  - [ ] Then all remaining admin-gated tables
-- [ ] Keep `is_admin()` as a wrapper: `RETURN has_permission('admin.dashboard')` — zero breakage
-- [ ] Update edge functions to use permission checks instead of `role !== 'admin'`
+### Step 6 — Permission Enforcement: Database (RLS) ✅
+- [x] `has_permission(TEXT)` already existed from Step 2 (migration 078)
+- [x] Created `user_has_permission(UUID, TEXT)` for edge functions (SECURITY DEFINER)
+- [x] Redefined `is_admin()` as wrapper: `RETURN has_permission('admin.dashboard')` — zero breakage
+- [x] Migrated all 106 RLS policies from `is_admin()` / inline role checks → granular `has_permission()`:
+  - [x] `admin.members` — profiles (2 policies)
+  - [x] `admin.roles` — roles, role_permissions, member_roles, role_audit_log (12 policies)
+  - [x] `admin.notifications` — notifications, push_subscriptions (3 policies)
+  - [x] `admin.brand` — storage profile-pictures/brand (3 policies)
+  - [x] `finance.transactions` — subscriptions, invoices (2 policies)
+  - [x] `finance.payouts` — payouts, payout_enrollments, app_settings (6 policies)
+  - [x] `finance.deposits` — manual_deposits (4 policies)
+  - [x] `finance.investments` — investment_snapshots, investment_holdings (6 policies)
+  - [x] `finance.expenses` — llc_expenses + storage llc-receipts (7 policies)
+  - [x] `finance.tax_prep` — tax_quarterly_payments, tax_checklist (8 policies)
+  - [x] `content.documents` — llc_documents, llc_document_shares + storage (9 policies)
+  - [x] `content.quests` — quests, member_quests, credit_points_log, member_badges, cosmetics, member_cosmetics (14 policies)
+  - [x] `content.feed` — posts, post_comments (3 policies, new permission key)
+  - [x] `content.family_approvals` — family_tree_people, tree_settings (3 policies)
+  - [x] `events.manage_all` — events, event_checkins, event_hosts, event_cost_items, event_waitlist, event_refunds, event_raffle_*, event_guest_rsvps, event_documents, event_locations, competition_*, event_photos + storage (24 policies)
+- [x] Updated 6 edge functions to use `user_has_permission()` RPC:
+  - [x] `invite-user` → `admin.invite`
+  - [x] `deactivate-user` → `admin.members`
+  - [x] `reactivate-user` → `admin.members`
+  - [x] `send-payout` → `finance.payouts`
+  - [x] `sync-subscription` → `admin.members`
+  - [x] `process-event-cancellation` → `events.manage_all`
 
 ### Step 7 — Audit Log & Role Display
 - [ ] **Audit log page** (within roles admin):

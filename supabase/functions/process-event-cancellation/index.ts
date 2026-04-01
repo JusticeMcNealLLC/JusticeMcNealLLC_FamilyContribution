@@ -56,14 +56,12 @@ serve(async (req) => {
       .single()
     if (eventErr || !event) throw new Error('Event not found')
 
-    // Verify host or admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Verify host or permission holder
+    const { data: hasEventPerm } = await supabase.rpc('user_has_permission', {
+      uid: user.id,
+      perm: 'events.manage_all',
+    })
 
-    const isAdmin = profile?.role === 'admin'
     const isCreator = event.created_by === user.id
 
     const { data: hostCheck } = await supabase
@@ -73,8 +71,8 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .maybeSingle()
 
-    const isHost = isCreator || !!hostCheck || isAdmin
-    if (!isHost) throw new Error('Only hosts or admins can process cancellations')
+    const isHost = isCreator || !!hostCheck || !!hasEventPerm
+    if (!isHost) throw new Error('Only hosts or users with events.manage_all permission can process cancellations')
 
     // ─── Single User Refund (Grace Window) ─────────────────
     if (single_user_refund && target_user_id) {

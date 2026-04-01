@@ -58,18 +58,15 @@ serve(async (req) => {
       )
     }
 
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Check permission via RBAC
+    const { data: hasPerm } = await supabase.rpc('user_has_permission', {
+      uid: user.id,
+      perm: 'admin.invite',
+    })
 
-    console.log('Profile check:', { role: profile?.role, error: profileError?.message })
-
-    if (profileError || !profile || profile.role !== 'admin') {
+    if (!hasPerm) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized: Admin access required' }),
+        JSON.stringify({ error: 'Unauthorized: requires admin.invite permission' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

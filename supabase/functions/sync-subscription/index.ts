@@ -34,12 +34,12 @@ serve(async (req) => {
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token)
     if (authErr || !user) throw new Error('Unauthorized')
 
-    const { data: callerProfile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    if (callerProfile?.role !== 'admin') throw new Error('Admin only')
+    // Check permission via RBAC
+    const { data: hasPerm } = await supabase.rpc('user_has_permission', {
+      uid: user.id,
+      perm: 'admin.members',
+    })
+    if (!hasPerm) throw new Error('Requires admin.members permission')
 
     const { userId } = await req.json()
     if (!userId) throw new Error('userId is required')
