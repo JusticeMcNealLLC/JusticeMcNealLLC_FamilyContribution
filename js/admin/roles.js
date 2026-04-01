@@ -262,6 +262,20 @@ function openPanel(roleId) {
     }
     renderPermAccordion(isSystem);
 
+    // System role notice
+    document.getElementById('systemRoleNotice').classList.toggle('hidden', !isSystem);
+
+    // Members with this role section
+    const membersSection = document.getElementById('panelMembersSection');
+    const membersList = document.getElementById('panelMembersList');
+    if (!isCreate && role) {
+        membersSection.classList.remove('hidden');
+        membersList.innerHTML = '<p class="text-xs text-gray-400">Loading…</p>';
+        loadPanelMembers(role.id);
+    } else {
+        membersSection.classList.add('hidden');
+    }
+
     // Delete button
     const deleteBtn = document.getElementById('btnDeleteRole');
     deleteBtn.classList.toggle('hidden', isCreate || isSystem);
@@ -282,6 +296,43 @@ function closePanel() {
     document.getElementById('rolePanel').classList.remove('open');
     document.body.style.overflow = '';
     editingRoleId = null;
+}
+
+// ─── Panel Members List ──────────────────────────────────
+
+async function loadPanelMembers(roleId) {
+    const container = document.getElementById('panelMembersList');
+    try {
+        const { data: assignments, error } = await supabaseClient
+            .from('member_roles')
+            .select('user_id, profiles:profiles!member_roles_user_id_fkey(id, first_name, last_name, profile_picture_url)')
+            .eq('role_id', roleId);
+
+        if (error) throw error;
+
+        const members = (assignments || []).filter(a => a.profiles).map(a => a.profiles);
+
+        if (members.length === 0) {
+            container.innerHTML = '<p class="text-xs text-gray-400">No members assigned to this role yet.</p>';
+            return;
+        }
+
+        container.innerHTML = members.map(m => {
+            const name = [m.first_name, m.last_name].filter(Boolean).join(' ') || 'Member';
+            const initials = ((m.first_name || '?')[0] + (m.last_name || '')[0]).toUpperCase();
+            return `
+                <a href="members.html" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition">
+                    ${m.profile_picture_url
+                        ? `<img src="${m.profile_picture_url}" class="w-7 h-7 rounded-full object-cover flex-shrink-0" alt="">`
+                        : `<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-brand-600">${initials}</span></div>`
+                    }
+                    <span class="text-sm text-gray-700 font-medium truncate">${escHtml(name)}</span>
+                </a>`;
+        }).join('');
+    } catch (err) {
+        console.error('loadPanelMembers', err);
+        container.innerHTML = '<p class="text-xs text-red-400">Failed to load members.</p>';
+    }
 }
 
 // ─── Color Swatches ──────────────────────────────────────

@@ -78,6 +78,7 @@
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Roles & Permissions</h1>
                     <p class="text-gray-500 mt-1 text-sm sm:text-base">Discord-style roles with granular permission control</p>
+                    <p class="text-xs text-gray-400 mt-1">💡 To assign roles to members, go to <a href="members.html" class="text-brand-600 hover:underline font-medium">Members</a> and click a member card.</p>
                 </div>
                 <button id="btnCreateRole" class="inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-2.5 px-5 rounded-xl transition shadow-sm shadow-brand-200 text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -139,6 +140,17 @@
             </button>
         </div>
         <div class="p-5 space-y-6" id="panelBody">
+            <!-- System role notice (shown dynamically) -->
+            <div id="systemRoleNotice" class="hidden">
+                <div class="flex items-start gap-2.5 px-3.5 py-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <div>
+                        <p class="text-sm font-semibold text-amber-800">System Role — Read Only</p>
+                        <p class="text-xs text-amber-600 mt-0.5">This is a built-in role that cannot be edited or deleted. Its name, color, and permissions are locked.</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Name -->
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Role Name</label>
@@ -161,6 +173,16 @@
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Permissions</label>
                 <div id="permAccordion" class="space-y-2"></div>
+            </div>
+
+            <!-- Members with this role (shown for existing roles) -->
+            <div id="panelMembersSection" class="hidden">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Members with this Role</label>
+                <div id="panelMembersList" class="space-y-2"></div>
+                <a href="members.html" class="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700 mt-2 transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Manage role assignments on Members page →
+                </a>
             </div>
         </div>
 
