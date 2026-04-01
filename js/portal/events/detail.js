@@ -500,11 +500,18 @@ async function evtOpenDetail(eventId) {
     let raffleHtml = '';
     if (event.raffle_enabled) {
         const prizes = event.raffle_prizes || [];
-        const prizesHtml = prizes.map((p, i) => `
-            <div style="display:flex;align-items:center;gap:12px;padding:10px 0">
-                <div class="evt-raffle-rank">${i + 1}</div>
-                <span style="font-size:15px;color:#222">${evtEscapeHtml(p.label || p.description || p)}</span>
-            </div>`).join('');
+        const ordinal = n => n===1?'1st':n===2?'2nd':n===3?'3rd':`${n}th`;
+        const prizesHtml = prizes.map((p, i) => {
+            const place = p.place || i + 1;
+            return `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#f9f9f4;border-radius:12px;margin-bottom:6px">
+                <div class="evt-raffle-rank">${place}</div>
+                <div>
+                    <p style="font-size:13px;color:#717171;font-weight:600;margin:0">${ordinal(place)} Place</p>
+                    <p style="font-size:15px;color:#222;font-weight:600;margin:2px 0 0">${evtEscapeHtml(p.label || p.description || p)}</p>
+                </div>
+            </div>`;
+        }).join('');
 
         // Raffle entry status
         let entryStatusHtml = '';
@@ -534,6 +541,11 @@ async function evtOpenDetail(eventId) {
                     🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}
                 </button>
                 <p style="font-size:12px;color:#717171;text-align:center;margin-top:8px">Non-refundable raffle ticket</p>`;
+        } else if (event.pricing_mode !== 'paid' && (!event.raffle_entry_cost_cents || event.raffle_entry_cost_cents === 0) && !entriesClosed) {
+            entryStatusHtml = `
+                <button onclick="evtHandleFreeRaffleEntry('${eventId}')" class="evt-raffle-buy">
+                    🎟️ Enter Raffle — Free
+                </button>`;
         } else if (event.pricing_mode === 'paid' && !rsvp?.paid) {
             entryStatusHtml = `<p style="font-size:13px;color:#717171;font-style:italic">Raffle entry included with paid RSVP</p>`;
         }
@@ -575,7 +587,12 @@ async function evtOpenDetail(eventId) {
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
                 <span style="font-size:14px;color:#717171">${raffleEntryCount} ${raffleEntryCount === 1 ? 'entry' : 'entries'}</span>
             </div>
-            ${prizesHtml ? `<div style="border-top:1px solid #ebebeb">${prizesHtml}</div>` : ''}
+            ${prizes.length > 0 ? `
+                <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#717171;margin:12px 0 10px">🏆 Prizes</p>
+                <div>${prizesHtml}</div>
+            ` : `
+                <p style="font-size:13px;color:#999;font-style:italic;margin:12px 0">🏆 Prizes to be announced</p>
+            `}
             <div style="margin-top:16px">${entryStatusHtml}</div>
             ${winnersHtml}
             ${drawBtnHtml}`;

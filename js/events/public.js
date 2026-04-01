@@ -496,11 +496,18 @@ async function pubRenderRaffleSection(event) {
     }
 
     const prizes = event.raffle_prizes || [];
-    const prizesHtml = prizes.map((p, i) => `
-        <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
-            <div class="evt-raffle-rank">${i + 1}</div>
-            <span style="font-size:14px;color:#222;font-weight:500">${pubEscapeHtml(p.label || p.description || p)}</span>
-        </div>`).join('');
+    const ordinal = n => n===1?'1st':n===2?'2nd':n===3?'3rd':`${n}th`;
+    const prizesHtml = prizes.map((p, i) => {
+        const place = p.place || i + 1;
+        return `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#f9f9f4;border-radius:12px;margin-bottom:6px">
+            <div class="evt-raffle-rank">${place}</div>
+            <div>
+                <p style="font-size:13px;color:#717171;font-weight:600;margin:0">${ordinal(place)} Place</p>
+                <p style="font-size:15px;color:#222;font-weight:600;margin:2px 0 0">${pubEscapeHtml(p.label || p.description || p)}</p>
+            </div>
+        </div>`;
+    }).join('');
 
     // Check if current user has raffle entry
     let myEntryHtml = '';
@@ -625,9 +632,11 @@ async function pubRenderRaffleSection(event) {
 
             <!-- Prizes -->
             ${prizes.length > 0 ? `
-                <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#717171;margin-bottom:8px">Prizes</p>
+                <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#717171;margin-bottom:10px">🏆 Prizes</p>
                 <div style="margin-bottom:12px">${prizesHtml}</div>
-            ` : ''}
+            ` : `
+                <p style="font-size:13px;color:#999;font-style:italic;margin-bottom:12px">🏆 Prizes to be announced</p>
+            `}
 
             <!-- Entry status / Locked button -->
             ${myEntryHtml}

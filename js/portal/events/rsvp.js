@@ -138,6 +138,39 @@ async function evtHandleRaffleEntry(eventId) {
     }
 }
 
+// ─── Free Raffle Entry (Signed-in Member) ───────────────
+
+async function evtHandleFreeRaffleEntry(eventId) {
+    try {
+        const event = evtAllEvents.find(e => e.id === eventId);
+        if (!event || !event.raffle_enabled) return;
+
+        const now = new Date();
+        const isClosed  = event.status === 'completed' || event.status === 'cancelled';
+        const isPast    = new Date(event.start_date) < now && event.status !== 'active';
+        const deadlined = event.rsvp_deadline && new Date(event.rsvp_deadline) < now;
+        if (isClosed || isPast || deadlined) {
+            alert('Raffle entries are closed for this event.');
+            return;
+        }
+
+        const { data: session } = await supabaseClient.auth.getSession();
+        if (!session?.session?.user) { alert('Please sign in to enter.'); return; }
+
+        const { error } = await supabaseClient
+            .from('event_raffle_entries')
+            .insert({ event_id: eventId, user_id: session.session.user.id, paid: true });
+
+        if (error) throw error;
+
+        alert('You\'re entered into the raffle! Good luck! 🎟️');
+        evtOpenDetail(eventId);
+    } catch (err) {
+        console.error('Free raffle entry error:', err);
+        alert(err.message || 'Failed to enter raffle. Please try again.');
+    }
+}
+
 // ─── Event Status Updates ───────────────────────────────
 
 async function evtUpdateStatus(eventId, newStatus) {
