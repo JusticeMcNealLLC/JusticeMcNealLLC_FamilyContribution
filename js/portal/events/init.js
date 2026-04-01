@@ -142,7 +142,7 @@ function evtSetupListeners() {
         for (let i = 1; i <= count; i++) {
             html += `<div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-gray-500 w-6">#${i}</span>
-                <input type="text" name="rafflePrize${i}" placeholder="Prize for ${i}${evtOrdinalSuffix ? evtOrdinalSuffix(i) : 'th'} place" class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500">
+                <input type="text" name="rafflePrize" placeholder="Prize for ${i}${evtOrdinalSuffix ? evtOrdinalSuffix(i) : 'th'} place" class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500">
             </div>`;
         }
         container.innerHTML = html;
