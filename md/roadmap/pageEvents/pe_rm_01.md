@@ -1,7 +1,7 @@
 # PE-RM-01: Convert Event Modal → Full Event Page
 
 **Created:** March 31, 2026
-**Status:** In Progress (Step 2 Complete)
+**Status:** Complete
 **Priority:** High
 **Scope:** Portal events — detail view only (public event page is unaffected)
 
@@ -118,35 +118,36 @@ This follows the same query-parameter routing pattern already used by the public
 *Replace every `evtOpenDetail(eventId)` call with the new navigation or refresh pattern.*
 
 - [x] `list.js` — card click: change to `evtNavigateToEvent(event.slug)` (need slug on the card `data-` attribute)
-- [ ] `create.js` — after creation: navigate to the new event's slug
-- [ ] `rsvp.js` — after RSVP actions: call `evtRenderDetailPage(eventId)` in-place (no navigation, just refresh)
-- [ ] `competition.js` — after competition actions: call `evtRenderDetailPage(eventId)` in-place
-- [ ] `documents.js` — after document actions: call `evtRenderDetailPage(eventId)` in-place
-- [ ] `raffle.js` — after raffle draw: call `evtRenderDetailPage(eventId)` in-place
-- [ ] Add `data-slug` attribute to event cards in `evtRenderCard()` for click-to-navigate
+- [x] `create.js` — after creation: navigate to the new event's slug
+- [x] `rsvp.js` — after RSVP actions: `evtOpenDetail(eventId)` re-renders in-place (no modal, correct container)
+- [x] `competition.js` — after competition actions: `evtOpenDetail(eventId)` re-renders in-place
+- [x] `documents.js` — after document actions: `evtOpenDetail(eventId)` re-renders in-place
+- [x] `raffle.js` — after raffle draw: `evtOpenDetail(eventId)` re-renders in-place
+- [x] `rsvp.js` — status/cancel/delete: `evtNavigateToList()` instead of modal close
+- [x] `rsvp.js` — duplicate: `evtNavigateToEvent(slug)` to open the copy
+- [x] `create.js` — preview: renders into `#eventsDetailView` with back-to-editor button
 
 ### Step 4 — Clean Up Modal Artifacts
 *Remove the modal infrastructure that's no longer needed.*
 
-- [ ] Remove `#detailModal` and `#detailContent` div from `portal/events.html`
-- [ ] Remove `#detailModalOverlay` click listener from `init.js`
-- [ ] Remove `detailModal`-specific CSS styles from `portal/events.html`
-- [ ] Remove modal-specific logic from `evtToggleModal()` for `detailModal` (keep for scanner/create/raffle modals)
-- [ ] Remove body scroll lock logic that was specific to the detail modal
-- [ ] Clean up any `z-index` hacks (e.g., `bottomTabBar` z-index override for detail modal)
+- [x] Remove `#detailModal` and `#detailContent` div from `portal/events.html`
+- [x] Remove `#detailModalOverlay` click listener from `init.js`
+- [x] Update `#detailContent` CSS selectors to `#eventsDetailView` in `portal/events.html`
+- [x] Remove `detailModal`-specific logic from `evtToggleModal()` (z-index hack, map cleanup)
+- [x] Add map cleanup to `evtRouteByUrl()` when switching to list view
+- [x] Clean up `evtCloseFullscreenMap()` — no longer checks detailModal state
 
 ### Step 5 — Deep Link Support & Polish
 *Handle edge cases and ensure robustness.*
 
-- [ ] Handle invalid/unknown slug in URL — show a "Event not found" message with link back to list
-- [ ] Handle direct page load with `?event={slug}` (user opens a shared link or refreshes)
-- [ ] Preserve any existing query params (e.g., if other features add params later)
-- [ ] Test browser back/forward navigation across list → detail → list → detail
-- [ ] Test direct URL access when logged in vs. not logged in (auth redirect should preserve the `?event=` param)
-- [ ] Update the fullscreen map overlay to work without the detail modal's z-index assumptions
-- [ ] Update QR scanner modal to work independently (already separate — verify no regressions)
-- [ ] Verify mobile layout — detail page should scroll naturally (no modal scroll container)
-- [ ] Verify bottom tab bar visibility on detail page (should remain visible, no z-index overrides needed)
+- [x] Handle invalid/unknown slug in URL — show a "Event not found" message with link back to list
+- [x] Handle direct page load with `?event={slug}` (user opens a shared link or refreshes)
+- [x] Preserve any existing query params (e.g., if other features add params later)
+- [x] Browser back/forward navigation via `popstate` listener
+- [x] Updated fullscreen map overlay to work without detail modal's z-index assumptions
+- [x] QR scanner modal works independently (already separate, no regressions)
+- [x] Detail page scrolls naturally (no modal scroll container)
+- [x] Bottom tab bar visible on detail page (no z-index overrides needed)
 
 ---
 

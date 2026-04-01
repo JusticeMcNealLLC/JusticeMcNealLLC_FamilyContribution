@@ -55,7 +55,7 @@
         .modal-panel { max-height: 90vh; }
         @media (max-width: 640px) {
             .modal-panel { max-height: 100dvh; max-height: -webkit-fill-available; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
-            #detailContent { padding-bottom: env(safe-area-inset-bottom, 0px); }
+            #eventsDetailView { padding-bottom: env(safe-area-inset-bottom, 0px); }
         }
         #scannerVideo { width: 100%; border-radius: 12px; }
 
@@ -148,20 +148,20 @@
         .evt-progress-fill { height:100%; border-radius:4px; background:#222; transition:width .3s ease; }
         .evt-progress-fill.met { background:#059669; }
         /* Normalize sub-section backgrounds in detail view */
-        #detailContent [class*="bg-gradient-to-br"] { background:#f7f7f7 !important; }
-        #detailContent [class*="bg-amber-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
-        #detailContent [class*="bg-emerald-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
-        #detailContent [class*="bg-blue-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
-        #detailContent [class*="bg-orange-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
-        #detailContent [class*="bg-brand-50"]:not(.evt-tag):not(.evt-rsvp-btn) { background:#f7f7f7 !important; }
-        #detailContent [class*="bg-surface-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
-        #detailContent [class*="border-amber-200"] { border-color:#e5e5e5 !important; }
-        #detailContent [class*="border-emerald-200"] { border-color:#e5e5e5 !important; }
-        #detailContent [class*="border-blue-200"] { border-color:#e5e5e5 !important; }
-        #detailContent [class*="border-orange-200"] { border-color:#e5e5e5 !important; }
-        #detailContent [class*="border-brand-200"] { border-color:#e5e5e5 !important; }
-        #detailContent [class*="bg-red-50"] { background:#fef2f2 !important; }
-        #detailContent [class*="border-red-200"] { border-color:#fecaca !important; }
+        #eventsDetailView [class*="bg-gradient-to-br"] { background:#f7f7f7 !important; }
+        #eventsDetailView [class*="bg-amber-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
+        #eventsDetailView [class*="bg-emerald-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
+        #eventsDetailView [class*="bg-blue-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
+        #eventsDetailView [class*="bg-orange-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
+        #eventsDetailView [class*="bg-brand-50"]:not(.evt-tag):not(.evt-rsvp-btn) { background:#f7f7f7 !important; }
+        #eventsDetailView [class*="bg-surface-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
+        #eventsDetailView [class*="border-amber-200"] { border-color:#e5e5e5 !important; }
+        #eventsDetailView [class*="border-emerald-200"] { border-color:#e5e5e5 !important; }
+        #eventsDetailView [class*="border-blue-200"] { border-color:#e5e5e5 !important; }
+        #eventsDetailView [class*="border-orange-200"] { border-color:#e5e5e5 !important; }
+        #eventsDetailView [class*="border-brand-200"] { border-color:#e5e5e5 !important; }
+        #eventsDetailView [class*="bg-red-50"] { background:#fef2f2 !important; }
+        #eventsDetailView [class*="border-red-200"] { border-color:#fecaca !important; }
         @media(max-width:640px){ .evt-stats-grid { grid-template-columns:repeat(2,1fr); } }
 
         /* ═══ Hero Status Badge (matches public page) ═══ */
@@ -800,16 +800,6 @@
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- ─── Event Detail Modal ────────────────────────────── -->
-    <div id="detailModal" class="fixed inset-0 z-[60] hidden">
-        <div class="modal-overlay absolute inset-0 bg-black/40" id="detailModalOverlay"></div>
-        <div class="absolute inset-0 flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-            <div class="modal-panel bg-white w-full sm:max-w-4xl sm:rounded-2xl shadow-2xl overflow-y-auto min-h-screen sm:min-h-0">
-                <div id="detailContent"></div>
             </div>
         </div>
     </div>

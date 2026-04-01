@@ -604,8 +604,8 @@ async function evtHandleCreate(e) {
         // Reload events
         await evtLoadEvents();
 
-        // Open the new event
-        evtOpenDetail(data.id);
+        // Navigate to the new event page
+        evtNavigateToEvent(data.slug);
     } catch (err) {
         console.error('Create event error:', err);
         alert(`Failed to create event: ${err.message}`);
@@ -632,14 +632,15 @@ function evtHandlePreview() {
     const gateTime = document.getElementById('gateTime').checked;
     const gateLocation = document.getElementById('gateLocation').checked;
 
-    document.getElementById('detailContent').innerHTML = `
+    document.getElementById('eventsDetailView').innerHTML = `
         <div class="relative" style="${bannerBg} min-height:280px;">
             <!-- Gradient scrim for text readability -->
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 pointer-events-none"></div>
-            <!-- Close button — respects Dynamic Island -->
-            <div class="absolute top-0 right-0" style="padding-top:max(1rem, env(safe-area-inset-top)); padding-right:1rem;">
-                <button onclick="evtToggleModal('detailModal',false)" class="w-8 h-8 bg-black/30 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-black/50 transition">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <!-- Back to create button -->
+            <div class="absolute top-0 left-0" style="padding-top:max(1rem, env(safe-area-inset-top)); padding-left:1rem;">
+                <button onclick="evtClosePreview()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 hover:bg-black/50 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Back to Editor
                 </button>
             </div>
             <!-- Preview tag + Title at bottom of banner -->
@@ -663,5 +664,15 @@ function evtHandlePreview() {
             </div>
         </div>
     `;
-    evtToggleModal('detailModal', true);
+    // Hide create modal and list, show preview in detail view
+    evtToggleModal('createModal', false);
+    document.getElementById('eventsListView')?.classList.add('hidden');
+    document.getElementById('eventsDetailView')?.classList.remove('hidden');
+}
+
+function evtClosePreview() {
+    document.getElementById('eventsDetailView').innerHTML = '';
+    document.getElementById('eventsDetailView')?.classList.add('hidden');
+    document.getElementById('eventsListView')?.classList.remove('hidden');
+    evtToggleModal('createModal', true);
 }

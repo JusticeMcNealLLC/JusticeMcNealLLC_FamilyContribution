@@ -979,11 +979,7 @@ function evtCloseFullscreenMap() {
     const overlay = document.getElementById('fullscreenMapOverlay');
     if (overlay) overlay.classList.add('hidden');
     if (_fullscreenMap) { _fullscreenMap.remove(); _fullscreenMap = null; }
-    // Restore scroll only if detail modal is closed
-    const detailModal = document.getElementById('detailModal');
-    if (!detailModal || detailModal.classList.contains('hidden')) {
-        document.body.style.overflow = '';
-    }
+    document.body.style.overflow = '';
 }
 
 // ═══════════════════════════════════════════════════════════

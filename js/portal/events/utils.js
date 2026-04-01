@@ -14,21 +14,12 @@ function evtBadgeChip(badgeKey) {
 function evtToggleModal(id, show) {
     const modal = document.getElementById(id);
     if (!modal) return;
-    const tabBar = document.getElementById('bottomTabBar');
     if (show) {
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
-        // Bring bottom nav above the detail modal on mobile
-        if (id === 'detailModal' && tabBar) tabBar.style.zIndex = '70';
     } else {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
-        // Reset bottom nav z-index
-        if (id === 'detailModal' && tabBar) tabBar.style.zIndex = '';
-        // Cleanup map when closing detail modal
-        if (id === 'detailModal' && typeof evtCleanupMap === 'function') {
-            evtCleanupMap();
-        }
     }
 }
 
@@ -99,6 +90,7 @@ function evtRouteByUrl() {
         detailView.innerHTML = '';
         listView.classList.remove('hidden');
         document.title = 'Events | Justice McNeal LLC';
+        if (typeof evtCleanupMap === 'function') evtCleanupMap();
     }
 }
 

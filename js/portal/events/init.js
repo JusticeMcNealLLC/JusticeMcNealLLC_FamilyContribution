@@ -81,9 +81,6 @@ function evtSetupListeners() {
     document.getElementById('closeCreateModal')?.addEventListener('click', () => evtToggleModal('createModal', false));
     document.getElementById('createModalOverlay')?.addEventListener('click', () => evtToggleModal('createModal', false));
 
-    // Detail modal
-    document.getElementById('detailModalOverlay')?.addEventListener('click', () => evtToggleModal('detailModal', false));
-
     // Scanner modal
     document.getElementById('closeScannerModal')?.addEventListener('click', evtCloseScanner);
     document.getElementById('scannerModalOverlay')?.addEventListener('click', evtCloseScanner);

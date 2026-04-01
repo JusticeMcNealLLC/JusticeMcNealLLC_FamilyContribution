@@ -152,7 +152,7 @@ async function evtUpdateStatus(eventId, newStatus) {
         if (error) throw error;
 
         await evtLoadEvents();
-        evtToggleModal('detailModal', false);
+        evtNavigateToList();
     } catch (err) {
         console.error('Status update error:', err);
         alert('Failed to update event status.');
@@ -297,7 +297,7 @@ async function evtCancelEvent(eventId) {
 
         alert(result.message || 'Event cancelled successfully.');
         await evtLoadEvents();
-        evtToggleModal('detailModal', false);
+        evtNavigateToList();
     } catch (err) {
         console.error('Cancel event error:', err);
         alert('Failed to cancel event: ' + (err.message || 'Unknown error'));
@@ -407,7 +407,7 @@ async function evtDeleteEvent(eventId) {
         if (error) throw error;
 
         alert('Event deleted successfully.');
-        evtToggleModal('detailModal', false);
+        evtNavigateToList();
         await evtLoadEvents();
     } catch (err) {
         console.error('Delete event error:', err);
@@ -493,7 +493,12 @@ async function evtDuplicateEvent(eventId) {
 
         alert('Event duplicated! Opening the copy in draft mode.');
         await evtLoadEvents();
-        await evtOpenDetail(newEvent.id);
+        const dupEvent = evtAllEvents.find(e => e.id === newEvent.id);
+        if (dupEvent && dupEvent.slug) {
+            evtNavigateToEvent(dupEvent.slug);
+        } else {
+            await evtOpenDetail(newEvent.id);
+        }
     } catch (err) {
         console.error('Duplicate event error:', err);
         alert('Failed to duplicate event: ' + (err.message || 'Unknown error'));
