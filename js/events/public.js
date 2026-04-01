@@ -323,7 +323,7 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     }
 
     // Guest lookup section (show for public events when not signed in and no guest ticket showing)
-    if (!pubCurrentUser && !pubGuestRsvp && !event.member_only) {
+    if (!pubCurrentUser && !pubGuestRsvp && !event.member_only && event.rsvp_enabled !== false) {
         document.getElementById('guestLookupSection').classList.remove('hidden');
     }
 
@@ -364,9 +364,23 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
 /* ── RSVP Section ────────────────────────── */
 function pubRenderRsvpSection(event) {
     const section = document.getElementById('rsvpSection');
+    const rsvpEnabled = event.rsvp_enabled !== false;
     const isClosed = event.status === 'completed' || event.status === 'cancelled';
     const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
     const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
+
+    // RSVP disabled for this event — show informational card
+    if (!rsvpEnabled) {
+        section.innerHTML = `
+            <div class="evt-info-card">
+                <span class="evt-info-card-icon">ℹ️</span>
+                <div>
+                    <p class="evt-info-card-title">Informational Event</p>
+                    <p class="evt-info-card-sub">RSVP is not required for this event</p>
+                </div>
+            </div>`;
+        return;
+    }
 
     if (isClosed || isPast || deadlinePassed) {
         // Status is already shown in the banner near the date — hide RSVP section entirely
@@ -1041,6 +1055,12 @@ async function pubHandleTicketScan(event, ticketToken) {
 function pubRenderGuestRsvpSection(event) {
     const section = document.getElementById('guestRsvpSection');
     if (!section) return;
+
+    // Hide guest RSVP when RSVP is disabled for this event
+    if (event.rsvp_enabled === false) {
+        section.classList.add('hidden');
+        return;
+    }
 
     // Only show for non-signed-in visitors on non-member-only events
     if (pubCurrentUser || event.member_only || pubGuestRsvp) {
