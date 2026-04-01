@@ -196,6 +196,18 @@ async function loadMembers() {
         const depMap = {};
         (depositTotals || []).forEach(d => { depMap[d.member_id] = (depMap[d.member_id] || 0) + (d.amount_cents || 0); });
 
+        // Fetch member roles with role details
+        const { data: memberRoles } = await supabaseClient
+            .from('member_roles')
+            .select('user_id, roles(id, name, color, icon, position, is_system)')
+            .order('roles(position)', { ascending: true });
+        const roleMap = {};
+        (memberRoles || []).forEach(mr => {
+            if (!mr.roles) return;
+            if (!roleMap[mr.user_id]) roleMap[mr.user_id] = [];
+            roleMap[mr.user_id].push(mr.roles);
+        });
+
         grid.innerHTML = profiles.map(p => {
             const sub = subMap[p.id];
             const total = (invMap[p.id] || 0) + (depMap[p.id] || 0);
@@ -204,6 +216,12 @@ async function loadMembers() {
             const avatarCls = getAvatarColor(p.email);
             const displayName = (p.first_name && p.last_name) ? `${p.first_name} ${p.last_name}` : p.email;
             const hasPhoto = !!p.profile_picture_url;
+            const memberRoleList = roleMap[p.id] || [];
+            const roleChips = memberRoleList.map(r => {
+                const bg = r.color ? `${r.color}20` : '#e0e7ff';
+                const fg = r.color || '#4f46e5';
+                return `<span class="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style="background:${bg};color:${fg}">${r.icon ? r.icon + ' ' : ''}${r.name}</span>`;
+            }).join('');
 
             return `
                 <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover cursor-pointer" onclick="openMemberModal('${p.id}')">
@@ -215,7 +233,7 @@ async function loadMembers() {
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="text-sm font-semibold text-gray-900 truncate">${displayName}</span>
-                                ${isAdmin ? '<span class="bg-brand-100 text-brand-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-md">Admin</span>' : ''}
+                                ${roleChips}
                                 ${getOnboardingBadge(p.setup_completed)}
                             </div>
                             ${(p.first_name && p.last_name) ? `<div class="text-xs text-gray-400 truncate">${p.email}</div>` : ''}
@@ -390,6 +408,10 @@ async function openMemberModal(userId) {
     document.getElementById('modalAmount').textContent = '$--';
     document.getElementById('modalTotal').textContent = '$--';
     document.getElementById('modalTransactions').innerHTML = '<div class="text-gray-400 text-center py-6 text-sm">Loading...</div>';
+    const roleAssignReset = document.getElementById('modalRoleAssignment');
+    if (roleAssignReset) roleAssignReset.innerHTML = '<div class="text-gray-400 text-center py-2 text-sm">Loading roles...</div>';
+    const roleWarnReset = document.getElementById('modalRoleWarning');
+    if (roleWarnReset) roleWarnReset.classList.add('hidden');
 
     try {
         const { data: profile, error: pErr } = await supabaseClient
@@ -416,7 +438,28 @@ async function openMemberModal(userId) {
 
         document.getElementById('modalMemberName').textContent = displayName;
         document.getElementById('modalMemberEmail').textContent = profile.email;
-        document.getElementById('modalMemberRole').textContent = profile.role === 'admin' ? 'Administrator' : 'Member';
+
+        // Fetch all roles + this member's assigned roles for the modal
+        const [allRolesRes, userRolesRes] = await Promise.all([
+            supabaseClient.from('roles').select('id, name, color, icon, position, is_system, role_permissions(permission)').order('position'),
+            supabaseClient.from('member_roles').select('role_id').eq('user_id', userId),
+        ]);
+        const allRoles = allRolesRes.data || [];
+        const userRoleIds = new Set((userRolesRes.data || []).map(r => r.role_id));
+
+        // Show role chips in header
+        const headerRoles = allRoles.filter(r => userRoleIds.has(r.id));
+        const modalRoleEl = document.getElementById('modalMemberRole');
+        if (modalRoleEl) {
+            modalRoleEl.innerHTML = headerRoles.map(r => {
+                const bg = r.color ? `${r.color}20` : '#e0e7ff';
+                const fg = r.color || '#4f46e5';
+                return `<span class="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md mr-1" style="background:${bg};color:${fg}">${r.icon ? r.icon + ' ' : ''}${r.name}</span>`;
+            }).join('') || '<span class="text-xs text-gray-400">No roles</span>';
+        }
+
+        // Render role assignment checkboxes
+        renderRoleAssignment(userId, allRoles, userRoleIds);
 
         // Profile details section
         const detailsEl = document.getElementById('modalProfileDetails');
@@ -442,7 +485,7 @@ async function openMemberModal(userId) {
             }
             detailsHTML += `<div class="flex justify-between py-2">
                 <span class="text-xs text-gray-500">Role</span>
-                <span class="text-xs font-medium text-gray-900">${profile.role === 'admin' ? 'Administrator' : 'Member'}</span>
+                <span class="text-xs font-medium text-gray-900">${headerRoles.map(r => r.name).join(', ') || 'Member'}</span>
             </div>`;
             detailsHTML += `<div class="flex justify-between items-center py-2 border-t border-gray-50">
                 <span class="text-xs text-gray-500">Leadership Title</span>
@@ -622,6 +665,129 @@ async function saveLeadershipTitle(userId, selectEl) {
         setTimeout(() => { selectEl.style.borderColor = ''; }, 1500);
     } finally {
         selectEl.disabled = false;
+    }
+}
+
+// ─── Role Assignment ─────────────────────────────────────
+
+const OWNER_ROLE_ID = '00000000-0000-0000-0000-000000000001';
+
+function renderRoleAssignment(userId, allRoles, userRoleIds) {
+    const container = document.getElementById('modalRoleAssignment');
+    if (!container) return;
+
+    const currentUserIsOwner = window.__userRoles && window.__userRoles.some(r => r.id === OWNER_ROLE_ID);
+
+    container.innerHTML = allRoles.map(r => {
+        const checked = userRoleIds.has(r.id);
+        const isOwnerRole = r.id === OWNER_ROLE_ID;
+        const disabled = isOwnerRole && !currentUserIsOwner;
+        const bg = r.color ? `${r.color}20` : '#f3f4f6';
+        const fg = r.color || '#4f46e5';
+        const borderCls = checked ? `border-current` : 'border-gray-200';
+
+        return `
+            <label class="flex items-center gap-3 p-2.5 rounded-xl border ${borderCls} cursor-pointer hover:bg-gray-50 transition${disabled ? ' opacity-50 pointer-events-none' : ''}" style="${checked ? `border-color:${fg}; background:${bg}` : ''}">
+                <input type="checkbox" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}
+                    onchange="toggleMemberRole('${userId}', '${r.id}', this.checked)"
+                    class="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                <span class="inline-flex items-center gap-1 text-sm font-medium" style="color:${fg}">
+                    ${r.icon ? r.icon : ''} ${r.name}
+                </span>
+                ${isOwnerRole && !currentUserIsOwner ? '<span class="ml-auto text-[10px] text-gray-400">Owner only</span>' : ''}
+                ${r.is_system ? '<span class="ml-auto text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">System</span>' : ''}
+            </label>`;
+    }).join('');
+
+    updateRoleWarning(userId, allRoles, userRoleIds);
+}
+
+function updateRoleWarning(userId, allRoles, userRoleIds) {
+    const warning = document.getElementById('modalRoleWarning');
+    if (!warning) return;
+
+    // Check if user has any role with admin.dashboard permission
+    const adminRoles = allRoles.filter(r =>
+        userRoleIds.has(r.id) &&
+        (r.role_permissions || []).some(rp => rp.permission === 'admin.dashboard')
+    );
+
+    if (adminRoles.length <= 1 && adminRoles.length > 0) {
+        warning.classList.remove('hidden');
+    } else {
+        warning.classList.add('hidden');
+    }
+}
+
+async function toggleMemberRole(userId, roleId, assign) {
+    const container = document.getElementById('modalRoleAssignment');
+    // Disable all checkboxes during operation
+    container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = true);
+
+    try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        const actorId = user.id;
+
+        if (assign) {
+            const { error } = await supabaseClient
+                .from('member_roles')
+                .insert({ user_id: userId, role_id: roleId, granted_by: actorId });
+            if (error) throw error;
+
+            // Audit log
+            await supabaseClient.from('role_audit_log').insert({
+                actor_id: actorId,
+                action: 'role_assigned',
+                target_user_id: userId,
+                role_id: roleId,
+                details: {}
+            });
+        } else {
+            const { error } = await supabaseClient
+                .from('member_roles')
+                .delete()
+                .eq('user_id', userId)
+                .eq('role_id', roleId);
+            if (error) throw error;
+
+            // Audit log
+            await supabaseClient.from('role_audit_log').insert({
+                actor_id: actorId,
+                action: 'role_removed',
+                target_user_id: userId,
+                role_id: roleId,
+                details: {}
+            });
+        }
+
+        // Re-fetch to get updated state
+        const [allRolesRes, userRolesRes] = await Promise.all([
+            supabaseClient.from('roles').select('id, name, color, icon, position, is_system, role_permissions(permission)').order('position'),
+            supabaseClient.from('member_roles').select('role_id').eq('user_id', userId),
+        ]);
+        const allRoles = allRolesRes.data || [];
+        const userRoleIds = new Set((userRolesRes.data || []).map(r => r.role_id));
+
+        renderRoleAssignment(userId, allRoles, userRoleIds);
+
+        // Update header role chips
+        const headerRoles = allRoles.filter(r => userRoleIds.has(r.id));
+        const modalRoleEl = document.getElementById('modalMemberRole');
+        if (modalRoleEl) {
+            modalRoleEl.innerHTML = headerRoles.map(r => {
+                const bg = r.color ? `${r.color}20` : '#e0e7ff';
+                const fg = r.color || '#4f46e5';
+                return `<span class="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md mr-1" style="background:${bg};color:${fg}">${r.icon ? r.icon + ' ' : ''}${r.name}</span>`;
+            }).join('') || '<span class="text-xs text-gray-400">No roles</span>';
+        }
+
+        // Refresh member list in background
+        loadMembers();
+    } catch (err) {
+        console.error('Error toggling role:', err);
+        alert('Failed to update role: ' + (err.message || err));
+        // Re-enable checkboxes on error
+        container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = false);
     }
 }
 

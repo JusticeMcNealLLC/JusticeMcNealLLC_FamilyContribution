@@ -129,15 +129,15 @@ Roles are named groups with a set of **permissions** (boolean flags). Members ca
   - [x] Owner always at top, Member always at bottom
   - [x] Position determines hierarchy display in member profiles
 
-### Step 4 — Admin Page: Member Role Assignment
-- [ ] Add "Roles" column to existing `admin/members.html` table
-  - [ ] Show colored role chips next to each member name
-  - [ ] Click member row → role assignment panel
-- [ ] **Role assignment panel:**
-  - [ ] Checkboxes for each role (multi-select — members can hold multiple roles)
-  - [ ] Owner role: only assignable by another Owner
-  - [ ] Show warning when removing last admin-level role from a member
-  - [ ] Changes write to `member_roles` + `role_audit_log`
+### Step 4 — Admin Page: Member Role Assignment ✅
+- [x] Add "Roles" column to existing `admin/members.html` table
+  - [x] Show colored role chips next to each member name
+  - [x] Click member row → role assignment panel
+- [x] **Role assignment panel:**
+  - [x] Checkboxes for each role (multi-select — members can hold multiple roles)
+  - [x] Owner role: only assignable by another Owner
+  - [x] Show warning when removing last admin-level role from a member
+  - [x] Changes write to `member_roles` + `role_audit_log`
 - [ ] **Bulk actions:**
   - [ ] Select multiple members → "Assign Role" / "Remove Role" dropdown
   - [ ] Confirmation: "Apply [Role] to X members?"
