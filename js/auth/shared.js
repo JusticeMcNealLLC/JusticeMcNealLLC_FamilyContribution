@@ -1,6 +1,61 @@
 // Shared authentication utilities
 // Loaded on every portal and admin page
 
+// ── Permissions Cache ─────────────────────────────────────
+// Populated by checkAuth(), consumed by hasPermission() helpers.
+window.__userRoles = null;       // Array of { id, name, color, icon, position }
+window.__userPermissions = null; // Set<string> of permission keys
+
+async function loadUserPermissions(userId) {
+    if (window.__userPermissions) return;
+
+    const { data: memberRoles, error } = await supabaseClient
+        .from('member_roles')
+        .select(`
+            roles (
+                id, name, color, icon, position,
+                role_permissions ( permission )
+            )
+        `)
+        .eq('user_id', userId);
+
+    if (error || !memberRoles) {
+        window.__userRoles = [];
+        window.__userPermissions = new Set();
+        return;
+    }
+
+    window.__userRoles = memberRoles
+        .map(mr => mr.roles)
+        .filter(Boolean)
+        .sort((a, b) => a.position - b.position);
+
+    const perms = new Set();
+    for (const role of window.__userRoles) {
+        for (const rp of (role.role_permissions || [])) {
+            perms.add(rp.permission);
+        }
+    }
+    window.__userPermissions = perms;
+}
+
+/** Check a single permission key, e.g. hasPermission('finance.expenses') */
+function hasPermission(key) {
+    return window.__userPermissions?.has(key) ?? false;
+}
+
+/** TRUE if user has at least one of the listed permissions */
+function hasAnyPermission(keys) {
+    if (!window.__userPermissions) return false;
+    return keys.some(k => window.__userPermissions.has(k));
+}
+
+/** TRUE if user has every one of the listed permissions */
+function hasAllPermissions(keys) {
+    if (!window.__userPermissions) return false;
+    return keys.every(k => window.__userPermissions.has(k));
+}
+
 // Check if user is logged in
 // skipOnboardingCheck: set true on the onboarding page itself to avoid redirect loops
 async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
@@ -44,6 +99,9 @@ async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
             }
         }
     }
+
+    // Load roles + permissions into global cache
+    await loadUserPermissions(session.user.id);
 
     return session.user;
 }

@@ -97,13 +97,13 @@ Roles are named groups with a set of **permissions** (boolean flags). Members ca
 - [x] Create `public.is_owner()` SQL function — checks if user has the Owner system role
 - [x] Add indexes: `member_roles(user_id)`, `member_roles(role_id)`, `role_permissions(permission)`
 
-### Step 2 — Migration Bridge: Backward Compatibility
+### Step 2 — Migration Bridge: Backward Compatibility ✅
 - [x] Migrate existing `admin` users → assign them the **Owner** role in `member_roles`
 - [x] Migrate existing `member` users → assign them the **Member** role in `member_roles`
-- [ ] Keep `profiles.role` column for now (read-only, synced via trigger on `member_roles` changes)
-- [ ] Create trigger: when `member_roles` changes, update `profiles.role` to `'admin'` if user has any role with `admin.dashboard`, else `'member'`
-- [ ] `is_admin()` function stays working during transition — no RLS policies need to change yet
-- [ ] Update `checkAuth()` to also fetch user's roles + permissions and expose `userPermissions` globally
+- [x] Keep `profiles.role` column for now (read-only, synced via trigger on `member_roles` changes)
+- [x] Create trigger: when `member_roles` changes, update `profiles.role` to `'admin'` if user has any role with `admin.dashboard`, else `'member'`
+- [x] `is_admin()` function stays working during transition — no RLS policies need to change yet
+- [x] Update `checkAuth()` to also fetch user's roles + permissions and expose `userPermissions` globally
 
 ### Step 3 — Admin Page: Roles Management UI
 - [ ] Create `admin/roles.html` — protected by `checkAuth(true)` + `admin.roles` permission
