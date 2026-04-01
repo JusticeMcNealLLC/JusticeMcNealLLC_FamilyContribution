@@ -198,17 +198,17 @@ Roles are named groups with a set of **permissions** (boolean flags). Members ca
   - [x] `sync-subscription` → `admin.members`
   - [x] `process-event-cancellation` → `events.manage_all`
 
-### Step 7 — Audit Log & Role Display
-- [ ] **Audit log page** (within roles admin):
-  - [ ] Filterable table: who changed what role, for whom, when
-  - [ ] Actions: `role_created`, `role_updated`, `role_deleted`, `role_assigned`, `role_removed`, `permissions_changed`
-- [ ] **Member profile cosmetic integration:**
-  - [ ] Show highest-positioned role as colored chip on profile
-  - [ ] Role color appears in member lists, event attendee lists, feed posts
-  - [ ] Multiple roles visible on full profile page (click to expand)
-- [ ] **Portal visibility:**
-  - [ ] Members can see their own roles on settings page
-  - [ ] Role names visible on other members' profiles (role chips)
+### Step 7 — Audit Log & Role Display ✅
+- [x] **Audit log page** (within roles admin):
+  - [x] Filterable table: who changed what role, for whom, when
+  - [x] Actions: `role_created`, `role_updated`, `role_deleted`, `role_assigned`, `role_removed`, `permissions_changed`
+- [x] **Member profile cosmetic integration:**
+  - [x] Show highest-positioned role as colored chip on profile
+  - [x] Role color appears in member lists, event attendee lists, feed posts
+  - [x] Multiple roles visible on full profile page (click to expand)
+- [x] **Portal visibility:**
+  - [x] Members can see their own roles on settings page
+  - [x] Role names visible on other members' profiles (role chips)
 
 ---
 

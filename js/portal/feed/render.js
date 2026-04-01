@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════
 
 // ─── Render a single post card ──────────────────────────
-function renderPostCard(post) {
+function renderPostCard(post, roleMap) {
     const author = post.author || {};
     const fi = (author.first_name || '')[0] || '';
     const li = (author.last_name || '')[0] || '';
@@ -12,6 +12,14 @@ function renderPostCard(post) {
     const photoUrl = author.profile_picture_url;
     const authorId = author.id;
     const displayedBadge = author.displayed_badge;
+
+    // Build role chips for this author
+    const authorRoles = (roleMap && roleMap[post.author_id]) || [];
+    const roleChipsHtml = authorRoles.map(r => {
+        const bg = r.color ? `${r.color}20` : '#e0e7ff';
+        const fg = r.color || '#4f46e5';
+        return `<span class="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style="background:${bg};color:${fg}">${r.icon ? r.icon + ' ' : ''}${r.name}</span>`;
+    }).join('');
 
     // Build badge overlay HTML for feed avatars
     let avatarBadgeHtml = '';
@@ -89,6 +97,7 @@ function renderPostCard(post) {
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
                     <a href="profile.html?id=${authorId}" class="font-semibold text-gray-900 text-sm hover:underline">${name}</a>
+                    ${roleChipsHtml}
                     ${badge}
                 </div>
                 <p class="text-[10px] text-gray-400">${timeAgo}</p>
@@ -131,6 +140,7 @@ function renderPostCard(post) {
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
                     <a href="profile.html?id=${authorId}" class="font-semibold text-gray-900 text-sm hover:underline">${name}</a>
+                    ${roleChipsHtml}
                     ${badge}
                 </div>
             </div>

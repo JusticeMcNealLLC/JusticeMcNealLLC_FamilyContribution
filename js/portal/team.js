@@ -75,6 +75,22 @@
             return;
         }
 
+        // Fetch member_roles for all members
+        const memberIds = members.map(m => m.id);
+        let teamRoleMap = {};
+        if (memberIds.length) {
+            const { data: mr } = await supabaseClient
+                .from('member_roles')
+                .select('user_id, roles(id, name, color, icon, position)')
+                .in('user_id', memberIds)
+                .order('roles(position)', { ascending: true });
+            (mr || []).forEach(r => {
+                if (!r.roles) return;
+                if (!teamRoleMap[r.user_id]) teamRoleMap[r.user_id] = [];
+                teamRoleMap[r.user_id].push(r.roles);
+            });
+        }
+
         // Only show members with a leadership title assigned
         const leaders = members.filter(m => m.title && ROLE_ORDER.includes(m.title));
 
@@ -85,12 +101,12 @@
             return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
         });
 
-        renderLeadership(leaders);
+        renderLeadership(leaders, teamRoleMap);
         renderOrgChart(leaders);
     }
 
     // ─── Render Leadership Cards ────────────────────────────
-    function renderLeadership(leaders) {
+    function renderLeadership(leaders, teamRoleMap) {
         const grid = document.getElementById('leadershipGrid');
         if (!grid) return;
 
@@ -99,11 +115,11 @@
             return;
         }
 
-        grid.innerHTML = leaders.map(m => buildCard(m, true)).join('');
+        grid.innerHTML = leaders.map(m => buildCard(m, true, teamRoleMap)).join('');
     }
 
     // ─── Build a Member Card ────────────────────────────────
-    function buildCard(member, isLeader) {
+    function buildCard(member, isLeader, teamRoleMap) {
         const fullName = [member.first_name, member.last_name].filter(Boolean).join(' ') || 'Member';
         const initials = ((member.first_name || '?')[0] + (member.last_name || '')[0]).toUpperCase();
         const title = member.title || 'Member';
@@ -133,6 +149,14 @@
 
         const bio = member.bio ? `<p class="text-xs text-gray-400 mt-1 line-clamp-2">${escapeHtml(member.bio)}</p>` : '';
 
+        // RBAC role chips
+        const memberRoles = (teamRoleMap && teamRoleMap[member.id]) || [];
+        const rbacChips = memberRoles.map(r => {
+            const bg = r.color ? `${r.color}20` : '#e0e7ff';
+            const fg = r.color || '#4f46e5';
+            return `<span class="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style="background:${bg};color:${fg}">${r.icon ? r.icon + ' ' : ''}${r.name}</span>`;
+        }).join('');
+
         return `
             <a href="profile.html?id=${member.id}" class="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition group">
                 <div class="relative flex-shrink-0">
@@ -144,8 +168,9 @@
                         <h3 class="text-sm font-bold text-gray-900 truncate group-hover:text-brand-600 transition">${escapeHtml(fullName)}</h3>
                         ${isLeader ? `<span class="text-sm">${roleDef.icon}</span>` : ''}
                     </div>
-                    <div class="flex items-center gap-2 mt-0.5">
+                    <div class="flex items-center gap-2 mt-0.5 flex-wrap">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${colors.bg} ${colors.text}">${title}</span>
+                        ${rbacChips}
                         ${since ? `<span class="text-[10px] text-gray-400">Since ${since}</span>` : ''}
                     </div>
                     ${bio}

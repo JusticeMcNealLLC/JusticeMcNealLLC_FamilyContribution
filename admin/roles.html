@@ -86,12 +86,45 @@
             </div>
         </div>
 
-        <!-- Role List -->
-        <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden">
+        <!-- Tabs: Roles | Audit Log -->
+        <div class="flex border-b border-gray-200 mb-0">
+            <button id="tabRoles" class="roles-tab flex-1 py-2.5 text-sm font-semibold text-center border-b-2 border-brand-600 text-brand-700 transition" data-tab="roles">Roles</button>
+            <button id="tabAudit" class="roles-tab flex-1 py-2.5 text-sm font-semibold text-center border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition" data-tab="audit">Audit Log</button>
+        </div>
+
+        <!-- Tab: Role List -->
+        <div id="panelRoles" class="bg-white rounded-b-2xl border border-t-0 border-gray-200/80 overflow-hidden">
             <div id="roleList" class="divide-y divide-gray-100">
                 <!-- Skeleton rows -->
                 <div class="p-5 flex items-center gap-4"><div class="skeleton h-5 w-40 rounded-lg"></div></div>
                 <div class="p-5 flex items-center gap-4"><div class="skeleton h-5 w-36 rounded-lg"></div></div>
+            </div>
+        </div>
+
+        <!-- Tab: Audit Log -->
+        <div id="panelAudit" class="hidden">
+            <div class="bg-white rounded-b-2xl border border-t-0 border-gray-200/80 overflow-hidden">
+                <!-- Filter bar -->
+                <div class="px-4 py-3 border-b border-gray-100 flex flex-col sm:flex-row gap-2">
+                    <select id="auditActionFilter" class="text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                        <option value="">All actions</option>
+                        <option value="role_created">Role created</option>
+                        <option value="role_updated">Role updated</option>
+                        <option value="role_deleted">Role deleted</option>
+                        <option value="role_assigned">Role assigned</option>
+                        <option value="role_removed">Role removed</option>
+                        <option value="permissions_changed">Permissions changed</option>
+                    </select>
+                </div>
+                <!-- Log entries -->
+                <div id="auditLogList" class="divide-y divide-gray-100">
+                    <div class="p-5 flex items-center gap-4"><div class="skeleton h-5 w-64 rounded-lg"></div></div>
+                    <div class="p-5 flex items-center gap-4"><div class="skeleton h-5 w-56 rounded-lg"></div></div>
+                </div>
+                <!-- Load more -->
+                <div id="auditLoadMore" class="hidden p-4 text-center">
+                    <button id="btnAuditMore" class="text-sm font-medium text-brand-600 hover:text-brand-700 transition">Load more…</button>
+                </div>
             </div>
         </div>
     </main>

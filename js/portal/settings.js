@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Load profile data for editing
     await loadProfile(user.id);
 
+    // Load user roles
+    await loadSettingsRoles(user.id);
+
     // Load subscription for billing info
     await loadSubscription(user.id);
 
@@ -76,6 +79,31 @@ async function loadProfile(userId) {
         }
     } catch (err) {
         console.error('Error loading profile:', err);
+    }
+}
+
+// ─── Load User Roles ────────────────────────────────────
+async function loadSettingsRoles(userId) {
+    try {
+        const { data: mr } = await supabaseClient
+            .from('member_roles')
+            .select('user_id, roles(id, name, color, icon, position)')
+            .eq('user_id', userId)
+            .order('roles(position)', { ascending: true });
+
+        const roles = (mr || []).filter(r => r.roles).map(r => r.roles);
+        const section = document.getElementById('settingsRolesSection');
+        const container = document.getElementById('settingsRoleChips');
+        if (!section || !container || roles.length === 0) return;
+
+        container.innerHTML = roles.map(r => {
+            const bg = r.color ? `${r.color}20` : '#e0e7ff';
+            const fg = r.color || '#4f46e5';
+            return `<span class="inline-flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:${bg};color:${fg};border:1px solid ${fg}30">${r.icon ? r.icon + ' ' : ''}${r.name}</span>`;
+        }).join('');
+        section.classList.remove('hidden');
+    } catch (err) {
+        console.error('Error loading roles:', err);
     }
 }
 

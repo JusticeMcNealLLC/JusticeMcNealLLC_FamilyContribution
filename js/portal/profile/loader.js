@@ -96,6 +96,22 @@ window.ProfileApp.loadProfile = async function loadProfile() {
             titleBadgeEl.classList.remove('hidden');
         }
 
+        // RBAC role chips
+        const roleChipsEl = document.getElementById('profileRoleChips');
+        if (roleChipsEl) {
+            const { data: mr } = await supabaseClient
+                .from('member_roles')
+                .select('user_id, roles(id, name, color, icon, position)')
+                .eq('user_id', S.viewingUserId)
+                .order('roles(position)', { ascending: true });
+            const roleChips = (mr || []).filter(r => r.roles).map(r => {
+                const bg = r.roles.color ? `${r.roles.color}20` : '#e0e7ff';
+                const fg = r.roles.color || '#4f46e5';
+                return `<span class="inline-flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:${bg};color:${fg};border:1px solid ${fg}30">${r.roles.icon ? r.roles.icon + ' ' : ''}${r.roles.name}</span>`;
+            }).join('');
+            roleChipsEl.innerHTML = roleChips;
+        }
+
         // Store profile data for About modal
         S._profileData = profile;
 

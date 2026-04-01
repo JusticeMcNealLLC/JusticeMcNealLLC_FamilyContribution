@@ -92,8 +92,24 @@ async function loadFeed(append = false) {
 
         if (posts.length < FEED_PAGE_SIZE) feedHasMore = false;
 
+        // Fetch role chips for all post authors
+        const authorIds = [...new Set(posts.map(p => p.author_id).filter(Boolean))];
+        let feedRoleMap = {};
+        if (authorIds.length) {
+            const { data: mr } = await supabaseClient
+                .from('member_roles')
+                .select('user_id, roles(id, name, color, icon, position)')
+                .in('user_id', authorIds)
+                .order('roles(position)', { ascending: true });
+            (mr || []).forEach(r => {
+                if (!r.roles) return;
+                if (!feedRoleMap[r.user_id]) feedRoleMap[r.user_id] = [];
+                feedRoleMap[r.user_id].push(r.roles);
+            });
+        }
+
         // Render posts
-        const html = posts.map(post => renderPostCard(post)).join('');
+        const html = posts.map(post => renderPostCard(post, feedRoleMap)).join('');
         
         if (append) {
             container.insertAdjacentHTML('beforeend', html);
@@ -132,11 +148,26 @@ async function prependNewPost(postId) {
 
     if (error || !post) return;
 
+    // Fetch role chips for this author
+    let prependRoleMap = {};
+    if (post.author_id) {
+        const { data: mr } = await supabaseClient
+            .from('member_roles')
+            .select('user_id, roles(id, name, color, icon, position)')
+            .eq('user_id', post.author_id)
+            .order('roles(position)', { ascending: true });
+        (mr || []).forEach(r => {
+            if (!r.roles) return;
+            if (!prependRoleMap[r.user_id]) prependRoleMap[r.user_id] = [];
+            prependRoleMap[r.user_id].push(r.roles);
+        });
+    }
+
     const container = document.getElementById('feedContainer');
     const empty = document.getElementById('feedEmpty');
     if (empty) empty.classList.add('hidden');
 
-    const html = renderPostCard(post);
+    const html = renderPostCard(post, prependRoleMap);
     container.insertAdjacentHTML('afterbegin', html);
     wirePostActions();
 

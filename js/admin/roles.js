@@ -46,6 +46,8 @@ let allRoles = [];
 let currentUser = null;
 let editingRoleId = null;     // null = create mode
 let panelPermissions = {};    // { 'admin.dashboard': true, ... }
+let auditPage = 0;
+const AUDIT_PAGE_SIZE = 25;
 
 // ─── Init ────────────────────────────────────────────────
 
@@ -61,6 +63,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnDeleteRole').addEventListener('click', promptDelete);
     document.getElementById('btnDeleteCancel').addEventListener('click', () => document.getElementById('deleteModal').classList.add('hidden'));
     document.getElementById('btnDeleteConfirm').addEventListener('click', confirmDelete);
+
+    // Tab switching
+    document.querySelectorAll('.roles-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    });
+
+    // Audit log filter
+    document.getElementById('auditActionFilter').addEventListener('change', () => {
+        auditPage = 0;
+        loadAuditLog();
+    });
+    document.getElementById('btnAuditMore').addEventListener('click', () => {
+        auditPage++;
+        loadAuditLog(true);
+    });
 
     await loadRoles();
 });
@@ -481,4 +498,104 @@ async function confirmDelete() {
         btn.disabled = false;
         btn.textContent = 'Delete';
     }
+}
+
+// ─── Tab Switching ───────────────────────────────────────
+
+function switchTab(tabName) {
+    document.querySelectorAll('.roles-tab').forEach(t => {
+        const isActive = t.dataset.tab === tabName;
+        t.classList.toggle('border-brand-600', isActive);
+        t.classList.toggle('text-brand-700', isActive);
+        t.classList.toggle('border-transparent', !isActive);
+        t.classList.toggle('text-gray-400', !isActive);
+    });
+    document.getElementById('panelRoles').classList.toggle('hidden', tabName !== 'roles');
+    document.getElementById('panelAudit').classList.toggle('hidden', tabName !== 'audit');
+    document.getElementById('btnCreateRole').classList.toggle('hidden', tabName !== 'roles');
+
+    if (tabName === 'audit') {
+        auditPage = 0;
+        loadAuditLog();
+    }
+}
+
+// ─── Audit Log ───────────────────────────────────────────
+
+const ACTION_LABELS = {
+    role_created: { label: 'Created role', icon: '➕', color: 'text-emerald-600' },
+    role_updated: { label: 'Updated role', icon: '✏️', color: 'text-blue-600' },
+    role_deleted: { label: 'Deleted role', icon: '🗑️', color: 'text-red-600' },
+    role_assigned: { label: 'Assigned role', icon: '🔗', color: 'text-brand-600' },
+    role_removed: { label: 'Removed role', icon: '⛓️‍💥', color: 'text-amber-600' },
+    permissions_changed: { label: 'Permissions changed', icon: '🔑', color: 'text-purple-600' },
+};
+
+async function loadAuditLog(append = false) {
+    const container = document.getElementById('auditLogList');
+    const loadMoreBtn = document.getElementById('auditLoadMore');
+    const filter = document.getElementById('auditActionFilter').value;
+
+    if (!append) container.innerHTML = '<div class="p-5 text-center text-sm text-gray-400">Loading…</div>';
+
+    const from = auditPage * AUDIT_PAGE_SIZE;
+    const to = from + AUDIT_PAGE_SIZE - 1;
+
+    let query = supabaseClient
+        .from('role_audit_log')
+        .select('*, actor:profiles!role_audit_log_actor_id_fkey(id, first_name, last_name), target:profiles!role_audit_log_target_user_id_fkey(id, first_name, last_name), role:roles!role_audit_log_role_id_fkey(id, name, color, icon)')
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+    if (filter) query = query.eq('action', filter);
+
+    const { data: logs, error } = await query;
+
+    if (error) {
+        console.error('loadAuditLog', error);
+        container.innerHTML = '<div class="p-5 text-center text-sm text-red-500">Failed to load audit log</div>';
+        return;
+    }
+
+    if (!logs || logs.length === 0) {
+        if (!append) container.innerHTML = '<div class="p-8 text-center text-sm text-gray-400">No audit log entries found.</div>';
+        loadMoreBtn.classList.add('hidden');
+        return;
+    }
+
+    const html = logs.map(entry => {
+        const meta = ACTION_LABELS[entry.action] || { label: entry.action, icon: '📝', color: 'text-gray-600' };
+        const actorName = entry.actor ? [entry.actor.first_name, entry.actor.last_name].filter(Boolean).join(' ') : 'System';
+        const targetName = entry.target ? [entry.target.first_name, entry.target.last_name].filter(Boolean).join(' ') : '';
+        const roleName = entry.role?.name || entry.details?.name || '—';
+        const roleColor = entry.role?.color || '#6b7280';
+        const roleIcon = entry.role?.icon || '';
+        const ts = new Date(entry.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+        let description = meta.label;
+        if (entry.action === 'role_assigned' && targetName) description = `Assigned to <strong class="text-gray-900">${escHtml(targetName)}</strong>`;
+        else if (entry.action === 'role_removed' && targetName) description = `Removed from <strong class="text-gray-900">${escHtml(targetName)}</strong>`;
+
+        return `
+            <div class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition">
+                <span class="text-base flex-shrink-0 mt-0.5">${meta.icon}</span>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm text-gray-700">${description}</div>
+                    <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span class="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md" style="background:${roleColor}20;color:${roleColor}">${roleIcon ? roleIcon + ' ' : ''}${escHtml(roleName)}</span>
+                        <span class="text-[10px] text-gray-400">by ${escHtml(actorName)}</span>
+                        <span class="text-[10px] text-gray-300">·</span>
+                        <span class="text-[10px] text-gray-400">${ts}</span>
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+
+    if (append) {
+        container.insertAdjacentHTML('beforeend', html);
+    } else {
+        container.innerHTML = html;
+    }
+
+    loadMoreBtn.classList.toggle('hidden', logs.length < AUDIT_PAGE_SIZE);
 }
