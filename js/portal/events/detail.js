@@ -1168,7 +1168,7 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
         </div>
         <div class="evt-bn-track" id="evtBnTrack">
             <div class="evt-bn-page">${rsvpBtn}${raffleBtn}</div>
-            <div class="evt-bn-page">${origContent}</div>
+            <div class="evt-bn-page-nav">${origContent}</div>
         </div>`;
 
     // Swipe logic
