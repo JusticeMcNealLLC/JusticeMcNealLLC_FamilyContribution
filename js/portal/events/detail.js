@@ -1097,14 +1097,10 @@ window.evtOpenFullscreenMap = evtOpenFullscreenMap;
 window.evtCloseFullscreenMap = evtCloseFullscreenMap;
 
 // ═══════════════════════════════════════════════════════════
-// Swipeable Bottom Nav (mobile) — injects into the existing .bottom-tab-bar
+// Action Strip — sits above the untouched bottom-tab-bar
 // ═══════════════════════════════════════════════════════════
 function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost) {
-    // Restore any previous swipe state first
     evtCleanupBottomNav();
-
-    const tabBar = document.querySelector('.bottom-tab-bar');
-    if (!tabBar) return;
 
     const rsvpEnabled = event.rsvp_enabled !== false;
     const raffleEnabled = !!event.raffle_enabled;
@@ -1154,73 +1150,16 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
 
     if (!rsvpBtn && !raffleBtn) return;
 
-    // Save original tab bar content so we can restore it later
-    tabBar._evtOriginalHTML = tabBar.innerHTML;
-    tabBar.classList.add('evt-swipe-active');
-
-    // Page 2 = the original nav tabs (re-wrapped)
-    const origContent = tabBar._evtOriginalHTML;
-
-    tabBar.innerHTML = `
-        <div class="evt-bn-dots">
-            <span class="evt-bn-dot active" data-page="0"></span>
-            <span class="evt-bn-dot" data-page="1"></span>
-        </div>
-        <div class="evt-bn-track" id="evtBnTrack">
-            <div class="evt-bn-page">${rsvpBtn}${raffleBtn}</div>
-            <div class="evt-bn-page-nav">${origContent}</div>
-        </div>`;
-
-    // Swipe logic
-    const track = document.getElementById('evtBnTrack');
-    const dots = tabBar.querySelectorAll('.evt-bn-dot');
-    let page = 0, startX = 0, currentX = 0, swiping = false;
-
-    function goToPage(p) {
-        page = p;
-        track.style.transform = `translateX(${-page * 50}%)`;
-        dots.forEach((d, i) => d.classList.toggle('active', i === page));
-    }
-
-    tabBar.addEventListener('touchstart', e => {
-        startX = e.touches[0].clientX;
-        currentX = startX;
-        swiping = true;
-        track.style.transition = 'none';
-    }, { passive: true });
-
-    tabBar.addEventListener('touchmove', e => {
-        if (!swiping) return;
-        currentX = e.touches[0].clientX;
-        const diff = currentX - startX;
-        const baseOffset = -page * 50;
-        const pxToPercent = (diff / tabBar.offsetWidth) * 50;
-        const clampedOffset = Math.max(-50, Math.min(0, baseOffset + pxToPercent));
-        track.style.transform = `translateX(${clampedOffset}%)`;
-    }, { passive: true });
-
-    tabBar.addEventListener('touchend', () => {
-        if (!swiping) return;
-        swiping = false;
-        track.style.transition = 'transform .3s ease';
-        const diff = currentX - startX;
-        if (Math.abs(diff) > 40) {
-            if (diff < 0 && page === 0) goToPage(1);
-            else if (diff > 0 && page === 1) goToPage(0);
-            else goToPage(page);
-        } else {
-            goToPage(page);
-        }
-    }, { passive: true });
-
-    dots.forEach(d => d.addEventListener('click', () => goToPage(Number(d.dataset.page))));
+    const strip = document.createElement('div');
+    strip.id = 'evtActionStrip';
+    strip.className = 'evt-action-strip';
+    strip.innerHTML = rsvpBtn + raffleBtn;
+    document.body.appendChild(strip);
+    document.body.classList.add('evt-strip-active');
 }
 
 function evtCleanupBottomNav() {
-    const tabBar = document.querySelector('.bottom-tab-bar');
-    if (tabBar && tabBar._evtOriginalHTML) {
-        tabBar.innerHTML = tabBar._evtOriginalHTML;
-        tabBar._evtOriginalHTML = null;
-        tabBar.classList.remove('evt-swipe-active');
-    }
+    const strip = document.getElementById('evtActionStrip');
+    if (strip) strip.remove();
+    document.body.classList.remove('evt-strip-active');
 }

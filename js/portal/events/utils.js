@@ -91,7 +91,7 @@ function evtRouteByUrl() {
         listView.classList.remove('hidden');
         document.title = 'Events | Justice McNeal LLC';
         if (typeof evtCleanupMap === 'function') evtCleanupMap();
-        // Restore original bottom tab bar
+        // Remove action strip
         if (typeof evtCleanupBottomNav === 'function') evtCleanupBottomNav();
     }
 }
