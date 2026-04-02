@@ -74,11 +74,11 @@
         .evt-hero-btn { width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.92); display:flex; align-items:center; justify-content:center; border:none; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.12); transition:transform .15s; }
         .evt-hero-btn:active { transform:scale(.92); }
         .evt-hero-btn svg { width:16px; height:16px; stroke:#222; }
-        .evt-hero-content { position:absolute; bottom:0; left:0; right:0; padding:20px 24px; z-index:2; }
+        .evt-hero-content { position:absolute; bottom:0; left:0; right:0; padding:20px 24px; z-index:5; }
         .evt-hero-title { font-size:26px; font-weight:800; color:#fff; line-height:1.2; text-shadow:0 2px 12px rgba(0,0,0,.35); }
         @media(min-width:640px){ .evt-hero-title { font-size:34px; } .evt-hero-content { padding:28px 32px; } }
         .evt-tag { font-size:11px; padding:3px 10px; border-radius:6px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
-        .evt-location-pill { display:inline-flex; align-items:center; gap:5px; background:#f3f4f6; color:#555; font-size:13px; font-weight:600; padding:6px 14px; border-radius:20px; }
+        .evt-location-pill { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.92); color:#222; font-size:13px; font-weight:600; padding:6px 14px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,.15); backdrop-filter:blur(6px); }
         .evt-content-title { font-size:26px; font-weight:800; color:#222; line-height:1.2; letter-spacing:-.02em; margin-bottom:4px; }
         @media(min-width:640px){ .evt-content-title { font-size:32px; } }
 
@@ -239,7 +239,9 @@
             <div class="evt-hero-content">
                 <div id="eventTags" style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"></div>
                 <div class="evt-hero-bottom">
-                    <div class="evt-hero-left"></div>
+                    <div class="evt-hero-left">
+                        <div id="heroLocationPill"></div>
+                    </div>
                     <div id="heroStatusBadge" aria-live="polite" aria-atomic="true"></div>
                 </div>
             </div>
@@ -250,7 +252,6 @@
 
         <!-- Event Title -->
         <h1 id="eventContentTitle" class="evt-content-title"></h1>
-        <div id="contentLocationPill" style="margin-bottom:8px"></div>
 
         <!-- Invite Banner (personalized share link) -->
         <div id="inviteBanner" class="hidden" style="padding:16px 0 0"></div>
