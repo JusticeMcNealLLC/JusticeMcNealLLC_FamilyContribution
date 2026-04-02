@@ -131,50 +131,11 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     }
     tagsEl.innerHTML = tagsHtml;
 
-    // Meta (date, time, location — respect gating)
-    const metaEl = document.getElementById('eventMeta');
+    // Meta — section removed (info on banner); keep start/end refs for calendar
     const start = new Date(event.start_date);
     const end   = event.end_date ? new Date(event.end_date) : null;
     const isGatedDate = event.gate_time && !pubCurrentRsvp;
     const isGatedLoc  = event.gate_location && !pubCurrentRsvp;
-
-    let metaHtml = '<h3 class="evt-section-title" style="font-size:18px">Event Details</h3>';;
-
-    // Date & Time
-    if (isGatedDate) {
-        metaHtml += `<div class="evt-info-row">
-            <div class="evt-info-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
-            <div><p class="evt-info-gated">🔒 Date & time visible after RSVP</p></div>
-        </div>`;
-    } else {
-        const dateStr = start.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-        const timeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-        const endStr  = end ? ` – ${end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}` : '';
-        metaHtml += `<div class="evt-info-row">
-            <div class="evt-info-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
-            <div>
-                <p class="evt-info-primary">${dateStr}</p>
-                <p class="evt-info-secondary">${timeStr}${endStr}${event.timezone ? ' · ' + event.timezone : ''}</p>
-            </div>
-        </div>`;
-    }
-
-    // Location
-    if (event.location_text) {
-        if (isGatedLoc) {
-            metaHtml += `<div class="evt-info-row">
-                <div class="evt-info-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
-                <div><p class="evt-info-gated">🔒 Location visible after RSVP</p></div>
-            </div>`;
-        } else {
-            metaHtml += `<div class="evt-info-row">
-                <div class="evt-info-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
-                <div><p class="evt-info-primary">${pubEscapeHtml(event.location_text)}</p></div>
-            </div>`;
-        }
-    }
-
-    metaEl.innerHTML = metaHtml;
 
     // ── Hero Date Card + Status Badge ──────
     const heroMonthStr = start.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
