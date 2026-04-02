@@ -389,6 +389,10 @@ async function evtOpenDetail(eventId) {
     const entriesClosed = isClosed || isPast || deadlinePassed;
 
     // ── Hero Status Badge (countdown / Live / Ended) ─────
+    // ── Hero Date Card + Status Badge ─────
+    const heroMonthStr = start.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+    const heroDayStr = start.getDate();
+    const heroTimeShort = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     let heroBadgeHtml = '';
     {
         let badgeLabel = '', badgeCls = '', dotPulse = false;
@@ -406,7 +410,14 @@ async function evtOpenDetail(eventId) {
             if (d > 0) { badgeLabel = `${d}d ${h}h`; } else if (h > 0) { badgeLabel = `${h}h ${m}m`; } else { badgeLabel = `${m}m`; }
             badgeCls = 'evt-status-soon'; dotPulse = d === 0;
         }
-        heroBadgeHtml = `<span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>`;
+        heroBadgeHtml = `<div class="evt-date-card-wrap">
+            <span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>
+            <div class="evt-date-card">
+                <span class="evt-date-card-month">${heroMonthStr}</span>
+                <span class="evt-date-card-day">${heroDayStr}</span>
+                <span class="evt-date-card-time">${heroTimeShort}</span>
+            </div>
+        </div>`;
     }
 
     // ── RSVP buttons (Airbnb-inspired) — now respects time-based locks ──

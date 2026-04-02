@@ -176,7 +176,11 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
 
     metaEl.innerHTML = metaHtml;
 
-    // ── Hero Status Badge (right side of title) ──────
+    // ── Hero Date Card + Status Badge ──────
+    const heroMonthStr = start.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+    const heroDayStr = start.getDate();
+    const heroTimeShort = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
     const heroBadge = document.getElementById('heroStatusBadge');
     const isClosed = event.status === 'completed' || event.status === 'cancelled';
     const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
@@ -207,7 +211,14 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         }
     }
 
-    heroBadge.innerHTML = `<span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>`;
+    heroBadge.innerHTML = `<div class="evt-date-card-wrap">
+        <span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>
+        <div class="evt-date-card">
+            <span class="evt-date-card-month">${heroMonthStr}</span>
+            <span class="evt-date-card-day">${heroDayStr}</span>
+            <span class="evt-date-card-time">${heroTimeShort}</span>
+        </div>
+    </div>`;
 
     // Live countdown updater (update badge every 60s for upcoming events)
     if (!isClosed && !isPast && event.status !== 'active') {
