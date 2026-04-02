@@ -108,8 +108,8 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     // Title moved to content area — set it there
     document.getElementById('eventContentTitle').textContent = event.title;
 
-    // Location pill on banner
-    const locPillEl = document.getElementById('heroLocationPill');
+    // Location nickname pill in content area
+    const locPillEl = document.getElementById('contentLocationPill');
     if (event.location_nickname) {
         locPillEl.innerHTML = `<span class="evt-location-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg> ${pubEscapeHtml(event.location_nickname)}</span>`;
     }

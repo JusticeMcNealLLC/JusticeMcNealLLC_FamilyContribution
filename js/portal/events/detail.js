@@ -730,9 +730,7 @@ async function evtOpenDetail(eventId) {
                     <span class="evt-tag ${tc.bg} ${tc.text}">${tc.label}</span>
                 </div>
                 <div class="evt-hero-bottom">
-                    <div class="evt-hero-left">
-                        ${event.location_nickname ? `<span class="evt-location-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg> ${evtEscapeHtml(event.location_nickname)}</span>` : ''}
-                    </div>
+                    <div class="evt-hero-left"></div>
                     <div aria-live="polite">${heroBadgeHtml}</div>
                 </div>
             </div>
@@ -745,6 +743,7 @@ async function evtOpenDetail(eventId) {
 
             <!-- Event Title + Details -->
             <h1 class="evt-content-title">${evtEscapeHtml(event.title)}</h1>
+            ${event.location_nickname ? `<div style="margin-bottom:8px"><span class="evt-location-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg> ${evtEscapeHtml(event.location_nickname)}</span></div>` : ''}
             <div class="evt-section">
                 <h3 class="evt-section-title">Event Details</h3>
                 <div class="evt-info-row">
