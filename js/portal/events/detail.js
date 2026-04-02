@@ -1097,8 +1097,16 @@ window.evtOpenFullscreenMap = evtOpenFullscreenMap;
 window.evtCloseFullscreenMap = evtCloseFullscreenMap;
 
 // ═══════════════════════════════════════════════════════════
-// Action Strip — sits above the untouched bottom-tab-bar
+// Event FABs — floating action buttons above the bottom tab bar
 // ═══════════════════════════════════════════════════════════
+const EVT_FAB_ICONS = {
+    plus: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>',
+    check: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
+    ticket: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>',
+    lock: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
+    host: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>',
+};
+
 function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost) {
     evtCleanupBottomNav();
 
@@ -1110,56 +1118,52 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
     const isPast = new Date(event.start_date) < new Date() && event.status !== 'active';
     const canRsvp = rsvpEnabled && ['open','confirmed','active'].includes(event.status) && !entriesClosed;
 
-    // Build RSVP button
-    let rsvpBtn = '';
-    if (rsvpEnabled) {
-        if (isHost) {
-            rsvpBtn = `<button class="evt-bn-rsvp" disabled>🎯 Hosting</button>`;
-        } else if (rsvp?.paid) {
-            rsvpBtn = `<button class="evt-bn-rsvp" disabled>✅ RSVP'd</button>`;
-        } else if (rsvp?.status === 'going') {
-            rsvpBtn = `<button class="evt-bn-rsvp" disabled>✅ Going</button>`;
-        } else if (canRsvp && !eventIsFull && event.pricing_mode === 'paid') {
-            rsvpBtn = `<button class="evt-bn-rsvp" onclick="evtHandleRsvp('${eventId}','going')">RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>`;
-        } else if (canRsvp && !eventIsFull) {
-            rsvpBtn = `<button class="evt-bn-rsvp" onclick="evtHandleRsvp('${eventId}','going')">RSVP</button>`;
-        } else if (eventIsFull) {
-            rsvpBtn = `<button class="evt-bn-rsvp" disabled>Full</button>`;
-        } else {
-            rsvpBtn = `<button class="evt-bn-rsvp" disabled>${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
-        }
-    }
+    const wrap = document.createElement('div');
+    wrap.id = 'evtFabWrap';
+    wrap.className = 'evt-fab-wrap';
 
-    // Build Raffle button
-    let raffleBtn = '';
-    if (raffleEnabled) {
-        if (isHost) {
-            raffleBtn = '';
-        } else if (myRaffleEntry) {
-            raffleBtn = `<button class="evt-bn-raffle" disabled>🎟️ Entered</button>`;
+    // Raffle FAB (stacked above RSVP)
+    if (raffleEnabled && !isHost) {
+        let cls, icon, label, onclick, disabled;
+        if (myRaffleEntry) {
+            cls = 'evt-fab evt-fab-raffle-done'; icon = EVT_FAB_ICONS.check; label = 'Entered'; disabled = true;
         } else if (entriesClosed) {
-            raffleBtn = `<button class="evt-bn-raffle" disabled>🔒 Closed</button>`;
+            cls = 'evt-fab evt-fab-raffle'; icon = EVT_FAB_ICONS.lock; label = 'Closed'; disabled = true;
         } else if (event.pricing_mode === 'paid') {
-            raffleBtn = '';
+            // included with RSVP, skip
+            cls = null;
         } else if (event.raffle_entry_cost_cents > 0) {
-            raffleBtn = `<button class="evt-bn-raffle" onclick="evtHandleRaffleEntry('${eventId}')">🎟️ Raffle — ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
+            cls = 'evt-fab evt-fab-raffle'; icon = EVT_FAB_ICONS.ticket; label = `Raffle — ${formatCurrency(event.raffle_entry_cost_cents)}`; onclick = `evtHandleRaffleEntry('${eventId}')`;
         } else {
-            raffleBtn = `<button class="evt-bn-raffle" onclick="evtHandleFreeRaffleEntry('${eventId}')">🎟️ Enter Raffle</button>`;
+            cls = 'evt-fab evt-fab-raffle'; icon = EVT_FAB_ICONS.ticket; label = 'Enter Raffle'; onclick = `evtHandleFreeRaffleEntry('${eventId}')`;
+        }
+        if (cls) {
+            wrap.innerHTML += `<button class="${cls}"${onclick ? ` onclick="${onclick}"` : ''}${disabled ? ' disabled' : ''}>${icon}<span class="evt-fab-label">${label}</span></button>`;
         }
     }
 
-    if (!rsvpBtn && !raffleBtn) return;
+    // RSVP FAB (bottom of stack, closest to tab bar)
+    if (rsvpEnabled) {
+        let cls, icon, label, onclick, disabled;
+        if (isHost) {
+            cls = 'evt-fab evt-fab-rsvp-done'; icon = EVT_FAB_ICONS.host; label = 'Hosting'; disabled = true;
+        } else if (rsvp?.paid || rsvp?.status === 'going') {
+            cls = 'evt-fab evt-fab-rsvp-done'; icon = EVT_FAB_ICONS.check; label = rsvp.paid ? "RSVP'd" : 'Going'; disabled = true;
+        } else if (canRsvp && !eventIsFull) {
+            cls = 'evt-fab evt-fab-rsvp'; icon = EVT_FAB_ICONS.plus; label = event.pricing_mode === 'paid' ? `RSVP — ${formatCurrency(event.rsvp_cost_cents)}` : 'RSVP'; onclick = `evtHandleRsvp('${eventId}','going')`;
+        } else if (eventIsFull) {
+            cls = 'evt-fab evt-fab-rsvp'; icon = EVT_FAB_ICONS.lock; label = 'Full'; disabled = true;
+        } else {
+            cls = 'evt-fab evt-fab-rsvp'; icon = EVT_FAB_ICONS.lock; label = isClosed ? 'Closed' : 'RSVP Closed'; disabled = true;
+        }
+        wrap.innerHTML += `<button class="${cls}"${onclick ? ` onclick="${onclick}"` : ''}${disabled ? ' disabled' : ''}>${icon}<span class="evt-fab-label">${label}</span></button>`;
+    }
 
-    const strip = document.createElement('div');
-    strip.id = 'evtActionStrip';
-    strip.className = 'evt-action-strip';
-    strip.innerHTML = rsvpBtn + raffleBtn;
-    document.body.appendChild(strip);
-    document.body.classList.add('evt-strip-active');
+    if (!wrap.children.length) return;
+    document.body.appendChild(wrap);
 }
 
 function evtCleanupBottomNav() {
-    const strip = document.getElementById('evtActionStrip');
-    if (strip) strip.remove();
-    document.body.classList.remove('evt-strip-active');
+    const el = document.getElementById('evtFabWrap');
+    if (el) el.remove();
 }

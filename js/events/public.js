@@ -1690,8 +1690,16 @@ window.pubPostComment = pubPostComment;
 // ═══════════════════════════════════════════════════════════
 // Swipeable Bottom Nav (mobile — public event page)
 // ═══════════════════════════════════════════════════════════
+const PUB_FAB_ICONS = {
+    plus: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>',
+    check: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
+    ticket: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>',
+    lock: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
+    signIn: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>',
+};
+
 function pubInitBottomNav(event) {
-    const prev = document.getElementById('evtBottomNav');
+    const prev = document.getElementById('evtFabWrap');
     if (prev) prev.remove();
 
     const rsvpEnabled = event.rsvp_enabled !== false;
@@ -1703,111 +1711,53 @@ function pubInitBottomNav(event) {
     const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
     const entriesClosed = isClosed || isPast || deadlinePassed;
 
-    // Build RSVP button for bottom bar
-    let rsvpBtn = '';
-    if (rsvpEnabled) {
-        if (pubCurrentRsvp?.paid || pubGuestRsvp?.paid) {
-            rsvpBtn = `<button class="evt-bn-rsvp" disabled>✅ RSVP'd</button>`;
-        } else if (pubCurrentRsvp?.status === 'going' || pubGuestRsvp) {
-            rsvpBtn = `<button class="evt-bn-rsvp" disabled>✅ Going</button>`;
-        } else if (entriesClosed) {
-            rsvpBtn = `<button class="evt-bn-rsvp" disabled>${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
-        } else if (pubCurrentUser && event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
-            rsvpBtn = `<button class="evt-bn-rsvp" onclick="document.getElementById('rsvpSection').scrollIntoView({behavior:'smooth'})">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
-        } else if (pubCurrentUser) {
-            rsvpBtn = `<button class="evt-bn-rsvp" onclick="pubHandleRsvp('going')">RSVP</button>`;
-        } else {
-            rsvpBtn = `<a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-bn-rsvp" style="text-decoration:none">Sign In to RSVP</a>`;
-        }
-    }
+    const wrap = document.createElement('div');
+    wrap.id = 'evtFabWrap';
+    wrap.className = 'evt-fab-wrap';
 
-    // Build Raffle button
-    let raffleBtn = '';
+    // Raffle FAB
     if (raffleEnabled) {
+        let cls, icon, label, onclick, disabled;
         if (entriesClosed) {
-            raffleBtn = `<button class="evt-bn-raffle" disabled>🔒 Closed</button>`;
+            cls = 'evt-fab evt-fab-raffle'; icon = PUB_FAB_ICONS.lock; label = 'Closed'; disabled = true;
         } else if (event.pricing_mode === 'paid') {
-            // included with RSVP — no separate button
+            cls = null; // included with RSVP
         } else {
-            raffleBtn = `<button class="evt-bn-raffle" onclick="document.getElementById('raffleSection')?.scrollIntoView({behavior:'smooth'})">🎟️ Raffle</button>`;
+            cls = 'evt-fab evt-fab-raffle'; icon = PUB_FAB_ICONS.ticket; label = 'Raffle';
+            onclick = "document.getElementById('raffleSection')?.scrollIntoView({behavior:'smooth'})";
+        }
+        if (cls) {
+            wrap.innerHTML += `<button class="${cls}"${onclick ? ` onclick="${onclick}"` : ''}${disabled ? ' disabled' : ''}>${icon}<span class="evt-fab-label">${label}</span></button>`;
         }
     }
 
-    if (!rsvpBtn && !raffleBtn) return;
-
-    // Nav page (page 2) — simple back / home / share
-    const navPage = `
-        <a href="/" class="evt-bn-nav-link">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
-            <span>Home</span>
-        </a>
-        <button onclick="pubCopyUrl()" class="evt-bn-nav-link" style="border:none;background:none;cursor:pointer">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/></svg>
-            <span>Share</span>
-        </button>
-        <button onclick="window.scrollTo({top:0,behavior:'smooth'})" class="evt-bn-nav-link" style="border:none;background:none;cursor:pointer">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l7.5-7.5 7.5 7.5m-15 6l7.5-7.5 7.5 7.5"/></svg>
-            <span>Top</span>
-        </button>`;
-
-    const bar = document.createElement('div');
-    bar.id = 'evtBottomNav';
-    bar.className = 'evt-bottom-nav';
-    bar.innerHTML = `
-        <div class="evt-bn-dots">
-            <span class="evt-bn-dot active" data-page="0"></span>
-            <span class="evt-bn-dot" data-page="1"></span>
-        </div>
-        <div class="evt-bn-track" id="evtBnTrack">
-            <div class="evt-bn-page">${rsvpBtn}${raffleBtn}</div>
-            <div class="evt-bn-page">${navPage}</div>
-        </div>`;
-    document.body.appendChild(bar);
-
-    // Add bottom padding to body for the bar
-    document.body.style.paddingBottom = '80px';
-
-    // Swipe logic
-    const track = document.getElementById('evtBnTrack');
-    const dots = bar.querySelectorAll('.evt-bn-dot');
-    let page = 0, startX = 0, currentX = 0, swiping = false;
-
-    function goToPage(p) {
-        page = p;
-        track.style.transform = `translateX(${-page * 50}%)`;
-        dots.forEach((d, i) => d.classList.toggle('active', i === page));
+    // RSVP FAB
+    if (rsvpEnabled) {
+        let cls, icon, label, onclick, disabled, isLink;
+        if (pubCurrentRsvp?.paid || pubGuestRsvp?.paid) {
+            cls = 'evt-fab evt-fab-rsvp-done'; icon = PUB_FAB_ICONS.check; label = "RSVP'd"; disabled = true;
+        } else if (pubCurrentRsvp?.status === 'going' || pubGuestRsvp) {
+            cls = 'evt-fab evt-fab-rsvp-done'; icon = PUB_FAB_ICONS.check; label = 'Going'; disabled = true;
+        } else if (entriesClosed) {
+            cls = 'evt-fab evt-fab-rsvp'; icon = PUB_FAB_ICONS.lock; label = isClosed ? 'Closed' : 'RSVP Closed'; disabled = true;
+        } else if (pubCurrentUser && event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
+            cls = 'evt-fab evt-fab-rsvp'; icon = PUB_FAB_ICONS.plus; label = `RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}`;
+            onclick = "document.getElementById('rsvpSection').scrollIntoView({behavior:'smooth'})";
+        } else if (pubCurrentUser) {
+            cls = 'evt-fab evt-fab-rsvp'; icon = PUB_FAB_ICONS.plus; label = 'RSVP'; onclick = "pubHandleRsvp('going')";
+        } else {
+            cls = 'evt-fab evt-fab-rsvp'; icon = PUB_FAB_ICONS.signIn; label = 'Sign In to RSVP'; isLink = true;
+        }
+        if (isLink) {
+            wrap.innerHTML += `<a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="${cls}" style="text-decoration:none">${icon}<span class="evt-fab-label">${label}</span></a>`;
+        } else {
+            wrap.innerHTML += `<button class="${cls}"${onclick ? ` onclick="${onclick}"` : ''}${disabled ? ' disabled' : ''}>${icon}<span class="evt-fab-label">${label}</span></button>`;
+        }
     }
 
-    bar.addEventListener('touchstart', e => {
-        startX = e.touches[0].clientX;
-        currentX = startX;
-        swiping = true;
-        track.style.transition = 'none';
-    }, { passive: true });
-
-    bar.addEventListener('touchmove', e => {
-        if (!swiping) return;
-        currentX = e.touches[0].clientX;
-        const diff = currentX - startX;
-        const baseOffset = -page * 50;
-        const pxToPercent = (diff / bar.offsetWidth) * 50;
-        const clampedOffset = Math.max(-50, Math.min(0, baseOffset + pxToPercent));
-        track.style.transform = `translateX(${clampedOffset}%)`;
-    }, { passive: true });
-
-    bar.addEventListener('touchend', () => {
-        if (!swiping) return;
-        swiping = false;
-        track.style.transition = 'transform .3s ease';
-        const diff = currentX - startX;
-        if (Math.abs(diff) > 40) {
-            if (diff < 0 && page === 0) goToPage(1);
-            else if (diff > 0 && page === 1) goToPage(0);
-            else goToPage(page);
-        } else {
-            goToPage(page);
-        }
-    }, { passive: true });
+    if (!wrap.children.length) return;
+    document.body.appendChild(wrap);
+}
 
     // Dot tap
     dots.forEach(d => d.addEventListener('click', () => goToPage(Number(d.dataset.page))));

@@ -210,21 +210,20 @@
         .evt-comment-time { font-size:11px; color:#b0b0b0; margin-left:6px; }
         .evt-comment-text { font-size:14px; color:#717171; line-height:1.5; margin-top:3px; word-break:break-word; }
 
-        /* ═══ Swipeable Event Bottom Nav (mobile only) ═══ */
-        .evt-bottom-nav { display:none; }
+        /* ═══ Event FABs — floating action buttons (mobile only) ═══ */
+        .evt-fab-wrap { display:none; }
         @media(max-width:767px){
-            .evt-bottom-nav { position:fixed; bottom:0; left:0; right:0; z-index:50; display:block; background:rgba(255,255,255,.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-top:1px solid rgba(0,0,0,.06); padding-bottom:env(safe-area-inset-bottom,0); touch-action:none; overflow:hidden; }
-            .evt-bn-dots { display:flex; justify-content:center; gap:6px; padding:6px 0 2px; }
-            .evt-bn-dot { width:6px; height:6px; border-radius:50%; background:#d1d5db; transition:background .2s,transform .2s; cursor:pointer; }
-            .evt-bn-dot.active { background:#222; transform:scale(1.3); }
-            .evt-bn-track { display:flex; width:200%; transition:transform .3s ease; will-change:transform; }
-            .evt-bn-page { width:50%; display:flex; align-items:center; justify-content:center; gap:10px; padding:10px 16px 8px; min-height:56px; }
-            .evt-bn-page button,.evt-bn-page a.evt-bn-rsvp,.evt-bn-page a.evt-bn-raffle { flex:1; max-width:220px; }
-            .evt-bn-rsvp { display:flex; align-items:center; justify-content:center; gap:6px; padding:12px 14px; border-radius:12px; background:#222; color:#fff; font-size:14px; font-weight:700; border:none; cursor:pointer; white-space:nowrap; text-decoration:none; }
-            .evt-bn-raffle { display:flex; align-items:center; justify-content:center; gap:6px; padding:12px 14px; border-radius:12px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:14px; font-weight:700; border:none; cursor:pointer; white-space:nowrap; text-decoration:none; }
-            .evt-bn-rsvp:disabled,.evt-bn-raffle:disabled { opacity:.5; cursor:not-allowed; }
-            .evt-bn-nav-link { display:flex; flex-direction:column; align-items:center; gap:2px; font-size:0.625rem; font-weight:500; color:#9ca3af; padding:8px 0; text-decoration:none; min-width:0; flex:1; min-height:56px; justify-content:center; }
-            .evt-bn-nav-link svg { width:22px; height:22px; }
+            .evt-fab-wrap { display:flex; flex-direction:column; align-items:flex-end; gap:12px; position:fixed; right:16px; bottom:24px; z-index:51; }
+            .evt-fab { width:52px; height:52px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.18); transition:transform .2s,box-shadow .2s,background .3s; -webkit-tap-highlight-color:transparent; }
+            .evt-fab:active { transform:scale(.9); }
+            .evt-fab:disabled { opacity:.5; cursor:not-allowed; }
+            .evt-fab svg { width:24px; height:24px; stroke-width:2.5; fill:none; stroke:currentColor; }
+            .evt-fab-rsvp { background:#4f46e5; color:#fff; }
+            .evt-fab-rsvp-done { background:#16a34a; color:#fff; }
+            .evt-fab-raffle { background:#f59e0b; color:#fff; }
+            .evt-fab-raffle-done { background:#16a34a; color:#fff; }
+            .evt-fab-label { position:absolute; right:60px; top:50%; transform:translateY(-50%); background:#222; color:#fff; font-size:12px; font-weight:600; padding:4px 10px; border-radius:6px; white-space:nowrap; pointer-events:none; opacity:0; transition:opacity .2s; }
+            .evt-fab:hover .evt-fab-label,.evt-fab:focus .evt-fab-label { opacity:1; }
         }
     </style>
 </head>
