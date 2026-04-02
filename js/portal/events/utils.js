@@ -135,7 +135,6 @@ function evtCopyShareUrl(slug) {
     let url;
     if (slug) {
         url = `https://justicemcneal.com/events/?e=${slug}`;
-        // Append ref so the event page shows "invited by" banner
         if (typeof evtCurrentUser !== 'undefined' && evtCurrentUser?.id) {
             url += `&ref=${evtCurrentUser.id.slice(0, 8)}`;
         }
@@ -143,12 +142,17 @@ function evtCopyShareUrl(slug) {
         url = document.getElementById('shareUrl')?.value;
     }
     if (!url) return;
-    navigator.clipboard.writeText(url).then(() => {
-        // Brief toast-style feedback
-        const toast = document.createElement('div');
-        toast.textContent = 'Link copied!';
-        toast.className = 'fixed top-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-lg z-[999] transition-opacity duration-300';
-        document.body.appendChild(toast);
-        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 1500);
-    });
+
+    // Prefer native share sheet, fallback to clipboard
+    if (navigator.share) {
+        navigator.share({ title: 'Check out this event', url }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            const toast = document.createElement('div');
+            toast.textContent = 'Link copied!';
+            toast.className = 'fixed top-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-lg z-[999] transition-opacity duration-300';
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 1500);
+        });
+    }
 }

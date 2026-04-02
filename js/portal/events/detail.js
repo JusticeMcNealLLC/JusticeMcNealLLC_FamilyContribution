@@ -4,6 +4,79 @@
 // with attendee list, QR codes, host controls, cost breakdown, etc.
 // ═══════════════════════════════════════════════════════════
 
+// ── Lightweight inline markdown (bold, italic, links) ────
+function evtMiniMarkdown(text) {
+    if (!text) return '';
+    let html = evtEscapeHtml(text);
+    // Links: [text](url)
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    // Bold: **text**
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic: *text*
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    return html;
+}
+
+// ── Banner lightbox ──────────────────────────────────────
+function evtOpenLightbox(imgUrl) {
+    if (!imgUrl) return;
+    const lb = document.createElement('div');
+    lb.className = 'evt-lightbox';
+    lb.innerHTML = `<button class="evt-lightbox-close" aria-label="Close"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button><img src="${imgUrl}" alt="Event banner">`;
+    lb.onclick = e => { if (e.target === lb || e.target.closest('.evt-lightbox-close')) { lb.classList.remove('active'); setTimeout(() => lb.remove(), 250); } };
+    document.body.appendChild(lb);
+    requestAnimationFrame(() => lb.classList.add('active'));
+}
+
+// ── Section fade-in observer ─────────────────────────────
+function evtInitSectionAnimations() {
+    const sections = document.querySelectorAll('#eventsDetailView .evt-section.evt-anim');
+    if (!sections.length) return;
+    const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('evt-visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    sections.forEach((s, i) => { s.style.animationDelay = `${i * 0.06}s`; obs.observe(s); });
+}
+
+// ── Live countdown (ticks every second when < 1 hour) ────
+let _evtCountdownInterval = null;
+function evtStartLiveCountdown(startDate) {
+    if (_evtCountdownInterval) clearInterval(_evtCountdownInterval);
+    const badgeEl = document.querySelector('#eventsDetailView .evt-status-badge');
+    if (!badgeEl) return;
+
+    function tick() {
+        const ms = new Date(startDate) - new Date();
+        if (ms <= 0) {
+            badgeEl.className = 'evt-status-badge evt-status-live';
+            badgeEl.innerHTML = '<span class="evt-status-dot pulse"></span>Live';
+            clearInterval(_evtCountdownInterval);
+            return;
+        }
+        const d = Math.floor(ms / 86400000);
+        const h = Math.floor((ms % 86400000) / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
+        let lbl;
+        if (d > 0) lbl = `${d}d ${h}h`;
+        else if (h > 0) lbl = `${h}h ${m}m`;
+        else lbl = `${m}m ${s}s`;
+        badgeEl.innerHTML = `<span class="evt-status-dot${d === 0 ? ' pulse' : ''}"></span>${lbl}`;
+    }
+    // Tick rate: every second when < 1 hour, else every 60s
+    const msUntil = new Date(startDate) - new Date();
+    const interval = msUntil < 3600000 ? 1000 : 60000;
+    _evtCountdownInterval = setInterval(tick, interval);
+
+    // Upgrade to 1s when crossing threshold
+    if (interval === 60000) {
+        const upgradeIn = msUntil - 3600000;
+        if (upgradeIn > 0) {
+            setTimeout(() => { clearInterval(_evtCountdownInterval); _evtCountdownInterval = setInterval(tick, 1000); }, upgradeIn);
+        }
+    }
+}
+
 async function evtOpenDetail(eventId) {
     const event = evtAllEvents.find(e => e.id === eventId);
     if (!event) return;
@@ -19,7 +92,7 @@ async function evtOpenDetail(eventId) {
     // Load RSVPs with profile info
     const { data: rsvps } = await supabaseClient
         .from('event_rsvps')
-        .select('user_id, status, profiles!event_rsvps_user_id_fkey(first_name, last_name, profile_picture_url)')
+        .select('user_id, status, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)')
         .eq('event_id', eventId);
 
     const goingList = (rsvps || []).filter(r => r.status === 'going');
@@ -466,14 +539,12 @@ async function evtOpenDetail(eventId) {
 
     } else if (canRsvp && !eventIsFull) {
         const goingActive = rsvp?.status === 'going' ? ' active-going' : '';
-        const maybeActive = rsvp?.status === 'maybe' ? ' active-maybe' : '';
-        const notActive = rsvp?.status === 'not_going' ? ' active-not' : '';
+        const interestedActive = rsvp?.status === 'maybe' ? ' active-interested' : '';
         rsvpButtons = `
             <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#717171;margin-bottom:12px">RSVP</p>
-            <div class="evt-rsvp-grid">
-                <button onclick="evtHandleRsvp('${eventId}','going')" class="evt-rsvp-btn${goingActive}">Going</button>
-                <button onclick="evtHandleRsvp('${eventId}','maybe')" class="evt-rsvp-btn${maybeActive}">Maybe</button>
-                <button onclick="evtHandleRsvp('${eventId}','not_going')" class="evt-rsvp-btn${notActive}">Can't Go</button>
+            <div class="evt-rsvp-pair">
+                <button onclick="evtHandleRsvp('${eventId}','going')" class="evt-rsvp-btn${goingActive}"><span class="evt-rsvp-icon">✅</span> Going</button>
+                <button onclick="evtHandleRsvp('${eventId}','maybe')" class="evt-rsvp-btn${interestedActive}"><span class="evt-rsvp-icon">❤️</span> Interested</button>
             </div>`;
     }
 
@@ -486,8 +557,8 @@ async function evtOpenDetail(eventId) {
 
         if (rsvp) {
             // Show existing RSVP status
-            const statusEmoji = rsvp.status === 'going' ? '✅' : rsvp.status === 'maybe' ? '🤔' : '❌';
-            const statusLabel = rsvp.status === 'going' ? 'Going' : rsvp.status === 'maybe' ? 'Maybe' : 'Not Going';
+            const statusEmoji = rsvp.status === 'going' ? '✅' : rsvp.status === 'maybe' ? '❤️' : '❌';
+            const statusLabel = rsvp.status === 'going' ? 'Going' : rsvp.status === 'maybe' ? 'Interested' : 'Not Going';
             rsvpButtons = `
             <div class="evt-info-card">
                 <span class="evt-info-card-icon">${statusEmoji}</span>
@@ -648,31 +719,22 @@ async function evtOpenDetail(eventId) {
                     <div class="space-y-1.5 ml-6">${goingList.length ? goingList.map(r => buildPersonRow(r.profiles)).join('') : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
                 </div>
 
-                <!-- Maybe -->
+                <!-- Interested -->
                 <div class="mb-3">
                     <div class="flex items-center gap-2 mb-1.5">
-                        <span class="text-sm">🤔</span>
-                        <span class="text-xs font-bold text-amber-700 uppercase tracking-wide">Maybe (${maybeList.length})</span>
+                        <span class="text-sm">❤️</span>
+                        <span class="text-xs font-bold text-pink-700 uppercase tracking-wide">Interested (${maybeList.length})</span>
                     </div>
                     <div class="space-y-1.5 ml-6">${maybeList.length ? maybeList.map(r => buildPersonRow(r.profiles)).join('') : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
                 </div>
 
                 <!-- Checked In -->
-                <div class="mb-3">
+                <div>
                     <div class="flex items-center gap-2 mb-1.5">
                         <span class="text-sm">📍</span>
                         <span class="text-xs font-bold text-violet-700 uppercase tracking-wide">Checked In (${checkinCount || 0})</span>
                     </div>
                     <div class="space-y-1.5 ml-6">${checkinRows}</div>
-                </div>
-
-                <!-- Not Going -->
-                <div>
-                    <div class="flex items-center gap-2 mb-1.5">
-                        <span class="text-sm">❌</span>
-                        <span class="text-xs font-bold text-red-600 uppercase tracking-wide">Not Going (${notGoingList.length})</span>
-                    </div>
-                    <div class="space-y-1.5 ml-6">${notGoingList.length ? notGoingList.map(r => buildPersonRow(r.profiles)).join('') : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
                 </div>
             </div>`;
     }
@@ -680,25 +742,33 @@ async function evtOpenDetail(eventId) {
     // ── Host Controls ────────────────────────────────────
     let hostControlsHtml = '';
     if (isHost) {
-        let buttons = '';
+        let primaryBtn = '';
+        let dropdownItems = '';
         if (event.status === 'draft') {
-            buttons += `<button onclick="evtUpdateStatus('${eventId}','open')" class="evt-host-btn primary">Publish Event</button>`;
+            primaryBtn = `<button onclick="evtUpdateStatus('${eventId}','open')" class="evt-host-btn primary">Publish Event</button>`;
         }
         if (['open', 'confirmed', 'active'].includes(event.status)) {
-            buttons += `<button onclick="evtUpdateStatus('${eventId}','completed')" class="evt-host-btn">Mark Completed</button>`;
-            buttons += `<button onclick="evtCancelEvent('${eventId}')" class="evt-host-btn danger">Cancel Event</button>`;
+            if (!primaryBtn) primaryBtn = `<button onclick="evtUpdateStatus('${eventId}','completed')" class="evt-host-btn primary">Mark Completed</button>`;
+            else dropdownItems += `<button onclick="evtUpdateStatus('${eventId}','completed')">✓ Mark Completed</button>`;
+            dropdownItems += `<button onclick="evtCancelEvent('${eventId}')" class="danger">✕ Cancel Event</button>`;
             if (isLlc) {
-                buttons += `<button onclick="evtRescheduleEvent('${eventId}')" class="evt-host-btn">Reschedule</button>`;
+                dropdownItems += `<button onclick="evtRescheduleEvent('${eventId}')">📅 Reschedule</button>`;
             }
         }
-        buttons += `<button onclick="evtDuplicateEvent('${eventId}')" class="evt-host-btn">Duplicate Event</button>`;
+        dropdownItems += `<button onclick="evtDuplicateEvent('${eventId}')">📋 Duplicate Event</button>`;
         if (evtCurrentUserRole === 'admin') {
-            buttons += `<button onclick="evtDeleteEvent('${eventId}')" class="evt-host-btn danger">Delete Event</button>`;
+            dropdownItems += `<button onclick="evtDeleteEvent('${eventId}')" class="danger">🗑 Delete Event</button>`;
         }
 
         hostControlsHtml = `
             <h3 class="evt-section-title">Host Controls</h3>
-            <div class="evt-host-controls">${buttons}</div>`;
+            <div class="evt-host-primary">
+                ${primaryBtn}
+                <div class="evt-host-more-wrap">
+                    <button class="evt-host-more-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="More actions">⋯ More</button>
+                    <div class="evt-host-dropdown">${dropdownItems}</div>
+                </div>
+            </div>`;
     }
 
     // ── Attendee Preview (visible to all) ────────────────
@@ -707,32 +777,84 @@ async function evtOpenDetail(eventId) {
         const displayList = goingList.slice(0, 6);
         const avatarHtml = displayList.map(r => {
             const p = r.profiles;
+            const link = p?.id ? `onclick="window.location.href='profile.html?id=${p.id}'"` : '';
+            const cursor = p?.id ? 'cursor:pointer' : '';
             if (p?.profile_picture_url) {
-                return `<div class="evt-avatar-item"><img src="${p.profile_picture_url}" alt=""></div>`;
+                return `<div class="evt-avatar-item" ${link} style="${cursor}" title="${evtEscapeHtml((p?.first_name || '') + ' ' + (p?.last_name || ''))}" role="button" aria-label="View profile"><img src="${p.profile_picture_url}" alt=""></div>`;
             }
             const ini = ((p?.first_name?.[0] || '') + (p?.last_name?.[0] || '')).toUpperCase() || '?';
-            return `<div class="evt-avatar-item"><span>${ini}</span></div>`;
+            return `<div class="evt-avatar-item" ${link} style="${cursor}" title="${evtEscapeHtml((p?.first_name || '') + ' ' + (p?.last_name || ''))}" role="button" aria-label="View profile"><span>${ini}</span></div>`;
         }).join('');
         const moreCount = goingList.length - displayList.length;
         const moreHtml = moreCount > 0 ? `<div class="evt-avatar-more">+${moreCount}</div>` : '';
-        const parts = [];
-        if (goingList.length) parts.push(`${goingList.length} going`);
-        if (maybeList.length) parts.push(`${maybeList.length} maybe`);
+        const totalInterested = goingList.length + maybeList.length;
+        const countText = `${goingList.length} going${maybeList.length ? ` · ${maybeList.length} interested` : ''}`;
         attendeePreviewHtml = `
             <div style="display:flex;align-items:center;gap:14px">
                 <div class="evt-avatar-stack">${avatarHtml}${moreHtml}</div>
-                <span style="font-size:14px;color:#717171">${parts.join(' · ')}</span>
+                <span style="font-size:14px;color:#717171">${countText}</span>
             </div>`;
     }
+    // ── Build description HTML (markdown + collapsible) ─────
+    const rawDesc = event.description || '';
+    const descHtml = rawDesc
+        ? evtMiniMarkdown(rawDesc)
+        : '<span style="color:#b0b0b0;font-style:italic">No details yet — check back closer to the event.</span>';
+    const descIsLong = rawDesc.length > 500;
+
+    // ── Related / Upcoming Events ─────────────────────────
+    let relatedHtml = '';
+    if (typeof evtAllEvents !== 'undefined' && evtAllEvents.length > 1) {
+        const now = new Date();
+        const upcoming = evtAllEvents
+            .filter(e => e.id !== eventId && new Date(e.start_date) > now && ['open','confirmed'].includes(e.status))
+            .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+            .slice(0, 4);
+        if (upcoming.length > 0) {
+            const cards = upcoming.map(e => {
+                const d = new Date(e.start_date);
+                const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const imgHtml = e.banner_url
+                    ? `<img src="${e.banner_url}" alt="" loading="lazy">`
+                    : `<div style="height:120px;background:linear-gradient(135deg,#6366f1,#8b5cf6)"></div>`;
+                return `<div class="evt-related-card" onclick="evtOpenDetail('${e.id}')">
+                    ${imgHtml}
+                    <div class="evt-related-card-body">
+                        <p class="evt-related-card-title">${evtEscapeHtml(e.title)}</p>
+                        <p class="evt-related-card-meta">${dateLabel}${e.location_nickname ? ' · ' + evtEscapeHtml(e.location_nickname) : ''}</p>
+                    </div>
+                </div>`;
+            }).join('');
+            relatedHtml = `
+                <h3 class="evt-section-title">More Events</h3>
+                <div class="evt-related-scroll">${cards}</div>`;
+        }
+    }
+
+    // ── Collapsible cost breakdown wrapper ─────────────────
+    if (costBreakdownHtml && event.rsvp_cost_cents) {
+        costBreakdownHtml = `
+            <div class="evt-cost-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')" role="button" aria-expanded="false" aria-label="Toggle cost breakdown">
+                <div>
+                    <span class="evt-cost-toggle-label">📊 Cost Breakdown</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span class="evt-cost-toggle-price">${formatCurrency(event.rsvp_cost_cents)}</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+            </div>
+            <div class="evt-cost-details">${costBreakdownHtml}</div>`;
+    }
+
     document.getElementById('eventsDetailView').innerHTML = `
         <!-- Hero Banner -->
-        <div class="evt-hero" style="${bannerBg} min-height:300px;">
+        <div class="evt-hero" style="${bannerBg} min-height:300px;" ${event.banner_url ? `onclick="evtOpenLightbox('${event.banner_url}')"` : ''} role="img" aria-label="Event banner image">
             <div class="evt-hero-scrim"></div>
             <div class="evt-hero-actions">
-                <button onclick="evtNavigateToList()" class="evt-hero-btn evt-hero-back-btn" title="Back" aria-label="Back to events">
+                <button onclick="event.stopPropagation();evtNavigateToList()" class="evt-hero-btn evt-hero-back-btn" title="Back" aria-label="Back to events">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 </button>
-                <button onclick="evtCopyShareUrl('${event.slug}')" class="evt-hero-btn" title="Share" aria-label="Share event">
+                <button onclick="event.stopPropagation();evtCopyShareUrl('${event.slug}')" class="evt-hero-btn" title="Share" aria-label="Share event">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                 </button>
             </div>
@@ -757,7 +879,7 @@ async function evtOpenDetail(eventId) {
             <hr class="evt-divider">
 
             <!-- About this event (title → organizer → description) -->
-            <div class="evt-section">
+            <div class="evt-section evt-anim">
                 <h3 class="evt-section-title">About this event</h3>
                 ${(() => {
                 if (isLlc) {
@@ -775,21 +897,22 @@ async function evtOpenDetail(eventId) {
                 }
                 return '';
             })()}
-                <p style="font-size:15px;line-height:1.7;color:#484848" class="whitespace-pre-line">${evtEscapeHtml(event.description || 'No description provided.')}</p>
+                <div class="evt-desc${descIsLong ? ' evt-desc-collapsed' : ''}" id="evtDescWrap" style="font-size:15px;line-height:1.7;color:#484848;white-space:pre-line">${descHtml}</div>
+                ${descIsLong ? '<button class="evt-read-more" onclick="document.getElementById(\'evtDescWrap\').classList.remove(\'evt-desc-collapsed\');this.remove()">Read more</button>' : ''}
             </div>
 
             <hr class="evt-divider">
 
             <!-- Map -->
             ${showLocation && event.location_lat && event.location_lng ? `
-            <div class="evt-section">
+            <div class="evt-section evt-anim">
                 <div id="detailEventMap" class="evt-map" onclick="evtOpenFullscreenMap(${event.location_lat}, ${event.location_lng}, '${evtEscapeHtml(event.location_text || '').replace(/'/g, "\\'")}')">
                     <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-600 shadow-sm z-[5] flex items-center gap-1">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
                         Expand
                     </div>
                 </div>
-                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="evt-directions-btn">
+                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="evt-directions-btn" aria-label="Get directions to event">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     Get Directions
                 </a>
@@ -797,7 +920,7 @@ async function evtOpenDetail(eventId) {
             <hr class="evt-divider">` : ''}
 
             ${showNotes && event.gated_notes ? `
-            <div class="evt-section">
+            <div class="evt-section evt-anim">
                 <h3 class="evt-section-title">Attendee Details</h3>
                 <p style="font-size:15px;line-height:1.7;color:#484848" class="whitespace-pre-line">${evtEscapeHtml(event.gated_notes)}</p>
             </div>
@@ -805,24 +928,24 @@ async function evtOpenDetail(eventId) {
 
             <!-- Who's Going -->
             ${attendeePreviewHtml ? `
-            <div class="evt-section">
+            <div class="evt-section evt-anim">
                 <h3 class="evt-section-title">Who's going</h3>
                 ${attendeePreviewHtml}
             </div>
             <hr class="evt-divider">` : ''}
 
             <!-- RSVP -->
-            <div class="evt-section">
+            <div class="evt-section evt-anim">
                 ${rsvpButtons}
             </div>
 
             <!-- Dynamic sections -->
-            ${[waitlistHtml, qrHtml, venueQrHtml, scannerBtn, thresholdHtml, costBreakdownHtml, transportHtml, locationReqHtml, graceHtml, raffleHtml, documentsHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => '<hr class="evt-divider"><div class="evt-section">' + s + '</div>').join('')}
+            ${[waitlistHtml, qrHtml, venueQrHtml, scannerBtn, thresholdHtml, costBreakdownHtml, transportHtml, locationReqHtml, graceHtml, raffleHtml, documentsHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => '<hr class="evt-divider"><div class="evt-section evt-anim">' + s + '</div>').join('')}
 
             <!-- Stats (Host) -->
             ${isHost ? `
             <hr class="evt-divider">
-            <div class="evt-section">
+            <div class="evt-section evt-anim">
                 <h3 class="evt-section-title">Event Stats</h3>
                 <div class="evt-stats-grid">
                     <div class="evt-stat">
@@ -830,33 +953,32 @@ async function evtOpenDetail(eventId) {
                         <div class="evt-stat-label">Going</div>
                     </div>
                     <div class="evt-stat">
-                        <div class="evt-stat-value">${maybeList.length}</div>
-                        <div class="evt-stat-label">Maybe</div>
+                        <div class="evt-stat-value" style="color:#e11d48">${maybeList.length}</div>
+                        <div class="evt-stat-label">Interested</div>
                     </div>
                     <div class="evt-stat">
                         <div class="evt-stat-value" style="color:#059669">${checkinCount || 0}</div>
                         <div class="evt-stat-label">Checked In</div>
                     </div>
-                    <div class="evt-stat">
-                        <div class="evt-stat-value" style="color:#dc2626">${notGoingList.length}</div>
-                        <div class="evt-stat-label">Not Going</div>
-                    </div>
                 </div>
             </div>` : ''}
 
             <!-- Attendee Breakdown (Host) -->
-            ${attendeeBreakdownHtml ? `<hr class="evt-divider"><div class="evt-section">${attendeeBreakdownHtml}</div>` : ''}
+            ${attendeeBreakdownHtml ? `<hr class="evt-divider"><div class="evt-section evt-anim">${attendeeBreakdownHtml}</div>` : ''}
 
             <!-- Comments / Discussion -->
             <hr class="evt-divider">
-            <div class="evt-section" id="portalCommentsSection" role="region" aria-label="Discussion">
+            <div class="evt-section evt-anim" id="portalCommentsSection" role="region" aria-label="Discussion">
                 <h3 class="evt-section-title">Discussion</h3>
                 <div id="portalCommentsList" style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px"></div>
                 <div style="display:flex;gap:10px">
                     <input type="text" id="portalCommentInput" placeholder="Write a comment..." class="w-full text-sm p-3 border border-gray-200 rounded-xl outline-none focus:border-gray-900 transition" aria-label="Write a comment">
-                    <button onclick="evtPostComment('${eventId}')" class="evt-action-btn" style="width:auto;padding:12px 20px;font-size:14px">Post</button>
+                    <button onclick="evtPostComment('${eventId}')" class="evt-action-btn" style="width:auto;padding:12px 20px;font-size:14px" aria-label="Post comment">Post</button>
                 </div>
             </div>
+
+            <!-- Related Events -->
+            ${relatedHtml ? `<hr class="evt-divider"><div class="evt-section evt-anim">${relatedHtml}</div>` : ''}
 
             <!-- Host Controls -->
             ${hostControlsHtml ? `<hr class="evt-divider"><div class="evt-section">${hostControlsHtml}</div>` : ''}
@@ -879,11 +1001,25 @@ async function evtOpenDetail(eventId) {
     document.title = `${event.title} | Events | Justice McNeal LLC`;
     window.scrollTo({ top: 0, behavior: 'instant' });
 
+    // ── Section fade-in animations ──────────────────────
+    evtInitSectionAnimations();
+
+    // ── Live countdown (tick every second when < 1h) ────
+    if (!isClosed && !isPast && event.status !== 'active' && event.status !== 'cancelled') {
+        evtStartLiveCountdown(event.start_date);
+    }
+
     // ── Swipeable bottom nav (mobile) ──────────────────
     evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost);
 
     // Load comments
     evtLoadComments(eventId);
+
+    // Close host dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        const dd = document.querySelector('.evt-host-dropdown.open');
+        if (dd && !dd.parentElement.contains(e.target)) dd.classList.remove('open');
+    }, { once: false });
 
     // Generate QR codes after DOM render
     setTimeout(() => {
@@ -1078,6 +1214,7 @@ window.evtDownloadIcs = evtDownloadIcs;
 window.evtPostComment = evtPostComment;
 window.evtOpenFullscreenMap = evtOpenFullscreenMap;
 window.evtCloseFullscreenMap = evtCloseFullscreenMap;
+window.evtOpenLightbox = evtOpenLightbox;
 
 // ═══════════════════════════════════════════════════════════
 // Sticky CTA Bar — sits above the untouched bottom-tab-bar

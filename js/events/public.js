@@ -22,6 +22,85 @@ let pubCurrentRsvp  = null;
 let pubGuestToken   = null;  // from URL after guest RSVP payment
 let pubGuestRsvp    = null;  // loaded from DB for guest lookup
 
+/* ── Utility: Lightweight Markdown ────────── */
+function pubMiniMarkdown(text) {
+    if (!text) return '';
+    return text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/\[([^\]]+)]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+
+/* ── Utility: Lightbox ────────────────────── */
+function pubOpenLightbox(imgUrl) {
+    let lb = document.querySelector('.evt-lightbox');
+    if (!lb) {
+        lb = document.createElement('div');
+        lb.className = 'evt-lightbox';
+        lb.setAttribute('role', 'dialog');
+        lb.setAttribute('aria-label', 'Image preview');
+        lb.innerHTML = `<button class="evt-lightbox-close" aria-label="Close preview"><svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button><img src="" alt="Event banner full size">`;
+        lb.addEventListener('click', () => { lb.classList.remove('active'); document.body.style.overflow = ''; });
+        lb.querySelector('.evt-lightbox-close').addEventListener('click', () => { lb.classList.remove('active'); document.body.style.overflow = ''; });
+        document.body.appendChild(lb);
+    }
+    lb.querySelector('img').src = imgUrl;
+    lb.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+/* ── Utility: Section Fade-in Animations ──── */
+function pubInitSectionAnimations() {
+    const sections = document.querySelectorAll('.evt-section.evt-anim');
+    if (!sections.length) return;
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => entry.target.classList.add('evt-visible'), i * 60);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15 });
+    sections.forEach(s => observer.observe(s));
+}
+
+/* ── Utility: Smart Live Countdown ────────── */
+function pubStartLiveCountdown(startDate, badgeEl) {
+    let tick;
+    const update = () => {
+        const ms = new Date(startDate) - new Date();
+        if (ms <= 0) {
+            badgeEl.innerHTML = `<span class="evt-status-badge evt-status-live"><span class="evt-status-dot pulse"></span>Live</span>`;
+            clearInterval(tick);
+            return;
+        }
+        const d = Math.floor(ms / 86400000);
+        const h = Math.floor((ms % 86400000) / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
+        let lbl;
+        if (d > 0) lbl = `${d}d ${h}h`;
+        else if (h > 0) lbl = `${h}h ${m}m`;
+        else lbl = `${m}m ${s}s`;
+        const badge = badgeEl.querySelector('.evt-status-badge');
+        if (badge) badge.innerHTML = `<span class="evt-status-dot${d === 0 ? ' pulse' : ''}"></span>${lbl}`;
+    };
+    // Tick every second when < 1 hour, otherwise every 60s; re-check threshold
+    const startTick = () => {
+        const ms = new Date(startDate) - new Date();
+        const interval = ms <= 3600000 ? 1000 : 60000;
+        tick = setInterval(() => {
+            update();
+            const remaining = new Date(startDate) - new Date();
+            if (remaining <= 3600000 && interval === 60000) {
+                clearInterval(tick);
+                startTick();
+            }
+        }, interval);
+    };
+    startTick();
+}
+
 /* ── Bootstrap ───────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
@@ -118,9 +197,13 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     const bannerEl = document.getElementById('eventBanner');
     if (event.banner_url) {
         bannerEl.style.backgroundImage = `url(${event.banner_url})`;
+        bannerEl.style.cursor = 'pointer';
+        bannerEl.addEventListener('click', () => pubOpenLightbox(event.banner_url));
     } else {
         bannerEl.style.background = 'linear-gradient(135deg, #222, #444)';
     }
+    // Prevent hero action buttons from triggering lightbox
+    bannerEl.querySelectorAll('.evt-hero-btn').forEach(b => b.addEventListener('click', e => e.stopPropagation()));
 
     // Tags (frosted glass pills on hero)
     const tagsEl = document.getElementById('eventTags');
@@ -182,17 +265,9 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         </div>
     </div>`;
 
-    // Live countdown updater (update badge every 60s for upcoming events)
+    // Live countdown updater (smart: 1s tick when < 1 hour)
     if (!isClosed && !isPast && event.status !== 'active') {
-        setInterval(() => {
-            const ms = new Date(event.start_date) - new Date();
-            if (ms <= 0) { heroBadge.innerHTML = `<span class="evt-status-badge evt-status-live"><span class="evt-status-dot pulse"></span>Live</span>`; return; }
-            const dd = Math.floor(ms / 86400000);
-            const hh = Math.floor((ms % 86400000) / 3600000);
-            const mm = Math.floor((ms % 3600000) / 60000);
-            const lbl = dd > 0 ? `${dd}d ${hh}h` : hh > 0 ? `${hh}h ${mm}m` : `${mm}m`;
-            heroBadge.querySelector('.evt-status-badge').innerHTML = `<span class="evt-status-dot${dd === 0 ? ' pulse' : ''}"></span>${lbl}`;
-        }, 60000);
+        pubStartLiveCountdown(event.start_date, heroBadge);
     }
 
     // Also show body-level status banner for deadline-passed (not reflected in hero)
@@ -253,8 +328,27 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         pubShowMap(event.location_lat, event.location_lng, event.location_text);
     }
 
-    // Description
-    document.getElementById('eventDesc').textContent = event.description || '';
+    // Description (markdown, collapsible, empty state)
+    const descEl = document.getElementById('eventDesc');
+    const rawDesc = event.description || '';
+    if (rawDesc.trim()) {
+        const rendered = pubMiniMarkdown(pubEscapeHtml(rawDesc)).replace(/\n/g, '<br>');
+        descEl.classList.add('evt-desc');
+        descEl.innerHTML = rendered;
+        if (rawDesc.length > 500) {
+            descEl.classList.add('evt-desc-collapsed');
+            const btn = document.createElement('button');
+            btn.className = 'evt-read-more';
+            btn.textContent = 'Read more';
+            btn.addEventListener('click', () => {
+                descEl.classList.remove('evt-desc-collapsed');
+                btn.remove();
+            });
+            descEl.parentNode.insertBefore(btn, descEl.nextSibling);
+        }
+    } else {
+        descEl.innerHTML = '<em style="color:#b0b0b0">No details yet — check back closer to the event.</em>';
+    }
 
     // Gated Notes
     if (event.gated_notes && (pubCurrentRsvp || pubGuestRsvp)) {
@@ -326,6 +420,10 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     loginLinks.forEach(link => {
         link.href = `/auth/login.html?redirect=${returnUrl}`;
     });
+
+    // Add section fade-in animations
+    content.querySelectorAll('.evt-section').forEach(s => s.classList.add('evt-anim'));
+    pubInitSectionAnimations();
 }
 
 /* ── RSVP Section ────────────────────────── */
@@ -422,23 +520,19 @@ function pubRenderRsvpSection(event) {
 
     // ── Free RSVP (any non-paid event) ──────────────────
     const goingCls = pubCurrentRsvp?.status === 'going' ? ' active-going' : '';
-    const maybeCls = pubCurrentRsvp?.status === 'maybe' ? ' active-maybe' : '';
-    const cantCls  = pubCurrentRsvp?.status === 'not_going' ? ' active-not' : '';
+    const intCls   = pubCurrentRsvp?.status === 'maybe' ? ' active-interested' : '';
 
     section.innerHTML = `
         <p style="font-size:12px;font-weight:700;color:#717171;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Your RSVP</p>
-        <div class="evt-rsvp-grid" role="group" aria-label="RSVP options">
+        <div class="evt-rsvp-pair" role="group" aria-label="RSVP options">
             <button onclick="pubHandleRsvp('going')" class="evt-rsvp-btn${goingCls}" aria-pressed="${pubCurrentRsvp?.status === 'going'}">
-                <span style="font-size:20px;display:block;margin-bottom:4px">✅</span> Going
+                <span class="evt-rsvp-icon">✅</span> Going
             </button>
-            <button onclick="pubHandleRsvp('maybe')" class="evt-rsvp-btn${maybeCls}" aria-pressed="${pubCurrentRsvp?.status === 'maybe'}">
-                <span style="font-size:20px;display:block;margin-bottom:4px">🤔</span> Maybe
-            </button>
-            <button onclick="pubHandleRsvp('not_going')" class="evt-rsvp-btn${cantCls}" aria-pressed="${pubCurrentRsvp?.status === 'not_going'}">
-                <span style="font-size:20px;display:block;margin-bottom:4px">❌</span> Can't Go
+            <button onclick="pubHandleRsvp('maybe')" class="evt-rsvp-btn${intCls}" aria-pressed="${pubCurrentRsvp?.status === 'maybe'}">
+                <span class="evt-rsvp-icon">❤️</span> Interested
             </button>
         </div>
-        ${pubCurrentRsvp ? '<p style="font-size:13px;color:#b0b0b0;text-align:center;margin-top:10px">Click your current response to cancel</p>' : ''}
+        ${pubCurrentRsvp ? '<p style="font-size:13px;color:#b0b0b0;text-align:center;margin-top:10px">Tap your current response to cancel</p>' : ''}
     `;
 }
 
@@ -1395,7 +1489,15 @@ function pubEscapeHtml(text) {
 
 function pubCopyUrl() {
     const input = document.getElementById('shareUrl');
-    navigator.clipboard.writeText(input.value).then(() => {
+    const url = input.value;
+
+    // Use native share if available
+    if (navigator.share) {
+        navigator.share({ title: pubCurrentEvent?.title || 'Event', url }).catch(() => {});
+        return;
+    }
+
+    navigator.clipboard.writeText(url).then(() => {
         const btn = document.getElementById('copyBtnBanner');
         // Swap icon to checkmark briefly
         btn.innerHTML = '<svg style="width:18px;height:18px;color:#059669" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
@@ -1670,6 +1772,7 @@ window.pubCloseFullscreenMap = pubCloseFullscreenMap;
 window.pubCopyUrl = pubCopyUrl;
 window.pubDownloadIcs = pubDownloadIcs;
 window.pubPostComment = pubPostComment;
+window.pubOpenLightbox = pubOpenLightbox;
 
 // ═══════════════════════════════════════════════════════════
 // Sticky CTA Bar (mobile — public event page)
@@ -1699,6 +1802,8 @@ function pubInitBottomNav(event) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${PUB_CTA_ICONS.check} RSVP'd</button>`;
         } else if (pubCurrentRsvp?.status === 'going' || pubGuestRsvp) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${PUB_CTA_ICONS.check} Going</button>`;
+        } else if (pubCurrentRsvp?.status === 'maybe') {
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled style="background:#e11d48">❤️ Interested</button>`;
         } else if (entriesClosed) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${PUB_CTA_ICONS.lock} ${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
         } else if (pubCurrentUser && event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
