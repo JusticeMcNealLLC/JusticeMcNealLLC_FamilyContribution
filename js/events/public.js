@@ -1688,18 +1688,16 @@ window.pubDownloadIcs = pubDownloadIcs;
 window.pubPostComment = pubPostComment;
 
 // ═══════════════════════════════════════════════════════════
-// Swipeable Bottom Nav (mobile — public event page)
+// Sticky CTA Bar (mobile — public event page)
 // ═══════════════════════════════════════════════════════════
-const PUB_FAB_ICONS = {
-    plus: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>',
+const PUB_CTA_ICONS = {
     check: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
     ticket: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>',
     lock: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
-    signIn: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>',
 };
 
 function pubInitBottomNav(event) {
-    const prev = document.getElementById('evtFabWrap');
+    const prev = document.getElementById('evtCtaBar');
     if (prev) prev.remove();
 
     const rsvpEnabled = event.rsvp_enabled !== false;
@@ -1711,54 +1709,40 @@ function pubInitBottomNav(event) {
     const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
     const entriesClosed = isClosed || isPast || deadlinePassed;
 
-    const wrap = document.createElement('div');
-    wrap.id = 'evtFabWrap';
-    wrap.className = 'evt-fab-wrap';
-
-    // Raffle FAB
-    if (raffleEnabled) {
-        let cls, icon, label, onclick, disabled;
-        if (entriesClosed) {
-            cls = 'evt-fab evt-fab-raffle'; icon = PUB_FAB_ICONS.lock; label = 'Closed'; disabled = true;
-        } else if (event.pricing_mode === 'paid') {
-            cls = null; // included with RSVP
-        } else {
-            cls = 'evt-fab evt-fab-raffle'; icon = PUB_FAB_ICONS.ticket; label = 'Raffle';
-            onclick = "document.getElementById('raffleSection')?.scrollIntoView({behavior:'smooth'})";
-        }
-        if (cls) {
-            wrap.innerHTML += `<button class="${cls}"${onclick ? ` onclick="${onclick}"` : ''}${disabled ? ' disabled' : ''}>${icon}<span class="evt-fab-label">${label}</span></button>`;
-        }
-    }
-
-    // RSVP FAB
+    let rsvpBtn = '';
     if (rsvpEnabled) {
-        let cls, icon, label, onclick, disabled, isLink;
         if (pubCurrentRsvp?.paid || pubGuestRsvp?.paid) {
-            cls = 'evt-fab evt-fab-rsvp-done'; icon = PUB_FAB_ICONS.check; label = "RSVP'd"; disabled = true;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${PUB_CTA_ICONS.check} RSVP'd</button>`;
         } else if (pubCurrentRsvp?.status === 'going' || pubGuestRsvp) {
-            cls = 'evt-fab evt-fab-rsvp-done'; icon = PUB_FAB_ICONS.check; label = 'Going'; disabled = true;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${PUB_CTA_ICONS.check} Going</button>`;
         } else if (entriesClosed) {
-            cls = 'evt-fab evt-fab-rsvp'; icon = PUB_FAB_ICONS.lock; label = isClosed ? 'Closed' : 'RSVP Closed'; disabled = true;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${PUB_CTA_ICONS.lock} ${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
         } else if (pubCurrentUser && event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
-            cls = 'evt-fab evt-fab-rsvp'; icon = PUB_FAB_ICONS.plus; label = `RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}`;
-            onclick = "document.getElementById('rsvpSection').scrollIntoView({behavior:'smooth'})";
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="document.getElementById('rsvpSection').scrollIntoView({behavior:'smooth'})">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
         } else if (pubCurrentUser) {
-            cls = 'evt-fab evt-fab-rsvp'; icon = PUB_FAB_ICONS.plus; label = 'RSVP'; onclick = "pubHandleRsvp('going')";
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubHandleRsvp('going')">RSVP</button>`;
         } else {
-            cls = 'evt-fab evt-fab-rsvp'; icon = PUB_FAB_ICONS.signIn; label = 'Sign In to RSVP'; isLink = true;
-        }
-        if (isLink) {
-            wrap.innerHTML += `<a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="${cls}" style="text-decoration:none">${icon}<span class="evt-fab-label">${label}</span></a>`;
-        } else {
-            wrap.innerHTML += `<button class="${cls}"${onclick ? ` onclick="${onclick}"` : ''}${disabled ? ' disabled' : ''}>${icon}<span class="evt-fab-label">${label}</span></button>`;
+            rsvpBtn = `<a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-cta-btn evt-cta-rsvp">Sign In to RSVP</a>`;
         }
     }
 
-    if (!wrap.children.length) return;
-    document.body.appendChild(wrap);
-}
+    let raffleBtn = '';
+    if (raffleEnabled) {
+        if (entriesClosed) {
+            raffleBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${PUB_CTA_ICONS.lock} Closed</button>`;
+        } else if (event.pricing_mode === 'paid') {
+            // included with RSVP — no separate button
+        } else {
+            raffleBtn = `<button class="evt-cta-btn evt-cta-raffle" onclick="document.getElementById('raffleSection')?.scrollIntoView({behavior:'smooth'})">${PUB_CTA_ICONS.ticket} Raffle</button>`;
+        }
+    }
 
-    // Dot tap
-    dots.forEach(d => d.addEventListener('click', () => goToPage(Number(d.dataset.page))));
+    if (!rsvpBtn && !raffleBtn) return;
+
+    const bar = document.createElement('div');
+    bar.id = 'evtCtaBar';
+    bar.className = 'evt-cta-bar';
+    bar.innerHTML = rsvpBtn + raffleBtn;
+    document.body.appendChild(bar);
+    document.body.style.paddingBottom = '80px';
 }
