@@ -174,10 +174,11 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
 
     heroBadge.innerHTML = `<div class="evt-date-card-wrap">
         <span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>
-        <div class="evt-date-card">
+        <div class="evt-date-card" onclick="pubDownloadIcs()" title="Add to calendar">
             <span class="evt-date-card-month">${heroMonthStr}</span>
             <span class="evt-date-card-day">${heroDayStr}</span>
             <span class="evt-date-card-time">${heroTimeShort}</span>
+            <span class="evt-date-card-cal-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"/></svg></span>
         </div>
     </div>`;
 
@@ -244,25 +245,8 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     }
     hostEl.classList.remove('hidden');
 
-    // ── Add to Calendar ─────────────────────────────
-    if (!isGatedDate) {
-        const calEl = document.getElementById('calendarSection');
-        const calStart = start.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-        const calEnd = end ? end.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '') : new Date(start.getTime() + 7200000).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-        const gcalUrl = `https://calendar.google.com/calendar/r/eventedit?text=${encodeURIComponent(event.title)}&dates=${calStart}/${calEnd}&details=${encodeURIComponent(event.description || '')}&location=${encodeURIComponent(event.location_text || '')}`;
-        calEl.innerHTML = `
-            <div style="display:flex;gap:10px">
-                <button onclick="pubDownloadIcs()" class="evt-action-btn" style="flex:1;background:#f7f7f7;color:#222">
-                    <svg style="width:18px;height:18px;stroke:#222" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    Add to Calendar
-                </button>
-                <a href="${gcalUrl}" target="_blank" rel="noopener" class="evt-action-btn" style="flex:1;background:#f7f7f7;color:#222;text-decoration:none">
-                    <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none"><path d="M18.316 5.684L24 0H18.316V5.684z" fill="#EA4335"/><path d="M18.316 0H5.684v5.684h7.263L18.316 0z" fill="#4285F4" opacity=".6"/><path d="M5.684 5.684H0V18.316h5.684V5.684z" fill="#34A853"/><path d="M18.316 5.684v12.632H24V5.684h-5.684z" fill="#FBBC05"/><path d="M18.316 18.316H5.684V24h12.632v-5.684z" fill="#EA4335" opacity=".6"/><path d="M5.684 0H0v5.684h5.684V0z" fill="#188038"/><path d="M5.684 18.316H0V24h5.684v-5.684z" fill="#1967D2"/><path d="M8 16.5v-9h2v9H8zm3-9h2v9h-2v-9zm3 0h2v9h-2v-9z" fill="#4285F4"/></svg>
-                    Google Calendar
-                </a>
-            </div>`;
-        calEl.classList.remove('hidden');
-    }
+    // ── Add to Calendar — handled by date card tap ───
+    // (calendarSection no longer used — .ics triggered from date card)
 
     // Map (show if location + lat/lng available and not gated)
     if (event.location_lat && event.location_lng && !isGatedLoc) {
