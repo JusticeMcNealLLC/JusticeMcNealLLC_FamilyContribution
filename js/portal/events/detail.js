@@ -736,20 +736,16 @@ async function evtOpenDetail(eventId) {
                 </button>
             </div>
             <div class="evt-hero-content">
-                <div class="flex gap-2 mb-2.5">
+                <div class="flex gap-2 mb-1">
                     ${event.category ? `<span class="evt-tag" style="background:rgba(255,255,255,.2);color:#fff;backdrop-filter:blur(4px)">${CATEGORY_EMOJI[event.category] || '📌'} ${(event.category || '').replace(/_/g,' ')}</span>` : ''}
                     <span class="evt-tag ${tc.bg} ${tc.text}">${tc.label}</span>
                 </div>
-                <div class="evt-hero-bottom">
-                    <div class="evt-hero-left">
-                        ${event.location_nickname ? `<span class="evt-location-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg> ${evtEscapeHtml(event.location_nickname)}</span>` : ''}
-                    </div>
-                    <div aria-live="polite">${heroBadgeHtml}</div>
-                </div>
+                ${event.location_nickname ? `<span class="evt-location-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg> ${evtEscapeHtml(event.location_nickname)}</span>` : ''}
             </div>
         </div>
 
         <div class="evt-body max-w-5xl mx-auto">
+            ${heroBadgeHtml}
 
             <!-- Status banner for deadline-passed -->
             ${deadlinePassed && !isClosed && !isPast ? '<div style="padding:16px 0 0"><span class="evt-status-banner evt-status-past-body">🔒 RSVP deadline passed</span></div>' : ''}

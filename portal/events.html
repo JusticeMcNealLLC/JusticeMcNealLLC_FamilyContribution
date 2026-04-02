@@ -173,11 +173,12 @@
         .evt-hero-bottom { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
         .evt-hero-left { flex:1; min-width:0; }
         .evt-status-badge { display:inline-flex; align-items:center; gap:7px; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); flex-shrink:0; }
-        .evt-date-card-wrap { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
-        .evt-date-card { background:rgba(255,255,255,.95); backdrop-filter:blur(8px); border-radius:14px; padding:10px 16px; display:flex; align-items:center; gap:12px; box-shadow:0 4px 16px rgba(0,0,0,.2); }
-        .evt-date-card-month { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--brand,#6d28d9); line-height:1; }
-        .evt-date-card-day { font-size:26px; font-weight:800; color:#222; line-height:1; }
-        .evt-date-card-time { font-size:12px; font-weight:600; color:#666; line-height:1; }
+        .evt-date-card-wrap { position:absolute; top:-28px; right:24px; display:flex; flex-direction:column; align-items:center; gap:6px; z-index:5; }
+        @media(min-width:640px){ .evt-date-card-wrap { right:40px; top:-32px; } }
+        .evt-date-card { background:rgba(255,255,255,.97); backdrop-filter:blur(8px); border-radius:14px; padding:10px 18px; display:flex; flex-direction:column; align-items:center; box-shadow:0 4px 16px rgba(0,0,0,.15); min-width:72px; }
+        .evt-date-card-month { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--brand,#6d28d9); line-height:1; }
+        .evt-date-card-day { font-size:28px; font-weight:800; color:#222; line-height:1.1; }
+        .evt-date-card-time { font-size:11px; font-weight:600; color:#666; line-height:1; margin-top:2px; }
         .evt-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
         .evt-status-dot.pulse { animation:dotPulse 1.5s ease-in-out infinite; }
         @keyframes dotPulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.4; transform:scale(.7); } }
