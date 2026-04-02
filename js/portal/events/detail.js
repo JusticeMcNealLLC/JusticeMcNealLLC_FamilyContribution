@@ -1117,8 +1117,10 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
 
     // Build RSVP button
     let rsvpBtn = '';
-    if (rsvpEnabled && !isHost) {
-        if (rsvp?.paid) {
+    if (rsvpEnabled) {
+        if (isHost) {
+            rsvpBtn = `<button class="evt-bn-rsvp" disabled>🎯 Hosting</button>`;
+        } else if (rsvp?.paid) {
             rsvpBtn = `<button class="evt-bn-rsvp" disabled>✅ RSVP'd</button>`;
         } else if (rsvp?.status === 'going') {
             rsvpBtn = `<button class="evt-bn-rsvp" disabled>✅ Going</button>`;
@@ -1135,8 +1137,10 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
 
     // Build Raffle button
     let raffleBtn = '';
-    if (raffleEnabled && !isHost) {
-        if (myRaffleEntry) {
+    if (raffleEnabled) {
+        if (isHost) {
+            raffleBtn = ''; // host doesn't need raffle button when hosting indicator shown
+        } else if (myRaffleEntry) {
             raffleBtn = `<button class="evt-bn-raffle" disabled>🎟️ Entered</button>`;
         } else if (entriesClosed) {
             raffleBtn = `<button class="evt-bn-raffle" disabled>🔒 Closed</button>`;
