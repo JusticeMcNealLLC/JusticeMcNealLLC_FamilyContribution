@@ -72,8 +72,11 @@
         .evt-hero-title { font-size:24px; font-weight:800; color:#fff; line-height:1.2; text-shadow:0 2px 12px rgba(0,0,0,.35); }
         @media(min-width:640px){ .evt-hero { min-height:380px; } .evt-hero-title { font-size:32px; } .evt-hero-content { padding:28px 32px; } }
         .evt-tag { font-size:11px; padding:3px 10px; border-radius:6px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
-        .evt-body { padding:0 24px; }
-        @media(min-width:640px){ .evt-body { padding:0 40px; } }
+        .evt-location-pill { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.92); color:#222; font-size:13px; font-weight:600; padding:6px 14px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,.15); backdrop-filter:blur(6px); }
+        .evt-content-title { font-size:26px; font-weight:800; color:#222; line-height:1.2; letter-spacing:-.02em; margin-bottom:4px; }
+        @media(min-width:640px){ .evt-content-title { font-size:32px; } }
+        .evt-body { padding:24px 24px 0; position:relative; z-index:4; background:#fff; border-radius:24px 24px 0 0; margin-top:-32px; }
+        @media(min-width:640px){ .evt-body { padding:32px 40px 0; margin-top:-40px; } }
         .evt-section { padding:24px 0; }
         .evt-section > *:first-child { margin-top:0 !important; }
         .evt-divider { border:none; height:1px; background:#ebebeb; margin:0; }
@@ -385,9 +388,15 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Location</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Location Nickname <span class="font-normal text-gray-400">(optional)</span></label>
+                        <input type="text" id="eventLocationNickname" placeholder="e.g. Yolanda's House, City Park"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent mb-3">
+                        <p class="text-xs text-gray-400 -mt-2 mb-3">A friendly name shown on the banner. The full address below is used for maps.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Address</label>
                         <div class="relative">
-                            <input type="text" id="eventLocation" placeholder="Address or venue name"
+                            <input type="text" id="eventLocation" placeholder="Full address for map & directions"
                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
                             <!-- Inline spinner / check / warning icon -->
                             <div id="locationIcon" class="absolute right-3 top-1/2 -translate-y-1/2 hidden">

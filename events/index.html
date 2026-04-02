@@ -78,6 +78,9 @@
         .evt-hero-title { font-size:26px; font-weight:800; color:#fff; line-height:1.2; text-shadow:0 2px 12px rgba(0,0,0,.35); }
         @media(min-width:640px){ .evt-hero-title { font-size:34px; } .evt-hero-content { padding:28px 32px; } }
         .evt-tag { font-size:11px; padding:3px 10px; border-radius:6px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+        .evt-location-pill { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.92); color:#222; font-size:13px; font-weight:600; padding:6px 14px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,.15); backdrop-filter:blur(6px); }
+        .evt-content-title { font-size:26px; font-weight:800; color:#222; line-height:1.2; letter-spacing:-.02em; margin-bottom:4px; }
+        @media(min-width:640px){ .evt-content-title { font-size:32px; } }
 
         /* Hero status badge */
         .evt-hero-bottom { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
@@ -96,8 +99,8 @@
         .evt-status-cancelled .evt-status-dot { background:#f87171; }
 
         /* ═══ Body & Sections ═══ */
-        .evt-body { padding:0 24px; max-width:42rem; margin:0 auto; }
-        @media(min-width:640px){ .evt-body { padding:0 40px; } }
+        .evt-body { padding:24px 24px 0; max-width:42rem; margin:-32px auto 0; position:relative; z-index:4; background:#fff; border-radius:24px 24px 0 0; }
+        @media(min-width:640px){ .evt-body { padding:32px 40px 0; margin-top:-40px; } }
         .evt-section { padding:24px 0; }
         .evt-divider { border:none; height:1px; background:#ebebeb; margin:0; }
         .evt-section-title { font-size:22px; font-weight:700; color:#222; letter-spacing:-.02em; margin-bottom:16px; }
@@ -237,7 +240,7 @@
                 <div id="eventTags" style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"></div>
                 <div class="evt-hero-bottom">
                     <div class="evt-hero-left">
-                        <h1 id="eventTitle" class="evt-hero-title"></h1>
+                        <div id="heroLocationPill"></div>
                     </div>
                     <div id="heroStatusBadge" aria-live="polite" aria-atomic="true"></div>
                 </div>
@@ -246,6 +249,9 @@
 
         <div class="evt-body">
         <input type="hidden" id="shareUrl" value="">
+
+        <!-- Event Title -->
+        <h1 id="eventContentTitle" class="evt-content-title"></h1>
 
         <!-- Invite Banner (personalized share link) -->
         <div id="inviteBanner" class="hidden" style="padding:16px 0 0"></div>

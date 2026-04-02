@@ -440,6 +440,7 @@ async function evtHandleCreate(e) {
             start_date: new Date(document.getElementById('eventStart').value).toISOString(),
             end_date: document.getElementById('eventEnd').value ? new Date(document.getElementById('eventEnd').value).toISOString() : null,
             timezone: document.getElementById('eventTimezone').value,
+            location_nickname: document.getElementById('eventLocationNickname').value.trim() || null,
             location_text: document.getElementById('eventLocation').value.trim() || null,
             max_participants: maxPart,
             rsvp_deadline: document.getElementById('eventRsvpDeadline').value ? new Date(document.getElementById('eventRsvpDeadline').value).toISOString() : null,
