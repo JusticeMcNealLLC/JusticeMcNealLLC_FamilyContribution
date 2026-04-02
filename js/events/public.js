@@ -292,6 +292,9 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     // Raffle section
     pubRenderRaffleSection(event);
 
+    // Swipeable bottom nav (mobile)
+    pubInitBottomNav(event);
+
     // QR Ticket — member
     if (pubCurrentRsvp && pubCurrentRsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
         pubShowTicketQR(pubCurrentRsvp.qr_token);
@@ -1683,3 +1686,129 @@ window.pubCloseFullscreenMap = pubCloseFullscreenMap;
 window.pubCopyUrl = pubCopyUrl;
 window.pubDownloadIcs = pubDownloadIcs;
 window.pubPostComment = pubPostComment;
+
+// ═══════════════════════════════════════════════════════════
+// Swipeable Bottom Nav (mobile — public event page)
+// ═══════════════════════════════════════════════════════════
+function pubInitBottomNav(event) {
+    const prev = document.getElementById('evtBottomNav');
+    if (prev) prev.remove();
+
+    const rsvpEnabled = event.rsvp_enabled !== false;
+    const raffleEnabled = !!event.raffle_enabled;
+    if (!rsvpEnabled && !raffleEnabled) return;
+
+    const isClosed = event.status === 'completed' || event.status === 'cancelled';
+    const isPast = new Date(event.start_date) < new Date() && event.status !== 'active';
+    const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
+    const entriesClosed = isClosed || isPast || deadlinePassed;
+
+    // Build RSVP button for bottom bar
+    let rsvpBtn = '';
+    if (rsvpEnabled) {
+        if (pubCurrentRsvp?.paid || pubGuestRsvp?.paid) {
+            rsvpBtn = `<button class="evt-bn-rsvp" disabled>✅ RSVP'd</button>`;
+        } else if (pubCurrentRsvp?.status === 'going' || pubGuestRsvp) {
+            rsvpBtn = `<button class="evt-bn-rsvp" disabled>✅ Going</button>`;
+        } else if (entriesClosed) {
+            rsvpBtn = `<button class="evt-bn-rsvp" disabled>${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
+        } else if (pubCurrentUser && event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
+            rsvpBtn = `<button class="evt-bn-rsvp" onclick="document.getElementById('rsvpSection').scrollIntoView({behavior:'smooth'})">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
+        } else if (pubCurrentUser) {
+            rsvpBtn = `<button class="evt-bn-rsvp" onclick="pubHandleRsvp('going')">RSVP</button>`;
+        } else {
+            rsvpBtn = `<a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-bn-rsvp" style="text-decoration:none">Sign In to RSVP</a>`;
+        }
+    }
+
+    // Build Raffle button
+    let raffleBtn = '';
+    if (raffleEnabled) {
+        if (entriesClosed) {
+            raffleBtn = `<button class="evt-bn-raffle" disabled>🔒 Closed</button>`;
+        } else if (event.pricing_mode === 'paid') {
+            // included with RSVP — no separate button
+        } else {
+            raffleBtn = `<button class="evt-bn-raffle" onclick="document.getElementById('raffleSection')?.scrollIntoView({behavior:'smooth'})">🎟️ Raffle</button>`;
+        }
+    }
+
+    if (!rsvpBtn && !raffleBtn) return;
+
+    // Nav page (page 2) — simple back / home / share
+    const navPage = `
+        <a href="/" class="evt-bn-nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+            <span>Home</span>
+        </a>
+        <button onclick="pubCopyUrl()" class="evt-bn-nav-link" style="border:none;background:none;cursor:pointer">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/></svg>
+            <span>Share</span>
+        </button>
+        <button onclick="window.scrollTo({top:0,behavior:'smooth'})" class="evt-bn-nav-link" style="border:none;background:none;cursor:pointer">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l7.5-7.5 7.5 7.5m-15 6l7.5-7.5 7.5 7.5"/></svg>
+            <span>Top</span>
+        </button>`;
+
+    const bar = document.createElement('div');
+    bar.id = 'evtBottomNav';
+    bar.className = 'evt-bottom-nav';
+    bar.innerHTML = `
+        <div class="evt-bn-dots">
+            <span class="evt-bn-dot active" data-page="0"></span>
+            <span class="evt-bn-dot" data-page="1"></span>
+        </div>
+        <div class="evt-bn-track" id="evtBnTrack">
+            <div class="evt-bn-page">${rsvpBtn}${raffleBtn}</div>
+            <div class="evt-bn-page">${navPage}</div>
+        </div>`;
+    document.body.appendChild(bar);
+
+    // Add bottom padding to body for the bar
+    document.body.style.paddingBottom = '80px';
+
+    // Swipe logic
+    const track = document.getElementById('evtBnTrack');
+    const dots = bar.querySelectorAll('.evt-bn-dot');
+    let page = 0, startX = 0, currentX = 0, swiping = false;
+
+    function goToPage(p) {
+        page = p;
+        track.style.transform = `translateX(${-page * 50}%)`;
+        dots.forEach((d, i) => d.classList.toggle('active', i === page));
+    }
+
+    bar.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        currentX = startX;
+        swiping = true;
+        track.style.transition = 'none';
+    }, { passive: true });
+
+    bar.addEventListener('touchmove', e => {
+        if (!swiping) return;
+        currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+        const baseOffset = -page * 50;
+        const pxToPercent = (diff / bar.offsetWidth) * 50;
+        const clampedOffset = Math.max(-50, Math.min(0, baseOffset + pxToPercent));
+        track.style.transform = `translateX(${clampedOffset}%)`;
+    }, { passive: true });
+
+    bar.addEventListener('touchend', () => {
+        if (!swiping) return;
+        swiping = false;
+        track.style.transition = 'transform .3s ease';
+        const diff = currentX - startX;
+        if (Math.abs(diff) > 40) {
+            if (diff < 0 && page === 0) goToPage(1);
+            else if (diff > 0 && page === 1) goToPage(0);
+            else goToPage(page);
+        } else {
+            goToPage(page);
+        }
+    }, { passive: true });
+
+    // Dot tap
+    dots.forEach(d => d.addEventListener('click', () => goToPage(Number(d.dataset.page))));
+}
