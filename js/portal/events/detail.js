@@ -1278,10 +1278,17 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
     bar.innerHTML = rsvpBtn + raffleBtn;
     document.body.appendChild(bar);
     document.body.classList.add('evt-cta-active');
+
+    // Hide swipe-hint so it doesn't overlap the CTA bar
+    const hint = document.querySelector('.bottom-tab-bar .swipe-hint');
+    if (hint) hint.style.display = 'none';
 }
 
 function evtCleanupBottomNav() {
     const el = document.getElementById('evtCtaBar');
     if (el) el.remove();
+    // Restore swipe-hint
+    const hint = document.querySelector('.bottom-tab-bar .swipe-hint');
+    if (hint) hint.style.display = '';
     document.body.classList.remove('evt-cta-active');
 }

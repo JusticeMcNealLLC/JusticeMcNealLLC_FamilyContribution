@@ -1834,4 +1834,8 @@ function pubInitBottomNav(event) {
     bar.innerHTML = rsvpBtn + raffleBtn;
     document.body.appendChild(bar);
     document.body.style.paddingBottom = '80px';
+
+    // Hide swipe-hint so it doesn't overlap the CTA bar
+    const hint = document.querySelector('.bottom-tab-bar .swipe-hint, .pub-nav .swipe-hint');
+    if (hint) hint.style.display = 'none';
 }
