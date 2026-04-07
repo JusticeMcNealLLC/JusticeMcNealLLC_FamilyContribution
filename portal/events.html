@@ -34,275 +34,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="JMLLC">
     <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
-    <style>
-        /* Hide nav on mobile — hero card replaces it */
-        @media (max-width: 767px) {
-            body[data-active-page="events"] > nav { display: none !important; }
-        }
-        /* Desktop nav: fixed so it stays visible on scroll.
-           sticky doesn't work on direct flex children in a column flex container. */
-        @media (min-width: 768px) {
-            #mainNav { position: fixed; top: 0; left: 0; right: 0; z-index: 40; }
-        }
-        .event-card { transition: transform .15s ease, box-shadow .15s ease; cursor: pointer; }
-        .event-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(0,0,0,.08); }
-        .tab-btn { position: relative; }
-        .tab-btn.active { color: #4f46e5; }
-        .tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: #4f46e5; border-radius: 2px; }
-        .type-tag { font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-        .rsvp-badge { font-size: 11px; padding: 2px 10px; border-radius: 999px; font-weight: 600; }
-        .modal-overlay { backdrop-filter: blur(4px); }
-        .modal-panel { max-height: 90vh; }
-        @media (max-width: 640px) {
-            .modal-panel { max-height: 100dvh; max-height: -webkit-fill-available; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
-            #eventsDetailView { padding-bottom: env(safe-area-inset-bottom, 0px); }
-        }
-        #scannerVideo { width: 100%; border-radius: 12px; }
-
-        /* ═══ Event Detail — Airbnb-inspired ═══ */
-        .evt-hero { position:relative; background-size:cover; background-position:center; }
-        .evt-hero-scrim { position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.7) 0%, rgba(0,0,0,.1) 45%, rgba(0,0,0,.25) 100%); pointer-events:none; }
-        .evt-hero-actions { position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-start; z-index:2; padding:12px; }
-        .evt-hero-back-btn { }
-        @media(min-width:640px){ .evt-hero-actions { padding:76px 16px 0; } .evt-hero-back-btn { display:none !important; } }
-        .evt-hero-btn { width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.92); display:flex; align-items:center; justify-content:center; border:none; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.12); transition:transform .15s; }
-        .evt-hero-btn:active { transform:scale(.92); }
-        .evt-hero-btn svg { width:16px; height:16px; stroke:#222; }
-        .evt-hero-content { position:absolute; bottom:0; left:0; right:0; padding:20px 24px; z-index:5; max-width:64rem; margin:0 auto; }
-        .evt-hero-title { font-size:24px; font-weight:800; color:#fff; line-height:1.2; text-shadow:0 2px 12px rgba(0,0,0,.35); }
-        @media(min-width:640px){ .evt-hero { min-height:380px; } .evt-hero-title { font-size:32px; } .evt-hero-content { padding:28px 32px; } }
-        .evt-tag { font-size:11px; padding:3px 10px; border-radius:6px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
-        .evt-location-pill { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.92); color:#222; font-size:13px; font-weight:600; padding:6px 14px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,.15); backdrop-filter:blur(6px); }
-        .evt-content-title { font-size:26px; font-weight:800; color:#222; line-height:1.2; letter-spacing:-.02em; margin-bottom:4px; }
-        @media(min-width:640px){ .evt-content-title { font-size:32px; } }
-        .evt-body { padding:24px 24px 0; position:relative; z-index:4; background:#fff; border-radius:24px 24px 0 0; margin-top:-32px; }
-        @media(min-width:640px){ .evt-body { padding:32px 40px 0; margin-top:-40px; } }
-        .evt-section { padding:24px 0; }
-        .evt-section > *:first-child { margin-top:0 !important; }
-        .evt-divider { border:none; height:1px; background:#ebebeb; margin:0; }
-        .evt-info-row { display:flex; align-items:flex-start; gap:16px; }
-        .evt-info-row + .evt-info-row { margin-top:16px; }
-        .evt-info-icon { width:48px; height:48px; border-radius:12px; background:#f7f7f7; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-        .evt-info-icon svg { width:24px; height:24px; stroke:#222; fill:none; }
-        .evt-info-primary { font-size:15px; font-weight:600; color:#222; }
-        .evt-info-secondary { font-size:14px; color:#717171; margin-top:2px; }
-        .evt-info-gated { font-size:14px; color:#b0b0b0; font-style:italic; display:flex; align-items:center; gap:6px; }
-        .evt-section-title { font-size:22px; font-weight:700; color:#222; letter-spacing:-.02em; margin-bottom:16px; }
-        .evt-host-link { display:flex; align-items:center; gap:14px; text-decoration:none; }
-        .evt-host-link:hover .evt-host-name { text-decoration:underline; }
-        .evt-host-avatar { width:48px; height:48px; border-radius:50%; overflow:hidden; background:#f0f0f0; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
-        .evt-host-avatar img { width:100%; height:100%; object-fit:cover; }
-        .evt-host-avatar span { font-size:15px; font-weight:700; color:#666; }
-        .evt-host-name { font-size:16px; font-weight:600; color:#222; }
-        .evt-host-meta { font-size:13px; color:#717171; display:flex; align-items:center; gap:4px; margin-top:1px; }
-        .evt-map { height:200px; border-radius:16px; cursor:pointer; position:relative; overflow:hidden; z-index:0; }
-        @media(min-width:640px){ .evt-map { height:260px; } }
-        .evt-directions-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:12px; padding:14px; border-radius:12px; background:#222; color:#fff; font-size:15px; font-weight:600; text-decoration:none; transition:background .2s; }
-        .evt-directions-btn:hover { background:#444; }
-        .evt-rsvp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-        .evt-rsvp-btn { padding:14px 8px; border-radius:12px; font-size:14px; font-weight:600; text-align:center; border:2px solid #ddd; background:#fff; color:#222; cursor:pointer; transition:all .2s; }
-        .evt-rsvp-btn:hover { border-color:#222; }
-        .evt-rsvp-btn.active-going { border-color:#222; background:#222; color:#fff; }
-        .evt-rsvp-btn.active-maybe { border-color:#222; background:#222; color:#fff; }
-        .evt-rsvp-btn.active-not { border-color:#dc2626; background:#fef2f2; color:#dc2626; }
-        .evt-rsvp-pay { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:16px; border-radius:12px; background:linear-gradient(135deg,#e11d48,#be123c); color:#fff; font-size:16px; font-weight:700; border:none; cursor:pointer; transition:opacity .2s; }
-        .evt-rsvp-pay:hover { opacity:.9; }
-        .evt-info-card { display:flex; align-items:center; gap:14px; padding:20px; border-radius:12px; background:#f7f7f7; }
-        .evt-info-card-icon { font-size:28px; flex-shrink:0; }
-        .evt-info-card-title { font-size:15px; font-weight:600; color:#222; }
-        .evt-info-card-sub { font-size:13px; color:#717171; margin-top:2px; }
-        .evt-stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-        .evt-stat { text-align:center; padding:16px 8px; background:#f7f7f7; border-radius:12px; }
-        .evt-stat-value { font-size:22px; font-weight:800; color:#222; }
-        .evt-stat-label { font-size:12px; color:#717171; margin-top:2px; }
-        .evt-avatar-stack { display:flex; align-items:center; }
-        .evt-avatar-item { width:40px; height:40px; border-radius:50%; border:2.5px solid #fff; margin-left:-10px; overflow:hidden; background:#e0e7ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-        .evt-avatar-item:first-child { margin-left:0; }
-        .evt-avatar-item img { width:100%; height:100%; object-fit:cover; }
-        .evt-avatar-item span { font-size:12px; font-weight:700; color:#4f46e5; }
-        .evt-avatar-more { width:40px; height:40px; border-radius:50%; border:2.5px solid #fff; margin-left:-10px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#666; flex-shrink:0; }
-        .evt-host-controls { display:flex; flex-wrap:wrap; gap:8px; }
-        .evt-host-btn { padding:10px 16px; border-radius:10px; font-size:13px; font-weight:600; border:1.5px solid #ddd; background:#fff; color:#222; cursor:pointer; transition:all .15s; }
-        .evt-host-btn:hover { border-color:#222; background:#f7f7f7; }
-        .evt-host-btn.danger { color:#dc2626; border-color:#fca5a5; }
-        .evt-host-btn.danger:hover { background:#fef2f2; }
-        .evt-host-btn.primary { background:#222; color:#fff; border-color:#222; }
-        .evt-host-btn.primary:hover { background:#444; }
-        /* Notice cards (transport, location, grace, threshold) */
-        .evt-notice-card { display:flex; align-items:flex-start; gap:16px; padding:20px; border-radius:14px; background:#f7f7f7; }
-        .evt-notice-icon { font-size:24px; flex-shrink:0; }
-        .evt-notice-title { font-size:15px; font-weight:600; color:#222; }
-        .evt-notice-sub { font-size:14px; color:#717171; margin-top:3px; line-height:1.5; }
-        /* QR card */
-        .evt-qr-card { text-align:center; padding:24px; border-radius:16px; background:#f7f7f7; }
-        .evt-qr-title { font-size:16px; font-weight:700; color:#222; margin-bottom:14px; }
-        .evt-qr-sub { font-size:13px; color:#717171; margin-top:10px; }
-        /* Action button (scanner, draw raffle, join waitlist) */
-        .evt-action-btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:14px; border-radius:12px; background:#222; color:#fff; font-size:15px; font-weight:600; border:none; cursor:pointer; transition:background .2s; }
-        .evt-action-btn:hover { background:#444; }
-        /* Raffle-buy button (gold themed) */
-        .evt-raffle-buy { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:16px; border-radius:12px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; font-weight:700; border:none; cursor:pointer; transition:opacity .2s; box-shadow:0 4px 14px rgba(245,158,11,.3); }
-        .evt-raffle-buy:hover { opacity:.9; }
-        .evt-raffle-rank { width:28px; height:28px; border-radius:50%; background:#222; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
-        /* Cost breakdown */
-        .evt-cost-row { display:flex; align-items:center; justify-content:space-between; font-size:14px; color:#222; padding:4px 0; }
-        .evt-cost-val { font-weight:700; }
-        .evt-cost-highlight { color:#222; }
-        /* Progress bar */
-        .evt-progress-track { width:100%; height:8px; border-radius:4px; background:#e5e5e5; overflow:hidden; }
-        .evt-progress-fill { height:100%; border-radius:4px; background:#222; transition:width .3s ease; }
-        .evt-progress-fill.met { background:#059669; }
-        /* Normalize sub-section backgrounds in detail view */
-        #eventsDetailView [class*="bg-gradient-to-br"] { background:#f7f7f7 !important; }
-        #eventsDetailView [class*="bg-amber-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
-        #eventsDetailView [class*="bg-emerald-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
-        #eventsDetailView [class*="bg-blue-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
-        #eventsDetailView [class*="bg-orange-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
-        #eventsDetailView [class*="bg-brand-50"]:not(.evt-tag):not(.evt-rsvp-btn) { background:#f7f7f7 !important; }
-        #eventsDetailView [class*="bg-surface-50"]:not(.evt-tag) { background:#f7f7f7 !important; }
-        #eventsDetailView [class*="border-amber-200"] { border-color:#e5e5e5 !important; }
-        #eventsDetailView [class*="border-emerald-200"] { border-color:#e5e5e5 !important; }
-        #eventsDetailView [class*="border-blue-200"] { border-color:#e5e5e5 !important; }
-        #eventsDetailView [class*="border-orange-200"] { border-color:#e5e5e5 !important; }
-        #eventsDetailView [class*="border-brand-200"] { border-color:#e5e5e5 !important; }
-        #eventsDetailView [class*="bg-red-50"] { background:#fef2f2 !important; }
-        #eventsDetailView [class*="border-red-200"] { border-color:#fecaca !important; }
-        @media(max-width:640px){ .evt-stats-grid { grid-template-columns:repeat(2,1fr); } }
-
-        /* ═══ Hero Status Badge (matches public page) ═══ */
-        .evt-hero-bottom { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
-        .evt-hero-left { flex:1; min-width:0; }
-        .evt-status-badge { display:inline-flex; align-items:center; gap:7px; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); flex-shrink:0; }
-        .evt-date-card-wrap { position:absolute; top:0; right:24px; transform:translateY(-50%); display:flex; flex-direction:column; align-items:center; gap:6px; z-index:5; }
-        @media(min-width:640px){ .evt-date-card-wrap { right:40px; } }
-        .evt-date-card { background:rgba(255,255,255,.97); backdrop-filter:blur(8px); border-radius:14px; padding:10px 18px; display:flex; flex-direction:column; align-items:center; box-shadow:0 4px 16px rgba(0,0,0,.15); min-width:72px; cursor:pointer; transition:transform .15s,box-shadow .15s; position:relative; -webkit-tap-highlight-color:transparent; }
-        .evt-date-card:active { transform:scale(.93); }
-        .evt-date-card-cal-icon { position:absolute; bottom:-6px; right:-6px; width:22px; height:22px; border-radius:50%; background:#4f46e5; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(79,70,229,.4); }
-        .evt-date-card-cal-icon svg { width:12px; height:12px; fill:none; stroke:#fff; stroke-width:2.5; }
-        .evt-date-card-month { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--brand,#6d28d9); line-height:1; }
-        .evt-date-card-day { font-size:28px; font-weight:800; color:#222; line-height:1.1; }
-        .evt-date-card-time { font-size:11px; font-weight:600; color:#666; line-height:1; margin-top:2px; }
-        .evt-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-        .evt-status-dot.pulse { animation:dotPulse 1.5s ease-in-out infinite; }
-        @keyframes dotPulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.4; transform:scale(.7); } }
-        .evt-status-ended   { background:rgba(113,113,113,.35); color:#e0e0e0; }
-        .evt-status-ended .evt-status-dot { background:#999; }
-        .evt-status-live     { background:rgba(5,150,105,.3); color:#6ee7b7; }
-        .evt-status-live .evt-status-dot { background:#34d399; }
-        .evt-status-soon     { background:rgba(245,158,11,.3); color:#fcd34d; }
-        .evt-status-soon .evt-status-dot { background:#fbbf24; }
-        .evt-status-cancelled{ background:rgba(220,38,38,.3); color:#fca5a5; }
-        .evt-status-cancelled .evt-status-dot { background:#f87171; }
-
-        /* Locked raffle button */
-        .evt-raffle-locked { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:16px; border-radius:12px; background:#ebebeb; color:#999; font-size:15px; font-weight:600; border:none; cursor:not-allowed; }
-        .evt-raffle-locked svg { width:16px; height:16px; stroke:#999; }
-
-        /* Status banner */
-        .evt-status-banner { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; }
-        .evt-status-past-body { background:#f7f7f7; color:#717171; }
-
-        /* Parallax hero (desktop only — mobile fixed bg is buggy) */
-        @media(min-width:640px){ .evt-hero { background-attachment:fixed; } }
-
-        /* Section fade-in animation */
-        @keyframes evtSectionIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-        .evt-section.evt-anim { opacity:0; }
-        .evt-section.evt-anim.evt-visible { animation:evtSectionIn .45s cubic-bezier(.16,1,.3,1) forwards; }
-
-        /* Banner lightbox */
-        .evt-lightbox { position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.92); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .25s; pointer-events:none; -webkit-tap-highlight-color:transparent; }
-        .evt-lightbox.active { opacity:1; pointer-events:auto; }
-        .evt-lightbox img { max-width:94vw; max-height:90vh; object-fit:contain; border-radius:8px; }
-        .evt-lightbox-close { position:absolute; top:max(16px,env(safe-area-inset-top)); right:16px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.15); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-        .evt-lightbox-close svg { width:20px; height:20px; stroke:#fff; }
-
-        /* Collapsible description */
-        .evt-desc-collapsed { max-height:120px; overflow:hidden; position:relative; }
-        .evt-desc-collapsed::after { content:''; position:absolute; bottom:0; left:0; right:0; height:48px; background:linear-gradient(transparent,#fff); pointer-events:none; }
-        .evt-read-more { display:inline-block; font-size:14px; font-weight:600; color:#4f46e5; cursor:pointer; margin-top:8px; background:none; border:none; padding:0; }
-        .evt-read-more:hover { text-decoration:underline; }
-
-        /* RSVP simplified: Going + Interested (2-col) */
-        .evt-rsvp-pair { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-        .evt-rsvp-btn.active-interested { border-color:#e11d48; background:#fff0f3; color:#e11d48; }
-        .evt-rsvp-btn .evt-rsvp-icon { font-size:18px; display:block; margin-bottom:3px; }
-
-        /* Host controls dropdown */
-        .evt-host-primary { display:flex; align-items:center; gap:8px; }
-        .evt-host-more-wrap { position:relative; display:inline-block; }
-        .evt-host-more-btn { padding:10px 16px; border-radius:10px; font-size:13px; font-weight:600; border:1.5px solid #ddd; background:#fff; color:#222; cursor:pointer; display:flex; align-items:center; gap:6px; }
-        .evt-host-more-btn:hover { border-color:#222; background:#f7f7f7; }
-        .evt-host-dropdown { position:absolute; right:0; bottom:calc(100% + 6px); min-width:200px; background:#fff; border:1px solid #e5e5e5; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.12); overflow:hidden; z-index:20; display:none; }
-        .evt-host-dropdown.open { display:block; }
-        .evt-host-dropdown button { display:flex; align-items:center; gap:10px; width:100%; padding:12px 16px; font-size:14px; font-weight:500; border:none; background:#fff; color:#222; cursor:pointer; text-align:left; }
-        .evt-host-dropdown button:hover { background:#f7f7f7; }
-        .evt-host-dropdown button.danger { color:#dc2626; }
-        .evt-host-dropdown button.danger:hover { background:#fef2f2; }
-
-        /* Collapsible cost breakdown */
-        .evt-cost-toggle { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:12px 0; }
-        .evt-cost-toggle-label { font-size:15px; font-weight:600; color:#222; }
-        .evt-cost-toggle-price { font-size:15px; font-weight:700; color:#222; }
-        .evt-cost-toggle svg { width:16px; height:16px; stroke:#717171; transition:transform .2s; }
-        .evt-cost-toggle.open svg { transform:rotate(180deg); }
-        .evt-cost-details { max-height:0; overflow:hidden; transition:max-height .3s ease; }
-        .evt-cost-details.open { max-height:500px; }
-
-        /* Skeleton pulse for detail view */
-        .evt-skel { background:#f0f0f0; border-radius:8px; animation:evtSkelPulse 1.2s ease-in-out infinite; }
-        @keyframes evtSkelPulse { 0%,100%{ opacity:1; } 50%{ opacity:.5; } }
-
-        /* Related events horizontal scroll */
-        .evt-related-scroll { display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:4px; }
-        .evt-related-scroll::-webkit-scrollbar { display:none; }
-        .evt-related-card { min-width:220px; max-width:260px; flex-shrink:0; scroll-snap-align:start; border-radius:14px; overflow:hidden; border:1px solid #ebebeb; background:#fff; cursor:pointer; transition:transform .15s; }
-        .evt-related-card:active { transform:scale(.97); }
-        .evt-related-card img { width:100%; height:120px; object-fit:cover; }
-        .evt-related-card-body { padding:12px; }
-        .evt-related-card-title { font-size:14px; font-weight:700; color:#222; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-        .evt-related-card-meta { font-size:12px; color:#717171; margin-top:4px; }
-
-        /* Simple markdown in descriptions */
-        .evt-desc a { color:#4f46e5; text-decoration:underline; }
-        .evt-desc strong { font-weight:700; }
-        .evt-desc em { font-style:italic; }
-
-        /* Comments */
-        .evt-comment { display:flex; gap:12px; }
-        .evt-comment-avatar { width:36px; height:36px; border-radius:50%; background:#ebebeb; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:13px; font-weight:700; color:#717171; overflow:hidden; }
-        .evt-comment-avatar img { width:100%; height:100%; object-fit:cover; }
-        .evt-comment-body { flex:1; min-width:0; }
-        .evt-comment-name { font-size:13px; font-weight:600; color:#222; }
-        .evt-comment-time { font-size:11px; color:#b0b0b0; margin-left:6px; }
-        .evt-comment-text { font-size:14px; color:#717171; line-height:1.5; margin-top:3px; word-break:break-word; }
-
-        /* Comment reactions */
-        .evt-comment-reactions { display:flex; gap:4px; margin-top:6px; flex-wrap:wrap; }
-        .evt-comment-react-btn { font-size:12px; padding:2px 8px; border-radius:20px; border:1px solid #ebebeb; background:#fff; cursor:pointer; display:flex; align-items:center; gap:3px; transition:all .15s; }
-        .evt-comment-react-btn:hover { border-color:#c7c7c7; background:#f7f7f7; }
-        .evt-comment-react-btn.active { border-color:#4f46e5; background:#ede9fe; }
-        .evt-comment-react-btn .count { font-weight:600; color:#717171; }
-        .evt-comment-add-react { font-size:14px; padding:2px 6px; border-radius:20px; border:1px dashed #ddd; background:none; cursor:pointer; color:#b0b0b0; }
-        .evt-comment-add-react:hover { border-color:#999; color:#717171; }
-
-        /* ═══ Event CTA Bar — sticky bottom bar above tab bar ═══ */
-        .evt-cta-bar { display:none; }
-        @media(max-width:767px){
-            .evt-cta-bar { display:flex; align-items:center; justify-content:center; gap:10px; position:fixed; left:0; right:0; bottom:calc(56px + env(safe-area-inset-bottom,0px)); z-index:49; background:rgba(255,255,255,.85); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-top:1px solid rgba(0,0,0,.06); padding:10px 16px 26px; }
-            .evt-cta-btn { flex:1; max-width:280px; display:flex; align-items:center; justify-content:center; gap:8px; padding:13px 18px; border-radius:50px; font-size:15px; font-weight:700; letter-spacing:.01em; border:none; cursor:pointer; text-decoration:none; white-space:nowrap; transition:transform .15s,opacity .15s; -webkit-tap-highlight-color:transparent; }
-            .evt-cta-btn:active { transform:scale(.97); }
-            .evt-cta-btn:disabled { opacity:.5; cursor:not-allowed; }
-            .evt-cta-btn svg { width:18px; height:18px; stroke-width:2.5; fill:none; stroke:currentColor; flex-shrink:0; }
-            .evt-cta-rsvp { background:#4f46e5; color:#fff; }
-            .evt-cta-rsvp-done { background:#16a34a; color:#fff; }
-            .evt-cta-raffle { background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; }
-            .evt-cta-raffle-done { background:#16a34a; color:#fff; }
-            .evt-cta-host { background:#e5e7eb; color:#374151; }
-            .evt-cta-disabled { background:#e5e7eb; color:#9ca3af; }
-            body.evt-cta-active.has-bottom-bar { padding-bottom:calc(72px + 56px + env(safe-area-inset-bottom,0px)); }
-        }
-    </style>
+    <link rel="stylesheet" href="../css/pages/portal-events.css">
 </head>
 <body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="events">
 
@@ -310,95 +42,126 @@
 
     <main class="flex-1 w-full">
 
-        <!-- ═══ List View (hero + tabs + grid) ═══ -->
+        <!-- ═══ List View ═══ -->
         <div id="eventsListView">
-        <!-- Events hero: full-bleed bg on desktop, sticky on mobile -->
-        <div class="sticky top-0 z-30 md:static">
-            <div class="bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 text-white relative overflow-hidden fade-in"
-                 style="padding-top: max(1rem, env(safe-area-inset-top));">
-                <!-- Spacer for the fixed nav on desktop so hero content sits below it -->
-                <div class="hidden md:block" style="height: 64px;"></div>
-                <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-12 translate-x-12"></div>
-                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-10 -translate-x-10"></div>
-                <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-5 sm:pb-8">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <svg class="w-5 h-5 text-brand-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                <span class="text-sm font-medium text-brand-200">Family Events</span>
+
+        <!-- ─── Immersive Hero ─── -->
+        <div class="events-hero" style="padding-top: max(1rem, env(safe-area-inset-top));">
+            <!-- Decorative orbs -->
+            <div class="hero-orb" style="width:320px;height:320px;top:-80px;right:-60px;"></div>
+            <div class="hero-orb" style="width:200px;height:200px;bottom:-40px;left:-30px;"></div>
+            <div class="hero-orb" style="width:160px;height:160px;top:40%;left:50%;"></div>
+            <!-- Desktop nav spacer -->
+            <div class="hidden md:block" style="height:64px;"></div>
+
+            <div class="relative max-w-5xl mx-auto px-5 sm:px-6 lg:px-8 pb-8 sm:pb-10">
+                <!-- Top row: label + search + create -->
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <div class="flex items-center gap-2.5 mb-2">
+                            <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
+                                <svg class="w-4.5 h-4.5 text-brand-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path></svg>
                             </div>
-                            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Events</h1>
-                            <p class="text-brand-200 text-sm mt-0.5">Gatherings, milestones & upcoming happenings</p>
+                            <span class="text-sm font-semibold text-brand-300 tracking-wide">Family Events</span>
                         </div>
-                        <button id="createEventBtn" class="hidden items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition border border-white/20">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-none">Events</h1>
+                        <p class="text-brand-300/80 text-sm mt-1.5 max-w-xs">Gatherings, milestones & upcoming happenings</p>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <!-- Search pill -->
+                        <div id="evtSearchWrap" class="evt-search-pill">
+                            <div class="evt-search-pill__icon">
+                                <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="m21 21-4.35-4.35"/></svg>
+                            </div>
+                            <span class="evt-search-pill__label" id="evtSearchLabel">Search</span>
+                            <input class="evt-search-pill__input" id="evtSearchInput" type="text" placeholder="Search events…" autocomplete="off">
+                            <button class="evt-search-pill__close" id="evtSearchClose" type="button">
+                                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                            <div class="evt-search-dropdown" id="evtSearchDropdown"></div>
+                        </div>
+                        <button id="createEventBtn" class="hidden items-center gap-2 bg-white text-brand-700 hover:bg-brand-50 px-5 py-2.5 rounded-full text-sm font-bold transition shadow-lg shadow-black/10">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
                             <span class="hidden sm:inline">Create Event</span>
                             <span class="sm:hidden">New</span>
                         </button>
                     </div>
-                    <div class="grid grid-cols-3 gap-3 mt-4 pt-3 border-t border-white/10">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-xs text-brand-200 whitespace-nowrap">Upcoming:</span>
-                            <span class="text-sm font-semibold text-white" id="heroUpcomingCount">—</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-xs text-brand-200 whitespace-nowrap">Your RSVPs:</span>
-                            <span class="text-sm font-semibold text-white" id="heroRsvpCount">—</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-xs text-brand-200 whitespace-nowrap">Next Event:</span>
-                            <span class="text-sm font-semibold text-white truncate" id="heroNextEvent">—</span>
-                        </div>
+                </div>
+
+                <!-- Stats row — glass cards -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="hero-stat-card">
+                        <div class="text-[22px] sm:text-2xl font-extrabold text-white leading-none" id="heroUpcomingCount">—</div>
+                        <div class="text-[11px] sm:text-xs text-brand-300 font-medium mt-1">Upcoming</div>
+                    </div>
+                    <div class="hero-stat-card">
+                        <div class="text-[22px] sm:text-2xl font-extrabold text-white leading-none" id="heroRsvpCount">—</div>
+                        <div class="text-[11px] sm:text-xs text-brand-300 font-medium mt-1">Your RSVPs</div>
+                    </div>
+                    <div class="hero-stat-card">
+                        <div class="text-sm sm:text-base font-bold text-white truncate leading-snug" id="heroNextEvent">—</div>
+                        <div class="text-[11px] sm:text-xs text-brand-300 font-medium mt-1">Next Event</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 sm:pb-6">
+        <!-- ─── Content area ─── -->
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-6 pb-24 sm:pb-8">
 
-        <!-- Tabs + Filter -->
-        <div class="flex items-center justify-between border-b border-gray-200 mb-6">
-            <div class="flex gap-6">
-                <button class="tab-btn active pb-3 text-sm font-semibold text-brand-600" data-tab="upcoming">Upcoming</button>
-                <button class="tab-btn pb-3 text-sm font-semibold text-gray-400 hover:text-gray-600 transition" data-tab="past">Past</button>
+            <!-- Pinned / Featured carousel -->
+            <div id="evtFeaturedSection" class="mb-6 hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-gray-900 tracking-wide uppercase">Featured</h2>
+                    <span id="evtFeaturedCount" class="text-xs font-semibold text-gray-400"></span>
+                </div>
+                <div id="evtFeaturedCarousel" class="evt-featured-scroll"></div>
             </div>
-            <div class="flex items-center gap-2 pb-3">
-                <select id="typeFilter" class="text-xs bg-white border border-gray-200 rounded-lg px-3 py-1.5 font-medium text-gray-600 focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+
+            <!-- Filter chips + type dropdown -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide" id="evtFilterChips">
+                    <button class="evt-filter-chip evt-filter-chip--active" data-filter="upcoming">Upcoming</button>
+                    <button class="evt-filter-chip" data-filter="past">Past</button>
+                    <button class="evt-filter-chip" data-filter="going">Going</button>
+                </div>
+                <select id="typeFilter" class="text-xs bg-white border border-gray-200 rounded-full px-4 py-2 font-semibold text-gray-600 focus:ring-2 focus:ring-brand-500 focus:border-transparent shadow-sm">
                     <option value="all">All Types</option>
                     <option value="llc">LLC Events</option>
                     <option value="member">Member Events</option>
                     <option value="competition">Competitions</option>
                 </select>
             </div>
-        </div>
 
-        <!-- Events Grid -->
-        <div id="eventsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden">
-                <div class="skeleton h-36 w-full"></div>
-                <div class="p-4 space-y-3"><div class="skeleton h-5 w-3/4 rounded"></div><div class="skeleton h-4 w-1/2 rounded"></div></div>
-            </div>
-            <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden hidden sm:block">
-                <div class="skeleton h-36 w-full"></div>
-                <div class="p-4 space-y-3"><div class="skeleton h-5 w-3/4 rounded"></div><div class="skeleton h-4 w-1/2 rounded"></div></div>
-            </div>
-            <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden hidden lg:block">
-                <div class="skeleton h-36 w-full"></div>
-                <div class="p-4 space-y-3"><div class="skeleton h-5 w-3/4 rounded"></div><div class="skeleton h-4 w-1/2 rounded"></div></div>
-            </div>
-        </div>
-
-        <!-- Empty State -->
-        <div id="emptyState" class="hidden">
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-8 sm:p-12 text-center">
-                <div class="w-16 h-16 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <!-- Events Grid -->
+            <div id="eventsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Skeleton cards -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm">
+                    <div class="skeleton h-44 w-full"></div>
+                    <div class="p-5 space-y-3"><div class="skeleton h-5 w-3/4 rounded-lg"></div><div class="skeleton h-4 w-1/2 rounded-lg"></div><div class="skeleton h-3 w-2/3 rounded"></div></div>
                 </div>
-                <h3 class="text-lg font-bold text-gray-900 mb-1" id="emptyTitle">No upcoming events</h3>
-                <p class="text-sm text-gray-500 max-w-sm mx-auto" id="emptySubtext">Check back soon — events will show up here!</p>
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm hidden sm:block">
+                    <div class="skeleton h-44 w-full"></div>
+                    <div class="p-5 space-y-3"><div class="skeleton h-5 w-3/4 rounded-lg"></div><div class="skeleton h-4 w-1/2 rounded-lg"></div><div class="skeleton h-3 w-2/3 rounded"></div></div>
+                </div>
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm hidden lg:block">
+                    <div class="skeleton h-44 w-full"></div>
+                    <div class="p-5 space-y-3"><div class="skeleton h-5 w-3/4 rounded-lg"></div><div class="skeleton h-4 w-1/2 rounded-lg"></div><div class="skeleton h-3 w-2/3 rounded"></div></div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden">
+                <div class="bg-white rounded-3xl shadow-sm p-10 sm:p-16 text-center max-w-lg mx-auto">
+                    <div class="w-20 h-20 bg-gradient-to-br from-brand-100 to-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
+                        <svg class="w-10 h-10 text-brand-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2" id="emptyTitle">No upcoming events</h3>
+                    <p class="text-sm text-gray-500 leading-relaxed max-w-xs mx-auto" id="emptySubtext">Check back soon — events will show up here!</p>
+                </div>
             </div>
         </div>
-        </div>
+
         </div><!-- /eventsListView -->
 
         <!-- ═══ Detail View (loaded dynamically by evtRouteByUrl) ═══ -->
@@ -408,13 +171,18 @@
 
     <!-- ─── Create Event Modal ────────────────────────────── -->
     <div id="createModal" class="fixed inset-0 z-[60] hidden">
-        <div class="modal-overlay absolute inset-0 bg-black/40" id="createModalOverlay"></div>
+        <div class="modal-overlay absolute inset-0 bg-black/50" id="createModalOverlay"></div>
         <div class="absolute inset-0 flex items-start sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-            <div class="modal-panel bg-white w-full sm:max-w-2xl sm:rounded-2xl shadow-2xl overflow-y-auto min-h-screen sm:min-h-0">
-                <div class="sticky top-0 bg-white z-10 flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100" style="padding-top: max(0.75rem, env(safe-area-inset-top));">
-                    <h2 class="text-lg font-bold text-gray-900">Create Event</h2>
-                    <button id="closeCreateModal" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
-                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <div class="modal-panel bg-white w-full sm:max-w-2xl sm:rounded-3xl shadow-2xl overflow-y-auto min-h-screen sm:min-h-0">
+                <div class="sticky top-0 bg-white/95 backdrop-blur-lg z-10 flex items-center justify-between px-5 sm:px-6 py-4 border-b border-gray-100/80" style="padding-top: max(1rem, env(safe-area-inset-top));">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                        </div>
+                        <h2 class="text-lg font-bold text-gray-900">Create Event</h2>
+                    </div>
+                    <button id="closeCreateModal" class="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
                 <form id="createEventForm" class="px-4 py-5 sm:p-5 space-y-5">
@@ -903,13 +671,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="sticky bottom-0 bg-white border-t border-gray-100 -mx-4 sm:-mx-5 px-4 sm:px-5 py-3 sm:py-4 flex items-center gap-3" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
-                        <button type="button" id="previewEventBtn" class="flex-1 border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-3 sm:py-2.5 rounded-xl text-sm font-semibold transition">
-                            Preview
-                        </button>
-                        <button type="submit" id="publishEventBtn" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white px-4 py-3 sm:py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
-                            Publish Event
-                        </button>
+                    <div class="sticky bottom-0 bg-white/95 backdrop-blur-lg border-t border-gray-100/80 -mx-4 sm:-mx-5 px-5 sm:px-6 py-4" style="padding-bottom: max(1rem, env(safe-area-inset-bottom));">
+                        <div class="flex items-center gap-3">
+                            <button type="button" id="previewEventBtn" class="flex-1 border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 px-4 py-3 sm:py-2.5 rounded-xl text-sm font-bold transition">
+                                Preview
+                            </button>
+                            <button type="submit" id="publishEventBtn" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white px-4 py-3 sm:py-2.5 rounded-xl text-sm font-bold transition shadow-lg shadow-brand-600/25">
+                                Publish Event
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -918,13 +688,18 @@
 
     <!-- ─── QR Scanner Modal ────────────────────────────── -->
     <div id="scannerModal" class="fixed inset-0 z-[60] hidden">
-        <div class="modal-overlay absolute inset-0 bg-black/40" id="scannerModalOverlay"></div>
+        <div class="modal-overlay absolute inset-0 bg-black/50" id="scannerModalOverlay"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                    <h2 class="text-lg font-bold text-gray-900">Scan QR Code</h2>
-                    <button id="closeScannerModal" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
-                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100/80">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5z"></path></svg>
+                        </div>
+                        <h2 class="text-lg font-bold text-gray-900">Scan QR Code</h2>
+                    </div>
+                    <button id="closeScannerModal" class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
                 <div class="p-5">
@@ -943,14 +718,19 @@
     <div id="raffleDrawModal" class="fixed inset-0 z-[60] hidden">
         <div class="modal-overlay absolute inset-0 bg-black/60 backdrop-blur-sm" id="raffleDrawOverlay"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                    <h2 class="text-lg font-bold text-gray-900">🎰 Raffle Draw</h2>
-                    <button id="closeRaffleDrawModal" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
-                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100/80">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                            <span class="text-base">🎰</span>
+                        </div>
+                        <h2 class="text-lg font-bold text-gray-900">Raffle Draw</h2>
+                    </div>
+                    <button id="closeRaffleDrawModal" class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
-                <div id="raffleDrawContent" class="p-5 text-center">
+                <div id="raffleDrawContent" class="p-6 text-center">
                     <!-- Populated dynamically by raffle.js -->
                 </div>
             </div>
@@ -1001,6 +781,7 @@
     <script src="../js/portal/events/utils.js"></script>
     <script src="../js/portal/events/list.js"></script>
     <script src="../js/portal/events/detail.js"></script>
+    <script src="../js/portal/events/comments.js"></script>
     <script src="../js/portal/events/rsvp.js"></script>
     <script src="../js/portal/events/create.js"></script>
     <script src="../js/portal/events/documents.js"></script>

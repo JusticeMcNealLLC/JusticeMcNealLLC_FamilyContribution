@@ -73,7 +73,7 @@ async function checkProfileCompleteness(userId) {
     try {
         const { data: profile, error } = await supabaseClient
             .from('profiles')
-            .select('first_name, last_name, birthday, profile_picture_url, setup_completed')
+            .select('first_name, last_name, birthday, profile_picture_url, setup_completed, role')
             .eq('id', userId)
             .single();
 
@@ -84,6 +84,22 @@ async function checkProfileCompleteness(userId) {
         if (nameEl) {
             const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
             if (fullName) nameEl.textContent = fullName;
+        }
+
+        // Set header avatar if profile picture exists
+        const headerAvatar = document.getElementById('headerAvatar');
+        if (headerAvatar && profile.profile_picture_url) {
+            const img = document.createElement('img');
+            img.src = profile.profile_picture_url;
+            img.alt = 'Profile';
+            img.className = 'w-full h-full object-cover';
+            img.onload = function() { headerAvatar.innerHTML = ''; headerAvatar.appendChild(img); };
+        }
+
+        // Set role badge
+        const roleBadge = document.getElementById('userRoleBadge');
+        if (roleBadge && profile.role) {
+            roleBadge.textContent = profile.role.charAt(0).toUpperCase() + profile.role.slice(1);
         }
 
         // If fully completed, don't show banner

@@ -1,18 +1,15 @@
 // ═══════════════════════════════════════════════════════════
-// Portal Events — Detail Page View
-// Renders the full event detail into the page (not a modal)
-// with attendee list, QR codes, host controls, cost breakdown, etc.
+// Portal Events — Detail Page View  (v2 – visual redesign)
+// Renders the full event detail into #eventsDetailView
+// Dark-themed immersive hero → light content cards below
 // ═══════════════════════════════════════════════════════════
 
 // ── Lightweight inline markdown (bold, italic, links) ────
 function evtMiniMarkdown(text) {
     if (!text) return '';
     let html = evtEscapeHtml(text);
-    // Links: [text](url)
     html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-    // Bold: **text**
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    // Italic: *text*
     html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
     return html;
 }
@@ -30,11 +27,11 @@ function evtOpenLightbox(imgUrl) {
 
 // ── Section fade-in observer ─────────────────────────────
 function evtInitSectionAnimations() {
-    const sections = document.querySelectorAll('#eventsDetailView .evt-section.evt-anim');
+    const sections = document.querySelectorAll('#eventsDetailView .ed-card');
     if (!sections.length) return;
     const obs = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('evt-visible'); obs.unobserve(e.target); } });
-    }, { threshold: 0.1 });
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('ed-visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.08 });
     sections.forEach((s, i) => { s.style.animationDelay = `${i * 0.06}s`; obs.observe(s); });
 }
 
@@ -63,12 +60,9 @@ function evtStartLiveCountdown(startDate) {
         else lbl = `${m}m ${s}s`;
         badgeEl.innerHTML = `<span class="evt-status-dot${d === 0 ? ' pulse' : ''}"></span>${lbl}`;
     }
-    // Tick rate: every second when < 1 hour, else every 60s
     const msUntil = new Date(startDate) - new Date();
     const interval = msUntil < 3600000 ? 1000 : 60000;
     _evtCountdownInterval = setInterval(tick, interval);
-
-    // Upgrade to 1s when crossing threshold
     if (interval === 60000) {
         const upgradeIn = msUntil - 3600000;
         if (upgradeIn > 0) {
@@ -77,35 +71,72 @@ function evtStartLiveCountdown(startDate) {
     }
 }
 
+// ═══════════════════════════════════════════════════════════
+// Render helpers — small composable blocks
+// ═══════════════════════════════════════════════════════════
+
+function _edMetaRow(icon, label, value, extra) {
+    return `<div class="ed-meta-row">
+        <div class="ed-meta-icon">${icon}</div>
+        <div class="ed-meta-text">
+            <span class="ed-meta-label">${label}</span>
+            <span class="ed-meta-value">${value}</span>
+            ${extra || ''}
+        </div>
+    </div>`;
+}
+
+function _edPill(text, cls) {
+    return `<span class="ed-pill ${cls || ''}">${text}</span>`;
+}
+
+function _edCard(content, extraCls) {
+    return `<div class="ed-card ${extraCls || ''}">${content}</div>`;
+}
+
+function _edNotice(emoji, title, sub) {
+    return `<div class="ed-notice">
+        <span class="ed-notice-emoji">${emoji}</span>
+        <div><p class="ed-notice-title">${title}</p><p class="ed-notice-sub">${sub}</p></div>
+    </div>`;
+}
+
+function _edSectionHead(title) {
+    return `<div class="ed-section-head"><h3>${title}</h3></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Main render — evtOpenDetail
+// ═══════════════════════════════════════════════════════════
+
 async function evtOpenDetail(eventId) {
     const event = evtAllEvents.find(e => e.id === eventId);
     if (!event) return;
 
     const rsvp = evtAllRsvps[eventId];
     const start = new Date(event.start_date);
+    const end = event.end_date ? new Date(event.end_date) : null;
     const dateStr = start.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-    const timeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+    const timeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const endTimeStr = end ? end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
     const tc = TYPE_COLORS[event.event_type] || TYPE_COLORS.member;
     const isLlc = event.event_type === 'llc';
     const isComp = event.event_type === 'competition';
 
-    // Load RSVPs with profile info
+    // ── Data fetching (unchanged business logic) ────────
     const { data: rsvps } = await supabaseClient
         .from('event_rsvps')
         .select('user_id, status, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)')
         .eq('event_id', eventId);
-
     const goingList = (rsvps || []).filter(r => r.status === 'going');
     const maybeList = (rsvps || []).filter(r => r.status === 'maybe');
     const notGoingList = (rsvps || []).filter(r => r.status === 'not_going');
 
-    // Load check-ins with profile info (for host attendee breakdown)
     const { data: checkins, count: checkinCount } = await supabaseClient
         .from('event_checkins')
         .select('user_id, profiles!event_checkins_user_id_fkey(first_name, last_name, profile_picture_url)', { count: 'exact' })
         .eq('event_id', eventId);
 
-    // Load cost items for LLC events
     let costItems = [];
     if (isLlc) {
         const { data: ci } = await supabaseClient
@@ -116,7 +147,6 @@ async function evtOpenDetail(eventId) {
         costItems = ci || [];
     }
 
-    // Load waitlist for LLC events
     let waitlist = [];
     let myWaitlistEntry = null;
     if (isLlc) {
@@ -129,7 +159,6 @@ async function evtOpenDetail(eventId) {
         myWaitlistEntry = waitlist.find(w => w.user_id === evtCurrentUser.id);
     }
 
-    // Load raffle entries + winners (if raffle enabled)
     let raffleEntryCount = 0;
     let myRaffleEntry = null;
     let raffleWinners = [];
@@ -139,7 +168,6 @@ async function evtOpenDetail(eventId) {
             .select('id', { count: 'exact', head: true })
             .eq('event_id', eventId);
         raffleEntryCount = rCount || 0;
-
         const { data: myEntry } = await supabaseClient
             .from('event_raffle_entries')
             .select('*')
@@ -147,7 +175,6 @@ async function evtOpenDetail(eventId) {
             .eq('user_id', evtCurrentUser.id)
             .maybeSingle();
         myRaffleEntry = myEntry;
-
         const { data: winners } = await supabaseClient
             .from('event_raffle_winners')
             .select('*, profiles:user_id(first_name, last_name)')
@@ -156,7 +183,6 @@ async function evtOpenDetail(eventId) {
         raffleWinners = winners || [];
     }
 
-    // Check if user is host/creator
     const isCreator = event.created_by === evtCurrentUser.id;
     const { data: hostRecord } = await supabaseClient
         .from('event_hosts')
@@ -166,7 +192,6 @@ async function evtOpenDetail(eventId) {
         .maybeSingle();
     const isHost = isCreator || !!hostRecord || evtCurrentUserRole === 'admin';
 
-    // Load creator profile for member-created events
     let creatorProfile = null;
     if (event.created_by) {
         const { data: cp } = await supabaseClient
@@ -176,68 +201,74 @@ async function evtOpenDetail(eventId) {
             .single();
         creatorProfile = cp;
     }
-    // Pre-compute creator display vars for banner
     const cpName = creatorProfile ? ([creatorProfile.first_name, creatorProfile.last_name].filter(Boolean).join(' ') || 'Member') : '';
     const cpInitials = creatorProfile ? ((creatorProfile.first_name || '?')[0] + (creatorProfile.last_name || '')[0]).toUpperCase() : '';
     const cpBadge = creatorProfile ? evtBadgeChip(creatorProfile.displayed_badge) : '';
     const cpTitle = creatorProfile ? (creatorProfile.title || 'Member') : '';
 
-    // Should show gated info?
     const hasRsvp = rsvp && (rsvp.status === 'going' || rsvp.status === 'maybe');
-
-    // Load documents HTML (async — for LLC events)
     const documentsHtml = await evtBuildDocumentsHtml(event, isHost, hasRsvp);
-
-    // Build live map HTML (LLC events during event window)
     const mapHtml = evtBuildMapHtml(event, hasRsvp, isHost);
-
-    // Build competition HTML (competition events)
     const competitionHtml = isComp ? await evtBuildCompetitionHtml(event, isHost) : '';
-
-    // Build scrapbook HTML (completed events — photo gallery)
     const scrapbookHtml = await evtBuildScrapbookHtml(event, !!hasRsvp);
 
-    // Transportation mode display (LLC)
-    let transportHtml = '';
-    if (isLlc && event.transportation_enabled !== false && event.transportation_mode) {
-        const isProvided = event.transportation_mode === 'llc_provides';
-        transportHtml = `
-            <div class="evt-notice-card">
-                <span class="evt-notice-icon">${isProvided ? '✈️' : '🧳'}</span>
-                <div>
-                    <p class="evt-notice-title">${isProvided ? 'LLC Provides Transportation' : 'Self-Arranged Transportation'}</p>
-                    <p class="evt-notice-sub">${isProvided ? 'Tickets will be uploaded to your documents' : `Members book their own travel${event.transportation_estimate_cents ? ` — est. ~${formatCurrency(event.transportation_estimate_cents)}` : ''}`}</p>
-                </div>
-            </div>`;
-    }
-
-    // Location-required badge
-    let locationReqHtml = '';
-    if (isLlc && event.location_required) {
-        locationReqHtml = `
-            <div class="evt-notice-card">
-                <span class="evt-notice-icon">📍</span>
-                <div>
-                    <p class="evt-notice-title">Location sharing required</p>
-                    <p class="evt-notice-sub">You'll need to enable location sharing at check-in</p>
-                </div>
-            </div>`;
-    }
-
-    // Banner
-    const bannerBg = event.banner_url
-        ? `background-image:url('${event.banner_url}');background-size:cover;background-position:center;`
-        : `background:linear-gradient(135deg,#6366f1,#8b5cf6);`;
-
-    // Gated info visibility
     const showTime = !event.gate_time || hasRsvp || isHost;
     const showLocation = !event.gate_location || hasRsvp || isHost;
     const showNotes = !event.gate_notes || hasRsvp || isHost;
 
-    // QR Code for attendee ticket mode — check if already checked in
+    // ── Time-based locks ────────────────────────────────
+    const isClosed = event.status === 'completed' || event.status === 'cancelled';
+    const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
+    const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
+    const entriesClosed = isClosed || isPast || deadlinePassed;
+    const rsvpEnabled = event.rsvp_enabled !== false;
+    const canRsvp = rsvpEnabled && ['open', 'confirmed', 'active'].includes(event.status) && !entriesClosed;
+    const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
+
+    // ═══════════════════════════════════════════════════════
+    // Build visual sections
+    // ═══════════════════════════════════════════════════════
+
+    // ── Hero status badge ────────────────────────────────
+    let badgeLabel = '', badgeCls = '', dotPulse = false;
+    if (event.status === 'cancelled') { badgeLabel = 'Cancelled'; badgeCls = 'evt-status-cancelled'; }
+    else if (event.status === 'completed' || isPast) { badgeLabel = 'Ended'; badgeCls = 'evt-status-ended'; }
+    else if (event.status === 'active') { badgeLabel = 'Live'; badgeCls = 'evt-status-live'; dotPulse = true; }
+    else {
+        const msUntil = new Date(event.start_date) - new Date();
+        const d = Math.floor(msUntil / 86400000);
+        const h = Math.floor((msUntil % 86400000) / 3600000);
+        const m = Math.floor((msUntil % 3600000) / 60000);
+        if (d > 0) badgeLabel = `${d}d ${h}h`; else if (h > 0) badgeLabel = `${h}h ${m}m`; else badgeLabel = `${m}m`;
+        badgeCls = 'evt-status-soon'; dotPulse = d === 0;
+    }
+
+    // ── Banner bg ────────────────────────────────────────
+    const bannerBg = event.banner_url
+        ? `background-image:url('${event.banner_url}');background-size:cover;background-position:center;`
+        : `background:linear-gradient(135deg, #312e81 0%, #6d28d9 50%, #a855f7 100%);`;
+
+    // ── Transportation notice ────────────────────────────
+    let transportHtml = '';
+    if (isLlc && event.transportation_enabled !== false && event.transportation_mode) {
+        const isProvided = event.transportation_mode === 'llc_provides';
+        transportHtml = _edNotice(
+            isProvided ? '✈️' : '🧳',
+            isProvided ? 'LLC Provides Transportation' : 'Self-Arranged Transportation',
+            isProvided ? 'Tickets will be uploaded to your documents' : `Members book their own travel${event.transportation_estimate_cents ? ` — est. ~${formatCurrency(event.transportation_estimate_cents)}` : ''}`
+        );
+    }
+
+    // ── Location-required badge ──────────────────────────
+    let locationReqHtml = '';
+    if (isLlc && event.location_required) {
+        locationReqHtml = _edNotice('📍', 'Location sharing required', "You'll need to enable location sharing at check-in");
+    }
+
+    // ── QR Code for attendee ticket ──────────────────────
     let qrHtml = '';
     let myCheckin = null;
-    const checkinEnabled = event.checkin_enabled !== false; // default true for backward compat
+    const checkinEnabled = event.checkin_enabled !== false;
     if (checkinEnabled && rsvp && rsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
         const { data: ci } = await supabaseClient
             .from('event_checkins')
@@ -246,105 +277,84 @@ async function evtOpenDetail(eventId) {
             .eq('user_id', evtCurrentUser.id)
             .maybeSingle();
         myCheckin = ci;
-
-        const checkedInTime = myCheckin
-            ? new Date(myCheckin.checked_in_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-            : null;
-        const checkedInDate = myCheckin
-            ? new Date(myCheckin.checked_in_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-            : null;
+        const checkedInTime = myCheckin ? new Date(myCheckin.checked_in_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : null;
+        const checkedInDate = myCheckin ? new Date(myCheckin.checked_in_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : null;
 
         qrHtml = `
-            <div class="evt-qr-card">
-                <h4 class="evt-qr-title">${myCheckin ? '✅ Checked In' : '🎫 Your Event Ticket'}</h4>
+            <div class="ed-qr-wrap">
+                <div class="ed-qr-header">${myCheckin ? '✅ Checked In' : '🎫 Your Event Ticket'}</div>
                 <div style="position:relative;display:inline-block">
-                    <canvas id="myTicketQR" style="display:block;margin:0 auto;${myCheckin ? 'opacity:.3' : ''}"></canvas>
-                    ${myCheckin ? `
-                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-                        <div style="width:56px;height:56px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.15)">
+                    <canvas id="myTicketQR" style="display:block;margin:0 auto;border-radius:12px;${myCheckin ? 'opacity:.25' : ''}"></canvas>
+                    ${myCheckin ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+                        <div style="width:56px;height:56px;border-radius:50%;background:#10b981;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(16,185,129,.4)">
                             <svg style="width:28px;height:28px;color:#fff" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                         </div>
                     </div>` : ''}
                 </div>
-                ${myCheckin
-                    ? `<p class="evt-qr-sub" style="color:#222;font-weight:600">Scanned at ${checkedInTime} · ${checkedInDate}</p>`
-                    : `<p class="evt-qr-sub">Show this QR code at check-in</p>`}
+                <p class="ed-qr-hint">${myCheckin ? `Scanned at ${checkedInTime} · ${checkedInDate}` : 'Show this QR code at check-in'}</p>
             </div>`;
     }
 
-    // Venue QR (if host and venue_scan mode)
+    // ── Venue QR (host) ──────────────────────────────────
     let venueQrHtml = '';
     if (checkinEnabled && isHost && event.checkin_mode === 'venue_scan' && event.venue_qr_token) {
         venueQrHtml = `
-            <div class="evt-qr-card">
-                <h4 class="evt-qr-title">📍 Venue QR Code</h4>
-                <canvas id="venueQR" style="display:block;margin:0 auto"></canvas>
-                <p class="evt-qr-sub">Display this at the entrance for attendees to scan</p>
+            <div class="ed-qr-wrap">
+                <div class="ed-qr-header">📍 Venue QR Code</div>
+                <canvas id="venueQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
+                <p class="ed-qr-hint">Display this at the entrance for attendees to scan</p>
             </div>`;
     }
 
-    // Scanner button (for hosts in attendee_ticket mode)
+    // ── Scanner button ───────────────────────────────────
     let scannerBtn = '';
     if (checkinEnabled && isHost && event.checkin_mode === 'attendee_ticket' && ['open', 'confirmed', 'active'].includes(event.status)) {
-        scannerBtn = `
-            <button onclick="evtOpenScanner('${eventId}')" class="evt-action-btn">
-                <svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-                Scan Attendee QR
-            </button>`;
+        scannerBtn = `<button onclick="evtOpenScanner('${eventId}')" class="ed-action-btn"><svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>Scan Attendee QR</button>`;
     }
 
-    // ── Cost Breakdown Display (LLC only — respects show_cost_breakdown toggle) ────────────────
+    // ── Cost Breakdown (LLC) ─────────────────────────────
     let costBreakdownHtml = '';
-    const showBreakdownToAttendees = event.show_cost_breakdown !== false; // default true for backwards compat
+    const showBreakdownToAttendees = event.show_cost_breakdown !== false;
     if (isLlc && costItems.length > 0 && (showBreakdownToAttendees || isHost)) {
         const CATEGORY_ICONS = { lodging: '🏠', transportation: '🚗', food: '🍕', gear: '🎿', entertainment: '🎭', other: '📦' };
         const included = costItems.filter(i => i.included_in_buyin);
         const oop = costItems.filter(i => !i.included_in_buyin);
         const totalIncluded = included.reduce((s, i) => s + (i.total_cost_cents || 0), 0);
         const totalOop = oop.reduce((s, i) => s + (i.avg_per_person_cents || 0), 0);
-        // Use min_participants as divisor (financially safe — event funded at minimum attendance)
         const minP = event.min_participants || event.max_participants || 0;
         const baseBuyIn = minP > 0 ? Math.ceil(totalIncluded / minP) : 0;
         const llcCut = Math.round(baseBuyIn * (event.llc_cut_pct || 0) / 100);
         const finalBuyIn = baseBuyIn + llcCut;
-        const lockedLabel = event.cost_breakdown_locked ? ' <span style="font-size:11px;background:#f7f7f7;color:#717171;padding:2px 8px;border-radius:6px;font-weight:600">🔒 Locked</span>' : '';
-        const hostOnlyLabel = !showBreakdownToAttendees ? ' <span style="font-size:11px;background:#f7f7f7;color:#717171;padding:2px 8px;border-radius:6px;font-weight:600">Host Only</span>' : '';
+        const lockedLabel = event.cost_breakdown_locked ? ` ${_edPill('🔒 Locked', 'ed-pill-muted')}` : '';
+        const hostOnlyLabel = !showBreakdownToAttendees ? ` ${_edPill('Host Only', 'ed-pill-muted')}` : '';
 
         const itemRows = costItems.map(i => `
-            <div class="evt-cost-row" style="padding:10px 0">
-                <div style="display:flex;align-items:center;gap:10px">
-                    <span style="font-size:16px">${CATEGORY_ICONS[i.category] || '📦'}</span>
-                    <span style="font-size:15px;color:#222">${evtEscapeHtml(i.name)}</span>
-                </div>
-                <div style="text-align:right">
+            <div class="ed-cost-item">
+                <div class="ed-cost-item-left"><span class="ed-cost-item-icon">${CATEGORY_ICONS[i.category] || '📦'}</span><span>${evtEscapeHtml(i.name)}</span></div>
+                <div class="ed-cost-item-right">
                     ${i.included_in_buyin
-                        ? `<span style="font-weight:600;color:#222">${formatCurrency(i.total_cost_cents)}</span><span style="font-size:11px;font-weight:700;color:#222;margin-left:8px;background:#f7f7f7;padding:2px 8px;border-radius:6px">INCLUDED</span>`
-                        : `<span style="color:#717171">~${formatCurrency(i.avg_per_person_cents)}/person</span><span style="font-size:11px;font-weight:700;color:#717171;margin-left:8px;background:#f7f7f7;padding:2px 8px;border-radius:6px">OOP</span>`}
+                        ? `<span class="ed-cost-item-amount">${formatCurrency(i.total_cost_cents)}</span>${_edPill('INCLUDED', 'ed-pill-green')}`
+                        : `<span class="ed-cost-item-amount" style="color:#8b8b8b">~${formatCurrency(i.avg_per_person_cents)}/pp</span>${_edPill('OOP', 'ed-pill-muted')}`}
                 </div>
             </div>`).join('');
 
         costBreakdownHtml = `
-            <h3 class="evt-section-title">📊 Cost Breakdown${lockedLabel}${hostOnlyLabel}</h3>
-            <div style="border-top:1px solid #ebebeb">${itemRows}</div>
-            <div style="border-top:2px solid #222;margin-top:16px;padding-top:16px">
-                <div class="evt-cost-row"><span>Total Included</span><span class="evt-cost-val">${formatCurrency(totalIncluded)}</span></div>
-                <div class="evt-cost-row"><span>Min Participants</span><span class="evt-cost-val">${minP}</span></div>
-                <div style="border-top:1px solid #ebebeb;margin:10px 0"></div>
-                <div class="evt-cost-row"><span>💡 Suggested Buy-In</span><span class="evt-cost-val evt-cost-highlight">${formatCurrency(finalBuyIn)}/person</span></div>
-                <div class="evt-cost-row"><span>💳 Actual RSVP Price</span><span class="evt-cost-val evt-cost-highlight">${formatCurrency(event.rsvp_cost_cents)}/person</span></div>
-                ${event.llc_cut_pct > 0 ? `<div class="evt-cost-row" style="font-size:13px;color:#717171"><span>Includes ${event.llc_cut_pct}% LLC contribution</span><span>+${formatCurrency(llcCut)}</span></div>` : ''}
-                <div class="evt-cost-row"><span>✈ Est. Out-of-Pocket</span><span class="evt-cost-val">~${formatCurrency(totalOop)}/person</span></div>
-                <div style="border-top:2px solid #222;margin:12px 0"></div>
-                <div class="evt-cost-row" style="font-size:16px"><span style="font-weight:700">💰 Est. Total/Person</span><span style="font-weight:800">~${formatCurrency((event.rsvp_cost_cents || finalBuyIn) + totalOop)}</span></div>
+            ${_edSectionHead(`Cost Breakdown${lockedLabel}${hostOnlyLabel}`)}
+            <div class="ed-cost-list">${itemRows}</div>
+            <div class="ed-cost-summary">
+                <div class="ed-cost-line"><span>Total Included</span><span>${formatCurrency(totalIncluded)}</span></div>
+                <div class="ed-cost-line"><span>Min Participants</span><span>${minP}</span></div>
+                <div class="ed-cost-divider"></div>
+                <div class="ed-cost-line ed-cost-line-bold"><span>💡 Suggested Buy-In</span><span>${formatCurrency(finalBuyIn)}/person</span></div>
+                <div class="ed-cost-line ed-cost-line-bold"><span>💳 Actual RSVP</span><span>${formatCurrency(event.rsvp_cost_cents)}/person</span></div>
+                ${event.llc_cut_pct > 0 ? `<div class="ed-cost-line ed-cost-line-muted"><span>Includes ${event.llc_cut_pct}% LLC contribution</span><span>+${formatCurrency(llcCut)}</span></div>` : ''}
+                <div class="ed-cost-line"><span>✈ Est. Out-of-Pocket</span><span>~${formatCurrency(totalOop)}/person</span></div>
+                <div class="ed-cost-divider thick"></div>
+                <div class="ed-cost-line ed-cost-total"><span>💰 Est. Total/Person</span><span>~${formatCurrency((event.rsvp_cost_cents || finalBuyIn) + totalOop)}</span></div>
             </div>`;
     }
 
-    // ── Minimum Threshold / Social Proof (LLC only) ──────
-    // Hosts always see full progress bar.
-    // Non-hosts see encouraging text with smart social proof:
-    //   - Before 50% of min: "Spots available — be one of the first to RSVP!"
-    //   - After 50% of min: "X going · spots left"
-    //   - Minimum met: "✅ Event confirmed! X going"
+    // ── Threshold / Social Proof (LLC) ───────────────────
     let thresholdHtml = '';
     if (isLlc && event.min_participants) {
         const currentGoing = goingList.length;
@@ -352,339 +362,177 @@ async function evtOpenDetail(eventId) {
         const pct = Math.min(100, Math.round((currentGoing / minNeeded) * 100));
         const isMet = currentGoing >= minNeeded;
         const deadlineStr = event.rsvp_deadline ? new Date(event.rsvp_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD';
-        const socialThreshold = Math.min(Math.floor(minNeeded * 0.5), 3); // 50% of min or 3, whichever is lower
+        const socialThreshold = Math.min(Math.floor(minNeeded * 0.5), 3);
         const showExactCount = currentGoing >= socialThreshold;
 
         if (isHost) {
-            // Host sees full progress bar with exact numbers
             thresholdHtml = `
-            <div class="evt-notice-card">
-                <div style="width:100%">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-                        <span style="font-size:14px;font-weight:600;color:#222">${isMet ? '✅ Minimum Met!' : '⚠️ Minimum Threshold'}</span>
-                        <span style="font-size:13px;color:#717171">${currentGoing} / ${minNeeded} by ${deadlineStr}</span>
-                    </div>
-                    <div class="evt-progress-track">
-                        <div class="evt-progress-fill${isMet ? ' met' : ''}" style="width:${pct}%"></div>
-                    </div>
-                    ${!isMet ? `<p style="font-size:13px;color:#717171;margin-top:8px">If ${minNeeded - currentGoing} more spot${minNeeded - currentGoing > 1 ? 's aren\'t' : ' isn\'t'} filled by the deadline, the event auto-cancels and all RSVPs are refunded.</p>` : ''}
+            <div class="ed-threshold">
+                <div class="ed-threshold-header">
+                    <span class="ed-threshold-label">${isMet ? '✅ Minimum Met!' : '⚠️ Minimum Threshold'}</span>
+                    <span class="ed-threshold-count">${currentGoing} / ${minNeeded} by ${deadlineStr}</span>
                 </div>
+                <div class="ed-progress"><div class="ed-progress-fill${isMet ? ' met' : ''}" style="width:${pct}%"></div></div>
+                ${!isMet ? `<p class="ed-threshold-note">If ${minNeeded - currentGoing} more spot${minNeeded - currentGoing > 1 ? 's aren\'t' : ' isn\'t'} filled by the deadline, the event auto-cancels and all RSVPs are refunded.</p>` : ''}
             </div>`;
         } else {
-            // Non-host sees social-proof-friendly text (no progress bar)
             let socialText = '';
-            let socialBg = '';
-            if (isMet) {
-                socialText = `<span style="font-size:14px;font-weight:600;color:#222">✅ Event confirmed!</span><span style="font-size:14px;color:#717171;margin-left:6px">${currentGoing} going${event.max_participants ? ' · ' + (event.max_participants - currentGoing) + ' spots left' : ''}</span>`;
-            } else if (showExactCount) {
-                socialText = `<span style="font-size:14px;font-weight:600;color:#222">${currentGoing} going</span><span style="font-size:14px;color:#717171;margin-left:6px">· spots remaining</span>`;
-            } else {
-                socialText = `<span style="font-size:14px;font-weight:600;color:#222">Spots available — be one of the first to RSVP!</span>`;
-            }
+            if (isMet) socialText = `<span class="ed-social-confirmed">✅ Event confirmed!</span> <span class="ed-social-count">${currentGoing} going${event.max_participants ? ' · ' + (event.max_participants - currentGoing) + ' spots left' : ''}</span>`;
+            else if (showExactCount) socialText = `<span class="ed-social-confirmed">${currentGoing} going</span> <span class="ed-social-count">· spots remaining</span>`;
+            else socialText = `<span class="ed-social-confirmed">Spots available — be one of the first to RSVP!</span>`;
             thresholdHtml = `
-            <div class="evt-notice-card">
+            <div class="ed-threshold">
                 <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
                     <div>${socialText}</div>
-                    ${event.rsvp_deadline ? `<span style="font-size:12px;color:#b0b0b0">RSVP by ${deadlineStr}</span>` : ''}
+                    ${event.rsvp_deadline ? `<span class="ed-threshold-deadline">RSVP by ${deadlineStr}</span>` : ''}
                 </div>
             </div>`;
         }
     }
 
-    // ── Waitlist Section (LLC only — when full) ──────────
+    // ── Waitlist (LLC) ───────────────────────────────────
     let waitlistHtml = '';
     if (isLlc && event.max_participants) {
         const isFull = goingList.length >= event.max_participants;
-        const canRsvp = ['open', 'confirmed', 'active'].includes(event.status);
+        const canRsvpWl = ['open', 'confirmed', 'active'].includes(event.status);
         const activeWaitlist = waitlist.filter(w => ['waiting', 'offered'].includes(w.status));
-
-        if (isFull && canRsvp) {
-            // Check if user has an active offer
+        if (isFull && canRsvpWl) {
             const hasOffer = myWaitlistEntry?.status === 'offered' && myWaitlistEntry.offer_expires_at && new Date(myWaitlistEntry.offer_expires_at) > new Date();
             const isWaiting = myWaitlistEntry?.status === 'waiting';
-
             let waitlistAction = '';
             if (hasOffer) {
                 const expiresStr = new Date(myWaitlistEntry.offer_expires_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
                 waitlistAction = `
-                    <div class="evt-info-card">
-                        <span class="evt-info-card-icon">🎉</span>
+                    <div class="ed-notice ed-notice-highlight">
+                        <span class="ed-notice-emoji">🎉</span>
                         <div style="flex:1">
-                            <p class="evt-info-card-title">A spot opened up for you!</p>
-                            <p class="evt-info-card-sub">Complete your RSVP by ${expiresStr}</p>
-                            <button onclick="evtClaimWaitlistSpot('${eventId}')" class="evt-rsvp-pay" style="margin-top:10px">Claim Spot — ${formatCurrency(event.rsvp_cost_cents)}</button>
+                            <p class="ed-notice-title">A spot opened up for you!</p>
+                            <p class="ed-notice-sub">Complete your RSVP by ${expiresStr}</p>
+                            <button onclick="evtClaimWaitlistSpot('${eventId}')" class="ed-primary-btn" style="margin-top:10px">Claim Spot — ${formatCurrency(event.rsvp_cost_cents)}</button>
                         </div>
                     </div>`;
             } else if (isWaiting) {
                 const pos = activeWaitlist.findIndex(w => w.user_id === evtCurrentUser.id) + 1;
                 waitlistAction = `
-                    <div class="evt-info-card" style="justify-content:space-between">
-                        <div>
-                            <p class="evt-info-card-title">You're #${pos} on the waitlist</p>
-                            <p class="evt-info-card-sub">We'll notify you if a spot opens</p>
-                        </div>
-                        <button onclick="evtLeaveWaitlist('${eventId}')" style="font-size:13px;color:#dc2626;font-weight:600;background:none;border:none;cursor:pointer">Leave</button>
+                    <div class="ed-notice" style="justify-content:space-between">
+                        <div><p class="ed-notice-title">You're #${pos} on the waitlist</p><p class="ed-notice-sub">We'll notify you if a spot opens</p></div>
+                        <button onclick="evtLeaveWaitlist('${eventId}')" class="ed-link-btn danger">Leave</button>
                     </div>`;
             } else if (!rsvp?.paid) {
-                waitlistAction = `
-                    <button onclick="evtJoinWaitlist('${eventId}')" class="evt-action-btn">
-                        Join Waitlist
-                    </button>
-                    <p style="font-size:12px;color:#717171;text-align:center;margin-top:8px">No payment required to join the waitlist</p>`;
+                waitlistAction = `<button onclick="evtJoinWaitlist('${eventId}')" class="ed-action-btn">Join Waitlist</button>
+                    <p class="ed-hint">No payment required to join the waitlist</p>`;
             }
-
-            waitlistHtml = `
-                <h3 class="evt-section-title">⏳ Waitlist</h3>
-                <p style="font-size:14px;color:#717171;margin-bottom:14px">${activeWaitlist.length} waiting</p>
-                ${waitlistAction}`;
+            waitlistHtml = `${_edSectionHead('Waitlist')}<p class="ed-sub-count">${activeWaitlist.length} waiting</p>${waitlistAction}`;
         }
     }
 
-    // ── Reschedule Grace Window Notice ───────────────────
+    // ── Grace Window ─────────────────────────────────────
     let graceHtml = '';
     if (event.rescheduled_at && event.grace_window_end && new Date(event.grace_window_end) > new Date()) {
         const graceEnd = new Date(event.grace_window_end).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-        graceHtml = `
-            <div class="evt-notice-card">
-                <span class="evt-notice-icon">📅</span>
-                <div>
-                    <p class="evt-notice-title">This event was rescheduled</p>
-                    <p class="evt-notice-sub">Request a full refund until <strong>${graceEnd}</strong> if the new date doesn't work.</p>
-                    ${rsvp?.paid ? `<button onclick="evtRequestGraceRefund('${eventId}')" style="margin-top:8px;font-size:14px;color:#dc2626;font-weight:600;text-decoration:underline;background:none;border:none;cursor:pointer">Request Full Refund</button>` : ''}
-                </div>
-            </div>`;
-    }
-
-    // ── Time-based locks (matches public page logic) ──────
-    const isClosed = event.status === 'completed' || event.status === 'cancelled';
-    const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
-    const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
-    const entriesClosed = isClosed || isPast || deadlinePassed;
-
-    // ── Hero Status Badge (countdown / Live / Ended) ─────
-    // ── Hero Date Card + Status Badge ─────
-    const heroMonthStr = start.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-    const heroDayStr = start.getDate();
-    const heroTimeShort = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    let heroBadgeHtml = '';
-    {
-        let badgeLabel = '', badgeCls = '', dotPulse = false;
-        if (event.status === 'cancelled') {
-            badgeLabel = 'Cancelled'; badgeCls = 'evt-status-cancelled';
-        } else if (event.status === 'completed' || isPast) {
-            badgeLabel = 'Ended'; badgeCls = 'evt-status-ended';
-        } else if (event.status === 'active') {
-            badgeLabel = 'Live'; badgeCls = 'evt-status-live'; dotPulse = true;
-        } else {
-            const msUntil = new Date(event.start_date) - new Date();
-            const d = Math.floor(msUntil / 86400000);
-            const h = Math.floor((msUntil % 86400000) / 3600000);
-            const m = Math.floor((msUntil % 3600000) / 60000);
-            if (d > 0) { badgeLabel = `${d}d ${h}h`; } else if (h > 0) { badgeLabel = `${h}h ${m}m`; } else { badgeLabel = `${m}m`; }
-            badgeCls = 'evt-status-soon'; dotPulse = d === 0;
-        }
-        heroBadgeHtml = `<div class="evt-date-card-wrap">
-            <span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>
-            <div class="evt-date-card" onclick="evtDownloadIcs('${eventId}')" title="Add to calendar">
-                <span class="evt-date-card-month">${heroMonthStr}</span>
-                <span class="evt-date-card-day">${heroDayStr}</span>
-                <span class="evt-date-card-time">${heroTimeShort}</span>
-                <span class="evt-date-card-cal-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"/></svg></span>
+        graceHtml = `<div class="ed-notice ed-notice-warn">
+            <span class="ed-notice-emoji">📅</span>
+            <div>
+                <p class="ed-notice-title">This event was rescheduled</p>
+                <p class="ed-notice-sub">Request a full refund until <strong>${graceEnd}</strong> if the new date doesn't work.</p>
+                ${rsvp?.paid ? `<button onclick="evtRequestGraceRefund('${eventId}')" class="ed-link-btn danger" style="margin-top:8px">Request Full Refund</button>` : ''}
             </div>
         </div>`;
     }
 
-    // ── RSVP buttons (Airbnb-inspired) — now respects time-based locks ──
+    // ── RSVP Buttons ─────────────────────────────────────
     let rsvpButtons = '';
-    const rsvpEnabled = event.rsvp_enabled !== false;
-    const canRsvp = rsvpEnabled && ['open', 'confirmed', 'active'].includes(event.status) && !entriesClosed;
-    const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
-
     if (!rsvpEnabled) {
-        rsvpButtons = `
-            <div class="evt-info-card">
-                <span class="evt-info-card-icon">ℹ️</span>
-                <div>
-                    <p class="evt-info-card-title">Informational Event</p>
-                    <p class="evt-info-card-sub">RSVP is not required for this event</p>
-                </div>
-            </div>`;
+        rsvpButtons = _edNotice('ℹ️', 'Informational Event', 'RSVP is not required for this event');
     } else if (isHost) {
-        rsvpButtons = `
-            <div class="evt-info-card">
-                <span class="evt-info-card-icon">🎯</span>
-                <div>
-                    <p class="evt-info-card-title">You're Hosting This Event</p>
-                    <p class="evt-info-card-sub">You're automatically counted as attending</p>
-                </div>
-            </div>`;
-
+        rsvpButtons = _edNotice('🎯', "You're Hosting This Event", "You're automatically counted as attending");
     } else if (canRsvp && !eventIsFull && event.pricing_mode === 'paid') {
         if (rsvp?.paid) {
-            rsvpButtons = `
-            <div class="evt-info-card">
-                <span class="evt-info-card-icon">✅</span>
-                <div>
-                    <p class="evt-info-card-title">RSVP Confirmed &amp; Paid</p>
-                    <p class="evt-info-card-sub">Non-refundable · Contact admin for changes</p>
-                </div>
-            </div>`;
+            rsvpButtons = _edNotice('✅', 'RSVP Confirmed &amp; Paid', 'Non-refundable · Contact admin for changes');
         } else {
-            rsvpButtons = `
-            <button onclick="evtHandleRsvp('${eventId}','going')" class="evt-rsvp-pay">
-                RSVP — ${formatCurrency(event.rsvp_cost_cents)}
-            </button>
-            <p style="font-size:12px;color:#717171;text-align:center;margin-top:8px">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' · Includes raffle entry' : ''}</p>`;
+            rsvpButtons = `<button onclick="evtHandleRsvp('${eventId}','going')" class="ed-primary-btn">RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>
+                <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' · Includes raffle entry' : ''}</p>`;
         }
-
     } else if (canRsvp && !eventIsFull) {
-        const goingActive = rsvp?.status === 'going' ? ' active-going' : '';
-        const interestedActive = rsvp?.status === 'maybe' ? ' active-interested' : '';
-        rsvpButtons = `
-            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#717171;margin-bottom:12px">RSVP</p>
-            <div class="evt-rsvp-pair">
-                <button onclick="evtHandleRsvp('${eventId}','going')" class="evt-rsvp-btn${goingActive}"><span class="evt-rsvp-icon">✅</span> Going</button>
-                <button onclick="evtHandleRsvp('${eventId}','maybe')" class="evt-rsvp-btn${interestedActive}"><span class="evt-rsvp-icon">❤️</span> Interested</button>
-            </div>`;
+        const goingActive = rsvp?.status === 'going' ? ' active' : '';
+        const interestedActive = rsvp?.status === 'maybe' ? ' active' : '';
+        rsvpButtons = `<div class="ed-rsvp-grid">
+            <button onclick="evtHandleRsvp('${eventId}','going')" class="ed-rsvp-opt${goingActive}"><span class="ed-rsvp-emoji">✅</span>Going</button>
+            <button onclick="evtHandleRsvp('${eventId}','maybe')" class="ed-rsvp-opt ed-rsvp-interested${interestedActive}"><span class="ed-rsvp-emoji">❤️</span>Interested</button>
+        </div>`;
     }
-
-    // ── RSVP closed state (event started / deadline passed) ──
+    // RSVP closed state
     if (rsvpEnabled && !isHost && entriesClosed && !rsvpButtons) {
         let closedReason = '';
         if (isClosed) closedReason = event.status === 'cancelled' ? 'Event cancelled' : 'Event ended';
         else if (isPast) closedReason = 'Event has already started';
         else if (deadlinePassed) closedReason = 'RSVP deadline passed';
-
         if (rsvp) {
-            // Show existing RSVP status
             const statusEmoji = rsvp.status === 'going' ? '✅' : rsvp.status === 'maybe' ? '❤️' : '❌';
             const statusLabel = rsvp.status === 'going' ? 'Going' : rsvp.status === 'maybe' ? 'Interested' : 'Not Going';
-            rsvpButtons = `
-            <div class="evt-info-card">
-                <span class="evt-info-card-icon">${statusEmoji}</span>
-                <div>
-                    <p class="evt-info-card-title">Your RSVP: ${statusLabel}</p>
-                    <p class="evt-info-card-sub">${closedReason}</p>
-                </div>
-            </div>`;
+            rsvpButtons = _edNotice(statusEmoji, `Your RSVP: ${statusLabel}`, closedReason);
         } else {
-            rsvpButtons = `
-            <div class="evt-info-card">
-                <span class="evt-info-card-icon">🔒</span>
-                <div>
-                    <p class="evt-info-card-title">RSVP Closed</p>
-                    <p class="evt-info-card-sub">${closedReason}</p>
-                </div>
-            </div>`;
+            rsvpButtons = _edNotice('🔒', 'RSVP Closed', closedReason);
         }
     }
 
-    // ── Raffle Section ──────────────────────────────────
+    // ── Raffle Section ───────────────────────────────────
     let raffleHtml = '';
     if (event.raffle_enabled) {
         const prizes = event.raffle_prizes || [];
         const ordinal = n => n===1?'1st':n===2?'2nd':n===3?'3rd':`${n}th`;
         const prizesHtml = prizes.map((p, i) => {
             const place = p.place || i + 1;
-            return `
-            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#f9f9f4;border-radius:12px;margin-bottom:6px">
-                <div class="evt-raffle-rank">${place}</div>
-                <div>
-                    <p style="font-size:13px;color:#717171;font-weight:600;margin:0">${ordinal(place)} Place</p>
-                    <p style="font-size:15px;color:#222;font-weight:600;margin:2px 0 0">${evtEscapeHtml(p.label || p.description || p)}</p>
-                </div>
-            </div>`;
+            return `<div class="ed-prize-row"><div class="ed-prize-rank">${place}</div><div><span class="ed-prize-place">${ordinal(place)} Place</span><span class="ed-prize-label">${evtEscapeHtml(p.label || p.description || p)}</span></div></div>`;
         }).join('');
 
-        // Raffle entry status
         let entryStatusHtml = '';
         if (myRaffleEntry) {
-            entryStatusHtml = `
-                <div class="evt-info-card">
-                    <span class="evt-info-card-icon">🎟️</span>
-                    <div>
-                        <p class="evt-info-card-title">You're entered!</p>
-                        <p class="evt-info-card-sub">Good luck in the drawing</p>
-                    </div>
-                </div>`;
+            entryStatusHtml = _edNotice('🎟️', "You're entered!", 'Good luck in the drawing');
         } else if (entriesClosed && !myRaffleEntry) {
-            // Locked reason
             let lockedReason = '';
             if (isClosed) lockedReason = event.status === 'cancelled' ? 'Event cancelled' : 'Event ended';
             else if (isPast) lockedReason = 'Event in progress';
             else if (deadlinePassed) lockedReason = 'RSVP deadline passed';
-            entryStatusHtml = `
-                <button class="evt-raffle-locked" disabled>
-                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
-                    Entries Closed — ${lockedReason}
-                </button>`;
+            entryStatusHtml = `<div class="ed-notice"><span class="ed-notice-emoji">🔒</span><div><p class="ed-notice-title">Entries Closed</p><p class="ed-notice-sub">${lockedReason}</p></div></div>`;
         } else if (event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0 && !entriesClosed) {
-            entryStatusHtml = `
-                <button onclick="evtHandleRaffleEntry('${eventId}')" class="evt-raffle-buy">
-                    🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}
-                </button>
-                <p style="font-size:12px;color:#717171;text-align:center;margin-top:8px">Non-refundable raffle ticket</p>`;
+            entryStatusHtml = `<button onclick="evtHandleRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p>`;
         } else if (event.pricing_mode !== 'paid' && (!event.raffle_entry_cost_cents || event.raffle_entry_cost_cents === 0) && !entriesClosed) {
-            entryStatusHtml = `
-                <button onclick="evtHandleFreeRaffleEntry('${eventId}')" class="evt-raffle-buy">
-                    🎟️ Enter Raffle — Free
-                </button>`;
+            entryStatusHtml = `<button onclick="evtHandleFreeRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Enter Raffle — Free</button>`;
         } else if (event.pricing_mode === 'paid' && !rsvp?.paid) {
-            entryStatusHtml = `<p style="font-size:13px;color:#717171;font-style:italic">Raffle entry included with paid RSVP</p>`;
+            entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Raffle entry included with paid RSVP</p>`;
         }
 
-        // Winners display
         let winnersHtml = '';
         if (raffleWinners.length > 0) {
-            winnersHtml = `
-            <div style="margin-top:16px">
-                <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#717171;margin-bottom:10px">🏆 Winners</p>
-                ${raffleWinners.map(w => {
-                    const name = w.profiles ? `${w.profiles.first_name || ''} ${w.profiles.last_name || ''}`.trim() : (w.guest_token ? 'Guest' : 'Unknown');
-                    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0">
-                        <div class="evt-raffle-rank">${w.place}</div>
-                        <span style="font-size:15px;font-weight:600;color:#222">${evtEscapeHtml(name)}</span>
-                        ${w.prize_description ? `<span style="font-size:14px;color:#717171">— ${evtEscapeHtml(w.prize_description)}</span>` : ''}
-                    </div>`;
-                }).join('')}
-            </div>`;
+            winnersHtml = `<div class="ed-winners">${_edSectionHead('Winners')}${raffleWinners.map(w => {
+                const name = w.profiles ? `${w.profiles.first_name || ''} ${w.profiles.last_name || ''}`.trim() : (w.guest_token ? 'Guest' : 'Unknown');
+                return `<div class="ed-winner-row"><div class="ed-prize-rank">${w.place}</div><span class="ed-winner-name">${evtEscapeHtml(name)}</span>${w.prize_description ? `<span class="ed-winner-prize">— ${evtEscapeHtml(w.prize_description)}</span>` : ''}</div>`;
+            }).join('')}</div>`;
         }
 
-        // Host draw button
         let drawBtnHtml = '';
         if (isHost && !entriesClosed && raffleWinners.length === 0) {
-            drawBtnHtml = `
-                <button onclick="evtOpenRaffleDraw('${eventId}')" class="evt-action-btn" style="margin-top:12px">
-                    🎰 Draw Raffle Winners
-                </button>`;
+            drawBtnHtml = `<button onclick="evtOpenRaffleDraw('${eventId}')" class="ed-action-btn" style="margin-top:12px">🎰 Draw Raffle Winners</button>`;
         }
 
+        const rafflePills = [
+            event.raffle_type ? _edPill(`${event.raffle_type === 'digital' ? '💻 Digital' : '🎁 Physical'} Prize`) : '',
+            event.raffle_draw_trigger ? _edPill(`${event.raffle_draw_trigger === 'auto' ? '⚡ Auto' : '🎰 Manual'} Draw`) : '',
+            event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0 ? _edPill(`🎟️ Entry: ${formatCurrency(event.raffle_entry_cost_cents)}`) : '',
+            event.pricing_mode === 'paid' ? _edPill('✅ Included with RSVP') : '',
+        ].filter(Boolean).join('');
+
         raffleHtml = `
-            <h3 class="evt-section-title">🎲 Raffle</h3>
-            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
-                ${event.raffle_type ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_type === 'digital' ? '💻' : '🎁'} ${event.raffle_type === 'digital' ? 'Digital Prize' : 'Physical Prize'}</span>` : ''}
-                ${event.raffle_draw_trigger ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_draw_trigger === 'auto' ? '⚡ Auto Draw' : '🎰 Manual Draw'}</span>` : ''}
-                ${event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0 ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">🎟️ Entry: ${formatCurrency(event.raffle_entry_cost_cents)}</span>` : ''}
-                ${event.pricing_mode === 'paid' ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">✅ Included with RSVP</span>` : ''}
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-                <span style="font-size:14px;color:#717171">${raffleEntryCount} ${raffleEntryCount === 1 ? 'entry' : 'entries'}</span>
-            </div>
-            ${prizes.length > 0 ? `
-                <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#717171;margin:12px 0 10px">🏆 Prizes</p>
-                <div>${prizesHtml}</div>
-            ` : `
-                <p style="font-size:13px;color:#999;font-style:italic;margin:12px 0">🏆 Prizes to be announced</p>
-            `}
+            ${_edSectionHead('Raffle')}
+            <div class="ed-pill-row">${rafflePills}</div>
+            <p class="ed-sub-count">${raffleEntryCount} ${raffleEntryCount === 1 ? 'entry' : 'entries'}</p>
+            ${prizes.length > 0 ? `<div class="ed-prizes">${_edSectionHead('Prizes')}${prizesHtml}</div>` : `<p class="ed-hint" style="font-style:italic">Prizes to be announced</p>`}
             <div style="margin-top:16px">${entryStatusHtml}</div>
-            ${winnersHtml}
-            ${drawBtnHtml}`;
+            ${winnersHtml}${drawBtnHtml}`;
     }
 
-    // Shareable link
-    const publicUrl = `${window.location.origin}/events/?e=${event.slug}`;
-
-    // Helper: build avatar + name row for a person
+    // ── Helper: avatar + name row ────────────────────────
     function buildPersonRow(p) {
         const initials = ((p?.first_name?.[0] || '') + (p?.last_name?.[0] || '')).toUpperCase() || '?';
         const avatar = p?.profile_picture_url
@@ -693,7 +541,7 @@ async function evtOpenDetail(eventId) {
         return `<div class="flex items-center gap-2">${avatar}<span class="text-sm text-gray-700">${evtEscapeHtml(p?.first_name || '')} ${evtEscapeHtml(p?.last_name || '')}</span></div>`;
     }
 
-    // Build categorized attendee breakdown (host-only)
+    // ── Attendee Breakdown (host) ────────────────────────
     let attendeeBreakdownHtml = '';
     if (isHost) {
         const checkinUserIds = new Set((checkins || []).map(c => c.user_id));
@@ -703,37 +551,21 @@ async function evtOpenDetail(eventId) {
             return list.map(r => buildPersonRow(r.profiles)).join('');
         }
 
-        // Checked-in list from checkins data
         const checkinRows = (checkins || []).map(c => buildPersonRow(c.profiles)).join('') || `<p class="text-xs text-gray-400 italic ml-6">None</p>`;
 
         attendeeBreakdownHtml = `
             <div>
-                <h3 class="evt-section-title">📋 Attendee Breakdown</h3>
-
-                <!-- Going -->
+                ${_edSectionHead('Attendee Breakdown')}
                 <div class="mb-3">
-                    <div class="flex items-center gap-2 mb-1.5">
-                        <span class="text-sm">✅</span>
-                        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wide">Going (${goingList.length})</span>
-                    </div>
+                    <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">✅</span><span class="text-xs font-bold text-emerald-700 uppercase tracking-wide">Going (${goingList.length})</span></div>
                     <div class="space-y-1.5 ml-6">${goingList.length ? goingList.map(r => buildPersonRow(r.profiles)).join('') : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
                 </div>
-
-                <!-- Interested -->
                 <div class="mb-3">
-                    <div class="flex items-center gap-2 mb-1.5">
-                        <span class="text-sm">❤️</span>
-                        <span class="text-xs font-bold text-pink-700 uppercase tracking-wide">Interested (${maybeList.length})</span>
-                    </div>
+                    <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">❤️</span><span class="text-xs font-bold text-pink-700 uppercase tracking-wide">Interested (${maybeList.length})</span></div>
                     <div class="space-y-1.5 ml-6">${maybeList.length ? maybeList.map(r => buildPersonRow(r.profiles)).join('') : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
                 </div>
-
-                <!-- Checked In -->
                 <div>
-                    <div class="flex items-center gap-2 mb-1.5">
-                        <span class="text-sm">📍</span>
-                        <span class="text-xs font-bold text-violet-700 uppercase tracking-wide">Checked In (${checkinCount || 0})</span>
-                    </div>
+                    <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">📍</span><span class="text-xs font-bold text-violet-700 uppercase tracking-wide">Checked In (${checkinCount || 0})</span></div>
                     <div class="space-y-1.5 ml-6">${checkinRows}</div>
                 </div>
             </div>`;
@@ -744,31 +576,18 @@ async function evtOpenDetail(eventId) {
     if (isHost) {
         let primaryBtn = '';
         let dropdownItems = '';
-        if (event.status === 'draft') {
-            primaryBtn = `<button onclick="evtUpdateStatus('${eventId}','open')" class="evt-host-btn primary">Publish Event</button>`;
-        }
+        if (event.status === 'draft') primaryBtn = `<button onclick="evtUpdateStatus('${eventId}','open')" class="evt-host-btn primary">Publish Event</button>`;
         if (['open', 'confirmed', 'active'].includes(event.status)) {
             if (!primaryBtn) primaryBtn = `<button onclick="evtUpdateStatus('${eventId}','completed')" class="evt-host-btn primary">Mark Completed</button>`;
             else dropdownItems += `<button onclick="evtUpdateStatus('${eventId}','completed')">✓ Mark Completed</button>`;
             dropdownItems += `<button onclick="evtCancelEvent('${eventId}')" class="danger">✕ Cancel Event</button>`;
-            if (isLlc) {
-                dropdownItems += `<button onclick="evtRescheduleEvent('${eventId}')">📅 Reschedule</button>`;
-            }
+            if (isLlc) dropdownItems += `<button onclick="evtRescheduleEvent('${eventId}')">📅 Reschedule</button>`;
         }
         dropdownItems += `<button onclick="evtDuplicateEvent('${eventId}')">📋 Duplicate Event</button>`;
-        if (evtCurrentUserRole === 'admin') {
-            dropdownItems += `<button onclick="evtDeleteEvent('${eventId}')" class="danger">🗑 Delete Event</button>`;
-        }
-
+        if (evtCurrentUserRole === 'admin') dropdownItems += `<button onclick="evtDeleteEvent('${eventId}')" class="danger">🗑 Delete Event</button>`;
         hostControlsHtml = `
-            <h3 class="evt-section-title">Host Controls</h3>
-            <div class="evt-host-primary">
-                ${primaryBtn}
-                <div class="evt-host-more-wrap">
-                    <button class="evt-host-more-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="More actions">⋯ More</button>
-                    <div class="evt-host-dropdown">${dropdownItems}</div>
-                </div>
-            </div>`;
+            ${_edSectionHead('Host Controls')}
+            <div class="evt-host-primary">${primaryBtn}<div class="evt-host-more-wrap"><button class="evt-host-more-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="More actions">⋯ More</button><div class="evt-host-dropdown">${dropdownItems}</div></div></div>`;
     }
 
     // ── Attendee Preview (visible to all) ────────────────
@@ -779,265 +598,206 @@ async function evtOpenDetail(eventId) {
             const p = r.profiles;
             const link = p?.id ? `onclick="window.location.href='profile.html?id=${p.id}'"` : '';
             const cursor = p?.id ? 'cursor:pointer' : '';
-            if (p?.profile_picture_url) {
-                return `<div class="evt-avatar-item" ${link} style="${cursor}" title="${evtEscapeHtml((p?.first_name || '') + ' ' + (p?.last_name || ''))}" role="button" aria-label="View profile"><img src="${p.profile_picture_url}" alt=""></div>`;
-            }
+            if (p?.profile_picture_url) return `<div class="ed-avatar" ${link} style="${cursor}" title="${evtEscapeHtml((p?.first_name || '') + ' ' + (p?.last_name || ''))}" role="button" aria-label="View profile"><img src="${p.profile_picture_url}" alt=""></div>`;
             const ini = ((p?.first_name?.[0] || '') + (p?.last_name?.[0] || '')).toUpperCase() || '?';
-            return `<div class="evt-avatar-item" ${link} style="${cursor}" title="${evtEscapeHtml((p?.first_name || '') + ' ' + (p?.last_name || ''))}" role="button" aria-label="View profile"><span>${ini}</span></div>`;
+            return `<div class="ed-avatar" ${link} style="${cursor}" title="${evtEscapeHtml((p?.first_name || '') + ' ' + (p?.last_name || ''))}" role="button" aria-label="View profile"><span>${ini}</span></div>`;
         }).join('');
         const moreCount = goingList.length - displayList.length;
-        const moreHtml = moreCount > 0 ? `<div class="evt-avatar-more">+${moreCount}</div>` : '';
-        const totalInterested = goingList.length + maybeList.length;
+        const moreHtml = moreCount > 0 ? `<div class="ed-avatar-overflow">+${moreCount}</div>` : '';
         const countText = `${goingList.length} going${maybeList.length ? ` · ${maybeList.length} interested` : ''}`;
-        attendeePreviewHtml = `
-            <div style="display:flex;align-items:center;gap:14px">
-                <div class="evt-avatar-stack">${avatarHtml}${moreHtml}</div>
-                <span style="font-size:14px;color:#717171">${countText}</span>
-            </div>`;
+        attendeePreviewHtml = `<div class="ed-attendee-row"><div class="ed-avatar-stack">${avatarHtml}${moreHtml}</div><span class="ed-attendee-count">${countText}</span></div>`;
     }
-    // ── Build description HTML (markdown + collapsible) ─────
+
+    // ── Description ──────────────────────────────────────
     const rawDesc = event.description || '';
-    const descHtml = rawDesc
-        ? evtMiniMarkdown(rawDesc)
-        : '<span style="color:#b0b0b0;font-style:italic">No details yet — check back closer to the event.</span>';
+    const descHtml = rawDesc ? evtMiniMarkdown(rawDesc) : '<span class="ed-no-desc">No details yet — check back closer to the event.</span>';
     const descIsLong = rawDesc.length > 500;
 
-    // ── Related / Upcoming Events ─────────────────────────
+    // ── Organizer row ────────────────────────────────────
+    let organizerHtml = '';
+    if (!isLlc && creatorProfile) {
+        const avatarImg = creatorProfile.profile_picture_url
+            ? `<img src="${creatorProfile.profile_picture_url}" class="ed-org-avatar" alt="${evtEscapeHtml(cpName)}">`
+            : `<div class="ed-org-avatar ed-org-avatar-fallback">${cpInitials}</div>`;
+        const avatarEl = cpBadge
+            ? `<div style="position:relative;flex-shrink:0">${avatarImg}<div style="position:absolute;bottom:-2px;right:-2px;transform:scale(.65);transform-origin:bottom right">${cpBadge}</div></div>`
+            : avatarImg;
+        organizerHtml = `<a href="profile.html?id=${creatorProfile.id}" class="ed-org-link">${avatarEl}<div><span class="ed-org-name">${evtEscapeHtml(cpName)}</span><span class="ed-org-title">${evtEscapeHtml(cpTitle || 'Member')} · Organizer</span></div></a>`;
+    }
+
+    // ── Related Events ───────────────────────────────────
     let relatedHtml = '';
     if (typeof evtAllEvents !== 'undefined' && evtAllEvents.length > 1) {
         const now = new Date();
-        const upcoming = evtAllEvents
-            .filter(e => e.id !== eventId && new Date(e.start_date) > now && ['open','confirmed'].includes(e.status))
-            .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
-            .slice(0, 4);
+        const upcoming = evtAllEvents.filter(e => e.id !== eventId && new Date(e.start_date) > now && ['open','confirmed'].includes(e.status)).sort((a, b) => new Date(a.start_date) - new Date(b.start_date)).slice(0, 4);
         if (upcoming.length > 0) {
             const cards = upcoming.map(e => {
                 const d = new Date(e.start_date);
                 const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                const imgHtml = e.banner_url
-                    ? `<img src="${e.banner_url}" alt="" loading="lazy">`
-                    : `<div style="height:120px;background:linear-gradient(135deg,#6366f1,#8b5cf6)"></div>`;
-                return `<div class="evt-related-card" onclick="evtOpenDetail('${e.id}')">
-                    ${imgHtml}
-                    <div class="evt-related-card-body">
-                        <p class="evt-related-card-title">${evtEscapeHtml(e.title)}</p>
-                        <p class="evt-related-card-meta">${dateLabel}${e.location_nickname ? ' · ' + evtEscapeHtml(e.location_nickname) : ''}</p>
-                    </div>
-                </div>`;
+                const imgHtml = e.banner_url ? `<img src="${e.banner_url}" alt="" loading="lazy">` : `<div style="height:120px;background:linear-gradient(135deg,#6366f1,#8b5cf6)"></div>`;
+                const onclickHandler = e.slug ? `evtNavigateToEvent('${e.slug}')` : `evtOpenDetail('${e.id}')`;
+                return `<div class="evt-related-card" onclick="${onclickHandler}">${imgHtml}<div class="evt-related-card-body"><p class="evt-related-card-title">${evtEscapeHtml(e.title)}</p><p class="evt-related-card-meta">${dateLabel}${e.location_nickname ? ' · ' + evtEscapeHtml(e.location_nickname) : ''}</p></div></div>`;
             }).join('');
-            relatedHtml = `
-                <h3 class="evt-section-title">More Events</h3>
-                <div class="evt-related-scroll">${cards}</div>`;
+            relatedHtml = `${_edSectionHead('More Events')}<div class="evt-related-scroll">${cards}</div>`;
         }
     }
 
-    // ── Collapsible cost breakdown wrapper ─────────────────
+    // ── Collapsible cost wrapper ─────────────────────────
     if (costBreakdownHtml && event.rsvp_cost_cents) {
         costBreakdownHtml = `
             <div class="evt-cost-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')" role="button" aria-expanded="false" aria-label="Toggle cost breakdown">
-                <div>
-                    <span class="evt-cost-toggle-label">📊 Cost Breakdown</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px">
-                    <span class="evt-cost-toggle-price">${formatCurrency(event.rsvp_cost_cents)}</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                </div>
+                <div><span class="evt-cost-toggle-label">Cost Breakdown</span></div>
+                <div style="display:flex;align-items:center;gap:8px"><span class="evt-cost-toggle-price">${formatCurrency(event.rsvp_cost_cents)}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></div>
             </div>
             <div class="evt-cost-details">${costBreakdownHtml}</div>`;
     }
 
+    // ═══════════════════════════════════════════════════════
+    // Final HTML assembly — new card-based layout
+    // ═══════════════════════════════════════════════════════
+
     document.getElementById('eventsDetailView').innerHTML = `
-        <!-- Hero Banner -->
-        <div class="evt-hero" style="${bannerBg} min-height:300px;" ${event.banner_url ? `onclick="evtOpenLightbox('${event.banner_url}')"` : ''} role="img" aria-label="Event banner image">
-            <div class="evt-hero-scrim"></div>
-            <div class="evt-hero-actions">
-                <button onclick="event.stopPropagation();evtNavigateToList()" class="evt-hero-btn evt-hero-back-btn" title="Back" aria-label="Back to events">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        <!-- ─── Immersive Hero ─── -->
+        <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `onclick="evtOpenLightbox('${event.banner_url}')"` : ''} role="img" aria-label="Event banner">
+            <div class="ed-hero-scrim"></div>
+            <div class="ed-hero-nav">
+                <button onclick="event.stopPropagation();evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                 </button>
-                <button onclick="event.stopPropagation();evtCopyShareUrl('${event.slug}')" class="evt-hero-btn" title="Share" aria-label="Share event">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                </button>
-            </div>
-            <div class="evt-hero-content">
-                <div class="flex gap-2 mb-1">
-                    ${event.category ? `<span class="evt-tag" style="background:rgba(255,255,255,.2);color:#fff;backdrop-filter:blur(4px)">${CATEGORY_EMOJI[event.category] || '📌'} ${(event.category || '').replace(/_/g,' ')}</span>` : ''}
-                    <span class="evt-tag ${tc.bg} ${tc.text}">${tc.label}</span>
+                <div class="ed-hero-pill-row">
+                    <span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>
+                    <button onclick="event.stopPropagation();evtCopyShareUrl('${event.slug}')" class="ed-hero-pill" title="Share" aria-label="Share event">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                    </button>
                 </div>
-                ${event.location_nickname ? `<span class="evt-location-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg> ${evtEscapeHtml(event.location_nickname)}</span>` : ''}
+            </div>
+            <div class="ed-hero-bottom-content">
+                <div class="ed-hero-pills">
+                    ${event.category ? `<span class="ed-hero-tag">${CATEGORY_EMOJI[event.category] || '📌'} ${(event.category || '').replace(/_/g,' ')}</span>` : ''}
+                    <span class="ed-hero-tag ed-hero-tag-type" style="background:${tc.bg.includes('bg-') ? 'rgba(255,255,255,.2)' : tc.bg};color:${tc.text.includes('text-') ? '#fff' : tc.text}">${tc.label}</span>
+                </div>
             </div>
         </div>
 
-        <div class="evt-body max-w-5xl mx-auto">
-            ${heroBadgeHtml}
+        <!-- ─── Content Area ─── -->
+        <div class="ed-content">
+            <!-- Title + Meta Card -->
+            <div class="ed-card ed-card-title">
+                <h1 class="ed-title">${evtEscapeHtml(event.title)}</h1>
 
-            <!-- Status banner for deadline-passed -->
-            ${deadlinePassed && !isClosed && !isPast ? '<div style="padding:16px 0 0"><span class="evt-status-banner evt-status-past-body">🔒 RSVP deadline passed</span></div>' : ''}
+                <div class="ed-meta-grid">
+                    ${_edMetaRow(`<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>`,
+                        dateStr,
+                        showTime ? timeStr + (endTimeStr ? ` — ${endTimeStr}` : '') : '<span class="ed-gated">🔒 RSVP to see time</span>',
+                        `<span class="ed-ics-link" onclick="event.stopPropagation();evtDownloadIcs('${eventId}')">+ Add to calendar</span>`
+                    )}
+                    ${event.location_nickname || event.location_text ? _edMetaRow(`<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg>`,
+                        showLocation ? evtEscapeHtml(event.location_nickname || '') : '<span class="ed-gated">🔒 RSVP to see location</span>',
+                        showLocation && event.location_text ? evtEscapeHtml(event.location_text) : ''
+                    ) : ''}
+                </div>
 
-            <!-- Event Title -->
-            <h1 class="evt-content-title">${evtEscapeHtml(event.title)}</h1>
+                ${deadlinePassed && !isClosed && !isPast ? '<div class="ed-deadline-banner">🔒 RSVP deadline passed</div>' : ''}
 
-            <hr class="evt-divider">
-
-            <!-- About this event (title → organizer → description) -->
-            <div class="evt-section evt-anim">
-                <h3 class="evt-section-title">About this event</h3>
-                ${(() => {
-                if (isLlc) {
-                    return '';
-                }
-                if (creatorProfile) {
-                    const avatarImg = creatorProfile.profile_picture_url
-                        ? `<img src="${creatorProfile.profile_picture_url}" style="width:48px;height:48px;border-radius:12px;object-fit:cover" alt="${evtEscapeHtml(cpName)}">`
-                        : `<div style="width:48px;height:48px;border-radius:12px;background:#222;color:#fff;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center">${cpInitials}</div>`;
-                    const avatarHtml = cpBadge
-                        ? `<div style="position:relative;flex-shrink:0">${avatarImg}<div style="position:absolute;bottom:-2px;right:-2px;transform:scale(.65);transform-origin:bottom right">${cpBadge}</div></div>`
-                        : avatarImg;
-                    const titleLabel = cpTitle || 'Member';
-                    return `<a href="profile.html?id=${creatorProfile.id}" style="text-decoration:none"><div class="evt-info-row" style="margin-bottom:12px">${avatarHtml}<div><p class="evt-info-primary">${evtEscapeHtml(cpName)}</p><p class="evt-info-secondary">${evtEscapeHtml(titleLabel)} · Organizer</p></div></div></a>`;
-                }
-                return '';
-            })()}
-                <div class="evt-desc${descIsLong ? ' evt-desc-collapsed' : ''}" id="evtDescWrap" style="font-size:15px;line-height:1.7;color:#484848;white-space:pre-line">${descHtml}</div>
-                ${descIsLong ? '<button class="evt-read-more" onclick="document.getElementById(\'evtDescWrap\').classList.remove(\'evt-desc-collapsed\');this.remove()">Read more</button>' : ''}
+                ${organizerHtml ? `<hr class="ed-divider" style="margin:20px 0 16px">` : ''}
+                ${organizerHtml}
+                <div class="ed-desc${descIsLong ? ' ed-desc-collapsed' : ''}" style="margin-top:14px" id="evtDescWrap">${descHtml}</div>
+                ${descIsLong ? '<button class="ed-read-more" onclick="document.getElementById(\'evtDescWrap\').classList.remove(\'ed-desc-collapsed\');this.remove()">Read more</button>' : ''}
             </div>
 
-            <hr class="evt-divider">
-
-            <!-- Map -->
+            <!-- Map Card -->
             ${showLocation && event.location_lat && event.location_lng ? `
-            <div class="evt-section evt-anim">
-                <div id="detailEventMap" class="evt-map" onclick="evtOpenFullscreenMap(${event.location_lat}, ${event.location_lng}, '${evtEscapeHtml(event.location_text || '').replace(/'/g, "\\'")}')">
-                    <div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg px-2.5 py-1 text-xs font-semibold text-gray-600 shadow-sm z-[5] flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                        Expand
-                    </div>
+            <div class="ed-card ed-card-map">
+                <div class="ed-map-wrap">
+                    <div id="detailEventMap" class="ed-map" onclick="evtOpenFullscreenMap(${event.location_lat}, ${event.location_lng}, '${evtEscapeHtml(event.location_text || '').replace(/'/g, "\\'")}')"></div>
+                    ${event.location_nickname ? `<div class="ed-map-label">${evtEscapeHtml(event.location_nickname)}</div>` : ''}
                 </div>
-                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="evt-directions-btn" aria-label="Get directions to event">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-directions-link">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:16px;height:16px"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     Get Directions
                 </a>
-            </div>
-            <hr class="evt-divider">` : ''}
-
-            ${showNotes && event.gated_notes ? `
-            <div class="evt-section evt-anim">
-                <h3 class="evt-section-title">Attendee Details</h3>
-                <p style="font-size:15px;line-height:1.7;color:#484848" class="whitespace-pre-line">${evtEscapeHtml(event.gated_notes)}</p>
-            </div>
-            <hr class="evt-divider">` : ''}
-
-            <!-- Who's Going -->
-            ${attendeePreviewHtml ? `
-            <div class="evt-section evt-anim">
-                <h3 class="evt-section-title">Who's going</h3>
-                ${attendeePreviewHtml}
-            </div>
-            <hr class="evt-divider">` : ''}
-
-            <!-- RSVP -->
-            <div class="evt-section evt-anim">
-                ${rsvpButtons}
-            </div>
-
-            <!-- Dynamic sections -->
-            ${[waitlistHtml, qrHtml, venueQrHtml, scannerBtn, thresholdHtml, costBreakdownHtml, transportHtml, locationReqHtml, graceHtml, raffleHtml, documentsHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => '<hr class="evt-divider"><div class="evt-section evt-anim">' + s + '</div>').join('')}
-
-            <!-- Stats (Host) -->
-            ${isHost ? `
-            <hr class="evt-divider">
-            <div class="evt-section evt-anim">
-                <h3 class="evt-section-title">Event Stats</h3>
-                <div class="evt-stats-grid">
-                    <div class="evt-stat">
-                        <div class="evt-stat-value">${goingList.length}${event.max_participants ? `<span style="font-size:12px;font-weight:400;color:#717171">/${event.max_participants}</span>` : ''}</div>
-                        <div class="evt-stat-label">Going</div>
-                    </div>
-                    <div class="evt-stat">
-                        <div class="evt-stat-value" style="color:#e11d48">${maybeList.length}</div>
-                        <div class="evt-stat-label">Interested</div>
-                    </div>
-                    <div class="evt-stat">
-                        <div class="evt-stat-value" style="color:#059669">${checkinCount || 0}</div>
-                        <div class="evt-stat-label">Checked In</div>
-                    </div>
-                </div>
             </div>` : ''}
 
-            <!-- Attendee Breakdown (Host) -->
-            ${attendeeBreakdownHtml ? `<hr class="evt-divider"><div class="evt-section evt-anim">${attendeeBreakdownHtml}</div>` : ''}
+            <!-- Gated Notes Card -->
+            ${showNotes && event.gated_notes ? `<div class="ed-card">${_edSectionHead('Attendee Details')}<p class="ed-body-text whitespace-pre-line">${evtEscapeHtml(event.gated_notes)}</p></div>` : ''}
 
-            <!-- Comments / Discussion -->
-            <hr class="evt-divider">
-            <div class="evt-section evt-anim" id="portalCommentsSection" role="region" aria-label="Discussion">
-                <h3 class="evt-section-title">Discussion</h3>
-                <div id="portalCommentsList" style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px"></div>
-                <div style="display:flex;gap:10px">
-                    <input type="text" id="portalCommentInput" placeholder="Write a comment..." class="w-full text-sm p-3 border border-gray-200 rounded-xl outline-none focus:border-gray-900 transition" aria-label="Write a comment">
-                    <button onclick="evtPostComment('${eventId}')" class="evt-action-btn" style="width:auto;padding:12px 20px;font-size:14px" aria-label="Post comment">Post</button>
+            <!-- Interested / Attendees Card -->
+            ${attendeePreviewHtml ? `<div class="ed-card">${_edSectionHead("Who's Going")}${attendeePreviewHtml}</div>` : ''}
+
+            <!-- RSVP Card -->
+            ${rsvpButtons && rsvpEnabled ? `<div class="ed-card ed-card-rsvp">${rsvpButtons}</div>` : ''}
+
+            <!-- Dynamic sections (notices, QR, cost, raffle…) -->
+            ${[waitlistHtml, qrHtml, venueQrHtml, scannerBtn, thresholdHtml, costBreakdownHtml, transportHtml, locationReqHtml, graceHtml, raffleHtml, documentsHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => _edCard(s)).join('')}
+
+            <!-- Stats (Host) -->
+            ${isHost ? _edCard(`
+                ${_edSectionHead('Event Stats')}
+                <div class="ed-stats-row">
+                    <div class="ed-stat-block"><span class="ed-stat-num">${goingList.length}${event.max_participants ? `<small>/${event.max_participants}</small>` : ''}</span><span class="ed-stat-lbl">Going</span></div>
+                    <div class="ed-stat-block ed-stat-pink"><span class="ed-stat-num">${maybeList.length}</span><span class="ed-stat-lbl">Interested</span></div>
+                    <div class="ed-stat-block ed-stat-green"><span class="ed-stat-num">${checkinCount || 0}</span><span class="ed-stat-lbl">Checked In</span></div>
+                </div>
+            `) : ''}
+
+            <!-- Attendee Breakdown (Host) -->
+            ${attendeeBreakdownHtml ? _edCard(attendeeBreakdownHtml) : ''}
+
+            <!-- Comments -->
+            <div class="ed-card" id="portalCommentsSection" role="region" aria-label="Discussion">
+                ${_edSectionHead('Discussion')}
+                <div id="portalCommentsList" class="ed-comments-list"></div>
+                <div class="ed-comment-input-row">
+                    <input type="text" id="portalCommentInput" placeholder="Write a comment…" class="ed-comment-input" aria-label="Write a comment">
+                    <button onclick="evtPostComment('${eventId}')" class="ed-comment-post" aria-label="Post comment">Post</button>
                 </div>
             </div>
 
             <!-- Related Events -->
-            ${relatedHtml ? `<hr class="evt-divider"><div class="evt-section evt-anim">${relatedHtml}</div>` : ''}
+            ${relatedHtml ? _edCard(relatedHtml) : ''}
 
             <!-- Host Controls -->
-            ${hostControlsHtml ? `<hr class="evt-divider"><div class="evt-section">${hostControlsHtml}</div>` : ''}
+            ${hostControlsHtml ? _edCard(hostControlsHtml, 'ed-card-host') : ''}
 
-            ${event.cancellation_note ? `
-            <hr class="evt-divider">
-            <div class="evt-section">
-                <div style="padding:20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca">
-                    <p style="font-size:15px;font-weight:600;color:#b91c1c">Cancellation Note</p>
-                    <p style="font-size:14px;color:#dc2626;margin-top:6px">${evtEscapeHtml(event.cancellation_note)}</p>
-                </div>
-            </div>` : ''}
+            ${event.cancellation_note ? _edCard(`<div class="ed-cancel-banner"><p class="ed-cancel-title">Cancellation Note</p><p class="ed-cancel-text">${evtEscapeHtml(event.cancellation_note)}</p></div>`) : ''}
 
             <div style="height:80px" class="sm:hidden"></div>
             <div style="height:32px" class="hidden sm:block"></div>
         </div>
     `;
 
-    // Update page title
+    // ── Post-render setup ────────────────────────────────
     document.title = `${event.title} | Events | Justice McNeal LLC`;
     window.scrollTo({ top: 0, behavior: 'instant' });
-
-    // ── Section fade-in animations ──────────────────────
     evtInitSectionAnimations();
 
-    // ── Live countdown (tick every second when < 1h) ────
     if (!isClosed && !isPast && event.status !== 'active' && event.status !== 'cancelled') {
         evtStartLiveCountdown(event.start_date);
     }
 
-    // ── Swipeable bottom nav (mobile) ──────────────────
     evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost);
-
-    // Load comments
+    evtInitHeroCollapse();
     evtLoadComments(eventId);
 
-    // Close host dropdown when clicking outside
     document.addEventListener('click', (e) => {
         const dd = document.querySelector('.evt-host-dropdown.open');
         if (dd && !dd.parentElement.contains(e.target)) dd.classList.remove('open');
     }, { once: false });
 
-    // Generate QR codes after DOM render
+    // QR codes + map after DOM render
     setTimeout(() => {
         if (rsvp && rsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
             const canvas = document.getElementById('myTicketQR');
             if (canvas && typeof QRCode !== 'undefined') {
-                const ticketUrl = `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`;
-                QRCode.toCanvas(canvas, ticketUrl, { width: 180, margin: 2 });
+                QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`, { width: 180, margin: 2 });
             }
         }
         if (isHost && event.checkin_mode === 'venue_scan' && event.venue_qr_token) {
             const canvas = document.getElementById('venueQR');
             if (canvas && typeof QRCode !== 'undefined') {
-                const venueUrl = `${window.location.origin}/events/?e=${event.slug}&checkin=1`;
-                QRCode.toCanvas(canvas, venueUrl, { width: 220, margin: 2 });
+                QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${event.slug}&checkin=1`, { width: 220, margin: 2 });
             }
         }
-        // Detail map
         if (showLocation && event.location_lat && event.location_lng && typeof L !== 'undefined') {
             const mapEl = document.getElementById('detailEventMap');
             if (mapEl) {
@@ -1094,127 +854,61 @@ function evtCloseFullscreenMap() {
     document.body.style.overflow = '';
 }
 
-// ═══════════════════════════════════════════════════════════
-// Download ICS
-// ═══════════════════════════════════════════════════════════
-function evtDownloadIcs(eventId) {
-    const e = (evtAllEvents || []).find(ev => ev.id === eventId);
-    if (!e) return;
-    const start = new Date(e.start_date);
-    const end   = e.end_date ? new Date(e.end_date) : new Date(start.getTime() + 7200000);
-    const fmt   = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-    const uid   = `${e.id}@justicemcnealllc.com`;
-
-    const ics = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//JusticeMcNealLLC//Events//EN',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH',
-        'BEGIN:VEVENT',
-        `UID:${uid}`,
-        `DTSTART:${fmt(start)}`,
-        `DTEND:${fmt(end)}`,
-        `SUMMARY:${e.title.replace(/[,;\\]/g, '')}`,
-        `DESCRIPTION:${(e.description || '').replace(/\n/g, '\\n').slice(0, 500)}`,
-        `LOCATION:${(e.location_text || '').replace(/[,;\\]/g, '')}`,
-        `URL:${window.location.origin}/events/?e=${e.slug}`,
-        'STATUS:CONFIRMED',
-        'END:VEVENT',
-        'END:VCALENDAR'
-    ].join('\r\n');
-
-    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
-    a.download = `${e.slug || 'event'}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-// ═══════════════════════════════════════════════════════════
-// Comments / Discussion
-// ═══════════════════════════════════════════════════════════
-function evtTimeAgo(dateStr) {
-    const diff  = Date.now() - new Date(dateStr).getTime();
-    const mins  = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days  = Math.floor(diff / 86400000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-async function evtLoadComments(eventId) {
-    const list = document.getElementById('portalCommentsList');
-    if (!list) return;
-
-    let comments = null;
-    try {
-        const { data, error } = await supabaseClient
-            .from('event_comments')
-            .select('*, profile:profiles!event_comments_user_id_fkey(first_name, last_name, profile_picture_url)')
-            .eq('event_id', eventId)
-            .order('created_at', { ascending: true })
-            .limit(100);
-        if (error) throw error;
-        comments = data;
-    } catch (err) {
-        // Table may not exist yet — hide section silently
-        console.warn('Comments unavailable:', err.message || err);
-        const section = document.getElementById('portalCommentsSection');
-        if (section) section.style.display = 'none';
-        return;
-    }
-
-    if (!comments || comments.length === 0) {
-        list.innerHTML = '<p style="font-size:14px;color:#b0b0b0;text-align:center">No comments yet — be the first!</p>';
-        return;
-    }
-
-    list.innerHTML = comments.map(c => {
-        const name = evtEscapeHtml(`${c.profile?.first_name || ''} ${c.profile?.last_name || ''}`.trim() || 'Member');
-        const avatarUrl = c.profile?.profile_picture_url;
-        const initials  = ((c.profile?.first_name?.[0] || '') + (c.profile?.last_name?.[0] || '')).toUpperCase() || '?';
-        const timeAgo   = evtTimeAgo(c.created_at);
-
-        return `<div class="evt-comment">
-            <div class="evt-comment-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : initials}</div>
-            <div class="evt-comment-body">
-                <span class="evt-comment-name">${name}</span><span class="evt-comment-time">${timeAgo}</span>
-                <p class="evt-comment-text">${evtEscapeHtml(c.body)}</p>
-            </div>
-        </div>`;
-    }).join('');
-}
-
-async function evtPostComment(eventId) {
-    const input = document.getElementById('portalCommentInput');
-    const body  = (input?.value || '').trim();
-    if (!body || !eventId || !evtCurrentUser) return;
-
-    const { error } = await supabaseClient
-        .from('event_comments')
-        .insert({ event_id: eventId, user_id: evtCurrentUser.id, body });
-
-    if (error) {
-        console.error('Comment error:', error);
-        return;
-    }
-    input.value = '';
-    await evtLoadComments(eventId);
-}
-
-window.evtDownloadIcs = evtDownloadIcs;
-window.evtPostComment = evtPostComment;
 window.evtOpenFullscreenMap = evtOpenFullscreenMap;
 window.evtCloseFullscreenMap = evtCloseFullscreenMap;
 window.evtOpenLightbox = evtOpenLightbox;
+
+// ═══════════════════════════════════════════════════════════
+// Scroll-driven hero collapse (shrink + sticky body header)
+// ═══════════════════════════════════════════════════════════
+function evtInitHeroCollapse() {
+    evtCleanupHeroCollapse();
+    // Hero scrolls naturally — collapse effect disabled
+    return;
+
+    const heroContent = hero.querySelector('.evt-hero-content');
+    const heroActions = hero.querySelector('.evt-hero-actions');
+    const heroInitH = hero.offsetHeight;
+    const heroMinH = 120;
+    hero.style.minHeight = heroMinH + 'px';
+
+    function onScroll() {
+        const scrollY = window.scrollY || window.pageYOffset;
+        const newH = Math.max(heroMinH, heroInitH - scrollY);
+        const shrink = heroInitH - newH;
+        const progress = Math.min(1, shrink / (heroInitH - heroMinH));
+
+        hero.style.height = newH + 'px';
+        if (spacer) spacer.style.height = shrink + 'px';
+
+        // Fade hero overlays as it collapses
+        if (heroContent) heroContent.style.opacity = Math.max(0, 1 - progress * 1.4);
+        if (heroActions) heroActions.style.opacity = Math.max(0, 1 - progress * 1.8);
+
+        // Shadow on stuck body-header
+        if (bodyHeader) bodyHeader.classList.toggle('stuck', progress > 0.85);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    window._evtHeroCollapseCleanup = () => {
+        window.removeEventListener('scroll', onScroll);
+        hero.style.height = '';
+        hero.style.minHeight = '';
+        if (spacer) spacer.style.height = '';
+        if (heroContent) heroContent.style.opacity = '';
+        if (heroActions) heroActions.style.opacity = '';
+        if (bodyHeader) bodyHeader.classList.remove('stuck');
+    };
+}
+
+function evtCleanupHeroCollapse() {
+    if (window._evtHeroCollapseCleanup) {
+        window._evtHeroCollapseCleanup();
+        window._evtHeroCollapseCleanup = null;
+    }
+}
 
 // ═══════════════════════════════════════════════════════════
 // Sticky CTA Bar — sits above the untouched bottom-tab-bar
@@ -1291,4 +985,6 @@ function evtCleanupBottomNav() {
     const hint = document.querySelector('.bottom-tab-bar .swipe-hint');
     if (hint) hint.style.display = '';
     document.body.classList.remove('evt-cta-active');
+    // Clean up hero collapse / sticky header
+    evtCleanupHeroCollapse();
 }

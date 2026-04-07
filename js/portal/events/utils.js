@@ -103,10 +103,10 @@ async function evtLoadDetailBySlug(slug) {
         evtOpenDetail(event.id);
         return;
     }
-    // Not in cache — direct query
+    // Not in cache — fetch full event data
     const { data, error } = await supabaseClient
         .from('events')
-        .select('id, slug')
+        .select('*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)')
         .eq('slug', slug)
         .maybeSingle();
     if (error || !data) {
@@ -127,6 +127,10 @@ async function evtLoadDetailBySlug(slug) {
         }
         document.title = 'Event Not Found | Justice McNeal LLC';
         return;
+    }
+    // Merge into cache so evtOpenDetail can find it
+    if (!evtAllEvents.find(e => e.id === data.id)) {
+        evtAllEvents.push(data);
     }
     evtOpenDetail(data.id);
 }
@@ -156,3 +160,46 @@ function evtCopyShareUrl(slug) {
         });
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// Download ICS
+// ═══════════════════════════════════════════════════════════
+function evtDownloadIcs(eventId) {
+    const e = (evtAllEvents || []).find(ev => ev.id === eventId);
+    if (!e) return;
+    const start = new Date(e.start_date);
+    const end   = e.end_date ? new Date(e.end_date) : new Date(start.getTime() + 7200000);
+    const fmt   = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const uid   = `${e.id}@justicemcnealllc.com`;
+
+    const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//JusticeMcNealLLC//Events//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `UID:${uid}`,
+        `DTSTART:${fmt(start)}`,
+        `DTEND:${fmt(end)}`,
+        `SUMMARY:${e.title.replace(/[,;\\]/g, '')}`,
+        `DESCRIPTION:${(e.description || '').replace(/\n/g, '\\n').slice(0, 500)}`,
+        `LOCATION:${(e.location_text || '').replace(/[,;\\]/g, '')}`,
+        `URL:${window.location.origin}/events/?e=${e.slug}`,
+        'STATUS:CONFIRMED',
+        'END:VEVENT',
+        'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${e.slug || 'event'}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+window.evtDownloadIcs = evtDownloadIcs;

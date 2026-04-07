@@ -67,7 +67,7 @@
         #eventContent { flex: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 
         /* ═══ Airbnb-inspired Hero Banner ═══ */
-        .evt-hero { position:relative; min-height:300px; background-size:cover; background-position:center; }
+        .evt-hero { position:relative; min-height:300px; background-size:cover; background-position:center; will-change:transform; transform-origin:center top; }
         @media(min-width:640px){ .evt-hero { min-height:400px; } }
         .evt-hero-scrim { position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.7) 0%, rgba(0,0,0,.1) 45%, rgba(0,0,0,.25) 100%); pointer-events:none; }
         .evt-hero-actions { position:absolute; top:0; right:0; display:flex; gap:8px; z-index:2; padding-top:max(16px, env(safe-area-inset-top)); padding-right:16px; }
@@ -204,8 +204,7 @@
         .evt-invite-banner p { font-size:14px; color:#92400e; font-weight:600; margin:0; }
         .evt-invite-banner span { font-size:13px; color:#a16207; margin-top:2px; display:block; font-weight:400; }
 
-        /* Parallax hero (desktop only) */
-        @media(min-width:640px){ .evt-hero { background-attachment:fixed; } }
+        /* Parallax hero replaced by scroll-driven zoom-out effect */
 
         /* Section fade-in */
         @keyframes evtSectionIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
@@ -277,6 +276,22 @@
             .evt-cta-raffle-done { background:#16a34a; color:#fff; }
             .evt-cta-disabled { background:#e5e7eb; color:#9ca3af; }
         }
+
+        /* ═══ Mobile: collapsing sticky hero ═══ */
+        .evt-hero-spacer { height:0; pointer-events:none; }
+        @media(max-width:767px){
+            .evt-hero { position:sticky; top:0; z-index:50; overflow:hidden; }
+            .evt-body { z-index:auto; border-radius:0; background:linear-gradient(to bottom, transparent 24px, #fff 24px); }
+        }
+
+        /* ═══ Sticky event details header (title + date card pin on scroll) ═══ */
+        .evt-body-header { position:sticky; top:120px; z-index:55; background:#fff; margin:0 -24px; padding:0 24px; border-radius:24px 24px 0 0; overflow:visible; }
+        @media(min-width:640px){ .evt-body-header { margin:0 -40px; padding:0 40px; } }
+        @media(min-width:768px){ .evt-body-header { top:0; z-index:10; } }
+        .evt-body-header.stuck { box-shadow:0 2px 16px rgba(0,0,0,.08); }
+        .evt-body-loc-pill { position:absolute; top:0; left:24px; transform:translateY(-50%); z-index:6; }
+        @media(min-width:640px){ .evt-body-loc-pill { left:40px; } }
+        .evt-body-header .evt-content-title { padding-top:12px; }
     </style>
 </head>
 <body class="antialiased">
@@ -312,16 +327,22 @@
             </div>
             <div class="evt-hero-content">
                 <div id="eventTags" style="display:flex;gap:6px;margin-bottom:4px;flex-wrap:wrap"></div>
-                <div id="heroLocationPill"></div>
             </div>
         </div>
 
-        <div class="evt-body">
-        <div id="heroStatusBadge" aria-live="polite" aria-atomic="true"></div>
-        <input type="hidden" id="shareUrl" value="">
+        <div class="evt-hero-spacer"></div>
 
-        <!-- Event Title -->
-        <h1 id="eventContentTitle" class="evt-content-title"></h1>
+        <div class="evt-body">
+        <div class="evt-body-header">
+            <div id="heroStatusBadge" aria-live="polite" aria-atomic="true"></div>
+            <div id="heroLocationPill" class="evt-body-loc-pill"></div>
+            <input type="hidden" id="shareUrl" value="">
+
+            <!-- Event Title -->
+            <h1 id="eventContentTitle" class="evt-content-title"></h1>
+
+            <hr class="evt-divider">
+        </div>
 
         <!-- Invite Banner (personalized share link) -->
         <div id="inviteBanner" class="hidden" style="padding:16px 0 0"></div>
@@ -334,8 +355,6 @@
         <div id="attendeeCount" class="hidden" style="padding:0 0 16px"></div>
         <!-- Add to Calendar -->
         <div id="calendarSection" class="hidden" style="padding:0 0 20px"></div>
-
-        <hr class="evt-divider">
 
         <!-- About this event (organizer + description) -->
         <div class="evt-section">

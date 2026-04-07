@@ -17,7 +17,8 @@
                         },
                         surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
                     },
-                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] },
+                    screens: { xs: '480px' }
                 }
             }
         }
@@ -26,6 +27,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/shared.css">
+    <link rel="stylesheet" href="../css/pages/portal/index.css">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#4f46e5">
     <meta name="mobile-web-app-capable" content="yes">
@@ -42,53 +44,57 @@
 
     <div id="nav-placeholder"></div>
 
-    <!-- Welcome hero: sticky full-bleed on mobile, card on desktop -->
-    <div class="sticky top-0 z-30 md:static md:max-w-5xl md:mx-auto md:mt-6 md:px-4 lg:px-8">
-        <div class="bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 text-white relative overflow-hidden fade-in md:rounded-2xl"
-             style="padding-top: max(1rem, env(safe-area-inset-top));">
-            <!-- Orbs -->
-            <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-12 translate-x-12"></div>
-            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-10 -translate-x-10"></div>
-            <div class="hidden md:block absolute top-1/2 left-1/2 w-96 h-96 bg-white/[0.03] rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-            <div class="hidden md:block absolute bottom-0 right-0 w-72 h-72 bg-white/[0.04] rounded-full translate-x-20 translate-y-20 pointer-events-none"></div>
+    <main class="flex-1 main-scroll">
+    <div class="max-w-[430px] mx-auto md:max-w-5xl pb-8">
 
-            <div class="relative px-5 sm:px-8 md:px-10 pb-5 sm:pb-6 md:pb-10">
-                <!-- Label -->
-                <p class="text-brand-200 text-xs md:text-sm font-medium md:font-semibold mb-0.5 md:mb-2 md:tracking-wide">Welcome back</p>
-
-                <!-- Mobile: email — Desktop: display name -->
-                <p class="text-sm text-white/80 truncate mb-2 md:hidden" id="userEmail">
-                    <span class="skeleton inline-block h-4 w-48 rounded opacity-20"></span>
-                </p>
-                <p class="hidden md:block text-3xl lg:text-4xl font-extrabold text-white mb-5 truncate leading-tight" id="userDisplayName">
-                    <span class="skeleton inline-block h-10 w-56 rounded opacity-20"></span>
-                </p>
-
-                <div class="flex items-end justify-between gap-3 md:gap-10">
-                    <!-- Amount block -->
-                    <div>
-                        <div class="text-xs md:text-sm text-brand-300 mb-0.5 md:mb-2">Monthly Contribution</div>
-                        <div class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight stat-number" id="currentAmount">
-                            <span class="skeleton inline-block h-9 md:h-14 w-24 md:w-40 rounded-lg opacity-30"></span>
-                        </div>
-                        <a href="contribution.html" class="text-brand-200 hover:text-white text-xs md:text-sm mt-1 md:mt-3 inline-flex items-center gap-1 transition">
-                            Change amount <svg class="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </a>
-                    </div>
-                    <!-- Manage button -->
-                    <a href="contribution.html" class="flex-shrink-0 inline-flex items-center gap-1.5 md:gap-2 bg-white/20 hover:bg-white/30 text-white font-semibold md:font-bold py-2 md:py-4 px-4 md:px-8 rounded-xl md:rounded-2xl transition text-sm md:text-base">
-                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Manage
-                    </a>
-                </div>
+      <!-- HEADER — Avatar + greeting + name + role | Notifications + Chat -->
+      <div class="flex items-center justify-between px-4 pt-5 pb-5">
+        <div class="flex items-center gap-4">
+          <div id="headerAvatar" class="w-14 h-14 rounded-full overflow-hidden flex-shrink-0" style="box-shadow:0 0 0 3px #bfdbfe;">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+              <circle cx="28" cy="28" r="28" fill="#1a3a5c"/>
+              <circle cx="28" cy="21" r="9" fill="#3a6a9c"/>
+              <ellipse cx="28" cy="43" rx="17" ry="12" fill="#3a6a9c"/>
+            </svg>
+          </div>
+          <div>
+            <p class="font-bold uppercase tracking-widest" id="greeting" style="font-size:10px;color:#6366f1;">Good evening,</p>
+            <div class="flex items-center gap-1.5">
+              <p class="text-gray-900 font-bold text-2xl leading-tight" id="userDisplayName">
+                <span class="skeleton inline-block h-7 w-32 rounded opacity-20"></span>
+              </p>
+              <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
             </div>
+            <div class="mt-1.5">
+              <span id="userRoleBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full font-semibold" style="font-size:11px;background-color:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;">Member</span>
+            </div>
+            <p class="text-xs text-gray-400 truncate mt-0.5 md:hidden" id="userEmail" style="display:none;"></p>
+          </div>
         </div>
-    </div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <button aria-label="Notifications" class="w-12 h-12 rounded-full flex items-center justify-center" style="background-color:#e8edf5;">
+              <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              </svg>
+            </button>
+            <span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 bg-red-500 text-white font-bold rounded-full flex items-center justify-center" style="width:20px;height:20px;font-size:11px;">0</span>
+          </div>
+          <a href="feed.html" aria-label="Messages" class="w-12 h-12 rounded-full flex items-center justify-center" style="background-color:#e8edf5;">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
 
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+      <!-- BANNERS — Success, Past Due, Profile Nudge -->
+      <div class="px-4 space-y-3 mb-3">
 
         <!-- Success Banner -->
-        <div id="successBanner" class="hidden mb-6 fade-in">
+        <div id="successBanner" class="hidden fade-in">
             <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -106,7 +112,7 @@
         </div>
 
         <!-- Past Due Banner -->
-        <div id="pastDueBanner" class="hidden mb-6 fade-in">
+        <div id="pastDueBanner" class="hidden fade-in">
             <div class="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -124,7 +130,7 @@
         </div>
 
         <!-- Complete Your Profile Nudge Banner -->
-        <div id="profileNudgeBanner" class="hidden mb-6 fade-in">
+        <div id="profileNudgeBanner" class="hidden fade-in">
             <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
                 <div class="flex items-start gap-3">
                     <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -147,196 +153,251 @@
                 </div>
             </div>
         </div>
+      </div>
 
-        <!-- Billing Overview -->
-        <div class="grid grid-cols-2 gap-3 mb-6 sm:mb-8">
+      <!-- CARD GRID -->
+      <div class="px-4 space-y-5">
+
+        <!-- MONTHLY CONTRIBUTION CARD — full-width blue gradient -->
+        <div class="rounded-2xl p-5 md:p-6" style="background:linear-gradient(135deg,#1b6fe8,#1558c0);">
+          <div class="md:grid md:grid-cols-2 md:gap-8 md:items-center">
+            <div class="flex items-center justify-between gap-4">
+              <div class="min-w-0">
+                <p class="font-semibold" style="font-size:13px;color:rgba(255,255,255,0.75);">Monthly Contribution</p>
+                <p class="text-white text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight stat-number" id="currentAmount">
+                  <span class="skeleton inline-block h-9 md:h-14 w-24 md:w-40 rounded-lg opacity-30"></span>
+                </p>
+                <a href="contribution.html" class="inline-block mt-1 font-medium underline underline-offset-2" style="font-size:13px;color:rgba(255,255,255,0.8);">Change amount</a>
+              </div>
+              <a href="contribution.html" class="flex-shrink-0 flex flex-row items-center justify-center gap-2 rounded-2xl px-4 py-3 text-white" style="font-size:14px;background:rgba(255,255,255,0.18);">
+                <svg class="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="font-semibold">Manage</span>
+              </a>
+            </div>
 
             <!-- Next Bill Date -->
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 card-hover">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <div class="mt-4 pt-4 md:mt-0 md:pt-0 md:pl-8" style="border-top:1px solid rgba(255,255,255,0.2);" id="nextBillSection">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color:rgba(255,255,255,0.2);">
+                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
                     </div>
-                    <span class="text-xs font-medium text-gray-500">Next Bill Date</span>
-                </div>
-                <div class="text-xl sm:text-3xl font-extrabold text-gray-900 stat-number" id="nextBillDate">
-                    <span class="skeleton inline-block h-8 w-24 rounded-lg"></span>
-                </div>
-                <div class="mt-1.5 flex items-center gap-1.5">
-                    <span id="statusDot" class="hidden w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
-                    <span class="text-xs text-gray-500" id="subscriptionStatus">
-                        <span class="skeleton inline-block h-3 w-16 rounded"></span>
+                    <p class="font-medium" style="font-size:13px;color:rgba(255,255,255,0.75);">Next Bill Date</p>
+                  </div>
+                  <p class="text-white font-extrabold stat-number" id="nextBillDate" style="font-size:28px;line-height:1.1;">
+                    <span class="skeleton inline-block h-8 w-24 rounded-lg opacity-30"></span>
+                  </p>
+                  <div class="mt-2 flex items-center gap-1.5">
+                    <span id="statusDot" class="hidden w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-dot"></span>
+                    <span class="text-white text-sm" id="subscriptionStatus">
+                      <span class="skeleton inline-block h-3 w-16 rounded opacity-30"></span>
                     </span>
+                  </div>
                 </div>
+                <span id="daysLeftBadge" class="hidden font-semibold px-3 py-1.5 rounded-full flex-shrink-0" style="color:#1b6fe8;background-color:rgba(255,255,255,0.9);font-size:13px;"></span>
+              </div>
             </div>
-
-            <!-- Total Contributed -->
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 card-hover">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                    </div>
-                    <span class="text-xs font-medium text-gray-500">Total Contributed</span>
-                </div>
-                <div class="text-xl sm:text-3xl font-extrabold text-emerald-600 stat-number" id="totalContributed">
-                    <span class="skeleton inline-block h-8 w-20 rounded-lg"></span>
-                </div>
-                <a href="history.html" class="text-gray-500 hover:text-brand-600 text-xs mt-1.5 inline-flex items-center gap-1 transition">
-                    View history
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                </a>
-            </div>
+          </div>
         </div>
 
-        <!-- Progress: Milestone + Personal Level -->
-        <section class="mb-6 sm:mb-8">
-            <h2 class="text-base sm:text-lg font-bold text-gray-900 mb-3">Progress</h2>
-            <div class="grid grid-cols-2 gap-3">
+        <!-- ROW 2: Total Contributed + Personal Level -->
+        <div class="grid grid-cols-2 gap-3">
 
-                <!-- Next Milestone -->
-                <div id="nextMilestoneCard" class="hidden fade-in">
-                    <a href="milestones.html" class="group flex flex-col bg-white rounded-2xl border border-gray-200/80 p-3 sm:p-4 card-hover h-full">
-                        <div class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-2">Next Milestone</div>
-                        <div class="flex items-center gap-2 mb-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-200 transition text-lg" id="nextMilestoneEmoji">🌱</div>
-                            <span class="text-sm font-bold text-gray-900 group-hover:text-brand-600 transition leading-tight line-clamp-2" id="nextMilestoneName">Next Milestone</span>
-                        </div>
-                        <div class="mt-auto">
-                            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-1">
-                                <div id="nextMilestoneBar" class="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                            </div>
-                            <div class="flex items-center justify-between gap-1">
-                                <div class="text-xs text-gray-500 truncate" id="nextMilestoneRemaining">Loading...</div>
-                                <span class="text-xs font-semibold text-amber-600 flex-shrink-0" id="nextMilestonePct">0%</span>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- Personal Level (CP) -->
-                <div id="cpStatusCard" class="hidden fade-in">
-                    <a href="quests.html" class="group flex flex-col bg-white rounded-2xl border border-gray-200/80 p-3 sm:p-4 card-hover h-full">
-                        <div class="text-[10px] font-bold text-brand-500 uppercase tracking-widest mb-2">Personal Level</div>
-                        <div class="flex items-center gap-2 mb-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0 text-lg" id="cpTierIcon">🥉</div>
-                            <span class="text-sm font-bold text-gray-900 group-hover:text-brand-600 transition leading-tight line-clamp-2" id="cpTierName">Bronze Member</span>
-                        </div>
-                        <div class="mt-auto">
-                            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-1">
-                                <div id="cpTierBar" class="h-full bg-gradient-to-r from-brand-400 to-brand-500 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                            </div>
-                            <div class="flex items-center justify-between gap-1">
-                                <div class="text-xs text-gray-500 truncate" id="cpTierNextInfo">Earn CP</div>
-                                <span class="text-xs font-semibold text-brand-600 flex-shrink-0" id="cpTierPoints">0 CP</span>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-
+          <!-- Total Contributed -->
+          <div class="card-bg rounded-2xl p-3 xs:p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color:#ecfdf5;">
+                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+              </div>
+              <span class="font-bold uppercase tracking-widest" style="font-size:10px;color:#6366f1;">Total Contributed</span>
             </div>
-        </section>
+            <p class="font-extrabold tracking-tight stat-number" id="totalContributed" style="font-size:24px;color:#059669;">
+              <span class="skeleton inline-block h-7 w-20 rounded-lg"></span>
+            </p>
+            <a href="history.html" class="inline-flex items-center gap-1 mt-1.5 text-gray-400 hover:text-emerald-600 transition-colors" style="font-size:13px;">
+              View history
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </a>
+          </div>
 
-        <!-- Quick Links -->
-        <section class="mb-6 sm:mb-8">
-            <h2 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Quick Links</h2>
-            <div class="grid grid-cols-3 gap-3">
-
-                <a href="quests.html" class="group bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover flex flex-col items-center text-center gap-2">
-                    <div class="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-200 transition">
-                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-gray-900 group-hover:text-amber-600 transition text-sm">Quests</div>
-                        <div class="text-xs text-gray-500 mt-0.5 hidden sm:block">Earn CP & badges</div>
-                    </div>
-                </a>
-
-                <a href="investments.html" class="group bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover flex flex-col items-center text-center gap-2">
-                    <div class="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition">
-                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-gray-900 group-hover:text-emerald-600 transition text-sm">Investments</div>
-                        <div class="text-xs text-gray-500 mt-0.5 hidden sm:block">View portfolio</div>
-                    </div>
-                </a>
-
-                <a href="milestones.html" class="group bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover flex flex-col items-center text-center gap-2">
-                    <div class="w-11 h-11 rounded-xl bg-yellow-100 flex items-center justify-center flex-shrink-0 group-hover:bg-yellow-200 transition">
-                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-gray-900 group-hover:text-yellow-600 transition text-sm">Milestones</div>
-                        <div class="text-xs text-gray-500 mt-0.5 hidden sm:block">Track family goals</div>
-                    </div>
-                </a>
-
-                <a href="contribution.html" class="group bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover flex flex-col items-center text-center gap-2">
-                    <div class="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-200 transition">
-                        <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-gray-900 group-hover:text-brand-600 transition text-sm">Contribute</div>
-                        <div class="text-xs text-gray-500 mt-0.5 hidden sm:block">Manage amount</div>
-                    </div>
-                </a>
-
-                <a href="extra-deposit.html" class="group bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover flex flex-col items-center text-center gap-2">
-                    <div class="w-11 h-11 rounded-xl bg-teal-100 flex items-center justify-center flex-shrink-0 group-hover:bg-teal-200 transition">
-                        <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-gray-900 group-hover:text-teal-600 transition text-sm">Deposit</div>
-                        <div class="text-xs text-gray-500 mt-0.5 hidden sm:block">One-time extra</div>
-                    </div>
-                </a>
-
-                <a href="history.html" class="group bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover flex flex-col items-center text-center gap-2">
-                    <div class="w-11 h-11 rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-200 transition">
-                        <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-gray-900 group-hover:text-violet-600 transition text-sm">History</div>
-                        <div class="text-xs text-gray-500 mt-0.5 hidden sm:block">Past payments</div>
-                    </div>
-                </a>
-
-                <a href="events.html" class="group bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover flex flex-col items-center text-center gap-2">
-                    <div class="w-11 h-11 rounded-xl bg-pink-100 flex items-center justify-center flex-shrink-0 group-hover:bg-pink-200 transition">
-                        <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-gray-900 group-hover:text-pink-600 transition text-sm">Events</div>
-                        <div class="text-xs text-gray-500 mt-0.5 hidden sm:block">Family calendar</div>
-                    </div>
-                </a>
-
-                <a href="feed.html" class="group bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover flex flex-col items-center text-center gap-2">
-                    <div class="w-11 h-11 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-200 transition">
-                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-gray-900 group-hover:text-indigo-600 transition text-sm">Feed</div>
-                        <div class="text-xs text-gray-500 mt-0.5 hidden sm:block">Family updates</div>
-                    </div>
-                </a>
-
-                <a href="settings.html" class="group bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 card-hover flex flex-col items-center text-center gap-2">
-                    <div class="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition">
-                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-gray-900 group-hover:text-gray-700 transition text-sm">Settings</div>
-                        <div class="text-xs text-gray-500 mt-0.5 hidden sm:block">Account & billing</div>
-                    </div>
-                </a>
-
+          <!-- Personal Level (CP) -->
+          <div id="cpStatusCard" class="card-bg rounded-2xl p-3 xs:p-4">
+            <p class="font-bold uppercase tracking-widest" style="font-size:10px;color:#6366f1;">Personal Level</p>
+            <div class="flex items-center gap-2 mt-2">
+              <div class="w-8 h-8 xs:w-10 xs:h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#c0c0c0,#8a8a8a);box-shadow:0 0 0 3px #e0e7ff;">
+                <span class="text-white font-bold" style="font-size:13px;" id="cpTierIcon">--</span>
+              </div>
+              <p class="text-gray-900 font-bold leading-tight" style="font-size:15px;" id="cpTierName">
+                <span class="skeleton inline-block h-4 w-20 rounded"></span>
+              </p>
             </div>
-        </section>
+            <div class="mt-4 progress-track">
+              <div id="cpTierBar" class="progress-fill" style="width:0%;background:linear-gradient(90deg,#6366f1,#818cf8);"></div>
+            </div>
+            <div class="flex flex-wrap items-center justify-between mt-1.5 gap-x-1 gap-y-0.5">
+              <p class="text-gray-500" style="font-size:11px;" id="cpTierNextInfo">Earn CP</p>
+              <p class="text-gray-700 font-semibold" style="font-size:11px;" id="cpTierPoints">0 CP</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- FISCAL MILESTONE — Next milestone progress -->
+        <div id="nextMilestoneCard" class="hidden fade-in">
+          <div class="card-bg rounded-2xl p-5">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <p class="font-bold uppercase tracking-widest" style="font-size:10px;color:#6366f1;">Next Milestone</p>
+                  <span class="text-lg" id="nextMilestoneEmoji">🌱</span>
+                </div>
+                <p class="text-gray-900 font-semibold mt-1" style="font-size:16px;" id="nextMilestoneName">Next Milestone</p>
+              </div>
+              <p class="text-gray-900 font-bold flex-shrink-0 ml-4" style="font-size:30px;" id="nextMilestonePct">0%</p>
+            </div>
+            <div class="mt-4 progress-track">
+              <div id="nextMilestoneBar" class="progress-fill" style="width:0%;"></div>
+            </div>
+            <div class="flex justify-between mt-3">
+              <span class="text-gray-600" style="font-size:14px;" id="nextMilestoneRemaining">Loading...</span>
+              <a href="milestones.html" class="text-brand-600 hover:text-brand-700 font-semibold transition" style="font-size:14px;">View all</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUICK LINKS — pill-style buttons -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-gray-900 font-bold" style="font-size:16px;">Quick Links</p>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <a href="quests.html" class="quick-btn" style="background-color:#7c3aed;">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color:rgba(255,255,255,0.2);">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+              </div>
+              <span class="text-white font-semibold" style="font-size:14px;">Quests</span>
+            </a>
+
+            <a href="investments.html" class="quick-btn" style="background-color:#16a34a;">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color:rgba(255,255,255,0.2);">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              </div>
+              <span class="text-white font-semibold" style="font-size:14px;">Investments</span>
+            </a>
+
+            <a href="milestones.html" class="quick-btn" style="background-color:#0d9488;">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color:rgba(255,255,255,0.2);">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+              </div>
+              <span class="text-white font-semibold" style="font-size:14px;">Milestones</span>
+            </a>
+
+            <a href="contribution.html" class="quick-btn" style="background-color:#db2777;">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color:rgba(255,255,255,0.2);">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
+              </div>
+              <span class="text-white font-semibold" style="font-size:14px;">Contribute</span>
+            </a>
+
+            <a href="extra-deposit.html" class="quick-btn" style="background-color:#0891b2;">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color:rgba(255,255,255,0.2);">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              </div>
+              <span class="text-white font-semibold" style="font-size:14px;">Deposit</span>
+            </a>
+
+            <a href="history.html" class="quick-btn" style="background-color:#2563eb;">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color:rgba(255,255,255,0.2);">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <span class="text-white font-semibold" style="font-size:14px;">History</span>
+            </a>
+
+            <a href="events.html" class="quick-btn" style="background-color:#ea580c;">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color:rgba(255,255,255,0.2);">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
+              <span class="text-white font-semibold" style="font-size:14px;">Events</span>
+            </a>
+
+            <a href="feed.html" class="quick-btn" style="background-color:#6d28d9;">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color:rgba(255,255,255,0.2);">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+              </div>
+              <span class="text-white font-semibold" style="font-size:14px;">Feed</span>
+            </a>
+
+            <a href="settings.html" class="quick-btn" style="background-color:#475569;">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color:rgba(255,255,255,0.2);">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+              <span class="text-white font-semibold" style="font-size:14px;">Settings</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- ACTIVITY FEED — placeholder carousel (wire to activity_feed table later) -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-gray-900 font-bold" style="font-size:16px;">Activity Feed</p>
+          </div>
+          <div class="overflow-hidden rounded-2xl">
+            <!--
+              TODO: Wire to an `activity_feed` table in Supabase.
+              Triggers should insert rows when members: complete quests, unlock cosmetics,
+              reach milestones, have birthdays, or when new events are created.
+              Replace the static cards below with dynamically rendered rows.
+            -->
+            <div id="activityTrack" class="flex transition-transform duration-300 ease-in-out">
+              <div class="card-bg flex-shrink-0 w-full rounded-2xl p-5 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style="background-color:#f5f3ff;">
+                  <svg class="w-6 h-6" style="color:#7c3aed;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="font-bold text-gray-900" style="font-size:14px;">Activity updates</span>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background-color:#f5f3ff;color:#7c3aed;">Quest</span>
+                  </div>
+                  <p class="text-gray-600 leading-snug" style="font-size:13px;">Member achievements will appear here!</p>
+                  <p class="text-gray-400 mt-1" style="font-size:12px;">Coming soon</p>
+                </div>
+                <span class="font-bold flex-shrink-0 px-3 py-1.5 rounded-xl" style="font-size:13px;color:#7c3aed;background-color:#f5f3ff;">&#10024;</span>
+              </div>
+              <div class="card-bg flex-shrink-0 w-full rounded-2xl p-5 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style="background-color:#ecfdf5;">
+                  <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="font-bold text-gray-900" style="font-size:14px;">Milestones</span>
+                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background-color:#ecfdf5;color:#059669;">Goal</span>
+                  </div>
+                  <p class="text-gray-600 leading-snug" style="font-size:13px;">Track family contributions and celebrate wins.</p>
+                  <p class="text-gray-400 mt-1" style="font-size:12px;">Coming soon</p>
+                </div>
+                <span class="font-bold flex-shrink-0 px-3 py-1.5 rounded-xl" style="font-size:13px;color:#059669;background-color:#ecfdf5;">&#127919;</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center justify-center gap-2 mt-3" id="activityDots">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+          </div>
+        </div>
 
         <!-- No Subscription State -->
         <div id="noSubscription" class="hidden fade-in">
-            <div class="bg-white rounded-2xl border border-gray-200 p-8 sm:p-16 text-center">
+            <div class="card-bg rounded-2xl p-8 sm:p-16 text-center">
                 <div class="w-20 h-20 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <svg class="w-10 h-10 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
@@ -348,6 +409,10 @@
                 </a>
             </div>
         </div>
+
+        <div class="h-6"></div>
+      </div><!-- /space-y-5 -->
+    </div><!-- /max-w container -->
     </main>
 
     <div id="footer-placeholder"></div>
@@ -370,5 +435,42 @@
     <script src="../js/lottie-effects.js"></script>
     <script src="../js/portal/portal.js"></script>
     <script src="../js/sw-register.js"></script>
+
+    <!-- Greeting time-of-day + Activity carousel -->
+    <script>
+      // Set greeting based on time of day
+      (function() {
+        const h = new Date().getHours();
+        const greetEl = document.getElementById('greeting');
+        if (greetEl) {
+          const period = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+          greetEl.textContent = 'Good ' + period + ',';
+        }
+      })();
+
+      // Simple swipe carousel for Activity Feed
+      (function() {
+        const track = document.getElementById('activityTrack');
+        const dots  = document.getElementById('activityDots');
+        if (!track || !dots) return;
+        const allDots = dots.querySelectorAll('span');
+        let idx = 0, startX = 0;
+
+        function go(i) {
+          idx = Math.max(0, Math.min(i, track.children.length - 1));
+          track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+          allDots.forEach(function(d, j) {
+            d.className = 'w-2 h-2 rounded-full ' + (j === idx ? 'bg-blue-500' : 'bg-gray-300');
+          });
+        }
+
+        track.addEventListener('touchstart', function(e) { startX = e.touches[0].clientX; }, { passive: true });
+        track.addEventListener('touchend', function(e) {
+          var dx = e.changedTouches[0].clientX - startX;
+          if (Math.abs(dx) > 40) go(idx + (dx < 0 ? 1 : -1));
+        });
+        allDots.forEach(function(d, j) { d.addEventListener('click', function() { go(j); }); });
+      })();
+    </script>
 </body>
 </html>

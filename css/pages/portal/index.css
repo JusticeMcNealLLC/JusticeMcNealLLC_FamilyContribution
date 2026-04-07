@@ -1,0 +1,139 @@
+/*
+ * dashboard.css
+ * Custom styles for dashboard.html
+ * Pairs with Tailwind CDN — Tailwind handles layout/spacing/color utilities
+ * via inline classes; this file covers reusable component styles and
+ * anything Tailwind can't express cleanly (pseudo-elements, media overrides).
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+
+/* ─── GLOBAL RESET & BASE ──────────────────────────────────────────────────── */
+
+* {
+  -webkit-tap-highlight-color: transparent; /* Remove tap flash on mobile */
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #f0f4f8;              /* Page background — light blue-gray */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;    /* Crisp text on webkit browsers */
+  color: #1f2937;                         /* Default body text — gray-800 */
+}
+
+/* Hide scrollbars while keeping scroll functionality */
+::-webkit-scrollbar { display: none; }
+
+
+/* ─── CARD ──────────────────────────────────────────────────────────────────── */
+/*
+ * .card-bg — white surface card with a subtle layered shadow.
+ * Used as base for every stat card, activity item, and section panel.
+ */
+.card-bg {
+  background-color: #ffffff;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+
+/* ─── PROGRESS BARS ─────────────────────────────────────────────────────────── */
+/*
+ * .progress-track — the grey pill-shaped container for all progress bars.
+ * .progress-fill  — the coloured fill, width set via inline style (%).
+ *
+ * The default fill gradient (#1b6fe8 → #00c8b8) is used for fiscal milestones.
+ * XP / level bars override background via an inline style on .progress-fill.
+ */
+.progress-track {
+  height: 9px;
+  background-color: #e2e8f0;   /* slate-200 */
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 9px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #1b6fe8, #00c8b8);  /* blue → teal */
+}
+
+
+/* ─── QUICK LINK BUTTONS ────────────────────────────────────────────────────── */
+/*
+ * .quick-btn — horizontal pill button used in the Quick Links grid.
+ * Background colour is set per-button via inline style (each link has its
+ * own brand colour). The frosted icon container inside also uses inline style.
+ *
+ * .quick-btn.active — inset white ring to indicate the current/selected link.
+ */
+.quick-btn {
+  border-radius: 14px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+  border: none;
+  width: 100%;
+}
+
+.quick-btn:hover {
+  filter: brightness(1.1);  /* Slight lighten on hover, preserves brand colour */
+}
+
+.quick-btn.active {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5) inset;  /* Inset white ring */
+}
+
+
+/* ─── MAIN SCROLL ───────────────────────────────────────────────────────────── */
+/*
+ * .main-scroll — applied to <main> so the content area is independently
+ * scrollable on desktop (full-height viewport, overflow hidden on outer shell).
+ */
+.main-scroll {
+  overflow-y: auto;
+  height: 100vh;
+}
+
+
+/* ─── DESKTOP OVERRIDES (md: 768px+) ───────────────────────────────────────── */
+@media (min-width: 768px) {
+
+  /*
+   * Monthly Contribution card — Next Bill Date section:
+   * On mobile: sits below with a top border acting as divider.
+   * On desktop: sits to the right with a left border divider instead.
+   */
+  #nextBillSection {
+    border-top: none !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    padding-left: 2rem;
+  }
+
+  /*
+   * Activity Feed carousel — desktop layout:
+   * On mobile: single-slide carousel (translateX driven by JS).
+   * On desktop: switch to a 2-column grid showing all cards simultaneously.
+   * JS transform is locked to none, dot indicators are hidden.
+   */
+  #activityTrack {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    transform: none !important;
+    gap: 12px;
+  }
+
+  #activityTrack > div {
+    width: 100% !important;  /* Override the flex-shrink-0 w-full mobile sizing */
+  }
+
+  #activityDots {
+    display: none;  /* Dots only needed for single-slide mobile carousel */
+  }
+}

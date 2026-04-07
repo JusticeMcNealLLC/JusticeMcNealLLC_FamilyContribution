@@ -424,6 +424,9 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     // Add section fade-in animations
     content.querySelectorAll('.evt-section').forEach(s => s.classList.add('evt-anim'));
     pubInitSectionAnimations();
+
+    // ── Scroll-driven hero collapse + sticky header ─────
+    pubInitHeroCollapse();
 }
 
 /* ── RSVP Section ────────────────────────── */
@@ -1773,6 +1776,63 @@ window.pubCopyUrl = pubCopyUrl;
 window.pubDownloadIcs = pubDownloadIcs;
 window.pubPostComment = pubPostComment;
 window.pubOpenLightbox = pubOpenLightbox;
+
+// ═══════════════════════════════════════════════════════════
+// Scroll-driven hero collapse (shrink + sticky body header)
+// ═══════════════════════════════════════════════════════════
+function pubInitHeroCollapse() {
+    pubCleanupHeroCollapse();
+    const scrollContainer = document.getElementById('eventContent');
+    const hero = document.getElementById('eventBanner');
+    if (!scrollContainer || !hero) return;
+
+    // Mobile only
+    if (window.innerWidth >= 768) return;
+
+    const bodyHeader = scrollContainer.querySelector('.evt-body-header');
+    const heroContent = hero.querySelector('.evt-hero-content');
+    const heroActions = hero.querySelector('.evt-hero-actions');
+    const spacer = scrollContainer.querySelector('.evt-hero-spacer');
+    const heroInitH = hero.offsetHeight;
+    const heroMinH = 120;
+    hero.style.minHeight = heroMinH + 'px';
+
+    function onScroll() {
+        const scrollTop = scrollContainer.scrollTop;
+        const newH = Math.max(heroMinH, heroInitH - scrollTop);
+        const shrink = heroInitH - newH;
+        const progress = Math.min(1, shrink / (heroInitH - heroMinH));
+
+        hero.style.height = newH + 'px';
+        if (spacer) spacer.style.height = shrink + 'px';
+
+        if (heroContent) heroContent.style.opacity = Math.max(0, 1 - progress * 1.4);
+        if (heroActions) heroActions.style.opacity = Math.max(0, 1 - progress * 1.8);
+
+        // Shadow on stuck body-header
+        if (bodyHeader) bodyHeader.classList.toggle('stuck', progress > 0.85);
+    }
+
+    scrollContainer.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    window._pubHeroCollapseCleanup = () => {
+        scrollContainer.removeEventListener('scroll', onScroll);
+        hero.style.height = '';
+        hero.style.minHeight = '';
+        if (spacer) spacer.style.height = '';
+        if (heroContent) heroContent.style.opacity = '';
+        if (heroActions) heroActions.style.opacity = '';
+        if (bodyHeader) bodyHeader.classList.remove('stuck');
+    };
+}
+
+function pubCleanupHeroCollapse() {
+    if (window._pubHeroCollapseCleanup) {
+        window._pubHeroCollapseCleanup();
+        window._pubHeroCollapseCleanup = null;
+    }
+}
 
 // ═══════════════════════════════════════════════════════════
 // Sticky CTA Bar (mobile — public event page)

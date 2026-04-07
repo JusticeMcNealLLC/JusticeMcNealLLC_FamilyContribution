@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     evtCurrentUserRole = profile?.role;
 
     if (hasPermission('events.create') || evtCurrentUserRole === 'admin') {
-        document.getElementById('createEventBtn').classList.remove('hidden');
-        document.getElementById('createEventBtn').classList.add('flex');
+        document.getElementById('createEventBtn')?.classList.remove('hidden');
+        document.getElementById('createEventBtn')?.classList.add('flex');
     }
 
     // Auto-detect timezone
@@ -63,15 +63,11 @@ function evtUpdateRaffleCostHint() {
 // ─── Event Listeners ────────────────────────────────────
 
 function evtSetupListeners() {
-    // Tabs
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            evtActiveTab = btn.dataset.tab;
-            evtRenderEvents();
-        });
-    });
+    // Filter chips (replaces old tab-btn listeners)
+    evtInitFilterChips();
+
+    // Search
+    evtSetupSearch();
 
     // Type filter
     document.getElementById('typeFilter').addEventListener('change', evtRenderEvents);
