@@ -1,0 +1,89 @@
+﻿/* ─────────────────────────────────────────────────────────────────────────
+ * nav.css  —  Side Navigation Styles
+ * Supplements inline Tailwind classes in nav.js.
+ * Covers: scrollbar suppression, admin dark-theme hover states.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+
+/* ─── Scrollbar suppression inside the sidebar ──────────────────────────── */
+
+#sideNav::-webkit-scrollbar { display: none; }
+#sideNav { scrollbar-width: none; }
+
+#sideNav .flex-1::-webkit-scrollbar { display: none; }
+#sideNav .flex-1 { scrollbar-width: none; }
+
+
+/* ─── Admin dark-theme link states ──────────────────────────────────────── */
+/*
+ * .nav-admin-link / .nav-admin-link-active
+ * Tailwind's hover: modifier works fine for light-on-white scenarios, but
+ * for semi-transparent light-on-dark hovers we define them here so the
+ * exact rgba values match the sidebar background.
+ */
+
+.nav-admin-link {
+  color: rgba(148, 163, 184, 1); /* slate-400 */
+  border-left: 3px solid transparent;
+}
+
+.nav-admin-link:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: rgba(226, 232, 240, 1); /* slate-200 */
+}
+
+.nav-admin-link-active {
+  background-color: rgba(59, 130, 246, 0.18);
+  color: #ffffff;
+  border-left: 3px solid #60a5fa; /* blue-400 */
+}
+
+.nav-admin-link-active:hover {
+  background-color: rgba(59, 130, 246, 0.26);
+}
+
+
+/* ─── Chevron rotation transition ───────────────────────────────────────── */
+/*
+ * Tailwind's transition-transform + rotate-180 handle this.
+ * The rule below is a safety net for browsers where Tailwind may not
+ * have scanned the dynamically injected class names.
+ */
+
+#navMoreChev,
+#navProfileChev {
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* ─── Profile inline slide-up expand ────────────────────────────────────── */
+/*
+ * .nav-profile-expand — wraps the profile menu items (My Profile, Settings,
+ * Sign out). Starts collapsed (max-height: 0) and smoothly opens to full
+ * height when .nav-profile-open is toggled on by nav.js.
+ *
+ * max-height is set generously above the actual content height so the
+ * transition completes before the cap is reached.
+ */
+
+.nav-profile-expand {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-profile-expand.nav-profile-open {
+  max-height: 200px;
+}
+
+
+/* ─── Admin sign-out button ──────────────────────────────────────────────── */
+
+.nav-admin-signout {
+  color: rgba(148, 163, 184, 1); /* slate-400 */
+}
+
+.nav-admin-signout:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: rgba(252, 165, 165, 1); /* red-300 */
+}

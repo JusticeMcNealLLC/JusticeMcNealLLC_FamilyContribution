@@ -2,12 +2,16 @@
 // Cache-first for statics, network-first for API calls.
 // Push notification handler for native OS notifications.
 
-const CACHE_NAME = 'jm-portal-v38';
+const CACHE_NAME = 'jm-portal-v40';
 
 // Shell assets to pre-cache on install
 const SHELL_ASSETS = [
     '/portal/index.html',
     '/portal/feed.html',
+    '/portal/quests.html',
+    '/js/portal/quests/config.js',
+    '/js/portal/quests/renders.js',
+    '/js/portal/quests/init.js',
     '/css/shared.css',
     '/js/components/pageShell/icons.js',
     '/js/components/pageShell/helpers.js',
@@ -60,6 +64,11 @@ self.addEventListener('fetch', (e) => {
 
     // Only handle http(s) GET requests (skip chrome-extension://, POSTs, etc.)
     if (!url.protocol.startsWith('http') || e.request.method !== 'GET') {
+        return;
+    }
+
+    // Let the browser handle full page navigations natively — no synthetic 503 fallback
+    if (e.request.mode === 'navigate') {
         return;
     }
 

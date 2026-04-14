@@ -1123,6 +1123,57 @@ input[type="date"] {
         radial-gradient(circle at 80% 70%, rgba(255,255,255,0.05) 0%, transparent 40%);
 }
 
+/* ─── Side Navigation ─────────────────────────────────────── */
+
+/* Scrollbar suppression inside sidebar */
+#sideNav::-webkit-scrollbar { display: none; }
+#sideNav { scrollbar-width: none; }
+#sideNav .sidenav-scroll::-webkit-scrollbar { display: none; }
+#sideNav .sidenav-scroll { scrollbar-width: none; }
+
+/* Admin dark-theme link states */
+.nav-admin-link {
+    color: rgba(148, 163, 184, 1);
+    border-left: 3px solid transparent;
+}
+.nav-admin-link:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+    color: rgba(226, 232, 240, 1);
+}
+.nav-admin-link-active {
+    background-color: rgba(99, 102, 241, 0.18);
+    color: #ffffff;
+    border-left: 3px solid #818cf8;
+}
+.nav-admin-link-active:hover {
+    background-color: rgba(99, 102, 241, 0.26);
+}
+
+/* Admin sign-out button */
+.nav-admin-signout {
+    color: rgba(148, 163, 184, 1);
+}
+.nav-admin-signout:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: rgba(252, 165, 165, 1);
+}
+
+/* Chevron rotation transition (sidebar) */
+#navMoreChev,
+#navProfileChev {
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Profile accordion expand */
+.nav-profile-expand {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-profile-expand.nav-profile-open {
+    max-height: 200px;
+}
+
 /* ─── Cat Banner (legendary exclusive) ───────────────────── */
 .cat-banner-preview,
 .cat-banner-cover {
