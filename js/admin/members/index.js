@@ -611,6 +611,20 @@
                     if (global.InviteModal) global.InviteModal.open();
                     return;
                 }
+
+                // Card overflow menu — handle BEFORE card click so the sheet
+                // doesn't open when the user is just opening/using the menu.
+                const cardAction = e.target.closest('[data-card-action]');
+                if (cardAction) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    _onCardAction(cardAction, e);
+                    return;
+                }
+
+                // Click outside any open menu closes it.
+                _closeAllCardMenus();
+
                 const card = e.target.closest('[data-action="open-member"]');
                 if (card) {
                     const id = card.dataset.memberId;
@@ -622,6 +636,10 @@
                 }
             });
         }
+        // Esc closes any open card menu.
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') _closeAllCardMenus();
+        });
 
         // Phase 4: CSV export of currently-filtered list
         const csvBtn = document.getElementById('exportCsvBtn');
@@ -631,6 +649,148 @@
                 _exportMembersCsv(rows, state.tab);
             });
         }
+    }
+
+    // ── Card overflow menu (Spec §6b) ────────────────────────────────────
+    function _closeAllCardMenus() {
+        document.querySelectorAll('[data-card-menu-list]').forEach(m => {
+            m.classList.add('hidden');
+            const btn = m.parentElement && m.parentElement.querySelector('[data-card-action="toggle-menu"]');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    function _onCardAction(triggerEl, e) {
+        const card = triggerEl.closest('[data-member-id]');
+        if (!card) return;
+        const memberId = card.dataset.memberId;
+        const member   = state.members.find(m => m.id === memberId);
+        if (!member) return;
+        const action = triggerEl.dataset.cardAction;
+
+        if (action === 'toggle-menu') {
+            const menu = triggerEl.parentElement.querySelector('[data-card-menu-list]');
+            const willOpen = menu && menu.classList.contains('hidden');
+            _closeAllCardMenus();
+            if (willOpen) {
+                menu.classList.remove('hidden');
+                triggerEl.setAttribute('aria-expanded', 'true');
+            }
+            return;
+        }
+
+        // Any other action = close the menu first, then dispatch.
+        _closeAllCardMenus();
+        if (action === 'copy-email')      _cardCopyEmail(member);
+        else if (action === 'resend-invite')   _cardResendInvite(member);
+        else if (action === 'deactivate')      _cardSetActive(member, false);
+        else if (action === 'reactivate')      _cardSetActive(member, true);
+    }
+
+    function _cardCopyEmail(member) {
+        if (!member.email) return _toast('No email on file', 'error');
+        const writeText = (typeof navigator !== 'undefined' && navigator.clipboard)
+            ? navigator.clipboard.writeText.bind(navigator.clipboard)
+            : null;
+        const ok = () => _toast('Email copied');
+        const fail = () => _toast('Copy failed', 'error');
+        if (writeText) {
+            writeText(member.email).then(ok).catch(fail);
+        } else {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = member.email;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute'; ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select(); document.execCommand('copy'); ta.remove();
+                ok();
+            } catch (_) { fail(); }
+        }
+    }
+
+    async function _cardResendInvite(member) {
+        if (!member.email) return _toast('No email on file', 'error');
+        _toast(`Resending invite to ${member.email}…`);
+        try {
+            const fn = global.callEdgeFunction;
+            if (typeof fn !== 'function') throw new Error('callEdgeFunction unavailable');
+            const res = await fn('invite-user', { email: member.email, resend: true });
+            if (res && res.error) throw res.error;
+            _toast('Invite resent');
+        } catch (err) {
+            console.error('[members] resend failed:', err);
+            _toast('Resend failed: ' + (err.message || 'unknown'), 'error');
+        }
+    }
+
+    async function _cardSetActive(member, makeActive) {
+        const verb = makeActive ? 'reactivate' : 'deactivate';
+        // Two-step confirm via toast — simpler than building a separate modal.
+        // Spec §6f bans native window.confirm; this uses an inline confirm toast.
+        _toastConfirm(
+            `${makeActive ? 'Reactivate' : 'Deactivate'} ${member.email || 'this member'}?`,
+            async () => {
+                try {
+                    const sb = supabaseClient;
+                    const { error } = await sb.from('profiles')
+                        .update({ is_active: makeActive }).eq('id', member.id);
+                    if (error) throw error;
+                    _toast(`Member ${verb}d`);
+                    await refresh();
+                } catch (err) {
+                    console.error(`[members] ${verb} failed:`, err);
+                    _toast(`${verb} failed: ` + (err.message || 'unknown'), 'error');
+                }
+            }
+        );
+    }
+
+    // Tiny shared toast — non-blocking notification.
+    function _toast(msg, kind) {
+        let el = document.getElementById('membersToast');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'membersToast';
+            el.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] pointer-events-none';
+            document.body.appendChild(el);
+        }
+        const tone = kind === 'error'
+            ? 'bg-red-600 text-white'
+            : 'bg-gray-900 text-white';
+        const node = document.createElement('div');
+        node.className = `pointer-events-auto px-4 py-2 rounded-xl text-sm font-semibold shadow-lg mb-2 ${tone} transition-opacity`;
+        node.textContent = msg;
+        el.appendChild(node);
+        setTimeout(() => { node.style.opacity = '0'; }, 2200);
+        setTimeout(() => { node.remove(); }, 2700);
+    }
+
+    function _toastConfirm(msg, onConfirm) {
+        let el = document.getElementById('membersToast');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'membersToast';
+            el.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[60]';
+            document.body.appendChild(el);
+        }
+        const node = document.createElement('div');
+        node.className = 'pointer-events-auto px-4 py-3 rounded-xl text-sm shadow-lg mb-2 bg-white border border-gray-200 flex items-center gap-3';
+        node.innerHTML = `
+            <span class="text-gray-900 font-semibold">${msg.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</span>
+            <button type="button" class="px-2.5 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-lg" data-act="cancel">Cancel</button>
+            <button type="button" class="px-2.5 py-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg" data-act="confirm">Confirm</button>
+        `;
+        el.appendChild(node);
+        let dismissed = false;
+        const dismiss = () => { if (dismissed) return; dismissed = true; node.remove(); };
+        node.addEventListener('click', (e) => {
+            const a = e.target.closest('[data-act]');
+            if (!a) return;
+            if (a.dataset.act === 'confirm') { dismiss(); onConfirm(); }
+            else dismiss();
+        });
+        setTimeout(dismiss, 8000);
     }
 
     // ── CSV export (Phase 4) ─────────────────────────────────────────────

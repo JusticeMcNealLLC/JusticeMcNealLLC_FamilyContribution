@@ -59,6 +59,7 @@
         const status = member.status || MEMBER_STATUS.PENDING;
         const cfg    = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
         const isDeactivated = status === MEMBER_STATUS.DEACTIVATED;
+        const canResend = !member.setup_completed && !isDeactivated;
 
         const displayName = (member.first_name && member.last_name)
             ? `${member.first_name} ${member.last_name}`
@@ -92,6 +93,38 @@
 
         const wrapperOpacity = isDeactivated ? 'opacity-60' : '';
 
+        // Overflow menu items vary by member state. The menu is rendered
+        // collapsed; index.js toggles `data-open` and dispatches the actions.
+        const menuItems = [
+            `<button type="button" role="menuitem" data-card-action="copy-email"
+                class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Copy email</button>`,
+            canResend
+                ? `<button type="button" role="menuitem" data-card-action="resend-invite"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Resend invite</button>`
+                : '',
+            isDeactivated
+                ? `<button type="button" role="menuitem" data-card-action="reactivate"
+                    class="w-full text-left px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50">Reactivate</button>`
+                : `<button type="button" role="menuitem" data-card-action="deactivate"
+                    class="w-full text-left px-3 py-2 text-sm text-red-700 hover:bg-red-50">Deactivate</button>`,
+        ].filter(Boolean).join('');
+
+        const overflowMenu = `
+            <div class="relative flex-shrink-0" data-card-menu>
+                <button type="button" data-card-action="toggle-menu" aria-haspopup="menu" aria-expanded="false"
+                    class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                    title="More actions" aria-label="More actions">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 6a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 5.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 5.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/>
+                    </svg>
+                </button>
+                <div role="menu" data-card-menu-list
+                    class="hidden absolute right-0 top-full mt-1 z-20 min-w-[160px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                    ${menuItems}
+                </div>
+            </div>
+        `;
+
         return `
             <div class="relative bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 cursor-pointer hover:border-gray-300 transition ${wrapperOpacity}"
                  data-member-id="${escapeHtml(member.id)}"
@@ -111,10 +144,11 @@
                             <span>${escapeHtml(totalText)}</span>
                         </div>
                     </div>
-                    <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                    <div class="flex items-center gap-1 flex-shrink-0">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${cfg.badgeBg} ${cfg.badgeText}">
                             ${escapeHtml(cfg.label)}
                         </span>
+                        ${overflowMenu}
                     </div>
                 </div>
             </div>

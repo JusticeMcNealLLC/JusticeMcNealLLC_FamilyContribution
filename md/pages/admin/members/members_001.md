@@ -1,8 +1,8 @@
 # Members Page — Complete Overhaul Spec
 **Files:** `admin/members.html` · `js/admin/members/index.js` (+ supporting modules) · DB migrations
 **Audit Date:** April 21, 2026
-**Revision:** v8 — Phase 5 Filtering & Attention shipped (search + sort + attention banner)
-**Status:** ✅ Phase 1A + 1B + 2 + 3 + 4 (partial) + 5 Shipped — bulk-select stubs and perf audit deferred
+**Revision:** v9 — Phase 5 + 6 shipped (filter/attention + sheet refresh, tx pagination, card overflow)
+**Status:** ✅ Phase 1A + 1B + 2 + 3 + 4 (partial) + 5 + 6 Shipped — bulk-select stubs and perf audit deferred
 
 ### Implementation Status (as of April 21, 2026)
 
@@ -83,6 +83,14 @@
 | Sort dropdown | ✅ | New `#memberSortSelect` (Name A–Z / Newest first / Oldest first / Contribution ↓ / Recently active). New `state.sort` + `_applySort()` comparator. Last-active sort uses `lastSignInAt` (auth meta from migration 084). |
 | Attention Banner (§6d) | ✅ | New `#attentionBanner` between stats row and toolbar. Renders only when ≥1 member has a HIGH_MED flag. Groups by primary flag (priority: `past_due` > `invite_expired` > `onboarding_stalled` > `inactive_90`), color-coded per accent map. Shows up to 5 names per group + "+ N more". "Filter to these" button toggles `state.attentionOnly`; collapse button replaces banner with a single summary row that re-expands on click. Names inside banner are clickable and open the member sheet. |
 | "Needs Attention" tile click-through | ✅ | Tile is now a `<button id="statNeedsAttentionTile">`. Click toggles `state.attentionOnly` (overrides the active tab). When active: amber ring on the tile, banner re-expands, filtered list shows only members with HIGH_MED flags, and the page scrolls to the banner. Selecting any tab clears `attentionOnly`. New `attention` empty-state copy added to `MemberCards.renderEmptyState`. |
+
+### Phase 6 Shipped (Sheet Refresh + Transaction Pagination + Card Overflow Menu)
+
+| Deliverable | Status | Notes |
+|---|---|---|
+| **Refresh button in member sheet header** (§5b) | ✅ | New `#memberSheetRefresh` button between header content and Close. Click clears the per-member tab cache (`delete _cache[memberId]`), awaits a fresh page-level `membersPage.refresh()`, then re-renders the header + currently-active tab. Icon spins while in flight. |
+| **"Load more" pagination on Transactions tab** (§5b / P2.4) | ✅ | `_loadTransactionsPage(member, page)` fetches one page (20 invoices + 20 deposits via `.range(from, to)`), accumulates into `cache.transactions = { items, page, hasMore }`. `hasMore` is true whenever either source returned a full page. "Load more" button appended to list when more exist; replaced with "Showing all N transactions" once exhausted. De-duped by `kind:id` so re-clicks are idempotent. |
+| **Card overflow menu** (§6b / P1.1) | ✅ | New `...` button in the right column of every card. Dropdown menu items render conditionally: **Copy email** (always when email exists), **Resend invite** (only when `!setup_completed && !deactivated`), **Deactivate** or **Reactivate** (mutually exclusive). Menu toggle stops propagation so clicking it never opens the sheet. Click outside / Esc closes any open menu. Action handlers live in `index.js`: `_cardCopyEmail` (clipboard with execCommand fallback), `_cardResendInvite` (calls `invite-user` edge fn with `resend: true`), `_cardSetActive` (inline confirm toast → `profiles.update({is_active})` → list refresh). New `_toast` + `_toastConfirm` helpers used so no `window.confirm/alert` are introduced (per §6f). |
 
 ---
 

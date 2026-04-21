@@ -86,6 +86,10 @@
         if (tabBar) tabBar.addEventListener('click', _onTabClick);
         if (content) content.addEventListener('click', _onContentClick);
 
+        // Refresh button — invalidate per-member cache + reload current tab.
+        const refreshBtn = document.getElementById('memberSheetRefresh');
+        if (refreshBtn) refreshBtn.addEventListener('click', _onRefresh);
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && sheet && !sheet.classList.contains('hidden')) {
                 close();
@@ -283,43 +287,70 @@
     }
 
     // ── Transactions tab (lazy fetch invoices + manual_deposits) ──────────
-    async function _renderTransactionsAsync(m, container) {
-        container.innerHTML = _spinnerBlock('Loading transactions…');
-        let txns = _cache[m.id] && _cache[m.id].transactions;
-        try {
-            if (!txns) {
-                const sb = supabaseClient;
-                const [invRes, depRes] = await Promise.all([
-                    sb.from('invoices').select('id, amount_paid_cents, created_at, status')
-                        .eq('user_id', m.id).eq('status', 'paid').order('created_at', { ascending: false }).limit(40),
-                    sb.from('manual_deposits').select('id, amount_cents, deposit_date, notes')
-                        .eq('member_id', m.id).order('deposit_date', { ascending: false }).limit(40),
-                ]);
-                if (invRes.error) throw invRes.error;
-                if (depRes.error) throw depRes.error;
-                txns = []
-                    .concat((invRes.data || []).map(i => ({
-                        kind: 'invoice', id: i.id, cents: i.amount_paid_cents, date: i.created_at, note: 'Subscription',
-                    })))
-                    .concat((depRes.data || []).map(d => ({
-                        kind: 'deposit', id: d.id, cents: d.amount_cents, date: d.deposit_date, note: d.notes || 'Manual deposit',
-                    })))
-                    .sort((a, b) => new Date(b.date) - new Date(a.date))
-                    .slice(0, 20);
-                _cache[m.id] = _cache[m.id] || {};
-                _cache[m.id].transactions = txns;
-            }
-        } catch (err) {
-            console.error('[member-modal] transactions load failed:', err);
-            container.innerHTML = _errorBlock('Failed to load transactions.');
-            return;
-        }
+    // Spec §5b — supports "Load more" for deeper history beyond the initial page.
+    const TX_PAGE_SIZE = 20;
 
+    async function _renderTransactionsAsync(m, container) {
+        let entry = _cache[m.id] && _cache[m.id].transactions;
+        if (!entry) {
+            container.innerHTML = _spinnerBlock('Loading transactions…');
+            try {
+                entry = await _loadTransactionsPage(m, 0);
+                _cache[m.id] = _cache[m.id] || {};
+                _cache[m.id].transactions = entry;
+            } catch (err) {
+                console.error('[member-modal] transactions load failed:', err);
+                container.innerHTML = _errorBlock('Failed to load transactions.');
+                return;
+            }
+        }
+        _paintTransactions(entry, container);
+    }
+
+    // Fetches one page of transactions (page = 0-indexed). Returns the
+    // accumulated `items` + `page` index + `hasMore` heuristic.
+    async function _loadTransactionsPage(m, page, prevItems) {
+        const sb = supabaseClient;
+        const from = page * TX_PAGE_SIZE;
+        const to   = from + TX_PAGE_SIZE - 1;
+        const [invRes, depRes] = await Promise.all([
+            sb.from('invoices')
+                .select('id, amount_paid_cents, created_at, status')
+                .eq('user_id', m.id).eq('status', 'paid')
+                .order('created_at', { ascending: false }).range(from, to),
+            sb.from('manual_deposits')
+                .select('id, amount_cents, deposit_date, notes')
+                .eq('member_id', m.id)
+                .order('deposit_date', { ascending: false }).range(from, to),
+        ]);
+        if (invRes.error) throw invRes.error;
+        if (depRes.error) throw depRes.error;
+        const invItems = (invRes.data || []).map(i => ({
+            kind: 'invoice', id: i.id, cents: i.amount_paid_cents, date: i.created_at, note: 'Subscription',
+        }));
+        const depItems = (depRes.data || []).map(d => ({
+            kind: 'deposit', id: d.id, cents: d.amount_cents, date: d.deposit_date, note: d.notes || 'Manual deposit',
+        }));
+        const merged = invItems.concat(depItems).sort((a, b) => new Date(b.date) - new Date(a.date));
+        // hasMore: either source returned a full page → there might be more.
+        const hasMore = invItems.length >= TX_PAGE_SIZE || depItems.length >= TX_PAGE_SIZE;
+        const all = (prevItems || []).concat(merged);
+        // De-dupe by `kind:id` in case a later page somehow reuses a row.
+        const seen = new Set();
+        const items = all.filter(t => {
+            const k = `${t.kind}:${t.id}`;
+            if (seen.has(k)) return false;
+            seen.add(k); return true;
+        });
+        return { items, page, hasMore };
+    }
+
+    function _paintTransactions(entry, container) {
+        const txns = entry.items || [];
         if (!txns.length) {
             container.innerHTML = '<div class="text-center py-8 text-sm text-gray-500">No transactions yet.</div>';
             return;
         }
-
         const rows = txns.map(t => {
             const iconBg = t.kind === 'invoice' ? 'bg-brand-100 text-brand-700' : 'bg-emerald-100 text-emerald-700';
             const icon = t.kind === 'invoice' ? '↻' : '+';
@@ -335,12 +366,37 @@
             `;
         }).join('');
 
+        const loadMore = entry.hasMore
+            ? `<button type="button" data-action="tx-load-more"
+                    class="mt-3 w-full py-2 text-sm font-semibold text-brand-700 border border-brand-200 rounded-lg hover:bg-brand-50">
+                    Load more
+               </button>`
+            : `<p class="text-xs text-gray-400 text-center mt-3">Showing all ${txns.length} transactions</p>`;
+
         container.innerHTML = `
             <div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100 overflow-hidden">
                 ${rows}
             </div>
-            <p class="text-xs text-gray-400 text-center mt-3">Showing ${txns.length} most recent</p>
+            ${loadMore}
         `;
+    }
+
+    async function _onTxLoadMore(member, btn) {
+        const entry = _cache[member.id] && _cache[member.id].transactions;
+        const container = document.getElementById('memberSheetContent');
+        if (!entry || !container) return;
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Loading…';
+        try {
+            const next = await _loadTransactionsPage(member, entry.page + 1, entry.items);
+            _cache[member.id].transactions = next;
+            _paintTransactions(next, container);
+        } catch (err) {
+            console.error('[member-modal] tx load-more failed:', err);
+            btn.disabled = false;
+            btn.textContent = original;
+        }
     }
 
     // ── Settings tab ──────────────────────────────────────────────────────
@@ -429,6 +485,32 @@
         _renderTabContent(tab, member);
     }
 
+    // Refresh button (Spec §5b) — invalidate this member's per-tab cache,
+    // trigger a fresh page-level data load, then re-render the current tab.
+    async function _onRefresh() {
+        if (!state.memberId) return;
+        const btn = document.getElementById('memberSheetRefresh');
+        const svg = btn && btn.querySelector('svg');
+        if (svg) svg.classList.add('animate-spin');
+        try {
+            // Drop cached lazy-tab data so they refetch.
+            delete _cache[state.memberId];
+            // Re-pull the master member list so Overview/Financials reflect
+            // any changes made elsewhere.
+            if (global.membersPage && typeof global.membersPage.refresh === 'function') {
+                await global.membersPage.refresh();
+            }
+            const member = _findMember(state.memberId);
+            if (!member) return;
+            _renderHeader(member);
+            _renderTabContent(state.currentTab, member);
+        } catch (err) {
+            console.error('[member-modal] refresh failed:', err);
+        } finally {
+            if (svg) svg.classList.remove('animate-spin');
+        }
+    }
+
     function _onHeaderClick(e) {
         const copyBtn = e.target.closest('[data-action="copy-email"]');
         if (!copyBtn) return;
@@ -482,6 +564,10 @@
         if (kind === 'resend-invite') {
             const status = action.parentElement.parentElement.querySelector('[data-resend-status]');
             await _onResendInvite(member, action, status);
+            return;
+        }
+        if (kind === 'tx-load-more') {
+            await _onTxLoadMore(member, action);
             return;
         }
         if (kind === 'save-contact') {
