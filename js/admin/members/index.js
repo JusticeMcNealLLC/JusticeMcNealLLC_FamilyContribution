@@ -752,7 +752,8 @@
         if (!el) {
             el = document.createElement('div');
             el.id = 'membersToast';
-            el.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] pointer-events-none';
+            // bottom-24 (96px) clears the mobile bottom-tab-bar; sm:bottom-6 on desktop.
+            el.className = 'fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-[70] pointer-events-none px-4 w-full max-w-sm flex flex-col items-center';
             document.body.appendChild(el);
         }
         const tone = kind === 'error'
@@ -771,13 +772,13 @@
         if (!el) {
             el = document.createElement('div');
             el.id = 'membersToast';
-            el.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[60]';
+            el.className = 'fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-[70] px-4 w-full max-w-sm flex flex-col items-center';
             document.body.appendChild(el);
         }
         const node = document.createElement('div');
-        node.className = 'pointer-events-auto px-4 py-3 rounded-xl text-sm shadow-lg mb-2 bg-white border border-gray-200 flex items-center gap-3';
+        node.className = 'pointer-events-auto w-full px-4 py-3 rounded-xl text-sm shadow-lg mb-2 bg-white border border-gray-200 flex flex-wrap items-center gap-2 sm:gap-3';
         node.innerHTML = `
-            <span class="text-gray-900 font-semibold">${msg.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</span>
+            <span class="text-gray-900 font-semibold flex-1 min-w-0">${msg.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</span>
             <button type="button" class="px-2.5 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-lg" data-act="cancel">Cancel</button>
             <button type="button" class="px-2.5 py-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg" data-act="confirm">Confirm</button>
         `;

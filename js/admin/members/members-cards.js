@@ -78,7 +78,7 @@
             const safe = safeHexColor(r.color);
             const bg = safe ? `${safe}20` : '#e0e7ff';
             const fg = safe || '#4f46e5';
-            return `<span class="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+            return `<span class="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md flex-shrink-0 whitespace-nowrap"
                           style="background:${bg};color:${fg}">${r.icon ? escapeHtml(r.icon) + ' ' : ''}${escapeHtml(r.name)}</span>`;
         }).join('');
 
@@ -112,7 +112,7 @@
         const overflowMenu = `
             <div class="relative flex-shrink-0" data-card-menu>
                 <button type="button" data-card-action="toggle-menu" aria-haspopup="menu" aria-expanded="false"
-                    class="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                    class="p-2 -m-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
                     title="More actions" aria-label="More actions">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10 6a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 5.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 5.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/>
@@ -126,15 +126,15 @@
         `;
 
         return `
-            <div class="relative bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 cursor-pointer hover:border-gray-300 transition ${wrapperOpacity}"
+            <div class="relative bg-white rounded-2xl border border-gray-200/80 p-3 sm:p-5 cursor-pointer hover:border-gray-300 transition w-full min-w-0 ${wrapperOpacity}"
                  data-member-id="${escapeHtml(member.id)}"
                  data-action="open-member">
                 ${accentBar}
-                <div class="flex items-center gap-3 sm:gap-4 pl-2">
+                <div class="flex items-center gap-3 sm:gap-4 pl-2 min-w-0">
                     ${avatarBlock}
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-sm font-semibold text-gray-900 truncate">${escapeHtml(displayName)}</span>
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-sm font-semibold text-gray-900 truncate min-w-0">${escapeHtml(displayName)}</span>
                             ${roleChips}
                         </div>
                         <div class="text-xs text-gray-400 truncate mt-0.5">${escapeHtml(member.email || '')}</div>
@@ -145,7 +145,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-1 flex-shrink-0">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${cfg.badgeBg} ${cfg.badgeText}">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${cfg.badgeBg} ${cfg.badgeText}">
                             ${escapeHtml(cfg.label)}
                         </span>
                         ${overflowMenu}

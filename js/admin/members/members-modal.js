@@ -147,6 +147,11 @@
                 ${TAB_LABELS[t]}
             </button>
         `).join('');
+        // Mobile: scroll the active tab into view in the horizontally-scrolling bar.
+        const active = bar.querySelector(`[data-tab="${state.currentTab}"]`);
+        if (active && typeof active.scrollIntoView === 'function') {
+            active.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+        }
     }
 
     function _renderTabContent(tabKey, member) {
@@ -361,7 +366,7 @@
                         <div class="text-sm font-semibold text-gray-900 truncate">${_esc(t.note)}</div>
                         <div class="text-xs text-gray-500">${_formatDate(t.date)}</div>
                     </div>
-                    <div class="text-sm font-semibold text-gray-900">${_money(t.cents || 0)}</div>
+                    <div class="text-sm font-semibold text-gray-900 flex-shrink-0 whitespace-nowrap">${_money(t.cents || 0)}</div>
                 </div>
             `;
         }).join('');
@@ -420,14 +425,14 @@
                             <input type="text" name="username" value="${_esc(m.username)}"
                                 placeholder="e.g. justmcneal" maxlength="20"
                                 pattern="[A-Za-z0-9_]{3,20}"
-                                class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-brand-400 focus:outline-none">
+                                class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-base sm:text-sm focus:border-brand-400 focus:outline-none">
                             <div class="text-[11px] text-gray-400 mt-1">3–20 characters. Letters, numbers, underscores. Unique.</div>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-600 mb-1">Phone</label>
                             <input type="tel" name="phone" value="${_esc(m.phone)}"
                                 placeholder="+15551234567" maxlength="32"
-                                class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-brand-400 focus:outline-none">
+                                class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-base sm:text-sm focus:border-brand-400 focus:outline-none">
                         </div>
                         <div class="flex items-center gap-2">
                             <button type="button" data-action="save-contact"
@@ -441,13 +446,13 @@
 
                 ${showResend ? `
                 <div class="bg-white border border-gray-200 rounded-xl p-4">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="min-w-0">
                             <div class="text-sm font-semibold text-gray-900">Resend invite</div>
                             <div class="text-xs text-gray-500">Send the setup email again.</div>
                         </div>
                         <button data-action="resend-invite"
-                            class="px-3 py-2 text-sm font-semibold text-brand-700 border border-brand-200 rounded-lg hover:bg-brand-50">
+                            class="w-full sm:w-auto px-3 py-2 text-sm font-semibold text-brand-700 border border-brand-200 rounded-lg hover:bg-brand-50 whitespace-nowrap">
                             Resend
                         </button>
                     </div>
@@ -456,13 +461,13 @@
                 ` : ''}
 
                 <div class="bg-white border border-gray-200 rounded-xl p-4">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="min-w-0">
                             <div class="text-sm font-semibold text-gray-900">${isDeactivated ? 'Reactivate access' : 'Deactivate member'}</div>
                             <div class="text-xs text-gray-500">${isDeactivated ? 'Restore login + subscription.' : 'Removes access without deleting data.'}</div>
                         </div>
                         <button data-action="${dangerAction}"
-                            class="px-3 py-2 text-sm font-semibold border rounded-lg ${dangerCls}">
+                            class="w-full sm:w-auto px-3 py-2 text-sm font-semibold border rounded-lg whitespace-nowrap ${dangerCls}">
                             ${dangerLabel}
                         </button>
                     </div>
@@ -698,7 +703,7 @@
             btn.dataset.confirming = '1';
             btn.dataset.original = original;
             btn.classList.add('ring-2', 'ring-offset-1', 'ring-red-400');
-            btn.innerHTML = `Click again to ${verb.toLowerCase()}`;
+            btn.innerHTML = `Tap again to ${verb.toLowerCase()}`;
             if (status) status.textContent = 'Tap again to confirm, or wait to cancel.';
             const t = setTimeout(() => {
                 if (btn.dataset.confirming === '1') {
@@ -836,9 +841,9 @@
 
     function _kvRow(label, value, isHtml) {
         return `
-            <div class="flex items-center justify-between px-4 py-3">
-                <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">${_esc(label)}</span>
-                <span class="text-sm text-gray-900 text-right">${isHtml ? value : _esc(value)}</span>
+            <div class="flex items-start justify-between gap-3 px-4 py-3">
+                <span class="text-xs font-semibold uppercase tracking-wider text-gray-500 flex-shrink-0">${_esc(label)}</span>
+                <span class="text-sm text-gray-900 text-right break-words min-w-0">${isHtml ? value : _esc(value)}</span>
             </div>
         `;
     }
