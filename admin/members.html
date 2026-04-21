@@ -142,6 +142,25 @@
     <div id="footer-placeholder"></div>
     <div id="tabs-placeholder"></div>
 
+    <!-- ── Member Profile Sheet (Phase 2) ───────────────────────────────────── -->
+    <div id="memberSheet" class="fixed inset-0 z-50 hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memberSheetHeader">
+        <div id="memberSheetBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+        <div class="absolute inset-x-0 bottom-0 sm:inset-y-0 sm:right-0 sm:left-auto sm:w-full sm:max-w-xl flex">
+            <div class="relative w-full bg-surface-50 sm:bg-surface-50 rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col max-h-[90vh] sm:max-h-none sm:h-full">
+                <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+                    <div id="memberSheetHeader" class="flex items-center gap-3 flex-1 min-w-0"></div>
+                    <button id="memberSheetClose" type="button" class="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex-shrink-0" aria-label="Close">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div id="memberSheetTabs" class="flex gap-1 px-3 border-b border-gray-200 bg-white sticky top-[73px] z-10 overflow-x-auto"></div>
+                <div id="memberSheetContent" class="flex-1 overflow-y-auto p-4 sm:p-5"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
     <script src="../js/components/pageShell/icons.js"></script>
@@ -155,6 +174,7 @@
     <script src="../js/admin/members/members-status.js"></script>
     <script src="../js/admin/members/members-cards.js"></script>
     <script src="../js/admin/members/members-invite.js"></script>
+    <script src="../js/admin/members/members-modal.js"></script>
     <script src="../js/admin/members/index.js"></script>
     <script src="../js/sw-register.js"></script>
 </body>

@@ -1,8 +1,8 @@
 # Members Page — Complete Overhaul Spec
 **Files:** `admin/members.html` · `js/admin/members/index.js` (+ supporting modules) · DB migrations
 **Audit Date:** April 21, 2026
-**Revision:** v5 — Phase 1B Shipped (invite modal UI + invite.html redirect)
-**Status:** ✅ Phase 1A + 1B Shipped — ready for Phase 2 (profile sheet expansion)
+**Revision:** v6 — Phase 2 Shipped (tabbed profile sheet)
+**Status:** ✅ Phase 1A + 1B + 2 Shipped — ready for Phase 3 (DB migrations: username/phone, last_active view)
 
 ### Implementation Status (as of April 21, 2026)
 
@@ -11,10 +11,11 @@
 | File | Status | Notes |
 |---|---|---|
 | `js/admin/members/members-status.js` | ✅ Complete | MEMBER_STATUS, STATUS_CONFIG, deriveMemberStatus, ATTENTION_FLAGS, HIGH_MED_FLAGS, FLAG_SEVERITY, deriveAttentionFlags, getFlagLabel. Phase 2 flags gated behind `authMeta`. |
-| `js/admin/members/members-cards.js` | ✅ Complete | renderCard (status accent bar, 52px avatar, role chips with **safeHexColor sanitization**, status badge, monthly + total), renderEmptyState per tab, getInitials/getAvatarColor. No overflow menu yet (deferred to Phase 2 polish). |
+| `js/admin/members/members-cards.js` | ✅ Complete | renderCard (status accent bar, 52px avatar, role chips with **safeHexColor sanitization**, status badge, monthly + total), renderEmptyState per tab, getInitials/getAvatarColor. No overflow menu yet (deferred to Phase 4 polish). |
+| `js/admin/members/members-modal.js` | ✅ Complete (Phase 2) | Full tabbed profile sheet (Overview/Financials/Roles/Transactions/Settings). Lazy load + per-member cache (`_cache[memberId][tab]`). Mobile bottom-sheet → desktop right-side panel. Sticky header (avatar + name + status badge), sticky tab bar, scrollable content. Role toggle (member_roles upsert/delete + card refresh), Resend Invite (edge fn), Deactivate/Reactivate with two-click confirm pattern (no native window.confirm per §6f). |
 | `js/admin/members/members-invite.js` | ✅ Complete (1B) | Full modal: `open`/`close`/`init`/`send`. Email validation, submit spinner, success state, esc-to-close, backdrop click, focus restore, idempotent `init()`. `_scheduleRefresh()` (800ms + retry at 2s) preserved. |
 | `js/admin/members/index.js` | ✅ Complete | Main entry. `loadAllMembers()` parallel fetches 7 tables + `get_family_contribution_total` RPC. Returns `{members, stats}`. Renders 5 stat tiles, 6 tabs (counts from full array), client-side filter, member list. **Uses bare `supabaseClient` identifier** (script-scoped const, not on window). Defensive tab fallback to `'all'`. |
-| `admin/members.html` | ✅ Complete | Single-doctype clean rewrite. Header + active invite button (1B pill removed). 5-tile stats row, `#membersTabs`, `#membersListContainer`, `#inviteModal` (backdrop + form + success state). No inline JS, no `dashboard.js` reference, scripts loaded once each. |
+| `admin/members.html` | ✅ Complete | Single-doctype clean rewrite. Header + active invite button (1B pill removed). 5-tile stats row, `#membersTabs`, `#membersListContainer`, `#inviteModal`, `#memberSheet` (Phase 2: backdrop + sticky header + sticky tab bar + scrollable content). No inline JS, no `dashboard.js` reference, scripts loaded once each. |
 | `admin/invite.html` | ✅ Complete (1B) | Meta-refresh + JS redirect to `members.html`. `noindex`, canonical link, fallback `<a>`. |
 
 ### Phase 1A Audit + Remediation Log
@@ -37,6 +38,20 @@
 | `InviteModal.init()` wiring | ✅ | Idempotent. Binds: button click (open), close X, Cancel, backdrop click, form submit, Esc keydown. Restores prior focus on close. |
 | `InviteModal._onSubmit()` | ✅ | Email regex validation, submit guard against double-submit, spinner + "Sending…" label, inline error region, success card auto-closes after 1.4s, then `_scheduleRefresh()` polls `membersPage.refresh()`. |
 | `admin/invite.html` | ✅ Redirect-only | `<meta http-equiv="refresh" content="0; url=members.html">` + `window.location.replace` JS fallback + `noindex` + `<a>` text fallback. |
+
+### Phase 2 Shipped (Tabbed Profile Sheet)
+
+| Deliverable | Status | Notes |
+|---|---|---|
+| `#memberSheet` markup in `admin/members.html` | ✅ | Backdrop + sticky header (avatar, name, email, status badge, close X) + sticky tab bar + scrollable content area. Mobile = bottom-sheet (`rounded-t-3xl`, `max-h-[90vh]`); desktop = right-side panel (`sm:right-0`, `sm:max-w-xl`, full height). `aria-modal`, `aria-labelledby`, `role="dialog"`. |
+| `js/admin/members/members-modal.js` | ✅ | Public API: `open(memberId)` / `close()` / `init()`. Reuses already-loaded enriched member from `membersPage._state.members` (no re-fetch on open). |
+| Overview tab (eager) | ✅ | Attention-flag list (when present), 4 stat cells (Monthly, All Time, Active CP / lifetime, Streak), key/value rows (Member since, Push, Payout, Onboarding). |
+| Financials tab | ✅ | Subscription status (color-coded), monthly amount, next bill date, Stripe ID, payout enrolled. Uses `member.subscription` from initial load. |
+| Roles tab (lazy + cached) | ✅ | Fetches `roles` once per session per member into `_cache[id].allRoles`. Checkbox per role pre-checked from `member.roles`. Toggle inserts/deletes in `member_roles` and triggers `membersPage.refresh()` so card chips update. Inline "Saving…/Saved." status. Reverts checkbox on error. |
+| Transactions tab (lazy + cached) | ✅ | Parallel fetch of paid `invoices` + `manual_deposits` for member (`limit 40` each), merge + sort desc by date, slice top 20. Per-row icon (↻ subscription / + deposit), date, amount. "Showing N most recent" footer. |
+| Settings tab | ✅ | Phone + Username inputs (greyed, "Available after Phase 3 migration"). Resend Invite (only when `!setup_completed && !deactivated`) calls `invite-user` edge fn. Deactivate/Reactivate updates `profiles.is_active` + refreshes list + re-renders header & settings tab. |
+| Two-click confirmation (no `window.confirm`) | ✅ | First click on Deactivate/Reactivate flips label to "Click again to deactivate/reactivate", adds red ring, sets 4s revert timer. Second click within window commits. Aligns with §6f (no native dialogs). |
+| `index.js` wiring | ✅ | `MemberModal.init()` called at bootstrap. Card click handler invokes `MemberModal.open(id)` instead of `console.log`. |
 
 ---
 
@@ -857,7 +872,7 @@ All items below were previously open questions. They are now approved decisions.
 | `js/admin/members/index.js` | New entry file (replaces dashboard.js for this page) | ✅ Complete | Main orchestration. `loadAllMembers()` parallel-fetches 7 tables + canonical `get_family_contribution_total` RPC for All Time total. Returns `{members, stats}`. Renders 5 tiles + 6 tabs + filtered list. Defensive `'all'` tab fallback. Uses bare `supabaseClient` identifier (script-scoped const, NOT on `window`). Exposes `window.membersPage` API. |
 | `js/admin/members/members-status.js` | New file | ✅ Complete | MEMBER_STATUS, STATUS_CONFIG, deriveMemberStatus (Phase 1 + Phase 2 stubs gated behind `if (authMeta)`), ATTENTION_FLAGS, HIGH_MED_FLAGS, FLAG_SEVERITY, deriveAttentionFlags, getFlagLabel. Admin force-active short-circuit. |
 | `js/admin/members/members-cards.js` | New file | ✅ Complete | renderCard (status accent bar, 52px avatar, role chips, status badge, monthly + total), renderEmptyState per tab, getInitials, getAvatarColor, **`safeHexColor()` sanitizer** (only `#RGB`/`#RRGGBB`/`#RRGGBBAA`) for role chip colors. Overflow menu deferred to Phase 1B. |
-| `js/admin/members/members-modal.js` | New file (Phase 2) | ⏳ Phase 2 | Profile sheet tab bar, lazy load, cache. |
+| `js/admin/members/members-modal.js` | New file (Phase 2) | ✅ Complete (Phase 2) | Tabbed profile sheet. `open(id)` / `close()` / `init()`. Eager Overview, lazy Financials/Roles/Transactions/Settings with per-member cache. Role toggle persists to `member_roles`, refreshes card list. Resend Invite via `invite-user` edge fn. Deactivate/Reactivate updates `profiles.is_active` with two-click confirmation (no `window.confirm`). |
 | `js/admin/members/members-invite.js` | New file (absorbs invite.js) | ✅ Complete (1B) | Full modal: `open`/`close`/`init`/`send`. Email regex validation, submit spinner, inline error, success state w/ auto-close, esc-to-close, backdrop click, focus restore, idempotent `init()`. `_scheduleRefresh()` (800ms + retry at 2s). |
 | `js/admin/dashboard.js` | Deprecate progressively | ⏳ Pending | Removed from `members.html` script tags. Audit other admin pages before deletion. |
 | `js/admin/invite.js` | Deprecate | ⏳ Pending | Functionality absorbed into `js/admin/members/members-invite.js`. |
@@ -913,21 +928,21 @@ This is the practical ship order. Items within a phase can be parallelized. Depe
 
 ---
 
-### Phase 2 — Profile Sheet Expansion
+### Phase 2 — Profile Sheet Expansion ✅ Shipped
 > Goal: Make the profile sheet the definitive admin workspace for a member.
 > Prerequisite: Phase 1 shipped and stable.
 
-1. **Profile sheet tab bar** (`members-modal.js`) — tab switching, lazy load scaffolding, cache object. No new data fetched yet — just the tab skeleton.
+1. ✅ **Profile sheet tab bar** (`members-modal.js`) — tab switching with `_renderTabBar()` + `_renderTabContent()`, lazy load via per-tab content function, per-member cache object `_cache[memberId][tabKey]`. Sticky header + sticky tab bar.
 
-2. **Overview tab** — new fields: join date, credit points (active + lifetime), contribution streak, notification status summary, payout enrolled, onboarding checklist (derive from existing profile fields — no migration needed).
+2. ✅ **Overview tab** — attention-flag list, 4 stat cells (Monthly, All Time, Active CP / lifetime, Streak), KV rows (Member since, Push, Payout, Onboarding). All derived from already-loaded enriched member — no migration needed.
 
-3. **Financials tab** — move subscription info from overview to here. Add payout/bank link status block.
+3. ✅ **Financials tab** — subscription status (color-coded), monthly amount, next bill date, Stripe ID, payout enrolled. Reads `member.subscription`.
 
-4. **Roles tab** — move role assignment checkboxes here from the old unsorted "Roles" section.
+4. ✅ **Roles tab** — fetches `roles` once per member (cached), checkbox list pre-checked from `member.roles`. Toggle persists to `member_roles` and refreshes card list so chips update immediately. Inline status text + reverts on error.
 
-5. **Transactions tab** — move transaction history here with pagination (20 per load, "Load more" button).
+5. ✅ **Transactions tab** — parallel fetch of paid `invoices` + `manual_deposits`, merge + sort desc, slice top 20. Cached per member. Per-row icon + date + amount.
 
-6. **Settings tab** — phone + username fields placeholder (greyed out until P3 migration), deactivate/reactivate action (moved from modal footer), resend invite (conditional). No free-text title field — role assignment is handled in the Roles tab.
+6. ✅ **Settings tab** — phone + username (greyed, "Available after Phase 3 migration"). Resend Invite (conditional on `!setup_completed && !deactivated`) → `invite-user` edge fn. Deactivate/Reactivate → updates `profiles.is_active`, refreshes list, re-renders header + settings tab. Two-click confirmation pattern in lieu of native `window.confirm` (per §6f).
 
 ---
 

@@ -43,6 +43,9 @@
         if (global.InviteModal && typeof global.InviteModal.init === 'function') {
             global.InviteModal.init();
         }
+        if (global.MemberModal && typeof global.MemberModal.init === 'function') {
+            global.MemberModal.init();
+        }
 
         await refresh();
     });
@@ -347,7 +350,11 @@
                 const card = e.target.closest('[data-action="open-member"]');
                 if (card) {
                     const id = card.dataset.memberId;
-                    console.log('[members] open member modal:', id); // Phase 2: open profile sheet
+                    if (global.MemberModal && typeof global.MemberModal.open === 'function') {
+                        global.MemberModal.open(id);
+                    } else {
+                        console.warn('[members] MemberModal not loaded:', id);
+                    }
                 }
             });
         }
