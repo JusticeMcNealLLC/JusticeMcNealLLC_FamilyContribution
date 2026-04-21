@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -32,230 +32,115 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="JMLLC">
     <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
-    <style>
-        @media (max-width: 640px) {
-            #memberModal .modal-panel {
-                position: fixed !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                max-width: 100% !important;
-                max-height: 92vh !important;
-                border-radius: 1.5rem 1.5rem 0 0 !important;
-                margin: 0 !important;
-            }
-            #memberModal .modal-center {
-                align-items: flex-end !important;
-            }
-        }
-    </style>
 </head>
-<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="admin" data-active-page="members">
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar"
+      data-page-type="admin" data-active-page="members">
 
     <div id="nav-placeholder"></div>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
 
-        <!-- Page Header -->
-        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+        <!-- â”€â”€ Page Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Members</h1>
-                <p class="text-gray-500 mt-1 text-sm sm:text-base">Family contribution overview</p>
+                <p class="text-gray-500 mt-1 text-sm">Family lifecycle management</p>
             </div>
-            <a href="invite.html" class="inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-2.5 px-5 rounded-xl transition shadow-sm shadow-brand-200 text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <button id="inviteBtn" type="button"
+                class="inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-2.5 px-5 rounded-xl text-sm shadow-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
                 Invite Member
-            </a>
+            </button>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-            <div class="col-span-2 bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700 rounded-2xl p-5 sm:p-6 text-white relative overflow-hidden card-hover">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-8 translate-x-8"></div>
-                <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-6 -translate-x-6"></div>
-                <div class="relative">
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <span class="text-sm font-medium text-brand-100">This Month</span>
-                    </div>
-                    <div class="text-3xl sm:text-4xl font-extrabold tracking-tight" id="thisMonthTotal">
-                        <div class="skeleton h-10 w-28 rounded-lg opacity-30"></div>
-                    </div>
-                    <p class="text-brand-200 text-sm mt-1">collected so far</p>
-                </div>
+        <!-- â”€â”€ Stats Row (5 tiles) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+            <div class="col-span-2 lg:col-span-2 bg-gradient-to-br from-brand-600 to-brand-700 rounded-2xl p-5 text-white">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-brand-100">This Month</div>
+                <div class="text-3xl sm:text-4xl font-extrabold tracking-tight mt-2" id="statThisMonth">â€”</div>
+                <div class="text-brand-200 text-xs mt-1">collected so far</div>
             </div>
-
-            <div class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 card-hover">
-                <div class="flex items-center gap-2 mb-3">
-                    <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    </div>
-                </div>
-                <div class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight" id="activeMemberCount">
-                    <div class="skeleton h-10 w-12 rounded-lg"></div>
-                </div>
-                <p class="text-gray-500 text-sm mt-1">Active</p>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Active</div>
+                <div class="text-2xl font-extrabold text-gray-900 tracking-tight mt-1" id="statActiveCount">â€”</div>
             </div>
-
-            <div class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 card-hover">
-                <div class="flex items-center gap-2 mb-3">
-                    <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
-                    </div>
-                </div>
-                <div class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight" id="allTimeTotal">
-                    <div class="skeleton h-10 w-24 rounded-lg"></div>
-                </div>
-                <p class="text-gray-500 text-sm mt-1">All Time</p>
-                <div class="text-[11px] text-gray-400 mt-1 leading-tight" id="allTimeFeeBreakdown"></div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-gray-500">All Time</div>
+                <div class="text-2xl font-extrabold text-gray-900 tracking-tight mt-1" id="statAllTime">â€”</div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Total Invited</div>
+                <div class="text-2xl font-extrabold text-gray-900 tracking-tight mt-1" id="statTotalInvited">â€”</div>
+            </div>
+            <div class="bg-white rounded-2xl p-4 border border-amber-200">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-amber-600">Needs Attention</div>
+                <div class="text-2xl font-extrabold text-amber-700 tracking-tight mt-1" id="statNeedsAttention">â€”</div>
             </div>
         </div>
 
-        <!-- Past Due Alert -->
-        <section id="pastDueSection" class="hidden mb-6">
-            <div class="bg-red-50 border border-red-200 rounded-2xl p-4 sm:p-5">
-                <div class="flex items-start gap-3 mb-4">
-                    <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-red-900">Past Due Payments</h3>
-                        <p class="text-sm text-red-700 mt-0.5">These members have failed payments that need attention.</p>
-                    </div>
-                </div>
-                <div id="pastDueBody" class="space-y-2"></div>
-            </div>
-        </section>
+        <!-- â”€â”€ Status Filter Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <div id="membersTabs" class="flex gap-1 mb-4 overflow-x-auto -mx-1 px-1 pb-1"></div>
 
-        <!-- Members Section -->
-        <section class="mb-8">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold text-gray-900">Members</h2>
-                <span id="memberCountBadge" class="hidden text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full"></span>
-            </div>
+        <!-- â”€â”€ Member List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <div id="membersListContainer" class="grid gap-3"></div>
 
-            <div id="membersGrid" class="grid gap-3">
-                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
-                    <div class="flex items-center gap-4">
-                        <div class="skeleton w-11 h-11 rounded-full flex-shrink-0"></div>
-                        <div class="flex-1 space-y-2"><div class="skeleton h-4 w-48 rounded"></div><div class="skeleton h-3 w-24 rounded"></div></div>
-                        <div class="skeleton h-8 w-16 rounded-full"></div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5">
-                    <div class="flex items-center gap-4">
-                        <div class="skeleton w-11 h-11 rounded-full flex-shrink-0"></div>
-                        <div class="flex-1 space-y-2"><div class="skeleton h-4 w-36 rounded"></div><div class="skeleton h-3 w-20 rounded"></div></div>
-                        <div class="skeleton h-8 w-16 rounded-full"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Deactivated Members -->
-        <section id="deactivatedSection" class="mb-8 hidden">
-            <details class="group">
-                <summary class="flex items-center justify-between cursor-pointer list-none mb-3">
-                    <h2 class="text-lg font-bold text-gray-400">Deactivated</h2>
-                    <svg class="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </summary>
-                <div id="deactivatedGrid" class="grid gap-3"></div>
-            </details>
-        </section>
-
-        <!-- Empty State -->
-        <div id="emptyState" class="hidden">
-            <div class="bg-white rounded-2xl border border-gray-200 p-8 sm:p-16 text-center">
-                <div class="w-20 h-20 bg-brand-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-10 h-10 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">No members yet</h3>
-                <p class="text-gray-500 mb-8 max-w-sm mx-auto">Invite your family members to start collecting monthly contributions.</p>
-                <a href="invite.html" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 px-6 rounded-xl transition shadow-sm">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    Invite First Member
-                </a>
-            </div>
-        </div>
     </main>
 
-    <div id="footer-placeholder"></div>
-    <div id="tabs-placeholder"></div>
-
-    <!-- Member Detail Modal -->
-    <div id="memberModal" class="fixed inset-0 z-50 hidden">
-        <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="closeMemberModal()"></div>
-        <div class="modal-center fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
-            <div class="modal-panel bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-hidden pointer-events-auto flex flex-col">
-                <div class="sm:hidden flex justify-center pt-3 pb-1">
-                    <div class="w-10 h-1 bg-gray-300 rounded-full"></div>
+    <!-- ── Invite Modal (Phase 1B) ─────────────────────────────────────────── -->
+    <div id="inviteModal" class="fixed inset-0 z-50 hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="inviteModalTitle">
+        <div id="inviteModalBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden">
+                <div class="px-6 pt-6 pb-2 flex items-start justify-between">
+                    <div>
+                        <h2 id="inviteModalTitle" class="text-lg font-bold text-gray-900">Invite a Member</h2>
+                        <p class="text-sm text-gray-500 mt-0.5">They'll receive an email with a setup link.</p>
+                    </div>
+                    <button id="inviteModalClose" type="button" class="-mr-2 -mt-2 p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100" aria-label="Close">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
-                <div class="px-5 sm:px-6 pt-4 sm:pt-5 pb-4">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div id="modalAvatar" class="w-12 h-12 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-bold text-lg flex-shrink-0">--</div>
-                            <div class="min-w-0">
-                                <h2 id="modalMemberName" class="text-base sm:text-lg font-bold text-gray-900 truncate">Loading...</h2>
-                                <div id="modalMemberEmail" class="text-xs text-gray-500 truncate"></div>
-                                <div id="modalMemberRole" class="text-xs text-gray-400"></div>
-                            </div>
+
+                <form id="inviteForm" class="px-6 pb-6 pt-4 space-y-4" novalidate>
+                    <div>
+                        <label for="inviteEmail" class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1.5">Email Address</label>
+                        <input id="inviteEmail" name="email" type="email" autocomplete="email" required
+                            placeholder="name@example.com"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                        <p id="inviteError" class="hidden mt-2 text-sm text-red-600" role="alert"></p>
+                    </div>
+
+                    <div id="inviteSuccess" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-start gap-2">
+                        <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <div class="text-sm text-emerald-800">
+                            <div class="font-semibold">Invitation sent!</div>
+                            <div class="text-emerald-700 mt-0.5">They'll appear in the list shortly.</div>
                         </div>
-                        <button onclick="closeMemberModal()" class="p-2 hover:bg-gray-100 rounded-lg transition -mr-2 hidden sm:block">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" id="inviteCancel" class="flex-1 py-2.5 px-4 rounded-xl border border-gray-300 text-gray-700 font-semibold text-sm hover:bg-gray-50">Cancel</button>
+                        <button type="submit" id="inviteSubmit" class="flex-1 py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2">
+                            <span id="inviteSubmitLabel">Send Invite</span>
+                            <svg id="inviteSubmitSpinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
                         </button>
                     </div>
-                </div>
-
-                <div class="overflow-y-auto flex-1 min-h-0">
-                <!-- Profile Details -->
-                <div class="px-5 sm:px-6 pb-3">
-                    <div id="modalProfileDetails" class="bg-surface-50 rounded-xl p-3 border border-gray-100">
-                        <div class="text-gray-400 text-xs text-center py-2">Loading profile...</div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-3 gap-3 px-5 sm:px-6 pb-4">
-                    <div class="bg-surface-50 rounded-xl p-3 text-center">
-                        <div class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Status</div>
-                        <div id="modalStatus"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">--</span></div>
-                    </div>
-                    <div class="bg-surface-50 rounded-xl p-3 text-center">
-                        <div class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Monthly</div>
-                        <div id="modalAmount" class="text-lg sm:text-xl font-bold text-gray-900">$--</div>
-                    </div>
-                    <div class="bg-surface-50 rounded-xl p-3 text-center">
-                        <div class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total</div>
-                        <div id="modalTotal" class="text-lg sm:text-xl font-bold text-emerald-600">$--</div>
-                    </div>
-                </div>
-                <div class="h-px bg-gray-100 mx-5 sm:mx-6"></div>
-
-                <!-- Role Assignment -->
-                <div class="px-5 sm:px-6 py-4">
-                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Roles</h3>
-                    <div id="modalRoleAssignment" class="space-y-2">
-                        <div class="text-gray-400 text-center py-2 text-sm">Loading roles...</div>
-                    </div>
-                    <div id="modalRoleWarning" class="hidden mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                        ⚠️ Removing the last admin-level role will demote this member to basic access.
-                    </div>
-                </div>
-
-                <div class="h-px bg-gray-100 mx-5 sm:mx-6"></div>
-                <div class="px-5 sm:px-6 py-4">
-                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Transactions</h3>
-                    <div id="modalTransactions" class="space-y-2">
-                        <div class="text-gray-400 text-center py-6 text-sm">Loading...</div>
-                    </div>
-                </div>
-                </div><!-- end scrollable -->
-                <div class="px-5 sm:px-6 py-4 border-t border-gray-100 bg-surface-50 flex-shrink-0">
-                    <button onclick="closeMemberModal()" class="w-full sm:w-auto px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-xl transition">Done</button>
-                </div>
+                </form>
             </div>
         </div>
     </div>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
@@ -267,7 +152,10 @@
     <script src="../js/components/pageShell/profile-loader.js"></script>
     <script src="../js/components/pageShell/index.js"></script>
     <script src="../js/auth/shared.js"></script>
-    <script src="../js/admin/dashboard.js"></script>
+    <script src="../js/admin/members/members-status.js"></script>
+    <script src="../js/admin/members/members-cards.js"></script>
+    <script src="../js/admin/members/members-invite.js"></script>
+    <script src="../js/admin/members/index.js"></script>
     <script src="../js/sw-register.js"></script>
 </body>
 </html>
