@@ -74,8 +74,26 @@
         // by name (lexical lookup) rather than via `global.supabaseClient`.
         const sb = supabaseClient;
 
+        // Phase 3 column set (includes username, phone). If migration 083 has
+        // not been applied yet the DB returns 42703 — we retry without those
+        // columns so the page keeps working pre-migration.
+        const PROFILE_COLS_PH3 =
+            'id, email, role, is_active, setup_completed, first_name, last_name, ' +
+            'birthday, profile_picture_url, payout_enrolled, connect_onboarding_complete, ' +
+            'contribution_streak, username, phone, created_at, updated_at';
+        const PROFILE_COLS_PH2 =
+            'id, email, role, is_active, setup_completed, first_name, last_name, ' +
+            'birthday, profile_picture_url, payout_enrolled, connect_onboarding_complete, ' +
+            'contribution_streak, created_at, updated_at';
+
+        let profilesRes = await sb.from('profiles').select(PROFILE_COLS_PH3);
+        if (profilesRes.error && profilesRes.error.code === '42703') {
+            console.warn('[members] username/phone columns missing — apply migration 083 to enable Settings tab edits.');
+            profilesRes = await sb.from('profiles').select(PROFILE_COLS_PH2);
+        }
+        if (profilesRes.error) throw profilesRes.error;
+
         const [
-            profilesRes,
             subsRes,
             invoicesRes,
             depositsRes,
@@ -83,12 +101,8 @@
             notifPrefsRes,
             creditPointsRes,
             allTimeRpcRes,
+            authMetaRes,
         ] = await Promise.all([
-            sb.from('profiles').select(
-                'id, email, role, is_active, setup_completed, first_name, last_name, ' +
-                'birthday, profile_picture_url, payout_enrolled, connect_onboarding_complete, ' +
-                'contribution_streak, created_at, updated_at'
-            ),
             sb.from('subscriptions').select('user_id, status, current_amount_cents, current_period_end, stripe_subscription_id'),
             sb.from('invoices').select('user_id, amount_paid_cents').eq('status', 'paid'),
             sb.from('manual_deposits').select('member_id, amount_cents'),
@@ -99,9 +113,11 @@
             // dashboard.js. Do NOT replace with a client-side sum: orphan invoices
             // / deposits (no matching profile row) would silently drop out.
             sb.rpc('get_family_contribution_total'),
+            // Phase 3: auth metadata (last_sign_in_at, email_confirmed_at) for every
+            // user. Admin-only RPC (migration 084). If it fails (older DB), every
+            // member falls back to authMeta=null and status derivation still works.
+            sb.rpc('admin_user_auth_meta'),
         ]);
-
-        if (profilesRes.error) throw profilesRes.error;
 
         const profiles = profilesRes.data || [];
 
@@ -132,6 +148,25 @@
         const notifMap = {};
         (notifPrefsRes.data || []).forEach(n => { notifMap[n.user_id] = n; });
 
+        // Phase 3: authMeta map keyed by user_id. Shape consumed by
+        // deriveMemberStatus / deriveAttentionFlags:
+        //   { confirmed_at, last_sign_in_at, invited_at }
+        // We map invited_at ← user_created_at when not yet confirmed (Supabase
+        // doesn't expose a separate invited_at; the auth.users row is created
+        // when the invite is sent).
+        const authMetaMap = {};
+        if (authMetaRes && !authMetaRes.error && Array.isArray(authMetaRes.data)) {
+            authMetaRes.data.forEach(a => {
+                authMetaMap[a.user_id] = {
+                    confirmed_at:    a.email_confirmed_at,
+                    last_sign_in_at: a.last_sign_in_at,
+                    invited_at:      a.email_confirmed_at ? null : a.user_created_at,
+                };
+            });
+        } else if (authMetaRes && authMetaRes.error) {
+            console.warn('[members] admin_user_auth_meta unavailable:', authMetaRes.error.message);
+        }
+
         const now = new Date();
         const cpActive   = {};
         const cpLifetime = {};
@@ -146,8 +181,9 @@
         const ctx = { now, payoutsEnabled: false }; // payouts globally enabled — Phase 2
         const members = profiles.map(p => {
             const sub = subMap[p.id] || null;
-            const status = deriveMemberStatus(p, sub, /* authMeta */ null);
-            const attentionFlags = deriveAttentionFlags(p, sub, null, ctx);
+            const authMeta = authMetaMap[p.id] || null;
+            const status = deriveMemberStatus(p, sub, authMeta);
+            const attentionFlags = deriveAttentionFlags(p, sub, authMeta, ctx);
 
             return {
                 // Profile fields
@@ -162,7 +198,13 @@
                 profile_picture_url:  p.profile_picture_url,
                 payout_enrolled:      p.payout_enrolled,
                 contribution_streak:  p.contribution_streak,
+                username:             p.username,
+                phone:                p.phone,
                 created_at:           p.created_at,
+
+                // Auth metadata (Phase 3) — nullable
+                lastSignInAt:         authMeta && authMeta.last_sign_in_at,
+                confirmedAt:          authMeta && authMeta.confirmed_at,
 
                 // Joined data
                 subscription:         sub,
@@ -358,6 +400,70 @@
                 }
             });
         }
+
+        // Phase 4: CSV export of currently-filtered list
+        const csvBtn = document.getElementById('exportCsvBtn');
+        if (csvBtn) {
+            csvBtn.addEventListener('click', () => {
+                const rows = _applyFilters(state.members, state.tab, state.search);
+                _exportMembersCsv(rows, state.tab);
+            });
+        }
+    }
+
+    // ── CSV export (Phase 4) ─────────────────────────────────────────────
+    function _exportMembersCsv(rows, tabKey) {
+        const headers = [
+            'Name', 'Email', 'Status', 'Role',
+            'Monthly $', 'Total $',
+            'Subscription status', 'Next bill',
+            'Username', 'Phone',
+            'Last sign-in', 'Joined',
+        ];
+        const csvRows = rows.map(m => {
+            const name = (m.first_name && m.last_name) ? `${m.first_name} ${m.last_name}` : '';
+            const sub  = m.subscription || {};
+            const nextBill = sub.current_period_end
+                ? new Date(sub.current_period_end).toISOString().slice(0, 10) : '';
+            return [
+                name,
+                m.email || '',
+                m.status || '',
+                m.role || '',
+                m.monthlyAmountCents    ? (m.monthlyAmountCents    / 100).toFixed(2) : '',
+                m.totalContributedCents ? (m.totalContributedCents / 100).toFixed(2) : '0.00',
+                sub.status || '',
+                nextBill,
+                m.username || '',
+                m.phone    || '',
+                m.lastSignInAt ? new Date(m.lastSignInAt).toISOString() : '',
+                m.created_at  ? new Date(m.created_at).toISOString().slice(0, 10) : '',
+            ];
+        });
+
+        const csv = [headers, ...csvRows].map(r => r.map(_csvCell).join(',')).join('\r\n');
+        const stamp = new Date().toISOString().slice(0, 10);
+        const fname = `members-${tabKey || 'all'}-${stamp}.csv`;
+        // Prepend BOM so Excel detects UTF-8 properly.
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = fname;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function _csvCell(value) {
+        const s = value == null ? '' : String(value);
+        // Quote if it contains a delimiter, quote, or newline. Escape inner quotes
+        // by doubling them (RFC 4180). Also defends against CSV injection by
+        // prefixing leading =/+/-/@ with a single quote.
+        const needsGuard = /^[=+\-@]/.test(s);
+        const safe = needsGuard ? `'${s}` : s;
+        if (/[",\r\n]/.test(safe)) return `"${safe.replace(/"/g, '""')}"`;
+        return safe;
     }
 
     // ── DOM helpers ──────────────────────────────────────────────────────

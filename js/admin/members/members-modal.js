@@ -76,11 +76,13 @@
         const sheet    = document.getElementById('memberSheet');
         const backdrop = document.getElementById('memberSheetBackdrop');
         const closeBtn = document.getElementById('memberSheetClose');
+        const header   = document.getElementById('memberSheetHeader');
         const tabBar   = document.getElementById('memberSheetTabs');
         const content  = document.getElementById('memberSheetContent');
 
         if (closeBtn) closeBtn.addEventListener('click', close);
         if (backdrop) backdrop.addEventListener('click', close);
+        if (header)  header.addEventListener('click', _onHeaderClick);
         if (tabBar) tabBar.addEventListener('click', _onTabClick);
         if (content) content.addEventListener('click', _onContentClick);
 
@@ -112,7 +114,15 @@
                 ${avatarBlock}
                 <div class="min-w-0">
                     <div class="text-base font-bold text-gray-900 truncate">${_esc(name)}</div>
-                    <div class="text-xs text-gray-500 truncate">${_esc(member.email || '')}</div>
+                    <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="text-xs text-gray-500 truncate">${_esc(member.email || '')}</span>
+                        ${member.email ? `
+                        <button type="button" data-action="copy-email"
+                            class="text-[10px] font-semibold text-brand-600 hover:text-brand-800 px-1.5 py-0.5 rounded hover:bg-brand-50 flex-shrink-0"
+                            title="Copy email"
+                            data-copy-default="Copy">Copy</button>
+                        ` : ''}
+                    </div>
                 </div>
             </div>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${cfg.badgeBg} ${cfg.badgeText} flex-shrink-0">
@@ -184,6 +194,7 @@
 
                 <div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
                     ${_kvRow('Member since', created)}
+                    ${_kvRow('Last active', _formatRelative(m.lastSignInAt))}
                     ${_kvRow('Push notifications', pushOn ? 'Enabled' : 'Off')}
                     ${_kvRow('Payout setup', payoutOn ? 'Complete' : 'Incomplete')}
                     ${_kvRow('Onboarding', m.setup_completed ? 'Complete' : 'In progress')}
@@ -347,16 +358,29 @@
             <div class="space-y-4">
                 <div class="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
                     <div class="text-xs font-bold uppercase tracking-wider text-gray-500">Profile fields</div>
-                    <div class="opacity-50">
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Phone</label>
-                        <input type="tel" disabled placeholder="Available after Phase 3 migration"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm">
-                    </div>
-                    <div class="opacity-50">
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Username</label>
-                        <input type="text" disabled placeholder="Available after Phase 3 migration"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm">
-                    </div>
+                    <form data-form="contact" class="space-y-3" autocomplete="off">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Username</label>
+                            <input type="text" name="username" value="${_esc(m.username)}"
+                                placeholder="e.g. justmcneal" maxlength="20"
+                                pattern="[A-Za-z0-9_]{3,20}"
+                                class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-brand-400 focus:outline-none">
+                            <div class="text-[11px] text-gray-400 mt-1">3–20 characters. Letters, numbers, underscores. Unique.</div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">Phone</label>
+                            <input type="tel" name="phone" value="${_esc(m.phone)}"
+                                placeholder="+15551234567" maxlength="32"
+                                class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:border-brand-400 focus:outline-none">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" data-action="save-contact"
+                                class="px-3 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-lg">
+                                Save
+                            </button>
+                            <span data-contact-status class="text-xs text-gray-500 h-4"></span>
+                        </div>
+                    </form>
                 </div>
 
                 ${showResend ? `
@@ -405,6 +429,41 @@
         _renderTabContent(tab, member);
     }
 
+    function _onHeaderClick(e) {
+        const copyBtn = e.target.closest('[data-action="copy-email"]');
+        if (!copyBtn) return;
+        const member = _findMember(state.memberId);
+        if (!member || !member.email) return;
+        const reset = copyBtn.dataset.copyDefault || 'Copy';
+        const writeText = (typeof navigator !== 'undefined' && navigator.clipboard)
+            ? navigator.clipboard.writeText.bind(navigator.clipboard)
+            : null;
+        const ok = () => {
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.textContent = reset; }, 1500);
+        };
+        const fail = () => {
+            copyBtn.textContent = 'Failed';
+            setTimeout(() => { copyBtn.textContent = reset; }, 1500);
+        };
+        if (writeText) {
+            writeText(member.email).then(ok).catch(fail);
+        } else {
+            // Fallback for non-secure contexts.
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = member.email;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute'; ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                ok();
+            } catch (_) { fail(); }
+        }
+    }
+
     async function _onContentClick(e) {
         const member = _findMember(state.memberId);
         if (!member) return;
@@ -423,6 +482,12 @@
         if (kind === 'resend-invite') {
             const status = action.parentElement.parentElement.querySelector('[data-resend-status]');
             await _onResendInvite(member, action, status);
+            return;
+        }
+        if (kind === 'save-contact') {
+            const form = action.closest('form[data-form="contact"]');
+            const status = form && form.querySelector('[data-contact-status]');
+            await _onSaveContact(member, form, action, status);
             return;
         }
         if (kind === 'deactivate' || kind === 'reactivate') {
@@ -468,6 +533,55 @@
         } finally {
             input.disabled = false;
             setTimeout(() => { if (status) status.textContent = ''; }, 1500);
+        }
+    }
+
+    async function _onSaveContact(member, form, btn, status) {
+        if (!form) return;
+        const usernameRaw = (form.elements.namedItem('username').value || '').trim();
+        const phoneRaw    = (form.elements.namedItem('phone').value || '').trim();
+
+        // Validate username locally before round-tripping the DB.
+        if (usernameRaw && !/^[A-Za-z0-9_]{3,20}$/.test(usernameRaw)) {
+            if (status) status.textContent = 'Username must be 3–20 letters/numbers/underscores.';
+            return;
+        }
+
+        const patch = {
+            username: usernameRaw || null,
+            phone:    phoneRaw    || null,
+        };
+
+        // Skip the round-trip when nothing changed.
+        if ((member.username || null) === patch.username
+            && (member.phone || null) === patch.phone) {
+            if (status) status.textContent = 'No changes.';
+            setTimeout(() => { if (status) status.textContent = ''; }, 1500);
+            return;
+        }
+
+        btn.disabled = true;
+        if (status) status.textContent = 'Saving…';
+        try {
+            const sb = supabaseClient;
+            const { error } = await sb.from('profiles').update(patch).eq('id', member.id);
+            if (error) throw error;
+            member.username = patch.username;
+            member.phone    = patch.phone;
+            if (status) status.textContent = 'Saved.';
+            if (global.membersPage && typeof global.membersPage.refresh === 'function') {
+                global.membersPage.refresh();
+            }
+        } catch (err) {
+            console.error('[member-modal] save contact failed:', err);
+            // Postgres unique violation = 23505 (case-insensitive idx on username).
+            const msg = (err && err.code === '23505')
+                ? 'That username is already taken.'
+                : ((err && err.message) || 'Failed to save.');
+            if (status) status.textContent = msg;
+        } finally {
+            btn.disabled = false;
+            setTimeout(() => { if (status) status.textContent = ''; }, 2500);
         }
     }
 
@@ -604,6 +718,24 @@
             const d = new Date(s);
             return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
         } catch (_) { return String(s); }
+    }
+
+    // Human relative time, e.g. "2h ago", "3d ago", "Apr 12". Falls back to "Never".
+    function _formatRelative(s) {
+        if (!s) return 'Never';
+        const d = new Date(s);
+        if (isNaN(d)) return '—';
+        const diffMs = Date.now() - d.getTime();
+        const sec = Math.floor(diffMs / 1000);
+        if (sec < 60)        return 'Just now';
+        const min = Math.floor(sec / 60);
+        if (min < 60)        return `${min}m ago`;
+        const hr  = Math.floor(min / 60);
+        if (hr  < 24)        return `${hr}h ago`;
+        const day = Math.floor(hr / 24);
+        if (day < 7)         return `${day}d ago`;
+        if (day < 30)        return `${Math.floor(day / 7)}w ago`;
+        return _formatDate(s);
     }
 
     function _statCell(label, value, sub) {

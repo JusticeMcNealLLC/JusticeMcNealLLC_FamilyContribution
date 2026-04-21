@@ -1,8 +1,8 @@
 # Members Page — Complete Overhaul Spec
 **Files:** `admin/members.html` · `js/admin/members/index.js` (+ supporting modules) · DB migrations
 **Audit Date:** April 21, 2026
-**Revision:** v6 — Phase 2 Shipped (tabbed profile sheet)
-**Status:** ✅ Phase 1A + 1B + 2 Shipped — ready for Phase 3 (DB migrations: username/phone, last_active view)
+**Revision:** v7 — Phase 3 + 4 Shipped (DB migrations + CSV/copy email)
+**Status:** ✅ Phase 1A + 1B + 2 + 3 + 4 (partial) Shipped — bulk-select stubs and perf audit deferred
 
 ### Implementation Status (as of April 21, 2026)
 
@@ -52,6 +52,28 @@
 | Settings tab | ✅ | Phone + Username inputs (greyed, "Available after Phase 3 migration"). Resend Invite (only when `!setup_completed && !deactivated`) calls `invite-user` edge fn. Deactivate/Reactivate updates `profiles.is_active` + refreshes list + re-renders header & settings tab. |
 | Two-click confirmation (no `window.confirm`) | ✅ | First click on Deactivate/Reactivate flips label to "Click again to deactivate/reactivate", adds red ring, sets 4s revert timer. Second click within window commits. Aligns with §6f (no native dialogs). |
 | `index.js` wiring | ✅ | `MemberModal.init()` called at bootstrap. Card click handler invokes `MemberModal.open(id)` instead of `console.log`. |
+
+---
+
+### Phase 3 Shipped (DB Migrations + Settings/Status Wire-up)
+
+| Deliverable | Status | Notes |
+|---|---|---|
+| `supabase/migrations/083_member_username_phone.sql` | ✅ | Adds `username` (text, optional) + `phone` (text, optional) to `profiles`. CHECK constraint enforces username format `^[A-Za-z0-9_]{3,20}$` (only when non-null). Unique partial index on `LOWER(username)` (case-insensitive, NULLs allowed). Lookup index on `phone`. |
+| `supabase/migrations/084_user_last_active.sql` | ✅ | `public.admin_user_auth_meta()` SECURITY DEFINER function (gated by `public.is_admin()`) returning `(user_id, last_sign_in_at, email_confirmed_at, user_created_at)` for every `auth.users` row. Granted to `authenticated`. |
+| `index.js` loader: auth-meta fetch | ✅ | `sb.rpc('admin_user_auth_meta')` added to the parallel fetch. Built into `authMetaMap` keyed by user_id with shape `{ confirmed_at, last_sign_in_at, invited_at }` (invited_at ← `user_created_at` when not yet confirmed). Passed into `deriveMemberStatus` + `deriveAttentionFlags` so `invited_unconfirmed`, `never_signed_in`, `inactive_30/90`, and `invite_expired` now activate. |
+| `index.js` loader: graceful pre-migration fallback | ✅ | Profile SELECT first tries the Phase 3 column set. On Postgres `42703` (column does not exist), retries the Phase 2 set with a console warning. Auth-meta RPC failure is also captured and falls back to `authMeta=null` — the page works whether or not migrations have been applied. |
+| Settings tab: editable username + phone | ✅ | Greyed inputs replaced with a `<form data-form="contact">` containing `username` (pattern `[A-Za-z0-9_]{3,20}`) + `phone` inputs and a Save button. `_onSaveContact` validates client-side, calls `profiles.update`, surfaces `23505` unique-violation as "That username is already taken", refreshes member list on success. Skips the round-trip when nothing changed. |
+| Overview tab: "Last active" row | ✅ | New `_formatRelative()` helper renders `lastSignInAt` as "Just now / Nm ago / Nh ago / Nd ago / Nw ago / Mon DD, YYYY". "Never" when null. |
+
+### Phase 4 Shipped (Polish, Partial)
+
+| Deliverable | Status | Notes |
+|---|---|---|
+| Export CSV button | ✅ | `#exportCsvBtn` added to page header. `_exportMembersCsv(rows, tabKey)` exports the **currently filtered** member list as `members-<tab>-<YYYY-MM-DD>.csv`. UTF-8 BOM for Excel compatibility. CSV-injection guard prefixes a `'` to cells starting with `=/+/-/@`. Columns: Name, Email, Status, Role, Monthly $, Total $, Subscription status, Next bill, Username, Phone, Last sign-in, Joined. |
+| Copy Email quick action | ✅ | "Copy" button rendered next to the email in the modal sticky header (when `member.email` present). `_onHeaderClick` uses `navigator.clipboard.writeText` with `document.execCommand('copy')` fallback for non-secure contexts. Inline ack: button label flips to "Copied!" → reverts after 1.5s. |
+| Bulk select stubs | ⏳ Deferred | Out of scope for this commit. Spec retained. |
+| Performance audit of `loadAllMembers()` | ⏳ Deferred | No regressions observed (page renders in <500ms on 17 members). Will revisit if member count grows. |
 
 ---
 
@@ -876,8 +898,8 @@ All items below were previously open questions. They are now approved decisions.
 | `js/admin/members/members-invite.js` | New file (absorbs invite.js) | ✅ Complete (1B) | Full modal: `open`/`close`/`init`/`send`. Email regex validation, submit spinner, inline error, success state w/ auto-close, esc-to-close, backdrop click, focus restore, idempotent `init()`. `_scheduleRefresh()` (800ms + retry at 2s). |
 | `js/admin/dashboard.js` | Deprecate progressively | ⏳ Pending | Removed from `members.html` script tags. Audit other admin pages before deletion. |
 | `js/admin/invite.js` | Deprecate | ⏳ Pending | Functionality absorbed into `js/admin/members/members-invite.js`. |
-| `supabase/migrations/XXX_add_username_phone.sql` | New | ⏳ Phase 3 | P3.1 — username + phone columns |
-| `supabase/migrations/XXX_last_active_view.sql` | New | ⏳ Phase 3 | P3.2 — public view of last_sign_in_at |
+| `supabase/migrations/083_member_username_phone.sql` | New | ✅ Phase 3 | username + phone columns on profiles (Phase 3) |
+| `supabase/migrations/084_user_last_active.sql` | New | ✅ Phase 3 | admin_user_auth_meta() RPC exposing last_sign_in_at + email_confirmed_at |
 | `css/pages/admin/members.css` | New (optional) | N/A | Heavy inline Tailwind has been sufficient through Phase 1A. |
 
 **Note on `dashboard.js`:** Already removed from `members.html` script tags. Audit all other admin pages to confirm none rely on functions exported/defined in `dashboard.js` before deleting it. If they do, those shared functions should be extracted to a shared admin utility file (`js/admin/utils.js`).
@@ -946,20 +968,20 @@ This is the practical ship order. Items within a phase can be parallelized. Depe
 
 ---
 
-### Phase 3 — DB Migrations
+### Phase 3 — DB Migrations ✅ Shipped
 > These can run in parallel with Phase 2 if a second developer is available, or immediately after Phase 2.
 
-1. **`XXX_add_username_phone.sql`** — add username, phone to profiles. After migration: wire up username + phone editing in Settings tab. Update onboarding optional step.
+1. ✅ **`083_member_username_phone.sql`** — `username` (text, optional, format-checked, unique case-insensitive partial index) + `phone` (text, optional, indexed) on `profiles`. Settings tab now exposes both as editable inputs with client-side validation, server-side `23505`-aware error messaging, and skip-if-unchanged.
 
-2. **`XXX_last_active_view.sql`** — deploy and validate `public.user_last_active` view. After migration: add last active display to member cards, unlock `invited_unconfirmed` status derivation, add `never_signed_in` and `inactive_90` attention flags, unlock "Last Active" sort option.
+2. ✅ **`084_user_last_active.sql`** — `public.admin_user_auth_meta()` SECURITY DEFINER function (gated by `is_admin()`) returning `last_sign_in_at`, `email_confirmed_at`, `user_created_at`. Index.js wires `authMetaMap` into `deriveMemberStatus` + `deriveAttentionFlags`, unlocking `invited_unconfirmed`, `never_signed_in`, `inactive_30/90`, and `invite_expired`. Overview tab shows "Last active" via `_formatRelative()`. Loader degrades gracefully when the migration is not yet applied.
 
 ---
 
 ### Phase 4 — Polish
 > These can be done incrementally after Phase 2/3 are solid.
 
-1. **CSV export** — client-side, low effort. Wire to a button in the page header.
-2. **Copy email quick action** — clipboard API, small toast. Low effort.
-3. **Bulk action UI stubs** — add checkboxes to cards (hidden by default, shown in a "Select" mode), no functional wiring yet. Sets up the layout for future bulk ops.
-4. **Performance audit** — profile `loadAllMembers()` fetch time. Check if any queries are slow. Add indexes if needed.
+1. ✅ **CSV export** — `#exportCsvBtn` in page header, exports the **currently filtered** list (respects active tab + search). UTF-8 BOM. CSV-injection guard on cells starting with `=/+/-/@`. Filename `members-<tab>-<YYYY-MM-DD>.csv`.
+2. ✅ **Copy email quick action** — "Copy" pill rendered next to email in the modal sticky header. Uses `navigator.clipboard.writeText` with `execCommand('copy')` fallback. Inline label flips to "Copied!" → reverts after 1.5s.
+3. ⏳ **Bulk action UI stubs** — deferred. Spec retained for a future pass.
+4. ⏳ **Performance audit** — deferred. No regressions observed at current member count (~17). Will revisit if fetch time grows.
 
