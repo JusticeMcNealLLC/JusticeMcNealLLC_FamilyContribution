@@ -82,13 +82,44 @@
                 <div class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Total Invited</div>
                 <div class="text-2xl font-extrabold text-gray-900 tracking-tight mt-1" id="statTotalInvited">â€”</div>
             </div>
-            <div class="bg-white rounded-2xl p-4 border border-amber-200">
+            <button type="button" id="statNeedsAttentionTile"
+                class="bg-white rounded-2xl p-4 border border-amber-200 text-left hover:border-amber-400 hover:bg-amber-50 transition focus:outline-none focus:ring-2 focus:ring-amber-400"
+                title="Show only members needing attention">
                 <div class="text-[10px] font-bold uppercase tracking-widest text-amber-600">Needs Attention</div>
-                <div class="text-2xl font-extrabold text-amber-700 tracking-tight mt-1" id="statNeedsAttention">â€”</div>
-            </div>
+                <div class="text-2xl font-extrabold text-amber-700 tracking-tight mt-1" id="statNeedsAttention">—</div>
+            </button>
         </div>
 
-        <!-- â”€â”€ Status Filter Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <!-- ── Attention Banner (Phase 5) ────────────────────────────────── -->
+        <div id="attentionBanner" class="hidden mb-4"></div>
+
+        <!-- ── Search + Sort Toolbar ─────────────────────────────────────── -->
+        <div class="flex flex-col sm:flex-row gap-2 mb-4">
+            <div class="relative flex-1">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/>
+                </svg>
+                <input id="memberSearchInput" type="search" autocomplete="off" placeholder="Search by name or email…"
+                    class="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                <button id="memberSearchClear" type="button"
+                    class="hidden absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                    aria-label="Clear search">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <select id="memberSortSelect"
+                class="py-2.5 px-3 pr-8 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                <option value="name_asc">Sort: Name A–Z</option>
+                <option value="join_desc">Sort: Newest first</option>
+                <option value="join_asc">Sort: Oldest first</option>
+                <option value="contribution_desc">Sort: Contribution ↓</option>
+                <option value="last_active_desc">Sort: Recently active</option>
+            </select>
+        </div>
+
+        <!-- ── Status Filter Tabs ────────────────────────────────────────── -->
         <div id="membersTabs" class="flex gap-1 mb-4 overflow-x-auto -mx-1 px-1 pb-1"></div>
 
         <!-- â”€â”€ Member List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->

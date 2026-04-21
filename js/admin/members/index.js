@@ -20,6 +20,9 @@
         stats:   null,
         tab:     'all',
         search:  '',
+        sort:    'name_asc',          // name_asc | join_desc | join_asc | contribution_desc | last_active_desc
+        attentionOnly:    false,      // true when "Needs Attention" tile is active
+        bannerDismissed:  false,      // collapsed/dismissed attention banner
     };
 
     // Tabs in display order. Counts derive from full unfiltered array.
@@ -58,6 +61,7 @@
             state.stats   = result.stats;
             _renderStats();
             _renderTabCounts();
+            _renderAttentionBanner();
             _renderMemberList();
             return state.members.length > 0;
         } catch (err) {
@@ -326,12 +330,19 @@
     }
 
     function _highlightActiveTab() {
+        const attention = state.attentionOnly;
         document.querySelectorAll('.members-tab').forEach(btn => {
-            const isActive = btn.dataset.tab === state.tab;
+            const isActive = !attention && btn.dataset.tab === state.tab;
             btn.classList.toggle('bg-brand-50',     isActive);
             btn.classList.toggle('text-brand-700',  isActive);
             btn.classList.toggle('text-gray-500',   !isActive);
         });
+        const tile = document.getElementById('statNeedsAttentionTile');
+        if (tile) {
+            tile.classList.toggle('ring-2',           attention);
+            tile.classList.toggle('ring-amber-500',   attention);
+            tile.classList.toggle('bg-amber-50',      attention);
+        }
     }
 
     // ── Member list render ───────────────────────────────────────────────
@@ -346,7 +357,7 @@
         const filtered = _applyFilters(state.members, state.tab, state.search);
 
         if (filtered.length === 0) {
-            container.innerHTML = global.MemberCards.renderEmptyState(state.tab);
+            container.innerHTML = global.MemberCards.renderEmptyState(state.attentionOnly ? 'attention' : state.tab);
             return;
         }
 
@@ -355,7 +366,12 @@
 
     function _applyFilters(members, tab, search) {
         let arr = members;
-        if (tab !== 'all') arr = arr.filter(m => m.status === tab);
+        if (state.attentionOnly) {
+            const HIGH_MED = global.MembersStatus.HIGH_MED_FLAGS;
+            arr = arr.filter(m => (m.attentionFlags || []).some(f => HIGH_MED.has(f)));
+        } else if (tab !== 'all') {
+            arr = arr.filter(m => m.status === tab);
+        }
         const q = (search || '').trim().toLowerCase();
         if (q) {
             arr = arr.filter(m => {
@@ -363,7 +379,131 @@
                 return (m.email || '').toLowerCase().includes(q) || name.includes(q);
             });
         }
-        return arr;
+        return _applySort(arr, state.sort);
+    }
+
+    function _applySort(arr, sort) {
+        const byName = (m) => `${(m.first_name || '').toLowerCase()} ${(m.last_name || '').toLowerCase()}`.trim()
+            || (m.email || '').toLowerCase();
+        const cmpStr = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+        const ts     = (v) => v ? new Date(v).getTime() : 0;
+        const sorted = arr.slice();
+        switch (sort) {
+            case 'join_desc':
+                sorted.sort((a, b) => ts(b.created_at) - ts(a.created_at));
+                break;
+            case 'join_asc':
+                sorted.sort((a, b) => ts(a.created_at) - ts(b.created_at));
+                break;
+            case 'contribution_desc':
+                sorted.sort((a, b) => (b.totalContributedCents || 0) - (a.totalContributedCents || 0));
+                break;
+            case 'last_active_desc':
+                sorted.sort((a, b) => ts(b.lastSignInAt) - ts(a.lastSignInAt));
+                break;
+            case 'name_asc':
+            default:
+                sorted.sort((a, b) => cmpStr(byName(a), byName(b)));
+        }
+        return sorted;
+    }
+
+    // ── Attention Banner (Spec §6d) ──────────────────────────────────────
+    function _renderAttentionBanner() {
+        const el = document.getElementById('attentionBanner');
+        if (!el) return;
+        const HIGH_MED = global.MembersStatus.HIGH_MED_FLAGS;
+        const flagged = state.members.filter(m =>
+            (m.attentionFlags || []).some(f => HIGH_MED.has(f))
+        );
+        if (flagged.length === 0) {
+            el.classList.add('hidden');
+            el.innerHTML = '';
+            return;
+        }
+        el.classList.remove('hidden');
+
+        if (state.bannerDismissed) {
+            el.innerHTML = `
+                <button type="button" data-action="banner-expand"
+                    class="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-sm font-semibold text-amber-800 hover:bg-amber-100 transition">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.74-3l-7.07-12a2 2 0 00-3.48 0L3.19 16a2 2 0 001.74 3z"/>
+                        </svg>
+                        ${flagged.length} member${flagged.length === 1 ? '' : 's'} need${flagged.length === 1 ? 's' : ''} attention
+                    </span>
+                    <span class="text-xs">Show ↓</span>
+                </button>`;
+            return;
+        }
+
+        // Group by primary (highest-severity) flag
+        const PRIORITY = ['past_due', 'invite_expired', 'onboarding_stalled', 'inactive_90'];
+        const groups = {};
+        flagged.forEach(m => {
+            const primary = PRIORITY.find(p => (m.attentionFlags || []).includes(p)) || (m.attentionFlags || [])[0];
+            if (!groups[primary]) groups[primary] = [];
+            groups[primary].push(m);
+        });
+
+        const ACCENT = {
+            past_due:           { bg: 'bg-red-50',     border: 'border-red-200',     dot: 'bg-red-500',    text: 'text-red-700'    },
+            invite_expired:     { bg: 'bg-violet-50',  border: 'border-violet-200',  dot: 'bg-violet-500', text: 'text-violet-700' },
+            onboarding_stalled: { bg: 'bg-amber-50',   border: 'border-amber-200',   dot: 'bg-amber-500',  text: 'text-amber-700'  },
+            inactive_90:        { bg: 'bg-gray-100',   border: 'border-gray-200',    dot: 'bg-gray-500',   text: 'text-gray-700'   },
+        };
+
+        const sections = PRIORITY.filter(k => groups[k] && groups[k].length).map(key => {
+            const list = groups[key];
+            const accent = ACCENT[key] || ACCENT.inactive_90;
+            const label  = global.MembersStatus.getFlagLabel(key);
+            const items  = list.slice(0, 5).map(m => {
+                const name = (m.first_name && m.last_name) ? `${m.first_name} ${m.last_name}` : (m.email || 'Unknown');
+                return `<li><button type="button" data-action="open-member" data-member-id="${m.id}"
+                    class="text-left text-sm font-medium ${accent.text} hover:underline">${_esc(name)}</button></li>`;
+            }).join('');
+            const more = list.length > 5 ? `<li class="text-xs text-gray-500 italic">+ ${list.length - 5} more</li>` : '';
+            return `
+                <div class="flex items-start gap-2.5">
+                    <span class="mt-1.5 w-2 h-2 rounded-full ${accent.dot} flex-shrink-0"></span>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs font-bold uppercase tracking-wider ${accent.text}">${label} <span class="text-gray-500">(${list.length})</span></div>
+                        <ul class="mt-1 flex flex-wrap gap-x-3 gap-y-1">${items}${more}</ul>
+                    </div>
+                </div>`;
+        }).join('');
+
+        el.innerHTML = `
+            <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+                <div class="flex items-start justify-between gap-3 mb-3">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.74-3l-7.07-12a2 2 0 00-3.48 0L3.19 16a2 2 0 001.74 3z"/>
+                        </svg>
+                        <span class="text-sm font-bold text-gray-900">${flagged.length} member${flagged.length === 1 ? '' : 's'} need${flagged.length === 1 ? 's' : ''} attention</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button type="button" data-action="banner-filter"
+                            class="text-xs font-semibold px-2.5 py-1 rounded-lg text-amber-800 hover:bg-amber-100">
+                            ${state.attentionOnly ? 'Show all' : 'Filter to these'}
+                        </button>
+                        <button type="button" data-action="banner-dismiss"
+                            class="p-1 rounded-md text-amber-700 hover:bg-amber-100" aria-label="Collapse banner">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-2.5">${sections}</div>
+            </div>`;
+    }
+
+    function _esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     // ── Event binding ────────────────────────────────────────────────────
@@ -375,7 +515,89 @@
                 const btn = e.target.closest('.members-tab');
                 if (!btn) return;
                 state.tab = btn.dataset.tab;
+                state.attentionOnly = false;       // tabs override attention filter
                 _highlightActiveTab();
+                _renderMemberList();
+            });
+        }
+
+        // "Needs Attention" stat tile — toggles attention-only filter
+        const attentionTile = document.getElementById('statNeedsAttentionTile');
+        if (attentionTile) {
+            attentionTile.addEventListener('click', () => {
+                state.attentionOnly = !state.attentionOnly;
+                if (state.attentionOnly) state.bannerDismissed = false;   // re-expand
+                _highlightActiveTab();
+                _renderAttentionBanner();
+                _renderMemberList();
+                if (state.attentionOnly) {
+                    const banner = document.getElementById('attentionBanner');
+                    if (banner) banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        }
+
+        // Attention banner actions (delegated)
+        const banner = document.getElementById('attentionBanner');
+        if (banner) {
+            banner.addEventListener('click', (e) => {
+                const dismiss = e.target.closest('[data-action="banner-dismiss"]');
+                if (dismiss) {
+                    state.bannerDismissed = true;
+                    _renderAttentionBanner();
+                    return;
+                }
+                const expand = e.target.closest('[data-action="banner-expand"]');
+                if (expand) {
+                    state.bannerDismissed = false;
+                    _renderAttentionBanner();
+                    return;
+                }
+                const filter = e.target.closest('[data-action="banner-filter"]');
+                if (filter) {
+                    state.attentionOnly = !state.attentionOnly;
+                    _highlightActiveTab();
+                    _renderAttentionBanner();
+                    _renderMemberList();
+                    return;
+                }
+                const open = e.target.closest('[data-action="open-member"]');
+                if (open && global.MemberModal && typeof global.MemberModal.open === 'function') {
+                    global.MemberModal.open(open.dataset.memberId);
+                }
+            });
+        }
+
+        // Search input — debounced
+        const search = document.getElementById('memberSearchInput');
+        const clear  = document.getElementById('memberSearchClear');
+        if (search) {
+            let t = null;
+            search.addEventListener('input', () => {
+                if (clear) clear.classList.toggle('hidden', !search.value);
+                clearTimeout(t);
+                t = setTimeout(() => {
+                    state.search = search.value;
+                    _renderMemberList();
+                }, 120);
+            });
+        }
+        if (clear) {
+            clear.addEventListener('click', () => {
+                if (search) search.value = '';
+                state.search = '';
+                clear.classList.add('hidden');
+                _renderMemberList();
+                if (search) search.focus();
+            });
+        }
+
+        // Sort select
+        const sortSel = document.getElementById('memberSortSelect');
+        if (sortSel) {
+            sortSel.value = state.sort;
+            sortSel.addEventListener('change', () => {
+                state.sort = sortSel.value;
                 _renderMemberList();
             });
         }

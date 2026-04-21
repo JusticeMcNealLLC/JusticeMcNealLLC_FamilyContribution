@@ -1,8 +1,8 @@
 # Members Page — Complete Overhaul Spec
 **Files:** `admin/members.html` · `js/admin/members/index.js` (+ supporting modules) · DB migrations
 **Audit Date:** April 21, 2026
-**Revision:** v7 — Phase 3 + 4 Shipped (DB migrations + CSV/copy email)
-**Status:** ✅ Phase 1A + 1B + 2 + 3 + 4 (partial) Shipped — bulk-select stubs and perf audit deferred
+**Revision:** v8 — Phase 5 Filtering & Attention shipped (search + sort + attention banner)
+**Status:** ✅ Phase 1A + 1B + 2 + 3 + 4 (partial) + 5 Shipped — bulk-select stubs and perf audit deferred
 
 ### Implementation Status (as of April 21, 2026)
 
@@ -74,6 +74,15 @@
 | Copy Email quick action | ✅ | "Copy" button rendered next to the email in the modal sticky header (when `member.email` present). `_onHeaderClick` uses `navigator.clipboard.writeText` with `document.execCommand('copy')` fallback for non-secure contexts. Inline ack: button label flips to "Copied!" → reverts after 1.5s. |
 | Bulk select stubs | ⏳ Deferred | Out of scope for this commit. Spec retained. |
 | Performance audit of `loadAllMembers()` | ⏳ Deferred | No regressions observed (page renders in <500ms on 17 members). Will revisit if member count grows. |
+
+### Phase 5 Shipped (Filtering & Attention)
+
+| Deliverable | Status | Notes |
+|---|---|---|
+| Search input in page header | ✅ | New `#memberSearchInput` with leading magnifier icon + clearable `×` button. 120ms debounced; updates `state.search`; matches against `first_name`/`last_name`/`email` (case-insensitive). Already-wired logic in `_applyFilters()` now actually drives by an input. |
+| Sort dropdown | ✅ | New `#memberSortSelect` (Name A–Z / Newest first / Oldest first / Contribution ↓ / Recently active). New `state.sort` + `_applySort()` comparator. Last-active sort uses `lastSignInAt` (auth meta from migration 084). |
+| Attention Banner (§6d) | ✅ | New `#attentionBanner` between stats row and toolbar. Renders only when ≥1 member has a HIGH_MED flag. Groups by primary flag (priority: `past_due` > `invite_expired` > `onboarding_stalled` > `inactive_90`), color-coded per accent map. Shows up to 5 names per group + "+ N more". "Filter to these" button toggles `state.attentionOnly`; collapse button replaces banner with a single summary row that re-expands on click. Names inside banner are clickable and open the member sheet. |
+| "Needs Attention" tile click-through | ✅ | Tile is now a `<button id="statNeedsAttentionTile">`. Click toggles `state.attentionOnly` (overrides the active tab). When active: amber ring on the tile, banner re-expands, filtered list shows only members with HIGH_MED flags, and the page scrolls to the banner. Selecting any tab clears `attentionOnly`. New `attention` empty-state copy added to `MemberCards.renderEmptyState`. |
 
 ---
 

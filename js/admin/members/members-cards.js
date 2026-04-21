@@ -129,6 +129,7 @@
         pending:               { msg: 'No pending invitations.',                    cta: true  },
         awaiting_subscription: { msg: 'No members awaiting subscription setup.',    cta: false },
         deactivated:           { msg: 'No deactivated members.',                    cta: false },
+        attention:             { msg: '🎉 No members need attention right now.',     cta: false },
     };
 
     function renderEmptyState(tab) {
