@@ -321,9 +321,15 @@
 
     function _renderTabCounts() {
         TABS.forEach(t => {
-            const count = t.key === 'all'
-                ? state.members.length
-                : state.members.filter(m => m.status === t.key).length;
+            let count;
+            if (t.key === 'all') {
+                count = state.members.length;
+            } else if (t.key === 'active') {
+                // Match dashboard: "Active" = active paying subscriber, exclude admins.
+                count = state.members.filter(m => m.status === 'active' && m.role !== 'admin').length;
+            } else {
+                count = state.members.filter(m => m.status === t.key).length;
+            }
             const el = document.querySelector(`[data-tab-count="${t.key}"]`);
             if (el) el.textContent = String(count);
         });
@@ -369,6 +375,9 @@
         if (state.attentionOnly) {
             const HIGH_MED = global.MembersStatus.HIGH_MED_FLAGS;
             arr = arr.filter(m => (m.attentionFlags || []).some(f => HIGH_MED.has(f)));
+        } else if (tab === 'active') {
+            // Match dashboard: "Active" = active paying subscriber, exclude admins.
+            arr = arr.filter(m => m.status === 'active' && m.role !== 'admin');
         } else if (tab !== 'all') {
             arr = arr.filter(m => m.status === tab);
         }
