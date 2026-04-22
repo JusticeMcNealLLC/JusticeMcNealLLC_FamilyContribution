@@ -1088,6 +1088,40 @@ Drafts created by the old `#createModal` may have:
 
 ---
 
+#### M6 — Status: Shipped (CSS dead-rule purge) ✅
+
+**Scope shipped this commit:**
+- Audited [css/pages/portal-events.css](css/pages/portal-events.css) (527 lines) for orphaned rules. Workspace grep confirmed zero references in HTML/JS for these blocks; removed:
+  - List-view immersive hero block: `.events-hero`, `::before`, `::after`, `.hero-orb`, `.hero-stat-card` (~36 lines).
+  - List-view event card block: `.event-card`, `.event-card-img*`, `.event-card-date-chip*` (~32 lines).
+  - `.rsvp-badge` (1 line — already gone via M5c stray edit).
+  - Form classes: `.form-section-label*`, `.form-input*`, `.form-label`, `.form-hint`, `.form-toggle-card*` (~32 lines — create flow uses inline Tailwind).
+  - `.evt-host-controls` wrapper (1 line).
+  - `@keyframes edCardIn` (defined but never animated).
+  - Search pill + dropdown: `.evt-search-pill*`, `.evt-search-dropdown`, `.evt-search-result*`, `.evt-search-empty` (~50 lines).
+  - Featured carousel: `.evt-featured-scroll`, `.evt-featured-card*`, `.evt-countdown-chip` (~30 lines).
+- File: 527 → 338 lines (-189 lines, -9 KB / 24% reduction). Inserted single `M6: removed orphan blocks` comment as breadcrumb.
+- SW cache bumped v49 → v50.
+- Smoke-tested public event page after cache+SW reset: identical render, no regressions (purge was strictly orphans).
+
+**Audited but kept:**
+- `js/portal/events/utils.js`: all 12 top-level functions actively used (15+ call sites for `evtEscapeHtml` alone). Zero dead.
+- `js/portal/events/constants.js`: all 3 constants (`CATEGORY_EMOJI`, `TYPE_COLORS`, `STATUS_COLORS`) referenced. Zero dead.
+- `js/portal/events/state.js`: 8 globals all referenced across modules. Spec says it should eventually become a namespace, but that is a refactor, not cleanup — out of scope for M6.
+- `js/portal/events/detail2.js`: confirmed already deleted (M0 work).
+
+**Scope cuts (deferred):**
+- Cross-surface mobile pass at 320/375/414/768/1024/1440. The component pieces are all in safe-area patterns and `_002.md` already enumerates the consistency targets. Manual visual audit is best done by a human in real DevTools, not Playwright.
+- Hero layout consistency between portal-detail and public ("M2 visual lock-in"). Spec language is vague; better tackled when there's a concrete visual target.
+- `events_001.md` drift audit. No drift discovered during M0–M6.
+
+**Lessons learned:**
+- The CSS audit pattern that worked: extract every selector → grep for the bare class name in `**/*.{html,js}` → anything with zero hits is dead. Conservative: only delete on zero matches. The Explore subagent did this well in parallel.
+- Be wary of "spec said delete this file" — `state.js` was scheduled for removal but is currently load-bearing. Always grep before deleting; specs lie, code doesn't.
+- Mojibake in older CSS files (PowerShell-saved comment borders like `╔═══`) breaks `replace_string_in_file` matching. Workaround: use a small Node script with regex `[\s\S]*?` for the volatile chunks.
+
+---
+
 ## 7. File Impact Plan
 
 > Per-file lifecycle through the milestones.
