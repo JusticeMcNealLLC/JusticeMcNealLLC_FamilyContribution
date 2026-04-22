@@ -616,7 +616,21 @@ js/admin/events/
 
 ---
 
-### Milestone 2 — Portal Event Detail Page (consumer)
+### Milestone 2 — Portal Event Detail Page (consumer) ✅ Shipped
+
+**Status:** ✅ Shipped. `detail.js` wrapped in IIFE with `PortalEvents.detail` namespace + sub-module registry. Dead JS hero-collapse code stripped. CTA bar safe-area tightened. Host "More" dropdown relabeled "Manage event" with settings-cog icon — same dropdown for now; M3 swaps the trigger for the full Event Management Sheet.
+
+**Deliberate scope cut (from original spec):**
+- **Did NOT split** `detail.js` into 5 sub-files (`{index,hero,body,rsvp,sticky-cta}.js`). Spec called this out as a load-order risk and proposed a `PortalEvents.detail.register(name, fn)` registry as mitigation. Shipped the **registry** without the split — same architectural win, far less risk. M3 + future tabs will register into the same registry.
+- All other M2 deliverables shipped intact.
+
+**Lessons learned:**
+- IIFE wrap of a 990-line classic-script file works fine because referenced free vars (`TYPE_COLORS`, `evtAllEvents`, `supabaseClient`, `formatCurrency`, etc.) live in sibling scripts' global lexical environment — the IIFE's scope chain still finds them.
+- `var _evtCountdownInterval` (was `let`) so it doesn't conflict if detail.js is somehow loaded twice in dev.
+- Dead JS hero-collapse code (~50 lines of unreachable scroll math after a `return;`) deleted entirely — the `position:sticky` title row in CSS is the new approach.
+- All 11 legacy `evt*` globals (`evtOpenDetail`, `evtOpenLightbox`, `evtOpenFullscreenMap`, `evtCloseFullscreenMap`, `evtMiniMarkdown`, `evtInitSectionAnimations`, `evtStartLiveCountdown`, `evtInitHeroCollapse`, `evtCleanupHeroCollapse`, `evtInitBottomNav`, `evtCleanupBottomNav`) preserved on `window` — `utils.js` still calls `evtCleanupBottomNav()` from `evtNavigateToList`, which would crash without the alias.
+- Sticky CTA bar already had `bottom: calc(56px + env(safe-area-inset-bottom,0px))`, but its `padding-bottom: 26px` hard-coded was wrong on notched iPhones — now `calc(12px + env(safe-area-inset-bottom, 0px))`.
+- SW cache bumped v42 → v43.
 
 **Goal:** refactor `detail.js` to use shared utils, simplify sticky-header logic, polish mobile, and ensure visual consistency with M1.
 

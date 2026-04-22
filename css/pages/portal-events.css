@@ -562,3 +562,13 @@
 .evt-featured-row::-webkit-scrollbar { display: none; }
 .evt-featured-row > * { flex-shrink: 0; width: 280px; max-width: 80vw; scroll-snap-align: start; }
 
+
+/* === M2: detail page polish === */
+/* Sticky title row inside detail card (replaces the removed JS hero-collapse) */
+.ed-card-title .ed-title { position: sticky; top: 0; background: #fff; padding-top: 4px; padding-bottom: 8px; z-index: 5; margin: -4px -4px 8px; padding-left: 4px; padding-right: 4px; }
+@media (max-width: 767px) {
+    /* Tighter safe-area inset on the CTA bar (was hard-coded 26px) */
+    .evt-cta-bar { padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; }
+}
+/* Manage event button: a touch wider so the icon + label breathe */
+.evt-host-more-btn { min-width: 132px; }

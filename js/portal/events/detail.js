@@ -1,8 +1,25 @@
 // ═══════════════════════════════════════════════════════════
-// Portal Events — Detail Page View  (v2 – visual redesign)
+// Portal Events — Detail Page View  (M2 refactor)
 // Renders the full event detail into #eventsDetailView
 // Dark-themed immersive hero → light content cards below
+//
+// M2 changes:
+//   • Wrapped in IIFE; registers PortalEvents.detail namespace + sub-registry.
+//   • Dead hero-collapse scroll code removed — page scrolls naturally.
+//   • Sticky title row via CSS (no JS scroll listener).
+//   • Host "⋯ More" → "Manage event" trigger (M3 will swap the dropdown for a sheet).
+//   • All legacy evt* globals preserved on window for unmodified consumers.
 // ═══════════════════════════════════════════════════════════
+
+(function () {
+    'use strict';
+
+    // ── PortalEvents.detail namespace + lightweight registry ──
+    window.PortalEvents = window.PortalEvents || {};
+    const detail = window.PortalEvents.detail = window.PortalEvents.detail || {};
+    detail._registry = detail._registry || {};
+    detail.register = function (name, fn) { detail._registry[name] = fn; };
+    detail.get = function (name) { return detail._registry[name]; };
 
 // ── Lightweight inline markdown (bold, italic, links) ────
 function evtMiniMarkdown(text) {
@@ -36,7 +53,7 @@ function evtInitSectionAnimations() {
 }
 
 // ── Live countdown (ticks every second when < 1 hour) ────
-let _evtCountdownInterval = null;
+var _evtCountdownInterval = null;
 function evtStartLiveCountdown(startDate) {
     if (_evtCountdownInterval) clearInterval(_evtCountdownInterval);
     const badgeEl = document.querySelector('#eventsDetailView .evt-status-badge');
@@ -585,9 +602,11 @@ async function evtOpenDetail(eventId) {
         }
         dropdownItems += `<button onclick="evtDuplicateEvent('${eventId}')">📋 Duplicate Event</button>`;
         if (evtCurrentUserRole === 'admin') dropdownItems += `<button onclick="evtDeleteEvent('${eventId}')" class="danger">🗑 Delete Event</button>`;
+        // M2: "⋯ More" relabeled to "Manage event" — placeholder entry point. M3 swaps the dropdown
+        // for the full Event Management Sheet (Overview / RSVPs / Money / Docs / Raffle / Comp / Danger).
         hostControlsHtml = `
             ${_edSectionHead('Host Controls')}
-            <div class="evt-host-primary">${primaryBtn}<div class="evt-host-more-wrap"><button class="evt-host-more-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="More actions">⋯ More</button><div class="evt-host-dropdown">${dropdownItems}</div></div></div>`;
+            <div class="evt-host-primary">${primaryBtn}<div class="evt-host-more-wrap"><button class="evt-host-more-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Manage event"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;display:inline-block;vertical-align:-3px;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Manage event</button><div class="evt-host-dropdown">${dropdownItems}</div></div></div>`;
     }
 
     // ── Attendee Preview (visible to all) ────────────────
@@ -854,61 +873,13 @@ function evtCloseFullscreenMap() {
     document.body.style.overflow = '';
 }
 
-window.evtOpenFullscreenMap = evtOpenFullscreenMap;
-window.evtCloseFullscreenMap = evtCloseFullscreenMap;
-window.evtOpenLightbox = evtOpenLightbox;
-
 // ═══════════════════════════════════════════════════════════
-// Scroll-driven hero collapse (shrink + sticky body header)
+// Hero collapse — DEPRECATED (M2)
+// Hero scrolls naturally; sticky title row handled in CSS via position:sticky.
+// Functions kept as no-ops so external callers (rsvp/utils) don't crash.
 // ═══════════════════════════════════════════════════════════
-function evtInitHeroCollapse() {
-    evtCleanupHeroCollapse();
-    // Hero scrolls naturally — collapse effect disabled
-    return;
-
-    const heroContent = hero.querySelector('.evt-hero-content');
-    const heroActions = hero.querySelector('.evt-hero-actions');
-    const heroInitH = hero.offsetHeight;
-    const heroMinH = 120;
-    hero.style.minHeight = heroMinH + 'px';
-
-    function onScroll() {
-        const scrollY = window.scrollY || window.pageYOffset;
-        const newH = Math.max(heroMinH, heroInitH - scrollY);
-        const shrink = heroInitH - newH;
-        const progress = Math.min(1, shrink / (heroInitH - heroMinH));
-
-        hero.style.height = newH + 'px';
-        if (spacer) spacer.style.height = shrink + 'px';
-
-        // Fade hero overlays as it collapses
-        if (heroContent) heroContent.style.opacity = Math.max(0, 1 - progress * 1.4);
-        if (heroActions) heroActions.style.opacity = Math.max(0, 1 - progress * 1.8);
-
-        // Shadow on stuck body-header
-        if (bodyHeader) bodyHeader.classList.toggle('stuck', progress > 0.85);
-    }
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-
-    window._evtHeroCollapseCleanup = () => {
-        window.removeEventListener('scroll', onScroll);
-        hero.style.height = '';
-        hero.style.minHeight = '';
-        if (spacer) spacer.style.height = '';
-        if (heroContent) heroContent.style.opacity = '';
-        if (heroActions) heroActions.style.opacity = '';
-        if (bodyHeader) bodyHeader.classList.remove('stuck');
-    };
-}
-
-function evtCleanupHeroCollapse() {
-    if (window._evtHeroCollapseCleanup) {
-        window._evtHeroCollapseCleanup();
-        window._evtHeroCollapseCleanup = null;
-    }
-}
+function evtInitHeroCollapse() { /* no-op since M2 — hero scrolls naturally */ }
+function evtCleanupHeroCollapse() { /* no-op since M2 */ }
 
 // ═══════════════════════════════════════════════════════════
 // Sticky CTA Bar — sits above the untouched bottom-tab-bar
@@ -988,3 +959,39 @@ function evtCleanupBottomNav() {
     // Clean up hero collapse / sticky header
     evtCleanupHeroCollapse();
 }
+
+// ═══════════════════════════════════════════════════════════
+// Public surface — preserve legacy evt* globals + register PortalEvents.detail namespace
+// ═══════════════════════════════════════════════════════════
+window.evtOpenDetail            = evtOpenDetail;
+window.evtOpenLightbox          = evtOpenLightbox;
+window.evtOpenFullscreenMap     = evtOpenFullscreenMap;
+window.evtCloseFullscreenMap    = evtCloseFullscreenMap;
+window.evtMiniMarkdown          = evtMiniMarkdown;
+window.evtInitSectionAnimations = evtInitSectionAnimations;
+window.evtStartLiveCountdown    = evtStartLiveCountdown;
+window.evtInitHeroCollapse      = evtInitHeroCollapse;
+window.evtCleanupHeroCollapse   = evtCleanupHeroCollapse;
+window.evtInitBottomNav         = evtInitBottomNav;
+window.evtCleanupBottomNav      = evtCleanupBottomNav;
+
+detail.open                = evtOpenDetail;
+detail.openLightbox        = evtOpenLightbox;
+detail.openFullscreenMap   = evtOpenFullscreenMap;
+detail.closeFullscreenMap  = evtCloseFullscreenMap;
+detail.initBottomNav       = evtInitBottomNav;
+detail.cleanupBottomNav    = evtCleanupBottomNav;
+detail.startLiveCountdown  = evtStartLiveCountdown;
+detail.initSectionAnimations = evtInitSectionAnimations;
+
+// Pre-register known sub-modules (M3 management sheet will register itself here)
+detail.register('rsvp',        { handle: () => window.evtHandleRsvp });
+detail.register('raffle',      { handle: () => window.evtHandleRaffleEntry });
+detail.register('competition', { build:  () => window.evtBuildCompetitionHtml });
+detail.register('comments',    { load:   () => window.evtLoadComments,  post: () => window.evtPostComment });
+detail.register('documents',   { build:  () => window.evtBuildDocumentsHtml });
+detail.register('scrapbook',   { build:  () => window.evtBuildScrapbookHtml });
+detail.register('map',         { build:  () => window.evtBuildMapHtml });
+detail.register('scanner',     { open:   () => window.evtOpenScanner });
+
+})(); // ── end IIFE ──
