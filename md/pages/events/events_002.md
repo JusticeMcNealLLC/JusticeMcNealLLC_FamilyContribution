@@ -1006,6 +1006,37 @@ Drafts created by the old `#createModal` may have:
 
 ---
 
+#### M5b — Status: Shipped (JS module split) ✅
+
+**Scope shipped this commit:**
+- Deleted [js/events/public.js](js/events/public.js) (1661 lines).
+- Created 6 focused modules under `js/events/`:
+  - `index.js` (~457 lines) — bootstrap, shared state (as `var` globals), `DOMContentLoaded`, `pubLoadEvent`, `pubRenderEvent` orchestrator, common utils (`pubMiniMarkdown`, `pubInitSectionAnimations`, `pubFormatCurrency`, `pubShowNotFound`, `pubEscapeHtml`, `pubCopyUrl`, `pubTimeAgo`).
+  - `hero.js` (~165 lines) — `pubStartLiveCountdown`, `pubInitHeroCollapse` / `pubCleanupHeroCollapse`, sticky `pubInitBottomNav` + `PUB_CTA_ICONS`.
+  - `body.js` (~263 lines) — `pubOpenLightbox`, `pubShowMap` / `pubOpenFullscreenMap` / `pubCloseFullscreenMap`, `pubDownloadIcs`, `pubRenderInviteBanner`, `pubRenderComments` / `pubPostComment`.
+  - `rsvp.js` (~322 lines) — member + guest RSVP (`pubRenderRsvpSection`, `pubHandleRsvp`, `pubHandlePaidRsvp`, `pubRenderGuestRsvpSection`, `pubHandleGuestRsvp`).
+  - `raffle.js` (~288 lines) — member + guest raffle, paid + free (`pubRenderRaffleSection`, `pubHandlePaidRaffle`, `pubHandleFreeRaffle`, `pubHandleGuestPaidRaffle`, `pubHandleGuestFreeRaffle`).
+  - `ticket.js` (~465 lines) — `pubShowTicketQR`, `pubShowCheckedInOverlay`, `pubRenderVenueCheckin`, `pubDoVenueCheckin`, `pubDoGuestVenueCheckin`, `pubHandleTicketScan`, `pubShowGuestTicket`, `pubToggleLookup`, `pubLookupGuestTicket`.
+- [events/index.html](events/index.html): replaced `<script src="../js/events/public.js">` with 6 `<script>` tags in load order (`index → hero → body → rsvp → raffle → ticket`).
+- SW cache bumped v47 → v48.
+- Pure code extraction — zero behavior or styling changes. Smoke-tested live event page: title, hero, category emoji, RSVP region, raffle section, sticky CTA all render identically; all `pub*` functions exposed on `window`.
+
+**Implementation notes:**
+- Original used `let` / `const` at top-level for shared state (`pubCurrentEvent`, `PUB_CATEGORY_EMOJI`, etc.). In a non-module `<script>`, those are script-scoped, not on `window`, so siblings can't see them. Converted top-level `let`/`const` → `var` in [js/events/index.js](js/events/index.js) so the variables live on `window` for sibling modules.
+- `function` declarations are already global in non-module scripts — no change needed for cross-module function calls.
+- Loaded `index.js` first because it owns the `DOMContentLoaded` bootstrap and the shared `var` state. The other 5 are siblings in any order.
+
+**Scope cuts (deferred to M5c):**
+- Audit / retire most of [css/pages/events.css](css/pages/events.css), folding what's still used into [css/pages/public-event.css](css/pages/public-event.css).
+- Design changes (invite-banner pill chip redesign, sticky CTA safe-area polish, email-lookup card promotion).
+- Hero layout consistency with portal detail (M2 visual lock-in).
+
+**Lessons learned:**
+- Splitting a 1661-line non-module script: the only catch is top-level `let`/`const` shared state — flip to `var` and `function` decls + state are all global. Zero refactor required for the call sites.
+- Use Node (not PowerShell `Get-Content`/`Set-Content`) for splits that contain emoji. PS5's default encoding handling will mojibake UTF-8 4-byte sequences and silently write BOMs that some downstream tooling chokes on.
+
+---
+
 ### Milestone 6 — Polish + Cleanup
 
 **Goal:** purge legacy CSS, finalize shared module surface, ensure everything is mobile-perfect, and document the new architecture.
