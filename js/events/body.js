@@ -165,10 +165,12 @@ async function pubRenderInviteBanner(event) {
     }
 
     if (inviterName) {
+        const initial = (inviterName.trim()[0] || '?').toUpperCase();
         banner.innerHTML = `
             <div class="evt-invite-banner">
-                <div>
-                    <p>🎉 ${pubEscapeHtml(inviterName)} invited you!</p>
+                <div class="evt-invite-avatar" aria-hidden="true">${pubEscapeHtml(initial)}</div>
+                <div class="evt-invite-text">
+                    <p>${pubEscapeHtml(inviterName)} invited you</p>
                     <span>Join them at this event</span>
                 </div>
             </div>`;

@@ -1037,6 +1037,28 @@ Drafts created by the old `#createModal` may have:
 
 ---
 
+#### M5c — Status: Shipped (CSS retire + design polish) ✅
+
+**Scope shipped this commit:**
+- **Retired** [css/pages/events.css](css/pages/events.css) (458 lines, ~20 KB). Audit confirmed it was orphaned: no HTML file linked it; only references were in spec md. All actually-used rules are already in [css/pages/public-event.css](css/pages/public-event.css) (extracted in M5a). Hard-deleted via `git rm`.
+- **Invite banner → pill chip.** Was a full-width yellow notice card. Now a compact horizontal pill with a gradient avatar circle (inviter's first initial) and tighter typography. Updated `pubRenderInviteBanner` in [js/events/body.js](js/events/body.js) and the `.evt-invite-banner` rules in [public-event.css](css/pages/public-event.css). Verified live render with mocked inviter — pill, 999px radius, gradient avatar with letter, ellipsis on overflow.
+- **Sticky CTA safe-area polish.** Replaced the hard-coded `padding: 10px 16px 26px` with `padding: 10px 16px max(12px, env(safe-area-inset-bottom))`, raised opacity from `.85` → `.88` for better contrast over photo content, and added a subtle `evtCtaSlideUp` keyframe animation on appear (35 ms cubic-bezier).
+- **Email lookup card.** Promoted from a tiny underlined inline link to a proper `.evt-lookup-card` (icon + title + sub + chevron) styled like `.evt-info-card` for visual consistency. Added `aria-expanded` toggling in `pubToggleLookup` ([ticket.js](js/events/ticket.js)) for screen-reader correctness.
+- SW cache bumped v48 → v49.
+
+**Scope cuts (deferred — not blocking ship):**
+- Hero layout consistency with portal detail ("M2 visual lock-in"). Spec language is vague and the public hero is already the strongest of the three surfaces. Better tackled in M6 with explicit visual targets and side-by-side comparison shots.
+
+**Implementation notes:**
+- The CTA bar's `bottom: calc(56px + env(safe-area-inset-bottom,0px))` already accounts for the mobile bottom-nav + iOS home indicator; the previous `padding-bottom: 26px` was a redundant manual fudge. Replacing with `env(safe-area-inset-bottom)` makes it correct on iPhones with no notch (no wasted space) AND notched devices (no clipping).
+- The lookup card uses the same `.evt-info-card` visual language already in use elsewhere on the page — surface = light grey, icon = floating white tile with shadow. No new design tokens introduced.
+
+**Lessons learned:**
+- Always grep the workspace for `link[href*="x.css"]` before assuming a CSS file is "in use." Spec docs lie; HTML never does.
+- Inline styles on a single-purpose element (the old underlined-link lookup trigger) were a smell — promoting to a class + card always pays off in <30 lines of CSS and gives you accessibility hooks (`aria-expanded`) for free.
+
+---
+
 ### Milestone 6 — Polish + Cleanup
 
 **Goal:** purge legacy CSS, finalize shared module surface, ensure everything is mobile-perfect, and document the new architecture.

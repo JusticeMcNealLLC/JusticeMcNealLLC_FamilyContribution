@@ -411,6 +411,8 @@ async function pubShowGuestTicket(guestRsvp) {
 function pubToggleLookup() {
     const form = document.getElementById('guestLookupForm');
     if (form) form.classList.toggle('hidden');
+    const trigger = document.querySelector('#guestLookupSection .evt-lookup-card');
+    if (trigger && form) trigger.setAttribute('aria-expanded', String(!form.classList.contains('hidden')));
 }
 
 

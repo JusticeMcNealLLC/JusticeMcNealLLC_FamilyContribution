@@ -160,10 +160,23 @@ body {
 @keyframes evtFadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 #eventContent.evt-fade-in { animation: evtFadeIn .45s cubic-bezier(.16,1,.3,1) forwards; }
 
-/* ═══ Invite Banner ═══ */
-.evt-invite-banner { display:flex; align-items:center; gap:14px; padding:16px 20px; border-radius:14px; background:linear-gradient(135deg,#fef3c7,#fef9c3); border:1px solid #fde68a; }
-.evt-invite-banner p { font-size:14px; color:#92400e; font-weight:600; margin:0; }
-.evt-invite-banner span { font-size:13px; color:#a16207; margin-top:2px; display:block; font-weight:400; }
+/* ═══ Invite Banner — pill chip (M5c) ═══ */
+.evt-invite-banner { display:inline-flex; align-items:center; gap:10px; padding:6px 14px 6px 6px; border-radius:999px; background:linear-gradient(135deg,#fef3c7,#fef9c3); border:1px solid #fde68a; box-shadow:0 1px 3px rgba(146,64,14,.08); max-width:100%; }
+.evt-invite-avatar { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#fbbf24,#d97706); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0; box-shadow:0 1px 2px rgba(0,0,0,.08); }
+.evt-invite-text { display:flex; flex-direction:column; min-width:0; line-height:1.15; }
+.evt-invite-text p { font-size:13px; color:#78350f; font-weight:700; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.evt-invite-text span { font-size:11px; color:#a16207; font-weight:500; margin-top:2px; }
+
+/* ═══ Guest Lookup Card (M5c) ═══ */
+.evt-lookup-card { display:flex; align-items:center; gap:14px; padding:16px 18px; border-radius:14px; background:#f7f7f7; border:1px solid #ebebeb; cursor:pointer; transition:background .15s,border-color .15s; -webkit-tap-highlight-color:transparent; width:100%; text-align:left; }
+.evt-lookup-card:hover { background:#f1f1f1; border-color:#dcdcdc; }
+.evt-lookup-card:active { background:#ebebeb; }
+.evt-lookup-card-icon { width:40px; height:40px; border-radius:10px; background:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:18px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+.evt-lookup-card-body { flex:1; min-width:0; }
+.evt-lookup-card-title { font-size:14px; font-weight:700; color:#222; line-height:1.2; }
+.evt-lookup-card-sub { font-size:12px; color:#717171; margin-top:3px; line-height:1.3; }
+.evt-lookup-card-chev { color:#999; flex-shrink:0; }
+.evt-lookup-card-chev svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2.5; }
 
 /* Parallax hero replaced by scroll-driven zoom-out effect */
 
@@ -226,7 +239,8 @@ body {
 /* ═══ Event CTA Bar — sticky bottom bar (mobile only, public page) ═══ */
 .evt-cta-bar { display:none; }
 @media(max-width:767px){
-    .evt-cta-bar { display:flex; align-items:center; justify-content:center; gap:10px; position:fixed; left:0; right:0; bottom:calc(56px + env(safe-area-inset-bottom,0px)); z-index:49; background:rgba(255,255,255,.85); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-top:1px solid rgba(0,0,0,.06); padding:10px 16px 26px; }
+    .evt-cta-bar { display:flex; align-items:center; justify-content:center; gap:10px; position:fixed; left:0; right:0; bottom:calc(56px + env(safe-area-inset-bottom,0px)); z-index:49; background:rgba(255,255,255,.88); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-top:1px solid rgba(0,0,0,.06); padding:10px 16px max(12px, env(safe-area-inset-bottom)); animation:evtCtaSlideUp .35s cubic-bezier(.16,1,.3,1); }
+    @keyframes evtCtaSlideUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
     .evt-cta-btn { flex:1; max-width:280px; display:flex; align-items:center; justify-content:center; gap:8px; padding:13px 18px; border-radius:50px; font-size:15px; font-weight:700; letter-spacing:.01em; border:none; cursor:pointer; text-decoration:none; white-space:nowrap; transition:transform .15s,opacity .15s; -webkit-tap-highlight-color:transparent; }
     .evt-cta-btn:active { transform:scale(.97); }
     .evt-cta-btn:disabled { opacity:.5; cursor:not-allowed; }

@@ -163,8 +163,17 @@
         </div>
 
         <!-- Guest Lookup -->
-        <div id="guestLookupSection" class="hidden" style="padding:8px 0">
-            <button onclick="pubToggleLookup()" style="font-size:13px;color:#222;font-weight:600;background:none;border:none;cursor:pointer;text-decoration:underline">Already RSVP'd? Look up your ticket</button>
+        <div id="guestLookupSection" class="hidden evt-section" style="padding-top:8px">
+            <button type="button" onclick="pubToggleLookup()" class="evt-lookup-card" aria-expanded="false" aria-controls="guestLookupForm">
+                <span class="evt-lookup-card-icon" aria-hidden="true">🎫</span>
+                <span class="evt-lookup-card-body">
+                    <span class="evt-lookup-card-title">Already RSVP'd?</span>
+                    <span class="evt-lookup-card-sub">Look up your ticket by email</span>
+                </span>
+                <span class="evt-lookup-card-chev" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </span>
+            </button>
             <div id="guestLookupForm" class="hidden" style="margin-top:12px">
                 <div style="display:flex;gap:8px">
                     <input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" style="flex:1" aria-label="Email used for RSVP">
