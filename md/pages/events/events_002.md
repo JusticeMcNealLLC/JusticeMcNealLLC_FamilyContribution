@@ -855,6 +855,48 @@ Drafts created by the old `#createModal` may have:
 4. Round-trip: load → save without changes → diff old vs new row. Diff must be empty (or limited to the defaulted-in-on-load fields).
 5. Only after all drafts pass, delete the old modal.
 
+---
+
+#### M4a — Status: Shipped (parallel, behind feature flag) ✅
+
+**Scope shipped this commit:**
+- New file: [js/portal/events/create/sheet.js](js/portal/events/create/sheet.js) (~590 lines, single-file IIFE, self-mounting like M3 `EventsManage`).
+- 4 steps live: **Basics → When & Where → Pricing → Review** (Steps 4 "Add-ons" and 5 "Preview" from the spec collapsed into Review for M4a).
+- **Member events only.** LLC + Competition type cards are visually disabled with "Use legacy editor for now" copy. Selecting them is blocked.
+- **Feature flag:** `?newCreate=1` (writes to `localStorage['events.newCreate']='1'`); `?newCreate=0` clears it. `EventsCreate.isFlagOn()` reads the persisted value.
+- Both `#createEventBtn` and `#emptyCreateBtn` are routed via `_openCreate()` in [js/portal/events/init.js](js/portal/events/init.js) — flag on → new sheet, flag off → legacy `#createModal` (untouched).
+- Banner upload → `event-banners` storage bucket (same path scheme as legacy).
+- Geocoding via existing `window.evtGeocodeAddress` global, debounced 700 ms.
+- INSERT into `events` mirrors the legacy column shape; emits `CustomEvent('events:created')` on success; init.js listens and reloads the list.
+- Save draft (`status='draft'`) and Publish (`status='open'`) both wired.
+- Mobile-first bottom sheet, safe-area footer padding, all inputs `font-size: 16px` (iOS zoom-safe).
+- SW cache bumped v45 → v46.
+
+**Scope cuts (deferred):**
+- LLC + Competition event creation (still uses legacy `#createModal`).
+- Edit-existing-event flow (legacy modal only).
+- Cost-breakdown builder (LLC-only feature, lives with legacy modal until LLC is ported).
+- Transportation, location-sharing, info-gating, raffle prize-pool config (M4b — needs Add-ons step).
+- Draft migration validation pass (no drafts exist yet that were created by sheet.js; legacy drafts continue to open in legacy modal).
+- Preview step (skipped — Review card serves the same purpose for the simpler member-event surface).
+- Banner drag-and-drop (click-to-upload only).
+
+**Lessons learned:**
+- Self-mounting modal pattern from M3 `EventsManage` reused cleanly; no HTML changes beyond the new `<script>` tag.
+- Feature flag via `URL param + localStorage` is the right shape for parallel rollout — toggle via URL once, sticky after.
+- Cache invalidation gotcha: bumping the SW cache version is necessary but **not sufficient** during local QA — the browser HTTP cache may still serve a stale `init.js` even after SW unregister + cache delete. Hard-clear via DevTools `Network.clearBrowserCache` (or use a `?cb=` query string on every script tag) when smoke-testing handler changes.
+- Single-file 590 lines is fine for now; if M4b adds the Add-ons step + edit flow it'll pass 800 lines and should split into `sheet/{core,steps,submit}.js` mirroring M3's planned split.
+
+**M4b backlog (next iteration):**
+- Add-ons step (transportation, location sharing, info gating, raffle prize-pool config).
+- Edit-existing flow (host-controls "Edit event" button → opens sheet pre-populated).
+- LLC type (cost-breakdown builder, LLC cut, invest-eligible).
+- Competition type (rounds, prize tiers, judge config).
+- Draft migration validation pass against production drafts.
+- Then delete legacy `#createModal` + monolithic `create.js`.
+
+---
+
 **Done when:**
 - Creating any event type works end-to-end via the new sheet.
 - Editing an existing event (admin host control) opens the same sheet pre-populated.

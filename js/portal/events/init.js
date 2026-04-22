@@ -72,10 +72,23 @@ function evtSetupListeners() {
     // Type filter
     document.getElementById('typeFilter').addEventListener('change', evtRenderEvents);
 
-    // Create modal
-    document.getElementById('createEventBtn')?.addEventListener('click', () => evtToggleModal('createModal', true));
+    // Create modal  — routes to new EventsCreate sheet if M4a flag is on
+    function _openCreate() {
+        if (window.EventsCreate && window.EventsCreate.isFlagOn && window.EventsCreate.isFlagOn()) {
+            window.EventsCreate.open();
+        } else {
+            evtToggleModal('createModal', true);
+        }
+    }
+    document.getElementById('createEventBtn')?.addEventListener('click', _openCreate);
+    document.getElementById('emptyCreateBtn')?.addEventListener('click', _openCreate);
     document.getElementById('closeCreateModal')?.addEventListener('click', () => evtToggleModal('createModal', false));
     document.getElementById('createModalOverlay')?.addEventListener('click', () => evtToggleModal('createModal', false));
+
+    // New-create-flow reload events
+    document.addEventListener('events:created', () => {
+        if (typeof evtLoadEvents === 'function') evtLoadEvents();
+    });
 
     // Scanner modal
     document.getElementById('closeScannerModal')?.addEventListener('click', evtCloseScanner);
