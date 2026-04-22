@@ -508,6 +508,8 @@ js/admin/events/
 
 ### Milestone 0 — Foundation (shared utilities + dead-code purge)
 
+> **Status:** ✅ **Shipped** — commit `c322241`.
+
 **Goal:** lay the shared module groundwork, delete dead code, set up the new file scaffolding without touching any user-visible page.
 
 **Pages / files touched:**
@@ -532,6 +534,16 @@ js/admin/events/
 - `js/components/events/` modules load on portal events page and public events page without breaking either.
 - `evtEscapeHtml === EventsHelpers.escapeHtml` (proxy).
 - No reference to `detail2.js` anywhere.
+
+**Regression checklist (verified post-ship):**
+- [x] `/portal/events.html` still loads (auth-gated; redirects to login as before).
+- [x] `/events/?e={slug}` still renders (tested with `?e=test` → "Event Not Found" as expected).
+- [x] All 4 `window.Events*` namespaces register on every surface.
+- [x] Legacy globals (`pubEscapeHtml`, `evtEscapeHtml`, etc.) still defined and functional.
+- [x] `window.EV2Detail` is `undefined` (dead code purged).
+- [x] SW cache bumped (`v40 → v41`) so clients pick up the new scripts.
+
+**Lesson learned (apply forward):** M0 ended up moving lightbox + countdown into shared helpers in addition to the lean set (constants, escape, date, money, pills). It worked and verified clean — but in retrospect, a stricter M0 scope (constants + 3 helpers + pills + delete) would have been safer. **For M1+, hold the line: do only what the milestone says.**
 
 ---
 
@@ -577,6 +589,22 @@ js/admin/events/
 - All filters / search / featured carousel / stats work.
 - Tapping a card opens the existing detail view (M2 refactors that).
 - No regressions in create-modal trigger or RSVP-status display.
+
+**Regression checklist:**
+- [ ] Tapping a card sets `?event={slug}` and opens existing detail view.
+- [ ] Featured/pinned LLC carousel renders + scrolls + arrows work.
+- [ ] All 3 lifecycle chips (Upcoming / Past / Going) filter correctly.
+- [ ] All 4 type filters (all / llc / member / competition) filter correctly.
+- [ ] Search matches title + description (case-insensitive).
+- [ ] Hero stat counters (Upcoming, Your RSVPs, Next Event) match data.
+- [ ] RSVP-status chip on each card matches `evtAllRsvps` for current user.
+- [ ] Create button hidden when user lacks `events.create` permission.
+- [ ] Create button still triggers the existing `#createModal` (M4 replaces that).
+- [ ] Skeleton placeholders render during initial load.
+- [ ] Empty state renders (and shows Create CTA only when permitted).
+- [ ] No JS errors in console on initial load or filter switch.
+- [ ] No layout shift on filter chip auto-scroll-into-view.
+- [ ] SW cache version bumped.
 
 ---
 
@@ -625,6 +653,25 @@ js/admin/events/
 - No visual mismatch between list (M1) and detail.
 - Sticky CTA bar respects safe-area on iOS.
 
+**Regression checklist:**
+- [ ] Opening `?event={slug}` loads the right event by slug.
+- [ ] Pre-RSVP gating: locked sections hidden until RSVP confirmed.
+- [ ] Post-RSVP gating: documents, map, scanner unlock as expected.
+- [ ] All RSVP modes work: Going, Maybe, Not Going, paid Stripe checkout, waitlist join, grace-window cancel.
+- [ ] Stripe `create-event-checkout` payload unchanged (verify via Network tab).
+- [ ] Raffle: config display, paid entry, draw winner animation, winner notification.
+- [ ] Competition: phase rendering (Registration / Active / Voting / Results), self-vote prevention, prize splits.
+- [ ] Comments: post + reactions + delete-own.
+- [ ] Documents: per-member distribution download links work.
+- [ ] Scrapbook: photo upload + lightbox.
+- [ ] QR scanner: both modes (Attendee Ticket / Venue Scan) work.
+- [ ] Live map: Leaflet renders + Realtime location pins update.
+- [ ] Host controls: reschedule, cancel, refund, edit, draw raffle, mark distributed.
+- [ ] Add-to-calendar produces valid `.ics`.
+- [ ] Share: Web Share API + clipboard fallback both function.
+- [ ] Sticky bottom CTA does not overlap bottom-tab-bar or iOS home indicator.
+- [ ] No regressions for non-host viewers (gating on `events.manage`).
+
 ---
 
 ### Milestone 3 — Admin Events Dashboard + Event Management Sheet
@@ -665,12 +712,35 @@ js/admin/events/
 
 **Risks:**
 - Sharing the management sheet between admin and portal pages requires careful event delegation. Ship as a self-contained module that both pages can `import`.
+- The full 7-tab management sheet is the largest single piece of UX in this overhaul — easy to over-scope.
+
+**Phased ship strategy (recommended):**
+The Event Management Sheet is big enough to ship in two passes:
+- **M3a — Thin first version:** ship dashboard rebuild + management sheet with **only 3 tabs**: `Overview`, `RSVPs`, `Danger Zone`. The other tabs render a placeholder ("Coming soon — use existing controls on portal detail").
+- **M3b — Full sheet:** layer in `Money`, `Docs`, `Raffle`, `Comp` tabs. Each tab can be its own commit.
+
+This keeps the *visible win* (modern admin dashboard + drill-in pattern) shippable fast, while the operational tabs land incrementally without blocking M4.
 
 **Done when:**
 - `/admin/events.html` matches the visual language of `/admin/hub.html` and `/admin/members.html`.
 - Tapping an event card opens the management sheet.
-- All tabs work and call the same RPCs as today.
-- No more "bouncing between admin and portal" for admin tasks.
+- (M3a) Overview / RSVPs / Danger Zone tabs work and call the same RPCs as today.
+- (M3b) All 7 tabs work; admins no longer bounce to portal detail for ops.
+
+**Regression checklist:**
+- [ ] All admin RPCs unchanged (verify Network tab payloads).
+- [ ] Permission gating still respects `events.manage`.
+- [ ] Stats overview matches existing values exactly (events, RSVPs, revenue, competitions).
+- [ ] Competition payouts table preserves 1099-NEC flag column.
+- [ ] Banner-award workflow still awards correctly.
+- [ ] Reschedule preserves RSVPs + sends notifications.
+- [ ] Cancel-with-refund triggers `process-event-cancellation` edge function with correct payload.
+- [ ] Manual check-in toggle writes to `event_checkins`.
+- [ ] Doc upload + per-member distribution still works.
+- [ ] Raffle draw still triggers `draw_raffle_winner` RPC.
+- [ ] Mobile: management sheet is full-height bottom sheet on `<sm`, modal on `>=sm`.
+- [ ] Tab bar auto-scrolls active tab into view (matches members-modal fix).
+- [ ] No regressions in portal detail's host-controls dropdown during M3a (still functional).
 
 ---
 
@@ -715,13 +785,43 @@ js/admin/events/
 
 **Risks:**
 - This is the biggest milestone. Ship it behind a feature flag or in parallel — let the old modal keep working until this one is stable.
-- Drafts in the wild from the old modal need to load cleanly into the new editor.
+- **Old drafts loading into the new editor is the single highest-risk path.** It is not a small edge case; it is its own validation pass (see below).
+
+**Draft migration validation (must pass before deleting the old modal):**
+Drafts created by the old `#createModal` may have:
+- Missing newer fields (`transportation_enabled`, `location_required`, `location_share_enabled`, etc.) — defaults must be applied on load, not on save.
+- Empty / null `cost_breakdown` arrays — editor must handle as "no items" not as a crash.
+- Older `pricing_mode` enum values that have since shifted naming — map old → new on read.
+- LLC drafts with `event_type='llc'` but missing `llc_cut_pct` — show as 0%, prompt before publish.
+- Banner uploads referencing the old storage path scheme — verify still resolvable.
+
+**Validation steps:**
+1. Pull every existing `events` row with `status='draft'` (production + dev).
+2. Snapshot each as JSON.
+3. Load each into the new editor; assert no console errors, all fields render, no data loss on a no-op save.
+4. Round-trip: load → save without changes → diff old vs new row. Diff must be empty (or limited to the defaulted-in-on-load fields).
+5. Only after all drafts pass, delete the old modal.
 
 **Done when:**
 - Creating any event type works end-to-end via the new sheet.
 - Editing an existing event (admin host control) opens the same sheet pre-populated.
 - Save Draft works and resumes correctly.
+- **All existing drafts in production pass the round-trip validation above.**
 - The old `#createModal` HTML and `create.js` monolith are deleted.
+
+**Regression checklist:**
+- [ ] All 3 event types (Member / LLC / Competition) creatable end-to-end.
+- [ ] All 3 pricing modes (fully_paid / free_event_paid_raffle / fully_free) selectable + saved.
+- [ ] Banner upload (drag/drop + file picker) writes to storage + sets `banner_url`.
+- [ ] Geocoding via `geocode-address` edge function still validates addresses.
+- [ ] Cost-breakdown auto-calc + per-RSVP override math identical to old modal.
+- [ ] LLC-only fields render only when `event_type='llc'`.
+- [ ] Competition-only fields render only when `event_type='competition'`.
+- [ ] Save Draft writes `status='draft'` and is editor-resumable.
+- [ ] Publish writes `status='open'` (or correct status) and triggers the new-event notification.
+- [ ] Editing existing event preserves all fields not touched by the editor.
+- [ ] All inputs `text-base sm:text-sm` (no iOS zoom on focus).
+- [ ] Sticky footer (Back / Next / Save Draft) doesn't overlap bottom-tab-bar.
 
 ---
 
@@ -770,6 +870,23 @@ js/admin/events/
 - `js/events/public.js` no longer exists; replaced by 6 focused modules.
 - Guest RSVP, email-lookup, paid checkout, raffle, member-only gating all verified.
 - Visual matches portal detail (M2).
+
+**Regression checklist:**
+- [ ] No-auth visitor can view public-tier info on a public event.
+- [ ] Member-only event shows sign-in prompt to guests.
+- [ ] Guest RSVP form (name + email) submits successfully.
+- [ ] Free RSVP path hits `rsvp-guest-free` edge function.
+- [ ] Paid RSVP path hits `create-event-checkout` with unchanged payload.
+- [ ] Raffle entry purchase works for guests.
+- [ ] QR ticket renders on confirmation + by email-lookup.
+- [ ] OG meta image still resolves via `event-og` edge function (test in social link debugger).
+- [ ] Slug URL contract preserved: `?e={slug}` still loads correct event.
+- [ ] `?invite_token=…` shows personalized invite chip.
+- [ ] Add-to-calendar `.ics` valid.
+- [ ] Share (Web Share API + clipboard fallback) works.
+- [ ] Sticky CTA respects iOS safe-area.
+- [ ] First paint has no flash (banner loads cleanly, no layout jump).
+- [ ] SW cache bumped (public page is heavily cached — critical).
 
 ---
 
