@@ -547,7 +547,15 @@ js/admin/events/
 
 ---
 
-### Milestone 1 — Portal Members List Page (consumer)
+### Milestone 1 — Portal Members List Page (consumer) ✅ Shipped — commit `fe52915`
+
+**Status:** ✅ Shipped. List view rebuilt with `PortalEvents.list` namespace, light editorial layout, EventsCard grid, sticky chip filters. Old list-only CSS rules left in place for M6 cleanup.
+
+**Lessons learned:**
+- Hidden `<select id="typeFilter">` retained as compat shim — `init.js` still calls `addEventListener('change', evtRenderEvents)` on it. Removing the element would crash bootstrap.
+- `EventsCard.render()` returns an `<a href="?event=...">` — overriding `href: 'javascript:void(0)'` and using `e.preventDefault()` keeps SPA routing intact.
+- All legacy `evt*` globals (`evtLoadEvents`, `evtRenderEvents`, `evtRenderFeatured`, `evtUpdateHeroStats`, `evtSetupSearch`, `evtInitFilterChips`, `evtRenderCard`) preserved as `window` aliases — unmodified consumers (init/rsvp/create/competition) keep working.
+- SW cache bumped v41 → v42 (real users auto-receive on next visit; dev verification via direct HTTP fetch since browser SW caches old file).
 
 **Goal:** rebuild `/portal/events.html` list view with the new visual language. Mobile-first card grid, light editorial layout, sticky filters.
 
