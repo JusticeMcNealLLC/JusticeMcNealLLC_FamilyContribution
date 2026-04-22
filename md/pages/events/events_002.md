@@ -985,6 +985,27 @@ Drafts created by the old `#createModal` may have:
 
 ---
 
+#### M5a — Status: Shipped (CSS extract only) ✅
+
+**Scope shipped this commit:**
+- New file: [css/pages/public-event.css](css/pages/public-event.css) — verbatim copy of the inline `<style>` block from `events/index.html` (~250 rules, no edits).
+- Inline `<style>…</style>` block in [events/index.html](events/index.html) replaced with `<link rel="stylesheet" href="../css/pages/public-event.css">`.
+- HTML file dropped from 470 → 252 lines.
+- SW cache bumped v46 → v47 (public page is heavily cached — critical).
+- Smoke-tested: loaded `events/?e=birthday-cook-out-mngpch5k`, verified `.evt-content-title` font-size 32px (M5a CSS applied) and `.evt-hero` rendered. Single residual inline `<style>` is from the SW-boot script (not the extracted block).
+
+**Scope cuts (deferred to M5b/M5c):**
+- `js/events/public.js` (1661 lines) split into 6 modules (`{index,hero,body,rsvp,raffle,ticket}.js`) — M5b.
+- Audit / retire most of [css/pages/events.css](css/pages/events.css), folding what's still used into `public-event.css` — M5c.
+- Design changes (invite-banner pill chip redesign, sticky CTA safe-area polish, email-lookup card promotion) — M5b.
+- Hero layout consistency with portal detail (M2 visual lock-in) — M5b.
+
+**Lessons learned:**
+- Pure CSS extract is a clean, reviewable, low-risk first slice for a milestone targeting the highest-traffic page. Zero behavior risk; zero JS touched.
+- Splitting M5 into a/b/c lets each piece ship + test independently — same pattern that worked for M3a/b and M4a.
+
+---
+
 ### Milestone 6 — Polish + Cleanup
 
 **Goal:** purge legacy CSS, finalize shared module surface, ensure everything is mobile-perfect, and document the new architecture.
