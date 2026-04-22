@@ -698,23 +698,36 @@ js/admin/events/
 
 ### Milestone 3 — Admin Events Dashboard + Event Management Sheet
 
-**Status:** **M3a ✅ Shipped** — admin dashboard's All Events table swapped for a card grid; self-contained `EventsManage` sheet shipped with 3 active tabs (Overview, RSVPs, Danger Zone) + 4 placeholder tabs (Money, Docs, Raffle, Comp) labeled "soon"; portal detail page's "Manage event" button now opens the sheet. **M3b** (Money / Docs / Raffle / Comp tabs) pending.
+**Status:** **M3a ✅ Shipped + M3b ✅ Shipped** — admin dashboard's All Events table swapped for a card grid; self-contained `EventsManage` sheet now ships with **all 7 tabs** (Overview, RSVPs, Money, Docs, Raffle, Comp, Danger Zone). Per-tab data is lazy-loaded on first switch and cached for the lifetime of the sheet. Portal detail page's "Manage event" button opens the same sheet.
 
-**M3a deliberate scope cuts (from original spec):**
+**M3b deliverables (this pass):**
+- **Money tab** — Gross / Refunded / Net / Paid-RSVP stat grid; Revenue breakdown card (RSVP payments + raffle entries + prize-pool contributions); Paid RSVPs list with per-row Stripe-payment-intent deep link. Per-row refund button is deferred to M4 (needs an edge-function trigger).
+- **Docs tab** — Total / Distributed / Pending stat grid; Group documents section + Per-member documents section grouped by member. Per-row Mark sent / Distributed ✓ toggle (writes `event_documents.distributed`) and Delete button (writes `event_documents.delete`). Upload UI is deferred to M4 (file picker + storage upload is a bigger flow than fits this commit).
+- **Raffle tab** — Empty state when `events.raffle_enabled = false`; otherwise Entries / Revenue / Prizes / Drawn stat grid; Configuration card (type / draw-trigger / entry cost) + Prizes list from `events.raffle_prizes`; Winners list with medal + ordinal place + prize. Draw button stays on portal detail page for now.
+- **Comp tab** — Empty state when `event_type !== 'competition'`; otherwise Entries (with min-entries denominator) / Votes / Pool / Net-payout stat grid; Phases timeline with status dots; Configuration card (entry type / fee / house cut / voter eligibility / moderated count); Winners list with medal + entry title + prize amount + payout-status pill + 1099 flag.
+
+**M3b architectural notes:**
+- All 4 new tabs are read-only in this commit. Mutations are limited to the Docs `distribute / undistribute / delete` actions because they're trivial UPDATE/DELETE row operations. Refund / draw-winner / phase-advance mutations stay on the portal page until M4 because they require either an edge function or the full ceremony UI (confetti/animations) from the existing modules.
+- New per-tab loaders live alongside their renderers in `sheet.js`. Each loader returns a plain object that's cached on `STATE.tabData[key]` for the lifetime of the open sheet — closing or opening a different event clears the cache.
+- The lazy-load flow uses a small `_renderTabAsync(key, loader, render, wire)` helper that shows a "Loading…" placeholder, runs the loader, guards against the user switching tabs mid-load, then renders + wires the tab.
+- `formatCurrency(cents)` is a global from `js/config.js` already loaded by both admin and portal pages — used directly with a tiny local `_money()` fallback.
+- `sheet.js` grew from ~330 to ~620 lines. Still a single file; the 600-line "consider splitting" guideline is hit — flagging here so M4 can split into `sheet/{core,money,docs,raffle,comp,danger}.js` if any tab grows mutation logic.
+- SW cache v44 → v45.
+
+**M3a deliberate scope cuts (still in effect):**
 - **Did NOT split** `events-dashboard.js` into 5 files (`{index,dashboard,list,payouts,banners}.js`). The current file is 339 lines and clean enough — splitting now would be churn for no architectural win. M3b can split if it grows past ~600 lines.
-- **Did NOT create 8 separate tab files** under `js/portal/events/manage/`. Shipped as one self-contained `sheet.js` (~330 lines) with all 3 active tabs + 4 placeholders inline. M3b adds new tabs as additional render functions in the same file (split if it grows past ~600 lines).
-- **Banner-award workflow** left as the existing form (per spec it's preserved, redesigned UI). The form already matches the modern admin style well enough; M3b/M4 polish if needed.
+- **Did NOT create 8 separate tab files** under `js/portal/events/manage/`. Shipped as one self-contained `sheet.js` with all 7 tabs inline.
+- **Banner-award workflow** left as the existing form (per spec it's preserved, redesigned UI). The form already matches the modern admin style well enough; M4 polish if needed.
 - **Competition Payouts** kept as a table (specifically because it's a financial reference table, not a discovery surface — cards would hurt scannability of the 1099 column).
 
-**M3a lessons learned:**
+**M3a lessons learned (still apply):**
 - The sheet is **self-mounting**: first call to `EventsManage.open()` injects DOM + `<style>` block into `<body>`, so admin/events.html and portal/events.html only need to load `sheet.js` — zero HTML changes required.
 - `EventsManage` registers itself onto `window.PortalEvents.detail._registry` as `'manage'` if `PortalEvents.detail.register` exists — the M2 registry pattern paid off.
 - Sheet talks back to the host page via `document.dispatchEvent(new CustomEvent('events:manage:deleted' | 'events:manage:updated'))` — admin dashboard reloads on either event. Loose coupling, no shared state.
 - Portal detail's "Manage event" button uses a runtime fallback: `if (window.EventsManage) { open(...) } else { toggle legacy dropdown }` — graceful degradation if the sheet script ever fails to load.
 - Mobile-first: bottom sheet on `<sm`, centered modal on `≥sm`. Safe-area padding via `pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]`.
 - Tab bar horizontally scrolls; active tab `scrollIntoView({inline:'center'})`.
-- All operations use existing tables/columns (no DB changes): `events.update({status: 'cancelled'|'completed'})` and `events.delete()`.
-- SW cache v43 → v44.
+- All operations use existing tables/columns (no DB changes).
 
 **Goal:** rebuild `/admin/events.html` to match modern admin pages. Introduce the **Event Management Sheet** — one place for all admin operational tasks per event.
 
