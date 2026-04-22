@@ -539,3 +539,26 @@
 .evt-filter-chip:hover { background: #e2e8f0; color: #475569; }
 .evt-filter-chip--active { background: #1e293b; color: #fff; }
 .evt-filter-chip--active:hover { background: #334155; color: #fff; }
+
+/* ════════════════════════════════════════════════════════════
+   M1 — Portal Events List Rebuild
+   Slim additions for the new chip rows + featured carousel.
+   Older list rules (.events-hero, .event-card-*, .evt-search-pill,
+   .evt-filter-chip, .evt-featured-card, .evt-featured-scroll) are
+   now unused after the HTML rebuild and will be purged in M6.
+   ════════════════════════════════════════════════════════════ */
+.evt-chip-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 2px 0; }
+.evt-chip-row::-webkit-scrollbar { display: none; }
+.evt-chip { flex-shrink: 0; padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; background: #fff; border: 1px solid rgba(0,0,0,0.08); color: #475569; cursor: pointer; transition: background .15s, color .15s, border-color .15s, transform .1s; white-space: nowrap; }
+.evt-chip:hover { border-color: #cbd5e1; }
+.evt-chip:active { transform: scale(.97); }
+.evt-chip--active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+.evt-chip--active:hover { background: #4338ca; border-color: #4338ca; }
+.evt-chip--ghost { background: transparent; border-color: transparent; color: #6b7280; padding: 6px 14px; font-size: 12px; }
+.evt-chip--ghost:hover { background: rgba(0,0,0,0.04); border-color: transparent; }
+.evt-chip--ghost.evt-chip--active { background: #eef2ff; color: #4338ca; border-color: transparent; }
+.evt-chip--ghost.evt-chip--active:hover { background: #e0e7ff; }
+.evt-featured-row { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.evt-featured-row::-webkit-scrollbar { display: none; }
+.evt-featured-row > * { flex-shrink: 0; width: 280px; max-width: 80vw; scroll-snap-align: start; }
+
