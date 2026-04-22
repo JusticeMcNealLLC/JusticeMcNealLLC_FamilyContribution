@@ -698,6 +698,24 @@ js/admin/events/
 
 ### Milestone 3 — Admin Events Dashboard + Event Management Sheet
 
+**Status:** **M3a ✅ Shipped** — admin dashboard's All Events table swapped for a card grid; self-contained `EventsManage` sheet shipped with 3 active tabs (Overview, RSVPs, Danger Zone) + 4 placeholder tabs (Money, Docs, Raffle, Comp) labeled "soon"; portal detail page's "Manage event" button now opens the sheet. **M3b** (Money / Docs / Raffle / Comp tabs) pending.
+
+**M3a deliberate scope cuts (from original spec):**
+- **Did NOT split** `events-dashboard.js` into 5 files (`{index,dashboard,list,payouts,banners}.js`). The current file is 339 lines and clean enough — splitting now would be churn for no architectural win. M3b can split if it grows past ~600 lines.
+- **Did NOT create 8 separate tab files** under `js/portal/events/manage/`. Shipped as one self-contained `sheet.js` (~330 lines) with all 3 active tabs + 4 placeholders inline. M3b adds new tabs as additional render functions in the same file (split if it grows past ~600 lines).
+- **Banner-award workflow** left as the existing form (per spec it's preserved, redesigned UI). The form already matches the modern admin style well enough; M3b/M4 polish if needed.
+- **Competition Payouts** kept as a table (specifically because it's a financial reference table, not a discovery surface — cards would hurt scannability of the 1099 column).
+
+**M3a lessons learned:**
+- The sheet is **self-mounting**: first call to `EventsManage.open()` injects DOM + `<style>` block into `<body>`, so admin/events.html and portal/events.html only need to load `sheet.js` — zero HTML changes required.
+- `EventsManage` registers itself onto `window.PortalEvents.detail._registry` as `'manage'` if `PortalEvents.detail.register` exists — the M2 registry pattern paid off.
+- Sheet talks back to the host page via `document.dispatchEvent(new CustomEvent('events:manage:deleted' | 'events:manage:updated'))` — admin dashboard reloads on either event. Loose coupling, no shared state.
+- Portal detail's "Manage event" button uses a runtime fallback: `if (window.EventsManage) { open(...) } else { toggle legacy dropdown }` — graceful degradation if the sheet script ever fails to load.
+- Mobile-first: bottom sheet on `<sm`, centered modal on `≥sm`. Safe-area padding via `pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]`.
+- Tab bar horizontally scrolls; active tab `scrollIntoView({inline:'center'})`.
+- All operations use existing tables/columns (no DB changes): `events.update({status: 'cancelled'|'completed'})` and `events.delete()`.
+- SW cache v43 → v44.
+
 **Goal:** rebuild `/admin/events.html` to match modern admin pages. Introduce the **Event Management Sheet** — one place for all admin operational tasks per event.
 
 **Pages / files touched:**

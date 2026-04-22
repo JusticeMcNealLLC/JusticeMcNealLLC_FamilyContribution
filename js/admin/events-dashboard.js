@@ -111,7 +111,7 @@ function formatCurrency(cents) {
     }).format((cents || 0) / 100);
 }
 
-// ─── Render Events Table ────────────────────────────────
+// ─── Render Events Card Grid (M3a — was a table) ────────
 
 function renderEventsTable() {
     const filter = document.getElementById('tableStatusFilter')?.value || 'all';
@@ -120,48 +120,89 @@ function renderEventsTable() {
         : adminEvents.filter(e => e.status === filter);
 
     const TYPE_LABELS = { llc: 'LLC', member: 'Member', competition: 'Competition' };
+    const TYPE_BG = { llc: 'bg-brand-50 text-brand-700', member: 'bg-emerald-50 text-emerald-700', competition: 'bg-amber-50 text-amber-700' };
     const STATUS_STYLES = {
-        draft: 'bg-gray-100 text-gray-600',
-        open: 'bg-emerald-100 text-emerald-700',
+        draft:     'bg-gray-100 text-gray-600',
+        open:      'bg-emerald-100 text-emerald-700',
         confirmed: 'bg-blue-100 text-blue-700',
-        active: 'bg-brand-100 text-brand-700',
+        active:    'bg-brand-100 text-brand-700',
         completed: 'bg-gray-200 text-gray-700',
         cancelled: 'bg-red-100 text-red-600',
     };
 
+    const grid  = document.getElementById('eventsCardGrid');
+    const empty = document.getElementById('eventsCardEmpty');
+    if (!grid) return;
+
     if (!filtered.length) {
-        document.getElementById('eventsTableBody').innerHTML = `
-            <tr><td colspan="8" class="py-8 text-center text-gray-400">No events found</td></tr>`;
+        grid.innerHTML = '';
+        empty?.classList.remove('hidden');
         return;
     }
+    empty?.classList.add('hidden');
 
-    document.getElementById('eventsTableBody').innerHTML = filtered.map(e => {
-        const rsvpCount = adminRsvps.filter(r => r.event_id === e.id && r.status === 'going').length;
+    grid.innerHTML = filtered.map(e => {
+        const rsvpCount  = adminRsvps.filter(r => r.event_id === e.id && r.status === 'going').length;
+        const maybeCount = adminRsvps.filter(r => r.event_id === e.id && r.status === 'maybe').length;
         const checkinCount = adminCheckins.filter(c => c.event_id === e.id).length;
         const revenue = adminRsvps.filter(r => r.event_id === e.id && r.paid).length * (e.rsvp_cost_cents || 0);
         const dateStr = new Date(e.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const statusStyle = STATUS_STYLES[e.status] || 'bg-gray-100 text-gray-600';
+        const typeStyle   = TYPE_BG[e.event_type] || 'bg-gray-100 text-gray-700';
 
         return `
-            <tr class="hover:bg-surface-50 transition">
-                <td class="py-3 px-4">
-                    <div class="font-semibold text-gray-800 truncate max-w-[200px]">${escapeHtml(e.title)}</div>
-                </td>
-                <td class="py-3 px-4 text-gray-500">${TYPE_LABELS[e.event_type] || e.event_type}</td>
-                <td class="py-3 px-4 text-gray-500 whitespace-nowrap">${dateStr}</td>
-                <td class="py-3 px-4 text-center"><span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ${statusStyle}">${e.status.toUpperCase()}</span></td>
-                <td class="py-3 px-4 text-center font-semibold">${rsvpCount}${e.max_participants ? `<span class="text-gray-400 font-normal">/${e.max_participants}</span>` : ''}</td>
-                <td class="py-3 px-4 text-center font-semibold text-emerald-600">${checkinCount}</td>
-                <td class="py-3 px-4 text-right font-semibold">${revenue > 0 ? formatCurrency(revenue) : '<span class="text-gray-300">—</span>'}</td>
-                <td class="py-3 px-4 text-center">
-                    <button onclick="adminDeleteEvent('${e.id}','${escapeHtml(e.title).replace(/'/g, "\\'")}')"
-                        class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition" title="Delete event">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            <article class="bg-white rounded-2xl border border-gray-200/80 p-4 flex flex-col gap-3 hover:border-brand-200 hover:shadow-sm transition" data-event-id="${e.id}">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${typeStyle}">${TYPE_LABELS[e.event_type] || e.event_type}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${statusStyle}">${(e.status || '').toUpperCase()}</span>
+                        </div>
+                        <h4 class="font-bold text-gray-900 text-base truncate">${escapeHtml(e.title)}</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">${dateStr}${e.location_nickname ? ' · ' + escapeHtml(e.location_nickname) : ''}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center pt-2 border-t border-gray-100">
+                    <div>
+                        <div class="text-lg font-extrabold text-gray-900">${rsvpCount}${e.max_participants ? `<span class="text-gray-400 font-normal text-sm">/${e.max_participants}</span>` : ''}</div>
+                        <div class="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Going</div>
+                    </div>
+                    <div>
+                        <div class="text-lg font-extrabold text-violet-600">${checkinCount}</div>
+                        <div class="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Checked in</div>
+                    </div>
+                    <div>
+                        <div class="text-lg font-extrabold ${revenue > 0 ? 'text-emerald-600' : 'text-gray-300'}">${revenue > 0 ? formatCurrency(revenue) : '—'}</div>
+                        <div class="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Revenue</div>
+                    </div>
+                </div>
+
+                ${maybeCount ? `<p class="text-[11px] text-gray-400">+${maybeCount} interested</p>` : ''}
+
+                <div class="flex items-center gap-2 pt-1">
+                    <button onclick="adminOpenManageSheet('${e.id}')" class="flex-1 inline-flex items-center justify-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-xl text-xs font-semibold transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Manage
                     </button>
-                </td>
-            </tr>`;
+                    <a href="../portal/events.html?event=${encodeURIComponent(e.slug || '')}" class="px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition" title="Open in portal">↗</a>
+                </div>
+            </article>`;
     }).join('');
 }
+
+function adminOpenManageSheet(eventId) {
+    if (window.EventsManage && typeof window.EventsManage.open === 'function') {
+        window.EventsManage.open(eventId, { source: 'admin' });
+    } else {
+        console.warn('[admin/events] EventsManage not loaded');
+    }
+}
+window.adminOpenManageSheet = adminOpenManageSheet;
+
+// Refresh dashboard when sheet performs a destructive op
+document.addEventListener('events:manage:deleted', () => loadEventsDashboard());
+document.addEventListener('events:manage:updated', () => loadEventsDashboard());
 
 function escapeHtml(str) {
     const el = document.createElement('span');

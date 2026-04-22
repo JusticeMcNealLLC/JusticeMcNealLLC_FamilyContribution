@@ -86,41 +86,26 @@
             <button class="admin-tab pb-3 text-sm font-semibold text-gray-400 hover:text-gray-600 transition" data-tab="banners">Banner Awards</button>
         </div>
 
-        <!-- All Events Table -->
+        <!-- All Events Card Grid -->
         <div id="tabAllEvents" class="tab-content">
-            <div class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden">
-                <div class="p-4 flex items-center justify-between border-b border-gray-100">
-                    <h3 class="font-bold text-gray-800">All Events</h3>
-                    <select id="tableStatusFilter" class="text-xs bg-white border border-gray-200 rounded-lg px-3 py-1.5 font-medium text-gray-600">
-                        <option value="all">All Status</option>
-                        <option value="draft">Draft</option>
-                        <option value="open">Open</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="active">Active</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-surface-50 text-xs uppercase tracking-wide text-gray-500">
-                            <tr>
-                                <th class="py-3 px-4 text-left font-semibold">Event</th>
-                                <th class="py-3 px-4 text-left font-semibold">Type</th>
-                                <th class="py-3 px-4 text-left font-semibold">Date</th>
-                                <th class="py-3 px-4 text-center font-semibold">Status</th>
-                                <th class="py-3 px-4 text-center font-semibold">RSVPs</th>
-                                <th class="py-3 px-4 text-center font-semibold">Check-ins</th>
-                                <th class="py-3 px-4 text-right font-semibold">Revenue</th>
-                                <th class="py-3 px-4 text-center font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="eventsTableBody" class="divide-y divide-gray-50">
-                            <tr><td colspan="7" class="py-8 text-center text-gray-400"><div class="skeleton h-6 w-48 mx-auto rounded-lg"></div></td></tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-gray-800">All Events</h3>
+                <select id="tableStatusFilter" class="text-xs bg-white border border-gray-200 rounded-lg px-3 py-1.5 font-medium text-gray-600">
+                    <option value="all">All Status</option>
+                    <option value="draft">Draft</option>
+                    <option value="open">Open</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="active">Active</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
             </div>
+            <div id="eventsCardGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4"><div class="skeleton h-5 w-3/4 rounded-lg mb-3"></div><div class="skeleton h-3 w-1/2 rounded-lg mb-2"></div><div class="skeleton h-3 w-1/3 rounded-lg"></div></div>
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4"><div class="skeleton h-5 w-3/4 rounded-lg mb-3"></div><div class="skeleton h-3 w-1/2 rounded-lg mb-2"></div><div class="skeleton h-3 w-1/3 rounded-lg"></div></div>
+                <div class="bg-white rounded-2xl border border-gray-200/80 p-4"><div class="skeleton h-5 w-3/4 rounded-lg mb-3"></div><div class="skeleton h-3 w-1/2 rounded-lg mb-2"></div><div class="skeleton h-3 w-1/3 rounded-lg"></div></div>
+            </div>
+            <div id="eventsCardEmpty" class="hidden bg-white rounded-2xl border border-gray-200/80 p-8 text-center text-gray-400 text-sm">No events match this filter.</div>
         </div>
 
         <!-- Competition Payouts Tab -->
@@ -207,6 +192,7 @@
     <script src="../js/components/events/pills.js"></script>
     <script src="../js/components/events/card.js"></script>
     <script src="../js/admin/events-dashboard.js"></script>
+    <script src="../js/portal/events/manage/sheet.js"></script>
     <script src="../js/sw-register.js"></script>
 
     <style>
