@@ -1469,6 +1469,19 @@
                     renderEvents();
                     return;
                 }
+                // F7 — RSVP footer button: toggle 'going' without navigating
+                const rsvpBtn = e.target.closest('button[data-evt-card-rsvp]');
+                if (rsvpBtn && link.contains(rsvpBtn)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof window.evtHandleRsvp === 'function') {
+                        rsvpBtn.disabled = true;
+                        Promise.resolve(window.evtHandleRsvp(ev.id, 'going'))
+                            .catch(err => console.error('Card RSVP failed', err))
+                            .finally(() => { rsvpBtn.disabled = false; });
+                    }
+                    return;
+                }
                 if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
                 e.preventDefault();
                 if (ev.slug && typeof window.evtNavigateToEvent === 'function') {

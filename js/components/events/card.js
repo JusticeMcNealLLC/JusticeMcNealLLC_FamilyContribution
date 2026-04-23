@@ -160,16 +160,31 @@
         const ribbon    = (variant === 'portal') ? _goingRibbon(opts.rsvp) : '';
         const stack     = (variant === 'portal') ? _avatarStack(opts.attendees) : '';
 
-        return `<a href="${href}" data-evt-card="${event.id}" class="group block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden transition md:hover:shadow-md md:hover:-translate-y-0.5">
+        // F7 — vlift date overlay chip (vertical white card on banner top-left)
+        const _d = _startDate(event);
+        const _day = _d ? _d.getDate() : '';
+        const _mon = _d ? _d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() : '';
+        const dataDate = _d ? ` data-evt-day="${_day}" data-evt-mon="${_mon}"` : '';
+        const dateChipOverlay = _d
+            ? `<div class="evt-card-date-chip" aria-hidden="true"><span class="evt-card-date-day">${_day}</span><span class="evt-card-date-mon">${_mon}</span></div>`
+            : '';
+        // F7 — RSVP footer outline button (portal vlift only; rendered for all, CSS gates)
+        const isGoing = !!(opts.rsvp && opts.rsvp.status === 'going');
+        const rsvpFooter = (variant === 'portal')
+            ? `<button type="button" data-evt-card-rsvp="${event.id}" class="evt-card-rsvp${isGoing ? ' evt-card-rsvp--on' : ''}" aria-pressed="${isGoing ? 'true' : 'false'}">${isGoing ? '✓ Going' : 'RSVP'}</button>`
+            : '';
+
+        return `<a href="${href}" data-evt-card="${event.id}"${dataDate} class="group block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden transition md:hover:shadow-md md:hover:-translate-y-0.5">
             ${ribbon}
-            <div class="px-4 pt-3 pb-2 flex items-center gap-3">
+            <div class="px-4 pt-3 pb-2 flex items-center gap-3 evt-card-header-row">
                 ${_dateStamp(event)}
                 <div class="flex-1 min-w-0 flex items-center justify-end">
                     ${_relativeLabel(event)}
                 </div>
             </div>
-            <div class="relative w-full aspect-[16/9]" style="${_bannerBg(event)}">
+            <div class="relative w-full aspect-[16/9] evt-card-banner" style="${_bannerBg(event)}">
                 ${_emptyBannerEmoji(event)}
+                ${dateChipOverlay}
                 ${_categoryChip(event)}
                 ${stateP ? `<div class="absolute top-3 right-3">${stateP}</div>` : ''}
             </div>
@@ -180,6 +195,7 @@
                     <div class="min-w-0">${stack}</div>
                     <div class="shrink-0">${countP}</div>
                 </div>` : ''}
+                ${rsvpFooter}
                 ${variant === 'admin' ? _adminFooter(event, opts.adminMeta) : ''}
             </div>
         </a>`;
