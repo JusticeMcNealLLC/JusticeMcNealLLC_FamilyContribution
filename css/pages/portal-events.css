@@ -2439,3 +2439,76 @@ body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
     }
 }
+/* ============================================================
+ * F20 -- Date chip inline in meta (same height as text),
+ *        time + location on one row.
+ *   - Datechip moved inside evt-hero-meta as a flex child —
+ *     it now naturally stretches to match the text column height
+ *   - evt-hero-meta becomes flex-row; new evt-hero-meta-body
+ *     is the flex column for title/host/timeloc
+ *   - evt-hero-timeloc is the combined time + location row
+ *   - Removes F18 padding-left:5.75rem override (chip is inside now)
+ *   - Removes F18/F19 absolute positioning on datechip
+ * ============================================================ */
+
+/* Meta: flex-row so datechip sits left of the text column */
+body.evt-vlift .evt-hero-meta {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: .75rem !important;
+    padding-left: 1.25rem !important;
+    /* cancel F18 column reorder rules */
+    justify-content: flex-start !important;
+}
+
+/* Cancel F18 padding-left override (chip is now inside, no gutter needed) */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-meta {
+        padding-left: 1.25rem !important;
+        max-width: 58% !important;
+    }
+}
+
+/* Datechip: now a regular flex child — NOT absolutely positioned */
+body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+    flex-shrink: 0 !important;
+    align-self: stretch !important;
+    justify-content: center !important;
+    width: 3.25rem !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+/* Text column: stacks title / host / timeloc */
+body.evt-vlift .evt-hero-meta-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    flex: 1;
+    min-width: 0;
+    gap: .1rem;
+}
+
+/* Time + location row */
+body.evt-vlift .evt-hero-timeloc {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .625rem;
+    margin-top: .2rem;
+    font-size: .8125rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+/* Cancel F18 flex-direction:column + order overrides on meta children
+   (structure is now explicit in the DOM, no ordering needed) */
+body.evt-vlift .evt-hero-meta > h2 { order: unset !important; }
+body.evt-vlift .evt-hero-meta > [data-f14-host] { order: unset !important; }
+body.evt-vlift .evt-hero-meta > p  { order: unset !important; }
+body.evt-vlift .evt-hero-meta > [data-f14-dtrow]  { display: none !important; }

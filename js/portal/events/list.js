@@ -1309,30 +1309,33 @@
                     '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + heartBtn + countP + stateP + '</div>' +
                     // F14 — FEATURED EVENT kicker (vlift only; CSS shown)
                     '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' +
-                    // F14 — Vertical date chip overlay (APR / 1 / WED)
-                    '<div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' +
-                        (fMon ? '<span class="evt-hero-datechip__mon">' + esc(fMon) + '</span>' : '') +
-                        (fDay !== '' ? '<span class="evt-hero-datechip__day">' + esc(fDay) + '</span>' : '') +
-                        (fDow ? '<span class="evt-hero-datechip__dow">' + esc(fDow) + '</span>' : '') +
-                    '</div>' +
                     // Bottom-edge dark fade for legibility
                     '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div>' +
                     '<div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6">' +
-                        // E7 — Avatar cluster (Tomorrowland "Interested" pattern), above date/time
-                        _attendeeCluster(event.id) +
-                        // Date/time row ABOVE the title (Tomorrowland layout)
-                        '<div class="flex items-center gap-3 text-[12px] font-semibold text-white/90 mb-2" data-f14-dtrow>' +
-                            (dateLong ? '<span class="inline-flex items-center gap-1.5">' + calIcon + esc(dateLong) + '</span>' : '') +
-                            (timeShort ? '<span class="inline-flex items-center gap-1.5">' + clkIcon + esc(timeShort) + '</span>' : '') +
+                        // F20 — Date chip now INSIDE meta as a flex child so it
+                        // stretches to the same height as the text column beside it
+                        '<div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' +
+                            (fMon ? '<span class="evt-hero-datechip__mon">' + esc(fMon) + '</span>' : '') +
+                            (fDay !== '' ? '<span class="evt-hero-datechip__day">' + esc(fDay) + '</span>' : '') +
+                            (fDow ? '<span class="evt-hero-datechip__dow">' + esc(fDow) + '</span>' : '') +
                         '</div>' +
-                        '<h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc(event.title || 'Untitled event') + '</h2>' +
-                        // F14 — Host line ("Hosted by LLC \u00B7 Birthday Celebration")
-                        (hostLine
-                            ? '<p class="evt-hero-host" data-f14-host>' + esc(hostLine) + '</p>'
-                            : '') +
-                        (loc
-                            ? '<p class="mt-2 inline-flex items-center gap-1.5 text-sm text-white/90 truncate">' + pinIcon + esc(loc) + '</p>'
-                            : '') +
+                        // Text column
+                        '<div class="evt-hero-meta-body">' +
+                            // E7 — Avatar cluster
+                            _attendeeCluster(event.id) +
+                            '<h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc(event.title || 'Untitled event') + '</h2>' +
+                            // F14 — Host line
+                            (hostLine
+                                ? '<p class="evt-hero-host" data-f14-host>' + esc(hostLine) + '</p>'
+                                : '') +
+                            // F20 — Time + location on the same line
+                            ((timeShort || loc)
+                                ? '<div class="evt-hero-timeloc" data-f14-timeloc>' +
+                                    (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc(timeShort) + '</span>' : '') +
+                                    (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc(loc) + '</span>' : '') +
+                                  '</div>'
+                                : '') +
+                        '</div>' +
                     '</div>' +
                     // F14 — Right-side description block + solid View Details button (desktop only via CSS)
                     // NOTE: must NOT be an <a> — nested <a> inside the banner anchor causes
