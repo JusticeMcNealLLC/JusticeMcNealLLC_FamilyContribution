@@ -1266,3 +1266,38 @@ body.evt-vlift .evt-hero-cluster-label {
     body.evt-vlift .evt-hero-cluster { transition: none; }
     body.evt-vlift .evt-hero-cluster:active { transform: none; }
 }
+
+
+/* =========================================================
+   E12 — Hero heart favorite (vlift only)
+   Maps to RSVP status='maybe' (enum: going|maybe|not_going)
+   ========================================================= */
+body.evt-vlift .evt-hero-heart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 0;
+    background: rgba(0, 0, 0, .35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color .15s ease, transform .12s ease, color .15s ease;
+    flex-shrink: 0;
+}
+body.evt-vlift .evt-hero-heart:hover { background: rgba(0, 0, 0, .5); }
+body.evt-vlift .evt-hero-heart:active { transform: scale(.92); }
+body.evt-vlift .evt-hero-heart:disabled { opacity: .6; cursor: progress; }
+body.evt-vlift .evt-hero-heart--on {
+    color: #f43f5e;
+    background: rgba(255, 255, 255, .92);
+}
+body.evt-vlift .evt-hero-heart--on:hover { background: #ffffff; }
+
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift .evt-hero-heart { transition: none; }
+    body.evt-vlift .evt-hero-heart:active { transform: none; }
+}

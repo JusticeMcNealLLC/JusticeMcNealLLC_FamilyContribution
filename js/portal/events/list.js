@@ -1254,6 +1254,23 @@
         const goingRibbon = (rsvp && rsvp.status === 'going')
             ? '<div class="absolute top-3 left-3 z-10 inline-flex items-center gap-1 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md backdrop-blur-sm">✓ Going</div>'
             : '';
+        // E12 — Heart favorite (vlift hero only). Maps to RSVP status='maybe'
+        // ↔ null since the rsvp_status enum is (going|maybe|not_going) — no
+        // 'interested' value. 'maybe' is already wired as the ❤️ Interested
+        // affordance in detail.js, so this is the same semantic state.
+        const isFav = !!(rsvp && rsvp.status === 'maybe');
+        const heartCls = 'evt-hero-heart' + (isFav ? ' evt-hero-heart--on' : '');
+        const heartPath = isFav
+            // Filled heart
+            ? '<path d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z" fill="currentColor"/>'
+            // Outline heart
+            : '<path stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none" d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z"/>';
+        const heartBtn = '<button type="button" data-evt-hero-heart="' + esc(event.id) + '"' +
+            ' aria-label="' + (isFav ? 'Remove from interested' : 'Mark as interested') + '"' +
+            ' aria-pressed="' + (isFav ? 'true' : 'false') + '"' +
+            ' class="' + heartCls + '">' +
+                '<svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + '</svg>' +
+            '</button>';
         const href = event.slug
             ? ('?event=' + encodeURIComponent(event.slug))
             : 'javascript:void(0)';
@@ -1292,7 +1309,7 @@
                 ' class="block relative rounded-3xl overflow-hidden text-white shadow-[0_18px_50px_rgba(15,23,42,0.30)] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300"' +
                 ' style="' + _heroBg(event) + '">' +
                     goingRibbon +
-                    '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div>' +
+                    '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + heartBtn + countP + stateP + '</div>' +
                     // Bottom-edge dark fade for legibility
                     '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div>' +
                     '<div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6">' +
@@ -1349,6 +1366,27 @@
                         window.evtOpenDetail(event);
                     } else if (event.slug) {
                         window.location.href = '?event=' + encodeURIComponent(event.slug);
+                    }
+                });
+            }
+
+            // E12 — Heart favorite toggles RSVP status='maybe' (semantic
+            // "interested"; enum is going|maybe|not_going). evtHandleRsvp
+            // toggles off when called with the existing status, so calling
+            // it with 'maybe' when already maybe will clear it.
+            const heart = heroEl.querySelector('button[data-evt-hero-heart]');
+            if (heart) {
+                heart.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof window.evtHandleRsvp !== 'function') return;
+                    try {
+                        heart.disabled = true;
+                        await window.evtHandleRsvp(event.id, 'maybe');
+                    } catch (err) {
+                        console.error('Hero heart toggle failed', err);
+                    } finally {
+                        heart.disabled = false;
                     }
                 });
             }
