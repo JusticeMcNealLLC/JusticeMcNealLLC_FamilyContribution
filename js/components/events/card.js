@@ -50,6 +50,19 @@
         return `<div class="absolute inset-0 flex items-center justify-center text-6xl opacity-40 pointer-events-none select-none">${emoji}</div>`;
     }
 
+    // C2 — Tappable category chip overlay (events_003 §3.11 / §8.5)
+    // Shows on every card with a category. Sets _activeCategory via
+    // data-evt-cat click handler wired in list.js _wireCardClicks.
+    function _categoryChip(event) {
+        if (!event || !event.category) return '';
+        const emoji = (C.CATEGORY_EMOJI && C.CATEGORY_EMOJI[event.category]) || '📅';
+        const label = (C.CATEGORY_TAG && C.CATEGORY_TAG[event.category]?.label) || event.category;
+        const esc = H.escapeHtml || (s => String(s == null ? '' : s));
+        return `<button type="button" data-evt-cat="${esc(event.category)}"
+            class="evt-cat-chip absolute top-2 left-2 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-base leading-none hover:scale-110 active:scale-95 transition-transform"
+            aria-label="Filter by ${esc(label)}" title="Filter by ${esc(label)}">${emoji}</button>`;
+    }
+
     // Date stamp (header row, NOT overlay) — events_003 §8.6
     // Pinned LLC events get a small 📌 overlay — events_003 §8.8
     function _dateStamp(event) {
@@ -157,6 +170,7 @@
             </div>
             <div class="relative w-full aspect-[16/9]" style="${_bannerBg(event)}">
                 ${_emptyBannerEmoji(event)}
+                ${_categoryChip(event)}
                 ${stateP ? `<div class="absolute top-3 right-3">${stateP}</div>` : ''}
             </div>
             <div class="p-4">

@@ -29,7 +29,75 @@
     // ─── Local UI state ───────────────────────────────────
     let _searchQuery    = '';
     let _activeType     = 'all';
+    let _activeCategory = '';   // C2 — tap-category-emoji-to-filter
     let _searchDebounce = null;
+
+    // C3 — sessionStorage persistence key (events_003 §3.11 / §8.5)
+    const STATE_KEY = 'evt_list_state_v1';
+    function _persistState() {
+        try {
+            sessionStorage.setItem(STATE_KEY, JSON.stringify({
+                q:   _searchQuery,
+                t:   _activeType,
+                c:   _activeCategory,
+                tab: window.evtActiveTab || 'upcoming',
+            }));
+        } catch (_) { /* quota / private mode — silent */ }
+    }
+    function _restoreState() {
+        try {
+            const raw = sessionStorage.getItem(STATE_KEY);
+            if (!raw) return;
+            const s = JSON.parse(raw) || {};
+            if (typeof s.q === 'string') _searchQuery = s.q;
+            if (typeof s.t === 'string') _activeType = s.t;
+            if (typeof s.c === 'string') _activeCategory = s.c;
+            if (typeof s.tab === 'string' && ['upcoming','past','going'].includes(s.tab)) {
+                window.evtActiveTab = s.tab;
+            }
+        } catch (_) { /* corrupt payload — ignore */ }
+    }
+    // Restore immediately at IIFE load so downstream init reads correct values
+    _restoreState();
+
+    // C3 — Sync restored state into the UI chrome (input, segmented control,
+    // type menu button, search-expand panel). Called after DOM is ready.
+    function _applyRestoredUi() {
+        // Lifecycle segmented control
+        const tab = window.evtActiveTab || 'upcoming';
+        document.querySelectorAll('#evtLifecycleSeg .evt-seg__btn').forEach(b => {
+            const on = b.dataset.filter === tab;
+            b.classList.toggle('evt-seg__btn--active', on);
+            b.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        // Type menu
+        const menuBtn = document.getElementById('evtTypeMenuBtn');
+        if (menuBtn) {
+            menuBtn.dataset.type = _activeType;
+            const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + _activeType + '"]');
+            if (opt) {
+                const label = opt.textContent.replace(/\s+events?$/i, '').trim();
+                const labelEl = menuBtn.querySelector('[data-type-label]');
+                if (labelEl) labelEl.textContent = label;
+                document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
+                    o.classList.toggle('evt-type-opt--active', o === opt)
+                );
+            }
+            const sel = document.getElementById('typeFilter');
+            if (sel) sel.value = _activeType;
+        }
+        // Search input (only expand if there's a restored query)
+        if (_searchQuery) {
+            const input  = document.getElementById('evtSearchInput');
+            const clear  = document.getElementById('evtSearchClear');
+            const expand = document.getElementById('evtSearchExpand');
+            const toggle = document.getElementById('evtSearchToggle');
+            if (input) input.value = _searchQuery;
+            if (clear) clear.classList.remove('hidden');
+            if (expand) expand.classList.remove('hidden');
+            if (toggle) toggle.setAttribute('aria-expanded', 'true');
+        }
+    }
 
     // =========================================================
     // Data loading
@@ -260,7 +328,7 @@
         const safeLabel = (H.escapeHtml || (s => s))(label);
         return '<section data-bucket="' + slug + '">' +
             '<h2 class="text-xs font-bold uppercase tracking-[0.14em] text-gray-500 mb-3">' + safeLabel + '</h2>' +
-            '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + cards + '</div>' +
+            '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + cards + '</div>' +
         '</section>';
     }
 
@@ -272,6 +340,17 @@
             const ev = eventsById[id];
             if (!ev) return;
             link.addEventListener('click', e => {
+                // C2 — tap-category-emoji-to-filter: intercept before nav
+                const catBtn = e.target.closest('button[data-evt-cat]');
+                if (catBtn && link.contains(catBtn)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const cat = catBtn.getAttribute('data-evt-cat');
+                    _activeCategory = (_activeCategory === cat) ? '' : cat;
+                    _persistState();
+                    renderEvents();
+                    return;
+                }
                 if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
                 e.preventDefault();
                 if (ev.slug && typeof window.evtNavigateToEvent === 'function') {
@@ -280,6 +359,39 @@
                     window.evtOpenDetail(ev.id);
                 }
             });
+        });
+    }
+
+    // =========================================================
+    // C2 — Active-filter pill strip (shows when _activeCategory set)
+    // =========================================================
+    function _renderActiveFilterPill() {
+        let host = document.getElementById('evtActiveFilters');
+        if (!host) {
+            // Create pill host right after the filter strip on first use
+            const strip = document.getElementById('evtFilterStrip');
+            if (!strip || !strip.parentNode) return;
+            host = document.createElement('div');
+            host.id = 'evtActiveFilters';
+            host.className = 'evt-active-filters mt-2 flex flex-wrap gap-2';
+            strip.parentNode.insertBefore(host, strip.nextSibling);
+        }
+        if (!_activeCategory) { host.innerHTML = ''; return; }
+        const esc = H.escapeHtml || (s => String(s == null ? '' : s));
+        const emoji = (C.CATEGORY_EMOJI && C.CATEGORY_EMOJI[_activeCategory]) || '📅';
+        const label = (C.CATEGORY_TAG && C.CATEGORY_TAG[_activeCategory]?.label) || _activeCategory;
+        host.innerHTML =
+            '<button type="button" data-clear-cat ' +
+            'class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100">' +
+                '<span aria-hidden="true">' + emoji + '</span>' +
+                '<span>' + esc(label) + '</span>' +
+                '<span aria-hidden="true" class="text-brand-500">×</span>' +
+                '<span class="sr-only">Clear ' + esc(label) + ' filter</span>' +
+            '</button>';
+        host.querySelector('[data-clear-cat]')?.addEventListener('click', () => {
+            _activeCategory = '';
+            _persistState();
+            renderEvents();
         });
     }
 
@@ -432,6 +544,11 @@
         return ev.event_type === _activeType;
     }
 
+    function _matchesCategory(ev) {
+        if (!_activeCategory) return true;
+        return ev.category === _activeCategory;
+    }
+
     function _matchesLifecycle(ev) {
         const tab = window.evtActiveTab || 'upcoming';
         const now = new Date();
@@ -465,6 +582,7 @@
         if (!groupsEl || !Card) return;
 
         _renderHeaderCount();
+        _renderActiveFilterPill();
 
         const all       = window.evtAllEvents || [];
         const rsvps     = window.evtAllRsvps  || {};
@@ -489,6 +607,7 @@
             const descHits  = [];
             all.forEach(e => {
                 if (e.status === 'cancelled') return;
+                if (!_matchesCategory(e)) return;
                 if ((e.title || '').toLowerCase().includes(q)) {
                     titleHits.push(e);
                 } else if ((e.description || '').toLowerCase().includes(q)) {
@@ -516,7 +635,7 @@
         }
 
         // ─── NORMAL MODE — bucketed ─────────────────────────
-        const filtered = all.filter(e => _matchesType(e) && _matchesLifecycle(e));
+        const filtered = all.filter(e => _matchesType(e) && _matchesCategory(e) && _matchesLifecycle(e));
         const tab = window.evtActiveTab || 'upcoming';
 
         // Pick hero only on Upcoming tab
@@ -608,6 +727,7 @@
                 clear?.classList.add('hidden');
                 _searchQuery = '';
                 _activeType = 'all';
+                _activeCategory = '';
                 const menuBtn = document.getElementById('evtTypeMenuBtn');
                 if (menuBtn) {
                     menuBtn.dataset.type = 'all';
@@ -617,6 +737,7 @@
                 document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
                     o.classList.toggle('evt-type-opt--active', o.dataset.type === 'all')
                 );
+                _persistState();
                 renderEvents();
             };
         } else if (tab === 'past') {
@@ -658,6 +779,7 @@
     // Switch the lifecycle segmented control programmatically
     function _switchLifecycleTab(tab) {
         window.evtActiveTab = tab;
+        _persistState();
         document.querySelectorAll('#evtLifecycleSeg .evt-seg__btn').forEach(b => {
             const on = b.dataset.filter === tab;
             b.classList.toggle('evt-seg__btn--active', on);
@@ -720,6 +842,7 @@
                 btn.classList.add('evt-seg__btn--active');
                 btn.setAttribute('aria-selected', 'true');
                 window.evtActiveTab = btn.dataset.filter;
+                _persistState();
                 renderEvents();
             });
         });
@@ -758,6 +881,7 @@
                     const sel = document.getElementById('typeFilter');
                     if (sel) sel.value = _activeType;
                     closeMenu();
+                    _persistState();
                     renderEvents();
                 });
             });
@@ -790,6 +914,7 @@
                     input.value = '';
                     _searchQuery = '';
                     clear?.classList.add('hidden');
+                    _persistState();
                     renderEvents();
                 }
             });
@@ -803,6 +928,7 @@
             clearTimeout(_searchDebounce);
             _searchDebounce = setTimeout(() => {
                 _searchQuery = q;
+                _persistState();
                 renderEvents();
             }, 120);
         });
@@ -811,6 +937,7 @@
             input.value = '';
             clear.classList.add('hidden');
             _searchQuery = '';
+            _persistState();
             renderEvents();
             input.focus();
         });
@@ -907,8 +1034,99 @@
     }
 
     // =========================================================
-    // Legacy global aliases
+    // C1 — Pull-to-refresh (events_003 §6.5)
+    //   Mobile-only. Pulls down from top of page when scrollY=0
+    //   trigger a reload via evtLoadEvents. Excluded when the
+    //   touch originates inside the horizontal going rail (that
+    //   rail has its own x-scroll and shouldn't cross-trigger).
+    //   Respects prefers-reduced-motion (keyframe still runs but
+    //   the rubber-band translate is skipped).
     // =========================================================
+    function _initPullToRefresh() {
+        // Only meaningful on touch/mobile; desktop bails early.
+        if (!('ontouchstart' in window)) return;
+        // Mobile viewport gate — matches the FAB / mobile-only treatment
+        const isMobile = () => window.innerWidth < 640;
+        if (!isMobile()) return;
+
+        const TRIGGER = 60;     // px — pull distance to commit
+        const MAX     = 120;    // px — max rubber-band translate
+        const DAMPING = 0.45;
+
+        // Build indicator once
+        let ind = document.getElementById('evtPtrIndicator');
+        if (!ind) {
+            ind = document.createElement('div');
+            ind.id = 'evtPtrIndicator';
+            ind.className = 'evt-ptr';
+            ind.innerHTML =
+                '<svg class="evt-ptr-spin" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">' +
+                    '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.5" ' +
+                    'stroke-linecap="round" stroke-dasharray="40 60"/>' +
+                '</svg>';
+            document.body.appendChild(ind);
+        }
+
+        let startY = 0, dy = 0, pulling = false, committed = false, refreshing = false;
+
+        const inRail = (target) => !!(target && target.closest && target.closest('#evtGoingRailScroll'));
+        const anyModal = () => document.body.classList.contains('modal-open') ||
+                               document.body.classList.contains('overflow-hidden');
+
+        const setOffset = (v) => {
+            ind.style.transform = 'translate(-50%,' + v + 'px)';
+            ind.style.opacity = String(Math.min(1, Math.abs(v) / TRIGGER));
+        };
+
+        const reset = () => {
+            pulling = false;
+            committed = false;
+            dy = 0;
+            ind.classList.remove('evt-ptr--active', 'evt-ptr--refreshing');
+            ind.style.transform = '';
+            ind.style.opacity = '';
+        };
+
+        document.addEventListener('touchstart', e => {
+            if (refreshing) return;
+            if (anyModal()) return;
+            if (window.scrollY > 0) return;
+            if (inRail(e.target)) return;
+            startY = e.touches[0].clientY;
+            pulling = true;
+            dy = 0;
+        }, { passive: true });
+
+        document.addEventListener('touchmove', e => {
+            if (!pulling || refreshing) return;
+            const y = e.touches[0].clientY;
+            dy = (y - startY) * DAMPING;
+            if (dy <= 0) { reset(); return; }
+            if (dy > MAX) dy = MAX;
+            ind.classList.add('evt-ptr--active');
+            setOffset(dy);
+            committed = dy >= TRIGGER;
+            ind.classList.toggle('evt-ptr--ready', committed);
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => {
+            if (!pulling || refreshing) return;
+            if (!committed) { reset(); return; }
+            refreshing = true;
+            ind.classList.add('evt-ptr--refreshing');
+            ind.classList.remove('evt-ptr--ready');
+            ind.style.transform = 'translate(-50%,' + TRIGGER + 'px)';
+            ind.style.opacity = '1';
+            const done = () => { refreshing = false; reset(); };
+            try {
+                const p = (typeof window.evtLoadEvents === 'function')
+                    ? window.evtLoadEvents()
+                    : Promise.resolve();
+                Promise.resolve(p).finally(() => setTimeout(done, 300));
+            } catch (_) { done(); }
+        });
+    }
+
     window.evtLoadEvents      = loadEvents;
     window.evtRenderEvents    = renderEvents;
     window.evtRenderFeatured  = function () { /* folded into hero+bucket pinned-first sort */ };
@@ -950,6 +1168,8 @@
         if (groupsEl && !groupsEl.innerHTML.trim()) renderSkeletons();
         _initStickyHeader();
         _initMobileFab();
+        _initPullToRefresh();
+        _applyRestoredUi();
     }
     if (document.readyState !== 'loading') _onReady();
     else document.addEventListener('DOMContentLoaded', _onReady, { once: true });

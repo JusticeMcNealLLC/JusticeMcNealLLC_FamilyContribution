@@ -1,6 +1,6 @@
 # 📅 `portal/events.html` — Visual & UX Overhaul Spec (events_003)
 
-> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5 shipped. SW at `v52`. Phase A4 (polish/QA on real device) pending before Phase C can open. **Phase E (Premium Visual Lift) scoped** — see §Phase E + Appendix C for the design-parity plan against the California gradient + Tomorrowland festival mockups.
+> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5+C1+C2+C3+C4 shipped. SW at `v53`. Phase A4 (polish/QA on real device) still pending — non-blocking for Phase C since C1 is mobile-gated behind `ontouchstart` + `innerWidth < 640` + `scrollY === 0`. **Phase E (Premium Visual Lift) scoped** — see §Phase E + Appendix C for the design-parity plan against the California gradient + Tomorrowland festival mockups.
 > **Scope:** `/portal/events.html` **list view only**. Detail view (`#eventsDetailView`) is out of scope — already shipped in M2 (`events_002.md`).
 > **Goal:** transform the current functional-but-flat list page into a **premium, mobile-first event browsing experience** that feels native to a top-tier consumer product, while staying inside the existing JMLLC portal theme (Inter + brand-indigo + surface-50 background + light editorial cards).
 > **Non-goal:** backend changes. No schema, RPC, or edge-function work. RSVP flow, create flow, detail flow all continue to call exactly what they call today.
@@ -813,11 +813,22 @@ This is not a polish pass. This is a **ship gate**. If any item fails, Phase A d
 
 ### Phase C — P2 discovery & motion
 
-11. **C1 — Pull-to-refresh.**
-12. **C2 — Tap-category-emoji-to-filter.**
-13. **C3 — `sessionStorage` search persistence.**
-14. **C4 — Card stagger / enter motion.**
-15. SW bump `v52 → v53`. **Commit + push.**
+11. **C1 — Pull-to-refresh.** ✅ SHIPPED
+    - `_initPullToRefresh()` in `js/portal/events/list.js` wires touch handlers on `document` (delegated). Constants: `TRIGGER=60px`, `MAX=120px`, `DAMPING=0.45`.
+    - Guards: `'ontouchstart' in window`, `innerWidth < 640`, `scrollY === 0`, touch originating inside `#evtGoingRailScroll` skipped, `body.modal-open`/`body.overflow-hidden` skipped.
+    - Indicator `#evtPtrIndicator` (`.evt-ptr` + inline SVG spinner) built once; transitions through `.evt-ptr--active` → `.evt-ptr--ready` → `.evt-ptr--refreshing`. On commit calls `window.evtLoadEvents()`; resets 300ms after resolve. `prefers-reduced-motion` kills the spin keyframe.
+12. **C2 — Tap-category-emoji-to-filter.** ✅ SHIPPED
+    - `_categoryChip(event)` helper in `js/components/events/card.js` renders a `<button data-evt-cat="{category}" class="evt-cat-chip ...">` at banner top-left (state pill keeps top-right).
+    - `_wireCardClicks` in `list.js` intercepts `button[data-evt-cat]` clicks *before* card-nav fires (`preventDefault` + `stopPropagation`). Toggle semantics: re-click same category clears it.
+    - `_activeCategory` state + `_matchesCategory(ev)` filter applied in both search and normal filter chains.
+    - `_renderActiveFilterPill()` mounts `#evtActiveFilters` host after `#evtFilterStrip` on first use; renders dismissible brand-50 `{emoji} {label} ×` pill.
+13. **C3 — `sessionStorage` search persistence.** ✅ SHIPPED
+    - `STATE_KEY = 'evt_list_state_v1'`. `_persistState()` writes `{q, t, c, tab}`; `_restoreState()` runs at IIFE load (before any init) so filter chains see correct values on first paint. `_applyRestoredUi()` runs on `_onReady` to sync the segmented control active class, type-menu label + active option, `#typeFilter` compat select, and search input/expand/toggle/clear UI (search chrome only opens when restored query is non-empty).
+    - `_persistState()` called at every mutation site: lifecycle tab switch, type-menu option pick, search debounce, search clear, search toggle close-with-value, category chip toggle, active-filter pill dismiss, and the empty-state Clear-filters action (which also clears `_activeCategory`). Wrapped in try/catch for private mode.
+14. **C4 — Card stagger / enter motion.** ✅ SHIPPED
+    - `_renderBucket` now emits `class="evt-card-grid grid ..."` on its grid container.
+    - `css/pages/portal-events.css` adds `@keyframes evtCardEnter` (`opacity 0 → 1`, `translateY(8px → 0)`, 240ms `cubic-bezier(.16,1,.3,1)`) applied to `.evt-card-grid > *`, with `:nth-child(1..6)` delays at 40ms steps, `:nth-child(n+7)` snapped to 240ms, and `@media (prefers-reduced-motion: reduce)` killing the animation entirely.
+15. SW bumped `v52 → v53`. **Commit + push.** ✅
 
 ### Phase D — P3 power features (deferred, scope as separate spec)
 

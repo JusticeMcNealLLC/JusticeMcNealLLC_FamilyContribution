@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EventsCard A1 Smoke Test</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: { colors: {
+    brand: {
+      50: '#eef2ff', 100: '#e0e7ff', 600: '#4f46e5', 700: '#4338ca'
+    },
+    surface: { 50: '#f8fafc' }
+  }}}
+};
+</script>
+<style>body{background:#f8fafc;font-family:Inter,system-ui,sans-serif}</style>
+</head>
+<body class="p-6 space-y-6">
+<h1 class="text-2xl font-bold">EventsCard A1 Smoke Test</h1>
+
+<section>
+  <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3">Portal variant — full attendee stack + countdown</h2>
+  <div id="t1" class="max-w-md"></div>
+</section>
+
+<section>
+  <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3">Portal — going RSVP, no banner (gradient fallback)</h2>
+  <div id="t2" class="max-w-md"></div>
+</section>
+
+<section>
+  <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3">Portal — past event</h2>
+  <div id="t3" class="max-w-md"></div>
+</section>
+
+<section>
+  <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3">Admin variant (regression)</h2>
+  <div id="t4" class="max-w-md"></div>
+</section>
+
+<section>
+  <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3">Skeleton</h2>
+  <div id="t5" class="max-w-md"></div>
+</section>
+
+<section>
+  <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3">Helpers smoke</h2>
+  <pre id="hOut" class="text-xs bg-white p-3 rounded border border-gray-200"></pre>
+</section>
+
+<section>
+  <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3">B5 — Pinned LLC 📌 date-stamp marker (events_003 §8.8)</h2>
+  <div id="t6" class="max-w-md"></div>
+  <pre id="pinOut" class="text-xs bg-white p-3 mt-2 rounded border border-gray-200"></pre>
+</section>
+
+<script>const _v = '?v=' + Date.now();</script>
+<script>document.write(`<script src="/js/components/events/constants.js${_v}"><\/script>`);</script>
+<script>document.write(`<script src="/js/components/events/helpers.js${_v}"><\/script>`);</script>
+<script>document.write(`<script src="/js/components/events/pills.js${_v}"><\/script>`);</script>
+<script>document.write(`<script src="/js/components/events/card.js${_v}"><\/script>`);</script>
+<script>
+const now = new Date();
+const inHours = (h) => new Date(now.getTime() + h*3600_000).toISOString();
+
+const e1 = {
+  id: '1', slug: 'cookout', title: 'Family Cookout at Mom\'s House',
+  category: 'cookout', event_type: 'llc',
+  start_date: inHours(3), end_date: inHours(6),
+  location_nickname: "Mom's House", status: 'open',
+  banner_url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600'
+};
+const e2 = {
+  id: '2', slug: 'birthday', title: 'Justin\'s Birthday Party',
+  category: 'birthday', event_type: 'member',
+  start_date: inHours(48), location_text: 'TBD', status: 'open'
+};
+const e3 = {
+  id: '3', slug: 'old', title: 'Last Year\'s Annual Trip',
+  category: 'trip', event_type: 'llc',
+  start_date: inHours(-24*30), end_date: inHours(-24*29),
+  location_text: 'Aspen, CO', status: 'completed'
+};
+
+const attendees = [
+  { first_name: 'Justin', profile_picture_url: 'https://i.pravatar.cc/40?u=1' },
+  { first_name: 'Maria',  profile_picture_url: null },
+  { first_name: 'Alex',   profile_picture_url: 'https://i.pravatar.cc/40?u=3' },
+  { first_name: 'Sam',    profile_picture_url: null },
+  { first_name: 'Chris',  profile_picture_url: 'https://i.pravatar.cc/40?u=5' },
+  { first_name: 'Dana',   profile_picture_url: null },
+  { first_name: 'Eli',    profile_picture_url: null }
+];
+
+document.getElementById('t1').innerHTML = EventsCard.render(e1, { attendees });
+document.getElementById('t2').innerHTML = EventsCard.render(e2, { rsvp: { status: 'going' }, attendees: attendees.slice(0,2) });
+document.getElementById('t3').innerHTML = EventsCard.render(e3, {});
+document.getElementById('t4').innerHTML = EventsCard.render(e1, { variant: 'admin', adminMeta: { rsvps: 12, revenue: 145000 } });
+document.getElementById('t5').innerHTML = EventsCard.skeleton();
+
+document.getElementById('hOut').textContent = JSON.stringify({
+  relativeDate_today: EventsHelpers.relativeDate(now),
+  relativeDate_tomorrow: EventsHelpers.relativeDate(inHours(30)),
+  relativeDate_in3days: EventsHelpers.relativeDate(inHours(72)),
+  relativeDate_yesterday: EventsHelpers.relativeDate(inHours(-24)),
+  countdown_3h: EventsPills.countdownChip(e1).includes('3h'),
+  countdown_48h_isTomorrow_or_2days: EventsPills.countdownChip(e2),
+  countdown_pastEmpty: EventsPills.countdownChip(e3) === '',
+  buckets_upcoming: EventsHelpers.groupByBucket([e1, e2], 'upcoming').map(g => ({ label: g.label, n: g.events.length })),
+  buckets_past: EventsHelpers.groupByBucket([e3], 'past').map(g => ({ label: g.label, n: g.events.length })),
+}, null, 2);
+
+// ── B5 pinned-marker smoke test ──
+const ePinned = {
+  id: '6', slug: 'annual', title: 'Annual LLC Meeting',
+  category: 'business', event_type: 'llc', is_pinned: true,
+  start_date: inHours(72), status: 'open'
+};
+const eNotPinned = { ...ePinned, id: '7', is_pinned: false };
+const eMemberPinned = { ...ePinned, id: '8', event_type: 'member' };
+const htmlPinned    = EventsCard.render(ePinned, {});
+const htmlNotPinned = EventsCard.render(eNotPinned, {});
+const htmlMemberPin = EventsCard.render(eMemberPinned, {});
+document.getElementById('t6').innerHTML = htmlPinned;
+document.getElementById('pinOut').textContent = JSON.stringify({
+  pinned_llc_has_marker:     htmlPinned.includes('📌'),
+  not_pinned_has_no_marker:  !htmlNotPinned.includes('📌'),
+  pinned_member_has_no_marker: !htmlMemberPin.includes('📌'),
+  marker_has_evt_date_pin_class: htmlPinned.includes('evt-date-pin'),
+}, null, 2);
+</script>
+</body>
+</html>

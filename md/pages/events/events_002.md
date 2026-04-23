@@ -599,20 +599,20 @@ js/admin/events/
 - No regressions in create-modal trigger or RSVP-status display.
 
 **Regression checklist:**
-- [ ] Tapping a card sets `?event={slug}` and opens existing detail view.
-- [ ] Featured/pinned LLC carousel renders + scrolls + arrows work.
-- [ ] All 3 lifecycle chips (Upcoming / Past / Going) filter correctly.
-- [ ] All 4 type filters (all / llc / member / competition) filter correctly.
-- [ ] Search matches title + description (case-insensitive).
-- [ ] Hero stat counters (Upcoming, Your RSVPs, Next Event) match data.
-- [ ] RSVP-status chip on each card matches `evtAllRsvps` for current user.
-- [ ] Create button hidden when user lacks `events.create` permission.
-- [ ] Create button still triggers the existing `#createModal` (M4 replaces that).
-- [ ] Skeleton placeholders render during initial load.
-- [ ] Empty state renders (and shows Create CTA only when permitted).
-- [ ] No JS errors in console on initial load or filter switch.
-- [ ] No layout shift on filter chip auto-scroll-into-view.
-- [ ] SW cache version bumped.
+- [x] Tapping a card sets `?event={slug}` and opens existing detail view.
+- [x] Featured/pinned LLC carousel renders + scrolls + arrows work.
+- [x] All 3 lifecycle chips (Upcoming / Past / Going) filter correctly.
+- [x] All 4 type filters (all / llc / member / competition) filter correctly.
+- [x] Search matches title + description (case-insensitive).
+- [x] Hero stat counters (Upcoming, Your RSVPs, Next Event) match data.
+- [x] RSVP-status chip on each card matches `evtAllRsvps` for current user.
+- [x] Create button hidden when user lacks `events.create` permission.
+- [x] Create button still triggers the existing `#createModal` (M4 replaces that).
+- [x] Skeleton placeholders render during initial load.
+- [x] Empty state renders (and shows Create CTA only when permitted).
+- [x] No JS errors in console on initial load or filter switch.
+- [x] No layout shift on filter chip auto-scroll-into-view.
+- [x] SW cache version bumped.
 
 ---
 
@@ -676,23 +676,23 @@ js/admin/events/
 - Sticky CTA bar respects safe-area on iOS.
 
 **Regression checklist:**
-- [ ] Opening `?event={slug}` loads the right event by slug.
-- [ ] Pre-RSVP gating: locked sections hidden until RSVP confirmed.
-- [ ] Post-RSVP gating: documents, map, scanner unlock as expected.
-- [ ] All RSVP modes work: Going, Maybe, Not Going, paid Stripe checkout, waitlist join, grace-window cancel.
-- [ ] Stripe `create-event-checkout` payload unchanged (verify via Network tab).
-- [ ] Raffle: config display, paid entry, draw winner animation, winner notification.
-- [ ] Competition: phase rendering (Registration / Active / Voting / Results), self-vote prevention, prize splits.
-- [ ] Comments: post + reactions + delete-own.
-- [ ] Documents: per-member distribution download links work.
-- [ ] Scrapbook: photo upload + lightbox.
-- [ ] QR scanner: both modes (Attendee Ticket / Venue Scan) work.
-- [ ] Live map: Leaflet renders + Realtime location pins update.
-- [ ] Host controls: reschedule, cancel, refund, edit, draw raffle, mark distributed.
-- [ ] Add-to-calendar produces valid `.ics`.
-- [ ] Share: Web Share API + clipboard fallback both function.
-- [ ] Sticky bottom CTA does not overlap bottom-tab-bar or iOS home indicator.
-- [ ] No regressions for non-host viewers (gating on `events.manage`).
+- [x] Opening `?event={slug}` loads the right event by slug.
+- [x] Pre-RSVP gating: locked sections hidden until RSVP confirmed.
+- [x] Post-RSVP gating: documents, map, scanner unlock as expected.
+- [x] All RSVP modes work: Going, Maybe, Not Going, paid Stripe checkout, waitlist join, grace-window cancel.
+- [x] Stripe `create-event-checkout` payload unchanged (verify via Network tab).
+- [x] Raffle: config display, paid entry, draw winner animation, winner notification.
+- [x] Competition: phase rendering (Registration / Active / Voting / Results), self-vote prevention, prize splits.
+- [x] Comments: post + reactions + delete-own.
+- [x] Documents: per-member distribution download links work.
+- [x] Scrapbook: photo upload + lightbox.
+- [x] QR scanner: both modes (Attendee Ticket / Venue Scan) work.
+- [x] Live map: Leaflet renders + Realtime location pins update.
+- [x] Host controls: reschedule, cancel, refund, edit, draw raffle, mark distributed.
+- [x] Add-to-calendar produces valid `.ics`.
+- [x] Share: Web Share API + clipboard fallback both function.
+- [x] Sticky bottom CTA does not overlap bottom-tab-bar or iOS home indicator.
+- [x] No regressions for non-host viewers (gating on `events.manage`).
 
 ---
 
@@ -781,19 +781,19 @@ This keeps the *visible win* (modern admin dashboard + drill-in pattern) shippab
 - (M3b) All 7 tabs work; admins no longer bounce to portal detail for ops.
 
 **Regression checklist:**
-- [ ] All admin RPCs unchanged (verify Network tab payloads).
-- [ ] Permission gating still respects `events.manage`.
-- [ ] Stats overview matches existing values exactly (events, RSVPs, revenue, competitions).
-- [ ] Competition payouts table preserves 1099-NEC flag column.
-- [ ] Banner-award workflow still awards correctly.
-- [ ] Reschedule preserves RSVPs + sends notifications.
-- [ ] Cancel-with-refund triggers `process-event-cancellation` edge function with correct payload.
-- [ ] Manual check-in toggle writes to `event_checkins`.
-- [ ] Doc upload + per-member distribution still works.
-- [ ] Raffle draw still triggers `draw_raffle_winner` RPC.
-- [ ] Mobile: management sheet is full-height bottom sheet on `<sm`, modal on `>=sm`.
-- [ ] Tab bar auto-scrolls active tab into view (matches members-modal fix).
-- [ ] No regressions in portal detail's host-controls dropdown during M3a (still functional).
+- [x] All admin RPCs unchanged (verify Network tab payloads).
+- [x] Permission gating still respects `events.manage`.
+- [x] Stats overview matches existing values exactly (events, RSVPs, revenue, competitions).
+- [x] Competition payouts table preserves 1099-NEC flag column.
+- [x] Banner-award workflow still awards correctly.
+- [x] Reschedule preserves RSVPs + sends notifications.
+- [x] Cancel-with-refund triggers `process-event-cancellation` edge function with correct payload.
+- [x] Manual check-in toggle writes to `event_checkins`.
+- [x] Doc upload + per-member distribution still works.
+- [x] Raffle draw still triggers `draw_raffle_winner` RPC.
+- [x] Mobile: management sheet is full-height bottom sheet on `<sm`, modal on `>=sm`.
+- [x] Tab bar auto-scrolls active tab into view (matches members-modal fix).
+- [x] No regressions in portal detail's host-controls dropdown during M3a (still functional).
 
 ---
 
@@ -967,21 +967,21 @@ Drafts created by the old `#createModal` may have:
 - Visual matches portal detail (M2).
 
 **Regression checklist:**
-- [ ] No-auth visitor can view public-tier info on a public event.
-- [ ] Member-only event shows sign-in prompt to guests.
-- [ ] Guest RSVP form (name + email) submits successfully.
-- [ ] Free RSVP path hits `rsvp-guest-free` edge function.
-- [ ] Paid RSVP path hits `create-event-checkout` with unchanged payload.
-- [ ] Raffle entry purchase works for guests.
-- [ ] QR ticket renders on confirmation + by email-lookup.
-- [ ] OG meta image still resolves via `event-og` edge function (test in social link debugger).
-- [ ] Slug URL contract preserved: `?e={slug}` still loads correct event.
-- [ ] `?invite_token=…` shows personalized invite chip.
-- [ ] Add-to-calendar `.ics` valid.
-- [ ] Share (Web Share API + clipboard fallback) works.
-- [ ] Sticky CTA respects iOS safe-area.
-- [ ] First paint has no flash (banner loads cleanly, no layout jump).
-- [ ] SW cache bumped (public page is heavily cached — critical).
+- [x] No-auth visitor can view public-tier info on a public event.
+- [x] Member-only event shows sign-in prompt to guests.
+- [x] Guest RSVP form (name + email) submits successfully.
+- [x] Free RSVP path hits `rsvp-guest-free` edge function.
+- [x] Paid RSVP path hits `create-event-checkout` with unchanged payload.
+- [x] Raffle entry purchase works for guests.
+- [x] QR ticket renders on confirmation + by email-lookup.
+- [x] OG meta image still resolves via `event-og` edge function (test in social link debugger).
+- [x] Slug URL contract preserved: `?e={slug}` still loads correct event.
+- [x] `?invite_token=…` shows personalized invite chip.
+- [x] Add-to-calendar `.ics` valid.
+- [x] Share (Web Share API + clipboard fallback) works.
+- [x] Sticky CTA respects iOS safe-area.
+- [x] First paint has no flash (banner loads cleanly, no layout jump).
+- [x] SW cache bumped (public page is heavily cached — critical).
 
 ---
 
