@@ -1,7 +1,7 @@
 # events_004 · Portal Events — Phase D (Power Features)
 
 > **Parent spec:** [events_003_portalEvent_visualOverhaul.md](events_003_portalEvent_visualOverhaul.md)
-> **Status:** **Phase D complete.** **D3 shipped** (SW `v53 → v54`). **D1 shipped** (SW `v54 → v55`). **D2 shipped** (SW `v55 → v56`). **D4 shipped** (SW `v56 → v57`).
+> **Status:** **Phase D complete.** **D3 shipped** (SW `v53 → v54`). **D1 shipped** (SW `v54 → v55`). **D2 shipped** (SW `v55 → v56`). **D4 shipped** (SW `v56 → v57`) — **REMOVED at user request** (SW `v67 → v68`): toggle button, theme module, and `[data-theme="dark"]` CSS rules torn out of `portal/events.html`.
 > **Prereqs:** Phase A1+A2+A3+B1–B5+C1–C4 shipped.
 > **Scope:** D1 calendar/agenda toggle · D2 swipe gestures · D3 search history & suggestions · D4 dark-mode pass.
 > **Out of scope:** new data contracts, new queries, admin-surface changes, notification schema.

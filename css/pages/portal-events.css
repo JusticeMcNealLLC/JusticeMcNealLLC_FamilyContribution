@@ -795,126 +795,91 @@ body.evt-view--calendar #evtViewToggle { background: #eef2ff; border-color: #c7d
 }
 
 
-/* =========================================================
- * D4 — Dark mode (events_004 §D4)
- * Triggered by <html data-theme="dark">.
- * Scoped to events surfaces only; does not bleed to other pages.
- * ========================================================= */
-[data-theme="dark"] body,
-[data-theme="dark"] #eventsView,
-[data-theme="dark"] #eventsDetailView { background: #0f172a; color: #e2e8f0; }
+
+
 
 /* Header / filter strip / search row surfaces */
-[data-theme="dark"] #eventsView .bg-white,
-[data-theme="dark"] #eventsDetailView .bg-white { background-color: #1e293b !important; color: #e2e8f0; }
-[data-theme="dark"] #eventsView .border-gray-100,
-[data-theme="dark"] #eventsView .border-gray-200,
-[data-theme="dark"] #eventsDetailView .border-gray-100,
-[data-theme="dark"] #eventsDetailView .border-gray-200 { border-color: #334155 !important; }
-[data-theme="dark"] #eventsView .text-gray-900,
-[data-theme="dark"] #eventsDetailView .text-gray-900 { color: #f1f5f9 !important; }
-[data-theme="dark"] #eventsView .text-gray-700,
-[data-theme="dark"] #eventsDetailView .text-gray-700 { color: #cbd5e1 !important; }
-[data-theme="dark"] #eventsView .text-gray-600,
-[data-theme="dark"] #eventsDetailView .text-gray-600 { color: #cbd5e1 !important; }
-[data-theme="dark"] #eventsView .text-gray-500,
-[data-theme="dark"] #eventsDetailView .text-gray-500 { color: #94a3b8 !important; }
-[data-theme="dark"] #eventsView .text-gray-400,
-[data-theme="dark"] #eventsDetailView .text-gray-400 { color: #64748b !important; }
-[data-theme="dark"] #eventsView .placeholder-gray-400::placeholder { color: #64748b !important; }
-[data-theme="dark"] #eventsView .hover\:bg-gray-100:hover,
-[data-theme="dark"] #eventsView .hover\:border-gray-300:hover { background-color: #334155 !important; border-color: #475569 !important; }
+
+
+
+
+
+
+
+
+
 
 /* Calendar day cells (D1) */
-[data-theme="dark"] .evt-cal-cell { background: #1e293b; color: #e2e8f0; border-color: #334155; }
-[data-theme="dark"] .evt-cal-cell--today { background: #1e3a8a; color: #f1f5f9; }
-[data-theme="dark"] .evt-cal-cell--otherMonth { color: #475569; opacity: .7; }
-[data-theme="dark"] .evt-cal-weekday { color: #94a3b8; }
-[data-theme="dark"] .evt-cal-overflow { color: #94a3b8; }
+
+
+
+
+
 
 /* Going rail + hero + live banner share Tailwind .bg-white above; rail
  * arrows + dots inherit. Boost shadow contrast on dark surfaces. */
-[data-theme="dark"] .evt-card,
-[data-theme="dark"] .evt-mini-card,
-[data-theme="dark"] .evt-going-card { box-shadow: 0 1px 3px rgba(0,0,0,.6), 0 8px 24px rgba(0,0,0,.4); }
+
 
 /* Hero card emoji watermark / banner scrim — bump for legibility per §D4.2 */
-[data-theme="dark"] .evt-hero-scrim,
-[data-theme="dark"] .ed-hero-scrim {
-    background: linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.35) 40%, rgba(0,0,0,.55) 100%) !important;
-}
+
 
 /* Pinned 📌 marker chip — flips white→slate-800 per §D4.2 */
-[data-theme="dark"] .evt-pinned-chip,
-[data-theme="dark"] [data-evt-pinned] .bg-white\/95 { background-color: rgba(30,41,59,.92) !important; color: #f1f5f9 !important; }
+
 
 /* Active filter pill (C2) */
-[data-theme="dark"] #evtActiveFilters .bg-brand-50,
-[data-theme="dark"] #evtActiveFilters .bg-gray-100 { background-color: #334155 !important; color: #e2e8f0 !important; }
+
 
 /* Type menu popover */
-[data-theme="dark"] #evtTypeMenu { background: #1e293b !important; border-color: #334155 !important; }
-[data-theme="dark"] .evt-type-opt { color: #e2e8f0; }
-[data-theme="dark"] .evt-type-opt:hover { background: #334155; }
-[data-theme="dark"] .evt-type-opt--active { background: #1e3a8a; color: #dbeafe; }
+
+
+
+
 
 /* PTR indicator (C1) */
-[data-theme="dark"] .evt-ptr { background: #1e293b; color: #cbd5e1; box-shadow: 0 8px 20px rgba(0,0,0,.5); }
-[data-theme="dark"] .evt-ptr--ready { color: #a5b4fc; }
+
+
 
 /* Search suggest dropdown (D3) */
-[data-theme="dark"] .evt-search-suggest { background: #1e293b !important; border-color: #334155 !important; color: #e2e8f0; }
-[data-theme="dark"] .evt-suggest-row:hover { background: #334155 !important; }
-[data-theme="dark"] .evt-suggest-row--clear { color: #94a3b8; }
+
+
+
 
 /* Context sheet (D2) */
-[data-theme="dark"] .evt-context-sheet__panel { background: #1e293b !important; color: #f1f5f9; }
-[data-theme="dark"] .evt-context-row { color: #e2e8f0; border-color: #334155; }
-[data-theme="dark"] .evt-context-row:hover,
-[data-theme="dark"] .evt-context-row:active { background: #334155 !important; }
-[data-theme="dark"] .evt-context-row--danger { color: #fca5a5; }
-[data-theme="dark"] .evt-context-row--cancel { color: #94a3b8; }
+
+
+
+
+
 
 /* Toast (D2) */
-[data-theme="dark"] .evt-toast { background: rgba(241,245,249,.95); color: #0f172a; }
+
 
 /* Detail-view ed-* cards */
-[data-theme="dark"] .ed-card { background: #1e293b !important; color: #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,.5), 0 4px 16px rgba(0,0,0,.35); }
-[data-theme="dark"] .ed-card-rsvp { background: #1e293b !important; }
-[data-theme="dark"] .ed-card-host { background: #2a1d1d !important; border-color: #7f1d1d !important; }
-[data-theme="dark"] .ed-title,
-[data-theme="dark"] .ed-meta-label,
-[data-theme="dark"] .ed-org-name,
-[data-theme="dark"] .ed-comment-name { color: #f1f5f9; }
-[data-theme="dark"] .ed-meta-value,
-[data-theme="dark"] .ed-org-title,
-[data-theme="dark"] .ed-attendee-count,
-[data-theme="dark"] .ed-comment-text,
-[data-theme="dark"] .ed-cost-line-muted,
-[data-theme="dark"] .ed-threshold-count,
-[data-theme="dark"] .ed-threshold-note { color: #94a3b8; }
-[data-theme="dark"] .ed-divider,
-[data-theme="dark"] .ed-cost-divider { background: #334155; }
-[data-theme="dark"] .ed-deadline-banner { background: #334155; color: #cbd5e1; }
-[data-theme="dark"] .ed-rsvp-opt { background: #1e293b; border-color: #334155; color: #e2e8f0; }
-[data-theme="dark"] .ed-rsvp-opt:hover { border-color: #cbd5e1; }
-[data-theme="dark"] .ed-rsvp-opt.active { background: #1e3a8a; border-color: #6366f1; color: #dbeafe; }
-[data-theme="dark"] .ed-action-btn { background: #f1f5f9; color: #0f172a; }
-[data-theme="dark"] .ed-action-btn:hover { background: #e2e8f0; }
-[data-theme="dark"] .ed-pill { background: #334155; color: #e2e8f0; }
-[data-theme="dark"] .ed-pill-muted { background: #1e293b; color: #94a3b8; }
-[data-theme="dark"] .ed-notice { background: #1e293b; }
-[data-theme="dark"] .ed-notice-warn { background: #2a2418; border-color: #92651e; color: #fde68a; }
-[data-theme="dark"] .ed-progress { background: #334155; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Status badges keep their gradient hues but strengthen text on dark */
-[data-theme="dark"] .evt-status-ended { color: #cbd5e1; }
+
 
 /* Skeletons */
-[data-theme="dark"] .evt-skel,
-[data-theme="dark"] .evt-skel-block { background: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%); }
 
-/* Reduced-motion: nothing extra needed; theme switch is instant. */
+
+
 
 
 /* =========================================================
@@ -922,7 +887,6 @@ body.evt-view--calendar #evtViewToggle { background: #eef2ff; border-color: #c7d
  * Activated via body.evt-vlift (toggled by ?vlift=1 / localStorage).
  * Ships: E1 gradient header, E4 emoji bucket labels (JS), E9 motion polish.
  * Other Phase E items (E2-E3, E5-E7, E10-E12) tracked separately.
- * Dark-mode aware: gradient inverts under [data-theme="dark"].
  * ========================================================= */
 body.evt-vlift #evtPageHeader {
     background: linear-gradient(160deg, #4f46e5 0%, #6d28d9 55%, #4c1d95 100%) !important;
@@ -953,9 +917,7 @@ body.evt-vlift #evtPageHeader.evt-header--condensed {
 }
 
 /* Dark mode: deepen the violet so it doesn't glow on dark surface. */
-[data-theme="dark"] body.evt-vlift #evtPageHeader {
-    background: linear-gradient(160deg, #312e81 0%, #4c1d95 55%, #1e1b4b 100%) !important;
-}
+
 
 @keyframes evtHeaderFade {
     from { opacity: 0; transform: translateY(-4px); }
@@ -973,7 +935,7 @@ body.evt-vlift section[data-bucket] > h2 {
     align-items: center;
     gap: 6px;
 }
-[data-theme="dark"] body.evt-vlift section[data-bucket] > h2 { color: #e2e8f0; }
+
 
 /* E9 motion polish: chip / segment micro-press */
 body.evt-vlift .evt-seg__btn:active,
@@ -1013,11 +975,7 @@ body.evt-vlift .evt-type-opt:active { transform: scale(0.97); }
         margin-bottom: 4px;
     }
 }
-[data-theme="dark"] body.evt-vlift #evtSearchExpand input {
-    background: #1e293b !important;
-    border-color: #334155 !important;
-    color: #f1f5f9 !important;
-}
+
 
 
 /* E1 follow-up: greeting + count contrast on gradient header */
@@ -1066,17 +1024,9 @@ body.evt-vlift #evtTypeMenuBtn + #evtTypeMenu { display: none !important; }
 }
 .evt-type-chip--active:hover { border-color: transparent; }
 
-[data-theme="dark"] .evt-type-chip {
-    background: #1e293b;
-    border-color: #334155;
-    color: #cbd5e1;
-}
-[data-theme="dark"] .evt-type-chip:hover { border-color: #475569; }
-[data-theme="dark"] .evt-type-chip--active {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    color: #ffffff;
-    border-color: transparent;
-}
+
+
+
 
 @media (prefers-reduced-motion: reduce) {
     .evt-type-chip { transition: none; }
@@ -1098,8 +1048,8 @@ body.evt-vlift #evtTypeMenuBtn + #evtTypeMenu { display: none !important; }
 }
 .evt-bucket-seeall:hover { background: rgba(99, 102, 241, .08); }
 .evt-bucket-seeall:active { background: rgba(99, 102, 241, .14); }
-[data-theme="dark"] .evt-bucket-seeall { color: #a5b4fc; }
-[data-theme="dark"] .evt-bucket-seeall:hover { background: rgba(165, 180, 252, .12); color: #c7d2fe; }
+
+
 @media (prefers-reduced-motion: reduce) {
     .evt-bucket-seeall { transition: none; }
 }
@@ -1199,9 +1149,7 @@ body.evt-vlift .evt-hero-cta--going:hover {
     box-shadow: 0 14px 32px rgba(16, 185, 129, .34);
 }
 
-[data-theme="dark"] body.evt-vlift .evt-hero-cta {
-    box-shadow: 0 12px 28px rgba(0, 0, 0, .55);
-}
+
 
 @media (prefers-reduced-motion: reduce) {
     body.evt-vlift .evt-hero-cta { transition: none; }

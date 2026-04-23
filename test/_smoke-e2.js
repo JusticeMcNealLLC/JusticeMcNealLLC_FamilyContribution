@@ -28,7 +28,6 @@ const checks = {
     css_e2_show_expand: /body\.evt-vlift #evtSearchExpand \{[\s\S]*display: block !important/.test(css),
     css_e2_pill_height: /body\.evt-vlift #evtSearchExpand input \{[\s\S]*height: 44px/.test(css),
     css_e2_pill_radius: /border-radius: 14px/.test(css),
-    css_e2_dark: /\[data-theme="dark"\] body\.evt-vlift #evtSearchExpand input/.test(css),
 
     // SW
     sw_bumped_past_v58: /jm-portal-v(59|[6-9]\d|\d{3,})/.test(sw),

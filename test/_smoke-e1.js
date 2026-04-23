@@ -23,7 +23,7 @@ const checks = {
     js_body_class_toggle: /document\.body\.classList\.toggle\('evt-vlift'/.test(list),
     js_public_set: /window\.evtSetVlift = function/.test(list),
     js_public_get: /window\.evtIsVlift = function/.test(list),
-    js_init_in_onready: /_initTheme\(\);\s*_initVlift\(\);\s*_initSwipeGestures\(\);/.test(list),
+    js_init_in_onready: /_initVlift\(\);\s*_initSwipeGestures\(\);/.test(list),
 
     // JS — bucket label integration
     js_render_bucket_uses_vlift: /useVlift = document\.body\.classList\.contains\('evt-vlift'\)/.test(list),
@@ -35,7 +35,6 @@ const checks = {
     css_vlift_header_title_white: /body\.evt-vlift #evtPageHeader #evtHeaderTitle[\s\S]*color: #ffffff/.test(css),
     css_vlift_header_count_dim: /body\.evt-vlift #evtPageHeader #evtHeaderCount[\s\S]*rgba\(255,255,255,\.78\)/.test(css),
     css_vlift_create_btn_translucent: /body\.evt-vlift #evtPageHeader #createEventBtn[\s\S]*rgba\(255,255,255,\.18\)/.test(css),
-    css_vlift_dark_inverts: /\[data-theme="dark"\] body\.evt-vlift #evtPageHeader/.test(css),
     css_vlift_header_fade_kf: /@keyframes evtHeaderFade/.test(css),
 
     // CSS — emoji bucket labels (E4)

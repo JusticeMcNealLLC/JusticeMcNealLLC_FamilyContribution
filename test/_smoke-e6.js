@@ -51,7 +51,6 @@ const checks = {
     css_cta_pill: /body\.evt-vlift \.evt-hero-cta \{[\s\S]{0,500}height: 56px;[\s\S]{0,400}border-radius: 18px;/.test(css),
     css_cta_going_variant: /body\.evt-vlift \.evt-hero-cta--going \{[\s\S]{0,200}#10b981/.test(css),
     css_cta_disabled: /body\.evt-vlift \.evt-hero-cta:disabled \{[\s\S]{0,100}cursor: progress;/.test(css),
-    css_dark_variant: /\[data-theme="dark"\] body\.evt-vlift \.evt-hero-cta \{/.test(css),
     css_reduced_motion: /@media \(prefers-reduced-motion: reduce\) \{[\s\S]{0,300}body\.evt-vlift \.evt-hero-cta \{ transition: none;/.test(css),
 
     // SW

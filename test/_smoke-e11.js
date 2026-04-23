@@ -41,7 +41,6 @@ const checks = {
     css_seeall_class: /\.evt-bucket-seeall \{/.test(css),
     css_head_class: /\.evt-bucket-head \{/.test(css),
     css_hover_tint: /\.evt-bucket-seeall:hover \{ background: rgba\(99, 102, 241, .08\)/.test(css),
-    css_dark_variant: /\[data-theme="dark"\] \.evt-bucket-seeall \{/.test(css),
     css_reduced_motion: /prefers-reduced-motion[\s\S]*\.evt-bucket-seeall \{ transition: none/.test(css),
 
     // SW (E11 shipped at v62; bumps past are fine)

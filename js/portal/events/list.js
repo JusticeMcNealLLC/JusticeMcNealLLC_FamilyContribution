@@ -503,72 +503,6 @@
     }
 
     // =========================================================
-    // D4 — Dark mode (events_004 §D4)
-    // Modes: 'auto' (follow prefers-color-scheme), 'light', 'dark'.
-    // Persisted in localStorage('evt_theme'). Cycle on button click.
-    // Resolved theme written to <html data-theme="light|dark">.
-    // =========================================================
-    const THEME_KEY = 'evt_theme';
-    const THEME_MODES = ['auto', 'light', 'dark'];
-    let _themeMql = null;
-
-    function _readThemeMode() {
-        try {
-            const v = localStorage.getItem(THEME_KEY);
-            return THEME_MODES.includes(v) ? v : 'auto';
-        } catch (_) { return 'auto'; }
-    }
-    function _writeThemeMode(mode) {
-        try { localStorage.setItem(THEME_KEY, mode); } catch (_) {}
-    }
-    function _resolveTheme(mode) {
-        if (mode === 'light' || mode === 'dark') return mode;
-        try {
-            return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
-                ? 'dark' : 'light';
-        } catch (_) { return 'light'; }
-    }
-    function _applyTheme(mode) {
-        const resolved = _resolveTheme(mode);
-        try { document.documentElement.dataset.theme = resolved; } catch (_) {}
-        const btn = document.getElementById('evtThemeToggle');
-        if (btn) {
-            btn.setAttribute('data-theme-mode', mode);
-            btn.setAttribute('aria-label', 'Theme: ' + mode + ' (tap to cycle)');
-            const auto  = btn.querySelector('.evt-theme-icon--auto');
-            const light = btn.querySelector('.evt-theme-icon--light');
-            const dark  = btn.querySelector('.evt-theme-icon--dark');
-            if (auto)  auto.classList.toggle('hidden',  mode !== 'auto');
-            if (light) light.classList.toggle('hidden', mode !== 'light');
-            if (dark)  dark.classList.toggle('hidden',  mode !== 'dark');
-        }
-    }
-    function _initTheme() {
-        const mode = _readThemeMode();
-        _applyTheme(mode);
-        // React to OS theme changes when in 'auto' mode.
-        try {
-            _themeMql = window.matchMedia('(prefers-color-scheme: dark)');
-            const onChange = () => { if (_readThemeMode() === 'auto') _applyTheme('auto'); };
-            if (_themeMql.addEventListener) _themeMql.addEventListener('change', onChange);
-            else if (_themeMql.addListener) _themeMql.addListener(onChange);
-        } catch (_) {}
-        const btn = document.getElementById('evtThemeToggle');
-        if (btn && btn.dataset.themeWired !== '1') {
-            btn.dataset.themeWired = '1';
-            btn.addEventListener('click', () => {
-                const cur = _readThemeMode();
-                const next = THEME_MODES[(THEME_MODES.indexOf(cur) + 1) % THEME_MODES.length];
-                _writeThemeMode(next);
-                _applyTheme(next);
-            });
-        }
-        // Public API for Settings page (and tests).
-        try { window.evtSetTheme = function (m) { if (THEME_MODES.includes(m)) { _writeThemeMode(m); _applyTheme(m); } }; } catch (_) {}
-        try { window.evtGetTheme = function () { return _readThemeMode(); }; } catch (_) {}
-    }
-
-    // =========================================================
     // D2 — Swipe gestures + long-press context sheet (events_004 §D2)
     // Mobile-only. Touch-only. Reduced-motion respected.
     // =========================================================
@@ -2493,7 +2427,6 @@
         _initMobileFab();
         _initPullToRefresh();
         _initViewToggle();
-        _initTheme();
         _initVlift();
         _initSwipeGestures();
         _applyRestoredUi();

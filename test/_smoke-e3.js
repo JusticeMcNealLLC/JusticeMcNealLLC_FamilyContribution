@@ -26,7 +26,6 @@ const checks = {
     css_e3_chip_active_gradient: /\.evt-type-chip--active \{[\s\S]*linear-gradient\(135deg, #6366f1/.test(css),
     css_e3_chip_radius: /\.evt-type-chip \{[\s\S]*border-radius: 999px/.test(css),
     css_e3_chip_height: /\.evt-type-chip \{[\s\S]*height: 36px/.test(css),
-    css_e3_dark: /\[data-theme="dark"\] \.evt-type-chip \{/.test(css),
     css_e3_reduced_motion: /prefers-reduced-motion[\s\S]*\.evt-type-chip \{ transition: none/.test(css),
 
     // JS — sync helper + chip click wiring + restored sync

@@ -42,7 +42,7 @@ const checks = {
     css_reduced_motion: /@media \(prefers-reduced-motion: reduce\) \{[\s\S]{0,300}body\.evt-vlift \.evt-hero-heart \{ transition: none;/.test(css),
 
     // SW
-    sw_v67: /jm-portal-v67/.test(sw),
+    sw_v67_or_higher: /jm-portal-v(6[7-9]|[7-9]\d|\d{3,})/.test(sw),
     sw_no_v66: !sw.includes("'jm-portal-v66'"),
 };
 
