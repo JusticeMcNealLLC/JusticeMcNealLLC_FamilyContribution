@@ -101,7 +101,7 @@
         const time = _startDate(event);
         if (time && H.formatDate) parts.push(H.formatDate(time, 'time'));
         if (!parts.length) return '';
-        return `<p class="text-[13px] text-gray-500 truncate mt-1">${parts.join(' · ')}</p>`;
+        return `<p class="text-[13px] text-gray-500 truncate mt-1" data-evt-legacy-meta>${parts.join(' · ')}</p>`;
     }
 
     // Avatar stack — events_003 §8.6 (max 4 + overflow count)
@@ -164,14 +164,45 @@
         const _d = _startDate(event);
         const _day = _d ? _d.getDate() : '';
         const _mon = _d ? _d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() : '';
+        const _dow = _d ? _d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() : '';
         const dataDate = _d ? ` data-evt-day="${_day}" data-evt-mon="${_mon}"` : '';
         const dateChipOverlay = _d
-            ? `<div class="evt-card-date-chip" aria-hidden="true"><span class="evt-card-date-day">${_day}</span><span class="evt-card-date-mon">${_mon}</span></div>`
+            ? `<div class="evt-card-date-chip" aria-hidden="true"><span class="evt-card-date-mon">${_mon}</span><span class="evt-card-date-day">${_day}</span><span class="evt-card-date-dow" data-f15-dow>${_dow}</span></div>`
             : '';
         // F7 — RSVP footer outline button (portal vlift only; rendered for all, CSS gates)
         const isGoing = !!(opts.rsvp && opts.rsvp.status === 'going');
         const rsvpFooter = (variant === 'portal')
             ? `<button type="button" data-evt-card-rsvp="${event.id}" class="evt-card-rsvp${isGoing ? ' evt-card-rsvp--on' : ''}" aria-pressed="${isGoing ? 'true' : 'false'}">${isGoing ? '✓ Going' : 'RSVP'}</button>`
+            : '';
+
+        // F15 — Split meta (vlift): type/host line, then icon rows for location + time.
+        // Legacy _meta() still emitted (hidden under vlift) so non-vlift stays intact.
+        const _tcLabel = (C.TYPE_COLORS_PORTAL && C.TYPE_COLORS_PORTAL[event.event_type]?.label) || '';
+        const _catLabel = (C.CATEGORY_TAG && C.CATEGORY_TAG[event.category]?.label) || '';
+        const f15TypeHost = (_tcLabel || _catLabel)
+            ? `<p class="evt-card-f15-type" data-f15-type>${[_tcLabel, _catLabel].filter(Boolean).map(s => H.escapeHtml ? H.escapeHtml(s) : s).join(' \u00B7 ')}</p>`
+            : '';
+        const _f15Loc = event.location_nickname || event.location_text || '';
+        const _f15Time = (_d && H.formatDate) ? H.formatDate(_d, 'time') : '';
+        const f15LocRow = _f15Loc
+            ? `<p class="evt-card-f15-row" data-f15-loc><svg class="evt-card-f15-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s7-7.58 7-13a7 7 0 10-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="truncate">${H.escapeHtml ? H.escapeHtml(_f15Loc) : _f15Loc}</span></p>`
+            : '';
+        const f15TimeRow = _f15Time
+            ? `<p class="evt-card-f15-row" data-f15-time><svg class="evt-card-f15-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg><span>${H.escapeHtml ? H.escapeHtml(_f15Time) : _f15Time}</span></p>`
+            : '';
+        const f15Body = (f15TypeHost || f15LocRow || f15TimeRow)
+            ? `<div class="evt-card-f15" data-f15>${f15TypeHost}${f15LocRow}${f15TimeRow}</div>`
+            : '';
+        // F15 — Compact footer (vlift): attendee cluster + "N going" left, compact RSVP pill right.
+        const _goingCount = Array.isArray(opts.attendees) ? opts.attendees.length : 0;
+        const f15GoingLabel = _goingCount > 0
+            ? `<span class="evt-card-f15-going">${_goingCount} going</span>`
+            : '';
+        const f15RsvpPill = (variant === 'portal')
+            ? `<button type="button" data-evt-card-rsvp="${event.id}" data-f15-rsvp class="evt-card-f15-rsvp${isGoing ? ' evt-card-f15-rsvp--on' : ''}" aria-pressed="${isGoing ? 'true' : 'false'}">${isGoing ? '✓ Going' : 'RSVP'}</button>`
+            : '';
+        const f15Footer = (variant === 'portal')
+            ? `<div class="evt-card-f15-foot" data-f15-foot><div class="evt-card-f15-foot__left">${stack}${f15GoingLabel}</div>${f15RsvpPill}</div>`
             : '';
 
         return `<a href="${href}" data-evt-card="${event.id}"${dataDate} class="group block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden transition md:hover:shadow-md md:hover:-translate-y-0.5">
@@ -190,12 +221,14 @@
             </div>
             <div class="p-4">
                 <h3 class="text-base font-bold text-gray-900 line-clamp-2 leading-snug">${title}</h3>
+                ${f15Body}
                 ${_meta(event)}
-                ${(stack || countP) ? `<div class="mt-3 flex items-center justify-between gap-3">
+                ${(stack || countP) ? `<div class="mt-3 flex items-center justify-between gap-3" data-evt-legacy-stack>
                     <div class="min-w-0">${stack}</div>
                     <div class="shrink-0">${countP}</div>
                 </div>` : ''}
                 ${rsvpFooter}
+                ${f15Footer}
                 ${variant === 'admin' ? _adminFooter(event, opts.adminMeta) : ''}
             </div>
         </a>`;

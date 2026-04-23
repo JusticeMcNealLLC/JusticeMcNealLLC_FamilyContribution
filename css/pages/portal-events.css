@@ -1961,3 +1961,144 @@ body.evt-vlift .evt-hero-side { display: none; }
     }
     body.evt-vlift .evt-hero-datechip__day { font-size: 1.75rem; }
 }
+
+/* ============================================================
+ * F15 -- Event card refresh (vlift): 3-line date chip (MON/DAY/DOW),
+ * split meta (type/host + location row + time row), and compact footer
+ * with attendee cluster + "N going" + pill RSVP.
+ * Non-vlift remains untouched (new elements hidden).
+ * ============================================================ */
+
+/* Date chip now stacks MON / DAY / DOW (F15 adds DOW line) */
+body.evt-vlift .evt-card-date-chip {
+    gap: .05rem;
+    padding: .45rem .55rem .5rem;
+}
+body.evt-vlift .evt-card-date-chip .evt-card-date-mon {
+    order: 1;
+    color: #dc2626;
+    font-size: .625rem;
+    letter-spacing: .1em;
+}
+body.evt-vlift .evt-card-date-chip .evt-card-date-day {
+    order: 2;
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: .05rem 0;
+}
+body.evt-vlift .evt-card-date-chip .evt-card-date-dow {
+    order: 3;
+    display: block;
+    font-size: .5625rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+body:not(.evt-vlift) .evt-card-date-chip .evt-card-date-dow { display: none; }
+
+/* F15 â€” Hide legacy single-line meta and legacy stack row under vlift
+   (they are replaced by the new split meta + footer) */
+body.evt-vlift [data-evt-card] [data-evt-legacy-meta]  { display: none !important; }
+body.evt-vlift [data-evt-card] [data-evt-legacy-stack] { display: none !important; }
+/* F15 â€” Hide the full-width F7 RSVP button under vlift (replaced by pill in footer) */
+body.evt-vlift [data-evt-card] > .p-4 > .evt-card-rsvp { display: none !important; }
+
+/* F15 â€” Split meta block */
+body.evt-vlift .evt-card-f15 {
+    margin-top: .375rem;
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+body.evt-vlift .evt-card-f15-type {
+    font-size: .8125rem;
+    color: #6b7280;
+    font-weight: 500;
+    line-height: 1.3;
+}
+body.evt-vlift .evt-card-f15-row {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    font-size: .8125rem;
+    color: #6b7280;
+    line-height: 1.3;
+    min-width: 0;
+}
+body.evt-vlift .evt-card-f15-row > span { min-width: 0; }
+body.evt-vlift .evt-card-f15-ico {
+    width: .875rem;
+    height: .875rem;
+    flex-shrink: 0;
+    color: #9ca3af;
+}
+
+/* Non-vlift: hide F15 markup so legacy card stays identical */
+body:not(.evt-vlift) [data-f15],
+body:not(.evt-vlift) [data-f15-foot] { display: none !important; }
+
+/* F15 â€” Compact footer (cluster + N going, pill RSVP right) */
+body.evt-vlift .evt-card-f15-foot {
+    margin-top: .75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+body.evt-vlift .evt-card-f15-foot__left {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    min-width: 0;
+}
+body.evt-vlift .evt-card-f15-going {
+    font-size: .75rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+body.evt-vlift .evt-card-f15-rsvp {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .4rem .875rem;
+    border-radius: 9999px;
+    border: 1px solid #c7d2fe;
+    background: #ffffff;
+    color: #4338ca;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+    flex-shrink: 0;
+}
+body.evt-vlift .evt-card-f15-rsvp:hover {
+    background: #eef2ff;
+    border-color: #a5b4fc;
+}
+body.evt-vlift .evt-card-f15-rsvp:disabled { opacity: .6; cursor: progress; }
+body.evt-vlift .evt-card-f15-rsvp--on {
+    background: #ecfdf5;
+    border-color: #6ee7b7;
+    color: #047857;
+}
+body.evt-vlift .evt-card-f15-rsvp--on:hover { background: #d1fae5; }
+
+/* F15 â€” Tighten create-event tile proportions to match compact card body */
+body.evt-vlift .evt-create-tile {
+    min-height: 0;
+    padding: 1.25rem 1rem;
+    gap: .5rem;
+}
+body.evt-vlift .evt-create-tile__plus {
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+}
+body.evt-vlift .evt-create-tile__label { font-size: .9375rem; }
+body.evt-vlift .evt-create-tile__hint {
+    font-size: .75rem;
+    max-width: 200px;
+    line-height: 1.35;
+}
