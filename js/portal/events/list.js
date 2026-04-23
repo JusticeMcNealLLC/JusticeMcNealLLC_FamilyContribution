@@ -465,18 +465,22 @@
         return e ? (e + ' ' + label) : label;
     }
     function _readVlift() {
+        // Default ON. Opt-out via ?vlift=0 (sticky in localStorage as '0').
         try {
             const url = new URL(window.location.href);
-            if (url.searchParams.get('vlift') === '1') {
+            const q = url.searchParams.get('vlift');
+            if (q === '1') {
                 try { localStorage.setItem(VLIFT_KEY, '1'); } catch (_) {}
                 return true;
             }
-            if (url.searchParams.get('vlift') === '0') {
-                try { localStorage.removeItem(VLIFT_KEY); } catch (_) {}
+            if (q === '0') {
+                try { localStorage.setItem(VLIFT_KEY, '0'); } catch (_) {}
                 return false;
             }
-            return localStorage.getItem(VLIFT_KEY) === '1';
-        } catch (_) { return false; }
+            const stored = (() => { try { return localStorage.getItem(VLIFT_KEY); } catch (_) { return null; } })();
+            if (stored === '0') return false;     // explicit opt-out persists
+            return true;                           // default ON
+        } catch (_) { return true; }
     }
     function _initVlift() {
         const on = _readVlift();
@@ -486,7 +490,7 @@
             else delete document.documentElement.dataset.vlift;
         } catch (_) {}
         try { window.evtSetVlift = function (v) {
-            try { v ? localStorage.setItem(VLIFT_KEY, '1') : localStorage.removeItem(VLIFT_KEY); } catch (_) {}
+            try { localStorage.setItem(VLIFT_KEY, v ? '1' : '0'); } catch (_) {}
             document.body.classList.toggle('evt-vlift', !!v);
         }; } catch (_) {}
         try { window.evtIsVlift = function () { return document.body.classList.contains('evt-vlift'); }; } catch (_) {}

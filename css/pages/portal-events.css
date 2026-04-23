@@ -984,3 +984,37 @@ body.evt-vlift .evt-type-opt:active { transform: scale(0.97); }
     body.evt-vlift .evt-seg__btn:active,
     body.evt-vlift .evt-type-opt:active { transform: none; }
 }
+
+
+/* =========================================================
+ * Phase E2 — Mobile hero-visible search pill (events_003 §E.2)
+ * Mobile (<640px) only when body.evt-vlift is active:
+ *   - hide the icon-toggle button #evtSearchToggle
+ *   - render #evtSearchExpand as an always-visible pill
+ *   - bump rounding + add subtle shadow for premium feel
+ * Desktop keeps the existing collapsed icon-toggle behavior.
+ * ========================================================= */
+@media (max-width: 639px) {
+    body.evt-vlift #evtSearchToggle { display: none !important; }
+    body.evt-vlift #evtSearchExpand {
+        display: block !important;
+        margin-top: 0;
+        order: -1;          /* if filter strip ever switches to flex-column */
+    }
+    body.evt-vlift #evtSearchExpand input {
+        height: 44px;
+        border-radius: 14px;
+        box-shadow: 0 1px 3px rgba(15,23,42,.06), 0 4px 12px rgba(15,23,42,.04);
+        font-size: 15px;
+    }
+    body.evt-vlift #evtFilterStrip > .flex { flex-wrap: wrap; gap: 10px; }
+    body.evt-vlift #evtFilterStrip #evtSearchExpand {
+        flex: 1 0 100%;
+        margin-bottom: 4px;
+    }
+}
+[data-theme="dark"] body.evt-vlift #evtSearchExpand input {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
