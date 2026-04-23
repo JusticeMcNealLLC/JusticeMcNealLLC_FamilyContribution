@@ -1563,6 +1563,122 @@
         if (rail) rail.classList.remove('hidden');
     }
 
+    // =========================================================
+    // F11 — "Your Upcoming RSVPs" rail card
+    // =========================================================
+    function _renderMyRsvps() {
+        const mount = document.getElementById('evtRailSlotRsvps');
+        if (!mount) return;
+        if (!document.body.classList.contains('evt-vlift')) { mount.innerHTML = ''; return; }
+
+        const all   = window.evtAllEvents || [];
+        const rsvps = window.evtAllRsvps  || {};
+        const esc   = H.escapeHtml || (s => String(s == null ? '' : s));
+        const now   = Date.now();
+
+        const mine = all
+            .filter(ev => {
+                const r = rsvps[ev.id];
+                if (!r || r.status !== 'going') return false;
+                const t = new Date(ev.start_date).getTime();
+                return !isNaN(t) && t >= now;
+            })
+            .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+
+        if (!mine.length) { mount.innerHTML = ''; return; }
+
+        const total = mine.length;
+        const rows = mine.slice(0, 3).map(ev => {
+            const d = new Date(ev.start_date);
+            const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            const hasBanner = !!ev.banner_url;
+            const thumbStyle = hasBanner
+                ? ('background: url(\'' + esc(ev.banner_url) + '\') center/cover;')
+                : 'background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);';
+            return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc(ev.id) + '">' +
+                '<span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span>' +
+                '<span class="evt-myrsvp-body">' +
+                    '<span class="evt-myrsvp-title">' + esc(ev.title || 'Untitled event') + '</span>' +
+                    '<span class="evt-myrsvp-meta">' + esc(dateStr) + ' · ' + esc(timeStr) + '</span>' +
+                '</span>' +
+            '</button>';
+        }).join('');
+
+        mount.innerHTML =
+            '<div class="evt-myrsvps">' +
+                '<div class="evt-myrsvps-head">' +
+                    '<h3 class="evt-myrsvps-title">Your Upcoming RSVPs</h3>' +
+                    '<span class="evt-myrsvps-count">' + total + '</span>' +
+                '</div>' +
+                '<div class="evt-myrsvps-list">' + rows + '</div>' +
+                '<button type="button" class="evt-myrsvps-all" data-evt-myrsvps-all>View All My Events</button>' +
+            '</div>';
+
+        mount.querySelectorAll('[data-evt-myrsvp]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-evt-myrsvp');
+                const ev = all.find(e => e.id === id);
+                if (!ev) return;
+                if (ev.slug && typeof window.evtNavigateToEvent === 'function') {
+                    window.evtNavigateToEvent(ev.slug);
+                } else if (typeof window.evtOpenDetail === 'function') {
+                    window.evtOpenDetail(ev.id);
+                }
+            });
+        });
+        mount.querySelector('[data-evt-myrsvps-all]')?.addEventListener('click', () => {
+            // Switch to "Going" tab
+            document.querySelector('[data-filter="going"]')?.click();
+        });
+
+        const rail = document.getElementById('evtRightRail');
+        if (rail) rail.classList.remove('hidden');
+    }
+
+    // =========================================================
+    // F12 — "Events Overview" stats rail card
+    // =========================================================
+    function _renderStatsCard() {
+        const mount = document.getElementById('evtRailSlotStats');
+        if (!mount) return;
+        if (!document.body.classList.contains('evt-vlift')) { mount.innerHTML = ''; return; }
+
+        const all   = window.evtAllEvents || [];
+        const rsvps = window.evtAllRsvps  || {};
+
+        const now = new Date();
+        const y = now.getFullYear(), m = now.getMonth();
+
+        const thisMonth = all.filter(ev => {
+            const d = new Date(ev.start_date);
+            return d.getFullYear() === y && d.getMonth() === m;
+        }).length;
+
+        const going = Object.values(rsvps).filter(r => r && r.status === 'going').length;
+
+        // Communities = distinct event_type values across all events
+        const communities = new Set();
+        all.forEach(ev => { if (ev && ev.event_type) communities.add(ev.event_type); });
+
+        mount.innerHTML =
+            '<div class="evt-stats">' +
+                '<h3 class="evt-stats-title">Events Overview</h3>' +
+                '<div class="evt-stats-row"><span class="evt-stats-label">This Month</span><span class="evt-stats-value">' + thisMonth + '</span></div>' +
+                '<div class="evt-stats-row"><span class="evt-stats-label">You\u2019re Going</span><span class="evt-stats-value">' + going + '</span></div>' +
+                '<div class="evt-stats-row"><span class="evt-stats-label">Communities</span><span class="evt-stats-value">' + communities.size + '</span></div>' +
+                '<button type="button" class="evt-stats-link" data-evt-stats-all>View Full Calendar</button>' +
+            '</div>';
+
+        mount.querySelector('[data-evt-stats-all]')?.addEventListener('click', () => {
+            const viewBtn = document.querySelector('[data-view="calendar"]');
+            if (viewBtn) viewBtn.click();
+        });
+
+        const rail = document.getElementById('evtRightRail');
+        if (rail) rail.classList.remove('hidden');
+    }
+
     // Wire card click navigation (anchor hrefs are real but we hijack
     // for SPA detail-view open when running in the unified portal).
     function _wireCardClicks(scope, eventsById) {
@@ -2076,6 +2192,8 @@
 
         _wireCardClicks(groupsEl, eventsById);
         _renderMiniCalendar(); // F10 — right-rail mini calendar
+        _renderMyRsvps();      // F11 — right-rail "Your Upcoming RSVPs"
+        _renderStatsCard();    // F12 — right-rail "Events Overview"
     }
 
     // =========================================================

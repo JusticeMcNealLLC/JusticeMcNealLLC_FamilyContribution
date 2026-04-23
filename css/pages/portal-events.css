@@ -1646,3 +1646,143 @@ body.evt-vlift .evt-mcal-clear:hover { background: #eef2ff; }
 @media (prefers-reduced-motion: reduce) {
     body.evt-vlift .evt-mcal-day { transition: none; }
 }
+
+/* ============================================================
+ * F11 -- Your Upcoming RSVPs rail card (vlift)
+ * ============================================================ */
+body.evt-vlift .evt-myrsvps {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: .875rem;
+    padding: .875rem;
+    box-shadow: 0 4px 10px rgba(15,23,42,.04);
+}
+body.evt-vlift .evt-myrsvps-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .5rem;
+}
+body.evt-vlift .evt-myrsvps-title {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: #111827;
+}
+body.evt-vlift .evt-myrsvps-count {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 .5rem;
+    border-radius: 9999px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: .75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+body.evt-vlift .evt-myrsvps-list {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+body.evt-vlift .evt-myrsvp-row {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    width: 100%;
+    padding: .375rem;
+    border: 0;
+    border-radius: .625rem;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: background .12s ease;
+}
+body.evt-vlift .evt-myrsvp-row:hover { background: #f9fafb; }
+body.evt-vlift .evt-myrsvp-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: .5rem;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+}
+body.evt-vlift .evt-myrsvp-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+body.evt-vlift .evt-myrsvp-title {
+    font-size: .8125rem;
+    font-weight: 700;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+body.evt-vlift .evt-myrsvp-meta {
+    font-size: .6875rem;
+    color: #6b7280;
+}
+body.evt-vlift .evt-myrsvps-all {
+    width: 100%;
+    margin-top: .625rem;
+    padding: .5rem .625rem;
+    border: 1px solid #e5e7eb;
+    border-radius: .5rem;
+    background: #ffffff;
+    color: #4338ca;
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+body.evt-vlift .evt-myrsvps-all:hover { background: #eef2ff; }
+
+/* ============================================================
+ * F12 -- Events Overview stats rail card (vlift)
+ * ============================================================ */
+body.evt-vlift .evt-stats {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: .875rem;
+    padding: .875rem;
+    box-shadow: 0 4px 10px rgba(15,23,42,.04);
+}
+body.evt-vlift .evt-stats-title {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: .5rem;
+}
+body.evt-vlift .evt-stats-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .375rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+body.evt-vlift .evt-stats-row:last-of-type { border-bottom: 0; }
+body.evt-vlift .evt-stats-label {
+    font-size: .8125rem;
+    color: #6b7280;
+}
+body.evt-vlift .evt-stats-value {
+    font-size: .9375rem;
+    font-weight: 800;
+    color: #111827;
+}
+body.evt-vlift .evt-stats-link {
+    width: 100%;
+    margin-top: .625rem;
+    padding: .5rem .625rem;
+    border: 0;
+    border-radius: .5rem;
+    background: transparent;
+    color: #4f46e5;
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+}
+body.evt-vlift .evt-stats-link:hover { background: #eef2ff; }
