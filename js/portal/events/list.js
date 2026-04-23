@@ -1106,6 +1106,65 @@
         g.textContent = 'Hey ' + esc(name) + ' 👋';
     }
 
+    // E10 — In-header notification bell (vlift only). Mirrors unread state from
+    // the global #notifBadge and forwards clicks to the global #notifBtn.
+    let _evtBellObserver = null;
+    function _initHeaderBell() {
+        if (!document.body.classList.contains('evt-vlift')) return;
+        const header = document.getElementById('evtPageHeader');
+        if (!header) return;
+        // Only render if the global notifications module is present
+        const globalBtn = document.getElementById('notifBtn');
+        if (!globalBtn) return;
+        if (document.getElementById('evtHeaderBell')) return; // idempotent
+
+        const wrap = header.querySelector('.flex.items-end.justify-between') || header.firstElementChild;
+        if (!wrap) return;
+
+        const bell = document.createElement('button');
+        bell.id = 'evtHeaderBell';
+        bell.type = 'button';
+        bell.setAttribute('aria-label', 'Notifications');
+        bell.className = 'evt-header-bell relative inline-flex items-center justify-center w-10 h-10 rounded-xl text-white/90 hover:text-white shrink-0';
+        bell.innerHTML =
+            '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">' +
+                '<path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.17V11a6 6 0 10-12 0v3.17a2 2 0 01-.6 1.43L4 17h5m6 0a3 3 0 11-6 0"/>' +
+            '</svg>' +
+            '<span id="evtHeaderBellDot" class="evt-header-bell-dot hidden" aria-hidden="true"></span>';
+
+        bell.addEventListener('click', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            const target = document.getElementById('notifBtn');
+            if (target) target.click();
+        });
+
+        // Insert before the Create button (or as last child of wrap)
+        const createBtn = wrap.querySelector('#createEventBtn');
+        if (createBtn) wrap.insertBefore(bell, createBtn);
+        else wrap.appendChild(bell);
+
+        _wireHeaderBellBadge();
+    }
+
+    function _wireHeaderBellBadge() {
+        const badge = document.getElementById('notifBadge');
+        const dot = document.getElementById('evtHeaderBellDot');
+        if (!dot) return;
+        const sync = () => {
+            if (!badge) { dot.classList.add('hidden'); return; }
+            // Unread when the global badge is not display:none AND has non-zero text content
+            const txt = (badge.textContent || '').trim();
+            const visible = !!txt && getComputedStyle(badge).display !== 'none';
+            dot.classList.toggle('hidden', !visible);
+        };
+        sync();
+        if (!badge) return;
+        try { _evtBellObserver?.disconnect(); } catch (_) {}
+        _evtBellObserver = new MutationObserver(sync);
+        _evtBellObserver.observe(badge, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+    }
+
     // =========================================================
     // Hero selection — events_003 §4.3 LOCKED rule
     //   1. Going within next 24h
@@ -2193,6 +2252,12 @@
         _initVlift();
         _initSwipeGestures();
         _applyRestoredUi();
+        // E10 — Notification bell in gradient header (vlift only).
+        // Try immediately, then again after a tick so the global nav (which
+        // mounts #notifBtn / #notifBadge async via pageShell) has time to render.
+        _initHeaderBell();
+        setTimeout(_initHeaderBell, 300);
+        setTimeout(_initHeaderBell, 1200);
     }
     if (document.readyState !== 'loading') _onReady();
     else document.addEventListener('DOMContentLoaded', _onReady, { once: true });

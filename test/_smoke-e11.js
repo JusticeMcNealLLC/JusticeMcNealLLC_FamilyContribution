@@ -44,8 +44,8 @@ const checks = {
     css_dark_variant: /\[data-theme="dark"\] \.evt-bucket-seeall \{/.test(css),
     css_reduced_motion: /prefers-reduced-motion[\s\S]*\.evt-bucket-seeall \{ transition: none/.test(css),
 
-    // SW
-    sw_v62: /jm-portal-v62/.test(sw),
+    // SW (E11 shipped at v62; bumps past are fine)
+    sw_v62: /jm-portal-v(6[2-9]|[7-9]\d|\d{3,})/.test(sw),
     sw_no_v61: !sw.includes("'jm-portal-v61'"),
 };
 
