@@ -1,0 +1,15 @@
+/* ════════════════════════════════════════════════════════════
+   index.css — Aggregator for portal/events.html
+   Replaces the legacy monolithic css/pages/portal-events.css.
+   Order matters: later modules override earlier ones to
+   preserve the F-phase cascade (F18→F19→F20→F21+F21b hero,
+   F15/F17 cards, F16 header/rail polish).
+   ════════════════════════════════════════════════════════════ */
+@import url('./base.css');
+@import url('./layout.css');
+@import url('./filters.css');
+@import url('./hero.css');
+@import url('./cards.css');
+@import url('./calendar.css');
+@import url('./rail.css');
+@import url('./detail.css');

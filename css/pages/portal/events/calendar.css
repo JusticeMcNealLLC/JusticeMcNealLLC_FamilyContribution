@@ -1,0 +1,203 @@
+/* ============================================================
+ * portal/events/calendar.css
+ *   F10 — Mini calendar in the right rail (vlift only)
+ *   D1  — Full calendar view (.evt-cal-* + body.evt-view--calendar)
+ *         + day modal (#evtDayModal)
+ * ============================================================ */
+
+/* ============================================================
+ * F10 — Mini calendar (right rail, vlift)
+ * ============================================================ */
+body.evt-vlift .evt-mcal {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: .875rem;
+    padding: .875rem;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, .04);
+}
+body.evt-vlift .evt-mcal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .625rem;
+}
+body.evt-vlift .evt-mcal-title {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: #111827;
+}
+body.evt-vlift .evt-mcal-nav {
+    width: 28px;
+    height: 28px;
+    border-radius: .5rem;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #4b5563;
+    font-size: 1.125rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+body.evt-vlift .evt-mcal-nav:hover { background: #f3f4f6; color: #111827; }
+body.evt-vlift .evt-mcal-dow-row,
+body.evt-vlift .evt-mcal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+body.evt-vlift .evt-mcal-dow {
+    font-size: .6875rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-align: center;
+    padding: .25rem 0;
+}
+body.evt-vlift .evt-mcal-day {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border: 0;
+    background: transparent;
+    border-radius: 9999px;
+    color: #374151;
+    font-size: .8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    transition: background .12s ease, color .12s ease;
+}
+body.evt-vlift .evt-mcal-day:hover { background: #eef2ff; color: #4338ca; }
+body.evt-vlift .evt-mcal-day--other { color: #d1d5db; }
+body.evt-vlift .evt-mcal-day--today {
+    background: #4f46e5;
+    color: #ffffff;
+}
+body.evt-vlift .evt-mcal-day--today:hover { background: #4338ca; color: #ffffff; }
+body.evt-vlift .evt-mcal-day--has::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 9999px;
+    background: #4f46e5;
+}
+body.evt-vlift .evt-mcal-day--today.evt-mcal-day--has::after { background: #ffffff; }
+body.evt-vlift .evt-mcal-day--active {
+    outline: 2px solid #4f46e5;
+    outline-offset: -2px;
+}
+body.evt-vlift .evt-mcal-clear {
+    width: 100%;
+    margin-top: .5rem;
+    padding: .375rem .5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: .5rem;
+    background: #ffffff;
+    color: #4f46e5;
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+body.evt-vlift .evt-mcal-clear:hover { background: #eef2ff; }
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift .evt-mcal-day { transition: none; }
+}
+
+/* ============================================================
+ * D1 — Full calendar view (toggle via body.evt-view--calendar)
+ * ============================================================ */
+
+/* Hide list-only regions when calendar view is active */
+body.evt-view--calendar #evtLifecycleSeg,
+body.evt-view--calendar #evtHero,
+body.evt-view--calendar #evtGoingRail,
+body.evt-view--calendar #evtLiveBanner,
+body.evt-view--calendar #evtActiveFilters { display: none !important; }
+
+body.evt-view--calendar #evtViewToggle {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+    color: #4338ca;
+}
+
+/* Calendar mount + entry animation */
+#evtCalendarMount { animation: evtCalIn .18s ease-out both; }
+@keyframes evtCalIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { #evtCalendarMount { animation: none; } }
+
+/* Header nav buttons */
+.evt-cal-nav {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #4b5563;
+    transition: background-color .12s ease, border-color .12s ease;
+}
+.evt-cal-nav:hover { background: #f9fafb; border-color: #d1d5db; }
+
+/* Day cells */
+.evt-cal-cell {
+    position: relative;
+    min-height: 56px;
+    padding: 6px 4px 4px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    cursor: pointer;
+    transition: background-color .12s ease, border-color .12s ease, transform .12s ease;
+}
+@media (min-width: 640px) { .evt-cal-cell { min-height: 72px; } }
+.evt-cal-cell--blank { visibility: hidden; cursor: default; border: 0; background: transparent; }
+.evt-cal-cell--has { border-color: #c7d2fe; }
+.evt-cal-cell--has:hover { background: #eef2ff; border-color: #a5b4fc; transform: translateY(-1px); }
+.evt-cal-cell--today { outline: 2px solid #4f46e5; outline-offset: -2px; }
+.evt-cal-cell--today .evt-cal-daynum { color: #4338ca; font-weight: 700; }
+.evt-cal-cell:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+
+.evt-cal-daynum {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    line-height: 1;
+    margin-top: 2px;
+}
+.evt-cal-dots {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: auto;
+    margin-bottom: 2px;
+    flex-wrap: nowrap;
+}
+.evt-cal-dot {
+    width: 6px; height: 6px;
+    border-radius: 999px;
+    display: inline-block;
+}
+.evt-cal-dot-more {
+    font-size: 9px;
+    font-weight: 700;
+    color: #6b7280;
+    margin-left: 2px;
+}
+.evt-cal-today:focus-visible,
+.evt-cal-nav:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+
+/* Day modal */
+#evtDayModal { animation: evtDayModalIn .18s ease-out both; }
+@keyframes evtDayModalIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #evtDayModal { animation: none; } }

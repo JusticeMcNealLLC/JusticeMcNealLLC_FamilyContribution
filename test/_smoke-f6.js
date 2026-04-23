@@ -4,7 +4,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 
-const css  = read('css/pages/portal-events.css');
+const css  = require('./_events-css');
 const sw   = read('sw.js');
 
 const checks = {

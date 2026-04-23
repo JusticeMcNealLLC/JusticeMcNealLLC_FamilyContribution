@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
-const css = fs.readFileSync(path.join(root, 'css/pages/portal-events.css'), 'utf8');
+const css = require('./_events-css');
 const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 const checks = [];
 const ok = (name, cond) => checks.push({ name, pass: !!cond });

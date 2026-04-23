@@ -6,7 +6,7 @@ const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 
 const card = read('js/components/events/card.js');
 const list = read('js/portal/events/list.js');
-const css  = read('css/pages/portal-events.css');
+const css  = require('./_events-css');
 const sw   = read('sw.js');
 
 const checks = {

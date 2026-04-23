@@ -1,0 +1,304 @@
+/* ============================================================
+ * portal/events/layout.css
+ * Page shell + 2-col rail grid (F2 + F16 full-width),
+ * sticky/condensing header (#evtPageHeader, with F16 white-bg refresh),
+ * gradient-header E1 styles (overridden by F16 under vlift),
+ * personalized greeting block (F1, B5b),
+ * mobile FAB (#evtCreateFab),
+ * scrollbar hide helper, hero focus state,
+ * card grid stagger animation (C4),
+ * pull-to-refresh indicator (C1).
+ * ============================================================ */
+
+/* ── Sticky condensing header (events_003) ── */
+#evtPageHeader {
+    transition: padding-top .18s ease, padding-bottom .18s ease, box-shadow .18s ease;
+}
+#evtPageHeader.evt-header--condensed {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    box-shadow: 0 4px 16px -8px rgba(0, 0, 0, .12);
+}
+#evtPageHeader.evt-header--condensed > div {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+#evtPageHeader.evt-header--condensed #evtHeaderTitle {
+    font-size: 1.125rem;
+}
+@media (prefers-reduced-motion: reduce) {
+    #evtPageHeader { transition: none; }
+}
+
+/* ── Mobile FAB (events_003) ── */
+#evtCreateFab.flex { display: flex; }
+#evtCreateFab:focus-visible { outline: 3px solid rgb(199 210 254); outline-offset: 3px; }
+#evtCreateFab {
+    transition: transform .22s cubic-bezier(.16, 1, .3, 1), opacity .22s ease;
+}
+#evtCreateFab.evt-fab--hidden {
+    transform: translateY(140%);
+    opacity: 0;
+    pointer-events: none;
+}
+#evtCreateFab.evt-fab--modal-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    #evtCreateFab { transition: opacity .15s ease; }
+    #evtCreateFab.evt-fab--hidden { transform: none; }
+}
+
+/* ── Scrollbar hide (going rail, type chip rail) ── */
+.evt-scroll-hide { -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.evt-scroll-hide::-webkit-scrollbar { display: none; }
+
+/* ── Hero anchor focus state ── */
+#evtHero a:focus-visible { outline: 3px solid rgb(199 210 254); outline-offset: 4px; border-radius: 1.25rem; }
+
+/* ── Card grid stagger enter (C4, cap at 6) ── */
+@keyframes evtCardEnter {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.evt-card-grid > * { animation: evtCardEnter .24s cubic-bezier(.16, 1, .3, 1) both; }
+.evt-card-grid > *:nth-child(1) { animation-delay: 0ms; }
+.evt-card-grid > *:nth-child(2) { animation-delay: 40ms; }
+.evt-card-grid > *:nth-child(3) { animation-delay: 80ms; }
+.evt-card-grid > *:nth-child(4) { animation-delay: 120ms; }
+.evt-card-grid > *:nth-child(5) { animation-delay: 160ms; }
+.evt-card-grid > *:nth-child(6) { animation-delay: 200ms; }
+.evt-card-grid > *:nth-child(n+7) { animation-delay: 240ms; }
+@media (prefers-reduced-motion: reduce) {
+    .evt-card-grid > * { animation: none !important; }
+}
+
+/* ── Pull-to-refresh indicator (C1) ── */
+.evt-ptr {
+    position: fixed;
+    top: max(8px, env(safe-area-inset-top));
+    left: 50%;
+    transform: translate(-50%, -140%);
+    z-index: 60;
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(17, 24, 39, .12);
+    color: #4f46e5;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .22s ease, opacity .18s ease;
+}
+.evt-ptr--active { transition: none; }
+.evt-ptr--ready { color: #4338ca; box-shadow: 0 10px 24px rgba(79, 70, 229, .22); }
+.evt-ptr .evt-ptr-spin { display: block; transition: transform .2s ease; }
+.evt-ptr--ready .evt-ptr-spin { transform: rotate(180deg); }
+.evt-ptr--refreshing .evt-ptr-spin { animation: evtPtrSpin 0.9s linear infinite; }
+@keyframes evtPtrSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .evt-ptr { transition: opacity .15s ease; }
+    .evt-ptr--refreshing .evt-ptr-spin { animation: none; }
+}
+
+/* ── Pinned LLC 📌 overlay on date stamps (B5a) ── */
+.evt-date-pin {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    font-size: 11px;
+    line-height: 1;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .18));
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
+}
+.evt-date-pin--mini { top: -5px; left: -5px; font-size: 10px; }
+
+/* ── Personalized greeting (B5b, F1) ── */
+.evt-header-greeting { letter-spacing: 0.01em; }
+#evtPageHeader.evt-header--condensed .evt-header-greeting { display: none; }
+
+/* ============================================================
+ * Phase E — Premium Visual Lift — E1 gradient header (vlift)
+ * NOTE: F16 (further down, also vlift) overrides these to a
+ * white surface. Both blocks are kept so toggling F16 off would
+ * restore the gradient look. F16 wins via cascade order.
+ * ============================================================ */
+body.evt-vlift #evtPageHeader {
+    background: linear-gradient(160deg, #4f46e5 0%, #6d28d9 55%, #4c1d95 100%) !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: 0 1px 3px rgba(76, 29, 149, .18), 0 8px 24px rgba(79, 70, 229, .12);
+    animation: evtHeaderFade .6s ease-out both;
+}
+body.evt-vlift #evtPageHeader #evtHeaderTitle {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+}
+body.evt-vlift #evtPageHeader #evtHeaderCount { color: rgba(255,255,255,.78) !important; }
+body.evt-vlift #evtPageHeader #createEventBtn {
+    background: rgba(255,255,255,.18) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255,255,255,.25);
+}
+body.evt-vlift #evtPageHeader #createEventBtn:hover { background: rgba(255, 255, 255, .28) !important; }
+body.evt-vlift #evtPageHeader.evt-header--condensed {
+    box-shadow: 0 1px 3px rgba(76, 29, 149, .25), 0 4px 16px rgba(79, 70, 229, .15);
+}
+@keyframes evtHeaderFade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift #evtPageHeader { animation: none; }
+}
+
+/* E4 emoji bucket label normalization */
+body.evt-vlift section[data-bucket] > h2 {
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f2937;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* E1 follow-up: greeting/count contrast on gradient header */
+body.evt-vlift #evtPageHeader #evtHeaderGreeting {
+    color: rgba(255, 255, 255, .85) !important;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, .18);
+}
+
+/* F1 greeting block (vlift only) */
+body.evt-vlift #evtGreetingHello { display: block !important; }
+body.evt-vlift #evtHeaderCount { display: none !important; }
+body.evt-vlift .evt-greeting-hello { letter-spacing: .01em; color: rgba(255, 255, 255, .85); }
+body.evt-vlift .evt-greeting-sub { color: rgba(255, 255, 255, .75); }
+@media (min-width: 640px) {
+    body.evt-vlift #evtGreetingSub { display: block !important; }
+}
+
+/* ============================================================
+ * Phase E10 — In-header notification bell (vlift only)
+ * ============================================================ */
+body:not(.evt-vlift) #evtHeaderBell { display: none !important; }
+.evt-header-bell {
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .18);
+    transition: background-color .15s ease, transform .12s ease;
+    cursor: pointer;
+}
+.evt-header-bell:hover { background: rgba(255, 255, 255, .22); }
+.evt-header-bell:active { transform: scale(.94); }
+.evt-header-bell-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 9px;
+    height: 9px;
+    background: #ef4444;
+    border-radius: 999px;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, .65);
+}
+body.evt-vlift #evtPageHeader.evt-header--condensed .evt-header-bell {
+    width: 36px;
+    height: 36px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .evt-header-bell { transition: none; }
+    .evt-header-bell:active { transform: none; }
+}
+
+/* ============================================================
+ * F2 — Desktop 2-col shell (vlift, ≥1024px)
+ * ============================================================ */
+body.evt-vlift #evtShell { max-width: 80rem; }
+@media (min-width: 1024px) {
+    body.evt-vlift #evtShell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+    body.evt-vlift .evt-shell-main { min-width: 0; }
+    body.evt-vlift #evtRightRail {
+        display: flex !important;
+        flex-direction: column;
+        gap: 1rem;
+        position: sticky;
+        top: calc(var(--evt-header-h, 4rem) + 1rem);
+        max-height: calc(100vh - var(--evt-header-h, 4rem) - 2rem);
+        overflow-y: auto;
+    }
+    body.evt-vlift #evtRightRail:empty,
+    body.evt-vlift #evtRightRail:has(> div:empty:only-child) { display: none !important; }
+}
+body.evt-vlift #evtPageHeader > div { max-width: 80rem !important; }
+body.evt-vlift #evtFilterStrip > div:first-child,
+body.evt-vlift #evtFilterStrip { max-width: none; }
+
+/* ============================================================
+ * F16 -- Header refresh + full-width page (vlift, OVERRIDES E1)
+ *   - Light surface header w/ border (no purple gradient)
+ *   - Full-width content (no max-width caps)
+ *   - Solid brand Create-Event button
+ * ============================================================ */
+body.evt-vlift #evtPageHeader {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    animation: none !important;
+}
+body.evt-vlift #evtPageHeader::before,
+body.evt-vlift #evtPageHeader::after { content: none !important; background: none !important; }
+
+body.evt-vlift #evtPageHeader #evtHeaderTitle {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    background: none !important;
+    text-shadow: none !important;
+}
+body.evt-vlift #evtPageHeader #evtHeaderCount,
+body.evt-vlift #evtPageHeader .evt-greeting-hello,
+body.evt-vlift #evtPageHeader .evt-greeting-sub {
+    color: #6b7280 !important;
+    text-shadow: none !important;
+}
+body.evt-vlift #evtPageHeader .evt-greeting-hello { color: #475569 !important; }
+
+body.evt-vlift #evtPageHeader #createEventBtn {
+    background: #4f46e5 !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.22) !important;
+    backdrop-filter: none !important;
+}
+body.evt-vlift #evtPageHeader #createEventBtn:hover { background: #4338ca !important; }
+
+body.evt-vlift #evtPageHeader > div {
+    max-width: none !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+}
+body.evt-vlift #evtShell {
+    max-width: none !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+}
+@media (min-width: 1024px) {
+    body.evt-vlift #evtPageHeader > div {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+    body.evt-vlift #evtShell {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        gap: 1.75rem !important;
+        grid-template-columns: minmax(0, 1fr) 320px !important;
+    }
+}
+body.evt-vlift #evtFilterStrip { max-width: none !important; }

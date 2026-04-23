@@ -4,7 +4,7 @@ const path = 'd:/SMOJO/Online/Buisness/JusticeMcNealLLC_02';
 
 const listJs  = fs.readFileSync(path + '/js/portal/events/list.js', 'utf8');
 const htmlTxt = fs.readFileSync(path + '/portal/events.html', 'utf8');
-const cssText = fs.readFileSync(path + '/css/pages/portal-events.css', 'utf8');
+const cssText = require('./_events-css');
 const swText  = fs.readFileSync(path + '/sw.js', 'utf8');
 
 const results = {

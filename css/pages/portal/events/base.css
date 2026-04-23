@@ -1,0 +1,143 @@
+/* ============================================================
+ * portal/events/base.css
+ * Page-level nav overrides, modal/scanner/lightbox chrome,
+ * status badges, type tags, comment blocks, related rail,
+ * legacy detail-page host buttons, mobile CTA bar.
+ * ============================================================ */
+
+/* Hide the bottom mobile nav on the events page (it has its own header) */
+@media (max-width: 767px) {
+    body[data-active-page="events"] > nav { display: none !important; }
+}
+@media (min-width: 768px) {
+    #mainNav { position: fixed; top: 0; left: 0; right: 0; z-index: 40; }
+}
+
+/* Generic event type tag */
+.type-tag { font-size: 10px; padding: 3px 10px; border-radius: 999px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+
+/* Modal overlay + panel */
+.modal-overlay { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.modal-panel { max-height: 90vh; }
+@media (max-width: 640px) {
+    .modal-panel { max-height: 100dvh; max-height: -webkit-fill-available; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+    #eventsDetailView { padding-bottom: env(safe-area-inset-bottom, 0px); }
+}
+
+#scannerVideo { width: 100%; border-radius: 12px; }
+
+/* Lightbox (image preview overlay) */
+.evt-lightbox { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.92); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .25s; pointer-events: none; -webkit-tap-highlight-color: transparent; }
+.evt-lightbox.active { opacity: 1; pointer-events: auto; }
+.evt-lightbox img { max-width: 94vw; max-height: 90vh; object-fit: contain; border-radius: 8px; }
+.evt-lightbox-close { position: absolute; top: max(16px, env(safe-area-inset-top)); right: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.15); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.evt-lightbox-close svg { width: 20px; height: 20px; stroke: #fff; }
+
+/* Status badges (live/soon/ended/cancelled) with pulsing dot */
+.evt-status-badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); flex-shrink: 0; }
+.evt-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.evt-status-dot.pulse { animation: dotPulse 1.5s ease-in-out infinite; }
+@keyframes dotPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .4; transform: scale(.7); }
+}
+.evt-status-ended { background: rgba(113, 113, 113, .35); color: #e0e0e0; }
+.evt-status-ended .evt-status-dot { background: #999; }
+.evt-status-live { background: rgba(5, 150, 105, .3); color: #6ee7b7; }
+.evt-status-live .evt-status-dot { background: #34d399; }
+.evt-status-soon { background: rgba(245, 158, 11, .3); color: #fcd34d; }
+.evt-status-soon .evt-status-dot { background: #fbbf24; }
+.evt-status-cancelled { background: rgba(220, 38, 38, .3); color: #fca5a5; }
+.evt-status-cancelled .evt-status-dot { background: #f87171; }
+
+/* Generic event tag color variants */
+.evt-tag { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 3px 9px; border-radius: 9999px; white-space: nowrap; }
+.evt-tag--purple { background: #ede9fe; color: #6d28d9; }
+.evt-tag--blue { background: #dbeafe; color: #1d4ed8; }
+.evt-tag--green { background: #d1fae5; color: #065f46; }
+.evt-tag--pink { background: #fce7f3; color: #9d174d; }
+.evt-tag--teal { background: #ccfbf1; color: #0f766e; }
+.evt-tag--orange { background: #ffedd5; color: #c2410c; }
+
+/* Legacy detail-page host buttons (kept for compatibility) */
+.evt-hero-back-btn { appearance: none; }
+.evt-host-btn { padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1.5px solid #ddd; background: #fff; color: #222; cursor: pointer; transition: all .15s; }
+.evt-host-btn:hover { border-color: #222; background: #f7f7f7; }
+.evt-host-btn.danger { color: #dc2626; border-color: #fca5a5; }
+.evt-host-btn.danger:hover { background: #fef2f2; }
+.evt-host-btn.primary { background: #222; color: #fff; border-color: #222; }
+.evt-host-btn.primary:hover { background: #444; }
+
+.evt-host-primary { display: flex; align-items: center; gap: 8px; }
+.evt-host-more-wrap { position: relative; display: inline-block; }
+.evt-host-more-btn { padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1.5px solid #ddd; background: #fff; color: #222; cursor: pointer; display: flex; align-items: center; gap: 6px; min-width: 132px; }
+.evt-host-more-btn:hover { border-color: #222; background: #f7f7f7; }
+.evt-host-dropdown { position: absolute; right: 0; bottom: calc(100% + 6px); min-width: 200px; background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.12); overflow: hidden; z-index: 20; display: none; }
+.evt-host-dropdown.open { display: block; }
+.evt-host-dropdown button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 16px; font-size: 14px; font-weight: 500; border: none; background: #fff; color: #222; cursor: pointer; text-align: left; }
+.evt-host-dropdown button:hover { background: #f7f7f7; }
+.evt-host-dropdown button.danger { color: #dc2626; }
+.evt-host-dropdown button.danger:hover { background: #fef2f2; }
+
+/* Legacy detail-page RSVP button */
+.evt-rsvp-btn.active-interested { border-color: #e11d48; background: #fff0f3; color: #e11d48; }
+
+/* Legacy cost toggle (collapse/expand) */
+.evt-cost-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 12px 0; }
+.evt-cost-toggle-label { font-size: 15px; font-weight: 600; color: #222; }
+.evt-cost-toggle-price { font-size: 15px; font-weight: 700; color: #222; }
+.evt-cost-toggle svg { width: 16px; height: 16px; stroke: #717171; transition: transform .2s; }
+.evt-cost-toggle.open svg { transform: rotate(180deg); }
+.evt-cost-details { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.evt-cost-details.open { max-height: 500px; }
+
+/* Legacy related-events horizontal rail */
+.evt-related-scroll { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+.evt-related-scroll::-webkit-scrollbar { display: none; }
+.evt-related-card { min-width: 220px; max-width: 260px; flex-shrink: 0; scroll-snap-align: start; border-radius: 14px; overflow: hidden; border: 1px solid #ebebeb; background: #fff; cursor: pointer; transition: transform .15s; }
+.evt-related-card:active { transform: scale(.97); }
+.evt-related-card img { width: 100%; height: 120px; object-fit: cover; }
+.evt-related-card-body { padding: 12px; }
+.evt-related-card-title { font-size: 14px; font-weight: 700; color: #222; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.evt-related-card-meta { font-size: 12px; color: #717171; margin-top: 4px; }
+
+/* Legacy detail-page comments */
+.evt-comment { display: flex; gap: 12px; }
+.evt-comment-avatar { width: 36px; height: 36px; border-radius: 50%; background: #ebebeb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; font-weight: 700; color: #717171; overflow: hidden; }
+.evt-comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.evt-comment-body { flex: 1; min-width: 0; }
+.evt-comment-name { font-size: 13px; font-weight: 600; color: #222; }
+.evt-comment-time { font-size: 11px; color: #b0b0b0; margin-left: 6px; }
+.evt-comment-text { font-size: 14px; color: #717171; line-height: 1.5; margin-top: 3px; word-break: break-word; }
+.evt-comment-reactions { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.evt-comment-react-btn { font-size: 12px; padding: 2px 8px; border-radius: 20px; border: 1px solid #ebebeb; background: #fff; cursor: pointer; display: flex; align-items: center; gap: 3px; transition: all .15s; }
+.evt-comment-react-btn:hover { border-color: #c7c7c7; background: #f7f7f7; }
+.evt-comment-react-btn.active { border-color: #4f46e5; background: #ede9fe; }
+.evt-comment-react-btn .count { font-weight: 600; color: #717171; }
+.evt-comment-add-react { font-size: 14px; padding: 2px 6px; border-radius: 20px; border: 1px dashed #ddd; background: none; cursor: pointer; color: #b0b0b0; }
+.evt-comment-add-react:hover { border-color: #999; color: #717171; }
+
+/* Mobile sticky CTA bar (legacy detail page) */
+.evt-cta-bar { display: none; }
+@media (max-width: 767px) {
+    .evt-cta-bar {
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+        position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+        z-index: 49;
+        background: rgba(255, 255, 255, .85);
+        backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+        border-top: 1px solid rgba(0, 0, 0, .06);
+        padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    .evt-cta-btn { flex: 1; max-width: 280px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 18px; border-radius: 50px; font-size: 15px; font-weight: 700; letter-spacing: .01em; border: none; cursor: pointer; text-decoration: none; white-space: nowrap; transition: transform .15s, opacity .15s; -webkit-tap-highlight-color: transparent; }
+    .evt-cta-btn:active { transform: scale(.97); }
+    .evt-cta-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .evt-cta-btn svg { width: 18px; height: 18px; stroke-width: 2.5; fill: none; stroke: currentColor; flex-shrink: 0; }
+    .evt-cta-rsvp { background: #4f46e5; color: #fff; }
+    .evt-cta-rsvp-done { background: #16a34a; color: #fff; }
+    .evt-cta-raffle { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+    .evt-cta-raffle-done { background: #16a34a; color: #fff; }
+    .evt-cta-host { background: #e5e7eb; color: #374151; }
+    .evt-cta-disabled { background: #e5e7eb; color: #9ca3af; }
+    body.evt-cta-active.has-bottom-bar { padding-bottom: calc(72px + 56px + env(safe-area-inset-bottom, 0px)); }
+}

@@ -1,0 +1,345 @@
+/* ============================================================
+ * portal/events/filters.css
+ * Filter strip for the events list view:
+ *   - Lifecycle segmented control (.evt-seg) — pill style, then
+ *     F3 underline tab style under vlift
+ *   - Type menu options (.evt-type-opt)
+ *   - Filter chips (.evt-chip + variants, .evt-filter-chip)
+ *   - Inline category chip rail (.evt-type-chip, E3)
+ *   - Mobile hero-visible search pill (E2)
+ *   - F4 always-visible search + Filters/Date dropdowns
+ *   - F5 icon swaps (emoji → SVG)
+ *   - F13 filter row reflow (≥640px under vlift)
+ *   - D3 search history & suggestions (.evt-suggest-*)
+ *   - C2 active category dismiss pill (.evt-active-pill)
+ *   - E11 per-bucket "See all" toggle
+ * ============================================================ */
+
+/* ── Segmented control (lifecycle: upcoming/past/going/saved) ── */
+.evt-seg {
+    display: inline-flex;
+    align-items: stretch;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 14px;
+    background: #e5e7eb;
+}
+.evt-seg__btn {
+    flex: 1 1 auto;
+    padding: 8px 14px;
+    border-radius: 11px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.evt-seg__btn:hover { color: #1e293b; }
+.evt-seg__btn--active {
+    background: #fff;
+    color: #1e293b;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+.evt-seg__btn:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+@media (min-width: 640px) {
+    .evt-seg__btn { flex: 0 0 auto; padding: 8px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .evt-seg__btn { transition: none; }
+}
+
+/* ── Type menu popover options ── */
+.evt-type-opt {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 10px 12px;
+    font-size: 13px;
+    text-align: left;
+    color: #1f2937;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+.evt-type-opt:hover { background: #f9fafb; }
+.evt-type-opt--active { color: #4f46e5; font-weight: 600; }
+.evt-type-opt:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+
+/* ── Filter chips (M1: scrollable horizontal row) ── */
+.evt-chip-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 0;
+}
+.evt-chip-row::-webkit-scrollbar { display: none; }
+.evt-chip {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, .08);
+    color: #475569;
+    cursor: pointer;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease, transform .1s ease;
+    white-space: nowrap;
+}
+.evt-chip:hover { border-color: #cbd5e1; }
+.evt-chip:active { transform: scale(.97); }
+.evt-chip--active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+.evt-chip--active:hover { background: #4338ca; border-color: #4338ca; }
+.evt-chip--ghost {
+    background: transparent;
+    border-color: transparent;
+    color: #6b7280;
+    padding: 6px 14px;
+    font-size: 12px;
+}
+.evt-chip--ghost:hover { background: rgba(0, 0, 0, .04); border-color: transparent; }
+.evt-chip--ghost.evt-chip--active { background: #eef2ff; color: #4338ca; border-color: transparent; }
+.evt-chip--ghost.evt-chip--active:hover { background: #e0e7ff; }
+
+/* ── Filter chip (also used as search-suggest chip) ── */
+.evt-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #64748b;
+    border: none;
+    cursor: pointer;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+    white-space: nowrap;
+}
+.evt-filter-chip:hover { background: #e2e8f0; color: #475569; }
+.evt-filter-chip--active { background: #1e293b; color: #fff; }
+.evt-filter-chip--active:hover { background: #334155; color: #fff; }
+
+/* ── C2 tappable category chip + active dismiss pill ── */
+.evt-cat-chip { cursor: pointer; }
+.evt-cat-chip:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+.evt-active-pill { cursor: pointer; transition: background-color .15s ease; }
+.evt-active-pill:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+
+/* ── Phase E2 — Mobile hero-visible search pill (vlift, <640px) ── */
+@media (max-width: 639px) {
+    body.evt-vlift #evtSearchToggle { display: none !important; }
+    body.evt-vlift #evtSearchExpand {
+        display: block !important;
+        margin-top: 0;
+        order: -1;
+    }
+    body.evt-vlift #evtSearchExpand input {
+        height: 44px;
+        border-radius: 14px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 4px 12px rgba(15, 23, 42, .04);
+        font-size: 15px;
+    }
+    body.evt-vlift #evtFilterStrip > .flex { flex-wrap: wrap; gap: 10px; }
+    body.evt-vlift #evtFilterStrip #evtSearchExpand {
+        flex: 1 0 100%;
+        margin-bottom: 4px;
+    }
+}
+
+/* ── E3 — Inline category chip rail (vlift only) ── */
+body.evt-vlift #evtTypeChips { display: flex; }
+.evt-type-chips {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+}
+.evt-type-chips::-webkit-scrollbar { display: none; }
+.evt-type-chip {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform .12s ease, background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.evt-type-chip:hover { border-color: #d1d5db; }
+.evt-type-chip:active { transform: scale(.96); }
+.evt-type-chip--active {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 1px 2px rgba(79, 70, 229, .25);
+}
+.evt-type-chip--active:hover { border-color: transparent; }
+@media (prefers-reduced-motion: reduce) {
+    .evt-type-chip { transition: none; }
+    .evt-type-chip:active { transform: none; }
+}
+
+/* E9 motion polish: chip / segment micro-press (vlift) */
+body.evt-vlift .evt-seg__btn:active,
+body.evt-vlift .evt-type-opt:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift .evt-seg__btn:active,
+    body.evt-vlift .evt-type-opt:active { transform: none; }
+}
+
+/* ── E11 — Per-bucket "See all" / "Show less" toggle ── */
+.evt-bucket-head { line-height: 1; }
+.evt-bucket-seeall {
+    background: transparent;
+    border: 0;
+    padding: 4px 6px;
+    margin: 0 -6px -2px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background-color .15s ease, color .15s ease;
+}
+.evt-bucket-seeall:hover { background: rgba(99, 102, 241, .08); }
+.evt-bucket-seeall:active { background: rgba(99, 102, 241, .14); }
+@media (prefers-reduced-motion: reduce) {
+    .evt-bucket-seeall { transition: none; }
+}
+
+/* ── F3 — Underline tab strip + Saved tab (vlift) ── */
+body.evt-vlift #evtLifecycleSeg {
+    display: flex;
+    gap: 0;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+body.evt-vlift #evtLifecycleSeg .evt-seg__btn {
+    background: transparent !important;
+    color: #6b7280;
+    font-weight: 600;
+    padding: 0.65rem 1rem;
+    border-radius: 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .15s ease, border-color .15s ease;
+    box-shadow: none !important;
+}
+body.evt-vlift #evtLifecycleSeg .evt-seg__btn:hover { color: #111827; }
+body.evt-vlift #evtLifecycleSeg .evt-seg__btn--active {
+    color: #4f46e5 !important;
+    border-bottom-color: #4f46e5 !important;
+    background: transparent !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift #evtLifecycleSeg .evt-seg__btn { transition: none; }
+}
+
+/* ── F4 — Always-visible search + Filters/Date dropdowns (vlift) ── */
+body.evt-vlift [data-f4-date-wrap] { display: block !important; }
+body.evt-vlift [data-f4-filters-icon] { display: block !important; }
+body.evt-vlift #evtTypeMenuBtn { display: inline-flex !important; }
+@media (min-width: 640px) {
+    body.evt-vlift #evtSearchExpand { display: block !important; order: -1; flex: 1 1 auto; margin-top: 0; }
+    body.evt-vlift #evtFilterStrip > div:first-child { flex-wrap: wrap; gap: 0.5rem; }
+    body.evt-vlift #evtSearchToggle { display: none !important; }
+    body.evt-vlift #evtLifecycleSeg { flex: 0 0 100%; order: -2; }
+}
+body.evt-vlift #evtTypeMenuBtn [data-type-label] { display: none; }
+body.evt-vlift #evtTypeMenuBtn::after {
+    content: "Filters";
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+}
+.evt-date-opt {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.875rem;
+    color: #374151;
+    background: #fff;
+    border: 0;
+    cursor: pointer;
+}
+.evt-date-opt:hover { background: #f3f4f6; }
+.evt-date-opt.evt-date-opt--active { background: #eef2ff; color: #4f46e5; font-weight: 600; }
+
+/* ── F5 — Icon chips: swap emoji for outline SVG (vlift) ── */
+body.evt-vlift #evtTypeChips [data-f5-emoji] { display: none !important; }
+body.evt-vlift #evtTypeChips [data-f5-icon] {
+    display: inline-block !important;
+    vertical-align: middle;
+    margin-right: .25rem;
+}
+body.evt-vlift #evtTypeChips .evt-type-chip { gap: .25rem; }
+
+/* ── F13 -- Filter row reflow (vlift, ≥640px) ── */
+@media (min-width: 640px) {
+    body.evt-vlift #evtFilterStrip {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .5rem;
+        row-gap: .625rem;
+    }
+    /* Flatten inner .flex so its children become flex items of #evtFilterStrip */
+    body.evt-vlift #evtFilterStrip > .flex.items-center.gap-2:not(#evtTypeChips) {
+        display: contents;
+    }
+    /* Row 1: lifecycle tabs full width */
+    body.evt-vlift #evtFilterStrip #evtLifecycleSeg { flex: 0 0 100%; order: -30; }
+    /* Row 2 left: search pill grows to fill */
+    body.evt-vlift #evtFilterStrip #evtSearchExpand {
+        flex: 1 1 240px;
+        order: -20;
+        margin-top: 0 !important;
+    }
+    body.evt-vlift #evtFilterStrip #evtSearchToggle { display: none !important; }
+    /* Row 2 right group: Filters, Date, view toggle */
+    body.evt-vlift #evtFilterStrip .relative.shrink-0:has(#evtTypeMenuBtn) { order: -12; }
+    body.evt-vlift #evtFilterStrip [data-f4-date-wrap] { order: -11; }
+    body.evt-vlift #evtFilterStrip #evtViewToggle { order: -10; }
+    /* Row 3: chip rail */
+    body.evt-vlift #evtFilterStrip #evtTypeChips {
+        flex: 0 0 100%;
+        order: 10;
+        margin-top: 0 !important;
+    }
+}
+
+/* ── D3 — Search history & suggestions ── */
+.evt-search-suggest { animation: evtSuggestIn .12s ease-out both; }
+@keyframes evtSuggestIn {
+    from { opacity: 0; transform: translateY(-2px); }
+    to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .evt-search-suggest { animation: none; }
+}
+.evt-suggest-row:focus-visible,
+.evt-suggest-chip:focus-visible,
+.evt-suggest-clear:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: -2px;
+}
+.evt-suggest-chip { cursor: pointer; transition: transform .12s ease; }
+.evt-suggest-chip:active { transform: scale(0.97); }

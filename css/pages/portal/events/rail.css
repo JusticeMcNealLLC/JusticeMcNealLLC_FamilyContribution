@@ -1,0 +1,305 @@
+/* ============================================================
+ * portal/events/rail.css
+ * Right rail panels + going-rail interactions:
+ *   F11 — Your Upcoming RSVPs card
+ *   F12 — Events Overview stats card
+ *   F16 — Polish (border + radius + shadow on rail cards)
+ *   D2  — Swipe gestures on going-rail mini cards
+ *         Long-press context sheet (.evt-context-*)
+ *         Toast (.evt-toast)
+ *   B4  — Per-viewer empty state polish (.evt-empty-*)
+ * ============================================================ */
+
+/* ============================================================
+ * F11 — Your Upcoming RSVPs rail card (vlift)
+ * ============================================================ */
+body.evt-vlift .evt-myrsvps {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: .875rem;
+    padding: .875rem;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, .04);
+}
+body.evt-vlift .evt-myrsvps-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .5rem;
+}
+body.evt-vlift .evt-myrsvps-title {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: #111827;
+}
+body.evt-vlift .evt-myrsvps-count {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 .5rem;
+    border-radius: 9999px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: .75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+body.evt-vlift .evt-myrsvps-list {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+body.evt-vlift .evt-myrsvp-row {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    width: 100%;
+    padding: .375rem;
+    border: 0;
+    border-radius: .625rem;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: background .12s ease;
+}
+body.evt-vlift .evt-myrsvp-row:hover { background: #f9fafb; }
+body.evt-vlift .evt-myrsvp-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: .5rem;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+}
+body.evt-vlift .evt-myrsvp-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+body.evt-vlift .evt-myrsvp-title {
+    font-size: .8125rem;
+    font-weight: 700;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+body.evt-vlift .evt-myrsvp-meta {
+    font-size: .6875rem;
+    color: #6b7280;
+}
+body.evt-vlift .evt-myrsvps-all {
+    width: 100%;
+    margin-top: .625rem;
+    padding: .5rem .625rem;
+    border: 1px solid #e5e7eb;
+    border-radius: .5rem;
+    background: #ffffff;
+    color: #4338ca;
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+body.evt-vlift .evt-myrsvps-all:hover { background: #eef2ff; }
+
+/* ============================================================
+ * F12 — Events Overview stats rail card (vlift)
+ * ============================================================ */
+body.evt-vlift .evt-stats {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: .875rem;
+    padding: .875rem;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, .04);
+}
+body.evt-vlift .evt-stats-title {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: .5rem;
+}
+body.evt-vlift .evt-stats-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .375rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+body.evt-vlift .evt-stats-row:last-of-type { border-bottom: 0; }
+body.evt-vlift .evt-stats-label {
+    font-size: .8125rem;
+    color: #6b7280;
+}
+body.evt-vlift .evt-stats-value {
+    font-size: .9375rem;
+    font-weight: 800;
+    color: #111827;
+}
+body.evt-vlift .evt-stats-link {
+    width: 100%;
+    margin-top: .625rem;
+    padding: .5rem .625rem;
+    border: 0;
+    border-radius: .5rem;
+    background: transparent;
+    color: #4f46e5;
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+}
+body.evt-vlift .evt-stats-link:hover { background: #eef2ff; }
+
+/* ============================================================
+ * F16 — Right-rail card polish (border + radius + shadow)
+ * ============================================================ */
+@media (min-width: 1024px) {
+    body.evt-vlift #evtRightRail {
+        gap: 1rem !important;
+        padding-top: .25rem;
+    }
+}
+body.evt-vlift #evtRightRail .evt-mcal,
+body.evt-vlift #evtRightRail .evt-myrsvps,
+body.evt-vlift #evtRightRail .evt-stats {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* ============================================================
+ * B4 — Per-viewer empty state polish
+ * ============================================================ */
+.evt-empty-card {
+    background-image: linear-gradient(180deg, #fafaff 0%, #ffffff 40%);
+}
+.evt-empty-illo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 16px;
+}
+.evt-empty-illo--lottie {
+    width: 140px;
+    height: 140px;
+}
+.evt-empty-link {
+    background: transparent;
+    border: 0;
+    padding: 6px 10px;
+    cursor: pointer;
+    display: inline-block;
+}
+.evt-empty-link:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .evt-empty-illo--lottie svg { animation: none !important; }
+}
+
+/* ============================================================
+ * D2 — Swipe gestures + long-press context sheet
+ * ============================================================ */
+
+/* Swipe-to-cancel host (going-rail mini cards) */
+.evt-swipe-host {
+    position: relative;
+    transition: transform .22s cubic-bezier(.16, 1, .3, 1);
+    will-change: transform;
+}
+.evt-swipe-host.evt-swipe--dragging { transition: none; }
+.evt-swipe-host.evt-swipe--revealed { transform: translateX(-92px); }
+
+.evt-swipe-action {
+    position: absolute;
+    top: 0; right: 0;
+    width: 88px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    border: 0;
+    border-radius: 0 16px 16px 0;
+    opacity: 0;
+    transition: opacity .12s ease;
+    z-index: 0;
+}
+.evt-swipe-host { z-index: 1; }
+.evt-swipe-action__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, .18);
+    border-radius: 999px;
+}
+.evt-swipe-action:active { background: #b91c1c; }
+@media (prefers-reduced-motion: reduce) {
+    .evt-swipe-host { transition: none; }
+}
+
+/* Context sheet (long-press menu) */
+.evt-context-sheet { animation: evtCtxIn .18s ease-out both; }
+.evt-context-sheet__panel { animation: evtCtxPanelIn .22s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes evtCtxIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes evtCtxPanelIn { from { transform: translateY(16px); } to { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+    .evt-context-sheet, .evt-context-sheet__panel { animation: none; }
+}
+
+.evt-context-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    cursor: pointer;
+    transition: background-color .12s ease;
+}
+.evt-context-row:hover,
+.evt-context-row:active { background: #f3f4f6; }
+.evt-context-row--danger { color: #b91c1c; }
+.evt-context-row--cancel { justify-content: center; font-weight: 600; color: #6b7280; }
+.evt-context-row:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+
+/* Toast */
+.evt-toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 24px);
+    background: rgba(17, 24, 39, .92);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 80;
+    transition: transform .22s ease, opacity .18s ease;
+}
+.evt-toast--show { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) {
+    .evt-toast { transition: opacity .12s ease; transform: translate(-50%, 0); }
+}

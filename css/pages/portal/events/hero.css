@@ -1,0 +1,554 @@
+/* ============================================================
+ * portal/events/hero.css
+ * Featured-event hero (vlift only). Built up across phases:
+ *   E6  — base aspect + bottom fade (now overridden by F18 overlay)
+ *   E7  — attendee cluster pill
+ *   E12 — heart favorite button
+ *   F6  — desktop horizontal hero (aspect 16/6 — overridden by F18)
+ *   F14 — kicker label, vertical date chip, host line, right-side block
+ *   F18 — compact 240/220px strip + dark overlay + meta reorder
+ *   F19 — datechip moved bottom-left, side scrim removed
+ *   F20 — datechip inline in meta (flex-row), time+location combined row
+ *   F21 — meta block pinned under kicker (top: 2.5rem)
+ *   F21b— left-align right side description + CTA
+ *
+ * Cascade order matters: F-phases are kept in time order so latest
+ * (F21b) wins. Removing F18+ would restore the F14 layout.
+ * ============================================================ */
+
+/* ============================================================
+ * E6 — Base hero geometry (mobile festival aspect, desktop landscape).
+ * NOTE: F18 below caps to 240/220px strict — these aspects only matter
+ * if F18 is disabled.
+ * ============================================================ */
+body.evt-vlift .evt-hero-vlift > a {
+    aspect-ratio: 4 / 5;
+    min-height: 62vh;
+    background-size: cover;
+    background-position: center;
+}
+@media (min-width: 640px) {
+    body.evt-vlift .evt-hero-vlift > a {
+        aspect-ratio: 16 / 10;
+        min-height: 0;
+    }
+}
+
+/* Bottom dark fade (replaced by F18 ::before overlay; kept for fallback) */
+body.evt-vlift .evt-hero-fade {
+    height: 62%;
+    background: linear-gradient(180deg,
+        rgba(0,0,0,0)   0%,
+        rgba(0,0,0,.18) 40%,
+        rgba(0,0,0,.62) 78%,
+        rgba(0,0,0,.85) 100%);
+    border-radius: 0 0 1.5rem 1.5rem;
+}
+body.evt-vlift .evt-hero-meta { z-index: 2; }
+
+/* Bottom CTA pill (mobile) — hidden on desktop by F6, often unused under F18 */
+body.evt-vlift .evt-hero-cta {
+    margin-top: 12px;
+    width: 100%;
+    height: 56px;
+    border: 0;
+    border-radius: 18px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 12px 28px rgba(79, 70, 229, .28);
+    transition: transform .12s ease, box-shadow .15s ease, background .2s ease, opacity .15s ease;
+}
+body.evt-vlift .evt-hero-cta:hover { box-shadow: 0 14px 32px rgba(79, 70, 229, .34); }
+body.evt-vlift .evt-hero-cta:active { transform: scale(.985); }
+body.evt-vlift .evt-hero-cta:disabled { opacity: .65; cursor: progress; }
+body.evt-vlift .evt-hero-cta--going {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 12px 28px rgba(16, 185, 129, .28);
+}
+body.evt-vlift .evt-hero-cta--going:hover { box-shadow: 0 14px 32px rgba(16, 185, 129, .34); }
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift .evt-hero-cta { transition: none; }
+    body.evt-vlift .evt-hero-cta:active { transform: none; }
+}
+
+/* ============================================================
+ * E7 — Hero attendee cluster pill
+ * ============================================================ */
+body.evt-vlift .evt-hero-cluster {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px 4px 4px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, .35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 0;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background-color .15s ease, transform .12s ease;
+}
+body.evt-vlift .evt-hero-cluster:hover { background: rgba(0, 0, 0, .5); }
+body.evt-vlift .evt-hero-cluster:active { transform: scale(.97); }
+body.evt-vlift .evt-hero-cluster-stack { display: inline-flex; align-items: center; }
+body.evt-vlift .evt-hero-cluster-bub {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 2px solid #ffffff;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .25);
+    flex-shrink: 0;
+}
+body.evt-vlift .evt-hero-cluster-bub img { width: 100%; height: 100%; object-fit: cover; display: block; }
+body.evt-vlift .evt-hero-cluster-init { line-height: 1; }
+body.evt-vlift .evt-hero-cluster-label { white-space: nowrap; letter-spacing: 0.01em; }
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift .evt-hero-cluster { transition: none; }
+    body.evt-vlift .evt-hero-cluster:active { transform: none; }
+}
+
+/* ============================================================
+ * E12 — Hero heart favorite (kept; JS render currently hides it)
+ * Maps to RSVP status='maybe'
+ * ============================================================ */
+body.evt-vlift .evt-hero-heart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 0;
+    background: rgba(0, 0, 0, .35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color .15s ease, transform .12s ease, color .15s ease;
+    flex-shrink: 0;
+}
+body.evt-vlift .evt-hero-heart:hover { background: rgba(0, 0, 0, .5); }
+body.evt-vlift .evt-hero-heart:active { transform: scale(.92); }
+body.evt-vlift .evt-hero-heart:disabled { opacity: .6; cursor: progress; }
+body.evt-vlift .evt-hero-heart--on { color: #f43f5e; background: rgba(255, 255, 255, .92); }
+body.evt-vlift .evt-hero-heart--on:hover { background: #ffffff; }
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift .evt-hero-heart { transition: none; }
+    body.evt-vlift .evt-hero-heart:active { transform: none; }
+}
+
+/* ============================================================
+ * F6 -- Horizontal hero (vlift, ≥1024px). F18 overrides height.
+ * ============================================================ */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-vlift > a {
+        aspect-ratio: 16 / 6 !important;
+        border-radius: 1.25rem;
+    }
+    body.evt-vlift .evt-hero-fade {
+        height: 72%;
+        background: linear-gradient(90deg,
+            rgba(0,0,0,.70) 0%,
+            rgba(0,0,0,.45) 45%,
+            rgba(0,0,0,.10) 85%,
+            rgba(0,0,0,0)   100%);
+        border-radius: 1.25rem;
+    }
+    body.evt-vlift .evt-hero-meta {
+        max-width: 62%;
+        padding: 1.25rem 1.5rem 1.5rem !important;
+    }
+    body.evt-vlift .evt-hero-meta h2 {
+        font-size: 1.875rem !important;
+        line-height: 1.15;
+    }
+    body.evt-vlift .evt-hero-cta { display: none !important; }
+    body.evt-vlift .evt-hero-vlift::after { content: none !important; }
+}
+
+/* ============================================================
+ * F14 -- Featured-event hero refresh (kicker, datechip, host, side)
+ * ============================================================ */
+body.evt-vlift .evt-hero-vlift [data-f14-kicker] {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 3;
+    font-size: .6875rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+}
+
+body.evt-vlift .evt-hero-datechip {
+    position: absolute;
+    top: 3rem;
+    left: 1rem;
+    z-index: 3;
+    width: 3.75rem;
+    padding: .5rem .25rem;
+    background: #ffffff;
+    color: #111827;
+    border-radius: .75rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .1rem;
+    line-height: 1;
+    pointer-events: none;
+}
+body.evt-vlift .evt-hero-datechip__mon {
+    font-size: .625rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    color: #dc2626;
+    text-transform: uppercase;
+}
+body.evt-vlift .evt-hero-datechip__day {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1;
+    margin: .1rem 0;
+}
+body.evt-vlift .evt-hero-datechip__dow {
+    font-size: .5625rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+
+body.evt-vlift .evt-hero-host {
+    margin-top: .25rem;
+    font-size: .8125rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+    line-height: 1.35;
+}
+
+/* Right-side description + CTA block (hidden on mobile; shown ≥1024px) */
+body.evt-vlift .evt-hero-side { display: none; }
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-side {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: flex-end;
+        gap: .875rem;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 34%;
+        padding: 1.5rem 1.5rem 1.5rem 1rem;
+        z-index: 2;
+        pointer-events: none;
+    }
+    body.evt-vlift .evt-hero-side__desc {
+        font-size: .875rem;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.92);
+        text-align: right;
+        max-width: 100%;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+        pointer-events: none;
+    }
+    body.evt-vlift .evt-hero-side__cta {
+        pointer-events: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: .625rem 1.125rem;
+        border-radius: 9999px;
+        background: #ffffff;
+        color: #1f2937;
+        font-size: .8125rem;
+        font-weight: 800;
+        letter-spacing: .01em;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.22);
+        text-decoration: none;
+        transition: transform .12s ease, box-shadow .12s ease;
+    }
+    body.evt-vlift .evt-hero-side__cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.28);
+    }
+
+    body.evt-vlift .evt-hero-meta { max-width: 62% !important; }
+
+    body.evt-vlift .evt-hero-datechip {
+        top: 3.25rem;
+        left: 1.25rem;
+        width: 4.25rem;
+        padding: .625rem .375rem;
+    }
+    body.evt-vlift .evt-hero-datechip__day { font-size: 1.75rem; }
+}
+
+/* ============================================================
+ * F18 -- Featured hero polish (compact strip + dark overlay)
+ * ============================================================ */
+body.evt-vlift .evt-hero-vlift > a {
+    aspect-ratio: auto !important;
+    min-height: 0 !important;
+    height: 240px !important;
+}
+body.evt-vlift .evt-hero-vlift > a::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(90deg,
+        rgba(20, 18, 60, 0.85) 0%,
+        rgba(35, 25, 90, 0.65) 45%,
+        rgba(20, 18, 60, 0.55) 75%,
+        rgba(20, 18, 60, 0.85) 100%);
+    pointer-events: none;
+    border-radius: inherit;
+}
+body.evt-vlift .evt-hero-fade { display: none !important; }
+body.evt-vlift .evt-hero-vlift > a > * { z-index: 2; }
+body.evt-vlift .evt-hero-vlift > a > .absolute,
+body.evt-vlift .evt-hero-vlift > a > [data-f14-kicker],
+body.evt-vlift .evt-hero-vlift > a > [data-f14-datechip],
+body.evt-vlift .evt-hero-vlift > a > .evt-hero-fade,
+body.evt-vlift .evt-hero-vlift > a > .evt-hero-meta,
+body.evt-vlift .evt-hero-vlift > a > .evt-hero-side { z-index: 2; }
+
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-vlift > a {
+        height: 220px !important;
+        min-height: 220px !important;
+        border-radius: 1.25rem;
+    }
+    body.evt-vlift .evt-hero-meta {
+        max-width: 56% !important;
+        padding: 1.25rem 1.5rem !important;
+    }
+    body.evt-vlift .evt-hero-meta h2 {
+        font-size: 1.625rem !important;
+        line-height: 1.15;
+        margin-top: .35rem;
+    }
+}
+
+/* F18 datechip pin (overridden by F20 to position:static) */
+body.evt-vlift .evt-hero-datechip {
+    top: 2.75rem !important;
+    left: 1rem !important;
+    width: 3.25rem !important;
+    padding: .4rem .25rem !important;
+}
+body.evt-vlift .evt-hero-datechip__day { font-size: 1.25rem !important; }
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-datechip {
+        top: 2.75rem !important;
+        left: 1.25rem !important;
+        width: 3.5rem !important;
+    }
+    body.evt-vlift .evt-hero-datechip__day { font-size: 1.375rem !important; }
+}
+
+/* F18 right-side desc tightened */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-side {
+        top: 0 !important;
+        bottom: 0 !important;
+        right: 0 !important;
+        width: 38% !important;
+        padding: 1rem 1.5rem !important;
+        justify-content: center !important;
+        align-items: flex-end !important;
+        gap: .875rem !important;
+    }
+    body.evt-vlift .evt-hero-side__desc {
+        text-align: right;
+        -webkit-line-clamp: 2 !important;
+        font-size: .8125rem !important;
+        line-height: 1.45 !important;
+        max-width: 95%;
+    }
+    body.evt-vlift .evt-hero-side__cta {
+        align-self: flex-end;
+        padding: .55rem 1.25rem !important;
+    }
+}
+
+/* Top-right pills (Live + heart + countdown) — push below kicker */
+body.evt-vlift .evt-hero-vlift .absolute.top-3.right-3 {
+    top: .75rem !important;
+    right: 1rem !important;
+    gap: .5rem !important;
+}
+
+/* Cluster sits cleanly below meta on the LEFT */
+body.evt-vlift .evt-hero-cluster {
+    margin-bottom: .375rem !important;
+    padding: 3px 8px 3px 3px !important;
+    font-size: 11px !important;
+}
+body.evt-vlift .evt-hero-cluster-bub { width: 22px !important; height: 22px !important; }
+
+/* FEATURED EVENT kicker: tighter, with subtle backdrop pill */
+body.evt-vlift .evt-hero-vlift [data-f14-kicker] {
+    top: .75rem !important;
+    left: 1rem !important;
+    padding: .2rem .55rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    font-size: .625rem !important;
+    color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+/* F18 [data-f14-dtrow] visibility (overridden by F20 hide) */
+body.evt-vlift .evt-hero-meta [data-f14-dtrow] {
+    margin-bottom: 0 !important;
+    font-size: .8125rem !important;
+}
+body.evt-vlift .evt-hero-meta [data-f14-dtrow] > span:first-child { display: none !important; }
+
+/* F18 meta column reorder (overridden by F20 row) */
+body.evt-vlift .evt-hero-meta {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: .15rem;
+}
+body.evt-vlift .evt-hero-meta > h2 { order: 1; }
+body.evt-vlift .evt-hero-meta > [data-f14-host] { order: 2; margin-top: 0 !important; }
+body.evt-vlift .evt-hero-meta > p { order: 3; }
+body.evt-vlift .evt-hero-meta > [data-f14-dtrow] { order: 3; }
+body.evt-vlift .evt-hero-meta > .evt-hero-cluster,
+body.evt-vlift .evt-hero-meta > button.evt-hero-cluster { order: 4; margin-top: .35rem !important; margin-bottom: 0 !important; }
+
+/* ============================================================
+ * F19 -- Hero refinements (datechip bottom-left, side scrim removed)
+ * ============================================================ */
+body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
+    top: auto !important;
+    bottom: 1.25rem !important;
+    left: 1rem !important;
+}
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
+        bottom: 1.25rem !important;
+        left: 1.25rem !important;
+    }
+    body.evt-vlift .evt-hero-side {
+        background: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    body.evt-vlift .evt-hero-side__desc {
+        background: transparent !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    }
+}
+
+/* ============================================================
+ * F20 — Datechip inline in meta (flex-row), time+location row
+ * ============================================================ */
+body.evt-vlift .evt-hero-meta {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: .75rem !important;
+    padding-left: 1.25rem !important;
+    justify-content: flex-start !important;
+}
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-meta {
+        padding-left: 1.25rem !important;
+        max-width: 58% !important;
+    }
+}
+body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+    flex-shrink: 0 !important;
+    align-self: stretch !important;
+    justify-content: center !important;
+    width: 3.25rem !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+body.evt-vlift .evt-hero-meta-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    flex: 1;
+    min-width: 0;
+    gap: .1rem;
+}
+body.evt-vlift .evt-hero-timeloc {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .625rem;
+    margin-top: .2rem;
+    font-size: .8125rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.88);
+}
+body.evt-vlift .evt-hero-meta > h2 { order: unset !important; }
+body.evt-vlift .evt-hero-meta > [data-f14-host] { order: unset !important; }
+body.evt-vlift .evt-hero-meta > p { order: unset !important; }
+body.evt-vlift .evt-hero-meta > [data-f14-dtrow] { display: none !important; }
+
+/* ============================================================
+ * F21 — Pin meta block under kicker (top: 2.5rem)
+ * ============================================================ */
+body.evt-vlift .evt-hero-meta {
+    bottom: auto !important;
+    top: 2.5rem !important;
+    padding-top: .5rem !important;
+}
+
+/* ============================================================
+ * F21b — Left-align right side description + CTA
+ * ============================================================ */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-side {
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        padding-top: 2.75rem !important;
+    }
+    body.evt-vlift .evt-hero-side__desc { text-align: left !important; }
+    body.evt-vlift .evt-hero-side__cta { align-self: flex-start !important; }
+}
