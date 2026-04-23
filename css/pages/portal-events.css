@@ -1786,3 +1786,51 @@ body.evt-vlift .evt-stats-link {
     text-align: left;
 }
 body.evt-vlift .evt-stats-link:hover { background: #eef2ff; }
+
+/* ============================================================
+ * F13 -- Filter row reflow (vlift, >=640px)
+ * Layout: [tabs full row] / [search (flex) | Filters | Date | view] / [chip rail]
+ * ============================================================ */
+@media (min-width: 640px) {
+    /* Promote #evtFilterStrip to a wrapping flex so lifecycle tabs, search,
+     * chip rail, and inner controls all become siblings we can order. */
+    body.evt-vlift #evtFilterStrip {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .5rem;
+        row-gap: .625rem;
+    }
+    /* Flatten inner .flex so its children become flex items of #evtFilterStrip */
+    body.evt-vlift #evtFilterStrip > .flex.items-center.gap-2:not(#evtTypeChips) {
+        display: contents;
+    }
+
+    /* Row 1 â€” lifecycle tabs take full width */
+    body.evt-vlift #evtFilterStrip #evtLifecycleSeg {
+        flex: 0 0 100%;
+        order: -30;
+    }
+
+    /* Row 2 (left) â€” search pill grows to fill */
+    body.evt-vlift #evtFilterStrip #evtSearchExpand {
+        flex: 1 1 240px;
+        order: -20;
+        margin-top: 0 !important;
+    }
+    /* Old round magnifier button no longer needed */
+    body.evt-vlift #evtFilterStrip #evtSearchToggle { display: none !important; }
+
+    /* Row 2 (right group) â€” Filters, Date, view toggle in visual order */
+    /* Filters button wrapper = the .relative.shrink-0 that contains #evtTypeMenuBtn */
+    body.evt-vlift #evtFilterStrip .relative.shrink-0:has(#evtTypeMenuBtn) { order: -12; }
+    body.evt-vlift #evtFilterStrip [data-f4-date-wrap]                    { order: -11; }
+    body.evt-vlift #evtFilterStrip #evtViewToggle                         { order: -10; }
+
+    /* Row 3 â€” chip rail */
+    body.evt-vlift #evtFilterStrip #evtTypeChips {
+        flex: 0 0 100%;
+        order: 10;
+        margin-top: 0 !important;
+    }
+}
