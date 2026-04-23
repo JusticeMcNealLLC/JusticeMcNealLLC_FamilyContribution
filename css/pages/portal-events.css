@@ -595,3 +595,95 @@
 .evt-suggest-clear:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
 .evt-suggest-chip { cursor: pointer; transition: transform .12s ease; }
 .evt-suggest-chip:active { transform: scale(0.97); }
+
+
+
+/* ============================================================
+   events_004 Phase D additions
+   D1 calendar / agenda view
+   ============================================================ */
+
+/* View toggle chrome: hide list-only regions when calendar active */
+body.evt-view--calendar #evtLifecycleSeg,
+body.evt-view--calendar #evtHero,
+body.evt-view--calendar #evtGoingRail,
+body.evt-view--calendar #evtLiveBanner,
+body.evt-view--calendar #evtActiveFilters { display: none !important; }
+
+body.evt-view--calendar #evtViewToggle { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+
+/* Calendar frame */
+#evtCalendarMount { animation: evtCalIn .18s ease-out both; }
+@keyframes evtCalIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { #evtCalendarMount { animation: none; } }
+
+/* Header nav buttons */
+.evt-cal-nav {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #4b5563;
+    transition: background-color .12s ease, border-color .12s ease;
+}
+.evt-cal-nav:hover { background: #f9fafb; border-color: #d1d5db; }
+
+/* Day cells */
+.evt-cal-cell {
+    position: relative;
+    min-height: 56px;
+    padding: 6px 4px 4px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    cursor: pointer;
+    transition: background-color .12s ease, border-color .12s ease, transform .12s ease;
+}
+@media (min-width: 640px) { .evt-cal-cell { min-height: 72px; } }
+.evt-cal-cell--blank { visibility: hidden; cursor: default; border: 0; background: transparent; }
+.evt-cal-cell--has { border-color: #c7d2fe; }
+.evt-cal-cell--has:hover { background: #eef2ff; border-color: #a5b4fc; transform: translateY(-1px); }
+.evt-cal-cell--today { outline: 2px solid #4f46e5; outline-offset: -2px; }
+.evt-cal-cell--today .evt-cal-daynum { color: #4338ca; font-weight: 700; }
+
+.evt-cal-daynum {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    line-height: 1;
+    margin-top: 2px;
+}
+.evt-cal-dots {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: auto;
+    margin-bottom: 2px;
+    flex-wrap: nowrap;
+}
+.evt-cal-dot {
+    width: 6px; height: 6px;
+    border-radius: 999px;
+    display: inline-block;
+}
+.evt-cal-dot-more {
+    font-size: 9px;
+    font-weight: 700;
+    color: #6b7280;
+    margin-left: 2px;
+}
+
+.evt-cal-cell:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+.evt-cal-today:focus-visible,
+.evt-cal-nav:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+
+/* Day modal */
+#evtDayModal { animation: evtDayModalIn .18s ease-out both; }
+@keyframes evtDayModalIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #evtDayModal { animation: none; } }

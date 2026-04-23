@@ -37,10 +37,10 @@ const results = {
     d3_suggest_css:            cssText.includes('.evt-search-suggest'),
     d3_suggest_keyframes:      cssText.includes('@keyframes evtSuggestIn'),
     d3_reduced_motion_guard:   /prefers-reduced-motion[\s\S]*?evt-search-suggest/.test(cssText),
-    d3_no_duplicate_block:     (cssText.match(/events_004 Phase D additions/g) || []).length === 1,
+    d3_no_duplicate_d3_section: (cssText.match(/D3 search history & suggestions/g) || []).length === 1,
 
-    // SW
-    sw_bumped_to_v54:          swText.includes("'jm-portal-v54'"),
+    // SW (D3 landed at v54; later phases may bump higher)
+    sw_bumped_past_v53:        /jm-portal-v(5[4-9]|[6-9]\d|\d{3,})/.test(swText),
     sw_no_leftover_v53:        !swText.includes("'jm-portal-v53'"),
 };
 

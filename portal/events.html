@@ -97,6 +97,15 @@
                             class="w-10 h-10 inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:border-gray-300 text-gray-600 shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
                         </button>
+                        <button id="evtViewToggle" type="button" aria-label="Toggle calendar view" aria-pressed="false" data-view="list"
+                            class="w-10 h-10 inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:border-gray-300 text-gray-600 shrink-0">
+                            <span class="evt-view-icon evt-view-icon--list" aria-hidden="true">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2" stroke-linejoin="round"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M8 4v16"/></svg>
+                            </span>
+                            <span class="evt-view-icon evt-view-icon--calendar hidden" aria-hidden="true">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                            </span>
+                        </button>
                         <div class="relative shrink-0">
                             <button id="evtTypeMenuBtn" type="button" data-type="all" aria-haspopup="true" aria-expanded="false"
                                 class="h-10 inline-flex items-center gap-1.5 px-3 rounded-xl border border-gray-200 bg-white hover:border-gray-300 text-sm font-semibold text-gray-700">
@@ -133,6 +142,23 @@
 
                 <!-- Bucketed groups -->
                 <div id="evtGroups" class="mt-6 space-y-8"></div>
+
+                <!-- D1 — Calendar mount (events_004 §D1) -->
+                <div id="evtCalendarMount" class="hidden mt-6"></div>
+
+                <!-- D1 — Day-details modal (single instance, populated on demand) -->
+                <div id="evtDayModal" class="hidden fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-labelledby="evtDayModalTitle">
+                    <div class="absolute inset-0 bg-black/40" data-day-close="1"></div>
+                    <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:max-w-lg sm:h-fit sm:rounded-2xl bg-white rounded-t-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                            <h3 id="evtDayModalTitle" class="text-base font-semibold text-gray-900"></h3>
+                            <button type="button" data-day-close="1" class="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100" aria-label="Close">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <div id="evtDayModalBody" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+                    </div>
+                </div>
 
                 <!-- Hidden compat grid (kept for any legacy callers) -->
                 <div id="eventsGrid" class="hidden"></div>

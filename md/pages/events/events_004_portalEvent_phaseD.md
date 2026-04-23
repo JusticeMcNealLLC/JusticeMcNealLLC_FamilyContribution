@@ -1,7 +1,7 @@
 # events_004 · Portal Events — Phase D (Power Features)
 
 > **Parent spec:** [events_003_portalEvent_visualOverhaul.md](events_003_portalEvent_visualOverhaul.md)
-> **Status:** Phase D opened. **D3 shipped** (SW `v53 → v54`). D1 + D2 + D4 pending.
+> **Status:** Phase D opened. **D3 shipped** (SW `v53 → v54`). **D1 shipped** (SW `v54 → v55`). D2 + D4 pending.
 > **Prereqs:** Phase A1+A2+A3+B1–B5+C1–C4 shipped.
 > **Scope:** D1 calendar/agenda toggle · D2 swipe gestures · D3 search history & suggestions · D4 dark-mode pass.
 > **Out of scope:** new data contracts, new queries, admin-surface changes, notification schema.
@@ -22,6 +22,19 @@ Each item ships as its own commit. Do NOT batch D1+D2+D3+D4.
 ---
 
 ## D1 — Calendar / agenda view toggle
+
+> ✅ **SHIPPED** — SW `v54 → v55`. Smoke: `test/_smoke-d1.js` 30/30 pass.
+>
+> Implementation notes:
+> - New state `_activeView` (`'list' | 'calendar'`) + `_calMonth` (first-of-viewed-month `Date`). Persisted in `evt_list_state_v1` under `v`.
+> - `#evtViewToggle` button (icon-only, right of search toggle in `#evtFilterStrip`) toggles views; `aria-pressed` tracks state; icon swaps so users see the *other* view’s icon.
+> - `renderEvents()` short-circuits to `_renderCalendar()` when `_activeView === 'calendar'`, hiding hero / going rail / live banner / groups / active-filter pill.
+> - `_renderCalendar()` draws weekday row + leading-blank cells + day cells. Each day cell shows day number + up to 3 colored dots (category gradient first color) + `+N` overflow.
+> - `_groupEventsByDay(all)` respects `_matchesType` + `_matchesCategory` so the visible dataset mirrors the list view.
+> - Month nav: `‹` prev, `›` next, `Today` reset. Client-side only — no reload.
+> - Tap day cell → `_openDayModal(dateKey)` opens bottom-sheet (mobile) / centered modal (sm+) populated with the reused `_miniCard` renderer. Esc or scrim tap closes.
+> - `body.evt-view--calendar` hides `#evtLifecycleSeg`, `#evtHero`, `#evtGoingRail`, `#evtLiveBanner`, `#evtActiveFilters` via CSS.
+> - `prefers-reduced-motion` kills the fade-in on both the calendar mount and the day modal.
 
 **Goal:** let members switch between today's **list view** and a month-calendar grid that highlights days with events.
 
