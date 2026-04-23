@@ -112,6 +112,22 @@
                             class="w-10 h-10 inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:border-gray-300 text-gray-600 shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
                         </button>
+                        <!-- F4 — Date filter dropdown (vlift only; hidden when flag off) -->
+                        <div class="relative shrink-0 hidden" data-f4-date-wrap>
+                            <button id="evtDateMenuBtn" type="button" data-date="any" aria-haspopup="true" aria-expanded="false"
+                                class="h-10 inline-flex items-center gap-1.5 px-3 rounded-xl border border-gray-200 bg-white hover:border-gray-300 text-sm font-semibold text-gray-700">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <span data-date-label>Date</span>
+                                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div id="evtDateMenu" class="hidden absolute right-0 top-full mt-1.5 w-44 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden z-50">
+                                <button type="button" data-date="any"      class="evt-date-opt evt-date-opt--active">Any date</button>
+                                <button type="button" data-date="today"    class="evt-date-opt">Today</button>
+                                <button type="button" data-date="week"     class="evt-date-opt">This week</button>
+                                <button type="button" data-date="weekend"  class="evt-date-opt">This weekend</button>
+                                <button type="button" data-date="month"    class="evt-date-opt">This month</button>
+                            </div>
+                        </div>
                         <button id="evtViewToggle" type="button" aria-label="Toggle calendar view" aria-pressed="false" data-view="list"
                             class="w-10 h-10 inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:border-gray-300 text-gray-600 shrink-0">
                             <span class="evt-view-icon evt-view-icon--list" aria-hidden="true">
@@ -124,6 +140,7 @@
                         <div class="relative shrink-0">
                             <button id="evtTypeMenuBtn" type="button" data-type="all" aria-haspopup="true" aria-expanded="false"
                                 class="h-10 inline-flex items-center gap-1.5 px-3 rounded-xl border border-gray-200 bg-white hover:border-gray-300 text-sm font-semibold text-gray-700">
+                                <svg data-f4-filters-icon class="w-4 h-4 text-gray-500 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18M6 8h12M10 12h4M11 16h2"/></svg>
                                 <span data-type-label>All</span>
                                 <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                             </button>
@@ -146,7 +163,7 @@
                     <!-- Expandable search row -->
                     <div id="evtSearchExpand" class="hidden mt-2 relative">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-                        <input id="evtSearchInput" type="search" autocomplete="off" placeholder="Search events…"
+                        <input id="evtSearchInput" type="search" autocomplete="off" placeholder="Search events, hosts, or locations…"
                             class="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-200 bg-white text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                         <button id="evtSearchClear" type="button" aria-label="Clear search"
                             class="hidden absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100">

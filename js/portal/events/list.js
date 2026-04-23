@@ -1859,7 +1859,7 @@
         }
 
         // ─── NORMAL MODE — bucketed ─────────────────────────
-        const filtered = all.filter(e => _matchesType(e) && _matchesCategory(e) && _matchesLifecycle(e) && _notHidden(e));
+        const filtered = all.filter(e => _matchesType(e) && _matchesCategory(e) && _matchesLifecycle(e) && _matchesDate(e) && _notHidden(e));
         const tab = window.evtActiveTab || 'upcoming';
 
         // Pick hero only on Upcoming tab
@@ -2167,6 +2167,70 @@
         emptyCreate?.addEventListener('click', () => {
             document.getElementById('createEventBtn')?.click();
         });
+
+        // F4 — Date filter dropdown (vlift only)
+        _initDateMenu();
+    }
+
+    // F4 — Date filter state + menu wiring
+    let _activeDate = 'any'; // 'any' | 'today' | 'week' | 'weekend' | 'month'
+    function _initDateMenu() {
+        const btn = document.getElementById('evtDateMenuBtn');
+        const menu = document.getElementById('evtDateMenu');
+        if (!btn || !menu) return;
+        const close = () => {
+            menu.classList.add('hidden');
+            btn.setAttribute('aria-expanded', 'false');
+        };
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const willOpen = menu.classList.contains('hidden');
+            menu.classList.toggle('hidden', !willOpen);
+            btn.setAttribute('aria-expanded', String(willOpen));
+        });
+        document.addEventListener('click', e => {
+            if (!menu.contains(e.target) && e.target !== btn) close();
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+        menu.querySelectorAll('.evt-date-opt').forEach(opt => {
+            opt.addEventListener('click', () => {
+                _activeDate = opt.dataset.date || 'any';
+                btn.dataset.date = _activeDate;
+                const labelEl = btn.querySelector('[data-date-label]');
+                if (labelEl) labelEl.textContent = _activeDate === 'any' ? 'Date' : opt.textContent.trim();
+                menu.querySelectorAll('.evt-date-opt').forEach(o =>
+                    o.classList.toggle('evt-date-opt--active', o === opt));
+                close();
+                renderEvents();
+            });
+        });
+    }
+
+    function _matchesDate(ev) {
+        if (_activeDate === 'any') return true;
+        const d = new Date(ev.start_date);
+        const now = new Date();
+        const y = now.getFullYear(), m = now.getMonth(), dy = now.getDate();
+        if (_activeDate === 'today') {
+            return d.getFullYear() === y && d.getMonth() === m && d.getDate() === dy;
+        }
+        if (_activeDate === 'week') {
+            const day = now.getDay(); // 0=Sun
+            const start = new Date(y, m, dy - day);
+            const end = new Date(y, m, dy + (6 - day), 23, 59, 59);
+            return d >= start && d <= end;
+        }
+        if (_activeDate === 'weekend') {
+            const day = now.getDay();
+            const satOffset = (6 - day + 7) % 7;
+            const sat = new Date(y, m, dy + satOffset);
+            const sun = new Date(y, m, dy + satOffset + 1, 23, 59, 59);
+            return d >= sat && d <= sun;
+        }
+        if (_activeDate === 'month') {
+            return d.getFullYear() === y && d.getMonth() === m;
+        }
+        return true;
     }
 
     // =========================================================

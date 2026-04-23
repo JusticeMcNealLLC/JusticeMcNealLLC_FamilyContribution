@@ -988,8 +988,8 @@ body.evt-vlift #evtPageHeader #evtHeaderGreeting {
    E3 — Inline category chip rail (vlift only)
    ========================================================= */
 body.evt-vlift #evtTypeChips { display: flex; }
-body.evt-vlift #evtTypeMenuBtn,
-body.evt-vlift #evtTypeMenuBtn + #evtTypeMenu { display: none !important; }
+/* F4 — Re-enable the Filters dropdown button (was hidden by E3). */
+body.evt-vlift #evtTypeMenuBtn { display: inline-flex !important; }
 
 .evt-type-chips { -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
 .evt-type-chips::-webkit-scrollbar { display: none; }
@@ -1323,3 +1323,34 @@ body.evt-vlift #evtLifecycleSeg .evt-seg__btn--active {
 @media (prefers-reduced-motion: reduce) {
     body.evt-vlift #evtLifecycleSeg .evt-seg__btn { transition: none; }
 }
+/* =========================================================
+   F4 â€” Always-visible search + Filters/Date dropdowns (vlift only)
+   ========================================================= */
+body.evt-vlift [data-f4-date-wrap] { display: block !important; }
+body.evt-vlift [data-f4-filters-icon] { display: block !important; }
+@media (min-width: 640px) {
+    body.evt-vlift #evtSearchExpand { display: block !important; order: -1; flex: 1 1 auto; margin-top: 0; }
+    body.evt-vlift #evtFilterStrip > div:first-child { flex-wrap: wrap; gap: 0.5rem; }
+    body.evt-vlift #evtSearchToggle { display: none !important; }
+    body.evt-vlift #evtLifecycleSeg { flex: 0 0 100%; order: -2; }
+}
+body.evt-vlift #evtTypeMenuBtn [data-type-label] { display: none; }
+body.evt-vlift #evtTypeMenuBtn::after {
+    content: "Filters";
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+}
+.evt-date-opt {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.875rem;
+    color: #374151;
+    background: #fff;
+    border: 0;
+    cursor: pointer;
+}
+.evt-date-opt:hover { background: #f3f4f6; }
+.evt-date-opt.evt-date-opt--active { background: #eef2ff; color: #4f46e5; font-weight: 600; }
