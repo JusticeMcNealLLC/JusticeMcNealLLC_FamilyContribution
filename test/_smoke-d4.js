@@ -35,7 +35,7 @@ const checks = {
     js_idempotent: /btn\.dataset\.themeWired/.test(list),
     js_public_set: /window\.evtSetTheme = function/.test(list),
     js_public_get: /window\.evtGetTheme = function/.test(list),
-    js_wired_in_ready: /_initViewToggle\(\);\s*_initTheme\(\);\s*_initSwipeGestures\(\);/.test(list),
+    js_wired_in_ready: /_initViewToggle\(\);\s*_initTheme\(\);[\s\S]{0,200}_initSwipeGestures\(\);/.test(list),
 
     // CSS dark overrides
     css_dark_block_marker: /D4 — Dark mode/.test(css),
@@ -56,7 +56,7 @@ const checks = {
     css_dark_skeleton: /\[data-theme="dark"\] \.evt-skel/.test(css),
 
     // SW
-    sw_bumped_to_v57: sw.includes("'jm-portal-v57'"),
+    sw_bumped_past_v56: /jm-portal-v(5[7-9]|[6-9]\d|\d{3,})/.test(sw),
     sw_no_v56: !sw.includes("'jm-portal-v56'"),
 
     // Functional sim — stub minimal env and exercise _readThemeMode/_applyTheme

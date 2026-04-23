@@ -439,6 +439,60 @@
     }
 
     // =========================================================
+    // E1/E4/E9 — Phase E premium visual lift (flagged via ?vlift=1
+    // or localStorage('evt_vlift'='1')). Items shipped:
+    //   E1  Gradient editorial header
+    //   E4  Emoji-tagged bucket labels
+    //   E9  Header fade-in motion polish (reduced-motion respected)
+    // Toggle is sticky once enabled via query string.
+    // =========================================================
+    const VLIFT_KEY = 'evt_vlift';
+    const E_BUCKET_EMOJI = {
+        'today':              '🔥',
+        'this week':          '✨',
+        'later this month':   '📅',
+        'next month':         '🌱',
+        'future':             '🗓️',
+        'past':               '🕰️',
+        'this month':         '📅',
+        'earlier':            '🕰️',
+    };
+    function _bucketLabelEmoji(label) {
+        if (!label) return '';
+        const l = String(label).toLowerCase().trim();
+        if (/^results for/i.test(label)) return '🔎 ' + label;
+        const e = E_BUCKET_EMOJI[l];
+        return e ? (e + ' ' + label) : label;
+    }
+    function _readVlift() {
+        try {
+            const url = new URL(window.location.href);
+            if (url.searchParams.get('vlift') === '1') {
+                try { localStorage.setItem(VLIFT_KEY, '1'); } catch (_) {}
+                return true;
+            }
+            if (url.searchParams.get('vlift') === '0') {
+                try { localStorage.removeItem(VLIFT_KEY); } catch (_) {}
+                return false;
+            }
+            return localStorage.getItem(VLIFT_KEY) === '1';
+        } catch (_) { return false; }
+    }
+    function _initVlift() {
+        const on = _readVlift();
+        try {
+            document.body.classList.toggle('evt-vlift', on);
+            if (on) document.documentElement.dataset.vlift = '1';
+            else delete document.documentElement.dataset.vlift;
+        } catch (_) {}
+        try { window.evtSetVlift = function (v) {
+            try { v ? localStorage.setItem(VLIFT_KEY, '1') : localStorage.removeItem(VLIFT_KEY); } catch (_) {}
+            document.body.classList.toggle('evt-vlift', !!v);
+        }; } catch (_) {}
+        try { window.evtIsVlift = function () { return document.body.classList.contains('evt-vlift'); }; } catch (_) {}
+    }
+
+    // =========================================================
     // D4 — Dark mode (events_004 §D4)
     // Modes: 'auto' (follow prefers-color-scheme), 'light', 'dark'.
     // Persisted in localStorage('evt_theme'). Cycle on button click.
@@ -1137,7 +1191,9 @@
             attendees: attendees[ev.id] || [],
         })).join('');
         const slug = String(label).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const safeLabel = (H.escapeHtml || (s => s))(label);
+        const useVlift = document.body.classList.contains('evt-vlift');
+        const displayLabel = useVlift ? _bucketLabelEmoji(label) : label;
+        const safeLabel = (H.escapeHtml || (s => s))(displayLabel);
         return '<section data-bucket="' + slug + '">' +
             '<h2 class="text-xs font-bold uppercase tracking-[0.14em] text-gray-500 mb-3">' + safeLabel + '</h2>' +
             '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + cards + '</div>' +
@@ -2025,6 +2081,7 @@
         _initPullToRefresh();
         _initViewToggle();
         _initTheme();
+        _initVlift();
         _initSwipeGestures();
         _applyRestoredUi();
     }

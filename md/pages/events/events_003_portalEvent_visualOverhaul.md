@@ -1,6 +1,6 @@
 # 📅 `portal/events.html` — Visual & UX Overhaul Spec (events_003)
 
-> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5+C1+C2+C3+C4 shipped. **Phase D opened** — see [events_004_portalEvent_phaseD.md](events_004_portalEvent_phaseD.md) (D3 + D1 + D2 + D4 shipped — **Phase D complete**, SW at `v57`). Phase A4 (polish/QA on real device) still pending — non-blocking for Phase C since C1 is mobile-gated behind `ontouchstart` + `innerWidth < 640` + `scrollY === 0`. **Phase E (Premium Visual Lift) scoped** — see §Phase E + Appendix C for the design-parity plan against the California gradient + Tomorrowland festival mockups.
+> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5+C1+C2+C3+C4 shipped. **Phase D opened** — see [events_004_portalEvent_phaseD.md](events_004_portalEvent_phaseD.md) (D3 + D1 + D2 + D4 shipped — **Phase D complete**, SW at `v58`). **Phase E partial:** E1 (gradient header) + E4 (emoji bucket labels) + E9 (motion polish) shipped behind `?vlift=1` flag. Phase A4 (polish/QA on real device) still pending — non-blocking for Phase C since C1 is mobile-gated behind `ontouchstart` + `innerWidth < 640` + `scrollY === 0`. **Phase E (Premium Visual Lift) scoped** — see §Phase E + Appendix C for the design-parity plan against the California gradient + Tomorrowland festival mockups.
 > **Scope:** `/portal/events.html` **list view only**. Detail view (`#eventsDetailView`) is out of scope — already shipped in M2 (`events_002.md`).
 > **Goal:** transform the current functional-but-flat list page into a **premium, mobile-first event browsing experience** that feels native to a top-tier consumer product, while staying inside the existing JMLLC portal theme (Inter + brand-indigo + surface-50 background + light editorial cards).
 > **Non-goal:** backend changes. No schema, RPC, or edge-function work. RSVP flow, create flow, detail flow all continue to call exactly what they call today.
@@ -869,7 +869,7 @@ This is not a polish pass. This is a **ship gate**. If any item fails, Phase A d
 > **Goal:** close the "first-screenshot wow" gap with best-in-class consumer event apps (reference mocks: California gradient-header browse screen + Tomorrowland/Roskilde dark-premium festival screen). We currently out-execute those mocks on **information density, personalization, and lifecycle coverage** but under-execute on **first-fold delight**. Phase E is the delight pass.
 >
 > **Scope:** visual/theming only — zero data contract changes, zero new queries. Reuses all B1–B5 data paths. Swappable via feature flag `?vlift=1` during rollout.
-> **Status:** pending — not started. Land after A4 (real-device QA) clears and before Phase C.
+> **Status:** **E1 + E4 + E9 shipped** behind `?vlift=1` flag (SW `v57 → v58`, smoke `test/_smoke-e1.js` 27/27). E2/E3/E5–E7/E10–E12 still pending. Land remaining items after A4 (real-device QA) clears.
 > **SW bump target:** `v52 → v53` (shared with Phase C if shipped together; otherwise its own `v52 → v53` and C slides to `v54`).
 
 ### E.1 — Gradient editorial header (mockup: California + Tomorrowland)
@@ -991,20 +991,20 @@ Card + hero gain an optional heart-bookmark icon in the top-right that **does no
 ### E.15 — Phase E task list
 
 ```
-E1  Gradient editorial header + condensed-state adaptation
+E1  ✅ SHIPPED  Gradient editorial header (flagged) — SW `v57 → v58`
 E2  Mobile hero-visible search pill (desktop keeps collapse)
 E3  Inline category chip rail (replaces dropdown)
-E4  Emoji-tagged bucket + segment labels (constants table)
+E4  ✅ SHIPPED  Emoji-tagged bucket labels (flagged, table in `list.js` `E_BUCKET_EMOJI`)
 E5  Top Picks rail (conditional on ≥2 pinned-LLC-future)
 E6  Festival-grade featured hero (height + layout refactor)
 E7  Interested avatar cluster on hero/cards (reuses evtAttendees)
-E8  Dark-mode-compatible CSS tokens (no dark theme yet)
-E9  Motion polish (gradient fade, chip press, ken-burns, stagger)
+E8  Dark-mode-compatible CSS tokens (no dark theme yet) — superseded by D4 ship
+E9  ✅ SHIPPED (partial)  Motion polish (header fade, chip press) — ken-burns + stagger pending
 E10 Notification bell + unread badge in header
 E11 "See all" per-bucket truncation links
 E12 Heart/favorite affordance (only if RSVP enum supports 'interested')
 E13 (out of scope — global nav)
-E14 Rollout flag + SW bump v52 → v53
+E14 Rollout flag + SW bump v52 → v53  — actual flag `?vlift=1` shipped at SW `v57 → v58`
 ```
 
 ### E.16 — Phase E non-goals

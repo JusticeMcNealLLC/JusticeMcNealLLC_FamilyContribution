@@ -915,3 +915,72 @@ body.evt-view--calendar #evtViewToggle { background: #eef2ff; border-color: #c7d
 [data-theme="dark"] .evt-skel-block { background: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%); }
 
 /* Reduced-motion: nothing extra needed; theme switch is instant. */
+
+
+/* =========================================================
+ * Phase E — Premium Visual Lift (events_003 §Phase E)
+ * Activated via body.evt-vlift (toggled by ?vlift=1 / localStorage).
+ * Ships: E1 gradient header, E4 emoji bucket labels (JS), E9 motion polish.
+ * Other Phase E items (E2-E3, E5-E7, E10-E12) tracked separately.
+ * Dark-mode aware: gradient inverts under [data-theme="dark"].
+ * ========================================================= */
+body.evt-vlift #evtPageHeader {
+    background: linear-gradient(160deg, #4f46e5 0%, #6d28d9 55%, #4c1d95 100%) !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: 0 1px 3px rgba(76,29,149,.18), 0 8px 24px rgba(79,70,229,.12);
+    animation: evtHeaderFade .6s ease-out both;
+}
+body.evt-vlift #evtPageHeader #evtHeaderTitle {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,.25);
+}
+body.evt-vlift #evtPageHeader #evtHeaderCount {
+    color: rgba(255,255,255,.78) !important;
+}
+body.evt-vlift #evtPageHeader #createEventBtn {
+    background: rgba(255,255,255,.18) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255,255,255,.25);
+}
+body.evt-vlift #evtPageHeader #createEventBtn:hover {
+    background: rgba(255,255,255,.28) !important;
+}
+
+/* Condensed sticky state still gets the gradient, just shorter. */
+body.evt-vlift #evtPageHeader.evt-header--condensed {
+    box-shadow: 0 1px 3px rgba(76,29,149,.25), 0 4px 16px rgba(79,70,229,.15);
+}
+
+/* Dark mode: deepen the violet so it doesn't glow on dark surface. */
+[data-theme="dark"] body.evt-vlift #evtPageHeader {
+    background: linear-gradient(160deg, #312e81 0%, #4c1d95 55%, #1e1b4b 100%) !important;
+}
+
+@keyframes evtHeaderFade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Emoji bucket labels (E4): render with normal-case so the emoji is legible. */
+body.evt-vlift section[data-bucket] > h2 {
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f2937;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+[data-theme="dark"] body.evt-vlift section[data-bucket] > h2 { color: #e2e8f0; }
+
+/* E9 motion polish: chip / segment micro-press */
+body.evt-vlift .evt-seg__btn:active,
+body.evt-vlift .evt-type-opt:active { transform: scale(0.97); }
+
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift #evtPageHeader { animation: none; }
+    body.evt-vlift .evt-seg__btn:active,
+    body.evt-vlift .evt-type-opt:active { transform: none; }
+}
