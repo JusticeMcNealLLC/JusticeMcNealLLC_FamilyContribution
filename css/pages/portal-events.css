@@ -2512,3 +2512,12 @@ body.evt-vlift .evt-hero-meta > h2 { order: unset !important; }
 body.evt-vlift .evt-hero-meta > [data-f14-host] { order: unset !important; }
 body.evt-vlift .evt-hero-meta > p  { order: unset !important; }
 body.evt-vlift .evt-hero-meta > [data-f14-dtrow]  { display: none !important; }
+/* ============================================================
+ * F21 -- Pin meta block under "FEATURED EVENT" kicker (top)
+ *        instead of the bottom of the hero.
+ * ============================================================ */
+body.evt-vlift .evt-hero-meta {
+    bottom: auto !important;
+    top: 2.5rem !important;
+    padding-top: .5rem !important;
+}
