@@ -2191,3 +2191,47 @@ body.evt-vlift #evtRightRail .evt-stats {
     border-radius: 1rem !important;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
 }
+
+/* ============================================================
+ * F17 -- Rectangular event cards (vlift).
+ *   - Card grid: 2 columns on lg (was 3) so each cell is wider
+ *   - Banner: shallower 21/9 aspect (was 16/9) -> landscape feel
+ *   - Tighten body padding to keep card overall landscape
+ * Non-vlift unchanged.
+ * ============================================================ */
+
+/* 2-col grid on lg, 3-col on xl so widescreens still use the extra space */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+@media (min-width: 1440px) {
+    body.evt-vlift .evt-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+/* Shallower banner -> rectangular */
+body.evt-vlift [data-evt-card] .evt-card-banner {
+    aspect-ratio: 21 / 9 !important;
+}
+
+/* Tighter body padding (card.js uses .p-4 = 1rem; shrink the vertical) */
+body.evt-vlift [data-evt-card] > .p-4 {
+    padding-top: .75rem !important;
+    padding-bottom: .75rem !important;
+}
+body.evt-vlift [data-evt-card] .evt-card-f15 {
+    margin-top: .25rem !important;
+    gap: .2rem !important;
+}
+body.evt-vlift [data-evt-card] .evt-card-f15-foot {
+    margin-top: .5rem !important;
+}
+
+/* Slightly shorter create tile to match new rectangular cells */
+body.evt-vlift .evt-create-tile {
+    padding: 1rem !important;
+    min-height: 160px !important;
+}
