@@ -39,8 +39,8 @@ const checks = {
     css_condensed_shrinks: /evt-header--condensed \.evt-header-bell \{[\s\S]*width: 36px/.test(css),
     css_reduced_motion: /prefers-reduced-motion[\s\S]*\.evt-header-bell \{ transition: none/.test(css),
 
-    // SW
-    sw_v63: /jm-portal-v63/.test(sw),
+    // SW (E10 shipped at v63; bumps past are fine)
+    sw_v63: /jm-portal-v(6[3-9]|[7-9]\d|\d{3,})/.test(sw),
     sw_no_v62: !sw.includes("'jm-portal-v62'"),
 };
 

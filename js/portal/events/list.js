@@ -1527,6 +1527,85 @@
     }
 
     // =========================================================
+    // E5 — Top Picks rail (vlift only)
+    //   Conditional on >=2 pinned-LLC future events (excluding hero).
+    //   Hidden during search, on Past tab, on Going tab, when vlift off.
+    // =========================================================
+    function _renderTopPicks(events, attendees, heroId, eventsById) {
+        const rail   = document.getElementById('evtTopPicks');
+        const scroll = document.getElementById('evtTopPicksScroll');
+        if (!rail || !scroll) return;
+
+        const useVlift = document.body.classList.contains('evt-vlift');
+        const tab = window.evtActiveTab || 'upcoming';
+        const inSearch = !!(_searchQuery || '').trim();
+        if (!useVlift || tab !== 'upcoming' || inSearch) {
+            rail.classList.add('hidden');
+            scroll.innerHTML = '';
+            return;
+        }
+
+        const now = new Date();
+        const picks = (events || []).filter(e =>
+            e.id !== heroId &&
+            e.is_pinned &&
+            e.event_type === 'llc' &&
+            e.status !== 'cancelled' && e.status !== 'draft' &&
+            _notHidden(e) &&
+            new Date(e.start_date) >= now
+        ).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+
+        if (picks.length < 2) {
+            rail.classList.add('hidden');
+            scroll.innerHTML = '';
+            return;
+        }
+
+        rail.classList.remove('hidden');
+        scroll.innerHTML = picks.map(ev => _miniCard(ev, attendees[ev.id] || [])).join('');
+
+        // Wire mini-card clicks (reuse same data-evt-mini hook as going rail)
+        scroll.querySelectorAll('a[data-evt-mini]').forEach(link => {
+            const id = link.getAttribute('data-evt-mini');
+            const ev = eventsById[id];
+            if (!ev) return;
+            link.addEventListener('click', e => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                e.preventDefault();
+                if (ev.slug && typeof window.evtNavigateToEvent === 'function') {
+                    window.evtNavigateToEvent(ev.slug);
+                } else if (typeof window.evtOpenDetail === 'function') {
+                    window.evtOpenDetail(ev.id);
+                }
+            });
+        });
+
+        // "See all" → activate LLC type filter (closest equivalent to "pinned-only")
+        const seeAll = document.getElementById('evtTopPicksSeeAll');
+        if (seeAll && !seeAll.dataset.wired) {
+            seeAll.dataset.wired = '1';
+            seeAll.addEventListener('click', e => {
+                e.preventDefault();
+                _activeType = 'llc';
+                _syncTypeChips('llc');
+                const menuBtn = document.getElementById('evtTypeMenuBtn');
+                if (menuBtn) {
+                    menuBtn.dataset.type = 'llc';
+                    const labelEl = menuBtn.querySelector('[data-type-label]');
+                    if (labelEl) labelEl.textContent = 'LLC';
+                    document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
+                        o.classList.toggle('evt-type-opt--active', o.dataset.type === 'llc')
+                    );
+                }
+                const sel = document.getElementById('typeFilter');
+                if (sel) sel.value = 'llc';
+                _persistState();
+                renderEvents();
+            });
+        }
+    }
+
+    // =========================================================
     // Filter helpers
     // =========================================================
     function _matchesType(ev) {
@@ -1609,6 +1688,8 @@
             if (rail) rail.classList.add('hidden');
             const banner = document.getElementById('evtLiveBanner');
             if (banner) banner.classList.add('hidden');
+            const picks = document.getElementById('evtTopPicks');
+            if (picks) picks.classList.add('hidden');
 
             const q = _searchQuery.toLowerCase();
             const titleHits = [];
@@ -1655,11 +1736,15 @@
         if (tab === 'upcoming') {
             _renderLiveBanner(all);
             _renderGoingRail(all, rsvps, attendees, hero ? hero.id : null, eventsById);
+            // E5 — Top Picks rail (vlift only; gated inside renderer)
+            _renderTopPicks(filtered, attendees, hero ? hero.id : null, eventsById);
         } else {
             const rail = document.getElementById('evtGoingRail');
             if (rail) rail.classList.add('hidden');
             const banner = document.getElementById('evtLiveBanner');
             if (banner) banner.classList.add('hidden');
+            const picks = document.getElementById('evtTopPicks');
+            if (picks) picks.classList.add('hidden');
         }
 
         const rest = hero ? filtered.filter(e => e.id !== hero.id) : filtered;
