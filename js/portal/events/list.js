@@ -1427,8 +1427,12 @@
             }
         }
 
-        const displayLabel = useVlift ? _bucketLabelEmoji(label) : label;
+        // F9 — vlift bucket header: drop emoji prefix, add "N events" count pill
+        const displayLabel = useVlift ? String(label) : label;
         const safeLabel = (H.escapeHtml || (s => s))(displayLabel);
+        const countPill = useVlift
+            ? '<span class="evt-bucket-count">' + total + (total === 1 ? ' event' : ' events') + '</span>'
+            : '';
 
         // E11 — Header link: "See all (N) →" when truncated, "Show less" when expanded
         let headerLink = '';
@@ -1446,10 +1450,12 @@
         const headerCls = useVlift
             ? 'evt-bucket-head flex items-end justify-between mb-3'
             : '';
-        const titleCls = 'text-xs font-bold uppercase tracking-[0.14em] text-gray-500';
+        const titleCls = useVlift
+            ? 'evt-bucket-title'
+            : 'text-xs font-bold uppercase tracking-[0.14em] text-gray-500';
 
         const header = useVlift
-            ? '<header class="' + headerCls + '"><h2 class="' + titleCls + '">' + safeLabel + '</h2>' + headerLink + '</header>'
+            ? '<header class="' + headerCls + '"><div class="flex items-baseline gap-2"><h2 class="' + titleCls + '">' + safeLabel + '</h2>' + countPill + '</div>' + headerLink + '</header>'
             : '<h2 class="' + titleCls + ' mb-3">' + safeLabel + '</h2>';
 
         return '<section data-bucket="' + slug + '">' +

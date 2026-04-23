@@ -1525,3 +1525,21 @@ body.evt-vlift .evt-create-tile__hint {
     color: #6b7280;
     max-width: 220px;
 }
+
+/* ============================================================
+ * F9 -- Bucket header refresh (vlift): proper heading + count pill.
+ * ============================================================ */
+body.evt-vlift .evt-bucket-title {
+    font-size: 1.25rem;      /* text-xl */
+    line-height: 1.4;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.01em;
+    text-transform: none;
+}
+body.evt-vlift .evt-bucket-count {
+    font-size: .8125rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+body.evt-vlift .evt-bucket-head { margin-bottom: .75rem; }
