@@ -2333,10 +2333,6 @@ body.evt-vlift .evt-hero-datechip__day { font-size: 1.25rem !important; }
         justify-content: center !important;
         align-items: flex-end !important;
         gap: .875rem !important;
-        background: linear-gradient(270deg,
-            rgba(0, 0, 0, 0.35) 0%,
-            rgba(0, 0, 0, 0.15) 60%,
-            rgba(0, 0, 0, 0)    100%);
     }
     body.evt-vlift .evt-hero-side__desc {
         text-align: right;
