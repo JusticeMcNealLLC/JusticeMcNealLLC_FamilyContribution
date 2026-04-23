@@ -1199,10 +1199,14 @@
         return upcoming.slice().sort(byDateAsc)[0] || null;
     }
 
-    function _heroBg(event) {
+    function _heroBg(event, stripGradient) {
         const url = event.banner_url;
         if (url) {
             const safe = String(url).replace(/'/g, "%27");
+            if (stripGradient) {
+                // vlift: ::before pseudo-element handles all darkening
+                return "background: url('" + safe + "') center/cover;";
+            }
             return "background: linear-gradient(0deg, rgba(0,0,0,.65), rgba(0,0,0,.05) 55%), url('" + safe + "') center/cover;";
         }
         const grad = (C.CATEGORY_GRADIENT && (C.CATEGORY_GRADIENT[event.category] || C.CATEGORY_GRADIENT.default))
@@ -1300,7 +1304,7 @@
                 '<div class="evt-hero-vlift relative">' +
                 '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '"' +
                 ' class="block relative rounded-3xl overflow-hidden text-white shadow-[0_18px_50px_rgba(15,23,42,0.30)] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300"' +
-                ' style="' + _heroBg(event) + '">' +
+                ' style="' + _heroBg(event, true) + '">' +
                     goingRibbon +
                     '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + heartBtn + countP + stateP + '</div>' +
                     // F14 — FEATURED EVENT kicker (vlift only; CSS shown)
