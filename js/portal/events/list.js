@@ -932,6 +932,16 @@
         setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
     }
 
+    // E3 — Sync chip rail active state to the given type.
+    function _syncTypeChips(type) {
+        const t = type || 'all';
+        document.querySelectorAll('#evtTypeChips .evt-type-chip').forEach(c => {
+            const on = (c.dataset.type || 'all') === t;
+            c.classList.toggle('evt-type-chip--active', on);
+            c.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+    }
+
     // C3 — Sync restored state into the UI chrome (input, segmented control,
     // type menu button, search-expand panel). Called after DOM is ready.
     function _applyRestoredUi() {
@@ -958,6 +968,8 @@
             const sel = document.getElementById('typeFilter');
             if (sel) sel.value = _activeType;
         }
+        // E3 — sync chip rail to restored type
+        _syncTypeChips(_activeType);
         // Search input (only expand if there's a restored query)
         if (_searchQuery) {
             const input  = document.getElementById('evtSearchInput');
@@ -1633,6 +1645,7 @@
                 document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
                     o.classList.toggle('evt-type-opt--active', o.dataset.type === 'all')
                 );
+                _syncTypeChips('all');
                 _persistState();
                 renderEvents();
             };
@@ -1776,7 +1789,40 @@
                     // Mirror to hidden compat <select>
                     const sel = document.getElementById('typeFilter');
                     if (sel) sel.value = _activeType;
+                    _syncTypeChips(_activeType);
                     closeMenu();
+                    _persistState();
+                    renderEvents();
+                });
+            });
+        }
+
+        // E3 — Inline category chip rail (vlift). Mirrors selection to legacy
+        // type-menu state so opt-out (?vlift=0) keeps the dropdown in sync.
+        const chipRail = document.getElementById('evtTypeChips');
+        if (chipRail) {
+            chipRail.querySelectorAll('.evt-type-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const t = chip.dataset.type || 'all';
+                    if (t === _activeType) return;
+                    _activeType = t;
+                    _syncTypeChips(t);
+                    // Mirror to legacy type menu button + hidden select
+                    const menuBtn = document.getElementById('evtTypeMenuBtn');
+                    if (menuBtn) {
+                        menuBtn.dataset.type = t;
+                        const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + t + '"]');
+                        if (opt) {
+                            const label = opt.textContent.replace(/\s+events?$/i, '').trim();
+                            const labelEl = menuBtn.querySelector('[data-type-label]');
+                            if (labelEl) labelEl.textContent = label;
+                            document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
+                                o.classList.toggle('evt-type-opt--active', o === opt)
+                            );
+                        }
+                    }
+                    const sel = document.getElementById('typeFilter');
+                    if (sel) sel.value = t;
                     _persistState();
                     renderEvents();
                 });

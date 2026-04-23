@@ -1025,3 +1025,60 @@ body.evt-vlift #evtPageHeader #evtHeaderGreeting {
     color: rgba(255,255,255,.85) !important;
     text-shadow: 0 1px 1px rgba(0,0,0,.18);
 }
+
+/* =========================================================
+   E3 — Inline category chip rail (vlift only)
+   ========================================================= */
+body.evt-vlift #evtTypeChips { display: flex; }
+body.evt-vlift #evtTypeMenuBtn,
+body.evt-vlift #evtTypeMenuBtn + #evtTypeMenu { display: none !important; }
+
+.evt-type-chips { -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
+.evt-type-chips::-webkit-scrollbar { display: none; }
+.evt-type-chips { scrollbar-width: none; }
+
+.evt-type-chip {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform .12s ease, background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.evt-type-chip:hover { border-color: #d1d5db; }
+.evt-type-chip:active { transform: scale(.96); }
+.evt-type-chip--active {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 1px 2px rgba(79, 70, 229, .25);
+}
+.evt-type-chip--active:hover { border-color: transparent; }
+
+[data-theme="dark"] .evt-type-chip {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+[data-theme="dark"] .evt-type-chip:hover { border-color: #475569; }
+[data-theme="dark"] .evt-type-chip--active {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    border-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .evt-type-chip { transition: none; }
+    .evt-type-chip:active { transform: none; }
+}

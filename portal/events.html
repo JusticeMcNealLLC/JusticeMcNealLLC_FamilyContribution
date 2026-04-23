@@ -132,6 +132,14 @@
                             </div>
                         </div>
                     </div>
+                    <!-- E3 — Inline category chip rail (vlift only; hidden when flag off) -->
+                    <div id="evtTypeChips" class="hidden mt-2 flex items-center gap-2 overflow-x-auto evt-type-chips" role="tablist" aria-label="Event categories">
+                        <button type="button" role="tab" data-type="all"         class="evt-type-chip evt-type-chip--active" aria-selected="true">All</button>
+                        <button type="button" role="tab" data-type="llc"         class="evt-type-chip" aria-selected="false"><span aria-hidden="true">💼</span> LLC</button>
+                        <button type="button" role="tab" data-type="member"      class="evt-type-chip" aria-selected="false"><span aria-hidden="true">👥</span> Member</button>
+                        <button type="button" role="tab" data-type="competition" class="evt-type-chip" aria-selected="false"><span aria-hidden="true">🏆</span> Competition</button>
+                    </div>
+
                     <!-- Expandable search row -->
                     <div id="evtSearchExpand" class="hidden mt-2 relative">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>

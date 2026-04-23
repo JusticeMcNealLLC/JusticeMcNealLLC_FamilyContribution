@@ -1,6 +1,6 @@
 # 📅 `portal/events.html` — Visual & UX Overhaul Spec (events_003)
 
-> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5+C1+C2+C3+C4 shipped. **Phase D opened** — see [events_004_portalEvent_phaseD.md](events_004_portalEvent_phaseD.md) (D3 + D1 + D2 + D4 shipped — **Phase D complete**, SW at `v59`). **Phase E partial:** E1 (gradient header) + E2 (mobile search pill) + E4 (emoji bucket labels) + E9 (motion polish) shipped — **vlift default-ON live**, opt-out via `?vlift=0`. Phase A4 (polish/QA on real device) still pending — non-blocking for Phase C since C1 is mobile-gated behind `ontouchstart` + `innerWidth < 640` + `scrollY === 0`. **Phase E (Premium Visual Lift) scoped** — see §Phase E + Appendix C for the design-parity plan against the California gradient + Tomorrowland festival mockups.
+> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5+C1+C2+C3+C4 shipped. **Phase D opened** — see [events_004_portalEvent_phaseD.md](events_004_portalEvent_phaseD.md) (D3 + D1 + D2 + D4 shipped — **Phase D complete**, SW at `v61`). **Phase E partial:** E1 (gradient header) + E2 (mobile search pill) + E3 (inline category chip rail) + E4 (emoji bucket labels) + E9 (motion polish) shipped — **vlift default-ON live**, opt-out via `?vlift=0`. Phase A4 (polish/QA on real device) still pending — non-blocking for Phase C since C1 is mobile-gated behind `ontouchstart` + `innerWidth < 640` + `scrollY === 0`. **Phase E (Premium Visual Lift) scoped** — see §Phase E + Appendix C for the design-parity plan against the California gradient + Tomorrowland festival mockups.
 > **Scope:** `/portal/events.html` **list view only**. Detail view (`#eventsDetailView`) is out of scope — already shipped in M2 (`events_002.md`).
 > **Goal:** transform the current functional-but-flat list page into a **premium, mobile-first event browsing experience** that feels native to a top-tier consumer product, while staying inside the existing JMLLC portal theme (Inter + brand-indigo + surface-50 background + light editorial cards).
 > **Non-goal:** backend changes. No schema, RPC, or edge-function work. RSVP flow, create flow, detail flow all continue to call exactly what they call today.
@@ -993,7 +993,7 @@ Card + hero gain an optional heart-bookmark icon in the top-right that **does no
 ```
 E1  ✅ SHIPPED  Gradient editorial header (default-ON) — SW `v57 → v58`
 E2  ✅ SHIPPED  Mobile hero-visible search pill (always-visible <640px) — SW `v58 → v59`
-E3  Inline category chip rail (replaces dropdown)
+E3  ✅ SHIPPED  Inline category chip rail (replaces dropdown when vlift on) — SW `v60 → v61`
 E4  ✅ SHIPPED  Emoji-tagged bucket labels (default-ON, table in `list.js` `E_BUCKET_EMOJI`)
 E5  Top Picks rail (conditional on ≥2 pinned-LLC-future)
 E6  Festival-grade featured hero (height + layout refactor)
