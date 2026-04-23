@@ -1,6 +1,6 @@
 # 📅 `portal/events.html` — Visual & UX Overhaul Spec (events_003)
 
-> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5+C1+C2+C3+C4 shipped. **Phase D opened** — see [events_004_portalEvent_phaseD.md](events_004_portalEvent_phaseD.md) (D3 + D1 + D2 + D4 shipped — **Phase D complete**, SW at `v64`). **Phase E partial:** E1 (gradient header) + E2 (mobile search pill) + E3 (inline category chip rail) + E4 (emoji bucket labels) + E5 (Top Picks rail) + E9 (motion polish) + E10 (in-header notification bell + unread dot) + E11 (per-bucket See all / Show less) shipped — **vlift default-ON live**, opt-out via `?vlift=0`. Phase A4 (polish/QA on real device) still pending — non-blocking for Phase C since C1 is mobile-gated behind `ontouchstart` + `innerWidth < 640` + `scrollY === 0`. **Phase E (Premium Visual Lift) scoped** — see §Phase E + Appendix C for the design-parity plan against the California gradient + Tomorrowland festival mockups.
+> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5+C1+C2+C3+C4 shipped. **Phase D opened** — see [events_004_portalEvent_phaseD.md](events_004_portalEvent_phaseD.md) (D3 + D1 + D2 + D4 shipped — **Phase D complete**, SW at `v65`). **Phase E partial:** E1 (gradient header) + E2 (mobile search pill) + E3 (inline category chip rail) + E4 (emoji bucket labels) + E5 (Top Picks rail) + E6 (festival hero + CTA bar) + E9 (motion polish) + E10 (in-header notification bell + unread dot) + E11 (per-bucket See all / Show less) shipped — **vlift default-ON live**, opt-out via `?vlift=0`. Phase A4 (polish/QA on real device) still pending — non-blocking for Phase C since C1 is mobile-gated behind `ontouchstart` + `innerWidth < 640` + `scrollY === 0`. **Phase E (Premium Visual Lift) scoped** — see §Phase E + Appendix C for the design-parity plan against the California gradient + Tomorrowland festival mockups.
 > **Scope:** `/portal/events.html` **list view only**. Detail view (`#eventsDetailView`) is out of scope — already shipped in M2 (`events_002.md`).
 > **Goal:** transform the current functional-but-flat list page into a **premium, mobile-first event browsing experience** that feels native to a top-tier consumer product, while staying inside the existing JMLLC portal theme (Inter + brand-indigo + surface-50 background + light editorial cards).
 > **Non-goal:** backend changes. No schema, RPC, or edge-function work. RSVP flow, create flow, detail flow all continue to call exactly what they call today.
@@ -996,7 +996,7 @@ E2  ✅ SHIPPED  Mobile hero-visible search pill (always-visible <640px) — SW 
 E3  ✅ SHIPPED  Inline category chip rail (replaces dropdown when vlift on) — SW `v60 → v61`
 E4  ✅ SHIPPED  Emoji-tagged bucket labels (default-ON, table in `list.js` `E_BUCKET_EMOJI`)
 E5  ✅ SHIPPED  Top Picks 🔥 rail (vlift, conditional on ≥2 pinned-LLC future excl. hero) — SW `v63 → v64`
-E6  Festival-grade featured hero (height + layout refactor)
+E6  ✅ SHIPPED  Festival-grade featured hero (date/time row above title, bottom dark fade, full-width RSVP CTA bar reusing `evtHandleRsvp`) — SW `v64 → v65`
 E7  Interested avatar cluster on hero/cards (reuses evtAttendees)
 E8  Dark-mode-compatible CSS tokens (no dark theme yet) — superseded by D4 ship
 E9  ✅ SHIPPED (partial)  Motion polish (header fade, chip press) — ken-burns + stagger pending

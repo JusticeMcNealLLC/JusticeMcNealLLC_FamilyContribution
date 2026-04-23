@@ -38,7 +38,7 @@ const checks = {
     js_hidden_in_search: /_searchQuery[\s\S]{0,800}getElementById\('evtTopPicks'\)/.test(list),
 
     // SW
-    sw_v64: /jm-portal-v64/.test(sw),
+    sw_v64_or_higher: /jm-portal-v(6[4-9]|[7-9]\d|\d{3,})/.test(sw),
     sw_no_v63: !sw.includes("'jm-portal-v63'"),
 };
 

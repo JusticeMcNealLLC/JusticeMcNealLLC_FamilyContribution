@@ -1232,18 +1232,95 @@
             ? ('?event=' + encodeURIComponent(event.slug))
             : 'javascript:void(0)';
 
-        heroEl.innerHTML =
-            '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '"' +
-            ' class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300"' +
-            ' style="' + _heroBg(event) + '">' +
-                goingRibbon +
-                '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div>' +
-                '<div class="absolute inset-x-0 bottom-0 p-5 sm:p-6">' +
-                    '<div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc(dateLine) + '</div>' +
-                    '<h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc(event.title || 'Untitled event') + '</h2>' +
-                    (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc(loc) + '</p>' : '') +
-                '</div>' +
-            '</a>';
+        const useVlift = document.body.classList.contains('evt-vlift');
+
+        if (useVlift) {
+            // E6 — Festival hero: date/time row above title + bottom RSVP CTA bar
+            const dateLong = (() => {
+                try { return start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
+                catch (_) { return ''; }
+            })();
+            const timeShort = time || (() => {
+                try { return start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
+                catch (_) { return ''; }
+            })();
+            const calIcon = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 9h18M8 3v4M16 3v4"/></svg>';
+            const clkIcon = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg>';
+            const pinIcon = loc
+                ? '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s7-7.58 7-13a7 7 0 10-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg>'
+                : '';
+
+            // CTA label/state
+            const isGoing = (rsvp && rsvp.status === 'going');
+            const isCompetition = event.event_type === 'competition';
+            const ctaLabel = isGoing
+                ? '✓ You\'re going'
+                : (isCompetition ? 'Buy Raffle Ticket' : 'RSVP — I\'m going');
+            const ctaCls = isGoing
+                ? 'evt-hero-cta evt-hero-cta--going'
+                : 'evt-hero-cta';
+
+            heroEl.innerHTML =
+                '<div class="evt-hero-vlift relative">' +
+                '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '"' +
+                ' class="block relative rounded-3xl overflow-hidden text-white shadow-[0_18px_50px_rgba(15,23,42,0.30)] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300"' +
+                ' style="' + _heroBg(event) + '">' +
+                    goingRibbon +
+                    '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div>' +
+                    // Bottom-edge dark fade for legibility
+                    '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div>' +
+                    '<div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6">' +
+                        // Date/time row ABOVE the title (Tomorrowland layout)
+                        '<div class="flex items-center gap-3 text-[12px] font-semibold text-white/90 mb-2">' +
+                            (dateLong ? '<span class="inline-flex items-center gap-1.5">' + calIcon + esc(dateLong) + '</span>' : '') +
+                            (timeShort ? '<span class="inline-flex items-center gap-1.5">' + clkIcon + esc(timeShort) + '</span>' : '') +
+                        '</div>' +
+                        '<h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc(event.title || 'Untitled event') + '</h2>' +
+                        (loc
+                            ? '<p class="mt-2 inline-flex items-center gap-1.5 text-sm text-white/90 truncate">' + pinIcon + esc(loc) + '</p>'
+                            : '') +
+                    '</div>' +
+                '</a>' +
+                // Bottom CTA bar (sits visually attached to hero, but is a separate
+                // button so the click isn't swallowed by the navigation anchor)
+                '<button type="button" data-evt-hero-cta="' + esc(event.id) + '" class="' + ctaCls + '">' +
+                    '<span>' + esc(ctaLabel) + '</span>' +
+                    '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>' +
+                '</button>' +
+                '</div>';
+
+            // Wire CTA → existing RSVP handler (no new flows)
+            const ctaBtn = heroEl.querySelector('button[data-evt-hero-cta]');
+            if (ctaBtn) {
+                ctaBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof window.evtHandleRsvp !== 'function') return;
+                    try {
+                        ctaBtn.disabled = true;
+                        // Toggling 'going' off when already going is handled by evtHandleRsvp
+                        await window.evtHandleRsvp(event.id, 'going');
+                    } catch (err) {
+                        console.error('Hero RSVP failed', err);
+                    } finally {
+                        ctaBtn.disabled = false;
+                    }
+                });
+            }
+        } else {
+            heroEl.innerHTML =
+                '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '"' +
+                ' class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300"' +
+                ' style="' + _heroBg(event) + '">' +
+                    goingRibbon +
+                    '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div>' +
+                    '<div class="absolute inset-x-0 bottom-0 p-5 sm:p-6">' +
+                        '<div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc(dateLine) + '</div>' +
+                        '<h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc(event.title || 'Untitled event') + '</h2>' +
+                        (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc(loc) + '</p>' : '') +
+                    '</div>' +
+                '</a>';
+        }
 
         // Click → detail navigation (preserve modifier-click for new tab)
         const link = heroEl.querySelector('a[data-evt-hero]');
