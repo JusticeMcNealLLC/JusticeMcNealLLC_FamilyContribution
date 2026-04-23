@@ -2102,3 +2102,92 @@ body.evt-vlift .evt-create-tile__hint {
     max-width: 200px;
     line-height: 1.35;
 }
+
+/* ============================================================
+ * F16 -- Header refresh + full-width page + cleaner right rail (vlift)
+ *   - Header: drop purple gradient, switch to light surface w/ border
+ *   - Page width: remove max-width caps so content fills viewport
+ *   - Right rail: keep cards but tighten spacing as a side section
+ * Non-vlift unchanged.
+ * ============================================================ */
+
+/* Header: light background, no purple gradient */
+body.evt-vlift #evtPageHeader {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    animation: none !important;
+}
+body.evt-vlift #evtPageHeader::before,
+body.evt-vlift #evtPageHeader::after { content: none !important; background: none !important; }
+
+/* Restore dark text on header */
+body.evt-vlift #evtPageHeader #evtHeaderTitle {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    background: none !important;
+    text-shadow: none !important;
+}
+body.evt-vlift #evtPageHeader #evtHeaderCount,
+body.evt-vlift #evtPageHeader .evt-greeting-hello,
+body.evt-vlift #evtPageHeader .evt-greeting-sub {
+    color: #6b7280 !important;
+    text-shadow: none !important;
+}
+body.evt-vlift #evtPageHeader .evt-greeting-hello { color: #475569 !important; }
+
+/* Restore solid brand Create Event button */
+body.evt-vlift #evtPageHeader #createEventBtn {
+    background: #4f46e5 !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.22) !important;
+    backdrop-filter: none !important;
+}
+body.evt-vlift #evtPageHeader #createEventBtn:hover {
+    background: #4338ca !important;
+}
+
+/* Full-width page: remove max-width caps */
+body.evt-vlift #evtPageHeader > div {
+    max-width: none !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+}
+body.evt-vlift #evtShell {
+    max-width: none !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+}
+@media (min-width: 1024px) {
+    body.evt-vlift #evtPageHeader > div {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+    body.evt-vlift #evtShell {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        gap: 1.75rem !important;
+        grid-template-columns: minmax(0, 1fr) 320px !important;
+    }
+}
+
+/* Filter strip: span the wider container (already max-width:none under F2,
+   but reassert to override any sibling cap) */
+body.evt-vlift #evtFilterStrip { max-width: none !important; }
+
+/* Right rail: present as a distinct side section */
+@media (min-width: 1024px) {
+    body.evt-vlift #evtRightRail {
+        gap: 1rem !important;
+        padding-top: .25rem;
+    }
+}
+body.evt-vlift #evtRightRail .evt-mcal,
+body.evt-vlift #evtRightRail .evt-myrsvps,
+body.evt-vlift #evtRightRail .evt-stats {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
