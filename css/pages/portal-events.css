@@ -579,3 +579,19 @@
     .evt-ptr { transition: opacity .15s ease; }
     .evt-ptr--refreshing .evt-ptr-spin { animation: none; }
 }
+
+
+/* ============================================================
+   events_004 Phase D additions
+   D3 search history & suggestions
+   ============================================================ */
+.evt-search-suggest { animation: evtSuggestIn .12s ease-out both; }
+@keyframes evtSuggestIn { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+    .evt-search-suggest { animation: none; }
+}
+.evt-suggest-row:focus-visible,
+.evt-suggest-chip:focus-visible,
+.evt-suggest-clear:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+.evt-suggest-chip { cursor: pointer; transition: transform .12s ease; }
+.evt-suggest-chip:active { transform: scale(0.97); }

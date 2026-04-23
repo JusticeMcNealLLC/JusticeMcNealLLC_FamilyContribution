@@ -65,8 +65,8 @@ const results = {
     c1_init_fn:                         /function\s+_initPullToRefresh/.test(listJs),
     c1_indicator_css:                   cssText.includes('.evt-ptr'),
     c1_spin_keyframe:                   cssText.includes('@keyframes evtPtrSpin'),
-    // SW bump
-    sw_bumped_to_v53:                   swText.includes("'jm-portal-v53'"),
+    // SW bump (Phase C landed at v53; later phases may bump higher)
+    sw_bumped_past_v52:                 /jm-portal-v(5[3-9]|[6-9]\d|\d{3,})/.test(swText),
     sw_no_leftover_v52:                 !swText.includes("'jm-portal-v52'"),
 };
 
