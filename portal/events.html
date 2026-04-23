@@ -70,7 +70,8 @@
             <!-- Sentinel for sticky-condense IntersectionObserver -->
             <div id="evtHeaderSentinel" class="h-px -mt-px" aria-hidden="true"></div>
 
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 sm:pb-10">
+            <div id="evtShell" class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 sm:pb-10">
+              <div class="evt-shell-main">
 
                 <!-- Live banner (hidden by default — populated in Phase B) -->
                 <div id="evtLiveBanner" class="hidden mt-3"></div>
@@ -209,7 +210,16 @@
                     </div>
                 </div>
 
-            </div>
+              </div><!-- /.evt-shell-main -->
+
+              <!-- F2 — Right rail (vlift only; hidden <lg). Populated by F10/F11/F12. -->
+              <aside id="evtRightRail" class="evt-shell-rail hidden" aria-label="Events sidebar">
+                <div id="evtRailSlotCalendar"></div>
+                <div id="evtRailSlotRsvps"></div>
+                <div id="evtRailSlotStats"></div>
+              </aside>
+
+            </div><!-- /#evtShell -->
 
             <!-- Mobile FAB (events_003 §8.9) — sm only, permission-gated by JS -->
             <button id="evtCreateFab" type="button" aria-label="Create event"

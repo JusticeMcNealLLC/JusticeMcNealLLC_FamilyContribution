@@ -1260,3 +1260,31 @@ body.evt-vlift .evt-greeting-hello { letter-spacing: .01em; }
     body.evt-vlift #evtGreetingSub { display: block !important; }
 }body.evt-vlift .evt-greeting-hello { color: rgba(255,255,255,.85); }
 body.evt-vlift .evt-greeting-sub   { color: rgba(255,255,255,.75); }
+/* =========================================================
+   F2 — Desktop 2-col shell (vlift only; >=lg)
+   ========================================================= */
+body.evt-vlift #evtShell { max-width: 80rem; }
+@media (min-width: 1024px) {
+    body.evt-vlift #evtShell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+    body.evt-vlift .evt-shell-main { min-width: 0; }
+    body.evt-vlift #evtRightRail {
+        display: flex !important;
+        flex-direction: column;
+        gap: 1rem;
+        position: sticky;
+        top: calc(var(--evt-header-h, 4rem) + 1rem);
+        max-height: calc(100vh - var(--evt-header-h, 4rem) - 2rem);
+        overflow-y: auto;
+    }
+    body.evt-vlift #evtRightRail:empty,
+    body.evt-vlift #evtRightRail:has(> div:empty:only-child) { display: none !important; }
+}
+/* Widen gradient header to match the wider shell */
+body.evt-vlift #evtPageHeader > div { max-width: 80rem !important; }
+body.evt-vlift #evtFilterStrip > div:first-child,
+body.evt-vlift #evtFilterStrip { max-width: none; }
