@@ -58,7 +58,7 @@
             if (typeof s.t === 'string') _activeType = s.t;
             if (typeof s.c === 'string') _activeCategory = s.c;
             if (typeof s.v === 'string' && (s.v === 'list' || s.v === 'calendar')) _activeView = s.v;
-            if (typeof s.tab === 'string' && ['upcoming','past','going'].includes(s.tab)) {
+            if (typeof s.tab === 'string' && ['upcoming','past','going','saved'].includes(s.tab)) {
                 window.evtActiveTab = s.tab;
             }
         } catch (_) { /* corrupt payload — ignore */ }
@@ -1766,6 +1766,11 @@
         if (tab === 'going') {
             const r = rsvps[ev.id];
             return r && r.status === 'going';
+        }
+        if (tab === 'saved') {
+            // F3 — Saved maps to rsvp.status='maybe' (same as E12 heart)
+            const r = rsvps[ev.id];
+            return r && r.status === 'maybe';
         }
         return true;
     }

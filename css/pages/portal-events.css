@@ -1288,3 +1288,38 @@ body.evt-vlift #evtShell { max-width: 80rem; }
 body.evt-vlift #evtPageHeader > div { max-width: 80rem !important; }
 body.evt-vlift #evtFilterStrip > div:first-child,
 body.evt-vlift #evtFilterStrip { max-width: none; }
+/* =========================================================
+   F3 — Underline tab strip + Saved tab (vlift only)
+   Replaces the E-era pill segmented control.
+   ========================================================= */
+body.evt-vlift #evtLifecycleSeg {
+    display: flex;
+    gap: 0;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+body.evt-vlift #evtLifecycleSeg .evt-seg__btn {
+    background: transparent !important;
+    color: #6b7280;
+    font-weight: 600;
+    padding: 0.65rem 1rem;
+    border-radius: 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .15s ease, border-color .15s ease;
+    box-shadow: none !important;
+}
+body.evt-vlift #evtLifecycleSeg .evt-seg__btn:hover {
+    color: #111827;
+}
+body.evt-vlift #evtLifecycleSeg .evt-seg__btn--active {
+    color: #4f46e5 !important;
+    border-bottom-color: #4f46e5 !important;
+    background: transparent !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift #evtLifecycleSeg .evt-seg__btn { transition: none; }
+}
