@@ -76,8 +76,7 @@
                 <!-- Live banner (hidden by default — populated in Phase B) -->
                 <div id="evtLiveBanner" class="hidden mt-3"></div>
 
-                <!-- Hero card -->
-                <section id="evtHero" class="mt-3"></section>
+                <!-- F19 — Hero card moved BELOW the filter+chip strip so the banner sits under the event-type chips. Empty placeholder kept here for legacy queries; live mount is #evtHero further down. -->
 
                 <!-- "You're going" rail (hidden by default — populated in Phase B) -->
                 <section id="evtGoingRail" class="hidden mt-6">
@@ -179,6 +178,9 @@
                     <option value="member">Member Events</option>
                     <option value="competition">Competitions</option>
                 </select>
+
+                <!-- F19 — Featured hero now renders here, directly under the event-type chip rail -->
+                <section id="evtHero" class="mt-4"></section>
 
                 <!-- Bucketed groups -->
                 <div id="evtGroups" class="mt-6 space-y-8"></div>

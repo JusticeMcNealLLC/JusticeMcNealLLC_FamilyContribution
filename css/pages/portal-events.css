@@ -2404,3 +2404,42 @@ body.evt-vlift .evt-hero-meta > p            { order: 3; }
 body.evt-vlift .evt-hero-meta > [data-f14-dtrow] { order: 3; }
 body.evt-vlift .evt-hero-meta > .evt-hero-cluster,
 body.evt-vlift .evt-hero-meta > button.evt-hero-cluster { order: 4; margin-top: .35rem !important; margin-bottom: 0 !important; }
+
+/* ============================================================
+ * F19 -- Hero refinements per user feedback (Apr 23):
+ *   1) Banner moved under event-type chips (DOM change in events.html)
+ *   2) Date chip + event meta on the SAME LINE (date chip moved to
+ *      bottom-left inline with meta, kicker stays top-left)
+ *   3) Right-side description = clean white text, NO scrim background
+ * Non-vlift unchanged.
+ * ============================================================ */
+
+/* (2) Date chip: drop the top-left absolute position; pin to bottom-left
+   so it sits on the SAME visual row as the meta block. */
+body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
+    top: auto !important;
+    bottom: 1.25rem !important;
+    left: 1rem !important;
+}
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
+        bottom: 1.25rem !important;
+        left: 1.25rem !important;
+    }
+    /* Meta padding-left already reserves ~5.75rem under F18 so the
+       date chip slides into that exact gutter -- no overlap. */
+}
+
+/* (3) Side description: strip the scrim/backdrop -- just white text */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-side {
+        background: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    body.evt-vlift .evt-hero-side__desc {
+        background: transparent !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    }
+}
