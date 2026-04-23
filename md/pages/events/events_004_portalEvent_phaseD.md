@@ -1,7 +1,7 @@
 # events_004 · Portal Events — Phase D (Power Features)
 
 > **Parent spec:** [events_003_portalEvent_visualOverhaul.md](events_003_portalEvent_visualOverhaul.md)
-> **Status:** Phase D opened. **D3 shipped** (SW `v53 → v54`). **D1 shipped** (SW `v54 → v55`). **D2 shipped** (SW `v55 → v56`). D4 pending.
+> **Status:** **Phase D complete.** **D3 shipped** (SW `v53 → v54`). **D1 shipped** (SW `v54 → v55`). **D2 shipped** (SW `v55 → v56`). **D4 shipped** (SW `v56 → v57`).
 > **Prereqs:** Phase A1+A2+A3+B1–B5+C1–C4 shipped.
 > **Scope:** D1 calendar/agenda toggle · D2 swipe gestures · D3 search history & suggestions · D4 dark-mode pass.
 > **Out of scope:** new data contracts, new queries, admin-surface changes, notification schema.
@@ -146,6 +146,17 @@ Each item ships as its own commit. Do NOT batch D1+D2+D3+D4.
 ---
 
 ## D4 — Dark mode pass
+
+> ✅ **SHIPPED** — SW `v56 → v57`. Smoke: `test/_smoke-d4.js` 39/39 pass.
+>
+> Implementation notes:
+> - **Theme modes:** `'auto' | 'light' | 'dark'` persisted in `localStorage('evt_theme')`. `'auto'` resolves via `matchMedia('(prefers-color-scheme: dark)')`. Resolved theme written to `document.documentElement.dataset.theme`.
+> - **Toggle button** `#evtThemeToggle` in `#evtFilterStrip` after `#evtViewToggle`. Cycles `auto → light → dark → auto`. Three swappable SVG icons (auto = half-moon, light = sun, dark = moon). Idempotent wiring via `dataset.themeWired='1'`.
+> - **OS theme listener:** when mode = `'auto'`, `mql.addEventListener('change', ...)` re-resolves on system flip. Manual `'light'`/`'dark'` choices ignore OS changes.
+> - **Public API for Settings page:** `window.evtSetTheme(mode)` and `window.evtGetTheme()` exposed for the Settings stub to wire later.
+> - **CSS scoping:** all dark overrides under `[data-theme="dark"]` and limited to `#eventsView`, `#eventsDetailView`, and event-specific `.evt-*` / `.ed-*` classes — does not bleed to other pages.
+> - **Surfaces audited:** body / page bg, all `.bg-white`, `.text-gray-900/700/600/500/400`, `.border-gray-100/200`, type menu popover, calendar grid (D1), going rail / hero card shadows, hero scrim (deepened per §D4.2), pinned chip background flips white → slate-800, active-filter pill (C2), PTR indicator (C1), search suggest dropdown (D3), context sheet panel + rows (D2), toast (D2), all `.ed-*` detail-view cards (rsvp options, host card, pills, notices, progress bar, dividers).
+> - **Theme switch is instant** — no transition needed, so `prefers-reduced-motion` requires no extra guards.
 
 **Goal:** portal events page renders correctly when user/system toggles dark.
 

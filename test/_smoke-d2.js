@@ -101,7 +101,7 @@ const results = {
     d2_reduced_motion_ctx:      /prefers-reduced-motion[\s\S]*?evt-context-sheet/.test(cssText),
 
     // SW
-    sw_bumped_to_v56:           swText.includes("'jm-portal-v56'"),
+    sw_bumped_past_v55:         /jm-portal-v(5[6-9]|[6-9]\d|\d{3,})/.test(swText),
     sw_no_leftover_v55:         !swText.includes("'jm-portal-v55'"),
 };
 
