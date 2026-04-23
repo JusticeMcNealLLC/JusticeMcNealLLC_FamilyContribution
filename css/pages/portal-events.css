@@ -338,6 +338,73 @@
     background: #f1f5f9; color: #64748b; border: none; cursor: pointer;
     transition: background .15s, color .15s; white-space: nowrap;
 }
+
+/* ════════════════════════════════════════════════════════════
+   events_003 — Portal events list (A2/A3)
+   Sticky condensing header, segmented control, type menu,
+   bucket headings, mobile FAB, going rail, live banner.
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Sticky condensing page header ─────────────────────── */
+#evtPageHeader { transition: padding .18s ease, box-shadow .18s ease; }
+#evtPageHeader.evt-header--condensed {
+    padding-top: max(0.25rem, env(safe-area-inset-top)) !important;
+    box-shadow: 0 1px 0 rgba(0,0,0,.06);
+}
+#evtPageHeader.evt-header--condensed #evtHeaderTitle { font-size: 1.125rem; line-height: 1.2; }
+#evtPageHeader.evt-header--condensed #evtHeaderCount { display: none; }
+#evtPageHeader.evt-header--condensed > div { padding-top: .5rem; padding-bottom: .5rem; }
+@media (prefers-reduced-motion: reduce) {
+    #evtPageHeader { transition: none; }
+}
+
+/* ── Segmented control (lifecycle) ─────────────────────── */
+.evt-seg {
+    display: inline-flex; align-items: stretch; gap: 2px;
+    padding: 3px; border-radius: 14px; background: #e5e7eb;
+}
+.evt-seg__btn {
+    flex: 1 1 auto;
+    padding: 8px 14px; border-radius: 11px;
+    font-size: 13px; font-weight: 600; color: #475569;
+    background: transparent; border: none; cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.evt-seg__btn:hover { color: #1e293b; }
+.evt-seg__btn--active {
+    background: #ffffff; color: #1e293b;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+.evt-seg__btn:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+@media (min-width: 640px) {
+    .evt-seg__btn { flex: 0 0 auto; padding: 8px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .evt-seg__btn { transition: none; }
+}
+
+/* ── Type menu popover ─────────────────────────────────── */
+.evt-type-opt {
+    width: 100%; display: flex; align-items: center; gap: .5rem;
+    padding: 10px 12px; font-size: 13px; text-align: left;
+    color: #1f2937; background: transparent; border: none; cursor: pointer;
+}
+.evt-type-opt:hover { background: #f9fafb; }
+.evt-type-opt--active { color: #4f46e5; font-weight: 600; }
+.evt-type-opt:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+
+/* ── Horizontal scroll (going rail) ────────────────────── */
+.evt-scroll-hide { -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.evt-scroll-hide::-webkit-scrollbar { display: none; }
+
+/* ── Mobile FAB ────────────────────────────────────────── */
+#evtCreateFab.flex { display: flex; }
+#evtCreateFab:focus-visible { outline: 3px solid #c7d2fe; outline-offset: 3px; }
+
+/* ── Hero card focus state ─────────────────────────────── */
+#evtHero a:focus-visible { outline: 3px solid #c7d2fe; outline-offset: 4px; }
+
 .evt-filter-chip:hover { background: #e2e8f0; color: #475569; }
 .evt-filter-chip--active { background: #1e293b; color: #fff; }
 .evt-filter-chip--active:hover { background: #334155; color: #fff; }
@@ -374,3 +441,79 @@
 }
 /* Manage event button: a touch wider so the icon + label breathe */
 .evt-host-more-btn { min-width: 132px; }
+
+
+/* ════════════════════════════════════════════════════════════
+   events_003 — Portal events list (A2/A3)
+   Sticky condensing header, segmented control, type menu,
+   bucket headings, mobile FAB, going rail, live banner.
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Sticky condensing page header ─────────────────────── */
+#evtPageHeader { transition: padding .18s ease, box-shadow .18s ease; }
+#evtPageHeader.evt-header--condensed {
+    padding-top: max(0.25rem, env(safe-area-inset-top)) !important;
+    box-shadow: 0 1px 0 rgba(0,0,0,.06);
+}
+#evtPageHeader.evt-header--condensed #evtHeaderTitle { font-size: 1.125rem; line-height: 1.2; }
+#evtPageHeader.evt-header--condensed #evtHeaderCount { display: none; }
+#evtPageHeader.evt-header--condensed > div { padding-top: .5rem; padding-bottom: .5rem; }
+@media (prefers-reduced-motion: reduce) {
+    #evtPageHeader { transition: none; }
+}
+
+/* ── Segmented control (lifecycle) ─────────────────────── */
+.evt-seg {
+    display: inline-flex; align-items: stretch; gap: 2px;
+    padding: 3px; border-radius: 14px; background: #e5e7eb;
+}
+.evt-seg__btn {
+    flex: 1 1 auto;
+    padding: 8px 14px; border-radius: 11px;
+    font-size: 13px; font-weight: 600; color: #475569;
+    background: transparent; border: none; cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.evt-seg__btn:hover { color: #1e293b; }
+.evt-seg__btn--active {
+    background: #ffffff; color: #1e293b;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+.evt-seg__btn:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+@media (min-width: 640px) {
+    .evt-seg__btn { flex: 0 0 auto; padding: 8px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .evt-seg__btn { transition: none; }
+}
+
+/* ── Type menu popover ─────────────────────────────────── */
+.evt-type-opt {
+    width: 100%; display: flex; align-items: center; gap: .5rem;
+    padding: 10px 12px; font-size: 13px; text-align: left;
+    color: #1f2937; background: transparent; border: none; cursor: pointer;
+}
+.evt-type-opt:hover { background: #f9fafb; }
+.evt-type-opt--active { color: #4f46e5; font-weight: 600; }
+.evt-type-opt:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+
+/* ── Horizontal scroll (going rail) ────────────────────── */
+.evt-scroll-hide { -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.evt-scroll-hide::-webkit-scrollbar { display: none; }
+
+/* ── Mobile FAB ────────────────────────────────────────── */
+#evtCreateFab.flex { display: flex; }
+#evtCreateFab:focus-visible { outline: 3px solid #c7d2fe; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+    #evtCreateFab { transition: none; }
+}
+
+/* ── Bucket section heading hover-shadow tweaks ────────── */
+#evtGroups section > h2 {
+    margin-top: 0;
+    /* Subtle sticky-ish — but keep simple to avoid iOS double-sticky bug */
+}
+
+/* ── Hero card focus state ─────────────────────────────── */
+#evtHero a:focus-visible { outline: 3px solid #c7d2fe; outline-offset: 4px; }

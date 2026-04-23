@@ -1,6 +1,6 @@
 # 📅 `portal/events.html` — Visual & UX Overhaul Spec (events_003)
 
-> **Status:** Draft / not started.
+> **Status:** Phase A1+A2+A3 shipped. SW bumped to `v51`. Phase A4 (polish/QA) and Phase B (rail/banner/FAB-scroll) pending.
 > **Scope:** `/portal/events.html` **list view only**. Detail view (`#eventsDetailView`) is out of scope — already shipped in M2 (`events_002.md`).
 > **Goal:** transform the current functional-but-flat list page into a **premium, mobile-first event browsing experience** that feels native to a top-tier consumer product, while staying inside the existing JMLLC portal theme (Inter + brand-indigo + surface-50 background + light editorial cards).
 > **Non-goal:** backend changes. No schema, RPC, or edge-function work. RSVP flow, create flow, detail flow all continue to call exactly what they call today.
@@ -758,26 +758,29 @@ This is not a polish pass. This is a **ship gate**. If any item fails, Phase A d
 
 ### Phase A — P0 visual core (single connected effort)
 
-1. **A1 — Card foundations.**
-   - Update `js/components/events/constants.js` with new muted gradient palette.
-   - Update `js/components/events/helpers.js` with `relativeDate()` and `groupByBucket()`.
-   - Update `js/components/events/pills.js` with `countdownChip()` and refreshed `statePill` colors.
-   - Update `js/components/events/card.js` to new card layout (banner + below-banner content reordered) + matching `skeleton()`.
-   - Smoke-test admin grid (`/admin/events.html`) for regression.
-   - **Commit + push.** No SW bump yet.
+1. **A1 — Card foundations.** ✅ **SHIPPED** (commit `7906904`).
+   - Updated `js/components/events/constants.js` with new muted gradient palette.
+   - Updated `js/components/events/helpers.js` with `relativeDate()` and `groupByBucket()`.
+   - Updated `js/components/events/pills.js` with `countdownChip()` and refreshed `statePill` (inline Tailwind; orphan `.evt-pill--*` classes were never compiled).
+   - Updated `js/components/events/card.js` to new card layout (header row date stamp + relative date, aspect-[16/9] banner, single status badge, category-text meta, avatar stack, countdown footer, going ribbon) + matching `skeleton()`.
+   - Smoke-tested admin grid (`/admin/events.html`) for regression — clean.
+   - **Verified via** [test/events-card.html](test/events-card.html).
 
-2. **A2 — List page DOM rewrite.**
-   - Replace `#eventsListView` markup in `portal/events.html` per §9.1: new sticky header shell, new filter strip (segmented control + search-toggle + type-menu), bucket containers, hero container, going rail container (hidden by default), live banner container (hidden by default), FAB.
-   - Add scoped `.evt-list-*` rules in `css/pages/portal-events.css` for the new components (segmented control fill, hero card overlay scrim, rail scroll, FAB, live banner).
-   - **Commit + push.** No SW bump yet.
+2. **A2 — List page DOM rewrite.** ✅ **SHIPPED**
+   - Replaced `#eventsListView` markup in `portal/events.html` per §9.1: sticky condensing header `#evtPageHeader`, hero container `#evtHero`, hidden `#evtLiveBanner` + `#evtGoingRail` (Phase B will populate), sticky filter strip with segmented `#evtLifecycleSeg` + `#evtSearchToggle` + `#evtTypeMenuBtn`/`#evtTypeMenu` popover + collapsible `#evtSearchExpand`, bucket container `#evtGroups`, mobile FAB `#evtCreateFab`.
+   - Preserved IDs `createEventBtn`, `emptyCreateBtn`, `typeFilter` (hidden compat select), `eventsDetailView`, `createModal` and all children.
+   - Added scoped `.evt-list-*` rules in `css/pages/portal-events.css` (segmented control, type menu, sticky condensing header, FAB, scroll-hide for rail, hero focus state, prefers-reduced-motion).
 
-3. **A3 — list.js render pipeline rewrite.**
-   - Refactor `list.js` `renderEvents()` to: (a) decide which event becomes hero, (b) bucket the rest by `groupByBucket`, (c) render each bucket section.
-   - Add `renderHero(event)` and `renderGoingRail(events)` and `renderLiveBanner(events)`.
-   - Re-wire `init.js` for sticky-header IntersectionObserver, search expand/collapse, type-menu open, FAB show/hide.
-   - Preserve all `evt*` legacy globals.
-   - **Commit + push.** **Bump SW cache `v50 → v51` here.**
-   - Smoke test full path: load → filter → search → tap card → detail opens → back → state preserved.
+3. **A3 — list.js render pipeline rewrite.** ✅ **SHIPPED** (SW `v50 → v51`)
+   - Rewrote `list.js`: `_pickHero()` per locked §4.3 rule (going-within-24h → pinned LLC future → soonest upcoming → null); `_renderHero()` full-bleed editorial hero with overlay; `_renderBucket()` per-bucket grid via `H.groupByBucket`; pinned-LLC sorted first within each bucket.
+   - Search behavior implements locked §4.4: non-empty query disables bucketing + hides hero/rail/banner, two-tier flat list (title-match → description-match) sorted by date asc within each tier.
+   - Avatar query implements locked §12.1: ONE batched `event_rsvps` query filtered by `event_id IN (currentIds)` + `status='going'`, joined to `profiles(profile_picture_url, first_name)`, capped 5/event client-side. Stored on `window.evtAttendees`, passed to every `Card.render` call. **No N+1.**
+   - New filter wiring: `#evtLifecycleSeg` segmented control replaces lifecycle chip row; `#evtTypeMenuBtn` popover replaces type chip row (label mirrored to hidden `#typeFilter` select for legacy compat); `#evtSearchToggle` expands/collapses `#evtSearchExpand`; ESC clears search or collapses.
+   - Sticky condensing header: IntersectionObserver on `#evtHeaderSentinel` toggles `.evt-header--condensed`; header height published as `--evt-header-h` CSS var so the sticky filter strip docks below it (avoids iOS double-sticky overlap).
+   - Mobile FAB shown only when `events.create` permission granted.
+   - Click routing: cards now emit `data-evt-card="<id>"`; list.js intercepts non-modifier clicks and routes via `evtNavigateToEvent` / `evtOpenDetail`.
+   - Legacy globals preserved: `evtLoadEvents`, `evtRenderEvents`, `evtRenderFeatured` (no-op stub), `evtUpdateHeroStats` (renders header count), `evtSetupSearch`, `evtInitFilterChips`, `evtRenderCard`.
+   - **SW cache bumped `v50 → v51`** in `sw.js`.
 
 4. **A4 — Polish & QA pass.**
    - Mobile pass at 320 / 375 / 414.

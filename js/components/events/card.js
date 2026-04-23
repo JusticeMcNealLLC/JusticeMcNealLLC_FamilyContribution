@@ -141,7 +141,7 @@
         const ribbon    = (variant === 'portal') ? _goingRibbon(opts.rsvp) : '';
         const stack     = (variant === 'portal') ? _avatarStack(opts.attendees) : '';
 
-        return `<a href="${href}" class="group block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden transition md:hover:shadow-md md:hover:-translate-y-0.5">
+        return `<a href="${href}" data-evt-card="${event.id}" class="group block bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden transition md:hover:shadow-md md:hover:-translate-y-0.5">
             ${ribbon}
             <div class="px-4 pt-3 pb-2 flex items-center gap-3">
                 ${_dateStamp(event)}
