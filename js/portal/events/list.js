@@ -35,6 +35,8 @@
     let _searchDebounce = null;
     let _expandedBucket = null;   // E11 — slug of bucket the user "See all"-ed; null = normal
     let _createTileInjected = false; // F8 — ensures only one Create tile per render
+    let _miniCalMonth = null;     // F10 — Date pointing to first day of displayed month
+    let _activeDay = '';          // F10 — ISO yyyy-mm-dd filter from mini calendar click
     const E_BUCKET_TRUNCATE = 6;  // E11 — show "See all" link when bucket > N (vlift only)
 
     // C3 — sessionStorage persistence key (events_003 §3.11 / §8.5)
@@ -1464,6 +1466,103 @@
         '</section>';
     }
 
+    // =========================================================
+    // F10 — Mini calendar (right rail, vlift only)
+    // =========================================================
+    function _toIsoDate(d) {
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+    }
+    function _renderMiniCalendar() {
+        const mount = document.getElementById('evtRailSlotCalendar');
+        if (!mount) return;
+        if (!document.body.classList.contains('evt-vlift')) { mount.innerHTML = ''; return; }
+
+        const today = new Date();
+        if (!_miniCalMonth) _miniCalMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const monthStart = new Date(_miniCalMonth);
+        const year = monthStart.getFullYear();
+        const month = monthStart.getMonth();
+        const monthLabel = monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+        // Build a Set of ISO dates that have events (from current filtered set)
+        const evtDays = new Set();
+        (window.evtAllEvents || []).forEach(ev => {
+            if (!ev || !ev.start_date) return;
+            const d = new Date(ev.start_date);
+            if (d.getFullYear() === year && d.getMonth() === month) {
+                evtDays.add(_toIsoDate(d));
+            }
+        });
+
+        // Grid: 6 rows x 7 cols, starting at Sunday of week containing the 1st
+        const firstDow = monthStart.getDay(); // 0=Sun
+        const gridStart = new Date(year, month, 1 - firstDow);
+        const todayIso = _toIsoDate(today);
+
+        const dayHeaders = ['S','M','T','W','T','F','S']
+            .map(d => '<div class="evt-mcal-dow">' + d + '</div>').join('');
+
+        let cells = '';
+        for (let i = 0; i < 42; i++) {
+            const d = new Date(gridStart);
+            d.setDate(gridStart.getDate() + i);
+            const iso = _toIsoDate(d);
+            const isOther = d.getMonth() !== month;
+            const isToday = iso === todayIso;
+            const hasEvt = evtDays.has(iso);
+            const isActive = iso === _activeDay;
+            const cls = ['evt-mcal-day'];
+            if (isOther) cls.push('evt-mcal-day--other');
+            if (isToday) cls.push('evt-mcal-day--today');
+            if (hasEvt) cls.push('evt-mcal-day--has');
+            if (isActive) cls.push('evt-mcal-day--active');
+            cells += '<button type="button" class="' + cls.join(' ') +
+                '" data-mcal-day="' + iso + '" aria-label="' +
+                d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) +
+                '">' + d.getDate() + '</button>';
+        }
+
+        mount.innerHTML =
+            '<div class="evt-mcal" role="group" aria-label="Mini calendar">' +
+                '<div class="evt-mcal-head">' +
+                    '<button type="button" class="evt-mcal-nav" data-mcal-prev aria-label="Previous month">&lsaquo;</button>' +
+                    '<span class="evt-mcal-title">' + monthLabel + '</span>' +
+                    '<button type="button" class="evt-mcal-nav" data-mcal-next aria-label="Next month">&rsaquo;</button>' +
+                '</div>' +
+                '<div class="evt-mcal-dow-row">' + dayHeaders + '</div>' +
+                '<div class="evt-mcal-grid">' + cells + '</div>' +
+                (_activeDay
+                    ? '<button type="button" class="evt-mcal-clear" data-mcal-clear>Clear day filter</button>'
+                    : '') +
+            '</div>';
+
+        mount.querySelector('[data-mcal-prev]')?.addEventListener('click', () => {
+            _miniCalMonth = new Date(year, month - 1, 1);
+            _renderMiniCalendar();
+        });
+        mount.querySelector('[data-mcal-next]')?.addEventListener('click', () => {
+            _miniCalMonth = new Date(year, month + 1, 1);
+            _renderMiniCalendar();
+        });
+        mount.querySelector('[data-mcal-clear]')?.addEventListener('click', () => {
+            _activeDay = '';
+            renderEvents();
+        });
+        mount.querySelectorAll('[data-mcal-day]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const iso = btn.getAttribute('data-mcal-day');
+                _activeDay = (_activeDay === iso) ? '' : iso;
+                renderEvents();
+            });
+        });
+
+        // Reveal the right rail now that it has content
+        const rail = document.getElementById('evtRightRail');
+        if (rail) rail.classList.remove('hidden');
+    }
+
     // Wire card click navigation (anchor hrefs are real but we hijack
     // for SPA detail-view open when running in the unified portal).
     function _wireCardClicks(scope, eventsById) {
@@ -1976,6 +2075,7 @@
             .join('');
 
         _wireCardClicks(groupsEl, eventsById);
+        _renderMiniCalendar(); // F10 — right-rail mini calendar
     }
 
     // =========================================================
@@ -2254,6 +2354,14 @@
     }
 
     function _matchesDate(ev) {
+        // F10 — explicit day filter from mini calendar (highest priority)
+        if (_activeDay) {
+            const d = new Date(ev.start_date);
+            const iso = d.getFullYear() + '-' +
+                String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                String(d.getDate()).padStart(2, '0');
+            if (iso !== _activeDay) return false;
+        }
         if (_activeDate === 'any') return true;
         const d = new Date(ev.start_date);
         const now = new Date();
