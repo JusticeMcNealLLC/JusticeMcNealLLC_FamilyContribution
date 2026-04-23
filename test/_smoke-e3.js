@@ -39,8 +39,8 @@ const checks = {
     js_legacy_menu_calls_sync: /closeMenu\(\);[\s\S]{0,200}|_syncTypeChips\(_activeType\);\s*closeMenu/.test(list),
     js_clear_filters_calls_sync: /_syncTypeChips\('all'\);\s*_persistState/.test(list),
 
-    // SW
-    sw_v61: /jm-portal-v61/.test(sw),
+    // SW (E3 shipped at v61; bumps past are fine)
+    sw_v61: /jm-portal-v(6[1-9]|[7-9]\d|\d{3,})/.test(sw),
     sw_no_v60: !sw.includes("'jm-portal-v60'"),
 };
 

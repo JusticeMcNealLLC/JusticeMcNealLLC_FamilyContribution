@@ -1,6 +1,6 @@
 # 📅 `portal/events.html` — Visual & UX Overhaul Spec (events_003)
 
-> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5+C1+C2+C3+C4 shipped. **Phase D opened** — see [events_004_portalEvent_phaseD.md](events_004_portalEvent_phaseD.md) (D3 + D1 + D2 + D4 shipped — **Phase D complete**, SW at `v61`). **Phase E partial:** E1 (gradient header) + E2 (mobile search pill) + E3 (inline category chip rail) + E4 (emoji bucket labels) + E9 (motion polish) shipped — **vlift default-ON live**, opt-out via `?vlift=0`. Phase A4 (polish/QA on real device) still pending — non-blocking for Phase C since C1 is mobile-gated behind `ontouchstart` + `innerWidth < 640` + `scrollY === 0`. **Phase E (Premium Visual Lift) scoped** — see §Phase E + Appendix C for the design-parity plan against the California gradient + Tomorrowland festival mockups.
+> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5+C1+C2+C3+C4 shipped. **Phase D opened** — see [events_004_portalEvent_phaseD.md](events_004_portalEvent_phaseD.md) (D3 + D1 + D2 + D4 shipped — **Phase D complete**, SW at `v62`). **Phase E partial:** E1 (gradient header) + E2 (mobile search pill) + E3 (inline category chip rail) + E4 (emoji bucket labels) + E9 (motion polish) + E11 (per-bucket See all / Show less) shipped — **vlift default-ON live**, opt-out via `?vlift=0`. Phase A4 (polish/QA on real device) still pending — non-blocking for Phase C since C1 is mobile-gated behind `ontouchstart` + `innerWidth < 640` + `scrollY === 0`. **Phase E (Premium Visual Lift) scoped** — see §Phase E + Appendix C for the design-parity plan against the California gradient + Tomorrowland festival mockups.
 > **Scope:** `/portal/events.html` **list view only**. Detail view (`#eventsDetailView`) is out of scope — already shipped in M2 (`events_002.md`).
 > **Goal:** transform the current functional-but-flat list page into a **premium, mobile-first event browsing experience** that feels native to a top-tier consumer product, while staying inside the existing JMLLC portal theme (Inter + brand-indigo + surface-50 background + light editorial cards).
 > **Non-goal:** backend changes. No schema, RPC, or edge-function work. RSVP flow, create flow, detail flow all continue to call exactly what they call today.
@@ -1001,7 +1001,7 @@ E7  Interested avatar cluster on hero/cards (reuses evtAttendees)
 E8  Dark-mode-compatible CSS tokens (no dark theme yet) — superseded by D4 ship
 E9  ✅ SHIPPED (partial)  Motion polish (header fade, chip press) — ken-burns + stagger pending
 E10 Notification bell + unread badge in header
-E11 "See all" per-bucket truncation links
+E11 ✅ SHIPPED  "See all" / "Show less" per-bucket truncation (vlift, threshold 6) — SW `v61 → v62`
 E12 Heart/favorite affordance (only if RSVP enum supports 'interested')
 E13 (out of scope — global nav)
 E14 ✅ LIVE  Rollout flag `?vlift=1`/`=0` — default-ON since SW `v58 → v59`

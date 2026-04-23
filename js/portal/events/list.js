@@ -33,6 +33,8 @@
     let _activeView     = 'list'; // D1 — 'list' | 'calendar'
     let _calMonth       = null;   // D1 — Date at first of viewed month
     let _searchDebounce = null;
+    let _expandedBucket = null;   // E11 — slug of bucket the user "See all"-ed; null = normal
+    const E_BUCKET_TRUNCATE = 6;  // E11 — show "See all" link when bucket > N (vlift only)
 
     // C3 — sessionStorage persistence key (events_003 §3.11 / §8.5)
     const STATE_KEY = 'evt_list_state_v1';
@@ -1204,18 +1206,48 @@
     // =========================================================
     function _renderBucket(label, events, rsvps, attendees) {
         if (!events.length) return '';
-        const cards = events.map(ev => Card.render(ev, {
+        const slug = String(label).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const useVlift = document.body.classList.contains('evt-vlift');
+
+        // E11 — Truncate vlift buckets over threshold unless this bucket is expanded
+        const total = events.length;
+        const isExpanded = (_expandedBucket === slug);
+        const truncated = useVlift && total > E_BUCKET_TRUNCATE && !isExpanded;
+        const visible = truncated ? events.slice(0, E_BUCKET_TRUNCATE) : events;
+
+        const cards = visible.map(ev => Card.render(ev, {
             rsvp: rsvps[ev.id] || null,
             href: ev.slug ? ('?event=' + encodeURIComponent(ev.slug)) : 'javascript:void(0)',
             variant: 'portal',
             attendees: attendees[ev.id] || [],
         })).join('');
-        const slug = String(label).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const useVlift = document.body.classList.contains('evt-vlift');
         const displayLabel = useVlift ? _bucketLabelEmoji(label) : label;
         const safeLabel = (H.escapeHtml || (s => s))(displayLabel);
+
+        // E11 — Header link: "See all (N) →" when truncated, "Show less" when expanded
+        let headerLink = '';
+        if (useVlift && total > E_BUCKET_TRUNCATE) {
+            if (truncated) {
+                headerLink = '<button type="button" data-evt-bucket-toggle="' + slug +
+                    '" class="evt-bucket-seeall text-xs font-semibold text-brand-600 hover:text-brand-700">' +
+                    'See all (' + total + ') →</button>';
+            } else {
+                headerLink = '<button type="button" data-evt-bucket-toggle="' + slug +
+                    '" class="evt-bucket-seeall text-xs font-semibold text-brand-600 hover:text-brand-700">' +
+                    'Show less ↑</button>';
+            }
+        }
+        const headerCls = useVlift
+            ? 'evt-bucket-head flex items-end justify-between mb-3'
+            : '';
+        const titleCls = 'text-xs font-bold uppercase tracking-[0.14em] text-gray-500';
+
+        const header = useVlift
+            ? '<header class="' + headerCls + '"><h2 class="' + titleCls + '">' + safeLabel + '</h2>' + headerLink + '</header>'
+            : '<h2 class="' + titleCls + ' mb-3">' + safeLabel + '</h2>';
+
         return '<section data-bucket="' + slug + '">' +
-            '<h2 class="text-xs font-bold uppercase tracking-[0.14em] text-gray-500 mb-3">' + safeLabel + '</h2>' +
+            header +
             '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + cards + '</div>' +
         '</section>';
     }
@@ -1223,6 +1255,16 @@
     // Wire card click navigation (anchor hrefs are real but we hijack
     // for SPA detail-view open when running in the unified portal).
     function _wireCardClicks(scope, eventsById) {
+        // E11 — bucket "See all" / "Show less" toggle (delegated)
+        scope.querySelectorAll('button[data-evt-bucket-toggle]').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                const slug = btn.getAttribute('data-evt-bucket-toggle');
+                _expandedBucket = (_expandedBucket === slug) ? null : slug;
+                renderEvents();
+            });
+        });
         scope.querySelectorAll('a[data-evt-card]').forEach(link => {
             const id = link.getAttribute('data-evt-card');
             const ev = eventsById[id];
@@ -1591,8 +1633,20 @@
             });
         });
 
+        // E11 — self-heal: if expanded slug no longer exists in current groups, clear it
+        if (_expandedBucket) {
+            const slugs = groups.map(g => String(g.label).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
+            if (!slugs.includes(_expandedBucket)) _expandedBucket = null;
+        }
+
         groupsEl.innerHTML = groups
             .filter(g => g.events.length)
+            .filter(g => {
+                // E11 — when a bucket is expanded, only render that one
+                if (!_expandedBucket) return true;
+                const s = String(g.label).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                return s === _expandedBucket;
+            })
             .map(g => _renderBucket(g.label, g.events, rsvps, attendees))
             .join('');
 
@@ -1751,6 +1805,7 @@
                 btn.classList.add('evt-seg__btn--active');
                 btn.setAttribute('aria-selected', 'true');
                 window.evtActiveTab = btn.dataset.filter;
+                _expandedBucket = null; // E11 — reset bucket expansion on tab change
                 _persistState();
                 renderEvents();
             });

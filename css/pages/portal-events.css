@@ -1082,3 +1082,24 @@ body.evt-vlift #evtTypeMenuBtn + #evtTypeMenu { display: none !important; }
     .evt-type-chip { transition: none; }
     .evt-type-chip:active { transform: none; }
 }
+/* =========================================================
+   E11 — Per-bucket "See all" / "Show less" toggle (vlift only)
+   ========================================================= */
+.evt-bucket-head { line-height: 1; }
+.evt-bucket-seeall {
+    background: transparent;
+    border: 0;
+    padding: 4px 6px;
+    margin: 0 -6px -2px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background-color .15s ease, color .15s ease;
+}
+.evt-bucket-seeall:hover { background: rgba(99, 102, 241, .08); }
+.evt-bucket-seeall:active { background: rgba(99, 102, 241, .14); }
+[data-theme="dark"] .evt-bucket-seeall { color: #a5b4fc; }
+[data-theme="dark"] .evt-bucket-seeall:hover { background: rgba(165, 180, 252, .12); color: #c7d2fe; }
+@media (prefers-reduced-motion: reduce) {
+    .evt-bucket-seeall { transition: none; }
+}
