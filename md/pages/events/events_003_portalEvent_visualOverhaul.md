@@ -1,6 +1,6 @@
 # 📅 `portal/events.html` — Visual & UX Overhaul Spec (events_003)
 
-> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5 shipped. SW at `v52`. Phase A4 (polish/QA on real device) pending before Phase C can open.
+> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5 shipped. SW at `v52`. Phase A4 (polish/QA on real device) pending before Phase C can open. **Phase E (Premium Visual Lift) scoped** — see §Phase E + Appendix C for the design-parity plan against the California gradient + Tomorrowland festival mockups.
 > **Scope:** `/portal/events.html` **list view only**. Detail view (`#eventsDetailView`) is out of scope — already shipped in M2 (`events_002.md`).
 > **Goal:** transform the current functional-but-flat list page into a **premium, mobile-first event browsing experience** that feels native to a top-tier consumer product, while staying inside the existing JMLLC portal theme (Inter + brand-indigo + surface-50 background + light editorial cards).
 > **Non-goal:** backend changes. No schema, RPC, or edge-function work. RSVP flow, create flow, detail flow all continue to call exactly what they call today.
@@ -849,3 +849,175 @@ This is not a polish pass. This is a **ship gate**. If any item fails, Phase A d
 - **Bucket** — A time-grouped section ("Tonight", "This week", etc.) within the active lifecycle tab.
 - **Segmented control** — One unified pill containing the three lifecycle options with a sliding active indicator.
 - **FAB** — Floating action button (mobile-only, brand-violet, bottom-right, `+` icon for Create).
+
+
+---
+
+## Phase E — Premium Visual Lift (design-parity pass)
+
+> **Goal:** close the "first-screenshot wow" gap with best-in-class consumer event apps (reference mocks: California gradient-header browse screen + Tomorrowland/Roskilde dark-premium festival screen). We currently out-execute those mocks on **information density, personalization, and lifecycle coverage** but under-execute on **first-fold delight**. Phase E is the delight pass.
+>
+> **Scope:** visual/theming only — zero data contract changes, zero new queries. Reuses all B1–B5 data paths. Swappable via feature flag `?vlift=1` during rollout.
+> **Status:** pending — not started. Land after A4 (real-device QA) clears and before Phase C.
+> **SW bump target:** `v52 → v53` (shared with Phase C if shipped together; otherwise its own `v52 → v53` and C slides to `v54`).
+
+### E.1 — Gradient editorial header (mockup: California + Tomorrowland)
+
+**Problem:** current `#evtPageHeader` is flat white on surface-50. It reads as utilitarian.
+**Fix:** apply a **brand-violet → deep-indigo gradient** to the header block (full-bleed behind the title row), with title text reversed to white.
+- Background: `linear-gradient(160deg, #4f46e5 0%, #6d28d9 55%, #4c1d95 100%)` (respect existing `--brand` token).
+- Title `#evtHeaderTitle`: white, tracking-tight, drop-shadow-sm.
+- Count `#evtHeaderCount`: `text-white/75`.
+- Greeting `#evtHeaderGreeting`: `text-white/80` with a small waving-hand animated emoji (reduced-motion: static).
+- Notification-bell slot top-right (reuses global `window.openNotifications` if exposed, else hidden). Small red dot when unread > 0.
+- Condensed sticky state: shrink gradient to a 56px bar, title scales to 16px, greeting hidden (already spec'd).
+- Status pills (countdown / state) on hero remain white-on-dark — already compatible.
+- Safe-area inset top preserved via existing `padding-top: max(0.5rem, env(safe-area-inset-top))`.
+
+**CSS class:** `.evt-header--gradient` (opt-in via flag; removable without JS churn).
+
+### E.2 — Hero-visible search pill (mockup: California)
+
+**Problem:** collapsed search icon is fast to scroll past but doesn't invite engagement on land.
+**Fix:** on mobile (`sm:hidden`), replace the icon toggle with a **full-width pill input** directly under the gradient header, styled as rounded-2xl with a leading search glyph and a trailing filter-icon button that opens the type menu. Desktop keeps the current compact icon-toggle behavior.
+- Markup: swap `#evtSearchToggle` for `#evtSearchPill` (mobile-only). Desktop keeps existing toggle.
+- Pill state: white bg, border-gray-200, shadow-sm. On focus, brand-500 ring.
+- Trailing filter-icon uses the same `#evtTypeMenu` popover (reuse, not duplicate).
+- Search input is uncollapsed at rest; focusing scrolls the chip-row below into view.
+
+### E.3 — Category chip rail replaces dropdown (mockup: California + Tomorrowland)
+
+**Problem:** type filter hidden behind a dropdown button — low discoverability.
+**Fix:** render an **inline horizontal chip row** directly under the search pill with the same four options (`All · LLC 💼 · Member 👥 · Competition 🏆`), each chip with its category emoji and a light-gradient tint when selected.
+- Active chip: `bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-sm`.
+- Inactive chip: `bg-white border-gray-200 text-gray-700`.
+- Scroll-snap horizontally on mobile if more chip types are added later (future extension slot).
+- Desktop: chips fit inline with the segmented control on the same row.
+- Keeps current `_activeType` state + legacy `#typeFilter` hidden compat select.
+- **Delete** `#evtTypeMenuBtn` + `#evtTypeMenu` from the strip; leave them in the DOM behind a `hidden` attribute only while the flag is off.
+
+### E.4 — Emoji-tagged bucket + segment labels (mockup: California "Top Picks 🔥")
+
+Low-cost delight. Refactor:
+- Segmented control labels: `🔜 Upcoming` · `🕰️ Past` · `✅ Going`.
+- Bucket labels in `_renderBucket`: map `label → emoji + label` via a small table:
+  - `Today` → `🔥 Today`
+  - `This week` → `✨ This week`
+  - `Later this month` → `📅 Later this month`
+  - `Next month` → `🌱 Next month`
+  - `Future` → `🗓️ Future`
+  - `Results for "…"` → `🔎 Results for "…"`
+- Single source: `E_BUCKET_EMOJI` constant in `js/components/events/constants.js`. Non-breaking to older callers.
+
+### E.5 — Top Picks / Curated rail (mockup: California "Top Picks 🔥")
+
+Optional **P1** layer above the first bucket on Upcoming, rendered only when ≥2 pinned-LLC-future events exist (reuses hero selection left-overs):
+- Horizontal snap-scroll rail titled `🔥 Top Picks` → `See all` (links to filtered view `?filter=pinned`).
+- Mini-card style matches `_miniCard` with a heart-like favorite corner (cosmetic only for now — wires to existing RSVP later).
+- Hidden during search, on Past tab, on Going tab.
+- When only one pinned event exists it's already the hero — rail hidden.
+
+### E.6 — Festival-grade featured banner hero (mockup: Tomorrowland detail)
+
+Upgrade `_renderHero()` visual treatment (no data changes):
+- Min-height bump on mobile: `aspect-[4/5]` → `min-h-[62vh]` on `sm:hidden`. Fills more of the first fold.
+- Date + time moved **above** the title (matches Tomorrowland layout): calendar-glyph + `25 – 26 July, 2021`  ·  clock-glyph + `4pm – 12pm`.
+- Location chip replaced with a **tiny map card** (static gradient stand-in unless we wire Mapbox — defer).
+- Bottom-edge fade darkens to `rgba(0,0,0,.85)` for title legibility.
+- Primary CTA bar (**Buy Ticket / RSVP Going / You're going ✓**) pinned to bottom of hero on mobile, matching the purple "Buy Ticket 272€" bar. Reuses existing RSVP handlers — no new flows.
+
+### E.7 — "Interested" avatar cluster (mockup: Tomorrowland "Interested 342+")
+
+On hero + large cards, render up-to-5 overlapping avatars + `N+` counter, sourced from existing `window.evtAttendees[event.id]` (already scoped in A3 §12.1). No new query.
+- Cluster uses negative margin stack (`-ml-2` on each after the first).
+- Last bubble is a gray `342+` pill when `going_count > 5`.
+- Tappable → opens existing Going list modal if present; otherwise no-op.
+
+### E.8 — Dark-mode surface option (mockup: Tomorrowland)
+
+Phase E **does not** ship a full dark mode (deferred to Phase D §19), but it introduces **dark-mode-compatible tokens** so D later is a CSS swap, not a refactor:
+- All new Phase E classes must read from CSS variables: `--evt-surface`, `--evt-surface-elevated`, `--evt-text`, `--evt-text-dim`, `--evt-border`.
+- Default (light) values set on `:root`; dark overrides scoped to `@media (prefers-color-scheme: dark)` behind the same `?vlift=1` flag initially.
+
+### E.9 — Motion polish (mockup: both)
+
+- Header gradient does a 600 ms fade on initial mount (single-shot, respects reduced-motion).
+- Category chips: `active:scale-[0.97]` micro-press.
+- Hero image: subtle 6 s `ease-in-out` scale 1 → 1.04 ken-burns loop. Paused under `prefers-reduced-motion`.
+- Bucket section headers fade-in on scroll (IntersectionObserver, one-shot, 120 ms stagger). Reuses C4 stagger plumbing if shipped first.
+
+### E.10 — Notification bell + unread badge (mockup: California top-right bell)
+
+Small addition: top-right `#evtHeaderBell` button in the gradient header.
+- Renders only if `window.notifications?.getUnreadCount` exists (reuse existing portal notifications module).
+- Unread dot: 8 px red circle on top-right of the bell when count > 0.
+- Click → `window.notifications.open()` — no new handler.
+
+### E.11 — "See all" secondary links (mockup: California)
+
+Every bucket header currently shows `<h2>{label}</h2>`. Extend to `<h2>{label}</h2> … <a>See all →</a>` when the bucket is truncated (default threshold: 6 cards). Clicking `See all` sets a transient client filter that renders only that bucket's events flat. Back via the segmented control reset.
+- Non-blocking: if threshold not hit, no link rendered — current behavior preserved.
+
+### E.12 — Heart / favorite affordance (mockup: Tomorrowland top-right heart)
+
+Card + hero gain an optional heart-bookmark icon in the top-right that **does not** introduce a new table — reuses the existing `event_rsvps.status = 'interested'` value (already supported by the RSVP enum per M2). Toggle flips `interested` ↔ `null`.
+- Visual: white filled when set, white outline when unset.
+- Does not collide with the Going ribbon (left side).
+- Deferred if the RSVP enum doesn't ship an `interested` status — confirm before wiring.
+
+### E.13 — Bottom tab-bar mockup parity (mockup: Tomorrowland bottom nav)
+
+**Out of scope for events_003.** Tracked here only as a reference that the global portal nav already provides this shape. No changes within the events page boundary.
+
+### E.14 — Rollout & success criteria
+
+- **Flag:** `?vlift=1` enables Phase E on every user; default remains current styling until QA clears.
+- **A/B window:** 1 week on the flag for opt-in internal testing.
+- **Success:** positive qualitative feedback from ≥3 family-member testers on "looks premium"; no measurable bounce-rate increase on the list page; no regression in load metrics (hero LCP within 10% of current).
+- **Kill switch:** remove `?vlift=1` class toggle — no DB rollback needed.
+- **SW bump:** `v52 → v53` when flag becomes default-on.
+
+### E.15 — Phase E task list
+
+```
+E1  Gradient editorial header + condensed-state adaptation
+E2  Mobile hero-visible search pill (desktop keeps collapse)
+E3  Inline category chip rail (replaces dropdown)
+E4  Emoji-tagged bucket + segment labels (constants table)
+E5  Top Picks rail (conditional on ≥2 pinned-LLC-future)
+E6  Festival-grade featured hero (height + layout refactor)
+E7  Interested avatar cluster on hero/cards (reuses evtAttendees)
+E8  Dark-mode-compatible CSS tokens (no dark theme yet)
+E9  Motion polish (gradient fade, chip press, ken-burns, stagger)
+E10 Notification bell + unread badge in header
+E11 "See all" per-bucket truncation links
+E12 Heart/favorite affordance (only if RSVP enum supports 'interested')
+E13 (out of scope — global nav)
+E14 Rollout flag + SW bump v52 → v53
+```
+
+### E.16 — Phase E non-goals
+
+- No new Supabase tables, columns, or RPCs.
+- No changes to `EventsCard.render()` call signature (internal template only).
+- No swipe gestures, pull-to-refresh, or calendar view (those remain Phase C / D).
+- No full dark theme (tokens only — shipped in Phase D).
+- No i18n — copy strings stay English.
+
+---
+
+## Appendix C — Mockup inspiration deltas (E-phase source mapping)
+
+| Mockup element | Our status | E-phase item |
+|---|---|---|
+| California purple gradient header | ❌ missing | **E1** |
+| California always-visible search pill w/ filter icon | ⚠️ collapsed toggle | **E2** |
+| California inline category chips (All / Concert / Book) | ⚠️ dropdown | **E3** |
+| California "Top Picks 🔥" label + "See all" | ⚠️ plain bucket | **E4 + E5 + E11** |
+| California notification bell top-right | ❌ missing | **E10** |
+| Tomorrowland full-bleed festival hero w/ CTA bar | ⚠️ shorter hero | **E6** |
+| Tomorrowland "Interested 342+" avatar cluster | ⚠️ attendee data loaded but not clustered on hero | **E7** |
+| Tomorrowland heart top-right | ❌ missing | **E12** |
+| Tomorrowland dark surface | ❌ light-only | **E8** (tokens now, theme later) |
+| Roskilde tall editorial card with overlaid date + title | ✅ close — bucket cards already layered | **E6** refinement |
+| Both: motion / polish cues | ⚠️ minimal | **E9** |
