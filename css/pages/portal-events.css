@@ -1018,3 +1018,10 @@ body.evt-vlift .evt-type-opt:active { transform: scale(0.97); }
     border-color: #334155 !important;
     color: #f1f5f9 !important;
 }
+
+
+/* E1 follow-up: greeting + count contrast on gradient header */
+body.evt-vlift #evtPageHeader #evtHeaderGreeting {
+    color: rgba(255,255,255,.85) !important;
+    text-shadow: 0 1px 1px rgba(0,0,0,.18);
+}

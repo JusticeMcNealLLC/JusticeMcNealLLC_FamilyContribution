@@ -448,13 +448,17 @@
     // =========================================================
     const VLIFT_KEY = 'evt_vlift';
     const E_BUCKET_EMOJI = {
+        'tonight':            '🌜',
         'today':              '🔥',
+        'tomorrow':           '⏭️',
         'this week':          '✨',
+        'this weekend':       '🎡',
+        'next week':          '🗓️',
         'later this month':   '📅',
+        'this month':         '📅',
         'next month':         '🌱',
         'future':             '🗓️',
         'past':               '🕰️',
-        'this month':         '📅',
         'earlier':            '🕰️',
     };
     function _bucketLabelEmoji(label) {
