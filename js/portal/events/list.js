@@ -1106,6 +1106,32 @@
         g.textContent = 'Hey ' + esc(name) + ' 👋';
     }
 
+    // E7 — "Interested" / Going avatar cluster (vlift hero overlay).
+    // Uses up-to-5 profile records already cached in window.evtAttendees[id]
+    // (scoped query in §12.1 LOCKED — no new query). Returns '' if empty.
+    function _attendeeCluster(eventId) {
+        const list = (window.evtAttendees && window.evtAttendees[eventId]) || [];
+        if (!list.length) return '';
+        const esc = H.escapeHtml || (s => String(s == null ? '' : s));
+        const bubs = list.slice(0, 5).map((p, i) => {
+            const pic = p && p.profile_picture_url;
+            const first = (p && p.first_name) || '';
+            const initial = (first.trim().charAt(0) || '?').toUpperCase();
+            const ml = i === 0 ? '' : ' -ml-2';
+            const inner = pic
+                ? '<img src="' + esc(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />'
+                : '<span class="evt-hero-cluster-init">' + esc(initial) + '</span>';
+            return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc(first) + '">' + inner + '</span>';
+        }).join('');
+        // We capped attendees client-side at 5; if at the cap, hint there may be more.
+        const labelN = list.length >= 5 ? '5+' : String(list.length);
+        return '<button type="button" data-evt-hero-going="' + esc(eventId) + '"' +
+            ' class="evt-hero-cluster" aria-label="See who is going">' +
+                '<span class="evt-hero-cluster-stack">' + bubs + '</span>' +
+                '<span class="evt-hero-cluster-label">' + labelN + ' going</span>' +
+            '</button>';
+    }
+
     // E10 — In-header notification bell (vlift only). Mirrors unread state from
     // the global #notifBadge and forwards clicks to the global #notifBtn.
     let _evtBellObserver = null;
@@ -1270,6 +1296,8 @@
                     // Bottom-edge dark fade for legibility
                     '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div>' +
                     '<div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6">' +
+                        // E7 — Avatar cluster (Tomorrowland "Interested" pattern), above date/time
+                        _attendeeCluster(event.id) +
                         // Date/time row ABOVE the title (Tomorrowland layout)
                         '<div class="flex items-center gap-3 text-[12px] font-semibold text-white/90 mb-2">' +
                             (dateLong ? '<span class="inline-flex items-center gap-1.5">' + calIcon + esc(dateLong) + '</span>' : '') +
@@ -1304,6 +1332,23 @@
                         console.error('Hero RSVP failed', err);
                     } finally {
                         ctaBtn.disabled = false;
+                    }
+                });
+            }
+
+            // E7 — Wire cluster click → navigate to event detail (where the
+            // existing Interested/Attendees card lives). No new modal added.
+            const cluster = heroEl.querySelector('button[data-evt-hero-going]');
+            if (cluster) {
+                cluster.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof window.evtNavigateToEvent === 'function') {
+                        window.evtNavigateToEvent(event);
+                    } else if (typeof window.evtOpenDetail === 'function') {
+                        window.evtOpenDetail(event);
+                    } else if (event.slug) {
+                        window.location.href = '?event=' + encodeURIComponent(event.slug);
                     }
                 });
             }
@@ -2420,6 +2465,20 @@
         _initHeaderBell();
         setTimeout(_initHeaderBell, 300);
         setTimeout(_initHeaderBell, 1200);
+        // Fallback: observe body for #notifBtn appearing (handles slow pageShell mounts).
+        if (document.body.classList.contains('evt-vlift') && !document.getElementById('evtHeaderBell')) {
+            const _bellMountObs = new MutationObserver(() => {
+                if (document.getElementById('notifBtn') && !document.getElementById('evtHeaderBell')) {
+                    _initHeaderBell();
+                    if (document.getElementById('evtHeaderBell')) {
+                        try { _bellMountObs.disconnect(); } catch (_) {}
+                    }
+                }
+            });
+            _bellMountObs.observe(document.body, { childList: true, subtree: true });
+            // Safety: stop watching after 15s even if nothing mounted
+            setTimeout(() => { try { _bellMountObs.disconnect(); } catch (_) {} }, 15000);
+        }
     }
     if (document.readyState !== 'loading') _onReady();
     else document.addEventListener('DOMContentLoaded', _onReady, { once: true });
