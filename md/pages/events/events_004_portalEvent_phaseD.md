@@ -1,7 +1,7 @@
 # events_004 · Portal Events — Phase D (Power Features)
 
 > **Parent spec:** [events_003_portalEvent_visualOverhaul.md](events_003_portalEvent_visualOverhaul.md)
-> **Status:** Phase D opened. **D3 shipped** (SW `v53 → v54`). **D1 shipped** (SW `v54 → v55`). D2 + D4 pending.
+> **Status:** Phase D opened. **D3 shipped** (SW `v53 → v54`). **D1 shipped** (SW `v54 → v55`). **D2 shipped** (SW `v55 → v56`). D4 pending.
 > **Prereqs:** Phase A1+A2+A3+B1–B5+C1–C4 shipped.
 > **Scope:** D1 calendar/agenda toggle · D2 swipe gestures · D3 search history & suggestions · D4 dark-mode pass.
 > **Out of scope:** new data contracts, new queries, admin-surface changes, notification schema.
@@ -60,6 +60,21 @@ Each item ships as its own commit. Do NOT batch D1+D2+D3+D4.
 ---
 
 ## D2 — Swipe gestures (mobile-only)
+
+> ✅ **SHIPPED** — SW `v55 → v56`. Smoke: `test/_smoke-d2.js` 51/51 pass.
+>
+> Implementation notes:
+> - Mobile-only gate via `_isMobileTouch()` (`'ontouchstart' in window && innerWidth < 640`) — desktop never wires touch listeners.
+> - Constants: `SWIPE_THRESHOLD=56`, `SWIPE_MAX=120`, `LONGPRESS_MS=500`, `LONGPRESS_MOVE=8`.
+> - **Going-rail swipe:** delegated `touchstart/move/end` on `#evtGoingRailScroll` (idempotent via `dataset.swipeWired='1'`). 6px axis-lock so vertical/native horizontal scroll wins when appropriate; leftward-only drag clamped `[-120, 0]`; commits `.evt-swipe--revealed` (`translateX(-92px)`) when `|dx| ≥ 56`. Tap red `[data-swipe-cancel]` → `confirm()` then `window.evtHandleRsvp(eventId, 'going')` (toggle-off semantics — no new RSVP code path). Tap on revealed card or starting a new gesture resets any other revealed card.
+> - **Long-press on `#evtGroups`:** delegated `touchstart` arms a 500ms timer (`dataset.lpWired='1'`); cancelled on `touchmove > 8px` or `touchend` before fire. On fire, sets `_longPressFired=true` and opens context sheet; capture-phase `click` handler suppresses the subsequent card-nav click and resets the flag.
+> - **Context sheet** singleton `#evtContextSheet` with bottom-panel + scrim + Esc close. 4 actions:
+>   - `share` — `navigator.share({ title, text, url })` with copy fallback.
+>   - `copy` — clipboard API + `<textarea>` fallback, transient toast.
+>   - `ics` — `_downloadIcs(ev)` builds RFC 5545 VCALENDAR/VEVENT (UID, DTSTAMP, DTSTART/DTEND default +2h, SUMMARY, DESCRIPTION+URL, optional LOCATION); downloads `{slug}.ics` via Blob `text/calendar`.
+>   - `hide` — adds id to in-memory `_hiddenIds = new Set()` (session-only, **not** persisted to `evt_list_state_v1` per D2.2), toast confirms, list re-renders.
+> - `_notHidden(ev)` filter integrated at 4 surfaces: search forEach, normal filter chain (`_matchesType && _matchesCategory && _matchesLifecycle && _notHidden`), `_groupEventsByDay` (calendar), `_renderGoingRail`.
+> - All animations respect `prefers-reduced-motion`: swipe reveal becomes instant, context sheet keyframes disabled, toast fades without translate.
 
 **Goal:** add native-app-feeling quick actions on cards.
 

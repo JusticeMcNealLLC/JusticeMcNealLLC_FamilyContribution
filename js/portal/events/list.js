@@ -231,6 +231,7 @@
         const map = {};
         events.forEach(ev => {
             if (!ev || !ev.start_date || ev.status === 'cancelled') return;
+            if (!_notHidden(ev)) return;
             if (!_matchesType(ev)) return;
             if (!_matchesCategory(ev)) return;
             const k = _localDateKey(new Date(ev.start_date));
@@ -435,6 +436,372 @@
             calIcon.classList.toggle('hidden', _activeView === 'calendar');    // show calendar icon when in list (to go to cal)
         }
         document.body.classList.toggle('evt-view--calendar', _activeView === 'calendar');
+    }
+
+    // =========================================================
+    // D2 — Swipe gestures + long-press context sheet (events_004 §D2)
+    // Mobile-only. Touch-only. Reduced-motion respected.
+    // =========================================================
+    const _hiddenIds = new Set();   // session-only hide list
+    const SWIPE_THRESHOLD = 56;     // px to commit reveal
+    const SWIPE_MAX       = 120;    // px max drag
+    const LONGPRESS_MS    = 500;
+    const LONGPRESS_MOVE  = 8;      // px tolerance before cancelling long-press
+    let _activeSwipe = null;        // { card, startX, startY, dx, locked }
+    let _longPressTimer = null;
+    let _longPressFired = false;
+
+    function _isMobileTouch() {
+        return ('ontouchstart' in window) && window.innerWidth < 640;
+    }
+    function _prefersReducedMotion() {
+        return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    // Filter helper used by going-rail render to drop session-hidden ids.
+    function _notHidden(ev) { return !_hiddenIds.has(ev?.id); }
+
+    function _resetSwipeCard(card) {
+        if (!card) return;
+        card.classList.remove('evt-swipe--revealed', 'evt-swipe--dragging');
+        card.style.transform = '';
+        const action = card.querySelector('.evt-swipe-action');
+        if (action) action.style.opacity = '';
+    }
+
+    function _ensureSwipeAction(card, eventId) {
+        let action = card.querySelector('.evt-swipe-action');
+        if (action) return action;
+        action = document.createElement('button');
+        action.type = 'button';
+        action.className = 'evt-swipe-action';
+        action.setAttribute('data-swipe-cancel', eventId);
+        action.setAttribute('aria-label', 'Cancel RSVP');
+        action.innerHTML =
+            '<span class="evt-swipe-action__icon" aria-hidden="true">' +
+                '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>' +
+            '</span>' +
+            '<span class="evt-swipe-action__label">Cancel</span>';
+        // Wrap card content so we can translate it independently
+        card.classList.add('evt-swipe-host');
+        card.appendChild(action);
+        return action;
+    }
+
+    function _initSwipeGestures() {
+        if (!_isMobileTouch()) return;
+
+        // ── Swipe-left on going-rail mini cards ─────────────
+        const rail = document.getElementById('evtGoingRailScroll');
+        if (rail && rail.dataset.swipeWired !== '1') {
+            rail.dataset.swipeWired = '1';
+            rail.addEventListener('touchstart', (e) => {
+                const card = e.target.closest('a[data-evt-mini]');
+                if (!card) return;
+                // Reset any other revealed card
+                rail.querySelectorAll('.evt-swipe--revealed').forEach(c => { if (c !== card) _resetSwipeCard(c); });
+                const t = e.touches[0];
+                _activeSwipe = { card, startX: t.clientX, startY: t.clientY, dx: 0, locked: null };
+                _ensureSwipeAction(card, card.getAttribute('data-evt-mini') || '');
+            }, { passive: true });
+
+            rail.addEventListener('touchmove', (e) => {
+                if (!_activeSwipe) return;
+                const t = e.touches[0];
+                const dx = t.clientX - _activeSwipe.startX;
+                const dy = t.clientY - _activeSwipe.startY;
+                if (_activeSwipe.locked === null) {
+                    // Lock axis after small movement; vertical scroll wins by default
+                    if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+                    _activeSwipe.locked = (Math.abs(dx) > Math.abs(dy)) ? 'x' : 'y';
+                    if (_activeSwipe.locked === 'x') _activeSwipe.card.classList.add('evt-swipe--dragging');
+                }
+                if (_activeSwipe.locked !== 'x') return;
+                // Only allow leftward drag
+                const clamped = Math.max(-SWIPE_MAX, Math.min(0, dx));
+                _activeSwipe.dx = clamped;
+                _activeSwipe.card.style.transform = 'translateX(' + clamped + 'px)';
+                const action = _activeSwipe.card.querySelector('.evt-swipe-action');
+                if (action) action.style.opacity = String(Math.min(1, Math.abs(clamped) / SWIPE_THRESHOLD));
+            }, { passive: true });
+
+            const finish = () => {
+                if (!_activeSwipe) return;
+                const { card, dx, locked } = _activeSwipe;
+                _activeSwipe = null;
+                if (locked !== 'x') { _resetSwipeCard(card); return; }
+                if (Math.abs(dx) >= SWIPE_THRESHOLD) {
+                    card.classList.remove('evt-swipe--dragging');
+                    card.classList.add('evt-swipe--revealed');
+                    card.style.transform = '';   // CSS class drives final position
+                    const action = card.querySelector('.evt-swipe-action');
+                    if (action) action.style.opacity = '1';
+                } else {
+                    _resetSwipeCard(card);
+                }
+            };
+            rail.addEventListener('touchend', finish, { passive: true });
+            rail.addEventListener('touchcancel', finish, { passive: true });
+
+            // Tap on revealed action → confirm cancel; tap on revealed card → reset
+            rail.addEventListener('click', (e) => {
+                const cancelBtn = e.target.closest('[data-swipe-cancel]');
+                if (cancelBtn) {
+                    e.preventDefault(); e.stopPropagation();
+                    const id = cancelBtn.getAttribute('data-swipe-cancel') || '';
+                    _confirmCancelRsvp(id);
+                    return;
+                }
+                const revealed = e.target.closest('.evt-swipe--revealed');
+                if (revealed) {
+                    e.preventDefault(); e.stopPropagation();
+                    _resetSwipeCard(revealed);
+                }
+            });
+        }
+
+        // ── Long-press on any list card → context sheet ────
+        const groups = document.getElementById('evtGroups');
+        if (groups && groups.dataset.lpWired !== '1') {
+            groups.dataset.lpWired = '1';
+            const cancelLp = () => {
+                if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+            };
+            groups.addEventListener('touchstart', (e) => {
+                const card = e.target.closest('a[data-evt-card], a[data-evt-mini], a[data-evt-hero]');
+                if (!card) return;
+                _longPressFired = false;
+                const t = e.touches[0];
+                const startX = t.clientX, startY = t.clientY;
+                cancelLp();
+                _longPressTimer = setTimeout(() => {
+                    _longPressFired = true;
+                    const id = card.getAttribute('data-evt-card') || card.getAttribute('data-evt-mini') || card.getAttribute('data-evt-hero') || '';
+                    _openContextSheet(id);
+                }, LONGPRESS_MS);
+                const moveHandler = (mv) => {
+                    const m = mv.touches[0];
+                    if (Math.abs(m.clientX - startX) > LONGPRESS_MOVE || Math.abs(m.clientY - startY) > LONGPRESS_MOVE) cancelLp();
+                };
+                const endHandler = () => {
+                    cancelLp();
+                    groups.removeEventListener('touchmove', moveHandler);
+                    groups.removeEventListener('touchend', endHandler);
+                    groups.removeEventListener('touchcancel', endHandler);
+                };
+                groups.addEventListener('touchmove', moveHandler, { passive: true });
+                groups.addEventListener('touchend', endHandler, { passive: true });
+                groups.addEventListener('touchcancel', endHandler, { passive: true });
+            }, { passive: true });
+
+            // Suppress nav click immediately after a long-press fires
+            groups.addEventListener('click', (e) => {
+                if (_longPressFired) {
+                    _longPressFired = false;
+                    e.preventDefault(); e.stopPropagation();
+                }
+            }, true);
+        }
+    }
+
+    async function _confirmCancelRsvp(eventId) {
+        if (!eventId) return;
+        const all = window.evtAllEvents || [];
+        const ev  = all.find(x => x.id === eventId);
+        const title = (ev && ev.title) ? ev.title : 'this event';
+        if (!window.confirm('Cancel your RSVP for "' + title + '"?')) return;
+        try {
+            if (typeof window.evtHandleRsvp === 'function') {
+                // evtHandleRsvp toggles off when called with the existing status
+                await window.evtHandleRsvp(eventId, 'going');
+            }
+        } catch (err) {
+            console.error('Cancel RSVP failed', err);
+        }
+    }
+
+    // =========================================================
+    // D2 — Context sheet (long-press menu)
+    // =========================================================
+    function _ensureContextSheet() {
+        let sheet = document.getElementById('evtContextSheet');
+        if (sheet) return sheet;
+        sheet = document.createElement('div');
+        sheet.id = 'evtContextSheet';
+        sheet.className = 'evt-context-sheet hidden fixed inset-0 z-[75]';
+        sheet.setAttribute('role', 'dialog');
+        sheet.setAttribute('aria-modal', 'true');
+        sheet.innerHTML =
+            '<div class="absolute inset-0 bg-black/40" data-ctx-close="1"></div>' +
+            '<div class="evt-context-sheet__panel absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:max-w-sm sm:h-fit sm:rounded-2xl bg-white rounded-t-2xl shadow-2xl overflow-hidden">' +
+                '<div class="px-4 pt-3 pb-2 border-b border-gray-100">' +
+                    '<h3 id="evtContextTitle" class="text-sm font-semibold text-gray-900 truncate"></h3>' +
+                '</div>' +
+                '<ul class="py-1">' +
+                    '<li><button type="button" data-ctx-act="share"   class="evt-context-row"><span aria-hidden="true">🔗</span><span>Share link</span></button></li>' +
+                    '<li><button type="button" data-ctx-act="copy"    class="evt-context-row"><span aria-hidden="true">📋</span><span>Copy link</span></button></li>' +
+                    '<li><button type="button" data-ctx-act="ics"     class="evt-context-row"><span aria-hidden="true">📅</span><span>Add to calendar</span></button></li>' +
+                    '<li><button type="button" data-ctx-act="hide"    class="evt-context-row evt-context-row--danger"><span aria-hidden="true">🙈</span><span>Hide from list</span></button></li>' +
+                    '<li class="border-t border-gray-100 mt-1"><button type="button" data-ctx-close="1" class="evt-context-row evt-context-row--cancel"><span>Cancel</span></button></li>' +
+                '</ul>' +
+            '</div>';
+        document.body.appendChild(sheet);
+        sheet.addEventListener('click', (e) => {
+            if (e.target.closest('[data-ctx-close]')) { _closeContextSheet(); return; }
+            const row = e.target.closest('[data-ctx-act]');
+            if (!row) return;
+            const act = row.getAttribute('data-ctx-act');
+            const id  = sheet.dataset.eventId || '';
+            _runContextAction(act, id);
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !sheet.classList.contains('hidden')) _closeContextSheet();
+        });
+        return sheet;
+    }
+
+    function _openContextSheet(eventId) {
+        if (!eventId) return;
+        const all = window.evtAllEvents || [];
+        const ev  = all.find(x => x.id === eventId);
+        if (!ev) return;
+        const sheet = _ensureContextSheet();
+        sheet.dataset.eventId = eventId;
+        const title = sheet.querySelector('#evtContextTitle');
+        if (title) title.textContent = ev.title || 'Event';
+        sheet.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+    function _closeContextSheet() {
+        const sheet = document.getElementById('evtContextSheet');
+        if (!sheet) return;
+        sheet.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    async function _runContextAction(act, eventId) {
+        const all = window.evtAllEvents || [];
+        const ev  = all.find(x => x.id === eventId);
+        if (!ev) { _closeContextSheet(); return; }
+        const url = _eventShareUrl(ev);
+
+        if (act === 'share') {
+            try {
+                if (navigator.share) {
+                    await navigator.share({ title: ev.title || 'Event', url });
+                } else {
+                    await _copyToClipboard(url);
+                    _toast('Link copied');
+                }
+            } catch (_) { /* user dismissed */ }
+            _closeContextSheet();
+            return;
+        }
+        if (act === 'copy') {
+            await _copyToClipboard(url);
+            _toast('Link copied');
+            _closeContextSheet();
+            return;
+        }
+        if (act === 'ics') {
+            _downloadIcs(ev);
+            _closeContextSheet();
+            return;
+        }
+        if (act === 'hide') {
+            _hiddenIds.add(eventId);
+            _toast('Hidden for this session');
+            _closeContextSheet();
+            renderEvents();
+            return;
+        }
+    }
+
+    function _eventShareUrl(ev) {
+        const origin = location.origin;
+        const base = origin + (location.pathname.includes('/portal/') ? location.pathname.split('?')[0] : '/portal/events.html');
+        return ev.slug ? (base + '?event=' + encodeURIComponent(ev.slug)) : base;
+    }
+
+    async function _copyToClipboard(text) {
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(text);
+                return true;
+            }
+        } catch (_) { /* fall through */ }
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            return true;
+        } catch (_) { return false; }
+    }
+
+    function _toast(msg) {
+        let t = document.getElementById('evtToast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'evtToast';
+            t.className = 'evt-toast';
+            document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        t.classList.add('evt-toast--show');
+        clearTimeout(t._hideT);
+        t._hideT = setTimeout(() => t.classList.remove('evt-toast--show'), 1800);
+    }
+
+    function _icsDate(d) {
+        const pad = n => String(n).padStart(2, '0');
+        return d.getUTCFullYear()
+            + pad(d.getUTCMonth() + 1)
+            + pad(d.getUTCDate()) + 'T'
+            + pad(d.getUTCHours())
+            + pad(d.getUTCMinutes())
+            + pad(d.getUTCSeconds()) + 'Z';
+    }
+    function _icsEscape(s) {
+        return String(s == null ? '' : s)
+            .replace(/\\/g, '\\\\')
+            .replace(/\r?\n/g, '\\n')
+            .replace(/,/g, '\\,')
+            .replace(/;/g, '\\;');
+    }
+    function _downloadIcs(ev) {
+        const start = new Date(ev.start_date);
+        const endRaw = ev.end_date || ev.end_at || ev.ends_at;
+        const end = endRaw ? new Date(endRaw) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+        const uid = (ev.id || ('evt-' + Date.now())) + '@justicemcneal';
+        const url = _eventShareUrl(ev);
+        const lines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//JusticeMcNeal//Portal Events//EN',
+            'CALSCALE:GREGORIAN',
+            'BEGIN:VEVENT',
+            'UID:' + uid,
+            'DTSTAMP:' + _icsDate(new Date()),
+            'DTSTART:' + _icsDate(start),
+            'DTEND:'   + _icsDate(end),
+            'SUMMARY:' + _icsEscape(ev.title || 'Event'),
+            'DESCRIPTION:' + _icsEscape((ev.description || '') + '\n\n' + url),
+            'URL:' + _icsEscape(url),
+        ];
+        if (ev.location_text || ev.location_nickname) {
+            lines.push('LOCATION:' + _icsEscape(ev.location_text || ev.location_nickname));
+        }
+        lines.push('END:VEVENT', 'END:VCALENDAR');
+        const ics = lines.join('\r\n');
+        const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+        const a = document.createElement('a');
+        const slug = ev.slug || ev.id || 'event';
+        a.href = URL.createObjectURL(blob);
+        a.download = slug + '.ics';
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
     }
 
     // C3 — Sync restored state into the UI chrome (input, segmented control,
@@ -842,6 +1209,7 @@
         const going = (events || []).filter(e => {
             if (e.id === heroId) return false;
             if (e.status === 'cancelled' || e.status === 'draft') return false;
+            if (!_notHidden(e)) return false;
             const r = rsvps[e.id];
             if (!r || r.status !== 'going') return false;
             return new Date(e.start_date) >= now;
@@ -1004,6 +1372,7 @@
             const descHits  = [];
             all.forEach(e => {
                 if (e.status === 'cancelled') return;
+                if (!_notHidden(e)) return;
                 if (!_matchesCategory(e)) return;
                 if ((e.title || '').toLowerCase().includes(q)) {
                     titleHits.push(e);
@@ -1032,7 +1401,7 @@
         }
 
         // ─── NORMAL MODE — bucketed ─────────────────────────
-        const filtered = all.filter(e => _matchesType(e) && _matchesCategory(e) && _matchesLifecycle(e));
+        const filtered = all.filter(e => _matchesType(e) && _matchesCategory(e) && _matchesLifecycle(e) && _notHidden(e));
         const tab = window.evtActiveTab || 'upcoming';
 
         // Pick hero only on Upcoming tab
@@ -1589,6 +1958,7 @@
         _initMobileFab();
         _initPullToRefresh();
         _initViewToggle();
+        _initSwipeGestures();
         _applyRestoredUi();
     }
     if (document.readyState !== 'loading') _onReady();

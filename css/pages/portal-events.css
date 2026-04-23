@@ -687,3 +687,109 @@ body.evt-view--calendar #evtViewToggle { background: #eef2ff; border-color: #c7d
 #evtDayModal { animation: evtDayModalIn .18s ease-out both; }
 @keyframes evtDayModalIn { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { #evtDayModal { animation: none; } }
+
+
+
+/* ============================================================
+   events_004 Phase D additions
+   D2 swipe gestures + long-press context sheet
+   ============================================================ */
+
+/* Swipe-to-cancel host (going-rail mini cards) */
+.evt-swipe-host {
+    position: relative;
+    transition: transform .22s cubic-bezier(.16,1,.3,1);
+    will-change: transform;
+}
+.evt-swipe-host.evt-swipe--dragging { transition: none; }
+.evt-swipe-host.evt-swipe--revealed { transform: translateX(-92px); }
+
+/* Reveal action button — sits behind the card */
+.evt-swipe-action {
+    position: absolute;
+    top: 0; right: 0;
+    width: 88px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    border: 0;
+    border-radius: 0 16px 16px 0;
+    opacity: 0;
+    transition: opacity .12s ease;
+    z-index: 0;
+}
+.evt-swipe-host { z-index: 1; }
+.evt-swipe-action__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(255,255,255,.18);
+    border-radius: 999px;
+}
+.evt-swipe-action:active { background: #b91c1c; }
+@media (prefers-reduced-motion: reduce) {
+    .evt-swipe-host { transition: none; }
+}
+
+/* Context sheet (long-press menu) */
+.evt-context-sheet { animation: evtCtxIn .18s ease-out both; }
+.evt-context-sheet__panel { animation: evtCtxPanelIn .22s cubic-bezier(.16,1,.3,1) both; }
+@keyframes evtCtxIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes evtCtxPanelIn { from { transform: translateY(16px); } to { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+    .evt-context-sheet, .evt-context-sheet__panel { animation: none; }
+}
+
+.evt-context-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    cursor: pointer;
+    transition: background-color .12s ease;
+}
+.evt-context-row:hover,
+.evt-context-row:active { background: #f3f4f6; }
+.evt-context-row--danger { color: #b91c1c; }
+.evt-context-row--cancel { justify-content: center; font-weight: 600; color: #6b7280; }
+.evt-context-row:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+
+/* Lightweight toast */
+.evt-toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 24px);
+    background: rgba(17,24,39,.92);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 80;
+    transition: transform .22s ease, opacity .18s ease;
+}
+.evt-toast--show { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) {
+    .evt-toast { transition: opacity .12s ease; transform: translate(-50%, 0); }
+}

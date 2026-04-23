@@ -46,8 +46,8 @@ const results = {
     d1_view_body_class:         cssText.includes('body.evt-view--calendar'),
     d1_reduced_motion:          /prefers-reduced-motion[\s\S]*?evtCalendarMount/.test(cssText),
 
-    // SW
-    sw_bumped_to_v55:           swText.includes("'jm-portal-v55'"),
+    // SW (D1 landed at v55; later phases may bump higher)
+    sw_bumped_past_v54:         /jm-portal-v(5[5-9]|[6-9]\d|\d{3,})/.test(swText),
     sw_no_leftover_v54:         !swText.includes("'jm-portal-v54'"),
 };
 
