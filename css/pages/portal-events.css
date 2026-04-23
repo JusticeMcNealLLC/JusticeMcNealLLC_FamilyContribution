@@ -2235,3 +2235,172 @@ body.evt-vlift .evt-create-tile {
     padding: 1rem !important;
     min-height: 160px !important;
 }
+
+/* ============================================================
+ * F18 -- Featured hero polish (vlift) to match target mockup.
+ *   - Cap hero height (compact strip, NOT 60vh)
+ *   - Mute banner photo with strong overlay so text is readable
+ *   - Pin date chip top-left under FEATURED EVENT kicker (no overlap)
+ *   - Right-side description gets a soft scrim/backdrop for legibility
+ *   - View Details button sits inside the right block, not floating
+ *   - Cluster sits cleanly under meta on the left
+ * Non-vlift unchanged.
+ * ============================================================ */
+
+/* MOBILE + everything: cap the hero height so it never goes full-bleed tall */
+body.evt-vlift .evt-hero-vlift > a {
+    aspect-ratio: auto !important;
+    min-height: 0 !important;
+    height: 240px !important;
+}
+
+/* Strong dark gradient over the banner photo so left text + right desc read clearly */
+body.evt-vlift .evt-hero-vlift > a::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(90deg,
+        rgba(20, 18, 60, 0.85) 0%,
+        rgba(35, 25, 90, 0.65) 45%,
+        rgba(20, 18, 60, 0.55) 75%,
+        rgba(20, 18, 60, 0.85) 100%);
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Hide the bottom-edge fade -- we now have a full overlay */
+body.evt-vlift .evt-hero-fade { display: none !important; }
+
+/* Make sure top-right pills and meta sit ABOVE the new overlay */
+body.evt-vlift .evt-hero-vlift > a > * { z-index: 2; }
+body.evt-vlift .evt-hero-vlift > a > .absolute,
+body.evt-vlift .evt-hero-vlift > a > [data-f14-kicker],
+body.evt-vlift .evt-hero-vlift > a > [data-f14-datechip],
+body.evt-vlift .evt-hero-vlift > a > .evt-hero-fade,
+body.evt-vlift .evt-hero-vlift > a > .evt-hero-meta,
+body.evt-vlift .evt-hero-vlift > a > .evt-hero-side { z-index: 2; }
+
+/* DESKTOP -- compact landscape strip */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-vlift > a {
+        height: 220px !important;
+        min-height: 220px !important;
+        border-radius: 1.25rem;
+    }
+    /* Meta stays on the left half, vertically anchored bottom */
+    body.evt-vlift .evt-hero-meta {
+        max-width: 56% !important;
+        padding: 1.25rem 1.5rem !important;
+    }
+    body.evt-vlift .evt-hero-meta h2 {
+        font-size: 1.625rem !important;
+        line-height: 1.15;
+        margin-top: .35rem;
+    }
+}
+
+/* Date chip -- pin top-left UNDER the FEATURED EVENT kicker, never mid-card */
+body.evt-vlift .evt-hero-datechip {
+    top: 2.75rem !important;
+    left: 1rem !important;
+    width: 3.25rem !important;
+    padding: .4rem .25rem !important;
+}
+body.evt-vlift .evt-hero-datechip__day { font-size: 1.25rem !important; }
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-datechip {
+        top: 2.75rem !important;
+        left: 1.25rem !important;
+        width: 3.5rem !important;
+    }
+    body.evt-vlift .evt-hero-datechip__day { font-size: 1.375rem !important; }
+}
+
+/* Push meta over so it doesn't collide with the date chip */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-meta { padding-left: 5.75rem !important; }
+}
+
+/* Right-side description block: clean column, vertical center, no overlap */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-side {
+        top: 0 !important;
+        bottom: 0 !important;
+        right: 0 !important;
+        width: 38% !important;
+        padding: 1rem 1.5rem !important;
+        justify-content: center !important;
+        align-items: flex-end !important;
+        gap: .875rem !important;
+        background: linear-gradient(270deg,
+            rgba(0, 0, 0, 0.35) 0%,
+            rgba(0, 0, 0, 0.15) 60%,
+            rgba(0, 0, 0, 0)    100%);
+    }
+    body.evt-vlift .evt-hero-side__desc {
+        text-align: right;
+        -webkit-line-clamp: 2 !important;
+        font-size: .8125rem !important;
+        line-height: 1.45 !important;
+        max-width: 95%;
+    }
+    body.evt-vlift .evt-hero-side__cta {
+        align-self: flex-end;
+        padding: .55rem 1.25rem !important;
+    }
+}
+
+/* Top-right pills (Live + heart + countdown) - tighten + push below kicker */
+body.evt-vlift .evt-hero-vlift .absolute.top-3.right-3 {
+    top: .75rem !important;
+    right: 1rem !important;
+    gap: .5rem !important;
+}
+
+/* Cluster sits cleanly below meta on the LEFT (no overlap with right block) */
+body.evt-vlift .evt-hero-cluster {
+    margin-bottom: .375rem !important;
+    padding: 3px 8px 3px 3px !important;
+    font-size: 11px !important;
+}
+body.evt-vlift .evt-hero-cluster-bub { width: 22px !important; height: 22px !important; }
+
+/* FEATURED EVENT kicker: tighter, with subtle backdrop so it pops */
+body.evt-vlift .evt-hero-vlift [data-f14-kicker] {
+    top: .75rem !important;
+    left: 1rem !important;
+    padding: .2rem .55rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    font-size: .625rem !important;
+    color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+/* Hide the redundant date/time row above the title under F18 (the date chip
+   already shows the date; the time appears in the meta line below) */
+body.evt-vlift .evt-hero-meta [data-f14-dtrow] {
+    /* Hide the DATE span (first child) so we keep only the time icon-text */
+    margin-bottom: 0 !important;
+    font-size: .8125rem !important;
+}
+body.evt-vlift .evt-hero-meta [data-f14-dtrow] > span:first-child { display: none !important; }
+
+/* F18 -- Reorder meta block so it reads: TITLE -> HOST -> LOCATION (target).
+   The flex direction + order keeps DOM untouched. */
+body.evt-vlift .evt-hero-meta {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: .15rem;
+}
+body.evt-vlift .evt-hero-meta > h2          { order: 1; }
+body.evt-vlift .evt-hero-meta > [data-f14-host] { order: 2; margin-top: 0 !important; }
+body.evt-vlift .evt-hero-meta > p            { order: 3; }
+body.evt-vlift .evt-hero-meta > [data-f14-dtrow] { order: 3; }
+body.evt-vlift .evt-hero-meta > .evt-hero-cluster,
+body.evt-vlift .evt-hero-meta > button.evt-hero-cluster { order: 4; margin-top: .35rem !important; margin-bottom: 0 !important; }

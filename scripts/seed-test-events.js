@@ -50,7 +50,7 @@ function buildEvents(creatorId) {
   const creatorId = me.rows[0].id;
 
   if (process.argv.includes('--clean')) {
-    const res = await c.query("delete from events where description like $1 returning id", ['%' + TAG + '%']);
+    const res = await c.query("delete from events where gated_notes = $1 or description like $2 returning id", [TAG, '%' + TAG + '%']);
     console.log(`${TAG} cleaned ${res.rowCount} rows`);
     await c.end();
     return;
@@ -61,13 +61,14 @@ function buildEvents(creatorId) {
   for (const e of events) {
     await c.query(
       `insert into events
-        (created_by, event_type, category, title, slug, description, banner_url, start_date,
+        (created_by, event_type, category, title, slug, description, gated_notes, banner_url, start_date,
          end_date, location_text, location_nickname, status, pricing_mode, member_only)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'open','free',false)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'open','free',false)
        on conflict (slug) do nothing`,
       [
         e.created_by, e.event_type, e.category, e.title, e.slug,
-        e.desc + '\n\n' + TAG,
+        e.desc,
+        TAG,
         e.banner,
         e.start.toISOString(),
         new Date(e.start.getTime() + 2 * 3600 * 1000).toISOString(),
