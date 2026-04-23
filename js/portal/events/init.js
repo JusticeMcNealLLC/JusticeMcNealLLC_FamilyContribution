@@ -10,10 +10,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Get role for backward compat, show "Create" button based on permission
     const { data: profile } = await supabaseClient
         .from('profiles')
-        .select('role')
+        .select('role, first_name')
         .eq('id', evtCurrentUser.id)
         .single();
     evtCurrentUserRole = profile?.role;
+    // Expose first name for personalized greeting (events_003 §8.1 / B5)
+    window.evtCurrentUserName = profile?.first_name || '';
 
     if (hasPermission('events.create') || evtCurrentUserRole === 'admin') {
         document.getElementById('createEventBtn')?.classList.remove('hidden');

@@ -113,7 +113,7 @@
     }
 
     // =========================================================
-    // Header count
+    // Header count + personalized greeting (events_003 §8.1 / B5)
     // =========================================================
     function _renderHeaderCount() {
         const el = document.getElementById('evtHeaderCount');
@@ -130,6 +130,24 @@
         if (going) parts.push(going + ' going');
         parts.push(upcoming + ' upcoming');
         el.textContent = parts.join(' · ');
+
+        _renderHeaderGreeting();
+    }
+
+    function _renderHeaderGreeting() {
+        const title = document.getElementById('evtHeaderTitle');
+        if (!title) return;
+        const name = (window.evtCurrentUserName || '').trim();
+        let g = document.getElementById('evtHeaderGreeting');
+        if (!name) { if (g) g.remove(); return; }
+        if (!g) {
+            g = document.createElement('small');
+            g.id = 'evtHeaderGreeting';
+            g.className = 'evt-header-greeting block text-xs text-gray-400 mb-1';
+            title.parentNode.insertBefore(g, title);
+        }
+        const esc = (H.escapeHtml || (s => String(s == null ? '' : s)));
+        g.textContent = 'Hey ' + esc(name) + ' 👋';
     }
 
     // =========================================================
@@ -384,11 +402,16 @@
         const attLine = attCount
             ? '<span class="text-[11px] text-gray-500 truncate">' + attCount + ' going</span>'
             : '';
+        const isPinnedLlc = event.is_pinned && event.event_type === 'llc';
+        const pin = isPinnedLlc
+            ? '<span class="evt-date-pin evt-date-pin--mini" aria-label="Pinned LLC event" title="Pinned">📌</span>'
+            : '';
 
         return '<a href="' + href + '" data-evt-mini="' + esc(event.id) + '"' +
             ' class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">' +
                 '<div class="relative aspect-[16/9]" style="' + bannerStyle + '">' +
                     '<div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' +
+                        pin +
                         '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div>' +
                         '<div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div>' +
                     '</div>' +
@@ -549,33 +572,137 @@
         _wireCardClicks(groupsEl, eventsById);
     }
 
+    // =========================================================
+    // Empty state — per-viewer (events_003 §8.10 / B4)
+    //
+    // Five variants (network-error handled separately, Phase C):
+    //   • Search has results=0  → "No events match …" + Clear filters
+    //   • Upcoming + canCreate  → "No events yet" + Create CTA
+    //   • Upcoming + !canCreate → "No events on the books" + Browse past
+    //   • Past                  → "No past events yet"
+    //   • Going                 → "Not going to any events"
+    //
+    // The 📌 marker appears inline with _dateStamp (card.js §8.8).
+    // Lottie illustration lazy-upgrades when cat-playing.json available.
+    // =========================================================
     function _renderEmptyCopy() {
-        const tab = window.evtActiveTab || 'upcoming';
+        const tab     = window.evtActiveTab || 'upcoming';
         const titleEl = document.getElementById('emptyTitle');
         const subEl   = document.getElementById('emptySubtext');
         const ctaBtn  = document.getElementById('emptyCreateBtn');
-
-        const titles = {
-            upcoming: _searchQuery ? 'No matches for "' + _searchQuery + '"' : 'No upcoming events',
-            past:     'No past events yet',
-            going:    "Not going to any events",
-        };
-        const subs = {
-            upcoming: _searchQuery
-                ? 'Try a different search term.'
-                : 'Check back soon — events will show up here!',
-            past:     'Past events will appear here after they wrap up.',
-            going:    'RSVP to an event to see it here.',
-        };
-        if (titleEl) titleEl.textContent = titles[tab] || titles.upcoming;
-        if (subEl)   subEl.textContent   = subs[tab]   || subs.upcoming;
+        const secBtn  = document.getElementById('emptySecondaryBtn');
 
         const canCreate = (typeof hasPermission === 'function' && hasPermission('events.create')) ||
                           window.evtCurrentUserRole === 'admin';
-        if (ctaBtn) {
-            const showCta = !_searchQuery && tab === 'upcoming' && canCreate;
-            ctaBtn.classList.toggle('hidden', !showCta);
+
+        let title, sub, showCta = false, secText = '', secAction = null;
+
+        if (_searchQuery) {
+            title   = 'No events match "' + _searchQuery + '"';
+            sub     = 'Try a shorter term, or clear your filters to see everything.';
+            secText = 'Clear filters';
+            secAction = () => {
+                const input = document.getElementById('evtSearchInput');
+                const clear = document.getElementById('evtSearchClear');
+                if (input) input.value = '';
+                clear?.classList.add('hidden');
+                _searchQuery = '';
+                _activeType = 'all';
+                const menuBtn = document.getElementById('evtTypeMenuBtn');
+                if (menuBtn) {
+                    menuBtn.dataset.type = 'all';
+                    const labelEl = menuBtn.querySelector('[data-type-label]');
+                    if (labelEl) labelEl.textContent = 'All';
+                }
+                document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
+                    o.classList.toggle('evt-type-opt--active', o.dataset.type === 'all')
+                );
+                renderEvents();
+            };
+        } else if (tab === 'past') {
+            title = 'No past events yet';
+            sub   = 'Past events will appear here after they wrap up.';
+        } else if (tab === 'going') {
+            title = 'Not going to any events';
+            sub   = 'RSVP to an event to see it here.';
+        } else if (canCreate) {
+            // Upcoming + can create — editorial CTA
+            title   = 'No events yet';
+            sub     = "Create your family's first one.";
+            showCta = true;
+        } else {
+            // Upcoming + cannot create — calm + secondary browse-past
+            title   = 'No events on the books';
+            sub     = "Check back soon — we'll post new gatherings here.";
+            secText = 'Browse past events';
+            secAction = () => _switchLifecycleTab('past');
         }
+
+        if (titleEl) titleEl.textContent = title;
+        if (subEl)   subEl.textContent   = sub;
+
+        if (ctaBtn) ctaBtn.classList.toggle('hidden', !showCta);
+        if (secBtn) {
+            secBtn.classList.toggle('hidden', !secText);
+            if (secText) {
+                secBtn.textContent = secText;
+                secBtn.onclick = secAction; // replace any prior handler
+            } else {
+                secBtn.onclick = null;
+            }
+        }
+
+        _upgradeEmptyIllo();
+    }
+
+    // Switch the lifecycle segmented control programmatically
+    function _switchLifecycleTab(tab) {
+        window.evtActiveTab = tab;
+        document.querySelectorAll('#evtLifecycleSeg .evt-seg__btn').forEach(b => {
+            const on = b.dataset.filter === tab;
+            b.classList.toggle('evt-seg__btn--active', on);
+            b.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        renderEvents();
+    }
+
+    // Lazy Lottie upgrade for the empty-state illustration.
+    // Uses existing cat-playing.json (assets/lottie/) as the fallback per spec §7.9.
+    // Loads lottie-web from jsDelivr once, on first empty render only.
+    let _lottieLoading = false;
+    let _lottieUpgraded = false;
+    function _upgradeEmptyIllo() {
+        if (_lottieUpgraded) return;
+        const slot = document.getElementById('emptyIllo');
+        if (!slot) return;
+
+        const go = () => {
+            if (_lottieUpgraded) return;
+            if (!window.lottie || typeof window.lottie.loadAnimation !== 'function') return;
+            // Replace SVG with animation only if slot still has placeholder
+            try {
+                slot.innerHTML = '';
+                slot.classList.add('evt-empty-illo--lottie');
+                window.lottie.loadAnimation({
+                    container: slot,
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    path: '/assets/lottie/cat-playing.json',
+                });
+                _lottieUpgraded = true;
+            } catch (_) { /* keep fallback SVG */ }
+        };
+
+        if (window.lottie) { go(); return; }
+        if (_lottieLoading) return;
+        _lottieLoading = true;
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js';
+        s.async = true;
+        s.onload = go;
+        s.onerror = () => { /* keep fallback SVG silently */ };
+        document.head.appendChild(s);
     }
 
     // =========================================================

@@ -139,11 +139,13 @@
 
                 <!-- Empty state -->
                 <div id="emptyState" class="hidden mt-8">
-                    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-10 sm:p-14 text-center max-w-lg mx-auto">
-                        <div class="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-brand-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path>
-                            </svg>
+                    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-10 sm:p-14 text-center max-w-lg mx-auto evt-empty-card">
+                        <div id="emptyIllo" class="w-24 h-24 mx-auto mb-4 evt-empty-illo">
+                            <div class="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto">
+                                <svg class="w-8 h-8 text-brand-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path>
+                                </svg>
+                            </div>
                         </div>
                         <h3 class="text-lg font-bold text-gray-900 mb-1.5" id="emptyTitle">No upcoming events</h3>
                         <p class="text-sm text-gray-500 leading-relaxed max-w-xs mx-auto" id="emptySubtext">Check back soon — events will show up here!</p>
@@ -153,6 +155,9 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
                             Create Event
+                        </button>
+                        <button id="emptySecondaryBtn" type="button"
+                            class="hidden mt-4 evt-empty-link text-sm font-semibold text-brand-600 hover:text-brand-700 underline-offset-2 hover:underline">
                         </button>
                     </div>
                 </div>

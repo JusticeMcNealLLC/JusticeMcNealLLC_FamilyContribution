@@ -457,3 +457,69 @@
 }
 /* Manage event button: a touch wider so the icon + label breathe */
 .evt-host-more-btn { min-width: 132px; }
+
+
+/* ════════════════════════════════════════════════════════════
+   events_003 — B4 + B5 additions
+   Per-viewer empty states + personalized greeting + pinned 📌
+   ════════════════════════════════════════════════════════════ */
+
+/* ── B5a — Pinned LLC 📌 overlay on date stamps (§8.8) ── */
+.evt-date-pin {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    font-size: 11px;
+    line-height: 1;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,.18));
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
+}
+.evt-date-pin--mini {
+    top: -5px;
+    left: -5px;
+    font-size: 10px;
+}
+
+/* ── B5b — Personalized greeting (§8.1) ── */
+.evt-header-greeting {
+    letter-spacing: 0.01em;
+}
+/* Hide greeting in the condensed sticky state */
+#evtPageHeader.evt-header--condensed .evt-header-greeting {
+    display: none;
+}
+
+/* ── B4 — Per-viewer empty state polish (§8.10) ── */
+.evt-empty-card {
+    background-image: linear-gradient(180deg, #fafaff 0%, #ffffff 40%);
+}
+.evt-empty-illo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 16px;
+}
+.evt-empty-illo--lottie {
+    width: 140px;
+    height: 140px;
+}
+.evt-empty-link {
+    background: transparent;
+    border: 0;
+    padding: 6px 10px;
+    cursor: pointer;
+    display: inline-block;
+}
+.evt-empty-link:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .evt-empty-illo--lottie svg { animation: none !important; }
+}

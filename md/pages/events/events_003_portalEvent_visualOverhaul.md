@@ -1,6 +1,6 @@
 # 📅 `portal/events.html` — Visual & UX Overhaul Spec (events_003)
 
-> **Status:** Phase A1+A2+A3+B1+B2+B3 shipped. SW bumped to `v52`. Phase A4 (polish/QA), B4 (per-viewer empty states), B5 (greeting + pinned marker) pending.
+> **Status:** Phase A1+A2+A3+B1+B2+B3+B4+B5 shipped. SW at `v52`. Phase A4 (polish/QA on real device) pending before Phase C can open.
 > **Scope:** `/portal/events.html` **list view only**. Detail view (`#eventsDetailView`) is out of scope — already shipped in M2 (`events_002.md`).
 > **Goal:** transform the current functional-but-flat list page into a **premium, mobile-first event browsing experience** that feels native to a top-tier consumer product, while staying inside the existing JMLLC portal theme (Inter + brand-indigo + surface-50 background + light editorial cards).
 > **Non-goal:** backend changes. No schema, RPC, or edge-function work. RSVP flow, create flow, detail flow all continue to call exactly what they call today.
@@ -797,9 +797,19 @@ This is not a polish pass. This is a **ship gate**. If any item fails, Phase A d
    - `_renderLiveBanner()` shows rose-50 pulsing-dot banner above filter strip whenever ≥1 event is in `[start, end]` window (end falls back to `start + 2h`). Single-event variant links directly to detail; multi-event variant shows count. Cancelled/draft filtered out. Hidden on non-Upcoming tabs and during search.
 7. **B3 — Mobile FAB scroll-show/hide behavior.** ✅ **SHIPPED**
    - FAB slides down + fades on scroll-down past 8px threshold, restores on scroll-up. Always visible above scrollY<20. `rAF`-throttled passive scroll listener. MutationObserver on `<body>` class toggles `.evt-fab--modal-hidden` when any modal opens (respects existing `modal-open` / `overflow-hidden` flag). `prefers-reduced-motion` disables transform animation, keeps opacity fade.
-8. **B4 — Per-viewer empty states (Lottie/illustration).** (pending)
-9. **B5 — Personalized greeting + pinned-LLC date-stamp marker.** (pending)
-10. SW bumped `v51 → v52` with B1+B2+B3.
+8. **B4 — Per-viewer empty states (Lottie/illustration).** ✅ **SHIPPED**
+   - `_renderEmptyCopy()` rewritten with role × tab × search branching per §8.10:
+     • search-has-0-results → *"No events match \"query\""* + **Clear filters** link that resets `_searchQuery` + `_activeType` + syncs the type-menu UI;
+     • upcoming + canCreate → *"No events yet"* + *"Create your family's first one."* + primary Create CTA;
+     • upcoming + !canCreate → *"No events on the books"* + *"Check back soon…"* + **Browse past events** secondary text-button that calls `_switchLifecycleTab('past')`;
+     • past / going → concise role-neutral copy.
+   - Added `#emptyIllo` illustration slot and `#emptySecondaryBtn` to `portal/events.html` `#emptyState` markup.
+   - Lottie lazy-upgrade: first empty render injects `lottie-web@5.12.2` from jsDelivr, loads `assets/lottie/cat-playing.json` (reused per §7.9 fallback). Silent fallback to the existing brand-50 calendar-SVG placeholder if load fails. `prefers-reduced-motion` respected.
+9. **B5 — Personalized greeting + pinned-LLC date-stamp marker.** ✅ **SHIPPED**
+   - `init.js` profile select extended to include `first_name`; stashed as `window.evtCurrentUserName`.
+   - `_renderHeaderGreeting()` inserts `<small id="evtHeaderGreeting" class="evt-header-greeting block text-xs text-gray-400">Hey {firstName} 👋</small>` above `#evtHeaderTitle` on every count render. Auto-hidden by `#evtPageHeader.evt-header--condensed .evt-header-greeting { display: none }` in the condensed sticky state. Silently omitted when no first name is available.
+   - `_dateStamp(event)` in `js/components/events/card.js` + `_miniCard()` in `list.js` render a small `📌` (`.evt-date-pin` / `.evt-date-pin--mini`) at top-left of the date block when `event.is_pinned && event.event_type === 'llc'`. Node-based smoke test (`test/_smoke-b5.js`) asserts: pinned LLC includes 📌, non-pinned LLC excludes 📌, pinned member-event excludes 📌, marker carries `.evt-date-pin` class. **All 5 assertions pass.**
+10. SW stays at `v52` (spec §13 groups B1–B5 under one cache generation).
 
 ### Phase C — P2 discovery & motion
 

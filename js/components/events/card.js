@@ -51,12 +51,18 @@
     }
 
     // Date stamp (header row, NOT overlay) — events_003 §8.6
+    // Pinned LLC events get a small 📌 overlay — events_003 §8.8
     function _dateStamp(event) {
         const d = _startDate(event);
         if (!d) return '<div class="w-11"></div>';
         const day = d.getDate();
         const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-        return `<div class="shrink-0 text-center min-w-[44px]">
+        const isPinnedLlc = event && event.is_pinned && event.event_type === 'llc';
+        const pin = isPinnedLlc
+            ? '<span class="evt-date-pin" aria-label="Pinned LLC event" title="Pinned">📌</span>'
+            : '';
+        return `<div class="relative shrink-0 text-center min-w-[44px]">
+            ${pin}
             <div class="text-[20px] leading-none font-extrabold text-gray-900">${day}</div>
             <div class="text-[10px] tracking-wider font-bold text-brand-600 mt-0.5">${mon}</div>
         </div>`;
