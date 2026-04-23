@@ -219,6 +219,84 @@
         }, opts.duration || 1500);
     }
 
+    // ─── relativeDate (card-display short label) ──────────
+    // events_003 §8.6 — distinct from relativeTime ("3h ago" style).
+    // Returns short, scannable card labels:
+    //   today after 5pm → "Tonight"
+    //   today           → "Today"
+    //   tomorrow        → "Tomorrow"
+    //   ≤6 days future  → "in N days"
+    //   else            → "Sat Jun 14"
+    //   past            → "Sat Jun 14"
+    function relativeDate(input) {
+        if (!input) return '';
+        const d = input instanceof Date ? input : new Date(input);
+        if (isNaN(d)) return '';
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startOfDay   = new Date(d.getFullYear(),   d.getMonth(),   d.getDate());
+        const dayDiff = Math.round((startOfDay - startOfToday) / 86_400_000);
+        if (dayDiff === 0) {
+            return d.getHours() >= 17 ? 'Tonight' : 'Today';
+        }
+        if (dayDiff === 1)  return 'Tomorrow';
+        if (dayDiff === -1) return 'Yesterday';
+        if (dayDiff > 1 && dayDiff <= 6) return `in ${dayDiff} days`;
+        return formatDate(d, 'short');
+    }
+
+    // ─── groupByBucket (time-bucket grouping) ─────────────
+    // events_003 §8.7 — returns [{ label, events: [] }, ...]
+    // mode: 'upcoming' → Tonight | This week | This month | Later
+    //       'past'     → Last week | Last month | Earlier
+    //       'going'    → Tonight | This week | Later
+    // Buckets with zero events are dropped. Input order preserved
+    // within each bucket (caller is responsible for date-sort).
+    function groupByBucket(events, mode = 'upcoming') {
+        const list = Array.isArray(events) ? events : [];
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // Bucket schemas
+        const schema = {
+            upcoming: ['Tonight', 'This week', 'This month', 'Later'],
+            past:     ['Last week', 'Last month', 'Earlier'],
+            going:    ['Tonight', 'This week', 'Later'],
+        };
+        const labels = schema[mode] || schema.upcoming;
+        const buckets = Object.fromEntries(labels.map(l => [l, []]));
+
+        function bucketOf(e) {
+            const raw = e?.start_at || e?.start_date || e?.starts_at;
+            if (!raw) return labels[labels.length - 1];
+            const d = new Date(raw);
+            if (isNaN(d)) return labels[labels.length - 1];
+            const dayDiff = Math.round((d - startOfToday) / 86_400_000);
+
+            if (mode === 'past') {
+                // dayDiff is negative for past
+                if (dayDiff >= -7)  return 'Last week';
+                if (dayDiff >= -30) return 'Last month';
+                return 'Earlier';
+            }
+
+            // upcoming / going
+            if (dayDiff <= 0)           return 'Tonight';   // today (any hour) or already started
+            if (dayDiff <= 7)           return 'This week';
+            if (mode === 'going')       return 'Later';
+            if (dayDiff <= 30)          return 'This month';
+            return 'Later';
+        }
+
+        for (const e of list) {
+            const b = bucketOf(e);
+            if (buckets[b]) buckets[b].push(e);
+        }
+        return labels
+            .map(label => ({ label, events: buckets[label] }))
+            .filter(g => g.events.length > 0);
+    }
+
     // ─── Toggle a modal (legacy parity) ───────────────────
     function toggleModal(id, show) {
         const modal = document.getElementById(id);
@@ -239,6 +317,8 @@
         formatMoney,
         formatDate,
         relativeTime,
+        relativeDate,
+        groupByBucket,
         ordinal,
         generateSlug,
         openLightbox,

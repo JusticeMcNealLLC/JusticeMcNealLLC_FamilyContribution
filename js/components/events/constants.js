@@ -47,20 +47,30 @@
     const DEFAULT_TAG = { cls: 'evt-tag--purple', label: 'Event' };
 
     // ─── Category → card gradient (no banner fallback) ────
+    // events_003 §7.3 — muted, photographic-feeling palette.
+    // Each gradient is anchored on a deeper, darker color so the
+    // white text + emoji watermark remains legible without the
+    // saturated, cartoony feel of the previous palette.
     const CATEGORY_GRADIENT = {
-        birthday:   'linear-gradient(135deg,#7c3aed,#a855f7)',
-        party:      'linear-gradient(135deg,#ea580c,#f97316)',
-        hangout:    'linear-gradient(135deg,#059669,#10b981)',
-        game_night: 'linear-gradient(135deg,#312e81,#4f46e5)',
-        cookout:    'linear-gradient(135deg,#92400e,#b45309)',
-        trip:       'linear-gradient(135deg,#0f766e,#14b8a6)',
-        retreat:    'linear-gradient(135deg,#0369a1,#0ea5e9)',
-        dinner:     'linear-gradient(135deg,#1d4ed8,#3b82f6)',
-        holiday:    'linear-gradient(135deg,#166534,#22c55e)',
-        investment: 'linear-gradient(135deg,#1e3a5f,#2563eb)',
-        annual:     'linear-gradient(135deg,#312e81,#4f46e5)',
+        birthday:   'linear-gradient(135deg,#831843,#ec4899)',  // wine → rose
+        party:      'linear-gradient(135deg,#1e1b4b,#6366f1)',  // deep indigo → brand
+        hangout:    'linear-gradient(135deg,#14532d,#4ade80)',  // forest → light green
+        game_night: 'linear-gradient(135deg,#0f172a,#475569)',  // slate
+        cookout:    'linear-gradient(135deg,#7c2d12,#f97316)',  // rust → amber
+        trip:       'linear-gradient(135deg,#0c4a6e,#0ea5e9)',  // deep teal → sky
+        retreat:    'linear-gradient(135deg,#0c4a6e,#0ea5e9)',  // deep teal → sky
+        dinner:     'linear-gradient(135deg,#422006,#d97706)',  // umber → amber
+        holiday:    'linear-gradient(135deg,#052e16,#16a34a)',  // forest → green
+        investment: 'linear-gradient(135deg,#0f172a,#475569)',  // slate
+        annual:     'linear-gradient(135deg,#1e1b4b,#6366f1)',  // deep indigo → brand
+        celebration:'linear-gradient(135deg,#4a044e,#d946ef)',  // deep purple → fuchsia
+        competition:'linear-gradient(135deg,#052e16,#16a34a)',  // forest → green
+        fundraiser: 'linear-gradient(135deg,#422006,#d97706)',  // umber → amber
+        volunteer:  'linear-gradient(135deg,#14532d,#4ade80)',  // forest → light green
+        meeting:    'linear-gradient(135deg,#0f172a,#475569)',  // slate
+        other:      'linear-gradient(135deg,#1f2937,#6b7280)',  // charcoal
     };
-    const DEFAULT_GRADIENT = 'linear-gradient(135deg,#374151,#6b7280)';
+    const DEFAULT_GRADIENT = 'linear-gradient(135deg,#1f2937,#6b7280)';
 
     // ─── Event type → color tokens ────────────────────────
     // Portal flavor (Tailwind classes) and Public flavor (raw colors).
