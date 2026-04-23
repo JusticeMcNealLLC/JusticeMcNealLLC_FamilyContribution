@@ -266,6 +266,142 @@
     }
 
     // =========================================================
+    // Phase B2 — Live banner (events_003 §5.3)
+    //   Single-line banner above the filter strip whenever
+    //   ≥ 1 event is currently in [start, end] window.
+    // =========================================================
+    function _renderLiveBanner(events) {
+        const el = document.getElementById('evtLiveBanner');
+        if (!el) return;
+        const now = new Date();
+        const live = (events || []).filter(e => {
+            if (e.status === 'cancelled' || e.status === 'draft') return false;
+            const start = new Date(e.start_date);
+            if (isNaN(start) || start > now) return false;
+            const endRaw = e.end_date || e.end_at || e.ends_at;
+            const end = endRaw ? new Date(endRaw) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+            return now <= end;
+        });
+        if (!live.length) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+
+        const esc = H.escapeHtml || (s => String(s == null ? '' : s));
+        const first = live[0];
+        const label = live.length === 1
+            ? esc(first.title || 'An event') + ' is happening now'
+            : live.length + ' events happening now';
+        const href = (live.length === 1 && first.slug)
+            ? '?event=' + encodeURIComponent(first.slug)
+            : 'javascript:void(0)';
+
+        el.classList.remove('hidden');
+        el.innerHTML =
+            '<a href="' + href + '" data-evt-live="' + esc(first.id) + '"' +
+            ' class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold">' +
+                '<span class="relative flex w-2.5 h-2.5 shrink-0">' +
+                    '<span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span>' +
+                    '<span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span>' +
+                '</span>' +
+                '<span class="flex-1 truncate">' + label + '</span>' +
+                (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">→</span>' : '') +
+            '</a>';
+
+        const link = el.querySelector('a[data-evt-live]');
+        if (link && live.length === 1) {
+            link.addEventListener('click', e => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                e.preventDefault();
+                if (first.slug && typeof window.evtNavigateToEvent === 'function') {
+                    window.evtNavigateToEvent(first.slug);
+                } else if (typeof window.evtOpenDetail === 'function') {
+                    window.evtOpenDetail(first.id);
+                }
+            });
+        }
+    }
+
+    // =========================================================
+    // Phase B1 — "You're going" rail (events_003 §5.2)
+    //   Shows events where user RSVP status='going', future
+    //   only, excluding the hero event. Hidden when empty.
+    // =========================================================
+    function _renderGoingRail(events, rsvps, attendees, heroId, eventsById) {
+        const rail   = document.getElementById('evtGoingRail');
+        const scroll = document.getElementById('evtGoingRailScroll');
+        if (!rail || !scroll) return;
+
+        const now = new Date();
+        const going = (events || []).filter(e => {
+            if (e.id === heroId) return false;
+            if (e.status === 'cancelled' || e.status === 'draft') return false;
+            const r = rsvps[e.id];
+            if (!r || r.status !== 'going') return false;
+            return new Date(e.start_date) >= now;
+        }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+
+        if (!going.length) { rail.classList.add('hidden'); scroll.innerHTML = ''; return; }
+
+        rail.classList.remove('hidden');
+        scroll.innerHTML = going.map(ev => _miniCard(ev, attendees[ev.id] || [])).join('');
+
+        // Wire clicks
+        scroll.querySelectorAll('a[data-evt-mini]').forEach(link => {
+            const id = link.getAttribute('data-evt-mini');
+            const ev = eventsById[id];
+            if (!ev) return;
+            link.addEventListener('click', e => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+                e.preventDefault();
+                if (ev.slug && typeof window.evtNavigateToEvent === 'function') {
+                    window.evtNavigateToEvent(ev.slug);
+                } else if (typeof window.evtOpenDetail === 'function') {
+                    window.evtOpenDetail(ev.id);
+                }
+            });
+        });
+    }
+
+    function _miniCard(event, attendees) {
+        const esc = H.escapeHtml || (s => String(s == null ? '' : s));
+        const d = new Date(event.start_date);
+        const day = d.getDate();
+        const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+        const rel = H.relativeDate ? H.relativeDate(d) : '';
+        const href = event.slug ? ('?event=' + encodeURIComponent(event.slug)) : 'javascript:void(0)';
+        const title = esc(event.title || 'Untitled event');
+        const loc = event.location_nickname || event.location_text || '';
+
+        let bannerStyle;
+        if (event.banner_url) {
+            const safe = String(event.banner_url).replace(/'/g, '%27');
+            bannerStyle = "background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55)), url('" + safe + "') center/cover;";
+        } else {
+            const grad = (C.CATEGORY_GRADIENT && (C.CATEGORY_GRADIENT[event.category] || C.DEFAULT_GRADIENT))
+                       || 'linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)';
+            bannerStyle = 'background: ' + grad + ';';
+        }
+
+        const attCount = (attendees || []).length;
+        const attLine = attCount
+            ? '<span class="text-[11px] text-gray-500 truncate">' + attCount + ' going</span>'
+            : '';
+
+        return '<a href="' + href + '" data-evt-mini="' + esc(event.id) + '"' +
+            ' class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">' +
+                '<div class="relative aspect-[16/9]" style="' + bannerStyle + '">' +
+                    '<div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' +
+                        '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div>' +
+                        '<div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="p-3">' +
+                    '<h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3>' +
+                    '<p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc(rel) : '') + (loc && rel ? ' · ' : '') + esc(loc) + '</p>' +
+                    (attLine ? '<div class="mt-1.5">' + attLine + '</div>' : '') +
+                '</div>' +
+            '</a>';
+    }
+
+    // =========================================================
     // Filter helpers
     // =========================================================
     function _matchesType(ev) {
@@ -363,6 +499,17 @@
         // Pick hero only on Upcoming tab
         const hero = (tab === 'upcoming') ? _pickHero(filtered, rsvps) : null;
         _renderHero(hero, hero ? rsvps[hero.id] : null);
+
+        // Phase B1/B2 — Live banner + Going rail (upcoming tab only)
+        if (tab === 'upcoming') {
+            _renderLiveBanner(all);
+            _renderGoingRail(all, rsvps, attendees, hero ? hero.id : null, eventsById);
+        } else {
+            const rail = document.getElementById('evtGoingRail');
+            if (rail) rail.classList.add('hidden');
+            const banner = document.getElementById('evtLiveBanner');
+            if (banner) banner.classList.add('hidden');
+        }
 
         const rest = hero ? filtered.filter(e => e.id !== hero.id) : filtered;
 
@@ -585,7 +732,7 @@
     }
 
     // =========================================================
-    // Mobile FAB (events_003 §8.9)
+    // Mobile FAB (events_003 §8.9 / B3 scroll-hide)
     // =========================================================
     function _initMobileFab() {
         const fab = document.getElementById('evtCreateFab');
@@ -598,6 +745,38 @@
         fab.addEventListener('click', () => {
             document.getElementById('createEventBtn')?.click();
         });
+
+        // B3 — scroll-hide (hide on scroll-down, show on scroll-up)
+        let lastY = window.scrollY || 0;
+        let ticking = false;
+        const TH = 8; // movement threshold in px
+        const onScroll = () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(() => {
+                const y = window.scrollY || 0;
+                const dy = y - lastY;
+                if (y < 20) {
+                    fab.classList.remove('evt-fab--hidden');
+                } else if (dy > TH) {
+                    fab.classList.add('evt-fab--hidden');
+                } else if (dy < -TH) {
+                    fab.classList.remove('evt-fab--hidden');
+                }
+                if (Math.abs(dy) > TH) lastY = y;
+                ticking = false;
+            });
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        // Hide when a modal (create/detail) is open — listens for body
+        // class toggle that other modules already use.
+        const mo = new MutationObserver(() => {
+            const modalOpen = document.body.classList.contains('modal-open') ||
+                              document.body.classList.contains('overflow-hidden');
+            fab.classList.toggle('evt-fab--modal-hidden', modalOpen);
+        });
+        mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
     }
 
     // =========================================================
@@ -637,7 +816,11 @@
 
     // Show skeletons ASAP, init sticky header + FAB once DOM is ready
     function _onReady() {
-        renderSkeletons();
+        const groupsEl = document.getElementById('evtGroups');
+        // Only paint skeletons if nothing has been rendered yet (avoid
+        // clobbering a prior render when seed data arrives before
+        // DOMContentLoaded, e.g. during tests or quick cache hits).
+        if (groupsEl && !groupsEl.innerHTML.trim()) renderSkeletons();
         _initStickyHeader();
         _initMobileFab();
     }

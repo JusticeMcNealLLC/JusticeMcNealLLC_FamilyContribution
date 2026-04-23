@@ -1,6 +1,6 @@
 # 📅 `portal/events.html` — Visual & UX Overhaul Spec (events_003)
 
-> **Status:** Phase A1+A2+A3 shipped. SW bumped to `v51`. Phase A4 (polish/QA) and Phase B (rail/banner/FAB-scroll) pending.
+> **Status:** Phase A1+A2+A3+B1+B2+B3 shipped. SW bumped to `v52`. Phase A4 (polish/QA), B4 (per-viewer empty states), B5 (greeting + pinned marker) pending.
 > **Scope:** `/portal/events.html` **list view only**. Detail view (`#eventsDetailView`) is out of scope — already shipped in M2 (`events_002.md`).
 > **Goal:** transform the current functional-but-flat list page into a **premium, mobile-first event browsing experience** that feels native to a top-tier consumer product, while staying inside the existing JMLLC portal theme (Inter + brand-indigo + surface-50 background + light editorial cards).
 > **Non-goal:** backend changes. No schema, RPC, or edge-function work. RSVP flow, create flow, detail flow all continue to call exactly what they call today.
@@ -791,12 +791,15 @@ This is not a polish pass. This is a **ship gate**. If any item fails, Phase A d
 
 ### Phase B — P1 personalization
 
-5. **B1 — "You're going" rail data + render.**
-6. **B2 — 🔴 Live banner.**
-7. **B3 — Mobile FAB scroll-show/hide behavior.**
-8. **B4 — Per-viewer empty states (Lottie/illustration).**
-9. **B5 — Personalized greeting + pinned-LLC date-stamp marker.**
-10. SW bump `v51 → v52`. **Commit + push.**
+5. **B1 — "You're going" rail data + render.** ✅ **SHIPPED**
+   - `_renderGoingRail()` filters `status='going'` future events, excludes hero event, sorted by `start_date` asc. Hidden when empty or on non-Upcoming tabs or during search. Mini-card renderer (`_miniCard`) with overlaid date stamp, banner or category-gradient fallback, relative date + location line, and attendee-count line. Horizontal snap-scroll on mobile, fixed 256px width on `sm+`.
+6. **B2 — 🔴 Live banner.** ✅ **SHIPPED**
+   - `_renderLiveBanner()` shows rose-50 pulsing-dot banner above filter strip whenever ≥1 event is in `[start, end]` window (end falls back to `start + 2h`). Single-event variant links directly to detail; multi-event variant shows count. Cancelled/draft filtered out. Hidden on non-Upcoming tabs and during search.
+7. **B3 — Mobile FAB scroll-show/hide behavior.** ✅ **SHIPPED**
+   - FAB slides down + fades on scroll-down past 8px threshold, restores on scroll-up. Always visible above scrollY<20. `rAF`-throttled passive scroll listener. MutationObserver on `<body>` class toggles `.evt-fab--modal-hidden` when any modal opens (respects existing `modal-open` / `overflow-hidden` flag). `prefers-reduced-motion` disables transform animation, keeps opacity fade.
+8. **B4 — Per-viewer empty states (Lottie/illustration).** (pending)
+9. **B5 — Personalized greeting + pinned-LLC date-stamp marker.** (pending)
+10. SW bumped `v51 → v52` with B1+B2+B3.
 
 ### Phase C — P2 discovery & motion
 
