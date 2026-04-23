@@ -1356,8 +1356,56 @@ body.evt-vlift #evtTypeMenuBtn::after {
 .evt-date-opt.evt-date-opt--active { background: #eef2ff; color: #4f46e5; font-weight: 600; }
 
 /* ============================================================
- * F5 â€” Icon chips (vlift): swap emoji for outline SVG icons
+ * F5 -- Icon chips (vlift): swap emoji for outline SVG icons
  * ============================================================ */
 body.evt-vlift #evtTypeChips [data-f5-emoji] { display: none !important; }
 body.evt-vlift #evtTypeChips [data-f5-icon]  { display: inline-block !important; vertical-align: middle; margin-right: .25rem; }
 body.evt-vlift #evtTypeChips .evt-type-chip { gap: .25rem; }
+
+/* ============================================================
+ * F6 -- Horizontal hero (vlift, desktop): landscape aspect, tighter meta,
+ * hide bottom CTA bar (View Details via anchor click-through).
+ * Mobile + â‰¥640 behavior unchanged.
+ * ============================================================ */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-vlift > a {
+        aspect-ratio: 16 / 6 !important;
+        border-radius: 1.25rem;
+    }
+    body.evt-vlift .evt-hero-fade {
+        height: 72%;
+        background: linear-gradient(90deg,
+            rgba(0,0,0,.70) 0%,
+            rgba(0,0,0,.45) 45%,
+            rgba(0,0,0,.10) 85%,
+            rgba(0,0,0,0)   100%);
+        border-radius: 1.25rem;
+    }
+    body.evt-vlift .evt-hero-meta {
+        max-width: 62%;
+        padding: 1.25rem 1.5rem 1.5rem !important;
+    }
+    body.evt-vlift .evt-hero-meta h2 {
+        font-size: 1.875rem !important; /* text-3xl */
+        line-height: 1.15;
+    }
+    /* Hide bottom pill CTA on desktop â€” anchor click-through handles navigation */
+    body.evt-vlift .evt-hero-cta { display: none !important; }
+    /* Floating "View Details" pill in the hero bottom-right */
+    body.evt-vlift .evt-hero-vlift::after {
+        content: "View Details \2192";
+        position: absolute;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 3;
+        padding: .55rem 1rem;
+        border-radius: 9999px;
+        background: rgba(255,255,255,.95);
+        color: #1f2937;
+        font-size: .8125rem;
+        font-weight: 700;
+        letter-spacing: .01em;
+        box-shadow: 0 6px 18px rgba(15,23,42,.18);
+        pointer-events: none;
+    }
+}
