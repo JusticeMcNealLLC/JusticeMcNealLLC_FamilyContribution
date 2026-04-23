@@ -1275,6 +1275,27 @@
                 ? 'evt-hero-cta evt-hero-cta--going'
                 : 'evt-hero-cta';
 
+            // F14 — Featured-event hero refresh (vlift): kicker label, vertical
+            // date chip, host line, right-side description block, solid View
+            // Details button. All new elements gated by CSS under body.evt-vlift.
+            const _titleCase = (s) => {
+                if (!s) return '';
+                const str = String(s);
+                if (str.toLowerCase() === 'llc') return 'LLC';
+                return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+            };
+            const hostTypeLabel = _titleCase(event.event_type || '');
+            const hostCatLabel  = _titleCase(event.category || '');
+            const hostLine = [
+                hostTypeLabel ? ('Hosted by ' + hostTypeLabel) : '',
+                hostCatLabel
+            ].filter(Boolean).join(' \u00B7 ');
+            const fDay = (() => { try { return start.getDate(); } catch(_) { return ''; } })();
+            const fMon = (() => { try { return start.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(); } catch(_) { return ''; } })();
+            const fDow = (() => { try { return start.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(); } catch(_) { return ''; } })();
+            const descRaw = event.description ? String(event.description).trim() : '';
+            const descShort = descRaw.length > 180 ? (descRaw.slice(0, 177) + '\u2026') : descRaw;
+
             heroEl.innerHTML =
                 '<div class="evt-hero-vlift relative">' +
                 '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '"' +
@@ -1282,20 +1303,37 @@
                 ' style="' + _heroBg(event) + '">' +
                     goingRibbon +
                     '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + heartBtn + countP + stateP + '</div>' +
+                    // F14 — FEATURED EVENT kicker (vlift only; CSS shown)
+                    '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' +
+                    // F14 — Vertical date chip overlay (APR / 1 / WED)
+                    '<div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' +
+                        (fMon ? '<span class="evt-hero-datechip__mon">' + esc(fMon) + '</span>' : '') +
+                        (fDay !== '' ? '<span class="evt-hero-datechip__day">' + esc(fDay) + '</span>' : '') +
+                        (fDow ? '<span class="evt-hero-datechip__dow">' + esc(fDow) + '</span>' : '') +
+                    '</div>' +
                     // Bottom-edge dark fade for legibility
                     '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div>' +
                     '<div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6">' +
                         // E7 — Avatar cluster (Tomorrowland "Interested" pattern), above date/time
                         _attendeeCluster(event.id) +
                         // Date/time row ABOVE the title (Tomorrowland layout)
-                        '<div class="flex items-center gap-3 text-[12px] font-semibold text-white/90 mb-2">' +
+                        '<div class="flex items-center gap-3 text-[12px] font-semibold text-white/90 mb-2" data-f14-dtrow>' +
                             (dateLong ? '<span class="inline-flex items-center gap-1.5">' + calIcon + esc(dateLong) + '</span>' : '') +
                             (timeShort ? '<span class="inline-flex items-center gap-1.5">' + clkIcon + esc(timeShort) + '</span>' : '') +
                         '</div>' +
                         '<h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc(event.title || 'Untitled event') + '</h2>' +
+                        // F14 — Host line ("Hosted by LLC \u00B7 Birthday Celebration")
+                        (hostLine
+                            ? '<p class="evt-hero-host" data-f14-host>' + esc(hostLine) + '</p>'
+                            : '') +
                         (loc
                             ? '<p class="mt-2 inline-flex items-center gap-1.5 text-sm text-white/90 truncate">' + pinIcon + esc(loc) + '</p>'
                             : '') +
+                    '</div>' +
+                    // F14 — Right-side description block + solid View Details button (desktop only via CSS)
+                    '<div class="evt-hero-side" data-f14-side>' +
+                        (descShort ? '<p class="evt-hero-side__desc">' + esc(descShort) + '</p>' : '') +
+                        '<a href="' + href + '" class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc(event.id) + '">View Details</a>' +
                     '</div>' +
                 '</a>' +
                 // Bottom CTA bar (sits visually attached to hero, but is a separate

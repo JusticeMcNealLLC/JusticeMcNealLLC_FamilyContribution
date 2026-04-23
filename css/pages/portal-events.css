@@ -1389,25 +1389,11 @@ body.evt-vlift #evtTypeChips .evt-type-chip { gap: .25rem; }
         font-size: 1.875rem !important; /* text-3xl */
         line-height: 1.15;
     }
-    /* Hide bottom pill CTA on desktop â€” anchor click-through handles navigation */
+    /* Hide bottom pill CTA on desktop -- anchor click-through handles navigation */
     body.evt-vlift .evt-hero-cta { display: none !important; }
-    /* Floating "View Details" pill in the hero bottom-right */
-    body.evt-vlift .evt-hero-vlift::after {
-        content: "View Details \2192";
-        position: absolute;
-        right: 1.25rem;
-        bottom: 1.25rem;
-        z-index: 3;
-        padding: .55rem 1rem;
-        border-radius: 9999px;
-        background: rgba(255,255,255,.95);
-        color: #1f2937;
-        font-size: .8125rem;
-        font-weight: 700;
-        letter-spacing: .01em;
-        box-shadow: 0 6px 18px rgba(15,23,42,.18);
-        pointer-events: none;
-    }
+    /* F6 floating "View Details" pseudo-element pill is superseded by the
+       real F14 anchor button (`.evt-hero-side__cta`). Disabled under F14. */
+    body.evt-vlift .evt-hero-vlift::after { content: none !important; }
 }
 
 /* ============================================================
@@ -1833,4 +1819,145 @@ body.evt-vlift .evt-stats-link:hover { background: #eef2ff; }
         order: 10;
         margin-top: 0 !important;
     }
+}
+
+/* ============================================================
+ * F14 -- Featured-event hero refresh (vlift). Adds:
+ *   - "FEATURED EVENT" kicker label (top-left)
+ *   - Vertical white date chip overlay (MON / DAY / DOW)
+ *   - Host line ("Hosted by LLC -- Birthday Celebration")
+ *   - Right-side description block + solid "View Details" button (desktop)
+ * All rules scoped to body.evt-vlift. Mobile keeps the existing bottom CTA.
+ * ============================================================ */
+
+/* Kicker label (top-left) */
+body.evt-vlift .evt-hero-vlift [data-f14-kicker] {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 3;
+    font-size: .6875rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+}
+
+/* Vertical white date chip (MON / DAY / DOW) */
+body.evt-vlift .evt-hero-datechip {
+    position: absolute;
+    top: 3rem;
+    left: 1rem;
+    z-index: 3;
+    width: 3.75rem;
+    padding: .5rem .25rem;
+    background: #ffffff;
+    color: #111827;
+    border-radius: .75rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .1rem;
+    line-height: 1;
+    pointer-events: none;
+}
+body.evt-vlift .evt-hero-datechip__mon {
+    font-size: .625rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    color: #dc2626;
+    text-transform: uppercase;
+}
+body.evt-vlift .evt-hero-datechip__day {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1;
+    margin: .1rem 0;
+}
+body.evt-vlift .evt-hero-datechip__dow {
+    font-size: .5625rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+
+/* Host line ("Hosted by LLC -- Birthday Celebration") */
+body.evt-vlift .evt-hero-host {
+    margin-top: .25rem;
+    font-size: .8125rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+    line-height: 1.35;
+}
+
+/* Right-side description + CTA block (hidden by default; shown >=1024px) */
+body.evt-vlift .evt-hero-side { display: none; }
+
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-side {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: flex-end;
+        gap: .875rem;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 34%;
+        padding: 1.5rem 1.5rem 1.5rem 1rem;
+        z-index: 2;
+        pointer-events: none; /* allow anchor click-through on empty space */
+    }
+    body.evt-vlift .evt-hero-side__desc {
+        font-size: .875rem;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.92);
+        text-align: right;
+        max-width: 100%;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+        pointer-events: none;
+    }
+    body.evt-vlift .evt-hero-side__cta {
+        pointer-events: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: .625rem 1.125rem;
+        border-radius: 9999px;
+        background: #ffffff;
+        color: #1f2937;
+        font-size: .8125rem;
+        font-weight: 800;
+        letter-spacing: .01em;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.22);
+        text-decoration: none;
+        transition: transform .12s ease, box-shadow .12s ease;
+    }
+    body.evt-vlift .evt-hero-side__cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.28);
+    }
+
+    /* Shrink meta so it never overlaps the right-side block */
+    body.evt-vlift .evt-hero-meta { max-width: 62% !important; }
+
+    /* Bigger datechip on desktop */
+    body.evt-vlift .evt-hero-datechip {
+        top: 3.25rem;
+        left: 1.25rem;
+        width: 4.25rem;
+        padding: .625rem .375rem;
+    }
+    body.evt-vlift .evt-hero-datechip__day { font-size: 1.75rem; }
 }
