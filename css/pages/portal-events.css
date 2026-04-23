@@ -1354,3 +1354,10 @@ body.evt-vlift #evtTypeMenuBtn::after {
 }
 .evt-date-opt:hover { background: #f3f4f6; }
 .evt-date-opt.evt-date-opt--active { background: #eef2ff; color: #4f46e5; font-weight: 600; }
+
+/* ============================================================
+ * F5 â€” Icon chips (vlift): swap emoji for outline SVG icons
+ * ============================================================ */
+body.evt-vlift #evtTypeChips [data-f5-emoji] { display: none !important; }
+body.evt-vlift #evtTypeChips [data-f5-icon]  { display: inline-block !important; vertical-align: middle; margin-right: .25rem; }
+body.evt-vlift #evtTypeChips .evt-type-chip { gap: .25rem; }
