@@ -1335,9 +1335,14 @@
                             : '') +
                     '</div>' +
                     // F14 — Right-side description block + solid View Details button (desktop only via CSS)
+                    // NOTE: must NOT be an <a> — nested <a> inside the banner anchor causes
+                    // the browser to auto-close the outer banner <a> early, breaking layout
+                    // (DOM gets re-parented and the banner background ends up wrapping the
+                    // description). Use a <span> styled as a button; the outer banner anchor
+                    // already navigates to the same event detail page on click.
                     '<div class="evt-hero-side" data-f14-side>' +
                         (descShort ? '<p class="evt-hero-side__desc">' + esc(descShort) + '</p>' : '') +
-                        '<a href="' + href + '" class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc(event.id) + '">View Details</a>' +
+                        '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc(event.id) + '" role="button" aria-hidden="true">View Details</span>' +
                     '</div>' +
                 '</a>' +
                 // Bottom CTA bar (sits visually attached to hero, but is a separate
