@@ -1249,3 +1249,14 @@ body.evt-vlift .evt-hero-heart--on:hover { background: #ffffff; }
     body.evt-vlift .evt-hero-heart { transition: none; }
     body.evt-vlift .evt-hero-heart:active { transform: none; }
 }
+
+/* =========================================================
+   F1 — Greeting block (vlift only)
+   ========================================================= */
+body.evt-vlift #evtGreetingHello { display: block !important; }
+body.evt-vlift #evtHeaderCount  { display: none !important; }
+body.evt-vlift .evt-greeting-hello { letter-spacing: .01em; }
+@media (min-width: 640px) {
+    body.evt-vlift #evtGreetingSub { display: block !important; }
+}body.evt-vlift .evt-greeting-hello { color: rgba(255,255,255,.85); }
+body.evt-vlift .evt-greeting-sub   { color: rgba(255,255,255,.75); }

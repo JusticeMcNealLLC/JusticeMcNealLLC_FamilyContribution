@@ -503,6 +503,32 @@
     }
 
     // =========================================================
+    // F1 — Greeting hydration (vlift only)
+    // Reads first name from the global nav (#navName, hydrated by
+    // layout.js → loadNavProfile after auth). Falls back to "there".
+    // =========================================================
+    function _initGreeting() {
+        if (!document.body.classList.contains('evt-vlift')) return;
+        const slot = document.querySelector('#evtGreetingHello [data-greeting-name]');
+        if (!slot) return;
+        const apply = () => {
+            const fromState = (window.evtCurrentUserName || '').trim();
+            if (fromState) { slot.textContent = fromState; return true; }
+            const navEl = document.getElementById('navName');
+            const name = (navEl && navEl.textContent || '').trim();
+            if (name) { slot.textContent = name; return true; }
+            return false;
+        };
+        if (apply()) return;
+        // Poll briefly (nav mounts async via pageShell + loadNavProfile)
+        let tries = 0;
+        const t = setInterval(() => {
+            tries++;
+            if (apply() || tries > 20) clearInterval(t);
+        }, 300);
+    }
+
+    // =========================================================
     // D2 — Swipe gestures + long-press context sheet (events_004 §D2)
     // Mobile-only. Touch-only. Reduced-motion respected.
     // =========================================================
@@ -1028,6 +1054,15 @@
         const title = document.getElementById('evtHeaderTitle');
         if (!title) return;
         const name = (window.evtCurrentUserName || '').trim();
+        // F1 — when vlift is on, F1 greeting supersedes B5 "Hey {name} 👋"
+        if (document.body.classList.contains('evt-vlift')) {
+            const old = document.getElementById('evtHeaderGreeting');
+            if (old) old.remove();
+            // Also refresh F1 greeting slot with the latest name
+            const slot = document.querySelector('#evtGreetingHello [data-greeting-name]');
+            if (slot && name) slot.textContent = name;
+            return;
+        }
         let g = document.getElementById('evtHeaderGreeting');
         if (!name) { if (g) g.remove(); return; }
         if (!g) {
@@ -2429,6 +2464,7 @@
         _initViewToggle();
         _initVlift();
         _initSwipeGestures();
+        _initGreeting();
         _applyRestoredUi();
         // E10 — Notification bell in gradient header (vlift only).
         // Try immediately, then again after a tick so the global nav (which
