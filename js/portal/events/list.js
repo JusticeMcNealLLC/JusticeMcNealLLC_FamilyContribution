@@ -1306,7 +1306,7 @@
                 ' class="block relative rounded-3xl overflow-hidden text-white shadow-[0_18px_50px_rgba(15,23,42,0.30)] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300"' +
                 ' style="' + _heroBg(event, true) + '">' +
                     goingRibbon +
-                    '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + heartBtn + countP + stateP + '</div>' +
+                    '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div>' +
                     // F14 — FEATURED EVENT kicker (vlift only; CSS shown)
                     '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' +
                     // Bottom-edge dark fade for legibility
