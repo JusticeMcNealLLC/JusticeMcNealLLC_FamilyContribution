@@ -2521,3 +2521,12 @@ body.evt-vlift .evt-hero-meta {
     top: 2.5rem !important;
     padding-top: .5rem !important;
 }
+/* F21b -- Left-align the right-side description + CTA */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-side {
+        align-items: flex-start !important;
+    }
+    body.evt-vlift .evt-hero-side__desc {
+        text-align: left !important;
+    }
+}
