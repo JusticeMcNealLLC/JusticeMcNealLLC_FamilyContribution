@@ -34,6 +34,7 @@
     let _calMonth       = null;   // D1 — Date at first of viewed month
     let _searchDebounce = null;
     let _expandedBucket = null;   // E11 — slug of bucket the user "See all"-ed; null = normal
+    let _createTileInjected = false; // F8 — ensures only one Create tile per render
     const E_BUCKET_TRUNCATE = 6;  // E11 — show "See all" link when bucket > N (vlift only)
 
     // C3 — sessionStorage persistence key (events_003 §3.11 / §8.5)
@@ -1409,6 +1410,23 @@
             variant: 'portal',
             attendees: attendees[ev.id] || [],
         })).join('');
+
+        // F8 — Create-event tile: prepend to the first upcoming-tab bucket when user can create
+        let createTile = '';
+        if (useVlift && !_createTileInjected && (window.evtActiveTab || 'upcoming') === 'upcoming') {
+            const canCreate = (typeof hasPermission === 'function' && hasPermission('events.create')) ||
+                              window.evtCurrentUserRole === 'admin';
+            if (canCreate) {
+                createTile =
+                    '<button type="button" data-evt-create-tile class="evt-create-tile" aria-label="Create new event">' +
+                        '<span class="evt-create-tile__plus" aria-hidden="true">+</span>' +
+                        '<span class="evt-create-tile__label">Create Event</span>' +
+                        '<span class="evt-create-tile__hint">Add a new event to the calendar</span>' +
+                    '</button>';
+                _createTileInjected = true;
+            }
+        }
+
         const displayLabel = useVlift ? _bucketLabelEmoji(label) : label;
         const safeLabel = (H.escapeHtml || (s => s))(displayLabel);
 
@@ -1436,13 +1454,21 @@
 
         return '<section data-bucket="' + slug + '">' +
             header +
-            '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + cards + '</div>' +
+            '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + createTile + cards + '</div>' +
         '</section>';
     }
 
     // Wire card click navigation (anchor hrefs are real but we hijack
     // for SPA detail-view open when running in the unified portal).
     function _wireCardClicks(scope, eventsById) {
+        // F8 — Create-event tile click → existing create flow
+        scope.querySelectorAll('button[data-evt-create-tile]').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('createEventBtn')?.click();
+            });
+        });
         // E11 — bucket "See all" / "Show less" toggle (delegated)
         scope.querySelectorAll('button[data-evt-bucket-toggle]').forEach(btn => {
             btn.addEventListener('click', e => {
@@ -1797,6 +1823,8 @@
         const empty    = document.getElementById('emptyState');
         const calMount = document.getElementById('evtCalendarMount');
         if (!groupsEl || !Card) return;
+
+        _createTileInjected = false; // F8 — reset per render so tile appears in first bucket only
 
         _renderHeaderCount();
         _renderActiveFilterPill();

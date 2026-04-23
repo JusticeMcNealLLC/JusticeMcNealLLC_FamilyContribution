@@ -1477,3 +1477,51 @@ body.evt-vlift .evt-card-rsvp--on:hover { background: #d1fae5; }
 /* Non-vlift: hide new overlay + RSVP button so legacy card stays identical */
 body:not(.evt-vlift) .evt-card-date-chip,
 body:not(.evt-vlift) .evt-card-rsvp { display: none !important; }
+
+/* ============================================================
+ * F8 -- Create-event tile (vlift): dashed-border inline grid cell.
+ * ============================================================ */
+body.evt-vlift .evt-create-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    min-height: 260px;
+    padding: 1.5rem;
+    border: 2px dashed #c7d2fe;
+    border-radius: 1rem;
+    background: #f8fafc;
+    color: #4f46e5;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    text-align: center;
+}
+body.evt-vlift .evt-create-tile:hover {
+    background: #eef2ff;
+    border-color: #a5b4fc;
+    transform: translateY(-1px);
+}
+body.evt-vlift .evt-create-tile__plus {
+    width: 56px;
+    height: 56px;
+    border-radius: 9999px;
+    background: #eef2ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 300;
+    line-height: 1;
+    color: #4f46e5;
+}
+body.evt-vlift .evt-create-tile__label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #4338ca;
+}
+body.evt-vlift .evt-create-tile__hint {
+    font-size: .8125rem;
+    color: #6b7280;
+    max-width: 220px;
+}
