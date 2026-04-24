@@ -1551,7 +1551,7 @@
         const gridStart = new Date(year, month, 1 - firstDow);
         const todayIso = _toIsoDate(today);
 
-        const dayHeaders = ['S','M','T','W','T','F','S']
+        const dayHeaders = ['SUN','MON','TUE','WED','THU','FRI','SAT']
             .map(d => '<div class="evt-mcal-dow">' + d + '</div>').join('');
 
         let cells = '';
@@ -1650,7 +1650,7 @@
                 '<span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span>' +
                 '<span class="evt-myrsvp-body">' +
                     '<span class="evt-myrsvp-title">' + esc(ev.title || 'Untitled event') + '</span>' +
-                    '<span class="evt-myrsvp-meta">' + esc(dateStr) + ' · ' + esc(timeStr) + '</span>' +
+                    '<span class="evt-myrsvp-meta">' + esc(dateStr) + ', ' + esc(timeStr) + '</span>' +
                 '</span>' +
             '</button>';
         }).join('');
@@ -1714,9 +1714,27 @@
         mount.innerHTML =
             '<div class="evt-stats">' +
                 '<h3 class="evt-stats-title">Events Overview</h3>' +
-                '<div class="evt-stats-row"><span class="evt-stats-label">This Month</span><span class="evt-stats-value">' + thisMonth + '</span></div>' +
-                '<div class="evt-stats-row"><span class="evt-stats-label">You\u2019re Going</span><span class="evt-stats-value">' + going + '</span></div>' +
-                '<div class="evt-stats-row"><span class="evt-stats-label">Communities</span><span class="evt-stats-value">' + communities.size + '</span></div>' +
+                '<div class="evt-stats-row">' +
+                    '<span class="evt-stats-icon evt-stats-icon--purple" aria-hidden="true">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
+                    '</span>' +
+                    '<span class="evt-stats-body"><span class="evt-stats-label">This Month</span><span class="evt-stats-sub">Upcoming events</span></span>' +
+                    '<span class="evt-stats-value">' + thisMonth + '</span>' +
+                '</div>' +
+                '<div class="evt-stats-row">' +
+                    '<span class="evt-stats-icon evt-stats-icon--green" aria-hidden="true">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+                    '</span>' +
+                    '<span class="evt-stats-body"><span class="evt-stats-label">You\u2019re Going</span><span class="evt-stats-sub">Events</span></span>' +
+                    '<span class="evt-stats-value">' + going + '</span>' +
+                '</div>' +
+                '<div class="evt-stats-row">' +
+                    '<span class="evt-stats-icon evt-stats-icon--blue" aria-hidden="true">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' +
+                    '</span>' +
+                    '<span class="evt-stats-body"><span class="evt-stats-label">Communities</span><span class="evt-stats-sub">Active communities</span></span>' +
+                    '<span class="evt-stats-value">' + communities.size + '</span>' +
+                '</div>' +
                 '<button type="button" class="evt-stats-link" data-evt-stats-all>View Full Calendar</button>' +
             '</div>';
 

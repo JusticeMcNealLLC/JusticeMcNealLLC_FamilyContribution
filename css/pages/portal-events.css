@@ -1,0 +1,2537 @@
+﻿/* 
+   Portal Events Page  /portal/events
+   Comprehensive styles for list + detail + modals.
+   Used with Tailwind; shared.css for globals.
+    */
+
+/* â•â•â• Page-level overrides â•â•â• */
+@media (max-width: 767px) {
+    body[data-active-page="events"] > nav { display: none !important; }
+}
+@media (min-width: 768px) {
+    #mainNav { position: fixed; top: 0; left: 0; right: 0; z-index: 40; }
+}
+
+/* â•â•â• Type tags â•â•â• */
+.type-tag { font-size: 10px; padding: 3px 10px; border-radius: 999px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+
+/* â•â•â• Modals â•â•â• */
+.modal-overlay { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.modal-panel { max-height: 90vh; }
+@media (max-width: 640px) {
+    .modal-panel { max-height: 100dvh; max-height: -webkit-fill-available; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+    #eventsDetailView { padding-bottom: env(safe-area-inset-bottom, 0px); }
+}
+#scannerVideo { width: 100%; border-radius: 12px; }
+
+/* --- Surviving Old Detail Classes --- */
+.evt-hero-back-btn { appearance:none; }
+.evt-host-btn { padding:10px 16px; border-radius:10px; font-size:13px; font-weight:600; border:1.5px solid #ddd; background:#fff; color:#222; cursor:pointer; transition:all .15s; }
+.evt-host-btn:hover { border-color:#222; background:#f7f7f7; }
+.evt-host-btn.danger { color:#dc2626; border-color:#fca5a5; }
+.evt-host-btn.danger:hover { background:#fef2f2; }
+.evt-host-btn.primary { background:#222; color:#fff; border-color:#222; }
+.evt-host-btn.primary:hover { background:#444; }
+
+/* â•â•â• Hero Status Badge â•â•â• */
+.evt-status-badge { display:inline-flex; align-items:center; gap:7px; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); flex-shrink:0; }
+.evt-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.evt-status-dot.pulse { animation:dotPulse 1.5s ease-in-out infinite; }
+@keyframes dotPulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.4; transform:scale(.7); } }
+.evt-status-ended   { background:rgba(113,113,113,.35); color:#e0e0e0; }
+.evt-status-ended .evt-status-dot { background:#999; }
+.evt-status-live     { background:rgba(5,150,105,.3); color:#6ee7b7; }
+.evt-status-live .evt-status-dot { background:#34d399; }
+.evt-status-soon     { background:rgba(245,158,11,.3); color:#fcd34d; }
+.evt-status-soon .evt-status-dot { background:#fbbf24; }
+.evt-status-cancelled{ background:rgba(220,38,38,.3); color:#fca5a5; }
+.evt-status-cancelled .evt-status-dot { background:#f87171; }
+.evt-lightbox { position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.92); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .25s; pointer-events:none; -webkit-tap-highlight-color:transparent; }
+.evt-lightbox.active { opacity:1; pointer-events:auto; }
+.evt-lightbox img { max-width:94vw; max-height:90vh; object-fit:contain; border-radius:8px; }
+.evt-lightbox-close { position:absolute; top:max(16px,env(safe-area-inset-top)); right:16px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.15); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.evt-lightbox-close svg { width:20px; height:20px; stroke:#fff; }
+.evt-rsvp-btn.active-interested { border-color:#e11d48; background:#fff0f3; color:#e11d48; }
+.evt-host-primary { display:flex; align-items:center; gap:8px; }
+.evt-host-more-wrap { position:relative; display:inline-block; }
+.evt-host-more-btn { padding:10px 16px; border-radius:10px; font-size:13px; font-weight:600; border:1.5px solid #ddd; background:#fff; color:#222; cursor:pointer; display:flex; align-items:center; gap:6px; }
+.evt-host-more-btn:hover { border-color:#222; background:#f7f7f7; }
+.evt-host-dropdown { position:absolute; right:0; bottom:calc(100% + 6px); min-width:200px; background:#fff; border:1px solid #e5e5e5; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.12); overflow:hidden; z-index:20; display:none; }
+.evt-host-dropdown.open { display:block; }
+.evt-host-dropdown button { display:flex; align-items:center; gap:10px; width:100%; padding:12px 16px; font-size:14px; font-weight:500; border:none; background:#fff; color:#222; cursor:pointer; text-align:left; }
+.evt-host-dropdown button:hover { background:#f7f7f7; }
+.evt-host-dropdown button.danger { color:#dc2626; }
+.evt-host-dropdown button.danger:hover { background:#fef2f2; }
+.evt-cost-toggle { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:12px 0; }
+.evt-cost-toggle-label { font-size:15px; font-weight:600; color:#222; }
+.evt-cost-toggle-price { font-size:15px; font-weight:700; color:#222; }
+.evt-cost-toggle svg { width:16px; height:16px; stroke:#717171; transition:transform .2s; }
+.evt-cost-toggle.open svg { transform:rotate(180deg); }
+.evt-cost-details { max-height:0; overflow:hidden; transition:max-height .3s ease; }
+.evt-cost-details.open { max-height:500px; }
+.evt-related-scroll { display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding-bottom:4px; }
+.evt-related-scroll::-webkit-scrollbar { display:none; }
+.evt-related-card { min-width:220px; max-width:260px; flex-shrink:0; scroll-snap-align:start; border-radius:14px; overflow:hidden; border:1px solid #ebebeb; background:#fff; cursor:pointer; transition:transform .15s; }
+.evt-related-card:active { transform:scale(.97); }
+.evt-related-card img { width:100%; height:120px; object-fit:cover; }
+.evt-related-card-body { padding:12px; }
+.evt-related-card-title { font-size:14px; font-weight:700; color:#222; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.evt-related-card-meta { font-size:12px; color:#717171; margin-top:4px; }
+.evt-comment { display:flex; gap:12px; }
+.evt-comment-avatar { width:36px; height:36px; border-radius:50%; background:#ebebeb; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:13px; font-weight:700; color:#717171; overflow:hidden; }
+.evt-comment-avatar img { width:100%; height:100%; object-fit:cover; }
+.evt-comment-body { flex:1; min-width:0; }
+.evt-comment-name { font-size:13px; font-weight:600; color:#222; }
+.evt-comment-time { font-size:11px; color:#b0b0b0; margin-left:6px; }
+.evt-comment-text { font-size:14px; color:#717171; line-height:1.5; margin-top:3px; word-break:break-word; }
+.evt-comment-reactions { display:flex; gap:4px; margin-top:6px; flex-wrap:wrap; }
+.evt-comment-react-btn { font-size:12px; padding:2px 8px; border-radius:20px; border:1px solid #ebebeb; background:#fff; cursor:pointer; display:flex; align-items:center; gap:3px; transition:all .15s; }
+.evt-comment-react-btn:hover { border-color:#c7c7c7; background:#f7f7f7; }
+.evt-comment-react-btn.active { border-color:#4f46e5; background:#ede9fe; }
+.evt-comment-react-btn .count { font-weight:600; color:#717171; }
+.evt-comment-add-react { font-size:14px; padding:2px 6px; border-radius:20px; border:1px dashed #ddd; background:none; cursor:pointer; color:#b0b0b0; }
+.evt-comment-add-react:hover { border-color:#999; color:#717171; }
+
+/* â•â•â• Event CTA Bar â•â•â• */
+.evt-cta-bar { display:none; }
+@media(max-width:767px){
+    .evt-cta-bar { display:flex; align-items:center; justify-content:center; gap:10px; position:fixed; left:0; right:0; bottom:calc(56px + env(safe-area-inset-bottom,0px)); z-index:49; background:rgba(255,255,255,.85); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-top:1px solid rgba(0,0,0,.06); padding:10px 16px 26px; }
+    .evt-cta-btn { flex:1; max-width:280px; display:flex; align-items:center; justify-content:center; gap:8px; padding:13px 18px; border-radius:50px; font-size:15px; font-weight:700; letter-spacing:.01em; border:none; cursor:pointer; text-decoration:none; white-space:nowrap; transition:transform .15s,opacity .15s; -webkit-tap-highlight-color:transparent; }
+    .evt-cta-btn:active { transform:scale(.97); }
+    .evt-cta-btn:disabled { opacity:.5; cursor:not-allowed; }
+    .evt-cta-btn svg { width:18px; height:18px; stroke-width:2.5; fill:none; stroke:currentColor; flex-shrink:0; }
+    .evt-cta-rsvp { background:#4f46e5; color:#fff; }
+    .evt-cta-rsvp-done { background:#16a34a; color:#fff; }
+    .evt-cta-raffle { background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; }
+    .evt-cta-raffle-done { background:#16a34a; color:#fff; }
+    .evt-cta-host { background:#e5e7eb; color:#374151; }
+    .evt-cta-disabled { background:#e5e7eb; color:#9ca3af; }
+    body.evt-cta-active.has-bottom-bar { padding-bottom:calc(72px + 56px + env(safe-area-inset-bottom,0px)); }
+}
+
+
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Event Detail v2 â€” Card-Based Layout (ed-* classes)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+/* â"€â"€â"€ Detail page wrapper â"€â"€â"€ */
+#eventsDetailView { background:#f8fafc; }
+
+/* â"€â"€â"€ Hero (full-bleed with deeper gradient scrim) â"€â"€â"€ */
+.ed-hero { position:relative; min-height:320px; max-height:420px; background-size:cover; background-position:center; cursor:pointer; overflow:hidden; }
+.ed-hero-scrim { position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.78) 0%, rgba(0,0,0,.08) 40%, rgba(0,0,0,.35) 100%); pointer-events:none; }
+.ed-hero-nav { position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-start; padding:max(12px, env(safe-area-inset-top)) 16px 0; z-index:3; }
+.ed-hero-pill { width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.35); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s; }
+.ed-hero-pill:active { background:rgba(0,0,0,.55); }
+.ed-hero-pill svg { width:18px; height:18px; stroke:#fff; fill:none; stroke-width:2; }
+.ed-hero-pill-row { display:flex; align-items:center; gap:8px; }
+.ed-hero-bottom-content { position:absolute; bottom:0; left:0; right:0; padding:20px 20px 18px; z-index:2; }
+.ed-hero-pills { display:flex; gap:6px; flex-wrap:wrap; }
+.ed-hero-tag { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; padding:3px 10px; border-radius:6px; background:rgba(255,255,255,.12); color:rgba(255,255,255,.85); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
+.ed-hero-tag-type { border:1px solid rgba(255,255,255,.15); }
+@media(min-width:640px){ .ed-hero { min-height:400px; max-height:420px; } .ed-hero-nav { padding-top:80px; padding-left:20px; padding-right:20px; } .evt-hero-back-btn { display:none !important; } }
+@media(max-width:767px){ .ed-hero { position:relative; height:300px !important; min-height:0 !important; } }
+
+/* â”€â”€â”€ Content area below hero â”€â”€â”€ */
+.ed-content { position:relative; z-index:20; max-width:64rem; margin:0 auto; padding:0 16px; padding-top:24px; }
+@media(max-width:767px){ .ed-content { padding-top:8px; } }
+@media(min-width:640px){ .ed-content { padding:24px 24px 0; } }
+
+/* â”€â”€â”€ Card containers (each section = a card) â”€â”€â”€ */
+.ed-card { background:#fff; border:none; border-radius:20px; padding:24px; margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.03); opacity:0; transform:translateY(12px); transition:opacity .4s cubic-bezier(.16,1,.3,1), transform .4s cubic-bezier(.16,1,.3,1); }
+.ed-card.ed-visible { opacity:1; transform:translateY(0); }
+.ed-card-rsvp { background:#fff; }
+.ed-card-host { border:1px solid #fecaca; background:#fffbfb; }
+.ed-card-map { padding:0; overflow:hidden; }
+.ed-card-map .ed-map-wrap { position:relative; }
+.ed-card-map .ed-directions-link { padding:16px 24px; }
+
+/* â”€â”€â”€ Title + Meta â”€â”€â”€ */
+.ed-title { font-size:24px; font-weight:700; color:#111; line-height:1.2; letter-spacing:-.02em; margin-bottom:16px; }
+@media(min-width:640px){ .ed-title { font-size:30px; } }
+
+.ed-meta-grid { display:flex; flex-direction:column; gap:16px; }
+.ed-meta-row { display:flex; align-items:flex-start; gap:14px; }
+.ed-meta-icon { width:36px; height:36px; border-radius:0; background:none; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ed-meta-icon svg { width:20px; height:20px; stroke:#9ca3af; fill:none; }
+.ed-meta-text { display:flex; flex-direction:column; gap:1px; min-width:0; }
+.ed-meta-label { font-size:15px; font-weight:600; color:#222; }
+.ed-meta-value { font-size:14px; color:#717171; }
+.ed-gated { font-size:13px; color:#b0b0b0; font-style:italic; }
+.ed-ics-link { font-size:13px; font-weight:600; color:#4f46e5; cursor:pointer; margin-top:2px; }
+.ed-ics-link:hover { text-decoration:underline; }
+.ed-deadline-banner { padding:8px 16px; border-radius:12px; background:#f7f7f7; color:#717171; font-size:13px; font-weight:600; text-align:center; margin-top:16px; }
+
+/* â”€â”€â”€ Section headings â”€â”€â”€ */
+.ed-section-head h3 { font-size:16px; font-weight:600; color:#444; letter-spacing:-.01em; margin-bottom:14px; }
+
+/* ─── Divider ─── */
+.ed-divider { border:none; height:1px; background:#f0f0f0; margin:16px 0; }
+
+/* â”€â”€â”€ Description â”€â”€â”€ */
+.ed-desc { font-size:15px; line-height:1.75; color:#484848; white-space:pre-line; }
+.ed-desc a { color:#4f46e5; text-decoration:underline; }
+.ed-desc strong { font-weight:700; }
+.ed-desc em { font-style:italic; }
+.ed-desc-collapsed { max-height:130px; overflow:hidden; position:relative; }
+.ed-desc-collapsed::after { content:''; position:absolute; bottom:0; left:0; right:0; height:56px; background:linear-gradient(transparent,#fff); pointer-events:none; }
+.ed-no-desc { color:#b0b0b0; font-style:italic; }
+.ed-read-more { display:inline-block; font-size:14px; font-weight:600; color:#4f46e5; cursor:pointer; margin-top:8px; background:none; border:none; padding:0; }
+.ed-read-more:hover { text-decoration:underline; }
+
+/* â”€â”€â”€ Organizer row â”€â”€â”€ */
+.ed-org-link { display:flex; align-items:center; gap:14px; text-decoration:none; margin-bottom:16px; }
+.ed-org-link:hover .ed-org-name { text-decoration:underline; }
+.ed-org-avatar { width:44px; height:44px; border-radius:50%; object-fit:cover; flex-shrink:0; background:#e0e7ff; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.ed-org-avatar-fallback { font-size:15px; font-weight:700; color:#4f46e5; }
+.ed-org-name { font-size:15px; font-weight:600; color:#222; display:block; }
+.ed-org-title { font-size:13px; color:#717171; display:block; }
+
+/* â”€â”€â”€ Map â”€â”€â”€ */
+.ed-map-wrap { position:relative; }
+.ed-map { height:200px; cursor:pointer; position:relative; overflow:hidden; z-index:0; }
+@media(min-width:640px){ .ed-map { height:260px; } }
+.ed-map-label { position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#fff; font-size:13px; font-weight:600; padding:6px 14px; border-radius:20px; z-index:2; }
+.ed-directions-link { display:flex; align-items:center; justify-content:center; gap:8px; font-size:14px; font-weight:600; color:#4f46e5; text-decoration:none; padding:16px 24px; border-top:1px solid rgba(0,0,0,.06); transition:background .15s; }
+.ed-directions-link:hover { background:#f8fafc; }
+
+/* â”€â”€â”€ Attendee avatar stack â”€â”€â”€ */
+.ed-attendee-row { display:flex; align-items:center; gap:14px; }
+.ed-avatar-stack { display:flex; align-items:center; }
+.ed-avatar { width:38px; height:38px; border-radius:50%; border:2.5px solid #fff; margin-left:-10px; overflow:hidden; background:#e0e7ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:transform .15s; }
+.ed-avatar:first-child { margin-left:0; }
+.ed-avatar:hover { transform:translateY(-2px); }
+.ed-avatar img { width:100%; height:100%; object-fit:cover; }
+.ed-avatar span { font-size:11px; font-weight:700; color:#4f46e5; }
+.ed-avatar-overflow { width:38px; height:38px; border-radius:50%; border:2.5px solid #fff; margin-left:-10px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#666; flex-shrink:0; }
+.ed-attendee-count { font-size:14px; color:#717171; }
+
+/* â”€â”€â”€ RSVP grid â”€â”€â”€ */
+.ed-rsvp-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.ed-rsvp-opt { padding:16px 12px; border-radius:14px; font-size:15px; font-weight:600; text-align:center; border:2px solid #e5e5e5; background:#fff; color:#222; cursor:pointer; transition:all .2s; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.ed-rsvp-opt:hover { border-color:#222; }
+.ed-rsvp-opt.active { border-color:#4f46e5; background:#eef2ff; color:#4f46e5; }
+.ed-rsvp-interested.active { border-color:#e11d48; background:#fff0f3; color:#e11d48; }
+.ed-rsvp-emoji { font-size:20px; }
+
+/* â”€â”€â”€ Buttons â”€â”€â”€ */
+.ed-primary-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:16px; border-radius:14px; background:linear-gradient(135deg,#4f46e5,#4338ca); color:#fff; font-size:16px; font-weight:700; border:none; cursor:pointer; transition:opacity .15s; box-shadow:0 4px 14px rgba(79,70,229,.25); }
+.ed-primary-btn:hover { opacity:.9; }
+.ed-action-btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:14px; border-radius:14px; background:#111; color:#fff; font-size:15px; font-weight:600; border:none; cursor:pointer; transition:background .15s; }
+.ed-action-btn:hover { background:#333; }
+.ed-action-disabled { opacity:.4; cursor:not-allowed; }
+.ed-link-btn { font-size:14px; font-weight:600; color:#4f46e5; background:none; border:none; cursor:pointer; padding:0; }
+.ed-link-btn:hover { text-decoration:underline; }
+.ed-link-btn.danger { color:#dc2626; }
+.ed-raffle-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:16px; border-radius:14px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; font-weight:700; border:none; cursor:pointer; box-shadow:0 4px 14px rgba(245,158,11,.25); }
+.ed-raffle-btn:hover { opacity:.9; }
+
+/* â”€â”€â”€ Notices â”€â”€â”€ */
+.ed-notice { display:flex; align-items:flex-start; gap:14px; padding:18px; border-radius:14px; background:#f8f8f5; }
+.ed-notice-emoji { font-size:24px; flex-shrink:0; line-height:1; }
+.ed-notice-title { font-size:15px; font-weight:600; color:#222; margin:0; }
+.ed-notice-sub { font-size:13px; color:#717171; margin:3px 0 0; line-height:1.5; }
+.ed-notice-highlight { background:linear-gradient(135deg, #ecfdf5, #d1fae5); border:1px solid #a7f3d0; }
+.ed-notice-warn { background:#fffbeb; border:1px solid #fde68a; }
+
+/* â”€â”€â”€ Pills â”€â”€â”€ */
+.ed-pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:8px; font-size:11px; font-weight:700; background:#f4f4f0; color:#222; }
+.ed-pill-green { background:#dcfce7; color:#166534; }
+.ed-pill-muted { background:#f0f0f0; color:#888; }
+.ed-pill-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+
+/* â”€â”€â”€ QR â”€â”€â”€ */
+.ed-qr-wrap { text-align:center; padding:20px 0; }
+.ed-qr-header { font-size:16px; font-weight:700; color:#222; margin-bottom:14px; }
+.ed-qr-hint { font-size:13px; color:#717171; margin-top:10px; }
+
+/* â”€â”€â”€ Cost Breakdown â”€â”€â”€ */
+.ed-cost-list { border-top:1px solid #ebebeb; }
+.ed-cost-item { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f5f5f5; }
+.ed-cost-item-left { display:flex; align-items:center; gap:10px; font-size:15px; color:#222; }
+.ed-cost-item-icon { font-size:16px; }
+.ed-cost-item-right { display:flex; align-items:center; gap:8px; }
+.ed-cost-item-amount { font-weight:600; font-size:14px; }
+.ed-cost-summary { border-top:2px solid #222; margin-top:16px; padding-top:16px; }
+.ed-cost-line { display:flex; align-items:center; justify-content:space-between; font-size:14px; color:#222; padding:3px 0; }
+.ed-cost-line-bold span { font-weight:700; }
+.ed-cost-line-muted { font-size:13px; color:#717171; }
+.ed-cost-divider { border:none; height:1px; background:#ebebeb; margin:10px 0; }
+.ed-cost-divider.thick { height:2px; background:#222; }
+.ed-cost-total span { font-size:16px; font-weight:800; }
+
+/* â”€â”€â”€ Threshold / Progress â”€â”€â”€ */
+.ed-threshold { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:16px 0; }
+.ed-threshold-header { display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:10px; }
+.ed-threshold-label { font-size:14px; font-weight:600; color:#222; }
+.ed-threshold-count { font-size:13px; color:#717171; }
+.ed-threshold-note { font-size:13px; color:#717171; margin-top:8px; line-height:1.5; }
+.ed-threshold-deadline { font-size:12px; color:#b0b0b0; }
+.ed-progress { width:100%; height:8px; border-radius:4px; background:#e5e5e5; overflow:hidden; }
+.ed-progress-fill { height:100%; border-radius:4px; background:#4f46e5; transition:width .3s ease; }
+.ed-progress-fill.met { background:#059669; }
+.ed-social-confirmed { font-size:14px; font-weight:600; color:#222; }
+.ed-social-count { font-size:14px; color:#717171; }
+
+/* â”€â”€â”€ Raffle (prizes, winners) â”€â”€â”€ */
+.ed-prize-row { display:flex; align-items:center; gap:12px; padding:10px 14px; background:#f8f8f5; border-radius:12px; margin-bottom:6px; }
+.ed-prize-rank { width:28px; height:28px; border-radius:50%; background:#222; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+.ed-prize-place { font-size:12px; color:#717171; font-weight:600; display:block; }
+.ed-prize-label { font-size:15px; color:#222; font-weight:600; display:block; margin-top:1px; }
+.ed-winners { margin-top:16px; }
+.ed-winner-row { display:flex; align-items:center; gap:10px; padding:8px 0; }
+.ed-winner-name { font-size:15px; font-weight:600; color:#222; }
+.ed-winner-prize { font-size:14px; color:#717171; }
+
+/* â”€â”€â”€ Stats (host) â”€â”€â”€ */
+.ed-stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+@media(max-width:480px){ .ed-stats-row { grid-template-columns:1fr; } }
+.ed-stat-block { text-align:center; padding:18px 12px; border-radius:14px; background:linear-gradient(135deg, #f8fafc, #f1f5f9); border:1px solid rgba(0,0,0,.04); }
+.ed-stat-block .ed-stat-num { font-size:24px; font-weight:800; color:#222; display:block; }
+.ed-stat-block .ed-stat-num small { font-size:13px; font-weight:400; color:#717171; }
+.ed-stat-block .ed-stat-lbl { font-size:12px; color:#717171; margin-top:4px; display:block; }
+.ed-stat-pink { background:linear-gradient(135deg, #fff0f3, #fce7f3); }
+.ed-stat-pink .ed-stat-num { color:#e11d48; }
+.ed-stat-green { background:linear-gradient(135deg, #ecfdf5, #d1fae5); }
+.ed-stat-green .ed-stat-num { color:#059669; }
+
+/* â”€â”€â”€ Comments â”€â”€â”€ */
+.ed-comments-list { display:flex; flex-direction:column; gap:16px; margin-bottom:16px; }
+.ed-comment-input-row { display:flex; gap:10px; }
+.ed-comment-input { flex:1; padding:12px 16px; border:1.5px solid #e2e8f0; border-radius:14px; font-size:14px; color:#222; background:#fff; outline:none; transition:border-color .2s; }
+.ed-comment-input:focus { border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.12); }
+.ed-comment-input::placeholder { color:#94a3b8; }
+.ed-comment-post { padding:12px 22px; border-radius:14px; background:#111; color:#fff; font-size:14px; font-weight:600; border:none; cursor:pointer; white-space:nowrap; }
+.ed-comment-post:hover { background:#333; }
+
+/* â”€â”€â”€ Misc â”€â”€â”€ */
+.ed-hint { font-size:12px; color:#717171; text-align:center; margin-top:8px; }
+.ed-sub-count { font-size:14px; color:#717171; margin-bottom:14px; }
+.ed-body-text { font-size:15px; line-height:1.7; color:#484848; }
+.ed-cancel-banner { padding:20px; border-radius:14px; background:#fef2f2; border:1px solid #fecaca; }
+.ed-cancel-title { font-size:15px; font-weight:600; color:#b91c1c; }
+.ed-cancel-text { font-size:14px; color:#dc2626; margin-top:6px; }
+
+
+/* M6: removed orphan blocks (list-view-hero, event-card-*, .rsvp-badge,
+       form-* (Tailwind-replaced), .evt-host-controls, @keyframes edCardIn,
+       .evt-search-pill*, .evt-search-dropdown, .evt-search-result*,
+       .evt-featured-scroll, .evt-featured-card*, .evt-countdown-chip). */
+/* â”€â”€ Category tags â”€â”€ */
+.evt-tag {
+    display: inline-flex; align-items: center; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em;
+    padding: 3px 9px; border-radius: 9999px; white-space: nowrap;
+}
+.evt-tag--purple { background: #ede9fe; color: #6d28d9; }
+.evt-tag--blue   { background: #dbeafe; color: #1d4ed8; }
+.evt-tag--green  { background: #d1fae5; color: #065f46; }
+.evt-tag--pink   { background: #fce7f3; color: #9d174d; }
+.evt-tag--teal   { background: #ccfbf1; color: #0f766e; }
+.evt-tag--orange { background: #ffedd5; color: #c2410c; }
+
+/* â”€â”€ Filter chips â”€â”€ */
+.evt-filter-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    background: #f1f5f9; color: #64748b; border: none; cursor: pointer;
+    transition: background .15s, color .15s; white-space: nowrap;
+}
+
+/* ════════════════════════════════════════════════════════════
+   events_003 — Portal events list (A2/A3)
+   Sticky condensing header, segmented control, type menu,
+   bucket headings, mobile FAB, going rail, live banner.
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Sticky condensing page header ─────────────────────── */
+#evtPageHeader { transition: padding .18s ease, box-shadow .18s ease; }
+#evtPageHeader.evt-header--condensed {
+    padding-top: max(0.25rem, env(safe-area-inset-top)) !important;
+    box-shadow: 0 1px 0 rgba(0,0,0,.06);
+}
+#evtPageHeader.evt-header--condensed #evtHeaderTitle { font-size: 1.125rem; line-height: 1.2; }
+#evtPageHeader.evt-header--condensed #evtHeaderCount { display: none; }
+#evtPageHeader.evt-header--condensed > div { padding-top: .5rem; padding-bottom: .5rem; }
+@media (prefers-reduced-motion: reduce) {
+    #evtPageHeader { transition: none; }
+}
+
+/* ── Segmented control (lifecycle) ─────────────────────── */
+.evt-seg {
+    display: inline-flex; align-items: stretch; gap: 2px;
+    padding: 3px; border-radius: 14px; background: #e5e7eb;
+}
+.evt-seg__btn {
+    flex: 1 1 auto;
+    padding: 8px 14px; border-radius: 11px;
+    font-size: 13px; font-weight: 600; color: #475569;
+    background: transparent; border: none; cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.evt-seg__btn:hover { color: #1e293b; }
+.evt-seg__btn--active {
+    background: #ffffff; color: #1e293b;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+.evt-seg__btn:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+@media (min-width: 640px) {
+    .evt-seg__btn { flex: 0 0 auto; padding: 8px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .evt-seg__btn { transition: none; }
+}
+
+/* ── Type menu popover ─────────────────────────────────── */
+.evt-type-opt {
+    width: 100%; display: flex; align-items: center; gap: .5rem;
+    padding: 10px 12px; font-size: 13px; text-align: left;
+    color: #1f2937; background: transparent; border: none; cursor: pointer;
+}
+.evt-type-opt:hover { background: #f9fafb; }
+.evt-type-opt--active { color: #4f46e5; font-weight: 600; }
+.evt-type-opt:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+
+/* ── Horizontal scroll (going rail) ────────────────────── */
+.evt-scroll-hide { -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.evt-scroll-hide::-webkit-scrollbar { display: none; }
+
+/* ── Mobile FAB ────────────────────────────────────────── */
+#evtCreateFab.flex { display: flex; }
+#evtCreateFab:focus-visible { outline: 3px solid #c7d2fe; outline-offset: 3px; }
+#evtCreateFab {
+    transition: transform .22s ease, opacity .22s ease;
+}
+#evtCreateFab.evt-fab--hidden {
+    transform: translateY(140%);
+    opacity: 0;
+    pointer-events: none;
+}
+#evtCreateFab.evt-fab--modal-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    #evtCreateFab { transition: opacity .15s ease; }
+    #evtCreateFab.evt-fab--hidden { transform: none; }
+}
+
+/* ── Hero card focus state ─────────────────────────────── */
+#evtHero a:focus-visible { outline: 3px solid #c7d2fe; outline-offset: 4px; }
+
+.evt-filter-chip:hover { background: #e2e8f0; color: #475569; }
+.evt-filter-chip--active { background: #1e293b; color: #fff; }
+.evt-filter-chip--active:hover { background: #334155; color: #fff; }
+
+/* ════════════════════════════════════════════════════════════
+   M1 — Portal Events List Rebuild
+   Slim additions for the new chip rows + featured carousel.
+   Older list rules (.events-hero, .event-card-*, .evt-search-pill,
+   .evt-filter-chip, .evt-featured-card, .evt-featured-scroll) are
+   now unused after the HTML rebuild and will be purged in M6.
+   ════════════════════════════════════════════════════════════ */
+.evt-chip-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 2px 0; }
+.evt-chip-row::-webkit-scrollbar { display: none; }
+.evt-chip { flex-shrink: 0; padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; background: #fff; border: 1px solid rgba(0,0,0,0.08); color: #475569; cursor: pointer; transition: background .15s, color .15s, border-color .15s, transform .1s; white-space: nowrap; }
+.evt-chip:hover { border-color: #cbd5e1; }
+.evt-chip:active { transform: scale(.97); }
+.evt-chip--active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+.evt-chip--active:hover { background: #4338ca; border-color: #4338ca; }
+.evt-chip--ghost { background: transparent; border-color: transparent; color: #6b7280; padding: 6px 14px; font-size: 12px; }
+.evt-chip--ghost:hover { background: rgba(0,0,0,0.04); border-color: transparent; }
+.evt-chip--ghost.evt-chip--active { background: #eef2ff; color: #4338ca; border-color: transparent; }
+.evt-chip--ghost.evt-chip--active:hover { background: #e0e7ff; }
+.evt-featured-row { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.evt-featured-row::-webkit-scrollbar { display: none; }
+.evt-featured-row > * { flex-shrink: 0; width: 280px; max-width: 80vw; scroll-snap-align: start; }
+
+
+/* === M2: detail page polish === */
+/* Sticky title row inside detail card (replaces the removed JS hero-collapse) */
+.ed-card-title .ed-title { position: sticky; top: 0; background: #fff; padding-top: 4px; padding-bottom: 8px; z-index: 5; margin: -4px -4px 8px; padding-left: 4px; padding-right: 4px; }
+@media (max-width: 767px) {
+    /* Tighter safe-area inset on the CTA bar (was hard-coded 26px) */
+    .evt-cta-bar { padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; }
+}
+/* Manage event button: a touch wider so the icon + label breathe */
+.evt-host-more-btn { min-width: 132px; }
+
+
+/* ════════════════════════════════════════════════════════════
+   events_003 — B4 + B5 additions
+   Per-viewer empty states + personalized greeting + pinned 📌
+   ════════════════════════════════════════════════════════════ */
+
+/* ── B5a — Pinned LLC 📌 overlay on date stamps (§8.8) ── */
+.evt-date-pin {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    font-size: 11px;
+    line-height: 1;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,.18));
+    pointer-events: none;
+    user-select: none;
+    z-index: 2;
+}
+.evt-date-pin--mini {
+    top: -5px;
+    left: -5px;
+    font-size: 10px;
+}
+
+/* ── B5b — Personalized greeting (§8.1) ── */
+.evt-header-greeting {
+    letter-spacing: 0.01em;
+}
+/* Hide greeting in the condensed sticky state */
+#evtPageHeader.evt-header--condensed .evt-header-greeting {
+    display: none;
+}
+
+/* ── B4 — Per-viewer empty state polish (§8.10) ── */
+.evt-empty-card {
+    background-image: linear-gradient(180deg, #fafaff 0%, #ffffff 40%);
+}
+.evt-empty-illo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 16px;
+}
+.evt-empty-illo--lottie {
+    width: 140px;
+    height: 140px;
+}
+.evt-empty-link {
+    background: transparent;
+    border: 0;
+    padding: 6px 10px;
+    cursor: pointer;
+    display: inline-block;
+}
+.evt-empty-link:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .evt-empty-illo--lottie svg { animation: none !important; }
+}
+
+
+/* ============================================================
+   events_003 Phase C additions
+   C1 pull-to-refresh, C2 category chip + active pill, C4 stagger
+   ============================================================ */
+
+/* C2 - Tappable category chip on cards */
+.evt-cat-chip { cursor: pointer; }
+.evt-cat-chip:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+
+/* C2 - Active-category dismiss pill */
+.evt-active-pill { cursor: pointer; transition: background-color .15s ease; }
+.evt-active-pill:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+
+/* C4 - Card stagger enter (cap at 6) */
+@keyframes evtCardEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.evt-card-grid > * { animation: evtCardEnter .24s cubic-bezier(.16,1,.3,1) both; }
+.evt-card-grid > *:nth-child(1) { animation-delay: 0ms; }
+.evt-card-grid > *:nth-child(2) { animation-delay: 40ms; }
+.evt-card-grid > *:nth-child(3) { animation-delay: 80ms; }
+.evt-card-grid > *:nth-child(4) { animation-delay: 120ms; }
+.evt-card-grid > *:nth-child(5) { animation-delay: 160ms; }
+.evt-card-grid > *:nth-child(6) { animation-delay: 200ms; }
+.evt-card-grid > *:nth-child(n+7) { animation-delay: 240ms; }
+@media (prefers-reduced-motion: reduce) {
+    .evt-card-grid > * { animation: none !important; }
+}
+
+/* C1 - Pull-to-refresh indicator */
+.evt-ptr {
+    position: fixed;
+    top: max(8px, env(safe-area-inset-top));
+    left: 50%;
+    transform: translate(-50%, -140%);
+    z-index: 60;
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(17,24,39,.12);
+    color: #4f46e5;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .22s ease, opacity .18s ease;
+}
+.evt-ptr--active { transition: none; }
+.evt-ptr--ready { color: #4338ca; box-shadow: 0 10px 24px rgba(79,70,229,.22); }
+.evt-ptr .evt-ptr-spin { display: block; transition: transform .2s ease; }
+.evt-ptr--ready .evt-ptr-spin { transform: rotate(180deg); }
+.evt-ptr--refreshing .evt-ptr-spin { animation: evtPtrSpin 0.9s linear infinite; }
+@keyframes evtPtrSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .evt-ptr { transition: opacity .15s ease; }
+    .evt-ptr--refreshing .evt-ptr-spin { animation: none; }
+}
+
+
+/* ============================================================
+   events_004 Phase D additions
+   D3 search history & suggestions
+   ============================================================ */
+.evt-search-suggest { animation: evtSuggestIn .12s ease-out both; }
+@keyframes evtSuggestIn { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+    .evt-search-suggest { animation: none; }
+}
+.evt-suggest-row:focus-visible,
+.evt-suggest-chip:focus-visible,
+.evt-suggest-clear:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+.evt-suggest-chip { cursor: pointer; transition: transform .12s ease; }
+.evt-suggest-chip:active { transform: scale(0.97); }
+
+
+
+/* ============================================================
+   events_004 Phase D additions
+   D1 calendar / agenda view
+   ============================================================ */
+
+/* View toggle chrome: hide list-only regions when calendar active */
+body.evt-view--calendar #evtLifecycleSeg,
+body.evt-view--calendar #evtHero,
+body.evt-view--calendar #evtGoingRail,
+body.evt-view--calendar #evtLiveBanner,
+body.evt-view--calendar #evtActiveFilters { display: none !important; }
+
+body.evt-view--calendar #evtViewToggle { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+
+/* Calendar frame */
+#evtCalendarMount { animation: evtCalIn .18s ease-out both; }
+@keyframes evtCalIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { #evtCalendarMount { animation: none; } }
+
+/* Header nav buttons */
+.evt-cal-nav {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #4b5563;
+    transition: background-color .12s ease, border-color .12s ease;
+}
+.evt-cal-nav:hover { background: #f9fafb; border-color: #d1d5db; }
+
+/* Day cells */
+.evt-cal-cell {
+    position: relative;
+    min-height: 56px;
+    padding: 6px 4px 4px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    cursor: pointer;
+    transition: background-color .12s ease, border-color .12s ease, transform .12s ease;
+}
+@media (min-width: 640px) { .evt-cal-cell { min-height: 72px; } }
+.evt-cal-cell--blank { visibility: hidden; cursor: default; border: 0; background: transparent; }
+.evt-cal-cell--has { border-color: #c7d2fe; }
+.evt-cal-cell--has:hover { background: #eef2ff; border-color: #a5b4fc; transform: translateY(-1px); }
+.evt-cal-cell--today { outline: 2px solid #4f46e5; outline-offset: -2px; }
+.evt-cal-cell--today .evt-cal-daynum { color: #4338ca; font-weight: 700; }
+
+.evt-cal-daynum {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    line-height: 1;
+    margin-top: 2px;
+}
+.evt-cal-dots {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: auto;
+    margin-bottom: 2px;
+    flex-wrap: nowrap;
+}
+.evt-cal-dot {
+    width: 6px; height: 6px;
+    border-radius: 999px;
+    display: inline-block;
+}
+.evt-cal-dot-more {
+    font-size: 9px;
+    font-weight: 700;
+    color: #6b7280;
+    margin-left: 2px;
+}
+
+.evt-cal-cell:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+.evt-cal-today:focus-visible,
+.evt-cal-nav:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+
+/* Day modal */
+#evtDayModal { animation: evtDayModalIn .18s ease-out both; }
+@keyframes evtDayModalIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #evtDayModal { animation: none; } }
+
+
+
+/* ============================================================
+   events_004 Phase D additions
+   D2 swipe gestures + long-press context sheet
+   ============================================================ */
+
+/* Swipe-to-cancel host (going-rail mini cards) */
+.evt-swipe-host {
+    position: relative;
+    transition: transform .22s cubic-bezier(.16,1,.3,1);
+    will-change: transform;
+}
+.evt-swipe-host.evt-swipe--dragging { transition: none; }
+.evt-swipe-host.evt-swipe--revealed { transform: translateX(-92px); }
+
+/* Reveal action button — sits behind the card */
+.evt-swipe-action {
+    position: absolute;
+    top: 0; right: 0;
+    width: 88px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    border: 0;
+    border-radius: 0 16px 16px 0;
+    opacity: 0;
+    transition: opacity .12s ease;
+    z-index: 0;
+}
+.evt-swipe-host { z-index: 1; }
+.evt-swipe-action__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(255,255,255,.18);
+    border-radius: 999px;
+}
+.evt-swipe-action:active { background: #b91c1c; }
+@media (prefers-reduced-motion: reduce) {
+    .evt-swipe-host { transition: none; }
+}
+
+/* Context sheet (long-press menu) */
+.evt-context-sheet { animation: evtCtxIn .18s ease-out both; }
+.evt-context-sheet__panel { animation: evtCtxPanelIn .22s cubic-bezier(.16,1,.3,1) both; }
+@keyframes evtCtxIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes evtCtxPanelIn { from { transform: translateY(16px); } to { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+    .evt-context-sheet, .evt-context-sheet__panel { animation: none; }
+}
+
+.evt-context-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    cursor: pointer;
+    transition: background-color .12s ease;
+}
+.evt-context-row:hover,
+.evt-context-row:active { background: #f3f4f6; }
+.evt-context-row--danger { color: #b91c1c; }
+.evt-context-row--cancel { justify-content: center; font-weight: 600; color: #6b7280; }
+.evt-context-row:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+
+/* Lightweight toast */
+.evt-toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 24px);
+    background: rgba(17,24,39,.92);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 80;
+    transition: transform .22s ease, opacity .18s ease;
+}
+.evt-toast--show { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) {
+    .evt-toast { transition: opacity .12s ease; transform: translate(-50%, 0); }
+}
+
+
+
+
+
+/* Header / filter strip / search row surfaces */
+
+
+
+
+
+
+
+
+
+
+/* Calendar day cells (D1) */
+
+
+
+
+
+
+/* Going rail + hero + live banner share Tailwind .bg-white above; rail
+ * arrows + dots inherit. Boost shadow contrast on dark surfaces. */
+
+
+/* Hero card emoji watermark / banner scrim — bump for legibility per §D4.2 */
+
+
+/* Pinned 📌 marker chip — flips white→slate-800 per §D4.2 */
+
+
+/* Active filter pill (C2) */
+
+
+/* Type menu popover */
+
+
+
+
+
+/* PTR indicator (C1) */
+
+
+
+/* Search suggest dropdown (D3) */
+
+
+
+
+/* Context sheet (D2) */
+
+
+
+
+
+
+/* Toast (D2) */
+
+
+/* Detail-view ed-* cards */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Status badges keep their gradient hues but strengthen text on dark */
+
+
+/* Skeletons */
+
+
+
+
+
+/* =========================================================
+ * Phase E — Premium Visual Lift (events_003 §Phase E)
+ * Activated via body.evt-vlift (toggled by ?vlift=1 / localStorage).
+ * Ships: E1 gradient header, E4 emoji bucket labels (JS), E9 motion polish.
+ * Other Phase E items (E2-E3, E5-E7, E10-E12) tracked separately.
+ * ========================================================= */
+body.evt-vlift #evtPageHeader {
+    background: linear-gradient(160deg, #4f46e5 0%, #6d28d9 55%, #4c1d95 100%) !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: 0 1px 3px rgba(76,29,149,.18), 0 8px 24px rgba(79,70,229,.12);
+    animation: evtHeaderFade .6s ease-out both;
+}
+body.evt-vlift #evtPageHeader #evtHeaderTitle {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,.25);
+}
+body.evt-vlift #evtPageHeader #evtHeaderCount {
+    color: rgba(255,255,255,.78) !important;
+}
+body.evt-vlift #evtPageHeader #createEventBtn {
+    background: rgba(255,255,255,.18) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255,255,255,.25);
+}
+body.evt-vlift #evtPageHeader #createEventBtn:hover {
+    background: rgba(255,255,255,.28) !important;
+}
+
+/* Condensed sticky state still gets the gradient, just shorter. */
+body.evt-vlift #evtPageHeader.evt-header--condensed {
+    box-shadow: 0 1px 3px rgba(76,29,149,.25), 0 4px 16px rgba(79,70,229,.15);
+}
+
+/* Dark mode: deepen the violet so it doesn't glow on dark surface. */
+
+
+@keyframes evtHeaderFade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Emoji bucket labels (E4): render with normal-case so the emoji is legible. */
+body.evt-vlift section[data-bucket] > h2 {
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f2937;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+
+/* E9 motion polish: chip / segment micro-press */
+body.evt-vlift .evt-seg__btn:active,
+body.evt-vlift .evt-type-opt:active { transform: scale(0.97); }
+
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift #evtPageHeader { animation: none; }
+    body.evt-vlift .evt-seg__btn:active,
+    body.evt-vlift .evt-type-opt:active { transform: none; }
+}
+
+
+/* =========================================================
+ * Phase E2 — Mobile hero-visible search pill (events_003 §E.2)
+ * Mobile (<640px) only when body.evt-vlift is active:
+ *   - hide the icon-toggle button #evtSearchToggle
+ *   - render #evtSearchExpand as an always-visible pill
+ *   - bump rounding + add subtle shadow for premium feel
+ * Desktop keeps the existing collapsed icon-toggle behavior.
+ * ========================================================= */
+@media (max-width: 639px) {
+    body.evt-vlift #evtSearchToggle { display: none !important; }
+    body.evt-vlift #evtSearchExpand {
+        display: block !important;
+        margin-top: 0;
+        order: -1;          /* if filter strip ever switches to flex-column */
+    }
+    body.evt-vlift #evtSearchExpand input {
+        height: 44px;
+        border-radius: 14px;
+        box-shadow: 0 1px 3px rgba(15,23,42,.06), 0 4px 12px rgba(15,23,42,.04);
+        font-size: 15px;
+    }
+    body.evt-vlift #evtFilterStrip > .flex { flex-wrap: wrap; gap: 10px; }
+    body.evt-vlift #evtFilterStrip #evtSearchExpand {
+        flex: 1 0 100%;
+        margin-bottom: 4px;
+    }
+}
+
+
+
+/* E1 follow-up: greeting + count contrast on gradient header */
+body.evt-vlift #evtPageHeader #evtHeaderGreeting {
+    color: rgba(255,255,255,.85) !important;
+    text-shadow: 0 1px 1px rgba(0,0,0,.18);
+}
+
+/* =========================================================
+   E3 — Inline category chip rail (vlift only)
+   ========================================================= */
+body.evt-vlift #evtTypeChips { display: flex; }
+/* F4 — Re-enable the Filters dropdown button (was hidden by E3). */
+body.evt-vlift #evtTypeMenuBtn { display: inline-flex !important; }
+
+.evt-type-chips { -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
+.evt-type-chips::-webkit-scrollbar { display: none; }
+.evt-type-chips { scrollbar-width: none; }
+
+.evt-type-chip {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform .12s ease, background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.evt-type-chip:hover { border-color: #d1d5db; }
+.evt-type-chip:active { transform: scale(.96); }
+.evt-type-chip--active {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 1px 2px rgba(79, 70, 229, .25);
+}
+.evt-type-chip--active:hover { border-color: transparent; }
+
+
+
+
+
+@media (prefers-reduced-motion: reduce) {
+    .evt-type-chip { transition: none; }
+    .evt-type-chip:active { transform: none; }
+}
+/* =========================================================
+   E11 — Per-bucket "See all" / "Show less" toggle (vlift only)
+   ========================================================= */
+.evt-bucket-head { line-height: 1; }
+.evt-bucket-seeall {
+    background: transparent;
+    border: 0;
+    padding: 4px 6px;
+    margin: 0 -6px -2px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background-color .15s ease, color .15s ease;
+}
+.evt-bucket-seeall:hover { background: rgba(99, 102, 241, .08); }
+.evt-bucket-seeall:active { background: rgba(99, 102, 241, .14); }
+
+
+@media (prefers-reduced-motion: reduce) {
+    .evt-bucket-seeall { transition: none; }
+}
+/* =========================================================
+   E10 — In-header notification bell (vlift only)
+   ========================================================= */
+body:not(.evt-vlift) #evtHeaderBell { display: none !important; }
+.evt-header-bell {
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .18);
+    transition: background-color .15s ease, transform .12s ease;
+    cursor: pointer;
+}
+.evt-header-bell:hover { background: rgba(255, 255, 255, .22); }
+.evt-header-bell:active { transform: scale(.94); }
+.evt-header-bell-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 9px;
+    height: 9px;
+    background: #ef4444;
+    border-radius: 999px;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, .65);
+}
+/* When the gradient header is condensed, slim the bell to match */
+body.evt-vlift #evtPageHeader.evt-header--condensed .evt-header-bell {
+    width: 36px;
+    height: 36px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .evt-header-bell { transition: none; }
+    .evt-header-bell:active { transform: none; }
+}
+/* =========================================================
+   E6 — Festival-grade featured hero (vlift only)
+   ========================================================= */
+body.evt-vlift .evt-hero-vlift > a {
+    /* Tall festival aspect on mobile, wider editorial on desktop */
+    aspect-ratio: 4 / 5;
+    min-height: 62vh;
+    background-size: cover;
+    background-position: center;
+}
+@media (min-width: 640px) {
+    body.evt-vlift .evt-hero-vlift > a {
+        aspect-ratio: 16 / 10;
+        min-height: 0;
+    }
+}
+
+/* Bottom dark fade for legibility under the date/title block */
+body.evt-vlift .evt-hero-fade {
+    height: 62%;
+    background: linear-gradient(180deg,
+        rgba(0,0,0,0)   0%,
+        rgba(0,0,0,.18) 40%,
+        rgba(0,0,0,.62) 78%,
+        rgba(0,0,0,.85) 100%);
+    border-radius: 0 0 1.5rem 1.5rem;
+}
+body.evt-vlift .evt-hero-meta {
+    /* Sits above the fade */
+    z-index: 2;
+}
+
+/* Bottom CTA bar — full-width violet pill attached under the hero */
+body.evt-vlift .evt-hero-cta {
+    margin-top: 12px;
+    width: 100%;
+    height: 56px;
+    border: 0;
+    border-radius: 18px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 12px 28px rgba(79, 70, 229, .28);
+    transition: transform .12s ease, box-shadow .15s ease, background .2s ease, opacity .15s ease;
+}
+body.evt-vlift .evt-hero-cta:hover {
+    box-shadow: 0 14px 32px rgba(79, 70, 229, .34);
+}
+body.evt-vlift .evt-hero-cta:active { transform: scale(.985); }
+body.evt-vlift .evt-hero-cta:disabled { opacity: .65; cursor: progress; }
+body.evt-vlift .evt-hero-cta--going {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 12px 28px rgba(16, 185, 129, .28);
+}
+body.evt-vlift .evt-hero-cta--going:hover {
+    box-shadow: 0 14px 32px rgba(16, 185, 129, .34);
+}
+
+
+
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift .evt-hero-cta { transition: none; }
+    body.evt-vlift .evt-hero-cta:active { transform: none; }
+}
+
+/* =========================================================
+   E7 — Hero attendee cluster (vlift only)
+   ========================================================= */
+body.evt-vlift .evt-hero-cluster {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px 4px 4px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, .35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 0;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background-color .15s ease, transform .12s ease;
+}
+body.evt-vlift .evt-hero-cluster:hover { background: rgba(0, 0, 0, .5); }
+body.evt-vlift .evt-hero-cluster:active { transform: scale(.97); }
+body.evt-vlift .evt-hero-cluster-stack {
+    display: inline-flex;
+    align-items: center;
+}
+body.evt-vlift .evt-hero-cluster-bub {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 2px solid #ffffff;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .25);
+    flex-shrink: 0;
+}
+body.evt-vlift .evt-hero-cluster-bub img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+body.evt-vlift .evt-hero-cluster-init { line-height: 1; }
+body.evt-vlift .evt-hero-cluster-label {
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift .evt-hero-cluster { transition: none; }
+    body.evt-vlift .evt-hero-cluster:active { transform: none; }
+}
+
+
+/* =========================================================
+   E12 — Hero heart favorite (vlift only)
+   Maps to RSVP status='maybe' (enum: going|maybe|not_going)
+   ========================================================= */
+body.evt-vlift .evt-hero-heart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 0;
+    background: rgba(0, 0, 0, .35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color .15s ease, transform .12s ease, color .15s ease;
+    flex-shrink: 0;
+}
+body.evt-vlift .evt-hero-heart:hover { background: rgba(0, 0, 0, .5); }
+body.evt-vlift .evt-hero-heart:active { transform: scale(.92); }
+body.evt-vlift .evt-hero-heart:disabled { opacity: .6; cursor: progress; }
+body.evt-vlift .evt-hero-heart--on {
+    color: #f43f5e;
+    background: rgba(255, 255, 255, .92);
+}
+body.evt-vlift .evt-hero-heart--on:hover { background: #ffffff; }
+
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift .evt-hero-heart { transition: none; }
+    body.evt-vlift .evt-hero-heart:active { transform: none; }
+}
+
+/* =========================================================
+   F1 — Greeting block (vlift only)
+   ========================================================= */
+body.evt-vlift #evtGreetingHello { display: block !important; }
+body.evt-vlift #evtHeaderCount  { display: none !important; }
+body.evt-vlift .evt-greeting-hello { letter-spacing: .01em; }
+@media (min-width: 640px) {
+    body.evt-vlift #evtGreetingSub { display: block !important; }
+}body.evt-vlift .evt-greeting-hello { color: rgba(255,255,255,.85); }
+body.evt-vlift .evt-greeting-sub   { color: rgba(255,255,255,.75); }
+/* =========================================================
+   F2 — Desktop 2-col shell (vlift only; >=lg)
+   ========================================================= */
+body.evt-vlift #evtShell { max-width: 80rem; }
+@media (min-width: 1024px) {
+    body.evt-vlift #evtShell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+    body.evt-vlift .evt-shell-main { min-width: 0; }
+    body.evt-vlift #evtRightRail {
+        display: flex !important;
+        flex-direction: column;
+        gap: 1rem;
+        position: sticky;
+        top: calc(var(--evt-header-h, 4rem) + 1rem);
+        max-height: calc(100vh - var(--evt-header-h, 4rem) - 2rem);
+        overflow-y: auto;
+    }
+    body.evt-vlift #evtRightRail:empty,
+    body.evt-vlift #evtRightRail:has(> div:empty:only-child) { display: none !important; }
+}
+/* Widen gradient header to match the wider shell */
+body.evt-vlift #evtPageHeader > div { max-width: 80rem !important; }
+body.evt-vlift #evtFilterStrip > div:first-child,
+body.evt-vlift #evtFilterStrip { max-width: none; }
+/* =========================================================
+   F3 — Underline tab strip + Saved tab (vlift only)
+   Replaces the E-era pill segmented control.
+   ========================================================= */
+body.evt-vlift #evtLifecycleSeg {
+    display: flex;
+    gap: 0;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+body.evt-vlift #evtLifecycleSeg .evt-seg__btn {
+    background: transparent !important;
+    color: #6b7280;
+    font-weight: 600;
+    padding: 0.65rem 1rem;
+    border-radius: 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .15s ease, border-color .15s ease;
+    box-shadow: none !important;
+}
+body.evt-vlift #evtLifecycleSeg .evt-seg__btn:hover {
+    color: #111827;
+}
+body.evt-vlift #evtLifecycleSeg .evt-seg__btn--active {
+    color: #4f46e5 !important;
+    border-bottom-color: #4f46e5 !important;
+    background: transparent !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift #evtLifecycleSeg .evt-seg__btn { transition: none; }
+}
+/* =========================================================
+   F4 â€” Always-visible search + Filters/Date dropdowns (vlift only)
+   ========================================================= */
+body.evt-vlift [data-f4-date-wrap] { display: block !important; }
+body.evt-vlift [data-f4-filters-icon] { display: block !important; }
+@media (min-width: 640px) {
+    body.evt-vlift #evtSearchExpand { display: block !important; order: -1; flex: 1 1 auto; margin-top: 0; }
+    body.evt-vlift #evtFilterStrip > div:first-child { flex-wrap: wrap; gap: 0.5rem; }
+    body.evt-vlift #evtSearchToggle { display: none !important; }
+    body.evt-vlift #evtLifecycleSeg { flex: 0 0 100%; order: -2; }
+}
+body.evt-vlift #evtTypeMenuBtn [data-type-label] { display: none; }
+body.evt-vlift #evtTypeMenuBtn::after {
+    content: "Filters";
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+}
+.evt-date-opt {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.875rem;
+    color: #374151;
+    background: #fff;
+    border: 0;
+    cursor: pointer;
+}
+.evt-date-opt:hover { background: #f3f4f6; }
+.evt-date-opt.evt-date-opt--active { background: #eef2ff; color: #4f46e5; font-weight: 600; }
+
+/* ============================================================
+ * F5 -- Icon chips (vlift): swap emoji for outline SVG icons
+ * ============================================================ */
+body.evt-vlift #evtTypeChips [data-f5-emoji] { display: none !important; }
+body.evt-vlift #evtTypeChips [data-f5-icon]  { display: inline-block !important; vertical-align: middle; margin-right: .25rem; }
+body.evt-vlift #evtTypeChips .evt-type-chip { gap: .25rem; }
+
+/* ============================================================
+ * F6 -- Horizontal hero (vlift, desktop): landscape aspect, tighter meta,
+ * hide bottom CTA bar (View Details via anchor click-through).
+ * Mobile + â‰¥640 behavior unchanged.
+ * ============================================================ */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-vlift > a {
+        aspect-ratio: 16 / 6 !important;
+        border-radius: 1.25rem;
+    }
+    body.evt-vlift .evt-hero-fade {
+        height: 72%;
+        background: linear-gradient(90deg,
+            rgba(0,0,0,.70) 0%,
+            rgba(0,0,0,.45) 45%,
+            rgba(0,0,0,.10) 85%,
+            rgba(0,0,0,0)   100%);
+        border-radius: 1.25rem;
+    }
+    body.evt-vlift .evt-hero-meta {
+        max-width: 62%;
+        padding: 1.25rem 1.5rem 1.5rem !important;
+    }
+    body.evt-vlift .evt-hero-meta h2 {
+        font-size: 1.875rem !important; /* text-3xl */
+        line-height: 1.15;
+    }
+    /* Hide bottom pill CTA on desktop -- anchor click-through handles navigation */
+    body.evt-vlift .evt-hero-cta { display: none !important; }
+    /* F6 floating "View Details" pseudo-element pill is superseded by the
+       real F14 anchor button (`.evt-hero-side__cta`). Disabled under F14. */
+    body.evt-vlift .evt-hero-vlift::after { content: none !important; }
+}
+
+/* ============================================================
+ * F7 -- 3-col card grid (vlift): date-chip overlay on banner,
+ * hide header date row, inline RSVP outline button in footer.
+ * ============================================================ */
+body.evt-vlift .evt-card-header-row { display: none !important; }
+body.evt-vlift .evt-card-date-chip {
+    position: absolute;
+    top: .625rem;
+    left: .625rem;
+    z-index: 2;
+    min-width: 44px;
+    padding: .375rem .5rem .4rem;
+    background: #ffffff;
+    border-radius: .75rem;
+    box-shadow: 0 6px 14px rgba(15,23,42,.18);
+    text-align: center;
+    line-height: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .15rem;
+}
+body.evt-vlift .evt-card-date-chip .evt-card-date-day {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: #111827;
+}
+body.evt-vlift .evt-card-date-chip .evt-card-date-mon {
+    font-size: .625rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: #4f46e5;
+}
+/* Shift existing category chip right so date overlay sits left */
+body.evt-vlift .evt-cat-chip { left: auto !important; right: .5rem; top: .5rem; }
+/* RSVP outline button in card footer */
+body.evt-vlift .evt-card-rsvp {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .375rem;
+    width: 100%;
+    margin-top: .75rem;
+    padding: .5rem .75rem;
+    border: 1px solid #c7d2fe;
+    border-radius: .75rem;
+    background: #ffffff;
+    color: #4338ca;
+    font-size: .8125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+body.evt-vlift .evt-card-rsvp:hover {
+    background: #eef2ff;
+    border-color: #a5b4fc;
+}
+body.evt-vlift .evt-card-rsvp:disabled { opacity: .6; cursor: progress; }
+body.evt-vlift .evt-card-rsvp--on {
+    background: #ecfdf5;
+    border-color: #6ee7b7;
+    color: #047857;
+}
+body.evt-vlift .evt-card-rsvp--on:hover { background: #d1fae5; }
+/* Non-vlift: hide new overlay + RSVP button so legacy card stays identical */
+body:not(.evt-vlift) .evt-card-date-chip,
+body:not(.evt-vlift) .evt-card-rsvp { display: none !important; }
+
+/* ============================================================
+ * F8 -- Create-event tile (vlift): dashed-border inline grid cell.
+ * ============================================================ */
+body.evt-vlift .evt-create-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    min-height: 260px;
+    padding: 1.5rem;
+    border: 2px dashed #c7d2fe;
+    border-radius: 1rem;
+    background: #f8fafc;
+    color: #4f46e5;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    text-align: center;
+}
+body.evt-vlift .evt-create-tile:hover {
+    background: #eef2ff;
+    border-color: #a5b4fc;
+    transform: translateY(-1px);
+}
+body.evt-vlift .evt-create-tile__plus {
+    width: 56px;
+    height: 56px;
+    border-radius: 9999px;
+    background: #eef2ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 300;
+    line-height: 1;
+    color: #4f46e5;
+}
+body.evt-vlift .evt-create-tile__label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #4338ca;
+}
+body.evt-vlift .evt-create-tile__hint {
+    font-size: .8125rem;
+    color: #6b7280;
+    max-width: 220px;
+}
+
+/* ============================================================
+ * F9 -- Bucket header refresh (vlift): proper heading + count pill.
+ * ============================================================ */
+body.evt-vlift .evt-bucket-title {
+    font-size: 1.25rem;      /* text-xl */
+    line-height: 1.4;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.01em;
+    text-transform: none;
+}
+body.evt-vlift .evt-bucket-count {
+    font-size: .8125rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+body.evt-vlift .evt-bucket-head { margin-bottom: .75rem; }
+
+/* ============================================================
+ * F10 -- Mini calendar (right rail, vlift)
+ * ============================================================ */
+body.evt-vlift .evt-mcal {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: .875rem;
+    padding: .875rem;
+    box-shadow: 0 4px 10px rgba(15,23,42,.04);
+}
+body.evt-vlift .evt-mcal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .625rem;
+}
+body.evt-vlift .evt-mcal-title {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: #111827;
+}
+body.evt-vlift .evt-mcal-nav {
+    width: 28px;
+    height: 28px;
+    border-radius: .5rem;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #4b5563;
+    font-size: 1.125rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+body.evt-vlift .evt-mcal-nav:hover { background: #f3f4f6; color: #111827; }
+body.evt-vlift .evt-mcal-dow-row,
+body.evt-vlift .evt-mcal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+body.evt-vlift .evt-mcal-dow {
+    font-size: .6875rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-align: center;
+    padding: .25rem 0;
+}
+body.evt-vlift .evt-mcal-day {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border: 0;
+    background: transparent;
+    border-radius: 9999px;
+    color: #374151;
+    font-size: .8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    transition: background .12s ease, color .12s ease;
+}
+body.evt-vlift .evt-mcal-day:hover { background: #eef2ff; color: #4338ca; }
+body.evt-vlift .evt-mcal-day--other { color: #d1d5db; }
+body.evt-vlift .evt-mcal-day--today {
+    background: #4f46e5;
+    color: #ffffff;
+}
+body.evt-vlift .evt-mcal-day--today:hover { background: #4338ca; color: #ffffff; }
+body.evt-vlift .evt-mcal-day--has::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 9999px;
+    background: #4f46e5;
+}
+body.evt-vlift .evt-mcal-day--today.evt-mcal-day--has::after { background: #ffffff; }
+body.evt-vlift .evt-mcal-day--active {
+    outline: 2px solid #4f46e5;
+    outline-offset: -2px;
+}
+body.evt-vlift .evt-mcal-clear {
+    width: 100%;
+    margin-top: .5rem;
+    padding: .375rem .5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: .5rem;
+    background: #ffffff;
+    color: #4f46e5;
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+body.evt-vlift .evt-mcal-clear:hover { background: #eef2ff; }
+
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift .evt-mcal-day { transition: none; }
+}
+
+/* ============================================================
+ * F11 -- Your Upcoming RSVPs rail card (vlift)
+ * ============================================================ */
+body.evt-vlift .evt-myrsvps {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: .875rem;
+    padding: .875rem;
+    box-shadow: 0 4px 10px rgba(15,23,42,.04);
+}
+body.evt-vlift .evt-myrsvps-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .5rem;
+}
+body.evt-vlift .evt-myrsvps-title {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: #111827;
+}
+body.evt-vlift .evt-myrsvps-count {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 .5rem;
+    border-radius: 9999px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: .75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+body.evt-vlift .evt-myrsvps-list {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+body.evt-vlift .evt-myrsvp-row {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    width: 100%;
+    padding: .375rem;
+    border: 0;
+    border-radius: .625rem;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: background .12s ease;
+}
+body.evt-vlift .evt-myrsvp-row:hover { background: #f9fafb; }
+body.evt-vlift .evt-myrsvp-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: .5rem;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+}
+body.evt-vlift .evt-myrsvp-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+body.evt-vlift .evt-myrsvp-title {
+    font-size: .8125rem;
+    font-weight: 700;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+body.evt-vlift .evt-myrsvp-meta {
+    font-size: .6875rem;
+    color: #6b7280;
+}
+body.evt-vlift .evt-myrsvps-all {
+    width: 100%;
+    margin-top: .625rem;
+    padding: .5rem .625rem;
+    border: 1px solid #e5e7eb;
+    border-radius: .5rem;
+    background: #ffffff;
+    color: #4338ca;
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+body.evt-vlift .evt-myrsvps-all:hover { background: #eef2ff; }
+
+/* ============================================================
+ * F12 -- Events Overview stats rail card (vlift)
+ * ============================================================ */
+body.evt-vlift .evt-stats {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: .875rem;
+    padding: .875rem;
+    box-shadow: 0 4px 10px rgba(15,23,42,.04);
+}
+body.evt-vlift .evt-stats-title {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: .5rem;
+}
+body.evt-vlift .evt-stats-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .375rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+body.evt-vlift .evt-stats-row:last-of-type { border-bottom: 0; }
+body.evt-vlift .evt-stats-label {
+    font-size: .8125rem;
+    color: #6b7280;
+}
+body.evt-vlift .evt-stats-value {
+    font-size: .9375rem;
+    font-weight: 800;
+    color: #111827;
+}
+body.evt-vlift .evt-stats-link {
+    width: 100%;
+    margin-top: .625rem;
+    padding: .5rem .625rem;
+    border: 0;
+    border-radius: .5rem;
+    background: transparent;
+    color: #4f46e5;
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+}
+body.evt-vlift .evt-stats-link:hover { background: #eef2ff; }
+
+/* ============================================================
+ * F13 -- Filter row reflow (vlift, >=640px)
+ * Layout: [tabs full row] / [search (flex) | Filters | Date | view] / [chip rail]
+ * ============================================================ */
+@media (min-width: 640px) {
+    /* Promote #evtFilterStrip to a wrapping flex so lifecycle tabs, search,
+     * chip rail, and inner controls all become siblings we can order. */
+    body.evt-vlift #evtFilterStrip {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .5rem;
+        row-gap: .625rem;
+    }
+    /* Flatten inner .flex so its children become flex items of #evtFilterStrip */
+    body.evt-vlift #evtFilterStrip > .flex.items-center.gap-2:not(#evtTypeChips) {
+        display: contents;
+    }
+
+    /* Row 1 â€” lifecycle tabs take full width */
+    body.evt-vlift #evtFilterStrip #evtLifecycleSeg {
+        flex: 0 0 100%;
+        order: -30;
+    }
+
+    /* Row 2 (left) â€” search pill grows to fill */
+    body.evt-vlift #evtFilterStrip #evtSearchExpand {
+        flex: 1 1 240px;
+        order: -20;
+        margin-top: 0 !important;
+    }
+    /* Old round magnifier button no longer needed */
+    body.evt-vlift #evtFilterStrip #evtSearchToggle { display: none !important; }
+
+    /* Row 2 (right group) â€” Filters, Date, view toggle in visual order */
+    /* Filters button wrapper = the .relative.shrink-0 that contains #evtTypeMenuBtn */
+    body.evt-vlift #evtFilterStrip .relative.shrink-0:has(#evtTypeMenuBtn) { order: -12; }
+    body.evt-vlift #evtFilterStrip [data-f4-date-wrap]                    { order: -11; }
+    body.evt-vlift #evtFilterStrip #evtViewToggle                         { order: -10; }
+
+    /* Row 3 â€” chip rail */
+    body.evt-vlift #evtFilterStrip #evtTypeChips {
+        flex: 0 0 100%;
+        order: 10;
+        margin-top: 0 !important;
+    }
+}
+
+/* ============================================================
+ * F14 -- Featured-event hero refresh (vlift). Adds:
+ *   - "FEATURED EVENT" kicker label (top-left)
+ *   - Vertical white date chip overlay (MON / DAY / DOW)
+ *   - Host line ("Hosted by LLC -- Birthday Celebration")
+ *   - Right-side description block + solid "View Details" button (desktop)
+ * All rules scoped to body.evt-vlift. Mobile keeps the existing bottom CTA.
+ * ============================================================ */
+
+/* Kicker label (top-left) */
+body.evt-vlift .evt-hero-vlift [data-f14-kicker] {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 3;
+    font-size: .6875rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+}
+
+/* Vertical white date chip (MON / DAY / DOW) */
+body.evt-vlift .evt-hero-datechip {
+    position: absolute;
+    top: 3rem;
+    left: 1rem;
+    z-index: 3;
+    width: 3.75rem;
+    padding: .5rem .25rem;
+    background: #ffffff;
+    color: #111827;
+    border-radius: .75rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .1rem;
+    line-height: 1;
+    pointer-events: none;
+}
+body.evt-vlift .evt-hero-datechip__mon {
+    font-size: .625rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    color: #dc2626;
+    text-transform: uppercase;
+}
+body.evt-vlift .evt-hero-datechip__day {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1;
+    margin: .1rem 0;
+}
+body.evt-vlift .evt-hero-datechip__dow {
+    font-size: .5625rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+
+/* Host line ("Hosted by LLC -- Birthday Celebration") */
+body.evt-vlift .evt-hero-host {
+    margin-top: .25rem;
+    font-size: .8125rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+    line-height: 1.35;
+}
+
+/* Right-side description + CTA block (hidden by default; shown >=1024px) */
+body.evt-vlift .evt-hero-side { display: none; }
+
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-side {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: flex-end;
+        gap: .875rem;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 34%;
+        padding: 1.5rem 1.5rem 1.5rem 1rem;
+        z-index: 2;
+        pointer-events: none; /* allow anchor click-through on empty space */
+    }
+    body.evt-vlift .evt-hero-side__desc {
+        font-size: .875rem;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.92);
+        text-align: right;
+        max-width: 100%;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+        pointer-events: none;
+    }
+    body.evt-vlift .evt-hero-side__cta {
+        pointer-events: auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: .625rem 1.125rem;
+        border-radius: 9999px;
+        background: #ffffff;
+        color: #1f2937;
+        font-size: .8125rem;
+        font-weight: 800;
+        letter-spacing: .01em;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.22);
+        text-decoration: none;
+        transition: transform .12s ease, box-shadow .12s ease;
+    }
+    body.evt-vlift .evt-hero-side__cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.28);
+    }
+
+    /* Shrink meta so it never overlaps the right-side block */
+    body.evt-vlift .evt-hero-meta { max-width: 62% !important; }
+
+    /* Bigger datechip on desktop */
+    body.evt-vlift .evt-hero-datechip {
+        top: 3.25rem;
+        left: 1.25rem;
+        width: 4.25rem;
+        padding: .625rem .375rem;
+    }
+    body.evt-vlift .evt-hero-datechip__day { font-size: 1.75rem; }
+}
+
+/* ============================================================
+ * F15 -- Event card refresh (vlift): 3-line date chip (MON/DAY/DOW),
+ * split meta (type/host + location row + time row), and compact footer
+ * with attendee cluster + "N going" + pill RSVP.
+ * Non-vlift remains untouched (new elements hidden).
+ * ============================================================ */
+
+/* Date chip now stacks MON / DAY / DOW (F15 adds DOW line) */
+body.evt-vlift .evt-card-date-chip {
+    gap: .05rem;
+    padding: .45rem .55rem .5rem;
+}
+body.evt-vlift .evt-card-date-chip .evt-card-date-mon {
+    order: 1;
+    color: #dc2626;
+    font-size: .625rem;
+    letter-spacing: .1em;
+}
+body.evt-vlift .evt-card-date-chip .evt-card-date-day {
+    order: 2;
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: .05rem 0;
+}
+body.evt-vlift .evt-card-date-chip .evt-card-date-dow {
+    order: 3;
+    display: block;
+    font-size: .5625rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+body:not(.evt-vlift) .evt-card-date-chip .evt-card-date-dow { display: none; }
+
+/* F15 â€” Hide legacy single-line meta and legacy stack row under vlift
+   (they are replaced by the new split meta + footer) */
+body.evt-vlift [data-evt-card] [data-evt-legacy-meta]  { display: none !important; }
+body.evt-vlift [data-evt-card] [data-evt-legacy-stack] { display: none !important; }
+/* F15 â€” Hide the full-width F7 RSVP button under vlift (replaced by pill in footer) */
+body.evt-vlift [data-evt-card] > .p-4 > .evt-card-rsvp { display: none !important; }
+
+/* F15 â€” Split meta block */
+body.evt-vlift .evt-card-f15 {
+    margin-top: .375rem;
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+body.evt-vlift .evt-card-f15-type {
+    font-size: .8125rem;
+    color: #6b7280;
+    font-weight: 500;
+    line-height: 1.3;
+}
+body.evt-vlift .evt-card-f15-row {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    font-size: .8125rem;
+    color: #6b7280;
+    line-height: 1.3;
+    min-width: 0;
+}
+body.evt-vlift .evt-card-f15-row > span { min-width: 0; }
+body.evt-vlift .evt-card-f15-ico {
+    width: .875rem;
+    height: .875rem;
+    flex-shrink: 0;
+    color: #9ca3af;
+}
+
+/* Non-vlift: hide F15 markup so legacy card stays identical */
+body:not(.evt-vlift) [data-f15],
+body:not(.evt-vlift) [data-f15-foot] { display: none !important; }
+
+/* F15 â€” Compact footer (cluster + N going, pill RSVP right) */
+body.evt-vlift .evt-card-f15-foot {
+    margin-top: .75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+body.evt-vlift .evt-card-f15-foot__left {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    min-width: 0;
+}
+body.evt-vlift .evt-card-f15-going {
+    font-size: .75rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+body.evt-vlift .evt-card-f15-rsvp {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .4rem .875rem;
+    border-radius: 9999px;
+    border: 1px solid #c7d2fe;
+    background: #ffffff;
+    color: #4338ca;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+    flex-shrink: 0;
+}
+body.evt-vlift .evt-card-f15-rsvp:hover {
+    background: #eef2ff;
+    border-color: #a5b4fc;
+}
+body.evt-vlift .evt-card-f15-rsvp:disabled { opacity: .6; cursor: progress; }
+body.evt-vlift .evt-card-f15-rsvp--on {
+    background: #ecfdf5;
+    border-color: #6ee7b7;
+    color: #047857;
+}
+body.evt-vlift .evt-card-f15-rsvp--on:hover { background: #d1fae5; }
+
+/* F15 â€” Tighten create-event tile proportions to match compact card body */
+body.evt-vlift .evt-create-tile {
+    min-height: 0;
+    padding: 1.25rem 1rem;
+    gap: .5rem;
+}
+body.evt-vlift .evt-create-tile__plus {
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+}
+body.evt-vlift .evt-create-tile__label { font-size: .9375rem; }
+body.evt-vlift .evt-create-tile__hint {
+    font-size: .75rem;
+    max-width: 200px;
+    line-height: 1.35;
+}
+
+/* ============================================================
+ * F16 -- Header refresh + full-width page + cleaner right rail (vlift)
+ *   - Header: drop purple gradient, switch to light surface w/ border
+ *   - Page width: remove max-width caps so content fills viewport
+ *   - Right rail: keep cards but tighten spacing as a side section
+ * Non-vlift unchanged.
+ * ============================================================ */
+
+/* Header: light background, no purple gradient */
+body.evt-vlift #evtPageHeader {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    animation: none !important;
+}
+body.evt-vlift #evtPageHeader::before,
+body.evt-vlift #evtPageHeader::after { content: none !important; background: none !important; }
+
+/* Restore dark text on header */
+body.evt-vlift #evtPageHeader #evtHeaderTitle {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    background: none !important;
+    text-shadow: none !important;
+}
+body.evt-vlift #evtPageHeader #evtHeaderCount,
+body.evt-vlift #evtPageHeader .evt-greeting-hello,
+body.evt-vlift #evtPageHeader .evt-greeting-sub {
+    color: #6b7280 !important;
+    text-shadow: none !important;
+}
+body.evt-vlift #evtPageHeader .evt-greeting-hello { color: #475569 !important; }
+
+/* Restore solid brand Create Event button */
+body.evt-vlift #evtPageHeader #createEventBtn {
+    background: #4f46e5 !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.22) !important;
+    backdrop-filter: none !important;
+}
+body.evt-vlift #evtPageHeader #createEventBtn:hover {
+    background: #4338ca !important;
+}
+
+/* Full-width page: remove max-width caps */
+body.evt-vlift #evtPageHeader > div {
+    max-width: none !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+}
+body.evt-vlift #evtShell {
+    max-width: none !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+}
+@media (min-width: 1024px) {
+    body.evt-vlift #evtPageHeader > div {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+    body.evt-vlift #evtShell {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        gap: 1.75rem !important;
+        grid-template-columns: minmax(0, 1fr) 320px !important;
+    }
+}
+
+/* Filter strip: span the wider container (already max-width:none under F2,
+   but reassert to override any sibling cap) */
+body.evt-vlift #evtFilterStrip { max-width: none !important; }
+
+/* Right rail: present as a distinct side section */
+@media (min-width: 1024px) {
+    body.evt-vlift #evtRightRail {
+        gap: 1rem !important;
+        padding-top: .25rem;
+    }
+}
+body.evt-vlift #evtRightRail .evt-mcal,
+body.evt-vlift #evtRightRail .evt-myrsvps,
+body.evt-vlift #evtRightRail .evt-stats {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* ============================================================
+ * F17 -- Rectangular event cards (vlift).
+ *   - Card grid: 2 columns on lg (was 3) so each cell is wider
+ *   - Banner: shallower 21/9 aspect (was 16/9) -> landscape feel
+ *   - Tighten body padding to keep card overall landscape
+ * Non-vlift unchanged.
+ * ============================================================ */
+
+/* 2-col grid on lg, 3-col on xl so widescreens still use the extra space */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+@media (min-width: 1440px) {
+    body.evt-vlift .evt-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+/* Shallower banner -> rectangular */
+body.evt-vlift [data-evt-card] .evt-card-banner {
+    aspect-ratio: 21 / 9 !important;
+}
+
+/* Tighter body padding (card.js uses .p-4 = 1rem; shrink the vertical) */
+body.evt-vlift [data-evt-card] > .p-4 {
+    padding-top: .75rem !important;
+    padding-bottom: .75rem !important;
+}
+body.evt-vlift [data-evt-card] .evt-card-f15 {
+    margin-top: .25rem !important;
+    gap: .2rem !important;
+}
+body.evt-vlift [data-evt-card] .evt-card-f15-foot {
+    margin-top: .5rem !important;
+}
+
+/* Slightly shorter create tile to match new rectangular cells */
+body.evt-vlift .evt-create-tile {
+    padding: 1rem !important;
+    min-height: 160px !important;
+}
+
+/* ============================================================
+ * F18 -- Featured hero polish (vlift) to match target mockup.
+ *   - Cap hero height (compact strip, NOT 60vh)
+ *   - Mute banner photo with strong overlay so text is readable
+ *   - Pin date chip top-left under FEATURED EVENT kicker (no overlap)
+ *   - Right-side description gets a soft scrim/backdrop for legibility
+ *   - View Details button sits inside the right block, not floating
+ *   - Cluster sits cleanly under meta on the left
+ * Non-vlift unchanged.
+ * ============================================================ */
+
+/* MOBILE + everything: cap the hero height so it never goes full-bleed tall */
+body.evt-vlift .evt-hero-vlift > a {
+    aspect-ratio: auto !important;
+    min-height: 0 !important;
+    height: 240px !important;
+}
+
+/* Strong dark gradient over the banner photo so left text + right desc read clearly */
+body.evt-vlift .evt-hero-vlift > a::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(90deg,
+        rgba(20, 18, 60, 0.85) 0%,
+        rgba(35, 25, 90, 0.65) 45%,
+        rgba(20, 18, 60, 0.55) 75%,
+        rgba(20, 18, 60, 0.85) 100%);
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Hide the bottom-edge fade -- we now have a full overlay */
+body.evt-vlift .evt-hero-fade { display: none !important; }
+
+/* Make sure top-right pills and meta sit ABOVE the new overlay */
+body.evt-vlift .evt-hero-vlift > a > * { z-index: 2; }
+body.evt-vlift .evt-hero-vlift > a > .absolute,
+body.evt-vlift .evt-hero-vlift > a > [data-f14-kicker],
+body.evt-vlift .evt-hero-vlift > a > [data-f14-datechip],
+body.evt-vlift .evt-hero-vlift > a > .evt-hero-fade,
+body.evt-vlift .evt-hero-vlift > a > .evt-hero-meta,
+body.evt-vlift .evt-hero-vlift > a > .evt-hero-side { z-index: 2; }
+
+/* DESKTOP -- compact landscape strip */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-vlift > a {
+        height: 220px !important;
+        min-height: 220px !important;
+        border-radius: 1.25rem;
+    }
+    /* Meta stays on the left half, vertically anchored bottom */
+    body.evt-vlift .evt-hero-meta {
+        max-width: 56% !important;
+        padding: 1.25rem 1.5rem !important;
+    }
+    body.evt-vlift .evt-hero-meta h2 {
+        font-size: 1.625rem !important;
+        line-height: 1.15;
+        margin-top: .35rem;
+    }
+}
+
+/* Date chip -- pin top-left UNDER the FEATURED EVENT kicker, never mid-card */
+body.evt-vlift .evt-hero-datechip {
+    top: 2.75rem !important;
+    left: 1rem !important;
+    width: 3.25rem !important;
+    padding: .4rem .25rem !important;
+}
+body.evt-vlift .evt-hero-datechip__day { font-size: 1.25rem !important; }
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-datechip {
+        top: 2.75rem !important;
+        left: 1.25rem !important;
+        width: 3.5rem !important;
+    }
+    body.evt-vlift .evt-hero-datechip__day { font-size: 1.375rem !important; }
+}
+
+/* Push meta over so it doesn't collide with the date chip */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-meta { padding-left: 5.75rem !important; }
+}
+
+/* Right-side description block: clean column, vertical center, no overlap */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-side {
+        top: 0 !important;
+        bottom: 0 !important;
+        right: 0 !important;
+        width: 38% !important;
+        padding: 1rem 1.5rem !important;
+        justify-content: center !important;
+        align-items: flex-end !important;
+        gap: .875rem !important;
+    }
+    body.evt-vlift .evt-hero-side__desc {
+        text-align: right;
+        -webkit-line-clamp: 2 !important;
+        font-size: .8125rem !important;
+        line-height: 1.45 !important;
+        max-width: 95%;
+    }
+    body.evt-vlift .evt-hero-side__cta {
+        align-self: flex-end;
+        padding: .55rem 1.25rem !important;
+    }
+}
+
+/* Top-right pills (Live + heart + countdown) - tighten + push below kicker */
+body.evt-vlift .evt-hero-vlift .absolute.top-3.right-3 {
+    top: .75rem !important;
+    right: 1rem !important;
+    gap: .5rem !important;
+}
+
+/* Cluster sits cleanly below meta on the LEFT (no overlap with right block) */
+body.evt-vlift .evt-hero-cluster {
+    margin-bottom: .375rem !important;
+    padding: 3px 8px 3px 3px !important;
+    font-size: 11px !important;
+}
+body.evt-vlift .evt-hero-cluster-bub { width: 22px !important; height: 22px !important; }
+
+/* FEATURED EVENT kicker: tighter, with subtle backdrop so it pops */
+body.evt-vlift .evt-hero-vlift [data-f14-kicker] {
+    top: .75rem !important;
+    left: 1rem !important;
+    padding: .2rem .55rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    font-size: .625rem !important;
+    color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+/* Hide the redundant date/time row above the title under F18 (the date chip
+   already shows the date; the time appears in the meta line below) */
+body.evt-vlift .evt-hero-meta [data-f14-dtrow] {
+    /* Hide the DATE span (first child) so we keep only the time icon-text */
+    margin-bottom: 0 !important;
+    font-size: .8125rem !important;
+}
+body.evt-vlift .evt-hero-meta [data-f14-dtrow] > span:first-child { display: none !important; }
+
+/* F18 -- Reorder meta block so it reads: TITLE -> HOST -> LOCATION (target).
+   The flex direction + order keeps DOM untouched. */
+body.evt-vlift .evt-hero-meta {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: .15rem;
+}
+body.evt-vlift .evt-hero-meta > h2          { order: 1; }
+body.evt-vlift .evt-hero-meta > [data-f14-host] { order: 2; margin-top: 0 !important; }
+body.evt-vlift .evt-hero-meta > p            { order: 3; }
+body.evt-vlift .evt-hero-meta > [data-f14-dtrow] { order: 3; }
+body.evt-vlift .evt-hero-meta > .evt-hero-cluster,
+body.evt-vlift .evt-hero-meta > button.evt-hero-cluster { order: 4; margin-top: .35rem !important; margin-bottom: 0 !important; }
+
+/* ============================================================
+ * F19 -- Hero refinements per user feedback (Apr 23):
+ *   1) Banner moved under event-type chips (DOM change in events.html)
+ *   2) Date chip + event meta on the SAME LINE (date chip moved to
+ *      bottom-left inline with meta, kicker stays top-left)
+ *   3) Right-side description = clean white text, NO scrim background
+ * Non-vlift unchanged.
+ * ============================================================ */
+
+/* (2) Date chip: drop the top-left absolute position; pin to bottom-left
+   so it sits on the SAME visual row as the meta block. */
+body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
+    top: auto !important;
+    bottom: 1.25rem !important;
+    left: 1rem !important;
+}
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
+        bottom: 1.25rem !important;
+        left: 1.25rem !important;
+    }
+    /* Meta padding-left already reserves ~5.75rem under F18 so the
+       date chip slides into that exact gutter -- no overlap. */
+}
+
+/* (3) Side description: strip the scrim/backdrop -- just white text */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-side {
+        background: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    body.evt-vlift .evt-hero-side__desc {
+        background: transparent !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    }
+}
+/* ============================================================
+ * F20 -- Date chip inline in meta (same height as text),
+ *        time + location on one row.
+ *   - Datechip moved inside evt-hero-meta as a flex child —
+ *     it now naturally stretches to match the text column height
+ *   - evt-hero-meta becomes flex-row; new evt-hero-meta-body
+ *     is the flex column for title/host/timeloc
+ *   - evt-hero-timeloc is the combined time + location row
+ *   - Removes F18 padding-left:5.75rem override (chip is inside now)
+ *   - Removes F18/F19 absolute positioning on datechip
+ * ============================================================ */
+
+/* Meta: flex-row so datechip sits left of the text column */
+body.evt-vlift .evt-hero-meta {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: .75rem !important;
+    padding-left: 1.25rem !important;
+    /* cancel F18 column reorder rules */
+    justify-content: flex-start !important;
+}
+
+/* Cancel F18 padding-left override (chip is now inside, no gutter needed) */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-meta {
+        padding-left: 1.25rem !important;
+        max-width: 58% !important;
+    }
+}
+
+/* Datechip: now a regular flex child — NOT absolutely positioned */
+body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+    flex-shrink: 0 !important;
+    align-self: stretch !important;
+    justify-content: center !important;
+    width: 3.25rem !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+/* Text column: stacks title / host / timeloc */
+body.evt-vlift .evt-hero-meta-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    flex: 1;
+    min-width: 0;
+    gap: .1rem;
+}
+
+/* Time + location row */
+body.evt-vlift .evt-hero-timeloc {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .625rem;
+    margin-top: .2rem;
+    font-size: .8125rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+/* Cancel F18 flex-direction:column + order overrides on meta children
+   (structure is now explicit in the DOM, no ordering needed) */
+body.evt-vlift .evt-hero-meta > h2 { order: unset !important; }
+body.evt-vlift .evt-hero-meta > [data-f14-host] { order: unset !important; }
+body.evt-vlift .evt-hero-meta > p  { order: unset !important; }
+body.evt-vlift .evt-hero-meta > [data-f14-dtrow]  { display: none !important; }
+/* ============================================================
+ * F21 -- Pin meta block under "FEATURED EVENT" kicker (top)
+ *        instead of the bottom of the hero.
+ * ============================================================ */
+body.evt-vlift .evt-hero-meta {
+    bottom: auto !important;
+    top: 2.5rem !important;
+    padding-top: .5rem !important;
+}
+/* F21b -- Left-align the right-side description + CTA */
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-side {
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        padding-top: 2.75rem !important;
+    }
+    body.evt-vlift .evt-hero-side__desc {
+        text-align: left !important;
+    }
+    body.evt-vlift .evt-hero-side__cta {
+        align-self: flex-start !important;
+    }
+}

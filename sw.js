@@ -2,7 +2,7 @@
 // Cache-first for statics, network-first for API calls.
 // Push notification handler for native OS notifications.
 
-const CACHE_NAME = 'jm-portal-v96';
+const CACHE_NAME = 'jm-portal-v97';
 
 // Shell assets to pre-cache on install
 const SHELL_ASSETS = [
