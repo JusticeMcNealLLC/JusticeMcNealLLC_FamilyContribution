@@ -182,10 +182,15 @@ body.evt-vlift .evt-stats-link:hover { background: #eef2ff; }
 /* ============================================================
  * F16 — Right-rail card polish (border + radius + shadow)
  * ============================================================ */
+body.evt-vlift #evtRightRail {
+    background: #eef2ff;
+    border-radius: 1rem;
+    padding: .75rem;
+}
 @media (min-width: 1024px) {
     body.evt-vlift #evtRightRail {
         gap: 1rem !important;
-        padding-top: .25rem;
+        padding-top: 1rem;
     }
 }
 body.evt-vlift #evtRightRail .evt-mcal,
