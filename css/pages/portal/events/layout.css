@@ -222,17 +222,14 @@ body.evt-vlift #evtShell { max-width: 80rem; }
         display: grid;
         grid-template-columns: minmax(0, 1fr) 320px;
         gap: 1.5rem;
-        align-items: start;
+        align-items: stretch;
     }
     body.evt-vlift .evt-shell-main { min-width: 0; }
     body.evt-vlift #evtRightRail {
         display: flex !important;
         flex-direction: column;
         gap: 1rem;
-        position: sticky;
-        top: calc(var(--evt-header-h, 4rem) + 1rem);
-        max-height: calc(100vh - var(--evt-header-h, 4rem) - 2rem);
-        overflow-y: auto;
+        align-self: stretch;
     }
     body.evt-vlift #evtRightRail:empty,
     body.evt-vlift #evtRightRail:has(> div:empty:only-child) { display: none !important; }
