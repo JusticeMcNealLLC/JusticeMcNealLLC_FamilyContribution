@@ -170,6 +170,25 @@ body.evt-vlift #evtTypeChips::-webkit-scrollbar { display: none; }
     scrollbar-width: none;
 }
 .evt-type-chips::-webkit-scrollbar { display: none; }
+
+/* ── G2 — Mobile filter button (icon-only square when relocated to mobile row) ── */
+.evt-filter-btn--mobile #evtTypeMenuBtn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+}
+.evt-filter-btn--mobile #evtTypeMenuBtn [data-type-label],
+.evt-filter-btn--mobile #evtTypeMenuBtn > svg:last-child {
+    display: none;
+}
+.evt-filter-btn--mobile #evtTypeMenuBtn [data-f4-filters-icon] {
+    display: block !important;
+    width: 18px;
+    height: 18px;
+    color: #4b5563;
+}
 .evt-type-chip {
     flex: 0 0 auto;
     scroll-snap-align: start;

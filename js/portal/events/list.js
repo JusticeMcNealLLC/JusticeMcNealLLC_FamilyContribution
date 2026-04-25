@@ -2861,6 +2861,67 @@
         initMobileFab:    _initMobileFab,
     };
 
+    // Mobile-only: relocate the search input row + filter button next to it,
+    // above the chip rail. On desktop, restore them to their original DOM
+    // homes so the existing search-toggle expand UX keeps working unchanged.
+    function _initMobileFilterStrip() {
+        const searchExpand = document.getElementById('evtSearchExpand');
+        const filterWrap   = document.getElementById('evtTypeMenuBtnWrap');
+        const mSearchHost  = document.getElementById('evtMobileSearchHost');
+        const mFilterHost  = document.getElementById('evtMobileFilterHost');
+        if (!searchExpand || !filterWrap || !mSearchHost || !mFilterHost) return;
+
+        // Remember original parents so we can restore on resize-up
+        if (!searchExpand.dataset.dHome) {
+            searchExpand.dataset.dHome = '1';
+            searchExpand._dHomeParent = searchExpand.parentElement;
+            searchExpand._dHomeNext   = searchExpand.nextSibling;
+        }
+        if (!filterWrap.dataset.dHome) {
+            filterWrap.dataset.dHome = '1';
+            filterWrap._dHomeParent = filterWrap.parentElement;
+            filterWrap._dHomeNext   = filterWrap.nextSibling;
+        }
+
+        const mq = window.matchMedia('(max-width: 639px)');
+        const apply = () => {
+            if (mq.matches) {
+                // Mobile: move into mobile hosts, force search visible
+                if (searchExpand.parentElement !== mSearchHost) {
+                    mSearchHost.appendChild(searchExpand);
+                }
+                searchExpand.classList.remove('hidden', 'mt-2');
+                if (filterWrap.parentElement !== mFilterHost) {
+                    mFilterHost.appendChild(filterWrap);
+                }
+                filterWrap.classList.add('evt-filter-btn--mobile');
+            } else {
+                // Desktop: restore original positions
+                if (searchExpand.parentElement !== searchExpand._dHomeParent) {
+                    searchExpand._dHomeParent.insertBefore(
+                        searchExpand,
+                        searchExpand._dHomeNext && searchExpand._dHomeNext.parentElement === searchExpand._dHomeParent
+                            ? searchExpand._dHomeNext : null
+                    );
+                    // Re-hide unless user has an active search
+                    if (!_searchQuery) searchExpand.classList.add('hidden');
+                    searchExpand.classList.add('mt-2');
+                }
+                if (filterWrap.parentElement !== filterWrap._dHomeParent) {
+                    filterWrap._dHomeParent.insertBefore(
+                        filterWrap,
+                        filterWrap._dHomeNext && filterWrap._dHomeNext.parentElement === filterWrap._dHomeParent
+                            ? filterWrap._dHomeNext : null
+                    );
+                }
+                filterWrap.classList.remove('evt-filter-btn--mobile');
+            }
+        };
+        apply();
+        if (mq.addEventListener) mq.addEventListener('change', apply);
+        else if (mq.addListener) mq.addListener(apply);
+    }
+
     // Show skeletons ASAP, init sticky header + FAB once DOM is ready
     function _onReady() {
         const groupsEl = document.getElementById('evtGroups');
@@ -2875,6 +2936,7 @@
         _initVlift();
         _initSwipeGestures();
         _initGreeting();
+        _initMobileFilterStrip();
         _applyRestoredUi();
         // E10 — Notification bell in gradient header (vlift only).
         // Try immediately, then again after a tick so the global nav (which
