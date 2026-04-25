@@ -260,12 +260,15 @@ body.evt-vlift #evtPageHeader #evtHeaderTitle {
     text-shadow: none !important;
 }
 body.evt-vlift #evtPageHeader #evtHeaderCount,
-body.evt-vlift #evtPageHeader .evt-greeting-hello,
 body.evt-vlift #evtPageHeader .evt-greeting-sub {
     color: #6b7280 !important;
     text-shadow: none !important;
 }
-body.evt-vlift #evtPageHeader .evt-greeting-hello { color: #475569 !important; }
+body.evt-vlift #evtPageHeader .evt-greeting-hello {
+    color: #4f46e5 !important;
+    font-weight: 600 !important;
+    text-shadow: none !important;
+}
 
 body.evt-vlift #evtPageHeader #createEventBtn {
     background: #4f46e5 !important;

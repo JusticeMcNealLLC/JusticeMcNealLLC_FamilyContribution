@@ -50,19 +50,19 @@
                     style="padding-top: max(0.5rem, env(safe-area-inset-top));">
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-end justify-between gap-3">
                     <div class="min-w-0">
-                        <!-- F1 — Greeting line (vlift-only, hydrated by _initGreeting) -->
-                        <p id="evtGreetingHello" class="hidden evt-greeting-hello text-xs font-semibold text-gray-500 mb-0.5">Welcome back, <span data-greeting-name>there</span> <span aria-hidden="true">👋</span></p>
-                        <h1 id="evtHeaderTitle" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight leading-none">Events</h1>
+                        <!-- F1 / G1 — Greeting line (vlift-only, hydrated by _initGreeting) -->
+                        <p id="evtGreetingHello" class="hidden evt-greeting-hello text-sm font-semibold text-brand-600 mb-1">Hey, <span data-greeting-name>there</span> <span aria-hidden="true">👋</span></p>
+                        <h1 id="evtHeaderTitle" class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight leading-none">Events</h1>
                         <p id="evtHeaderCount" class="text-xs text-gray-500 mt-1.5 truncate">Loading…</p>
                         <!-- F1 — Subtitle (vlift-only, shown ≥sm) -->
                         <p id="evtGreetingSub" class="hidden evt-greeting-sub text-sm text-gray-500 mt-1">Discover and join events in your community.</p>
                     </div>
                     <button id="createEventBtn" type="button"
-                        class="hidden items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold rounded-xl shadow-sm transition-colors h-10 w-10 sm:w-auto sm:h-auto sm:py-2.5 sm:px-5 sm:text-sm shrink-0">
+                        class="hidden items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold rounded-xl shadow-sm transition-colors h-11 px-5 text-sm sm:h-auto sm:py-2.5 sm:px-5 shrink-0">
                         <svg class="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
                         </svg>
-                        <span class="hidden sm:inline">Create&nbsp;Event</span>
+                        <span>Create&nbsp;Event</span>
                     </button>
                 </div>
             </header>

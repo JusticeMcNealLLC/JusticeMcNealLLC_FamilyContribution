@@ -11,7 +11,7 @@ const list = read('js/portal/events/list.js');
 const sw   = read('sw.js');
 
 const checks = {
-    html_greeting_hello:   /<p id="evtGreetingHello"[^>]*class="[^"]*hidden[^"]*evt-greeting-hello[^"]*"[^>]*>Welcome back, <span data-greeting-name>there<\/span>/.test(html),
+    html_greeting_hello:   /<p id="evtGreetingHello"[^>]*class="[^"]*hidden[^"]*evt-greeting-hello[^"]*"[^>]*>Hey, <span data-greeting-name>there<\/span>/.test(html),
     html_greeting_sub:     /<p id="evtGreetingSub"[^>]*class="[^"]*hidden[^"]*evt-greeting-sub[^"]*"[^>]*>Discover and join events in your community\./.test(html),
     html_title_after_hello:/evtGreetingHello[\s\S]{0,400}<h1 id="evtHeaderTitle"/.test(html),
     html_sub_after_title:  /<h1 id="evtHeaderTitle"[\s\S]{0,400}evtGreetingSub/.test(html),
