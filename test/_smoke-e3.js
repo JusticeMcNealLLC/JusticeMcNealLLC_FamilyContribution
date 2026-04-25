@@ -21,7 +21,7 @@ const checks = {
 
     // CSS — vlift reveal + dropdown hide + chip styles
     css_e3_marker: /E3 — Inline category chip rail/.test(css),
-    css_e3_show_vlift: /body\.evt-vlift #evtTypeChips \{ display: flex; \}/.test(css),
+    css_e3_show_vlift: /body\.evt-vlift #evtTypeChips \{[^}]*display:\s*flex/.test(css),
     css_e3_hide_dropdown: /body\.evt-vlift #evtTypeMenuBtn[\s\S]*display: none !important/.test(css),
     css_e3_chip_active_gradient: /\.evt-type-chip--active \{[\s\S]*linear-gradient\(135deg, #6366f1/.test(css),
     css_e3_chip_radius: /\.evt-type-chip \{[\s\S]*border-radius: 999px/.test(css),
