@@ -155,7 +155,15 @@
 }
 
 /* ── E3 — Inline category chip rail (vlift only) ── */
-body.evt-vlift #evtTypeChips { display: flex; }
+body.evt-vlift #evtTypeChips {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+body.evt-vlift #evtTypeChips::-webkit-scrollbar { display: none; }
 .evt-type-chips {
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
