@@ -965,12 +965,12 @@
             window.evtAllEvents = events || [];
 
             // Drafts (admin-created, only visible to creator)
-            if (window.evtCurrentUserRole === 'admin' && window.evtCurrentUser) {
+            if (evtCurrentUserRole === 'admin' && evtCurrentUser) {
                 const { data: drafts } = await supabaseClient
                     .from('events')
                     .select('*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)')
                     .eq('status', 'draft')
-                    .eq('created_by', window.evtCurrentUser.id)
+                    .eq('created_by', evtCurrentUser.id)
                     .order('created_at', { ascending: false });
                 if (drafts && drafts.length) {
                     window.evtAllEvents = [...drafts, ...window.evtAllEvents];
@@ -981,11 +981,11 @@
 
             // User's own RSVPs
             window.evtAllRsvps = {};
-            if (window.evtCurrentUser && ids.length) {
+            if (evtCurrentUser && ids.length) {
                 const { data: rsvps } = await supabaseClient
                     .from('event_rsvps')
                     .select('*')
-                    .eq('user_id', window.evtCurrentUser.id)
+                    .eq('user_id', evtCurrentUser.id)
                     .in('event_id', ids);
                 (rsvps || []).forEach(r => { window.evtAllRsvps[r.event_id] = r; });
             }
@@ -1164,39 +1164,17 @@
     }
 
     // =========================================================
-    // Hero selection — events_003 §4.3 LOCKED rule
-    //   1. Going within next 24h
-    //   2. Pinned LLC future
-    //   3. Soonest upcoming
-    //   4. Otherwise null
+    // Hero selection — events_006: admin-controlled featured event.
+    // Returns the single event with is_featured = true that is not
+    // cancelled or draft. If none is featured, returns null and the
+    // hero banner is hidden entirely.
     // =========================================================
-    function _pickHero(events, rsvps) {
-        const now = new Date();
-        const upcoming = events.filter(e =>
-            e.status !== 'cancelled' && e.status !== 'draft' &&
-            new Date(e.start_date) >= now
-        );
-        if (!upcoming.length) return null;
-
-        const byDateAsc = (a, b) => new Date(a.start_date) - new Date(b.start_date);
-        const dayMs = 86_400_000;
-
-        // Rule 1
-        const goingSoon = upcoming.filter(e => {
-            const r = rsvps[e.id];
-            return r && r.status === 'going' &&
-                   (new Date(e.start_date) - now) <= dayMs;
-        }).sort(byDateAsc);
-        if (goingSoon[0]) return goingSoon[0];
-
-        // Rule 2
-        const pinned = upcoming.filter(e =>
-            e.is_pinned && e.event_type === 'llc'
-        ).sort(byDateAsc);
-        if (pinned[0]) return pinned[0];
-
-        // Rule 3
-        return upcoming.slice().sort(byDateAsc)[0] || null;
+    function _pickHero(events) {
+        return events.find(e =>
+            e.is_featured === true &&
+            e.status !== 'cancelled' &&
+            e.status !== 'draft'
+        ) || null;
     }
 
     function _heroBg(event, stripGradient) {
@@ -1269,15 +1247,7 @@
                 ? '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s7-7.58 7-13a7 7 0 10-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg>'
                 : '';
 
-            // CTA label/state
-            const isGoing = (rsvp && rsvp.status === 'going');
-            const isCompetition = event.event_type === 'competition';
-            const ctaLabel = isGoing
-                ? '✓ You\'re going'
-                : (isCompetition ? 'Buy Raffle Ticket' : 'RSVP — I\'m going');
-            const ctaCls = isGoing
-                ? 'evt-hero-cta evt-hero-cta--going'
-                : 'evt-hero-cta';
+            // CTA — always "View Details"; navigates to the event detail page.
 
             // F14 — Featured-event hero refresh (vlift): kicker label, vertical
             // date chip, host line, right-side description block, solid View
@@ -1303,12 +1273,12 @@
             heroEl.innerHTML =
                 '<div class="evt-hero-vlift relative">' +
                 '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '"' +
-                ' class="block relative rounded-3xl overflow-hidden text-white shadow-[0_18px_50px_rgba(15,23,42,0.30)] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300"' +
+                ' class="block relative rounded-3xl overflow-hidden text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300"' +
                 ' style="' + _heroBg(event, true) + '">' +
                     goingRibbon +
                     '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div>' +
-                    // F14 — FEATURED EVENT kicker (vlift only; CSS shown)
-                    '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' +
+                    // F14 — FEATURED EVENT kicker (vlift only; only shown when admin-featured)
+                    (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : '') +
                     // Bottom-edge dark fade for legibility
                     '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div>' +
                     '<div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6">' +
@@ -1323,7 +1293,7 @@
                         '<div class="evt-hero-meta-body">' +
                             // E7 — Avatar cluster
                             _attendeeCluster(event.id) +
-                            '<h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc(event.title || 'Untitled event') + '</h2>' +
+                            '<h2 class="text-xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc(event.title || 'Untitled event') + '</h2>' +
                             // F14 — Host line
                             (hostLine
                                 ? '<p class="evt-hero-host" data-f14-host>' + esc(hostLine) + '</p>'
@@ -1348,29 +1318,25 @@
                         '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc(event.id) + '" role="button" aria-hidden="true">View Details</span>' +
                     '</div>' +
                 '</a>' +
-                // Bottom CTA bar (sits visually attached to hero, but is a separate
-                // button so the click isn't swallowed by the navigation anchor)
-                '<button type="button" data-evt-hero-cta="' + esc(event.id) + '" class="' + ctaCls + '">' +
-                    '<span>' + esc(ctaLabel) + '</span>' +
-                    '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>' +
+                // View Details button — absolutely positioned at bottom center of
+                // the banner card (outside <a> to avoid nested interactive elements).
+                '<button type="button" data-evt-hero-cta="' + esc(event.id) + '" class="evt-hero-cta" aria-label="View details for ' + esc(event.title || 'this event') + '">' +
+                    'View Details' +
                 '</button>' +
                 '</div>';
 
-            // Wire CTA → existing RSVP handler (no new flows)
+            // Wire View Details CTA → navigate to event detail page
             const ctaBtn = heroEl.querySelector('button[data-evt-hero-cta]');
             if (ctaBtn) {
-                ctaBtn.addEventListener('click', async (e) => {
+                ctaBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (typeof window.evtHandleRsvp !== 'function') return;
-                    try {
-                        ctaBtn.disabled = true;
-                        // Toggling 'going' off when already going is handled by evtHandleRsvp
-                        await window.evtHandleRsvp(event.id, 'going');
-                    } catch (err) {
-                        console.error('Hero RSVP failed', err);
-                    } finally {
-                        ctaBtn.disabled = false;
+                    if (href && href !== 'javascript:void(0)') {
+                        window.location.href = href;
+                    } else if (typeof window.evtNavigateToEvent === 'function') {
+                        window.evtNavigateToEvent(event);
+                    } else if (typeof window.evtOpenDetail === 'function') {
+                        window.evtOpenDetail(event);
                     }
                 });
             }
@@ -1467,7 +1433,7 @@
         let createTile = '';
         if (useVlift && !_createTileInjected && (window.evtActiveTab || 'upcoming') === 'upcoming') {
             const canCreate = (typeof hasPermission === 'function' && hasPermission('events.create')) ||
-                              window.evtCurrentUserRole === 'admin';
+                              evtCurrentUserRole === 'admin';
             if (canCreate) {
                 createTile =
                     '<button type="button" data-evt-create-tile class="evt-create-tile" aria-label="Create new event">' +
@@ -1507,12 +1473,12 @@
             : 'text-xs font-bold uppercase tracking-[0.14em] text-gray-500';
 
         const header = useVlift
-            ? '<header class="' + headerCls + '"><div class="flex items-baseline gap-2"><h2 class="' + titleCls + '">' + safeLabel + '</h2>' + countPill + '</div>' + headerLink + '</header>'
+            ? '<header class="' + headerCls + '"><h2 class="' + titleCls + '">' + safeLabel + '</h2><div class="flex items-center gap-2">' + countPill + headerLink + '</div></header>'
             : '<h2 class="' + titleCls + ' mb-3">' + safeLabel + '</h2>';
 
         return '<section data-bucket="' + slug + '">' +
             header +
-            '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + createTile + cards + '</div>' +
+            '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + cards + createTile + '</div>' +
         '</section>';
     }
 
@@ -2193,7 +2159,7 @@
         const tab = window.evtActiveTab || 'upcoming';
 
         // Pick hero only on Upcoming tab
-        const hero = (tab === 'upcoming') ? _pickHero(filtered, rsvps) : null;
+        const hero = (tab === 'upcoming') ? _pickHero(filtered) : null;
         _renderHero(hero, hero ? rsvps[hero.id] : null);
 
         // Phase B1/B2 — Live banner + Going rail (upcoming tab only)
@@ -2258,6 +2224,25 @@
             .map(g => _renderBucket(g.label, g.events, rsvps, attendees))
             .join('');
 
+        // F8 — If no buckets rendered (e.g. all events are the hero) but user can create,
+        // inject the standalone create tile so it's still reachable.
+        if (!_createTileInjected && document.body.classList.contains('evt-vlift') && tab === 'upcoming') {
+            const canCreate = (typeof hasPermission === 'function' && hasPermission('events.create')) ||
+                              evtCurrentUserRole === 'admin';
+            if (canCreate) {
+                const tileWrap =
+                    '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' +
+                        '<button type="button" data-evt-create-tile class="evt-create-tile" aria-label="Create new event">' +
+                            '<span class="evt-create-tile__plus" aria-hidden="true">+</span>' +
+                            '<span class="evt-create-tile__label">Create Event</span>' +
+                            '<span class="evt-create-tile__hint">Add a new event to the calendar</span>' +
+                        '</button>' +
+                    '</div>';
+                groupsEl.innerHTML += tileWrap;
+                _createTileInjected = true;
+            }
+        }
+
         _wireCardClicks(groupsEl, eventsById);
         _renderMiniCalendar(); // F10 — right-rail mini calendar
         _renderMyRsvps();      // F11 — right-rail "Your Upcoming RSVPs"
@@ -2285,7 +2270,7 @@
         const secBtn  = document.getElementById('emptySecondaryBtn');
 
         const canCreate = (typeof hasPermission === 'function' && hasPermission('events.create')) ||
-                          window.evtCurrentUserRole === 'admin';
+                          evtCurrentUserRole === 'admin';
 
         let title, sub, showCta = false, secText = '', secAction = null;
 
@@ -2694,7 +2679,7 @@
         const fab = document.getElementById('evtCreateFab');
         if (!fab) return;
         const canCreate = (typeof hasPermission === 'function' && hasPermission('events.create')) ||
-                          window.evtCurrentUserRole === 'admin';
+                          evtCurrentUserRole === 'admin';
         if (!canCreate) return;
         fab.classList.remove('hidden');
         fab.classList.add('flex');
@@ -2866,37 +2851,28 @@
     // homes so the existing search-toggle expand UX keeps working unchanged.
     function _initMobileFilterStrip() {
         const searchExpand = document.getElementById('evtSearchExpand');
-        const filterWrap   = document.getElementById('evtTypeMenuBtnWrap');
         const mSearchHost  = document.getElementById('evtMobileSearchHost');
-        const mFilterHost  = document.getElementById('evtMobileFilterHost');
-        if (!searchExpand || !filterWrap || !mSearchHost || !mFilterHost) return;
+        const filterRow2   = document.getElementById('evtFilterRow2');
+        if (!searchExpand || !mSearchHost) return;
 
-        // Remember original parents so we can restore on resize-up
+        // Remember original parent so we can restore on resize-up
         if (!searchExpand.dataset.dHome) {
             searchExpand.dataset.dHome = '1';
             searchExpand._dHomeParent = searchExpand.parentElement;
             searchExpand._dHomeNext   = searchExpand.nextSibling;
         }
-        if (!filterWrap.dataset.dHome) {
-            filterWrap.dataset.dHome = '1';
-            filterWrap._dHomeParent = filterWrap.parentElement;
-            filterWrap._dHomeNext   = filterWrap.nextSibling;
-        }
 
         const mq = window.matchMedia('(max-width: 639px)');
         const apply = () => {
             if (mq.matches) {
-                // Mobile: move into mobile hosts, force search visible
+                // Mobile: move search into mobile row, hide the desktop filter row
                 if (searchExpand.parentElement !== mSearchHost) {
                     mSearchHost.appendChild(searchExpand);
                 }
                 searchExpand.classList.remove('hidden', 'mt-2');
-                if (filterWrap.parentElement !== mFilterHost) {
-                    mFilterHost.appendChild(filterWrap);
-                }
-                filterWrap.classList.add('evt-filter-btn--mobile');
+                if (filterRow2) filterRow2.classList.add('hidden');
             } else {
-                // Desktop: restore original positions
+                // Desktop: restore search to filterRow2
                 if (searchExpand.parentElement !== searchExpand._dHomeParent) {
                     searchExpand._dHomeParent.insertBefore(
                         searchExpand,
@@ -2907,14 +2883,7 @@
                     if (!_searchQuery) searchExpand.classList.add('hidden');
                     searchExpand.classList.add('mt-2');
                 }
-                if (filterWrap.parentElement !== filterWrap._dHomeParent) {
-                    filterWrap._dHomeParent.insertBefore(
-                        filterWrap,
-                        filterWrap._dHomeNext && filterWrap._dHomeNext.parentElement === filterWrap._dHomeParent
-                            ? filterWrap._dHomeNext : null
-                    );
-                }
-                filterWrap.classList.remove('evt-filter-btn--mobile');
+                if (filterRow2) filterRow2.classList.remove('hidden');
             }
         };
         apply();
@@ -2961,4 +2930,9 @@
     }
     if (document.readyState !== 'loading') _onReady();
     else document.addEventListener('DOMContentLoaded', _onReady, { once: true });
+
+    // events_006 — Re-render hero when admin toggles featured status via manage sheet
+    document.addEventListener('events:manage:updated', function () {
+        if (typeof window.evtLoadEvents === 'function') window.evtLoadEvents();
+    });
 })();

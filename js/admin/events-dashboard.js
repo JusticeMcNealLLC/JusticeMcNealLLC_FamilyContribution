@@ -158,7 +158,7 @@ function renderEventsTable() {
                             <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${typeStyle}">${TYPE_LABELS[e.event_type] || e.event_type}</span>
                             <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${statusStyle}">${(e.status || '').toUpperCase()}</span>
                         </div>
-                        <h4 class="font-bold text-gray-900 text-base truncate">${escapeHtml(e.title)}</h4>
+                        <h4 class="font-bold text-gray-900 text-base truncate">${e.is_featured ? '<span class="inline-block mr-1 text-amber-400" title="Featured on portal">&#9733;</span>' : ''}${escapeHtml(e.title)}</h4>
                         <p class="text-xs text-gray-500 mt-0.5">${dateStr}${e.location_nickname ? ' · ' + escapeHtml(e.location_nickname) : ''}</p>
                     </div>
                 </div>

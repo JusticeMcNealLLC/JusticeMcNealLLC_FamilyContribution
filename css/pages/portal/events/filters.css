@@ -24,6 +24,8 @@
     border-radius: 14px;
     background: #e5e7eb;
 }
+/* When evtLifecycleSeg is a direct child of evtFilterStrip (block), stretch full width */
+#evtLifecycleSeg { width: 100%; }
 .evt-seg__btn {
     flex: 1 1 auto;
     padding: 8px 14px;
@@ -147,11 +149,11 @@
         box-shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 4px 12px rgba(15, 23, 42, .04);
         font-size: 15px;
     }
-    body.evt-vlift #evtFilterStrip > .flex { flex-wrap: wrap; gap: 10px; }
-    body.evt-vlift #evtFilterStrip #evtSearchExpand {
-        flex: 1 0 100%;
-        margin-bottom: 4px;
-    }
+}
+/* Note: evtSearchExpand is moved by JS into evtMobileSearchHost on mobile; no strip-level flex rules needed. */
+/* iOS Safari zooms into inputs with font-size < 16px. Pin to 16px on mobile to suppress that behaviour. */
+@media (max-width: 639px) {
+    #evtSearchInput { font-size: 16px; }
 }
 
 /* ── E3 — Inline category chip rail (vlift only) ── */
@@ -180,7 +182,8 @@ body.evt-vlift #evtTypeChips::-webkit-scrollbar { display: none; }
     gap: 0;
 }
 .evt-filter-btn--mobile #evtTypeMenuBtn [data-type-label],
-.evt-filter-btn--mobile #evtTypeMenuBtn > svg:last-child {
+.evt-filter-btn--mobile #evtTypeMenuBtn > svg:last-child,
+.evt-filter-btn--mobile #evtTypeMenuBtn::after {
     display: none;
 }
 .evt-filter-btn--mobile #evtTypeMenuBtn [data-f4-filters-icon] {
@@ -279,15 +282,27 @@ body.evt-vlift #evtLifecycleSeg .evt-seg__btn--active {
     body.evt-vlift #evtLifecycleSeg .evt-seg__btn { transition: none; }
 }
 
+/* ── #evtFilterRow2 — horizontally scrollable controls row ── */
+/* Padding-bottom + negative-margin trick: overflow-x:auto forces overflow-y:auto,
+   which would clip absolute dropdown menus. The padding extends the container
+   downward so menus land within its scroll area; negative margin collapses the
+   layout gap so the chip rail still sits tight below the buttons. */
+#evtFilterRow2 {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 250px;
+    margin-bottom: -250px;
+}
+#evtFilterRow2::-webkit-scrollbar { display: none; }
+
 /* ── F4 — Always-visible search + Filters/Date dropdowns (vlift) ── */
 body.evt-vlift [data-f4-date-wrap] { display: block !important; }
 body.evt-vlift [data-f4-filters-icon] { display: block !important; }
 body.evt-vlift #evtTypeMenuBtn { display: inline-flex !important; }
 @media (min-width: 640px) {
-    body.evt-vlift #evtSearchExpand { display: block !important; order: -1; flex: 1 1 auto; margin-top: 0; }
-    body.evt-vlift #evtFilterStrip > div:first-child { flex-wrap: wrap; gap: 0.5rem; }
+    body.evt-vlift #evtSearchExpand { display: block !important; flex: 1 1 160px; min-width: 0; margin-top: 0; }
     body.evt-vlift #evtSearchToggle { display: none !important; }
-    body.evt-vlift #evtLifecycleSeg { flex: 0 0 100%; order: -2; }
 }
 body.evt-vlift #evtTypeMenuBtn [data-type-label] { display: none; }
 body.evt-vlift #evtTypeMenuBtn::after {
@@ -320,38 +335,11 @@ body.evt-vlift #evtTypeChips [data-f5-icon] {
 body.evt-vlift #evtTypeChips .evt-type-chip { gap: .25rem; }
 
 /* ── F13 -- Filter row reflow (vlift, ≥640px) ── */
-@media (min-width: 640px) {
-    body.evt-vlift #evtFilterStrip {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: .5rem;
-        row-gap: .625rem;
-    }
-    /* Flatten inner .flex so its children become flex items of #evtFilterStrip */
-    body.evt-vlift #evtFilterStrip > .flex.items-center.gap-2:not(#evtTypeChips) {
-        display: contents;
-    }
-    /* Row 1: lifecycle tabs full width */
-    body.evt-vlift #evtFilterStrip #evtLifecycleSeg { flex: 0 0 100%; order: -30; }
-    /* Row 2 left: search pill grows to fill */
-    body.evt-vlift #evtFilterStrip #evtSearchExpand {
-        flex: 1 1 240px;
-        order: -20;
-        margin-top: 0 !important;
-    }
-    body.evt-vlift #evtFilterStrip #evtSearchToggle { display: none !important; }
-    /* Row 2 right group: Filters, Date, view toggle */
-    body.evt-vlift #evtFilterStrip .relative.shrink-0:has(#evtTypeMenuBtn) { order: -12; }
-    body.evt-vlift #evtFilterStrip [data-f4-date-wrap] { order: -11; }
-    body.evt-vlift #evtFilterStrip #evtViewToggle { order: -10; }
-    /* Row 3: chip rail */
-    body.evt-vlift #evtFilterStrip #evtTypeChips {
-        flex: 0 0 100%;
-        order: 10;
-        margin-top: 0 !important;
-    }
-}
+/* Row layout now driven by HTML structure:
+   Row 1 → #evtLifecycleSeg  (block, full width)
+   Row 2 → #evtFilterRow2    (scrollable flex strip)
+   Row 3 → #evtTypeChips     (block, full width)
+   No display:contents or order tricks needed. */
 
 /* ── D3 — Search history & suggestions ── */
 .evt-search-suggest { animation: evtSuggestIn .12s ease-out both; }

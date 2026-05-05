@@ -217,6 +217,9 @@ body.evt-vlift #evtPageHeader.evt-header--condensed .evt-header-bell {
  * F2 — Desktop 2-col shell (vlift, ≥1024px)
  * ============================================================ */
 body.evt-vlift #evtShell { max-width: 80rem; }
+@media (max-width: 1023px) {
+    #evtRightRail { display: none !important; }
+}
 @media (min-width: 1024px) {
     body.evt-vlift #evtShell {
         display: grid;

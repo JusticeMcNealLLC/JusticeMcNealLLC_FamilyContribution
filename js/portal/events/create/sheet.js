@@ -1,38 +1,22 @@
 // ═══════════════════════════════════════════════════════════
 // Event Create Sheet  (M4a — multi-step, Member events only)
 //
-// Behind a feature flag. Old #createModal stays alive for LLC,
-// Competition, edits, and drafts.
-//
-// Enable per-browser:
-//   localStorage.setItem('events.newCreate', '1')
-//   or visit any /portal/events.html?newCreate=1
+// DEFAULT for all create-event entry points. Legacy #createModal
+// kept as a fallback for LLC/Competition (greyed-out in Step 1).
 //
 // 4 steps:  Basics  →  When & Where  →  Pricing  →  Review
 //
 // Public surface:
 //   window.EventsCreate.open()
 //   window.EventsCreate.close()
-//   window.EventsCreate.isFlagOn()
+//   window.EventsCreate.isFlagOn()  — kept for compatibility, always true
 // ═══════════════════════════════════════════════════════════
 
 (function () {
     'use strict';
 
-    // ─── Feature flag ──────────────────────────────────────────────
-    function isFlagOn() {
-        try {
-            const url = new URLSearchParams(window.location.search);
-            if (url.get('newCreate') === '1') {
-                localStorage.setItem('events.newCreate', '1');
-            } else if (url.get('newCreate') === '0') {
-                localStorage.removeItem('events.newCreate');
-            }
-            return localStorage.getItem('events.newCreate') === '1';
-        } catch (_) {
-            return false;
-        }
-    }
+    // ─── Feature flag ── always on (sheet is now the default) ─────
+    function isFlagOn() { return true; }
 
     const STEPS = [
         { key: 'basics',  label: 'Basics' },
@@ -249,7 +233,7 @@
                         </div>
                     `).join('')}
                 </div>
-                <p class="ec-help">M4a supports Member events. LLC + Competition still use the legacy "Create Event" modal — close this sheet and toggle the flag off if you need them.</p>
+                <p class="ec-help">LLC &amp; Competition events use the legacy form — select Member to continue here.</p>
             </div>
 
             <div class="ec-row">

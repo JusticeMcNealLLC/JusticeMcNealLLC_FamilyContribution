@@ -204,7 +204,7 @@
     }
 
     function _renderTab(tab) {
-        if (tab === 'overview') return _renderContent(_overviewHtml());
+        if (tab === 'overview') { _renderContent(_overviewHtml()); _wireOverview(); return; }
         if (tab === 'rsvps')    return _renderContent(_rsvpsHtml());
         if (tab === 'danger')   { _renderContent(_dangerHtml()); _wireDanger(); return; }
         // Lazy-loaded M3b tabs:
@@ -261,14 +261,38 @@
                 </div>
             </div>
 
+            ${STATE.source === 'admin' ? `
+            <div class="em-card mb-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-bold text-gray-800 text-sm">&#9733; Featured on portal</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Show this event in the hero banner on the portal events page.</p>
+                    </div>
+                    <button id="emFeaturedToggle"
+                        class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${STATE.event.is_featured ? 'bg-brand-600' : 'bg-gray-200'}"
+                        role="switch" aria-checked="${STATE.event.is_featured ? 'true' : 'false'}"
+                        onclick="window._emToggleFeatured()"
+                    >
+                        <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${STATE.event.is_featured ? 'translate-x-5' : 'translate-x-0'}"></span>
+                    </button>
+                </div>
+            </div>` : ''}
+
             <div class="em-card">
                 <h3 class="font-bold text-gray-800 text-sm mb-3">Quick actions</h3>
                 <div class="flex flex-wrap gap-2">
                     ${portalLink}
                     ${e.slug ? `<button class="em-btn-ghost" onclick="navigator.clipboard.writeText('${window.location.origin}/portal/events.html?event=${encodeURIComponent(e.slug)}');this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy share link',1500)">Copy share link</button>` : ''}
+                    ${e.checkin_enabled !== false && e.checkin_mode === 'attendee_ticket' && ['open','confirmed','active'].includes(e.status) ? `<button class="em-btn-ghost" onclick="window.EventsManage.close();setTimeout(()=>window.evtOpenScanner&&window.evtOpenScanner('${STATE.eventId}'),150)"><svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>Scan Attendees</button>` : ''}
                 </div>
                 <p class="text-xs text-gray-400 mt-3">Tap any tab above for Money, Docs, Raffle, or Comp details.</p>
             </div>
+            ${e.checkin_enabled !== false && e.checkin_mode === 'venue_scan' && e.venue_qr_token ? `
+            <div class="em-card mt-3">
+                <h3 class="font-bold text-gray-800 text-sm mb-3">📍 Venue QR Code</h3>
+                <canvas id="emVenueQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
+                <p class="text-xs text-gray-400 text-center mt-2">Display this at the entrance for attendees to scan</p>
+            </div>` : ''}
         `;
     }
 
@@ -338,6 +362,16 @@
                 <button class="em-btn-danger" data-action="delete">Delete event</button>
             </div>
         `;
+    }
+
+    function _wireOverview() {
+        const e = STATE.event;
+        if (!e) return;
+        // Render venue QR if present
+        const canvas = document.getElementById('emVenueQR');
+        if (canvas && e.venue_qr_token && typeof QRCode !== 'undefined') {
+            QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${encodeURIComponent(e.slug || '')}&checkin=1`, { width: 200, margin: 2 });
+        }
     }
 
     function _wireDanger() {
@@ -817,6 +851,28 @@
     function _money(cents) {
         return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', minimumFractionDigits:0, maximumFractionDigits:2 }).format((cents || 0) / 100);
     }
+
+    // ─── Featured toggle (admin only) ───────────────────────────────
+    window._emToggleFeatured = async function () {
+        const btn = document.getElementById('emFeaturedToggle');
+        if (!btn) return;
+        const newVal = !(STATE.event.is_featured);
+        btn.disabled = true;
+        const { error } = await supabaseClient
+            .from('events')
+            .update({ is_featured: newVal })
+            .eq('id', STATE.event.id);
+        if (error) {
+            alert('Failed to update: ' + error.message);
+            btn.disabled = false;
+            return;
+        }
+        STATE.event.is_featured = newVal;
+        // Re-render overview tab to reflect new state
+        _renderTab('overview');
+        // Notify list view to refresh hero
+        document.dispatchEvent(new CustomEvent('events:manage:updated', { detail: { eventId: STATE.event.id } }));
+    };
 
     // ─── Public surface ─────────────────────────────────────────────
     window.EventsManage = { open, close };

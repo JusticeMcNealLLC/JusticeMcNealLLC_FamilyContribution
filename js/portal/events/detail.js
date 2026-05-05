@@ -141,13 +141,21 @@ async function evtOpenDetail(eventId) {
     const isComp = event.event_type === 'competition';
 
     // ── Data fetching (unchanged business logic) ────────
-    const { data: rsvps } = await supabaseClient
-        .from('event_rsvps')
-        .select('user_id, status, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)')
-        .eq('event_id', eventId);
+    const [{ data: rsvps }, { data: guestRsvps }] = await Promise.all([
+        supabaseClient
+            .from('event_rsvps')
+            .select('user_id, status, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)')
+            .eq('event_id', eventId),
+        supabaseClient
+            .from('event_guest_rsvps')
+            .select('id, guest_name, guest_email, status, paid')
+            .eq('event_id', eventId),
+    ]);
     const goingList = (rsvps || []).filter(r => r.status === 'going');
     const maybeList = (rsvps || []).filter(r => r.status === 'maybe');
     const notGoingList = (rsvps || []).filter(r => r.status === 'not_going');
+    // Guests who confirmed (free events use status='going'; paid events require paid=true)
+    const guestGoingList = (guestRsvps || []).filter(g => g.status === 'going' || g.paid === true);
 
     const { data: checkins, count: checkinCount } = await supabaseClient
         .from('event_checkins')
@@ -462,21 +470,48 @@ async function evtOpenDetail(eventId) {
     if (!rsvpEnabled) {
         rsvpButtons = _edNotice('ℹ️', 'Informational Event', 'RSVP is not required for this event');
     } else if (isHost) {
-        rsvpButtons = _edNotice('🎯', "You're Hosting This Event", "You're automatically counted as attending");
+        rsvpButtons = `
+            <div class="ed-rsvp-confirmed">
+                <div class="ed-rsvp-confirmed-row">
+                    <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
+                    <div><span class="ed-rsvp-confirmed-title">You're hosting!</span><span class="ed-rsvp-confirmed-sub">You're automatically counted as attending.</span></div>
+                </div>
+            </div>
+            <button onclick="window.EventsManage ? window.EventsManage.open('${eventId}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId}')" class="ed-outline-btn">Manage Event</button>`;
     } else if (canRsvp && !eventIsFull && event.pricing_mode === 'paid') {
         if (rsvp?.paid) {
-            rsvpButtons = _edNotice('✅', 'RSVP Confirmed &amp; Paid', 'Non-refundable · Contact admin for changes');
+            rsvpButtons = `
+                <div class="ed-rsvp-confirmed">
+                    <div class="ed-rsvp-confirmed-row">
+                        <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
+                        <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">Non-refundable · Contact admin for changes</span></div>
+                    </div>
+                </div>`;
         } else {
-            rsvpButtons = `<button onclick="evtHandleRsvp('${eventId}','going')" class="ed-primary-btn">RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>
+            rsvpButtons = `
+                <button onclick="evtHandleRsvp('${eventId}','going')" class="ed-primary-btn">RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>
+                <button onclick="evtMessageHost('${eventId}')" class="ed-outline-btn">Message Host</button>
                 <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' · Includes raffle entry' : ''}</p>`;
         }
     } else if (canRsvp && !eventIsFull) {
-        const goingActive = rsvp?.status === 'going' ? ' active' : '';
-        const interestedActive = rsvp?.status === 'maybe' ? ' active' : '';
-        rsvpButtons = `<div class="ed-rsvp-grid">
-            <button onclick="evtHandleRsvp('${eventId}','going')" class="ed-rsvp-opt${goingActive}"><span class="ed-rsvp-emoji">✅</span>Going</button>
-            <button onclick="evtHandleRsvp('${eventId}','maybe')" class="ed-rsvp-opt ed-rsvp-interested${interestedActive}"><span class="ed-rsvp-emoji">❤️</span>Interested</button>
-        </div>`;
+        if (rsvp?.status === 'going') {
+            rsvpButtons = `
+                <div class="ed-rsvp-confirmed">
+                    <div class="ed-rsvp-confirmed-row">
+                        <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
+                        <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">We'll see you there.</span></div>
+                    </div>
+                </div>
+                <button onclick="evtHandleRsvp('${eventId}','going')" class="ed-outline-btn">Update RSVP</button>`;
+        } else {
+            const interestedActive = rsvp?.status === 'maybe' ? ' active' : '';
+            rsvpButtons = `
+                <button onclick="evtHandleRsvp('${eventId}','going')" class="ed-primary-btn">RSVP</button>
+                <button onclick="evtMessageHost('${eventId}')" class="ed-outline-btn">Message Host</button>
+                <div class="ed-rsvp-secondary">
+                    <button onclick="evtHandleRsvp('${eventId}','maybe')" class="ed-rsvp-sm${interestedActive ? ' active' : ''}">❤️ Interested</button>
+                </div>`;
+        }
     }
     // RSVP closed state
     if (rsvpEnabled && !isHost && entriesClosed && !rsvpButtons) {
@@ -612,20 +647,26 @@ async function evtOpenDetail(eventId) {
 
     // ── Attendee Preview (visible to all) ────────────────
     let attendeePreviewHtml = '';
-    if (goingList.length > 0 || maybeList.length > 0) {
-        const displayList = goingList.slice(0, 6);
-        const avatarHtml = displayList.map(r => {
-            const p = r.profiles;
-            const link = p?.id ? `onclick="window.location.href='profile.html?id=${p.id}'"` : '';
-            const cursor = p?.id ? 'cursor:pointer' : '';
-            if (p?.profile_picture_url) return `<div class="ed-avatar" ${link} style="${cursor}" title="${evtEscapeHtml((p?.first_name || '') + ' ' + (p?.last_name || ''))}" role="button" aria-label="View profile"><img src="${p.profile_picture_url}" alt=""></div>`;
-            const ini = ((p?.first_name?.[0] || '') + (p?.last_name?.[0] || '')).toUpperCase() || '?';
-            return `<div class="ed-avatar" ${link} style="${cursor}" title="${evtEscapeHtml((p?.first_name || '') + ' ' + (p?.last_name || ''))}" role="button" aria-label="View profile"><span>${ini}</span></div>`;
-        }).join('');
-        const moreCount = goingList.length - displayList.length;
-        const moreHtml = moreCount > 0 ? `<div class="ed-avatar-overflow">+${moreCount}</div>` : '';
-        const countText = `${goingList.length} going${maybeList.length ? ` · ${maybeList.length} interested` : ''}`;
-        attendeePreviewHtml = `<div class="ed-attendee-row"><div class="ed-avatar-stack">${avatarHtml}${moreHtml}</div><span class="ed-attendee-count">${countText}</span></div>`;
+    const totalGoing = goingList.length + guestGoingList.length;
+    if (totalGoing > 0 || maybeList.length > 0) {
+        // Build flat ordered avatar data list (members first, then guests)
+        const _allAvatars = [
+            ...goingList.map(r => {
+                const p = r.profiles;
+                return { type: 'member', id: p?.id, name: evtEscapeHtml((p?.first_name || '') + ' ' + (p?.last_name || '')).trim(), img: p?.profile_picture_url || null };
+            }),
+            ...guestGoingList.map(g => ({ type: 'guest', name: evtEscapeHtml(g.guest_name || 'Guest'), img: null }))
+        ];
+        window._edAvatarData = window._edAvatarData || {};
+        window._edAvatarData[eventId] = { avatars: _allAvatars, totalGoing, maybeCount: maybeList.length };
+        const countParts = [];
+        if (totalGoing > 0) countParts.push(`${totalGoing} going`);
+        if (maybeList.length > 0) countParts.push(`${maybeList.length} interested`);
+        attendeePreviewHtml = `
+            <div class="ed-attendee-row" id="edAttendeeRow-${eventId}">
+                <div class="ed-avatar-stack" id="edAvatarStack-${eventId}"></div>
+                <span class="ed-attendee-count">${countParts.join(' · ')}</span>
+            </div>`;
     }
 
     // ── Description ──────────────────────────────────────
@@ -642,15 +683,38 @@ async function evtOpenDetail(eventId) {
         const avatarEl = cpBadge
             ? `<div style="position:relative;flex-shrink:0">${avatarImg}<div style="position:absolute;bottom:-2px;right:-2px;transform:scale(.65);transform-origin:bottom right">${cpBadge}</div></div>`
             : avatarImg;
-        organizerHtml = `<a href="profile.html?id=${creatorProfile.id}" class="ed-org-link">${avatarEl}<div><span class="ed-org-name">${evtEscapeHtml(cpName)}</span><span class="ed-org-title">${evtEscapeHtml(cpTitle || 'Member')} · Organizer</span></div></a>`;
+        organizerHtml = `
+            <a href="profile.html?id=${creatorProfile.id}" class="ed-org-block">
+                <div class="ed-org-block-row">
+                    ${avatarEl}
+                    <div>
+                        <span class="ed-org-block-label">Hosted By</span>
+                        <span class="ed-org-name-row"><span class="ed-org-name">${evtEscapeHtml(cpName)}</span><svg class="ed-org-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg></span>
+                    </div>
+                </div>
+            </a>
+        `;
+    } else if (isLlc) {
+        organizerHtml = `
+            <div class="ed-org-block ed-org-block-llc">
+                <div class="ed-org-block-row">
+                    <div class="ed-org-avatar ed-org-avatar-llc">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+                    </div>
+                    <div>
+                        <span class="ed-org-block-label">Hosted By</span>
+                        <span class="ed-org-name">LLC</span>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     // ── Related Events ───────────────────────────────────
     let relatedHtml = '';
     if (typeof evtAllEvents !== 'undefined' && evtAllEvents.length > 1) {
-        const now = new Date();
-        const upcoming = evtAllEvents.filter(e => e.id !== eventId && new Date(e.start_date) > now && ['open','confirmed'].includes(e.status)).sort((a, b) => new Date(a.start_date) - new Date(b.start_date)).slice(0, 4);
-        if (upcoming.length > 0) {
+        const upcoming = evtAllEvents.filter(e => e.id !== eventId && e.status !== 'cancelled').slice(0, 4);
+        if (upcoming.length) {
             const cards = upcoming.map(e => {
                 const d = new Date(e.start_date);
                 const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -677,112 +741,258 @@ async function evtOpenDetail(eventId) {
     // ═══════════════════════════════════════════════════════
 
     document.getElementById('eventsDetailView').innerHTML = `
-        <!-- ─── Immersive Hero ─── -->
-        <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `onclick="evtOpenLightbox('${event.banner_url}')"` : ''} role="img" aria-label="Event banner">
-            <div class="ed-hero-scrim"></div>
-            <div class="ed-hero-nav">
-                <button onclick="event.stopPropagation();evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        <!-- ─── Detail Page Header ─── -->
+        <div class="ed-page-header">
+            <div class="ed-page-header-inner">
+                <button onclick="evtNavigateToList()" class="ed-page-header-back" aria-label="Back to events">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <span class="ed-page-header-back-label">Back to Events</span>
                 </button>
-                <div class="ed-hero-pill-row">
-                    <span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>
-                    <button onclick="event.stopPropagation();evtCopyShareUrl('${event.slug}')" class="ed-hero-pill" title="Share" aria-label="Share event">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                    </button>
+                <div class="ed-page-header-title">
+                    <h2>Event Details</h2>
+                    <p class="ed-page-header-sub">Discover and join events in your community.</p>
                 </div>
-            </div>
-            <div class="ed-hero-bottom-content">
-                <div class="ed-hero-pills">
-                    ${event.category ? `<span class="ed-hero-tag">${CATEGORY_EMOJI[event.category] || '📌'} ${(event.category || '').replace(/_/g,' ')}</span>` : ''}
-                    <span class="ed-hero-tag ed-hero-tag-type" style="background:${tc.bg.includes('bg-') ? 'rgba(255,255,255,.2)' : tc.bg};color:${tc.text.includes('text-') ? '#fff' : tc.text}">${tc.label}</span>
+                <div class="ed-page-header-actions">
+                    <button onclick="evtCopyShareUrl('${event.slug}')" class="ed-page-header-btn" aria-label="Share event">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                        <span class="ed-page-header-btn-label">Share</span>
+                    </button>
+                    <button onclick="event.stopPropagation();evtDownloadIcs('${eventId}')" class="ed-page-header-btn ed-page-header-btn-cal" aria-label="Add to calendar">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span class="ed-page-header-btn-label">Add to Calendar</span>
+                    </button>
+                    <button onclick="event.stopPropagation();evtDownloadIcs('${eventId}')" class="ed-page-header-btn ed-page-header-btn-bookmark" aria-label="Save event">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- ─── Content Area ─── -->
+        <!-- ─── Two-column layout: hero+content LEFT, summary sidebar RIGHT ─── -->
         <div class="ed-content">
-            <!-- Title + Meta Card -->
-            <div class="ed-card ed-card-title">
-                <h1 class="ed-title">${evtEscapeHtml(event.title)}</h1>
+            <div class="ed-detail-body">
+                <div class="ed-main">
 
-                <div class="ed-meta-grid">
-                    ${_edMetaRow(`<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>`,
-                        dateStr,
-                        showTime ? timeStr + (endTimeStr ? ` — ${endTimeStr}` : '') : '<span class="ed-gated">🔒 RSVP to see time</span>',
-                        `<span class="ed-ics-link" onclick="event.stopPropagation();evtDownloadIcs('${eventId}')">+ Add to calendar</span>`
-                    )}
-                    ${event.location_nickname || event.location_text ? _edMetaRow(`<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg>`,
-                        showLocation ? evtEscapeHtml(event.location_nickname || '') : '<span class="ed-gated">🔒 RSVP to see location</span>',
-                        showLocation && event.location_text ? evtEscapeHtml(event.location_text) : ''
-                    ) : ''}
-                </div>
+                <!-- ─── Immersive Hero ─── -->
+                <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `onclick="evtOpenLightbox('${event.banner_url}')"` : ''} role="img" aria-label="Event banner">
+                    <div class="ed-hero-scrim"></div>
+                    <div class="ed-hero-nav">
+                        <span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>
+                        <div class="ed-hero-pill-row">
+                            <button onclick="event.stopPropagation();evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ed-hero-bottom-content">
+                        <h1 class="ed-hero-title">${evtEscapeHtml(event.title)}</h1>
+                        <p class="ed-hero-subtitle">${cpName ? `Hosted by ${evtEscapeHtml(cpName)}` : evtEscapeHtml(tc.label)}${event.category ? ` &bull; ${evtEscapeHtml((event.category || '').replace(/_/g,' '))}` : ''}</p>
+                        <div class="ed-hero-info-bar">
+                            <div class="ed-hero-info-item">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <div>
+                                    <span class="ed-hero-info-main">${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                    <span class="ed-hero-info-sub">${start.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                </div>
+                            </div>
+                            ${showTime ? `<div class="ed-hero-info-item">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <div>
+                                    <span class="ed-hero-info-main">${timeStr}</span>
+                                    <span class="ed-hero-info-sub">Start time</span>
+                                </div>
+                            </div>` : ''}
+                            ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-hero-info-item">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <div>
+                                    <span class="ed-hero-info-main">${evtEscapeHtml(event.location_nickname || event.location_text || '')}</span>
+                                    <span class="ed-hero-info-sub">${evtEscapeHtml(event.location_text && event.location_nickname ? event.location_text : '')}</span>
+                                </div>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                </div><!-- /ed-hero -->
 
-                ${deadlinePassed && !isClosed && !isPast ? '<div class="ed-deadline-banner">🔒 RSVP deadline passed</div>' : ''}
-
-                ${organizerHtml ? `<hr class="ed-divider" style="margin:20px 0 16px">` : ''}
-                ${organizerHtml}
-                <div class="ed-desc${descIsLong ? ' ed-desc-collapsed' : ''}" style="margin-top:14px" id="evtDescWrap">${descHtml}</div>
-                ${descIsLong ? '<button class="ed-read-more" onclick="document.getElementById(\'evtDescWrap\').classList.remove(\'ed-desc-collapsed\');this.remove()">Read more</button>' : ''}
-            </div>
-
-            <!-- Map Card -->
-            ${showLocation && event.location_lat && event.location_lng ? `
-            <div class="ed-card ed-card-map">
-                <div class="ed-map-wrap">
-                    <div id="detailEventMap" class="ed-map" onclick="evtOpenFullscreenMap(${event.location_lat}, ${event.location_lng}, '${evtEscapeHtml(event.location_text || '').replace(/'/g, "\\'")}')"></div>
-                    ${event.location_nickname ? `<div class="ed-map-label">${evtEscapeHtml(event.location_nickname)}</div>` : ''}
-                </div>
-                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-directions-link">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:16px;height:16px"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    Get Directions
-                </a>
-            </div>` : ''}
+                <div class="ed-content-cards">
+                    <!-- Quick-Info Bar (mobile only: date / time / location) -->
+                    <div class="ed-qi-bar">
+                        <div class="ed-qi-col">
+                            <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <span class="ed-qi-main">${start.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
+                            <span class="ed-qi-sub">${start.toLocaleDateString('en-US',{weekday:'short'})}</span>
+                        </div>
+                        ${showTime ? `<div class="ed-qi-col">
+                            <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span class="ed-qi-main">${timeStr}</span>
+                            <span class="ed-qi-sub">Start time</span>
+                        </div>` : ''}
+                        ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-qi-col${event.location_lat && event.location_lng ? ' ed-qi-col-loc' : ''}"${event.location_lat && event.location_lng ? ` onclick="evtOpenFullscreenMap(${event.location_lat},${event.location_lng})"` : ''}>
+                            <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span class="ed-qi-main">${evtEscapeHtml(event.location_nickname || event.location_text || '')}</span>
+                            <span class="ed-qi-sub">${event.location_nickname && event.location_text ? evtEscapeHtml(event.location_text) : 'Location'}</span>
+                        </div>` : ''}
+                    </div>
+                    <!-- Mobile Map Card (S5 — hidden on desktop) -->
+                    ${showLocation && event.location_lat && event.location_lng ? `
+                    <div class="ed-mobile-map-card">
+                        <div id="detailEventMapMobile" class="ed-mobile-map"></div>
+                        <div class="ed-map-overlay ed-mobile-map-overlay">
+                            <span class="ed-map-overlay-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
+                            <div class="ed-map-overlay-body">
+                                <p class="ed-map-overlay-name">${evtEscapeHtml(event.location_nickname || event.location_text || 'Venue')}</p>
+                                ${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${evtEscapeHtml(event.location_text)}</p>` : ''}
+                                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-map-overlay-link">View on Maps ↗</a>
+                            </div>
+                        </div>
+                    </div>` : ''}
+                    <!-- Mobile Attendees Card (S7) -->
+                    ${totalGoing > 0 || maybeList.length > 0 ? `
+                    <div class="ed-mobile-attendees-card">
+                        <div class="ed-avatar-stack ed-avatar-stack-sm" id="edAvatarStackMobile-${eventId}"></div>
+                        <span class="ed-mobile-att-count">${totalGoing > 0 ? `${totalGoing} going` : ''}${totalGoing > 0 && maybeList.length > 0 ? ' · ' : ''}${maybeList.length > 0 ? `${maybeList.length} interested` : ''}</span>
+                    </div>` : ''}
+                    <!-- About Card -->
+                    <div class="ed-about-grid">
+                        <div class="ed-about-left">
+                            <div class="ed-about-desc-col">
+                                ${deadlinePassed && !isClosed && !isPast ? '<div class="ed-deadline-banner" style="margin-bottom:14px">🔒 RSVP deadline passed</div>' : ''}
+                                <p class="ed-about-heading">About This Event</p>
+                                <div class="ed-desc${descIsLong ? ' ed-desc-collapsed' : ''}" id="evtDescWrap">${descHtml}</div>
+                                ${descIsLong ? '<button class="ed-read-more" onclick="document.getElementById(\'evtDescWrap\').classList.remove(\'ed-desc-collapsed\');this.remove()">Read more</button>' : ''}
+                            </div>
+                            ${attendeePreviewHtml ? `
+                            <div class="ed-about-desc-col">
+                                <p class="ed-card-heading" style="margin-bottom:12px">Attendees</p>
+                                ${attendeePreviewHtml}
+                            </div>` : ''}
+                        </div>
+                        ${(organizerHtml || (showLocation && event.location_lat && event.location_lng)) ? `
+                        <div class="ed-about-right">
+                            ${organizerHtml ? `<div class="ed-about-org-col">${organizerHtml}</div>` : ''}
+                            ${showLocation && event.location_lat && event.location_lng ? `
+                            <div class="ed-about-map-col">
+                                <div class="ed-map-wrap">
+                                    <div id="detailEventMap" class="ed-map"></div>
+                                    <div class="ed-map-overlay">
+                                        <span class="ed-map-overlay-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
+                                        <div class="ed-map-overlay-body">
+                                            <p class="ed-map-overlay-name">${evtEscapeHtml(event.location_nickname || event.location_text || 'Venue')}</p>
+                                            ${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${evtEscapeHtml(event.location_text)}</p>` : ''}
+                                            <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-map-overlay-link">View on Maps ↗</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>` : ''}
+                        </div>` : ''}
+                    </div>
 
             <!-- Gated Notes Card -->
             ${showNotes && event.gated_notes ? `<div class="ed-card">${_edSectionHead('Attendee Details')}<p class="ed-body-text whitespace-pre-line">${evtEscapeHtml(event.gated_notes)}</p></div>` : ''}
 
-            <!-- Interested / Attendees Card -->
-            ${attendeePreviewHtml ? `<div class="ed-card">${_edSectionHead("Who's Going")}${attendeePreviewHtml}</div>` : ''}
-
-            <!-- RSVP Card -->
-            ${rsvpButtons && rsvpEnabled ? `<div class="ed-card ed-card-rsvp">${rsvpButtons}</div>` : ''}
+            <!-- Attendees Card moved into about grid right column -->
 
             <!-- Dynamic sections (notices, QR, cost, raffle…) -->
-            ${[waitlistHtml, qrHtml, venueQrHtml, scannerBtn, thresholdHtml, costBreakdownHtml, transportHtml, locationReqHtml, graceHtml, raffleHtml, documentsHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => _edCard(s)).join('')}
+            <!-- scannerBtn + venueQrHtml moved into Manage Event sheet -->
+            ${[waitlistHtml, qrHtml, thresholdHtml, costBreakdownHtml, transportHtml, locationReqHtml, graceHtml, raffleHtml, documentsHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => _edCard(s)).join('')}
 
-            <!-- Stats (Host) -->
-            ${isHost ? _edCard(`
-                ${_edSectionHead('Event Stats')}
-                <div class="ed-stats-row">
-                    <div class="ed-stat-block"><span class="ed-stat-num">${goingList.length}${event.max_participants ? `<small>/${event.max_participants}</small>` : ''}</span><span class="ed-stat-lbl">Going</span></div>
-                    <div class="ed-stat-block ed-stat-pink"><span class="ed-stat-num">${maybeList.length}</span><span class="ed-stat-lbl">Interested</span></div>
-                    <div class="ed-stat-block ed-stat-green"><span class="ed-stat-num">${checkinCount || 0}</span><span class="ed-stat-lbl">Checked In</span></div>
-                </div>
-            `) : ''}
-
-            <!-- Attendee Breakdown (Host) -->
-            ${attendeeBreakdownHtml ? _edCard(attendeeBreakdownHtml) : ''}
+            <!-- Stats & Breakdown moved into Manage Event sheet (EventsManage) -->
 
             <!-- Comments -->
             <div class="ed-card" id="portalCommentsSection" role="region" aria-label="Discussion">
                 ${_edSectionHead('Discussion')}
                 <div id="portalCommentsList" class="ed-comments-list"></div>
                 <div class="ed-comment-input-row">
-                    <input type="text" id="portalCommentInput" placeholder="Write a comment…" class="ed-comment-input" aria-label="Write a comment">
-                    <button onclick="evtPostComment('${eventId}')" class="ed-comment-post" aria-label="Post comment">Post</button>
+                    <div class="ed-comment-self-avatar" id="portalCommentSelfAvatar"></div>
+                    <div class="ed-comment-input-wrap">
+                        <input type="text" id="portalCommentInput" placeholder="Add a comment…" class="ed-comment-input" aria-label="Write a comment">
+                        <button onclick="evtPostComment('${eventId}')" class="ed-comment-post" aria-label="Post comment">Post</button>
+                    </div>
                 </div>
             </div>
 
             <!-- Related Events -->
             ${relatedHtml ? _edCard(relatedHtml) : ''}
 
-            <!-- Host Controls -->
-            ${hostControlsHtml ? _edCard(hostControlsHtml, 'ed-card-host') : ''}
+            <!-- Host Controls inline card removed — opens via Manage Event sheet -->
 
             ${event.cancellation_note ? _edCard(`<div class="ed-cancel-banner"><p class="ed-cancel-title">Cancellation Note</p><p class="ed-cancel-text">${evtEscapeHtml(event.cancellation_note)}</p></div>`) : ''}
 
-            <div style="height:80px" class="sm:hidden"></div>
-            <div style="height:32px" class="hidden sm:block"></div>
+                    <div style="height:80px" class="sm:hidden"></div>
+                    <div style="height:32px" class="hidden sm:block"></div>
+                </div><!-- /ed-content-cards -->
+                </div><!-- /ed-main -->
+
+                <!-- ─── Event Summary Sidebar ─── -->
+                <div class="ed-sidebar">
+                    <div class="ed-card ed-summary-card">
+                        <p class="ed-summary-heading">Event Summary</p>
+                        <div class="ed-summary-header-row">
+                            ${event.banner_url ? `<img src="${event.banner_url}" class="ed-summary-thumb" alt="">` : `<div class="ed-summary-thumb ed-summary-thumb-placeholder"></div>`}
+                            <div class="ed-summary-header-text">
+                                <p class="ed-summary-title">${evtEscapeHtml(event.title)}</p>
+                                <p class="ed-summary-sub">${cpName ? `Hosted by ${evtEscapeHtml(cpName)}` : evtEscapeHtml(tc.label)}</p>
+                                ${event.category ? `<p class="ed-summary-cat">${evtEscapeHtml((event.category||'').replace(/_/g,' '))}</p>` : ''}
+                            </div>
+                        </div>
+                        <hr class="ed-divider" style="margin:14px 0">
+                        <div class="ed-summary-rows">
+                            <div class="ed-summary-row">
+                                <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg></div>
+                                <div>
+                                    <span class="ed-summary-main">${start.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                                    <span class="ed-summary-sub2">${start.toLocaleDateString('en-US', { weekday: 'long' })}</span>
+                                </div>
+                            </div>
+                            ${showTime ? `<div class="ed-summary-row">
+                                <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                                <div>
+                                    <span class="ed-summary-main">${timeStr}</span>
+                                    <span class="ed-summary-sub2">Start time</span>
+                                </div>
+                            </div>` : ''}
+                            ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-summary-row">
+                                <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg></div>
+                                <div>
+                                    <span class="ed-summary-main">${evtEscapeHtml(event.location_nickname || event.location_text || '')}</span>
+                                    ${event.location_text && event.location_nickname ? `<span class="ed-summary-sub2">${evtEscapeHtml(event.location_text)}</span>` : ''}
+                                    ${event.location_text ? `<a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-maps-link">View on Maps ↗</a>` : ''}
+                                </div>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                    ${rsvpButtons && rsvpEnabled ? `
+                    <div class="ed-card ed-card-rsvp">
+                        <p class="ed-summary-heading">Your RSVP</p>
+                        ${rsvpButtons}
+                    </div>` : ''}
+                    ${!isPast && !isClosed ? `
+                    <div class="ed-card ed-countdown-card" id="edCountdownCard">
+                        <p class="ed-summary-heading">Starts In</p>
+                        <div class="ed-countdown-grid">
+                            <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdDays">--</span><span class="ed-countdown-lbl">Days</span></div>
+                            <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdHours">--</span><span class="ed-countdown-lbl">Hours</span></div>
+                            <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdMins">--</span><span class="ed-countdown-lbl">Mins</span></div>
+                            <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdSecs">--</span><span class="ed-countdown-lbl">Secs</span></div>
+                        </div>
+                    </div>` : ''}
+                    <div class="ed-card ed-share-card">
+                        <p class="ed-summary-heading">Share This Event</p>
+                        <div class="ed-share-row">
+                            <button class="ed-share-btn" title="Copy link" onclick="(function(){navigator.clipboard.writeText(window.location.href);const b=this;b.classList.add('ed-share-btn-copied');setTimeout(()=>b.classList.remove('ed-share-btn-copied'),1500)}).call(this)">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                            </button>
+                            <a class="ed-share-btn" title="Share on Facebook" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}" target="_blank" rel="noopener">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            </a>
+                            <a class="ed-share-btn" title="Share on X" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(event.title)}" target="_blank" rel="noopener">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            </a>
+                            <a class="ed-share-btn" title="Share on Instagram" href="https://instagram.com" target="_blank" rel="noopener">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                            </a>
+                        </div>
+                    </div>
+            </div><!-- /ed-detail-body -->
         </div>
     `;
 
@@ -790,9 +1000,29 @@ async function evtOpenDetail(eventId) {
     document.title = `${event.title} | Events | Justice McNeal LLC`;
     window.scrollTo({ top: 0, behavior: 'instant' });
     evtInitSectionAnimations();
-
-    if (!isClosed && !isPast && event.status !== 'active' && event.status !== 'cancelled') {
-        evtStartLiveCountdown(event.start_date);
+    // ── Sidebar countdown tick ───────────────────────────
+    if (!isPast && !isClosed) {
+        const _cdTarget = new Date(event.start_date).getTime();
+        const _cdEls = ['edCdDays','edCdHours','edCdMins','edCdSecs'].map(id => document.getElementById(id));
+        const _cdCard = document.getElementById('edCountdownCard');
+        function _tickCd() {
+            const diff = _cdTarget - Date.now();
+            if (!_cdEls[0] || diff < 0) { if (_cdCard) _cdCard.style.display = 'none'; return; }
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            _cdEls[0].textContent = String(d).padStart(2,'0');
+            _cdEls[1].textContent = String(h).padStart(2,'0');
+            _cdEls[2].textContent = String(m).padStart(2,'0');
+            _cdEls[3].textContent = String(s).padStart(2,'0');
+        }
+        _tickCd();
+        const _cdTimer = setInterval(_tickCd, 1000);
+        // Clean up on next navigation
+        const _cdCleanup = () => clearInterval(_cdTimer);
+        window.addEventListener('popstate', _cdCleanup, { once: true });
+        document.addEventListener('evtDetailUnmount', _cdCleanup, { once: true });
     }
 
     evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost);
@@ -804,6 +1034,42 @@ async function evtOpenDetail(eventId) {
         if (dd && !dd.parentElement.contains(e.target)) dd.classList.remove('open');
     }, { once: false });
 
+    // Attendee avatar stack — size to fit panel width
+    setTimeout(() => {
+        const row = document.getElementById(`edAttendeeRow-${eventId}`);
+        const stack = document.getElementById(`edAvatarStack-${eventId}`);
+        const data = window._edAvatarData?.[eventId];
+        if (!row || !stack || !data) return;
+        function _buildAvatarHtml(avatars, overflow, sm) {
+            const cls = sm ? 'ed-avatar ed-avatar-sm' : 'ed-avatar';
+            return avatars.map(a => {
+                if (a.img) return `<div class="${cls}" ${a.id ? `onclick="window.location.href='profile.html?id=${a.id}'" style="cursor:pointer"` : ''} title="${a.name}" role="button"><img src="${a.img}" alt=""></div>`;
+                const ini = a.name.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2) || '?';
+                const gc = a.type === 'guest' ? ` ed-avatar-guest` : '';
+                return `<div class="${cls}${gc}" title="${a.name}"><span>${ini}</span></div>`;
+            }).join('') + (overflow > 0 ? `<div class="${cls} ed-avatar-overflow"><span>+${overflow}</span></div>` : '');
+        }
+        function _paintAvatars() {
+            // Reserve space for count text + gap; each avatar after first adds 32px (40-8 overlap)
+            const countEl = row.querySelector('.ed-attendee-count');
+            const countW = countEl ? countEl.offsetWidth + 12 : 90;
+            const available = row.offsetWidth - countW;
+            const maxAvatars = Math.min(5, available > 0 ? Math.max(1, Math.floor((available - 40) / 32) + 1) : 3);
+            const shown = data.avatars.slice(0, maxAvatars);
+            stack.innerHTML = _buildAvatarHtml(shown, data.avatars.length - shown.length, false);
+        }
+        _paintAvatars();
+        if (typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(_paintAvatars).observe(row);
+        }
+        // Mobile attendees card stack (fixed 4 max)
+        const mobileStack = document.getElementById(`edAvatarStackMobile-${eventId}`);
+        if (mobileStack && data) {
+            const shown = data.avatars.slice(0, 4);
+            mobileStack.innerHTML = _buildAvatarHtml(shown, data.avatars.length - shown.length, true);
+        }
+    }, 0);
+
     // QR codes + map after DOM render
     setTimeout(() => {
         if (rsvp && rsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
@@ -812,20 +1078,20 @@ async function evtOpenDetail(eventId) {
                 QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`, { width: 180, margin: 2 });
             }
         }
-        if (isHost && event.checkin_mode === 'venue_scan' && event.venue_qr_token) {
-            const canvas = document.getElementById('venueQR');
-            if (canvas && typeof QRCode !== 'undefined') {
-                QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${event.slug}&checkin=1`, { width: 220, margin: 2 });
-            }
-        }
+        // venueQR canvas moved into Manage Event sheet
         if (showLocation && event.location_lat && event.location_lng && typeof L !== 'undefined') {
-            const mapEl = document.getElementById('detailEventMap');
-            if (mapEl) {
-                const dMap = L.map('detailEventMap', { zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false }).setView([event.location_lat, event.location_lng], 15);
+            const _initMap = (id) => {
+                const mapEl = document.getElementById(id);
+                if (!mapEl) return;
+                const dMap = L.map(id, { zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false, tap: true }).setView([event.location_lat, event.location_lng], 15);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(dMap);
                 L.marker([event.location_lat, event.location_lng]).addTo(dMap);
                 setTimeout(() => dMap.invalidateSize(), 100);
-            }
+                // Leaflet's own click event fires only on a clean tap (not after a drag)
+                dMap.on('click', () => evtOpenFullscreenMap(event.location_lat, event.location_lng, evtEscapeHtml(event.location_text || '')));
+            };
+            _initMap('detailEventMap');
+            _initMap('detailEventMapMobile');
         }
     }, 100);
 }

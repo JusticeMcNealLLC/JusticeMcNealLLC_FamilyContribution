@@ -3,7 +3,7 @@
 // Cleanup: node scripts/seed-test-events.js --clean
 const { Client } = require('pg');
 const c = new Client({
-  connectionString: 'postgresql://postgres:30Wkpoizst6gDYUS@db.jcrsfzcabzdeqixbewgf.supabase.co:5432/postgres',
+  connectionString: 'postgresql://postgres:N1Svp3ECWO0m8TKu@db.jcrsfzcabzdeqixbewgf.supabase.co:5432/postgres',
   ssl: { rejectUnauthorized: false }
 });
 

@@ -19,6 +19,16 @@ async function evtLoadComments(eventId) {
     const list = document.getElementById('portalCommentsList');
     if (!list) return;
 
+    // Fill self-avatar in input row
+    const selfEl = document.getElementById('portalCommentSelfAvatar');
+    if (selfEl) {
+        const pic = window.evtCurrentUserPic;
+        const initials = window.evtCurrentUserInitials || '?';
+        selfEl.innerHTML = pic
+            ? `<img src="${evtEscapeHtml(pic)}" alt="">`
+            : initials;
+    }
+
     let comments = null;
     try {
         const { data, error } = await supabaseClient
@@ -38,7 +48,10 @@ async function evtLoadComments(eventId) {
     }
 
     if (!comments || comments.length === 0) {
-        list.innerHTML = '<p style="font-size:14px;color:#b0b0b0;text-align:center">No comments yet — be the first!</p>';
+        list.innerHTML = `<div class="ed-comment-empty">
+            <span class="ed-comment-empty-icon">💬</span>
+            <p class="ed-comment-empty-text">No comments yet — be the first!</p>
+        </div>`;
         return;
     }
 
@@ -49,7 +62,7 @@ async function evtLoadComments(eventId) {
         const timeAgo   = evtTimeAgo(c.created_at);
 
         return `<div class="evt-comment">
-            <div class="evt-comment-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : initials}</div>
+            <div class="evt-comment-avatar">${avatarUrl ? `<img src="${evtEscapeHtml(avatarUrl)}" alt="">` : initials}</div>
             <div class="evt-comment-body">
                 <span class="evt-comment-name">${name}</span><span class="evt-comment-time">${timeAgo}</span>
                 <p class="evt-comment-text">${evtEscapeHtml(c.body)}</p>
@@ -74,5 +87,13 @@ async function evtPostComment(eventId) {
     input.value = '';
     await evtLoadComments(eventId);
 }
+
+// Allow Enter key to post
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.id === 'portalCommentInput') {
+        const btn = document.querySelector('.ed-comment-post');
+        btn?.click();
+    }
+});
 
 window.evtPostComment = evtPostComment;

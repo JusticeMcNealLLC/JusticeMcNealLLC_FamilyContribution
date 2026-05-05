@@ -74,10 +74,12 @@
         const pin = isPinnedLlc
             ? '<span class="evt-date-pin" aria-label="Pinned LLC event" title="Pinned">📌</span>'
             : '';
+        const dow = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
         return `<div class="relative shrink-0 text-center min-w-[44px]">
             ${pin}
             <div class="text-[20px] leading-none font-extrabold text-gray-900">${day}</div>
             <div class="text-[10px] tracking-wider font-bold text-brand-600 mt-0.5">${mon}</div>
+            <div class="evt-date-stamp-dow text-[9px] tracking-wider font-semibold text-gray-400 mt-0.5">${dow}</div>
         </div>`;
     }
 
@@ -128,7 +130,7 @@
     // Going ribbon (top of card) — events_003 §8.6
     function _goingRibbon(rsvp) {
         if (!rsvp || rsvp.status !== 'going') return '';
-        return `<div class="bg-emerald-50 text-emerald-700 text-[11px] font-bold uppercase tracking-wider px-4 py-1 flex items-center gap-1.5">
+        return `<div class="evt-going-ribbon bg-emerald-50 text-emerald-700 text-[11px] font-bold uppercase tracking-wider px-4 py-1 flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
             </svg>You're going
@@ -172,7 +174,7 @@
         // F7 — RSVP footer outline button (portal vlift only; rendered for all, CSS gates)
         const isGoing = !!(opts.rsvp && opts.rsvp.status === 'going');
         const rsvpFooter = (variant === 'portal')
-            ? `<button type="button" data-evt-card-rsvp="${event.id}" class="evt-card-rsvp${isGoing ? ' evt-card-rsvp--on' : ''}" aria-pressed="${isGoing ? 'true' : 'false'}">${isGoing ? '✓ Going' : 'RSVP'}</button>`
+            ? `<button type="button" data-evt-card-rsvp="${event.id}" class="evt-card-rsvp${isGoing ? ' evt-card-rsvp--on' : ''}" aria-pressed="${isGoing ? 'true' : 'false'}">${isGoing ? '✓ Going' : 'Details'}</button>`
             : '';
 
         // F15 — Split meta (vlift): type/host line, then icon rows for location + time.
@@ -199,7 +201,7 @@
             ? `<span class="evt-card-f15-going">${_goingCount} going</span>`
             : '';
         const f15RsvpPill = (variant === 'portal')
-            ? `<button type="button" data-evt-card-rsvp="${event.id}" data-f15-rsvp class="evt-card-f15-rsvp${isGoing ? ' evt-card-f15-rsvp--on' : ''}" aria-pressed="${isGoing ? 'true' : 'false'}">${isGoing ? '✓ Going' : 'RSVP'}</button>`
+            ? `<button type="button" data-evt-card-rsvp="${event.id}" data-f15-rsvp class="evt-card-f15-rsvp${isGoing ? ' evt-card-f15-rsvp--on' : ''}" aria-pressed="${isGoing ? 'true' : 'false'}">${isGoing ? '✓ Going' : 'Details'}</button>`
             : '';
         const f15Footer = (variant === 'portal')
             ? `<div class="evt-card-f15-foot" data-f15-foot><div class="evt-card-f15-foot__left">${stack}${f15GoingLabel}</div>${f15RsvpPill}</div>`

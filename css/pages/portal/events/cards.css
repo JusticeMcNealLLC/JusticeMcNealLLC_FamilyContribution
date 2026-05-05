@@ -237,7 +237,7 @@ body.evt-vlift .evt-card-f15-rsvp {
     align-items: center;
     justify-content: center;
     padding: .4rem .875rem;
-    border-radius: 9999px;
+    border-radius: 10px;
     border: 1px solid #c7d2fe;
     background: #ffffff;
     color: #4338ca;
@@ -311,4 +311,106 @@ body.evt-vlift [data-evt-card] .evt-card-f15-foot {
 body.evt-vlift .evt-create-tile {
     padding: 1rem !important;
     min-height: 160px !important;
+}
+
+/* DOW in date stamp: hidden by default; shown only in mobile row */
+.evt-date-stamp-dow { display: none; }
+
+/* ============================================================
+ * Mobile row card layout (< 640px, vlift only)
+ * Matches the horizontal "list row" design:
+ *   [thumbnail] [date col] [title / meta / footer] [RSVP]
+ * ============================================================ */
+@media (max-width: 639px) {
+    /* Card → horizontal flex row */
+    body.evt-vlift a[data-evt-card] {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch;
+        min-height: 84px;
+    }
+
+    /* Going ribbon: hide on mobile row (RSVP button reflects state) */
+    body.evt-vlift a[data-evt-card] .evt-going-ribbon { display: none !important; }
+
+    /* Thumbnail: first in visual order, fixed width */
+    body.evt-vlift a[data-evt-card] .evt-card-banner {
+        order: 1;
+        width: 84px !important;
+        aspect-ratio: unset !important;
+        flex-shrink: 0;
+        align-self: stretch;
+    }
+
+    /* Date chip overlay on thumbnail: hide (date column replaces it) */
+    body.evt-vlift a[data-evt-card] .evt-card-date-chip { display: none !important; }
+
+    /* Category chip: too crowded in small thumbnail */
+    body.evt-vlift a[data-evt-card] .evt-cat-chip { display: none !important; }
+
+    /* Date column: second in visual order, narrow vertical block */
+    body.evt-vlift a[data-evt-card] .evt-card-header-row {
+        order: 2;
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 52px;
+        padding: 8px 4px !important;
+        border-right: 1px solid #f1f5f9;
+        gap: 0;
+    }
+
+    /* Show DOW in date column */
+    body.evt-vlift a[data-evt-card] .evt-date-stamp-dow { display: block !important; }
+
+    /* Month colour: red to match date-chip style */
+    body.evt-vlift a[data-evt-card] .evt-card-header-row .text-brand-600 { color: #dc2626 !important; }
+
+    /* Hide the relative-label div (second child of header row) */
+    body.evt-vlift a[data-evt-card] .evt-card-header-row > div:last-child { display: none !important; }
+
+    /* Content area: third in visual order */
+    body.evt-vlift a[data-evt-card] > .p-4 {
+        order: 3;
+        flex: 1;
+        min-width: 0;
+        padding: 9px 10px 9px 12px !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0;
+    }
+
+    /* Title: 1-line clamp */
+    body.evt-vlift a[data-evt-card] h3 {
+        -webkit-line-clamp: 1;
+        font-size: .875rem !important;
+        margin-bottom: 0;
+    }
+
+    /* F15 meta: inline row (location · time on one line) */
+    body.evt-vlift a[data-evt-card] [data-f15] {
+        margin-top: 2px !important;
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1px .375rem !important;
+        overflow: hidden;
+    }
+    body.evt-vlift a[data-evt-card] [data-f15-type] { display: none !important; }
+    body.evt-vlift a[data-evt-card] [data-f15-loc],
+    body.evt-vlift a[data-evt-card] [data-f15-time] { font-size: .6875rem !important; }
+
+    /* Footer */
+    body.evt-vlift a[data-evt-card] .evt-card-f15-foot { margin-top: 5px !important; }
+    body.evt-vlift a[data-evt-card] .evt-card-f15-rsvp {
+        padding: .3rem .65rem !important;
+        font-size: .6875rem !important;
+    }
+    body.evt-vlift a[data-evt-card] .evt-card-f15-going { font-size: .6875rem !important; }
+
+    /* Create-event tile: keep vertical, just tighten height */
+    body.evt-vlift .evt-create-tile { min-height: 84px !important; }
 }

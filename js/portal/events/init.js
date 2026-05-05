@@ -10,12 +10,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Get role for backward compat, show "Create" button based on permission
     const { data: profile } = await supabaseClient
         .from('profiles')
-        .select('role, first_name')
+        .select('role, first_name, last_name, profile_picture_url')
         .eq('id', evtCurrentUser.id)
         .single();
     evtCurrentUserRole = profile?.role;
     // Expose first name for personalized greeting (events_003 §8.1 / B5)
     window.evtCurrentUserName = profile?.first_name || '';
+    window.evtCurrentUserPic = profile?.profile_picture_url || null;
+    window.evtCurrentUserInitials = ((profile?.first_name?.[0] || '') + (profile?.last_name?.[0] || '')).toUpperCase() || '?';
 
     if (hasPermission('events.create') || evtCurrentUserRole === 'admin') {
         document.getElementById('createEventBtn')?.classList.remove('hidden');
@@ -74,9 +76,10 @@ function evtSetupListeners() {
     // Type filter
     document.getElementById('typeFilter').addEventListener('change', evtRenderEvents);
 
-    // Create modal  — routes to new EventsCreate sheet if M4a flag is on
+    // Create modal  — multi-step EventsCreate sheet is now the default.
+    // Falls back to legacy #createModal only if sheet module failed to load.
     function _openCreate() {
-        if (window.EventsCreate && window.EventsCreate.isFlagOn && window.EventsCreate.isFlagOn()) {
+        if (window.EventsCreate && window.EventsCreate.open) {
             window.EventsCreate.open();
         } else {
             evtToggleModal('createModal', true);
