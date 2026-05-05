@@ -155,9 +155,10 @@ function pubRenderGuestRsvpSection(event) {
     const section = document.getElementById('guestRsvpSection');
     if (!section) return;
 
-    // Move to <body> at init so position:fixed always escapes ancestor transform
-    // stacking contexts (e.g. evt-fade-in on #eventContent).
-    if (section.parentElement !== document.body) {
+    // Move to <body> on mobile so position:fixed escapes ancestor transform
+    // stacking contexts (e.g. evt-fade-in on #eventContent), while desktop
+    // keeps the card in the sidebar layout.
+    if (window.matchMedia('(max-width: 1023px)').matches && section.parentElement !== document.body) {
         document.body.appendChild(section);
     }
 
@@ -302,8 +303,13 @@ async function pubHandleGuestRsvp() {
 
                 // Show QR ticket if attendee_ticket mode
                 if (pubCurrentEvent.checkin_mode === 'attendee_ticket') {
-                    pubShowGuestTicket(pubGuestRsvp);
+                    await pubShowGuestTicket(pubGuestRsvp);
+                    if (window.matchMedia('(max-width: 1023px)').matches) {
+                        pubCloseRsvpSheet();
+                        pubOpenGuestTicketSheet();
+                    }
                 }
+                pubInitBottomNav(pubCurrentEvent);
             }
         }
     } catch (err) {

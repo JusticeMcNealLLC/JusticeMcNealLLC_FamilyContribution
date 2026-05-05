@@ -31,13 +31,13 @@
 
 /* ── Mobile nav bar (≤ 1023px) ── */
 @media (max-width:1023px) {
-    .ed-page-header-inner { padding:0 16px; height:56px; position:relative; }
+    .ed-page-header-inner { padding:0 16px; height:56px; position:relative; display:flex; align-items:center; }
     /* Back: 38px circle */
     .ed-page-header-back { width:38px; height:38px; border-radius:50%; border:1.5px solid #e5e7eb; justify-content:center; background:#fff; flex-shrink:0; }
     .ed-page-header-back svg { width:20px; height:20px; }
     .ed-page-header-back-label { display:none; }
-    /* Title: centered absolutely so it's truly centered regardless of action button widths */
-    .ed-page-header-title { position:absolute; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; }
+    /* Title: absolutely positioned spanning full inner width so it centers relative to the header, not a grid column */
+    .ed-page-header-title { position:absolute; left:0; right:0; transform:none; text-align:center; pointer-events:none; }
     .ed-page-header-title h2 { font-size:15px; font-weight:700; color:#0f172a; letter-spacing:-.01em; }
     .ed-page-header-sub { display:none; }
     /* Action buttons: 38px circles, icon only — pushed to far right */

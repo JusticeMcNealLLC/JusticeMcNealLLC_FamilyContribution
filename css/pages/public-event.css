@@ -432,7 +432,8 @@ body.public-event-detail #commentsSection {
     .rsvp-sheet-backdrop {
         display: block;
     }
-    body.public-event-detail #guestRsvpSection {
+    body.public-event-detail #guestRsvpSection,
+    body.public-event-detail #guestTicketSection {
         position: fixed !important;
         left: 0;
         right: 0;
@@ -447,11 +448,13 @@ body.public-event-detail #commentsSection {
         transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
         padding: 20px 20px max(24px, env(safe-area-inset-bottom, 24px)) !important;
     }
-    body.public-event-detail #guestRsvpSection.rsvp-sheet-open {
+    body.public-event-detail #guestRsvpSection.rsvp-sheet-open,
+    body.public-event-detail #guestTicketSection.ticket-sheet-open {
         opacity: 1 !important;
         transform: translateY(0) !important;
     }
-    body.public-event-detail #guestRsvpSection::before {
+    body.public-event-detail #guestRsvpSection::before,
+    body.public-event-detail #guestTicketSection::before {
         content: '';
         display: block;
         width: 36px;
@@ -480,6 +483,79 @@ body.public-event-detail #commentsSection {
         width: 14px;
         height: 14px;
         stroke: #6b7280;
+    }
+    body.public-event-detail #guestTicketSection {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+        border: 1px solid rgba(15, 23, 42, 0.08) !important;
+        box-shadow: 0 -18px 50px rgba(15, 23, 42, 0.18) !important;
+        padding: 18px 20px max(22px, env(safe-area-inset-bottom, 22px)) !important;
+    }
+    body.public-event-detail #guestTicketSection .evt-qr-card {
+        background: transparent;
+        border-radius: 0;
+        padding: 16px 4px 4px;
+    }
+    body.public-event-detail #guestTicketSection .evt-qr-card > div:first-child {
+        width: 54px;
+        height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px !important;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+        box-shadow: 0 12px 26px rgba(22, 163, 74, 0.24);
+        font-size: 0 !important;
+    }
+    body.public-event-detail #guestTicketSection .evt-qr-card > div:first-child::before {
+        content: '✓';
+        color: #fff;
+        font-size: 30px;
+        font-weight: 900;
+        line-height: 1;
+    }
+    body.public-event-detail #guestTicketSection .evt-qr-title {
+        margin: 0 0 6px;
+        font-size: 28px;
+        font-weight: 850;
+        line-height: 1.1;
+        color: #0f172a;
+        letter-spacing: 0;
+    }
+    body.public-event-detail #guestTicketName {
+        margin: 0 auto 18px !important;
+        color: #64748b !important;
+        font-size: 15px !important;
+        font-weight: 600;
+    }
+    body.public-event-detail #guestTicketQR {
+        width: min(68vw, 248px) !important;
+        height: min(68vw, 248px) !important;
+        margin: 0 auto !important;
+        padding: 12px;
+        border-radius: 22px;
+        background: #fff;
+        box-shadow: 0 16px 38px rgba(15, 23, 42, 0.12);
+    }
+    body.public-event-detail #guestTicketSection .evt-qr-sub {
+        margin-top: 16px;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 650;
+    }
+    body.public-event-detail #guestTicketSection .evt-qr-sub + p {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
+        margin: 14px auto 0 !important;
+        padding: 10px 13px;
+        border-radius: 999px;
+        background: #ecfdf5;
+        color: #15803d !important;
+        font-size: 13px !important;
+        font-weight: 750 !important;
+        line-height: 1.25;
     }
 }
 .rsvp-sheet-close {

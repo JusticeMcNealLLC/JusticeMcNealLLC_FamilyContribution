@@ -4,6 +4,23 @@
    ────────────────────────────────────────── */
 
 /* ── RSVP Bottom Sheet (mobile) ─────────── */
+function pubCloseAllBottomSheets() {
+    pubCloseRsvpSheet();
+    pubCloseGuestTicketSheet();
+}
+
+function pubEnsureSheetBackdrop() {
+    let backdrop = document.getElementById('rsvpSheetBackdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'rsvpSheetBackdrop';
+        backdrop.className = 'rsvp-sheet-backdrop';
+        document.body.appendChild(backdrop);
+    }
+    backdrop.onclick = pubCloseAllBottomSheets;
+    return backdrop;
+}
+
 function pubOpenRsvpSheet() {
     const section = document.getElementById('guestRsvpSection');
     if (!section) return;
@@ -25,15 +42,7 @@ function pubOpenRsvpSheet() {
         section.insertBefore(closeBtn, section.firstChild);
     }
 
-    // Create backdrop once
-    let backdrop = document.getElementById('rsvpSheetBackdrop');
-    if (!backdrop) {
-        backdrop = document.createElement('div');
-        backdrop.id = 'rsvpSheetBackdrop';
-        backdrop.className = 'rsvp-sheet-backdrop';
-        backdrop.addEventListener('click', pubCloseRsvpSheet);
-        document.body.appendChild(backdrop);
-    }
+    const backdrop = pubEnsureSheetBackdrop();
 
     requestAnimationFrame(() => {
         backdrop.classList.add('visible');
@@ -46,6 +55,40 @@ function pubCloseRsvpSheet() {
     const section = document.getElementById('guestRsvpSection');
     const backdrop = document.getElementById('rsvpSheetBackdrop');
     if (section) section.classList.remove('rsvp-sheet-open');
+    if (backdrop) backdrop.classList.remove('visible');
+    document.body.style.overflow = '';
+}
+
+function pubOpenGuestTicketSheet() {
+    const section = document.getElementById('guestTicketSection');
+    if (!section) return;
+    section.classList.remove('hidden');
+
+    if (section.parentElement !== document.body) {
+        document.body.appendChild(section);
+    }
+
+    if (!section.querySelector('.ticket-sheet-close')) {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'rsvp-sheet-close ticket-sheet-close';
+        closeBtn.setAttribute('aria-label', 'Close ticket');
+        closeBtn.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+        closeBtn.addEventListener('click', pubCloseGuestTicketSheet);
+        section.insertBefore(closeBtn, section.firstChild);
+    }
+
+    const backdrop = pubEnsureSheetBackdrop();
+    requestAnimationFrame(() => {
+        backdrop.classList.add('visible');
+        section.classList.add('ticket-sheet-open');
+    });
+    document.body.style.overflow = 'hidden';
+}
+
+function pubCloseGuestTicketSheet() {
+    const section = document.getElementById('guestTicketSection');
+    const backdrop = document.getElementById('rsvpSheetBackdrop');
+    if (section) section.classList.remove('ticket-sheet-open');
     if (backdrop) backdrop.classList.remove('visible');
     document.body.style.overflow = '';
 }

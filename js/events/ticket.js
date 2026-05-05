@@ -384,6 +384,9 @@ async function pubShowGuestTicket(guestRsvp) {
     if (!section) return;
 
     section.classList.remove('hidden');
+    if (window.matchMedia('(max-width: 1023px)').matches && section.parentElement !== document.body) {
+        document.body.appendChild(section);
+    }
     document.getElementById('guestTicketName').textContent = guestRsvp.guest_name || 'Guest';
 
     const canvas = document.getElementById('guestTicketQR');
@@ -396,14 +399,17 @@ async function pubShowGuestTicket(guestRsvp) {
     const formSection = document.getElementById('guestRsvpSection');
     if (formSection) formSection.classList.add('hidden');
 
-    // Check if guest is already checked in
-    const { data: ci } = await supabaseClient
+    // Check-in status can load after the ticket is shown; don't block sheet opening.
+    supabaseClient
         .from('event_checkins')
         .select('checked_in_at')
         .eq('event_id', pubCurrentEvent.id)
         .eq('guest_token', guestRsvp.guest_token)
-        .maybeSingle();
-    if (ci) pubShowCheckedInOverlay('guestTicketSection', 'guestTicketQR', ci.checked_in_at);
+        .maybeSingle()
+        .then(({ data: ci }) => {
+            if (ci) pubShowCheckedInOverlay('guestTicketSection', 'guestTicketQR', ci.checked_in_at);
+        })
+        .catch(err => console.warn('Guest check-in status unavailable:', err));
 }
 
 /* ── Guest Lookup ────────────────────────── */
@@ -442,6 +448,7 @@ async function pubLookupGuestTicket() {
             pubGuestRsvp = gRsvp;
             pubGuestToken = gRsvp.guest_token;
             pubShowGuestTicket(gRsvp);
+            pubInitBottomNav(pubCurrentEvent);
 
             // Show gated notes if applicable
             if (pubCurrentEvent.gated_notes) {

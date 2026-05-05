@@ -122,9 +122,11 @@ function pubInitBottomNav(event) {
 
     let rsvpBtn = '';
     if (rsvpEnabled) {
-        if (pubCurrentRsvp?.paid || pubGuestRsvp?.paid) {
+        if (pubGuestRsvp) {
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="pubOpenGuestTicketSheet()">${PUB_CTA_ICONS.ticket} View Ticket</button>`;
+        } else if (pubCurrentRsvp?.paid) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${PUB_CTA_ICONS.check} RSVP'd</button>`;
-        } else if (pubCurrentRsvp?.status === 'going' || pubGuestRsvp) {
+        } else if (pubCurrentRsvp?.status === 'going') {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${PUB_CTA_ICONS.check} Going</button>`;
         } else if (pubCurrentRsvp?.status === 'maybe') {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled style="background:#e11d48">❤️ Interested</button>`;
