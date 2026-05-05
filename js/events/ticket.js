@@ -332,7 +332,8 @@ async function pubHandleTicketScan(event, ticketToken) {
                 .eq('guest_token', ticketToken)
                 .maybeSingle();
 
-            if (guestRsvp && guestRsvp.paid) {
+            const isFreeEvent = !(event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0);
+            if (guestRsvp && (guestRsvp.paid || isFreeEvent)) {
                 const { data: gExisting } = await supabaseClient
                     .from('event_checkins')
                     .select('id')
