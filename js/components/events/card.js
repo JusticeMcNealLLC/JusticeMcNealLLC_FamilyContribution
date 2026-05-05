@@ -196,7 +196,8 @@
             ? `<div class="evt-card-f15" data-f15>${f15TypeHost}${f15LocRow}${f15TimeRow}</div>`
             : '';
         // F15 — Compact footer (vlift): attendee cluster + "N going" left, compact RSVP pill right.
-        const _goingCount = Array.isArray(opts.attendees) ? opts.attendees.length : 0;
+        // opts.goingCount = true total (members + guests); falls back to avatar list length.
+        const _goingCount = (opts.goingCount != null) ? opts.goingCount : (Array.isArray(opts.attendees) ? opts.attendees.length : 0);
         const f15GoingLabel = _goingCount > 0
             ? `<span class="evt-card-f15-going">${_goingCount} going</span>`
             : '';

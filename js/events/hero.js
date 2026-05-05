@@ -45,6 +45,7 @@ function pubInitHeroCollapse() {
     const scrollContainer = document.getElementById('eventContent');
     const hero = document.getElementById('eventBanner');
     if (!scrollContainer || !hero) return;
+    if (hero.classList.contains('ed-hero')) return;
 
     // Mobile only
     if (window.innerWidth >= 768) return;
@@ -133,8 +134,12 @@ function pubInitBottomNav(event) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="document.getElementById('rsvpSection').scrollIntoView({behavior:'smooth'})">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
         } else if (pubCurrentUser) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubHandleRsvp('going')">RSVP</button>`;
-        } else {
+        } else if (event.member_only) {
             rsvpBtn = `<a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-cta-btn evt-cta-rsvp">Sign In to RSVP</a>`;
+        } else if (event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenRsvpSheet()">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
+        } else {
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenRsvpSheet()">RSVP</button>`;
         }
     }
 

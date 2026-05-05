@@ -3,6 +3,53 @@
    ICS download, invite banner, comments)
    ────────────────────────────────────────── */
 
+/* ── RSVP Bottom Sheet (mobile) ─────────── */
+function pubOpenRsvpSheet() {
+    const section = document.getElementById('guestRsvpSection');
+    if (!section) return;
+    section.classList.remove('hidden');
+
+    // Move to <body> so position:fixed escapes any ancestor transform/animation
+    // (evtFadeIn on #eventContent creates a stacking context that traps fixed children)
+    if (section.parentElement !== document.body) {
+        document.body.appendChild(section);
+    }
+
+    // Add close button once
+    if (!section.querySelector('.rsvp-sheet-close')) {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'rsvp-sheet-close';
+        closeBtn.setAttribute('aria-label', 'Close');
+        closeBtn.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+        closeBtn.addEventListener('click', pubCloseRsvpSheet);
+        section.insertBefore(closeBtn, section.firstChild);
+    }
+
+    // Create backdrop once
+    let backdrop = document.getElementById('rsvpSheetBackdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'rsvpSheetBackdrop';
+        backdrop.className = 'rsvp-sheet-backdrop';
+        backdrop.addEventListener('click', pubCloseRsvpSheet);
+        document.body.appendChild(backdrop);
+    }
+
+    requestAnimationFrame(() => {
+        backdrop.classList.add('visible');
+        section.classList.add('rsvp-sheet-open');
+    });
+    document.body.style.overflow = 'hidden';
+}
+
+function pubCloseRsvpSheet() {
+    const section = document.getElementById('guestRsvpSection');
+    const backdrop = document.getElementById('rsvpSheetBackdrop');
+    if (section) section.classList.remove('rsvp-sheet-open');
+    if (backdrop) backdrop.classList.remove('visible');
+    document.body.style.overflow = '';
+}
+
 function pubOpenLightbox(imgUrl) {
     let lb = document.querySelector('.evt-lightbox');
     if (!lb) {
@@ -42,6 +89,15 @@ function pubShowMap(lat, lng, label) {
             ? `https://maps.apple.com/?daddr=${addr}`
             : `https://www.google.com/maps/dir/?api=1&destination=${addr}`;
         dirBtn.href = mapsUrl;
+    }
+
+    // Mobile map card (shown on ≤1023px, hidden on desktop via CSS)
+    const mobileMapEl = document.getElementById('eventMapMobile');
+    if (mobileMapEl) {
+        const mobileMap = L.map('eventMapMobile', { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false, tap: false }).setView([lat, lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mobileMap);
+        L.marker([lat, lng]).addTo(mobileMap);
+        setTimeout(() => mobileMap.invalidateSize(), 200);
     }
 
     // Fix tile rendering after hidden element becomes visible

@@ -409,10 +409,7 @@ async function pubShowGuestTicket(guestRsvp) {
 /* ── Guest Lookup ────────────────────────── */
 
 function pubToggleLookup() {
-    const form = document.getElementById('guestLookupForm');
-    if (form) form.classList.toggle('hidden');
-    const trigger = document.querySelector('#guestLookupSection .evt-lookup-card');
-    if (trigger && form) trigger.setAttribute('aria-expanded', String(!form.classList.contains('hidden')));
+    // Legacy — lookup is now a tab in the unified RSVP card. No-op.
 }
 
 
@@ -460,7 +457,7 @@ async function pubLookupGuestTicket() {
     }
 
     btn.disabled = false;
-    btn.textContent = 'Find';
+    btn.textContent = 'Find My Ticket';
 }
 
 /* ── Utilities ───────────────────────────── */

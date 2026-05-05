@@ -851,6 +851,23 @@ async function evtOpenDetail(eventId) {
                         <div class="ed-avatar-stack ed-avatar-stack-sm" id="edAvatarStackMobile-${eventId}"></div>
                         <span class="ed-mobile-att-count">${totalGoing > 0 ? `${totalGoing} going` : ''}${totalGoing > 0 && maybeList.length > 0 ? ' · ' : ''}${maybeList.length > 0 ? `${maybeList.length} interested` : ''}</span>
                     </div>` : ''}
+                    <!-- Mobile Hosted By Card (S8) -->
+                    ${creatorProfile || isLlc ? `
+                    <div class="ed-mobile-hosted-card" ${creatorProfile ? `onclick="window.location.href='profile.html?id=${creatorProfile.id}'" style="cursor:pointer"` : ''}>
+                        <div class="ed-mh-avatar-wrap" style="position:relative;flex-shrink:0">
+                            ${creatorProfile?.profile_picture_url
+                                ? `<img src="${creatorProfile.profile_picture_url}" class="ed-mh-avatar" alt="${evtEscapeHtml(cpName)}">`
+                                : `<div class="ed-mh-avatar ed-mh-avatar-fallback">${isLlc ? `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>` : cpInitials}</div>`
+                            }
+                            ${cpBadge ? cpBadge : ''}
+                        </div>
+                        <div class="ed-mh-body">
+                            <span class="ed-mh-label">Hosted by</span>
+                            <span class="ed-mh-name">${isLlc ? 'Justice McNeal LLC' : evtEscapeHtml(cpName)}</span>
+                            ${!isLlc ? `<span class="ed-mh-sub">Organizer of this event</span>` : ''}
+                        </div>
+                        ${creatorProfile ? `<svg class="ed-mh-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>` : ''}
+                    </div>` : ''}
                     <!-- About Card -->
                     <div class="ed-about-grid">
                         <div class="ed-about-left">
@@ -917,8 +934,8 @@ async function evtOpenDetail(eventId) {
 
             ${event.cancellation_note ? _edCard(`<div class="ed-cancel-banner"><p class="ed-cancel-title">Cancellation Note</p><p class="ed-cancel-text">${evtEscapeHtml(event.cancellation_note)}</p></div>`) : ''}
 
-                    <div style="height:80px" class="sm:hidden"></div>
-                    <div style="height:32px" class="hidden sm:block"></div>
+                    <div style="height:80px" class="lg:hidden"></div>
+                    <div style="height:32px" class="hidden lg:block"></div>
                 </div><!-- /ed-content-cards -->
                 </div><!-- /ed-main -->
 
@@ -1152,62 +1169,82 @@ function evtCleanupHeroCollapse() { /* no-op since M2 */ }
 // Sticky CTA Bar — sits above the untouched bottom-tab-bar
 // ═══════════════════════════════════════════════════════════
 const EVT_CTA_ICONS = {
-    check: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
+    check:  '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
     ticket: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>',
-    lock: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
+    lock:   '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
+    manage: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
 };
 
 function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost) {
     evtCleanupBottomNav();
 
-    const rsvpEnabled = event.rsvp_enabled !== false;
+    const rsvpEnabled  = event.rsvp_enabled !== false;
     const raffleEnabled = !!event.raffle_enabled;
-    if (!rsvpEnabled && !raffleEnabled) return;
+
+    // No bar for non-hosts on informational events (neither RSVP nor raffle)
+    if (!isHost && !rsvpEnabled && !raffleEnabled) return;
 
     const isClosed = event.status === 'completed' || event.status === 'cancelled';
-    const isPast = new Date(event.start_date) < new Date() && event.status !== 'active';
-    const canRsvp = rsvpEnabled && ['open','confirmed','active'].includes(event.status) && !entriesClosed;
+    const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
+    const canRsvp  = rsvpEnabled && ['open','confirmed','active'].includes(event.status) && !entriesClosed;
 
-    let rsvpBtn = '';
-    if (rsvpEnabled) {
-        if (isHost) {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-host" disabled>⭐ Hosting</button>`;
-        } else if (rsvp?.paid) {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${EVT_CTA_ICONS.check} RSVP'd</button>`;
-        } else if (rsvp?.status === 'going') {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${EVT_CTA_ICONS.check} Going</button>`;
-        } else if (canRsvp && !eventIsFull && event.pricing_mode === 'paid') {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId}','going')">RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>`;
-        } else if (canRsvp && !eventIsFull) {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId}','going')">RSVP</button>`;
-        } else if (eventIsFull) {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Full</button>`;
-        } else {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} ${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
+    let primaryBtn   = '';
+    let secondaryBtn = '';
+
+    // ── Host: Manage Event button ────────────────────────
+    if (isHost) {
+        primaryBtn = `<button class="evt-cta-btn evt-cta-manage" onclick="window.EventsManage ? window.EventsManage.open('${eventId}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId}')">${EVT_CTA_ICONS.manage} Manage Event</button>`;
+    } else {
+        // ── RSVP button (primary) ────────────────────────
+        if (rsvpEnabled) {
+            if (rsvp?.paid) {
+                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${EVT_CTA_ICONS.check} RSVP'd</button>`;
+            } else if (rsvp?.status === 'going') {
+                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${EVT_CTA_ICONS.check} Going</button>`;
+            } else if (canRsvp && !eventIsFull && event.pricing_mode === 'paid') {
+                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId}','going')">RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>`;
+            } else if (canRsvp && !eventIsFull) {
+                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId}','going')">RSVP</button>`;
+            } else if (eventIsFull) {
+                primaryBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Full</button>`;
+            } else {
+                primaryBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} ${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
+            }
+        }
+
+        // ── Raffle button (secondary when RSVP present, primary when alone) ──
+        if (raffleEnabled) {
+            // Raffle is bundled with paid RSVP — no separate button
+            const raffleIncluded = event.pricing_mode === 'paid' && rsvpEnabled;
+            if (!raffleIncluded) {
+                const hasPrimary = !!primaryBtn;
+                // Use outline style when raffle is the secondary action alongside RSVP
+                const activeCls = hasPrimary ? 'evt-cta-raffle-outline' : 'evt-cta-raffle';
+                let raffleSlot = '';
+                if (myRaffleEntry) {
+                    raffleSlot = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${EVT_CTA_ICONS.check} Entered</button>`;
+                } else if (entriesClosed) {
+                    raffleSlot = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Entries Closed</button>`;
+                } else if (event.raffle_entry_cost_cents > 0) {
+                    raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtHandleRaffleEntry('${eventId}')">${EVT_CTA_ICONS.ticket} Raffle — ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
+                } else {
+                    raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtHandleFreeRaffleEntry('${eventId}')">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
+                }
+                if (hasPrimary) {
+                    secondaryBtn = raffleSlot;
+                } else {
+                    primaryBtn = raffleSlot;
+                }
+            }
         }
     }
 
-    let raffleBtn = '';
-    if (raffleEnabled && !isHost) {
-        if (myRaffleEntry) {
-            raffleBtn = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${EVT_CTA_ICONS.check} Entered</button>`;
-        } else if (entriesClosed) {
-            raffleBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Closed</button>`;
-        } else if (event.pricing_mode === 'paid') {
-            // raffle included with RSVP — no separate button
-        } else if (event.raffle_entry_cost_cents > 0) {
-            raffleBtn = `<button class="evt-cta-btn evt-cta-raffle" onclick="evtHandleRaffleEntry('${eventId}')">${EVT_CTA_ICONS.ticket} Raffle — ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
-        } else {
-            raffleBtn = `<button class="evt-cta-btn evt-cta-raffle" onclick="evtHandleFreeRaffleEntry('${eventId}')">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
-        }
-    }
-
-    if (!rsvpBtn && !raffleBtn) return;
+    if (!primaryBtn && !secondaryBtn) return;
 
     const bar = document.createElement('div');
     bar.id = 'evtCtaBar';
     bar.className = 'evt-cta-bar';
-    bar.innerHTML = rsvpBtn + raffleBtn;
+    bar.innerHTML = primaryBtn + secondaryBtn;
     document.body.appendChild(bar);
     document.body.classList.add('evt-cta-active');
 

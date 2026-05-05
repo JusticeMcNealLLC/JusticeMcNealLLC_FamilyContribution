@@ -232,7 +232,10 @@ body.evt-vlift #evtShell { max-width: 80rem; }
         display: flex !important;
         flex-direction: column;
         gap: 1rem;
-        align-self: stretch;
+        align-self: start;
+        position: sticky;
+        top: 24px;
+        padding-top: 8px;
     }
     body.evt-vlift #evtRightRail:empty,
     body.evt-vlift #evtRightRail:has(> div:empty:only-child) { display: none !important; }
@@ -240,6 +243,7 @@ body.evt-vlift #evtShell { max-width: 80rem; }
 body.evt-vlift #evtPageHeader > div { max-width: 80rem !important; }
 body.evt-vlift #evtFilterStrip > div:first-child,
 body.evt-vlift #evtFilterStrip { max-width: none; }
+body.evt-vlift #evtFilterStrip { position: relative; z-index: 10; }
 
 /* ============================================================
  * F16 -- Header refresh + full-width page (vlift, OVERRIDES E1)

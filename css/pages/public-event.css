@@ -239,7 +239,7 @@ body {
 /* ═══ Event CTA Bar — sticky bottom bar (mobile only, public page) ═══ */
 .evt-cta-bar { display:none; }
 @media(max-width:767px){
-    .evt-cta-bar { display:flex; align-items:center; justify-content:center; gap:10px; position:fixed; left:0; right:0; bottom:calc(56px + env(safe-area-inset-bottom,0px)); z-index:49; background:rgba(255,255,255,.88); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-top:1px solid rgba(0,0,0,.06); padding:10px 16px max(12px, env(safe-area-inset-bottom)); animation:evtCtaSlideUp .35s cubic-bezier(.16,1,.3,1); }
+    .evt-cta-bar { display:flex; align-items:center; justify-content:center; gap:10px; position:fixed; left:0; right:0; bottom:0; z-index:49; background:rgba(255,255,255,.88); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-top:1px solid rgba(0,0,0,.06); padding:10px 16px max(12px, env(safe-area-inset-bottom)); animation:evtCtaSlideUp .35s cubic-bezier(.16,1,.3,1); }
     @keyframes evtCtaSlideUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
     .evt-cta-btn { flex:1; max-width:280px; display:flex; align-items:center; justify-content:center; gap:8px; padding:13px 18px; border-radius:50px; font-size:15px; font-weight:700; letter-spacing:.01em; border:none; cursor:pointer; text-decoration:none; white-space:nowrap; transition:transform .15s,opacity .15s; -webkit-tap-highlight-color:transparent; }
     .evt-cta-btn:active { transform:scale(.97); }
@@ -257,6 +257,239 @@ body {
 @media(max-width:767px){
     .evt-hero { position:sticky; top:0; z-index:50; overflow:hidden; }
     .evt-body { z-index:auto; border-radius:0; background:linear-gradient(to bottom, transparent 24px, #fff 24px); }
+}
+
+/* ═══ Public detail revamp — member-detail visual shell ═══ */
+body.public-event-detail {
+    min-height: 100vh;
+    height: auto;
+    overflow: auto;
+    background: #f8fafc;
+}
+body.public-event-detail .pub-nav {
+    position: sticky;
+    top: 0;
+    bottom: auto;
+    z-index: 70;
+    border-top: 0;
+    border-bottom: 1px solid #ebebeb;
+    padding-bottom: 12px;
+}
+body.public-event-detail #eventContent {
+    flex: 0 0 auto;
+    overflow: visible;
+    overscroll-behavior: auto;
+    background: #f8fafc;
+}
+body.public-event-detail #eventContent .ed-card {
+    opacity: 1;
+    transform: none;
+}
+body.public-event-detail #eventContent .evt-hero-btn {
+    width: auto;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: none;
+}
+body.public-event-detail #eventContent .evt-hero-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+}
+body.public-event-detail .ed-hero-pills .evt-tag {
+    background: rgba(255,255,255,.14) !important;
+    color: rgba(255,255,255,.9) !important;
+    border: 1px solid rgba(255,255,255,.16);
+}
+body.public-event-detail .public-ed-invite {
+    margin: 0 0 16px;
+}
+body.public-event-detail .public-ed-hidden-mount {
+    display: none;
+}
+body.public-event-detail .public-ed-muted {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #717171;
+    margin: -4px 0 14px;
+}
+body.public-event-detail .public-ed-field-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+body.public-event-detail .public-ed-lookup-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+body.public-event-detail .public-ed-lookup-form .evt-action-btn {
+    width: auto;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+body.public-event-detail #raffleSection:empty {
+    display: none;
+}
+body.public-event-detail #raffleSection .evt-section {
+    padding: 0;
+}
+body.public-event-detail #raffleSection .evt-divider {
+    display: none;
+}
+body.public-event-detail .public-ed-mobile-map {
+    overflow: hidden;
+}
+body.public-event-detail .public-ed-mobile-map .ed-map {
+    height: 220px;
+}
+body.public-event-detail .ed-about-org-col:has(#hostSection.hidden),
+body.public-event-detail .ed-about-org-col:has(#hostSection:empty) {
+    display: none;
+}
+body.public-event-detail .public-ed-map-col .ed-map {
+    height: 220px;
+}
+@media (max-width: 1023px) {
+    body.public-event-detail .pub-nav {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+    body.public-event-detail .ed-page-header {
+        position: sticky;
+        top: 57px;
+        z-index: 60;
+    }
+    body.public-event-detail .ed-hero {
+        position: relative;
+        top: auto;
+        z-index: auto;
+    }
+    body.public-event-detail .public-ed-sidebar {
+        display: flex;
+        flex-direction: column;
+        padding: 12px 16px 0;
+    }
+    body.public-event-detail .public-ed-sidebar .ed-card {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    body.public-event-detail .public-ed-lookup-form {
+        flex-direction: column;
+    }
+    body.public-event-detail .public-ed-lookup-form .evt-action-btn {
+        width: 100%;
+    }
+}
+
+/* ── Unified RSVP card — text link row ── */
+#guestRsvpSection .pub-rsvp-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+}
+#guestRsvpSection .pub-rsvp-text-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: #9ca3af;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s;
+    line-height: 1.6;
+    text-align: center;
+    display: block;
+    font-family: inherit;
+}
+#guestRsvpSection .pub-rsvp-text-link:hover {
+    color: #4f46e5;
+    text-decoration: underline;
+}
+
+body.public-event-detail #commentsSection {
+    margin-top: 16px;
+}
+
+/* ── RSVP bottom sheet (mobile) ── */
+.rsvp-sheet-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 299;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+.rsvp-sheet-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+@media (max-width: 1023px) {
+    .rsvp-sheet-backdrop {
+        display: block;
+    }
+    body.public-event-detail #guestRsvpSection {
+        position: fixed !important;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 300;
+        opacity: 1 !important;
+        margin: 0 !important;
+        border-radius: 20px 20px 0 0 !important;
+        max-height: 85vh;
+        overflow-y: auto;
+        transform: translateY(calc(100% + 160px)) !important;
+        transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        padding: 20px 20px max(24px, env(safe-area-inset-bottom, 24px)) !important;
+    }
+    body.public-event-detail #guestRsvpSection.rsvp-sheet-open {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+    body.public-event-detail #guestRsvpSection::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 2px;
+        margin: -8px auto 16px;
+    }
+    body.public-event-detail .rsvp-sheet-close {
+        display: flex;
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        background: #f3f4f6;
+        border: none;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 0;
+        flex-shrink: 0;
+    }
+    body.public-event-detail .rsvp-sheet-close svg {
+        width: 14px;
+        height: 14px;
+        stroke: #6b7280;
+    }
+}
+.rsvp-sheet-close {
+    display: none;
+}
+
+@media (max-width: 1023px) {
+    body.public-event-detail .ed-summary-card {
+        display: none;
+    }
 }
 
 /* ═══ Sticky event details header (title + date card pin on scroll) ═══ */

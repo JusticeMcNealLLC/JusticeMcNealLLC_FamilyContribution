@@ -118,6 +118,159 @@ async function pubLoadEvent(slug, isCheckin, ticketToken) {
     pubRenderEvent(event, goingCount, isCheckin, ticketToken);
 }
 
+
+function pubPublicMapsHref(destination) {
+    const addr = encodeURIComponent(destination || '');
+    return /iPad|iPhone|iPod/.test(navigator.userAgent)
+        ? `https://maps.apple.com/?daddr=${addr}`
+        : `https://www.google.com/maps/dir/?api=1&destination=${addr}`;
+}
+
+
+function pubBuildPublicDetailShell(event, goingCount) {
+    const content = document.getElementById('eventContent');
+    if (!content) return;
+
+    document.body.classList.add('public-event-detail');
+    content.classList.add('public-ed-detail');
+
+    const start = new Date(event.start_date);
+    const end = event.end_date ? new Date(event.end_date) : null;
+    const dateMain = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const dateLong = start.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const weekday = start.toLocaleDateString('en-US', { weekday: 'long' });
+    const timeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const endTimeStr = end ? end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
+    const showTime = !event.gate_time || pubCurrentRsvp || pubGuestRsvp;
+    const showLocation = !event.gate_location || pubCurrentRsvp || pubGuestRsvp;
+    const typeInfo = PUB_TYPE_COLORS[event.event_type] || PUB_TYPE_COLORS.llc;
+    const isLlc = event.event_type === 'llc';
+    const creator = event.creator || null;
+    const creatorName = creator
+        ? `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || 'Member'
+        : '';
+    const hostName = isLlc ? 'Justice McNeal LLC' : (creatorName || typeInfo.label);
+    const categoryLabel = event.category ? (event.category || '').replace(/_/g, ' ') : '';
+    const bannerStyle = event.banner_url
+        ? `background-image:url('${event.banner_url}');background-size:cover;background-position:center;`
+        : 'background:linear-gradient(135deg,#312e81 0%,#6d28d9 52%,#a855f7 100%);';
+    const mapsHref = event.location_text ? pubPublicMapsHref(event.location_text) : '#';
+
+    content.innerHTML = `
+        <input type="hidden" id="shareUrl" value="">
+
+        <div class="ed-content">
+            <div class="ed-detail-body">
+                <div class="ed-main">
+                    <div id="eventBanner" class="ed-hero" style="${bannerStyle}" role="img" aria-label="Event banner">
+                        <div class="ed-hero-scrim"></div>
+                        <div class="ed-hero-nav">
+                            <div id="heroStatusBadge" aria-live="polite" aria-atomic="true"></div>
+                            <div id="eventTags" class="ed-hero-pills"></div>
+                        </div>
+                        <div class="ed-hero-bottom-content">
+                            <h1 id="eventContentTitle" class="ed-hero-title">${pubEscapeHtml(event.title || 'Event')}</h1>
+                            <div id="heroLocationPill" class="public-ed-hidden-mount"></div>
+                            <p class="ed-hero-subtitle">Hosted by ${pubEscapeHtml(hostName)}${categoryLabel ? ` &bull; ${pubEscapeHtml(categoryLabel)}` : ''}</p>
+                            <div class="ed-hero-info-bar">
+                                <div class="ed-hero-info-item">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    <div><span class="ed-hero-info-main">${dateMain}</span><span class="ed-hero-info-sub">${weekday}</span></div>
+                                </div>
+                                ${showTime ? `<div class="ed-hero-info-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><div><span class="ed-hero-info-main">${timeStr}</span><span class="ed-hero-info-sub">${endTimeStr ? `Ends ${endTimeStr}` : 'Start time'}</span></div></div>` : ''}
+                                ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-hero-info-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><div><span class="ed-hero-info-main">${pubEscapeHtml(event.location_nickname || event.location_text || '')}</span><span class="ed-hero-info-sub">${pubEscapeHtml(event.location_nickname && event.location_text ? event.location_text : 'Location')}</span></div></div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ed-content-cards">
+                        <div class="ed-qi-bar">
+                            <div class="ed-qi-col"><svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="ed-qi-main">${dateMain}</span><span class="ed-qi-sub">${weekday}</span></div>
+                            ${showTime ? `<div class="ed-qi-col"><svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="ed-qi-main">${timeStr}</span><span class="ed-qi-sub">Start time</span></div>` : ''}
+                            ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-qi-col ed-qi-col-loc"><svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="ed-qi-main">${pubEscapeHtml(event.location_nickname || event.location_text || '')}</span><span class="ed-qi-sub">Location</span></div>` : ''}
+                        </div>
+                        ${showLocation && event.location_lat && event.location_lng ? `
+                        <div class="ed-mobile-map-card">
+                            <div id="eventMapMobile" class="ed-mobile-map" onclick="pubOpenFullscreenMap()"></div>
+                            <div class="ed-map-overlay ed-mobile-map-overlay">
+                                <span class="ed-map-overlay-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
+                                <div class="ed-map-overlay-body">
+                                    <p class="ed-map-overlay-name">${pubEscapeHtml(event.location_nickname || event.location_text || 'Venue')}</p>
+                                    ${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${pubEscapeHtml(event.location_text)}</p>` : ''}
+                                    <a href="${mapsHref}" target="_blank" rel="noopener" class="ed-map-overlay-link">View on Maps ↗</a>
+                                </div>
+                            </div>
+                        </div>` : ''}
+
+                        <div id="inviteBanner" class="hidden public-ed-invite"></div>
+                        <div id="eventStatusBanner" class="hidden ed-card"></div>
+                        <div id="attendeeCount" class="hidden ed-card"></div>
+                        <div id="calendarSection" class="hidden"></div>
+
+                        <div class="ed-about-grid public-ed-about-grid">
+                            <div class="ed-about-left">
+                                <div class="ed-about-desc-col">
+                                    <p class="ed-about-heading">About This Event</p>
+                                    <p id="eventDesc" class="ed-desc"></p>
+                                </div>
+                            </div>
+                            <div class="ed-about-right">
+                                <div class="ed-about-org-col"><div id="hostSection" class="hidden"></div></div>
+                                <div id="eventMapWrap" class="hidden ed-about-map-col public-ed-map-col">
+                                    <div class="ed-map-wrap">
+                                        <div id="eventMap" class="ed-map" onclick="pubOpenFullscreenMap()"></div>
+                                        <div class="ed-map-overlay">
+                                            <span class="ed-map-overlay-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
+                                            <div class="ed-map-overlay-body"><p class="ed-map-overlay-name">${pubEscapeHtml(event.location_nickname || event.location_text || 'Venue')}</p>${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${pubEscapeHtml(event.location_text)}</p>` : ''}<a id="eventDirectionsBtn" href="${mapsHref}" target="_blank" rel="noopener" class="ed-map-overlay-link">View on Maps</a></div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="gatedSection" class="hidden ed-card evt-section"><div class="evt-info-card"><span class="evt-info-card-icon">🔓</span><div><p class="evt-info-card-title">Attendee Details</p><p id="gatedNotes" class="evt-info-card-sub" style="white-space:pre-line"></p></div></div></div>
+                        <div id="commentsSection" class="hidden ed-card" role="region" aria-label="Discussion">
+                            <div class="ed-section-head"><h3>Discussion</h3></div>
+                            <div id="commentsList" class="ed-comments-list"></div>
+                            <div id="commentForm" class="hidden ed-comment-input-row">
+                                <div class="ed-comment-self-avatar">G</div>
+                                <div class="ed-comment-input-wrap"><input type="text" id="commentInput" placeholder="Add a comment..." class="ed-comment-input" aria-label="Write a comment"><button onclick="pubPostComment()" class="ed-comment-post">Post</button></div>
+                            </div>
+                            <div id="commentLoginPrompt" class="hidden ed-comment-empty"><span class="ed-comment-empty-icon">💬</span><p class="ed-comment-empty-text">RSVP to join the discussion</p></div>
+                        </div>
+                        <div class="evt-footer">&copy; Justice McNeal LLC · <a href="/">Home</a></div>
+                    </div>
+                </div>
+
+                <div class="ed-sidebar public-ed-sidebar">
+                    <div class="ed-card ed-summary-card">
+                        <p class="ed-summary-heading">Event Summary</p>
+                        <div class="ed-summary-header-row">
+                            ${event.banner_url ? `<img src="${event.banner_url}" class="ed-summary-thumb" alt="">` : '<div class="ed-summary-thumb ed-summary-thumb-placeholder"></div>'}
+                            <div class="ed-summary-header-text"><p class="ed-summary-title">${pubEscapeHtml(event.title || 'Event')}</p><p class="ed-summary-sub">Hosted by ${pubEscapeHtml(hostName)}</p>${categoryLabel ? `<p class="ed-summary-cat">${pubEscapeHtml(categoryLabel)}</p>` : ''}</div>
+                        </div>
+                        <hr class="ed-divider" style="margin:14px 0">
+                        <div class="ed-summary-rows">
+                            <div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25"/></svg></div><div><span class="ed-summary-main">${dateLong}</span><span class="ed-summary-sub2">${weekday}</span></div></div>
+                            ${showTime ? `<div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><span class="ed-summary-main">${timeStr}</span><span class="ed-summary-sub2">${endTimeStr ? `Ends ${endTimeStr}` : 'Start time'}</span></div></div>` : ''}
+                            ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg></div><div><span class="ed-summary-main">${pubEscapeHtml(event.location_nickname || event.location_text || '')}</span>${event.location_text && event.location_nickname ? `<span class="ed-summary-sub2">${pubEscapeHtml(event.location_text)}</span>` : ''}${event.location_text ? `<a href="${mapsHref}" target="_blank" rel="noopener" class="ed-maps-link">View on Maps</a>` : ''}</div></div>` : ''}
+                            ${goingCount >= 3 ? `<div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857"/></svg></div><div><span class="ed-summary-main">${goingCount} going</span>${event.max_participants ? `<span class="ed-summary-sub2">${event.max_participants - goingCount > 0 ? `${event.max_participants - goingCount} spots left` : 'Sold out'}</span>` : ''}</div></div>` : ''}
+                        </div>
+                    </div>
+                    <div id="memberRsvpCard" class="hidden ed-card ed-card-rsvp"><p class="ed-summary-heading">Your RSVP</p><div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div></div>
+                    <div id="guestRsvpSection" class="hidden ed-card"><p class="ed-summary-heading">RSVP for This Event</p><p class="public-ed-muted" style="margin-bottom:14px">No account needed. Enter your name and email.</p><div class="public-ed-field-stack"><input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name"><input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address"><label class="evt-checkbox-label hidden"><input type="checkbox" id="guestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label><button onclick="pubHandleGuestRsvp()" id="guestRsvpBtn" class="evt-rsvp-pay">RSVP as Guest</button></div><div class="pub-rsvp-links"><a id="signinRsvpLink" href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="pub-rsvp-text-link">Have an account? Sign in</a><button type="button" onclick="var p=document.getElementById('lookupPanel');if(p)p.classList.toggle('hidden')" class="pub-rsvp-text-link">Already RSVP'd? Find my ticket</button></div><div id="lookupPanel" class="hidden" style="margin-top:14px"><div class="public-ed-field-stack"><input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" aria-label="Email used for RSVP"><button onclick="pubLookupGuestTicket()" id="lookupBtn" class="evt-action-btn">Find My Ticket</button></div><div id="lookupResult" style="margin-top:10px"></div></div></div>
+                    <div id="memberOnlyNotice" class="hidden ed-card evt-section"><div class="evt-notice-card"><span class="evt-notice-icon">🔒</span><div><p class="evt-notice-title">Members-only event</p><p class="evt-notice-sub">Sign in with your member account to RSVP.</p></div></div></div>
+                    <div id="ticketSection" class="hidden ed-card evt-section"><div class="evt-qr-card"><h3 class="evt-qr-title">🎫 Your Event Ticket</h3><canvas id="ticketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p></div></div>
+                    <div id="guestTicketSection" class="hidden ed-card evt-section"><div class="evt-qr-card"><div style="font-size:36px;margin-bottom:8px">🎉</div><h3 class="evt-qr-title">You're In!</h3><p id="guestTicketName" style="font-size:13px;color:#717171;margin-bottom:16px"></p><canvas id="guestTicketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p><p style="font-size:13px;color:#f59e0b;font-weight:600;margin-top:10px">Bookmark this page. This is your ticket.</p></div></div>
+                    <div id="venueCheckin" class="hidden ed-card evt-section"><div id="checkinResult"></div></div>
+                    <div id="raffleSection" class="ed-card"></div>
+
+                </div>
+            </div>
+        </div>`;
+}
+
 /* ── Render ──────────────────────────────── */
 
 function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
@@ -125,6 +278,7 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     const content = document.getElementById('eventContent');
     content.classList.remove('hidden');
     content.classList.add('evt-fade-in');
+    pubBuildPublicDetailShell(event, goingCount);
 
     // ── OG meta tags handled by event-og edge function (crawlers hit that URL) ──
     // Set page title for the browser tab
@@ -201,15 +355,7 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         }
     }
 
-    heroBadge.innerHTML = `<div class="evt-date-card-wrap">
-        <span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>
-        <div class="evt-date-card" onclick="pubDownloadIcs()" title="Add to calendar">
-            <span class="evt-date-card-month">${heroMonthStr}</span>
-            <span class="evt-date-card-day">${heroDayStr}</span>
-            <span class="evt-date-card-time">${heroTimeShort}</span>
-            <span class="evt-date-card-cal-icon"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"/></svg></span>
-        </div>
-    </div>`;
+    heroBadge.innerHTML = `<span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>`;
 
     // Live countdown updater (smart: 1s tick when < 1 hour)
     if (!isClosed && !isPast && event.status !== 'active') {
@@ -329,11 +475,6 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         pubShowGuestTicket(pubGuestRsvp);
     }
 
-    // Guest lookup section (show for public events when not signed in and no guest ticket showing)
-    if (!pubCurrentUser && !pubGuestRsvp && !event.member_only && event.rsvp_enabled !== false) {
-        document.getElementById('guestLookupSection').classList.remove('hidden');
-    }
-
     // Venue Check-In mode
     if (isCheckin && event.checkin_mode === 'venue_scan') {
         pubRenderVenueCheckin(event);
@@ -432,24 +573,23 @@ function pubTimeAgo(dateStr) {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// Expose for onclick handlers
-window.pubHandleRsvp = pubHandleRsvp;
-window.pubHandlePaidRsvp = pubHandlePaidRsvp;
-window.pubHandlePaidRaffle = pubHandlePaidRaffle;
-window.pubHandleFreeRaffle = pubHandleFreeRaffle;
-window.pubHandleGuestPaidRaffle = pubHandleGuestPaidRaffle;
-window.pubHandleGuestFreeRaffle = pubHandleGuestFreeRaffle;
-window.pubHandleGuestRsvp = pubHandleGuestRsvp;
-window.pubDoVenueCheckin = pubDoVenueCheckin;
-window.pubDoGuestVenueCheckin = pubDoGuestVenueCheckin;
-window.pubToggleLookup = pubToggleLookup;
-window.pubLookupGuestTicket = pubLookupGuestTicket;
-window.pubOpenFullscreenMap = pubOpenFullscreenMap;
-window.pubCloseFullscreenMap = pubCloseFullscreenMap;
+// Expose for onclick handlers. Some handlers are defined in later-loaded files,
+// so wrappers resolve from window at click time instead of at index.js parse time.
+function pubCallDeferred(name, args) {
+    const fn = window[name];
+    if (typeof fn === 'function' && fn !== window[`_${name}Wrapper`]) return fn.apply(window, args);
+}
+[
+    'pubHandleRsvp', 'pubHandlePaidRsvp', 'pubHandlePaidRaffle', 'pubHandleFreeRaffle',
+    'pubHandleGuestPaidRaffle', 'pubHandleGuestFreeRaffle', 'pubHandleGuestRsvp',
+    'pubDoVenueCheckin', 'pubDoGuestVenueCheckin', 'pubToggleLookup', 'pubLookupGuestTicket',
+    'pubOpenFullscreenMap', 'pubCloseFullscreenMap', 'pubDownloadIcs', 'pubPostComment',
+    'pubOpenLightbox', 'pubOpenRsvpSheet', 'pubCloseRsvpSheet'
+].forEach(name => {
+    window[`_${name}Wrapper`] = function () { return pubCallDeferred(name, arguments); };
+    window[name] = window[`_${name}Wrapper`];
+});
 window.pubCopyUrl = pubCopyUrl;
-window.pubDownloadIcs = pubDownloadIcs;
-window.pubPostComment = pubPostComment;
-window.pubOpenLightbox = pubOpenLightbox;
 
 // ═══════════════════════════════════════════════════════════
 // Scroll-driven hero collapse (shrink + sticky body header)

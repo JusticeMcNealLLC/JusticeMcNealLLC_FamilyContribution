@@ -4,10 +4,20 @@
 
 function pubRenderRsvpSection(event) {
     const section = document.getElementById('rsvpSection');
+    const memberCard = document.getElementById('memberRsvpCard');
     const rsvpEnabled = event.rsvp_enabled !== false;
     const isClosed = event.status === 'completed' || event.status === 'cancelled';
     const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
     const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
+
+    // For guests: hide member card entirely, unified guest card handles everything
+    if (!pubCurrentUser) {
+        if (memberCard) memberCard.classList.add('hidden');
+        return;
+    }
+
+    // Logged-in member — reveal the member RSVP card
+    if (memberCard) memberCard.classList.remove('hidden');
 
     // RSVP disabled for this event — show informational card
     if (!rsvpEnabled) {
@@ -28,45 +38,6 @@ function pubRenderRsvpSection(event) {
         // Also hide the divider above it
         const prevDivider = section.previousElementSibling;
         if (prevDivider && prevDivider.tagName === 'HR') prevDivider.classList.add('hidden');
-        return;
-    }
-
-    if (!pubCurrentUser) {
-        // If guest already has an RSVP (paid or free), show confirmed state
-        if (pubGuestRsvp) {
-            const isPaidGuest = pubGuestRsvp.paid;
-            section.innerHTML = `
-                <div class="evt-info-card">
-                    <span class="evt-info-card-icon">✅</span>
-                    <div>
-                        <p class="evt-info-card-title">Guest RSVP Confirmed</p>
-                        <p class="evt-info-card-sub">${pubEscapeHtml(pubGuestRsvp.guest_name)}${isPaidGuest ? ' · Non-refundable' : ''}</p>
-                    </div>
-                </div>`;
-            return;
-        }
-
-        // For member-only events, show sign-in prompt
-        if (event.member_only) {
-            section.innerHTML = `<div style="text-align:center">
-                <p style="font-size:15px;color:#717171;margin-bottom:16px">Sign in to RSVP for this members-only event</p>
-                <a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-action-btn" style="display:inline-flex;width:auto;padding:14px 32px;text-decoration:none">
-                    Sign In to RSVP
-                </a>
-            </div>`;
-            return;
-        }
-
-        // For public (non-member-only) events
-        const costHint = event.pricing_mode === 'paid' && event.rsvp_cost_cents
-            ? ` (${pubFormatCurrency(event.rsvp_cost_cents)})`
-            : '';
-        section.innerHTML = `<div style="text-align:center">
-            <p style="font-size:15px;color:#717171;margin-bottom:16px">Have an account?</p>
-            <a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-action-btn" style="display:inline-flex;width:auto;padding:14px 32px;text-decoration:none">
-                Sign In to RSVP${costHint}
-            </a>
-        </div>`;
         return;
     }
 
@@ -184,14 +155,28 @@ function pubRenderGuestRsvpSection(event) {
     const section = document.getElementById('guestRsvpSection');
     if (!section) return;
 
-    // Hide guest RSVP when RSVP is disabled for this event
+    // Move to <body> at init so position:fixed always escapes ancestor transform
+    // stacking contexts (e.g. evt-fade-in on #eventContent).
+    if (section.parentElement !== document.body) {
+        document.body.appendChild(section);
+    }
+
+    // Hide when RSVP disabled for this event
     if (event.rsvp_enabled === false) {
         section.classList.add('hidden');
         return;
     }
 
-    // Only show for non-signed-in visitors on non-member-only events
-    if (pubCurrentUser || event.member_only || pubGuestRsvp) {
+    // Hide for members-only events (show #memberOnlyNotice instead)
+    if (event.member_only) {
+        section.classList.add('hidden');
+        const notice = document.getElementById('memberOnlyNotice');
+        if (notice) notice.classList.remove('hidden');
+        return;
+    }
+
+    // Hide when a member is signed in (they use the member RSVP card)
+    if (pubCurrentUser) {
         section.classList.add('hidden');
         return;
     }
@@ -199,22 +184,39 @@ function pubRenderGuestRsvpSection(event) {
     const isClosed = event.status === 'completed' || event.status === 'cancelled';
     const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
     const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
-    if (isClosed || isPast || deadlinePassed) return;
+    if (isClosed || isPast || deadlinePassed) {
+        section.classList.add('hidden');
+        return;
+    }
 
+    // Guest already confirmed — replace card content with confirmation state
+    if (pubGuestRsvp) {
+        const isPaidGuest = pubGuestRsvp.paid;
+        section.classList.remove('hidden');
+        section.innerHTML = `
+            <div class="evt-info-card">
+                <span class="evt-info-card-icon">✅</span>
+                <div>
+                    <p class="evt-info-card-title">You're RSVP'd!</p>
+                    <p class="evt-info-card-sub">${pubEscapeHtml(pubGuestRsvp.guest_name)}${isPaidGuest ? ' · Non-refundable' : ''}</p>
+                </div>
+            </div>`;
+        return;
+    }
+
+    // Default: show the unified tab card
     section.classList.remove('hidden');
 
-    // Update button label with price (if paid)
+    // Update button label with price if paid event
     const btn = document.getElementById('guestRsvpBtn');
     if (btn) {
         const cost = event.rsvp_cost_cents || 0;
-        if (event.pricing_mode === 'paid' && cost > 0) {
-            btn.textContent = `RSVP as Guest — ${pubFormatCurrency(cost)}`;
-        } else {
-            btn.textContent = 'RSVP as Guest';
-        }
+        btn.textContent = (event.pricing_mode === 'paid' && cost > 0)
+            ? `RSVP as Guest — ${pubFormatCurrency(cost)}`
+            : 'RSVP as Guest';
     }
 
-    // Show/hide no-refund checkbox (only for paid events)
+    // Show/hide no-refund checkbox (paid events only)
     const noRefundCheck = document.getElementById('guestNoRefundCheck');
     if (noRefundCheck) {
         const isPaid = event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0;
@@ -302,10 +304,6 @@ async function pubHandleGuestRsvp() {
                 if (pubCurrentEvent.checkin_mode === 'attendee_ticket') {
                     pubShowGuestTicket(pubGuestRsvp);
                 }
-
-                // Hide guest lookup since they just RSVP'd
-                const lookupSection = document.getElementById('guestLookupSection');
-                if (lookupSection) lookupSection.classList.add('hidden');
             }
         }
     } catch (err) {

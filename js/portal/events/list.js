@@ -376,6 +376,7 @@
 
         const all = window.evtAllEvents || [];
         const attendees = window.evtAttendees || {};
+        const counts = window.evtAttendeeCounts || {};
         const byDay = _groupEventsByDay(all);
         const items = byDay[dateKey] || [];
 
@@ -388,7 +389,7 @@
         } else {
             // Reuse existing _miniCard for consistent rendering
             body.innerHTML = '<div class="flex flex-col gap-2">' +
-                items.map(ev => _miniCard(ev, attendees[ev.id] || [])
+                items.map(ev => _miniCard(ev, attendees[ev.id] || [], counts[ev.id])
                     .replace('snap-start shrink-0 w-[76%] sm:w-64', 'w-full')
                 ).join('') +
             '</div>';
@@ -992,19 +993,36 @@
 
             // Scoped attendee query (events_003 §12.1 LOCKED)
             // ONE query — filtered by event_id IN currentIds + status='going'
-            // Cap 5 / event client-side. Never N+1.
+            // Cap 5 avatars / event client-side. Never N+1.
+            // evtAttendees      = up-to-5 profile objects (for avatar stack)
+            // evtAttendeeCounts = true total including guests (for "N going" label)
             window.evtAttendees = {};
+            window.evtAttendeeCounts = {};
             if (ids.length) {
-                const { data: going, error: aErr } = await supabaseClient
-                    .from('event_rsvps')
-                    .select('event_id, profiles:user_id(profile_picture_url, first_name)')
-                    .eq('status', 'going')
-                    .in('event_id', ids);
+                const [{ data: going, error: aErr }, { data: guestGoing, error: gErr }] = await Promise.all([
+                    supabaseClient
+                        .from('event_rsvps')
+                        .select('event_id, profiles:user_id(profile_picture_url, first_name)')
+                        .eq('status', 'going')
+                        .in('event_id', ids),
+                    supabaseClient
+                        .from('event_guest_rsvps')
+                        .select('event_id, status, paid')
+                        .in('event_id', ids),
+                ]);
                 if (!aErr && going) {
                     going.forEach(row => {
                         if (!row.profiles) return;
                         const list = (window.evtAttendees[row.event_id] ||= []);
                         if (list.length < 5) list.push(row.profiles);
+                        window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
+                    });
+                }
+                if (!gErr && guestGoing) {
+                    guestGoing.forEach(row => {
+                        if (row.status === 'going' || row.paid === true) {
+                            window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
+                        }
                     });
                 }
             }
@@ -1095,8 +1113,9 @@
                 : '<span class="evt-hero-cluster-init">' + esc(initial) + '</span>';
             return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc(first) + '">' + inner + '</span>';
         }).join('');
-        // We capped attendees client-side at 5; if at the cap, hint there may be more.
-        const labelN = list.length >= 5 ? '5+' : String(list.length);
+        // Use true total from evtAttendeeCounts; fall back to list length.
+        const trueCount = (window.evtAttendeeCounts && window.evtAttendeeCounts[eventId]) || list.length;
+        const labelN = String(trueCount);
         return '<button type="button" data-evt-hero-going="' + esc(eventId) + '"' +
             ' class="evt-hero-cluster" aria-label="See who is going">' +
                 '<span class="evt-hero-cluster-stack">' + bubs + '</span>' +
@@ -1422,11 +1441,13 @@
         const truncated = useVlift && total > E_BUCKET_TRUNCATE && !isExpanded;
         const visible = truncated ? events.slice(0, E_BUCKET_TRUNCATE) : events;
 
+        const counts = window.evtAttendeeCounts || {};
         const cards = visible.map(ev => Card.render(ev, {
             rsvp: rsvps[ev.id] || null,
             href: ev.slug ? ('?event=' + encodeURIComponent(ev.slug)) : 'javascript:void(0)',
             variant: 'portal',
             attendees: attendees[ev.id] || [],
+            goingCount: counts[ev.id] || (attendees[ev.id] || []).length,
         })).join('');
 
         // F8 — Create-event tile: prepend to the first upcoming-tab bucket when user can create
@@ -1542,6 +1563,7 @@
 
         mount.innerHTML =
             '<div class="evt-mcal" role="group" aria-label="Mini calendar">' +
+                '<p class="evt-mcal-section-heading">Calendar</p>' +
                 '<div class="evt-mcal-head">' +
                     '<button type="button" class="evt-mcal-nav" data-mcal-prev aria-label="Previous month">&lsaquo;</button>' +
                     '<span class="evt-mcal-title">' + monthLabel + '</span>' +
@@ -1884,7 +1906,8 @@
         if (!going.length) { rail.classList.add('hidden'); scroll.innerHTML = ''; return; }
 
         rail.classList.remove('hidden');
-        scroll.innerHTML = going.map(ev => _miniCard(ev, attendees[ev.id] || [])).join('');
+        const counts = window.evtAttendeeCounts || {};
+        scroll.innerHTML = going.map(ev => _miniCard(ev, attendees[ev.id] || [], counts[ev.id])).join('');
 
         // Wire clicks
         scroll.querySelectorAll('a[data-evt-mini]').forEach(link => {
@@ -1903,7 +1926,7 @@
         });
     }
 
-    function _miniCard(event, attendees) {
+    function _miniCard(event, attendees, goingCount) {
         const esc = H.escapeHtml || (s => String(s == null ? '' : s));
         const d = new Date(event.start_date);
         const day = d.getDate();
@@ -1923,7 +1946,7 @@
             bannerStyle = 'background: ' + grad + ';';
         }
 
-        const attCount = (attendees || []).length;
+        const attCount = (goingCount != null) ? goingCount : (attendees || []).length;
         const attLine = attCount
             ? '<span class="text-[11px] text-gray-500 truncate">' + attCount + ' going</span>'
             : '';
@@ -1985,7 +2008,8 @@
         }
 
         rail.classList.remove('hidden');
-        scroll.innerHTML = picks.map(ev => _miniCard(ev, attendees[ev.id] || [])).join('');
+        const counts = window.evtAttendeeCounts || {};
+        scroll.innerHTML = picks.map(ev => _miniCard(ev, attendees[ev.id] || [], counts[ev.id])).join('');
 
         // Wire mini-card clicks (reuse same data-evt-mini hook as going rail)
         scroll.querySelectorAll('a[data-evt-mini]').forEach(link => {
@@ -2823,9 +2847,11 @@
     window.evtRenderCard = function (event) {
         const rsvps = window.evtAllRsvps || {};
         const attendees = window.evtAttendees || {};
+        const counts = window.evtAttendeeCounts || {};
         return Card ? Card.render(event, {
             rsvp: rsvps[event.id] || null,
             attendees: attendees[event.id] || [],
+            goingCount: counts[event.id] || (attendees[event.id] || []).length,
             variant: 'portal',
         }) : '';
     };

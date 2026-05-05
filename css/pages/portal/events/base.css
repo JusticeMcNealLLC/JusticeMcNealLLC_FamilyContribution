@@ -119,23 +119,24 @@
 
 /* Mobile sticky CTA bar (legacy detail page) */
 .evt-cta-bar { display: none; }
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     .evt-cta-bar {
         display: flex; align-items: center; justify-content: center; gap: 10px;
         position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom, 0px));
         z-index: 49;
-        background: rgba(255, 255, 255, .85);
-        backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-        border-top: 1px solid rgba(0, 0, 0, .06);
-        padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+        background: #fff;
+        border-top: 1px solid #f3f4f6;
+        padding: 12px 16px max(12px, env(safe-area-inset-bottom));
     }
-    .evt-cta-btn { flex: 1; max-width: 280px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 18px; border-radius: 50px; font-size: 15px; font-weight: 700; letter-spacing: .01em; border: none; cursor: pointer; text-decoration: none; white-space: nowrap; transition: transform .15s, opacity .15s; -webkit-tap-highlight-color: transparent; }
+    .evt-cta-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 18px; border-radius: 14px; font-size: 15px; font-weight: 700; letter-spacing: .01em; border: none; cursor: pointer; text-decoration: none; white-space: nowrap; transition: transform .15s, opacity .15s; -webkit-tap-highlight-color: transparent; }
     .evt-cta-btn:active { transform: scale(.97); }
     .evt-cta-btn:disabled { opacity: .5; cursor: not-allowed; }
     .evt-cta-btn svg { width: 18px; height: 18px; stroke-width: 2.5; fill: none; stroke: currentColor; flex-shrink: 0; }
     .evt-cta-rsvp { background: #4f46e5; color: #fff; }
     .evt-cta-rsvp-done { background: #16a34a; color: #fff; }
+    .evt-cta-manage { background: #4f46e5; color: #fff; }
     .evt-cta-raffle { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+    .evt-cta-raffle-outline { background: #fff; color: #d97706; border: 2px solid #fbbf24; }
     .evt-cta-raffle-done { background: #16a34a; color: #fff; }
     .evt-cta-host { background: #e5e7eb; color: #374151; }
     .evt-cta-disabled { background: #e5e7eb; color: #9ca3af; }

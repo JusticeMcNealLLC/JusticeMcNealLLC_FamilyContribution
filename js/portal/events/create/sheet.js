@@ -116,6 +116,7 @@
                 .ec-type-emoji { font-size:24px; line-height:1; }
                 .ec-banner-drop { border:2px dashed #d1d5db; border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; }
                 .ec-banner-drop:hover { border-color:#a5b4fc; background:#fafafa; }
+                .ec-banner-drop--over { border-color:#4f46e5; background:#eef2ff; }
                 .ec-banner-preview { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; }
                 .ec-pill { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; background:#f3f4f6; color:#374151; cursor:pointer; border:1px solid transparent; }
                 .ec-pill.active { background:#4f46e5; color:#fff; }
@@ -262,7 +263,7 @@
                     ? `<div><img src="${STATE.bannerPreviewUrl}" class="ec-banner-preview" alt=""><button type="button" id="ecBannerClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>`
                     : `<div id="ecBannerDrop" class="ec-banner-drop">
                             <div style="font-size:28px">🖼️</div>
-                            <div class="text-sm font-semibold text-gray-700 mt-1">Tap to upload</div>
+                            <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drag &amp; drop or click to upload</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
                             <div class="text-xs text-gray-400">PNG / JPG / WebP · max 5 MB</div>
                        </div>`
                 }
@@ -289,7 +290,40 @@
 
         const drop = document.getElementById('ecBannerDrop');
         const file = document.getElementById('ecBannerFile');
+
+        // Show desktop hint on non-touch devices
+        if (drop && window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
+            const dt = drop.querySelector('.ec-drop-hint-desktop');
+            const tt = drop.querySelector('.ec-drop-hint-touch');
+            if (dt) dt.style.display = '';
+            if (tt) tt.style.display = 'none';
+        }
+
         drop?.addEventListener('click', () => file.click());
+
+        // Drag & drop (desktop only — touch devices don't fire dragover)
+        drop?.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            drop.classList.add('ec-banner-drop--over');
+        });
+        drop?.addEventListener('dragleave', (e) => {
+            if (!drop.contains(e.relatedTarget)) {
+                drop.classList.remove('ec-banner-drop--over');
+            }
+        });
+        drop?.addEventListener('drop', (e) => {
+            e.preventDefault();
+            drop.classList.remove('ec-banner-drop--over');
+            const f = e.dataTransfer?.files?.[0];
+            if (!f) return;
+            if (!f.type.match(/^image\/(png|jpeg|webp)$/)) { alert('Please drop a PNG, JPG, or WebP image.'); return; }
+            if (f.size > 5 * 1024 * 1024) { alert('File must be under 5 MB.'); return; }
+            STATE.bannerFile = f;
+            const r = new FileReader();
+            r.onload = () => { STATE.bannerPreviewUrl = r.result; _render(); };
+            r.readAsDataURL(f);
+        });
+
         file?.addEventListener('change', () => {
             const f = file.files[0];
             if (!f) return;
