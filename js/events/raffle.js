@@ -31,10 +31,11 @@ async function pubRenderRaffleSection(event) {
     const totalWinners = pubRaffleWinnerCount(raffleConfig, event);
     const prizesHtml = pubRafflePrizesHtml(event);
 
-    // Check if current user has raffle entry. Primary entry actions live in
-    // the mobile CTA; this section now shows raffle details and status only.
+    // Check if current user has raffle entry. Mobile uses the sticky CTA;
+    // desktop keeps an inline action because no sticky CTA is shown there.
     let myEntryHtml = '';
     let lockedBtnHtml = '';
+    const hasRsvp = pubCurrentUser ? (pubCurrentRsvp?.status === 'going' || !!pubCurrentRsvp?.paid) : !!pubGuestRsvp;
 
     if (entriesClosed) {
         // Show greyed-out locked button
@@ -60,11 +61,23 @@ async function pubRenderRaffleSection(event) {
 
         if (myEntry) {
             myEntryHtml = `<div class="ed-raffle-entry-chip" style="margin-top:14px">🎟️ Entered</div>`;
-        } else myEntryHtml = `<p class="public-raffle-empty" style="margin-top:14px">Use the sticky CTA below to enter the raffle.</p>`;
+        } else if (!hasRsvp) {
+            myEntryHtml = `<div class="public-raffle-action public-raffle-desktop-action"><p class="public-raffle-empty">RSVP first to enter the raffle.</p><button onclick="pubHandleRsvp('going')" class="evt-raffle-buy">RSVP to Enter Raffle</button></div><p class="public-raffle-empty public-raffle-mobile-hint">RSVP first using the sticky CTA below, then enter the raffle.</p>`;
+        } else if (event.raffle_entry_cost_cents > 0) {
+            myEntryHtml = `<div class="public-raffle-action public-raffle-desktop-action"><button onclick="pubHandlePaidRaffle()" class="evt-raffle-buy">🎟️ Buy Raffle Entry — ${pubFormatCurrency(event.raffle_entry_cost_cents)}</button><p style="font-size:13px;color:#b0b0b0;text-align:center;margin-top:8px">Non-refundable raffle ticket</p></div><p class="public-raffle-empty public-raffle-mobile-hint">Use the sticky CTA below to enter the raffle.</p>`;
+        } else {
+            myEntryHtml = `<div class="public-raffle-action public-raffle-desktop-action"><button onclick="pubHandleFreeRaffle()" class="evt-raffle-buy">🎟️ Enter Raffle — Free</button></div><p class="public-raffle-empty public-raffle-mobile-hint">Use the sticky CTA below to enter the raffle.</p>`;
+        }
     } else {
-        myEntryHtml = pubGuestRaffleEntry
-            ? `<div class="ed-raffle-entry-chip" style="margin-top:14px">🎟️ Entered</div>`
-            : `<p class="public-raffle-empty" style="margin-top:14px">Use the sticky CTA below to enter the raffle.</p>`;
+        if (pubGuestRaffleEntry) {
+            myEntryHtml = `<div class="ed-raffle-entry-chip" style="margin-top:14px">🎟️ Entered</div>`;
+        } else if (!hasRsvp) {
+            myEntryHtml = `<div class="public-raffle-action public-raffle-desktop-action"><p class="public-raffle-empty">RSVP first to enter the raffle.</p><button onclick="pubOpenRsvpSheet()" class="evt-raffle-buy">RSVP to Enter Raffle</button></div><p class="public-raffle-empty public-raffle-mobile-hint">RSVP first using the sticky CTA below, then enter the raffle.</p>`;
+        } else if (event.raffle_entry_cost_cents > 0) {
+            myEntryHtml = `<div class="public-raffle-action public-raffle-desktop-action"><button onclick="pubHandleGuestPaidRaffle()" class="evt-raffle-buy">🎟️ Buy Raffle Entry — ${pubFormatCurrency(event.raffle_entry_cost_cents)}</button><p style="font-size:13px;color:#b0b0b0;text-align:center;margin-top:8px">Using RSVP info for ${pubEscapeHtml(pubGuestRsvp.guest_name || 'Guest')}</p></div><p class="public-raffle-empty public-raffle-mobile-hint">Use the sticky CTA below to enter the raffle.</p>`;
+        } else {
+            myEntryHtml = `<div class="public-raffle-action public-raffle-desktop-action"><button onclick="pubHandleGuestFreeRaffle()" class="evt-raffle-buy">🎟️ Enter Raffle — Free</button><p style="font-size:13px;color:#b0b0b0;text-align:center;margin-top:8px">Using RSVP info for ${pubEscapeHtml(pubGuestRsvp.guest_name || 'Guest')}</p></div><p class="public-raffle-empty public-raffle-mobile-hint">Use the sticky CTA below to enter the raffle.</p>`;
+        }
     }
 
     // Load winners
@@ -212,6 +225,11 @@ function pubRaffleWinnersHtml(winners, guestWinnerNames) {
 async function pubHandlePaidRaffle() {
     if (!pubCurrentUser || !pubCurrentEvent) return;
 
+    if (!(pubCurrentRsvp?.status === 'going' || pubCurrentRsvp?.paid)) {
+        alert('Please RSVP before entering the raffle.');
+        return;
+    }
+
     const confirmPay = confirm(
         `Raffle entry costs ${pubFormatCurrency(pubCurrentEvent.raffle_entry_cost_cents)}.\n\n` +
         'Raffle entry is non-refundable. Proceed to checkout?'
@@ -235,15 +253,21 @@ async function pubHandlePaidRaffle() {
 async function pubHandleFreeRaffle() {
     if (!pubCurrentUser || !pubCurrentEvent) return;
 
+    if (!(pubCurrentRsvp?.status === 'going' || pubCurrentRsvp?.paid)) {
+        alert('Please RSVP before entering the raffle.');
+        return;
+    }
+
     try {
         const { error } = await supabaseClient
             .from('event_raffle_entries')
-            .insert({ event_id: pubCurrentEvent.id, user_id: pubCurrentUser.id, paid: true });
+            .upsert({ event_id: pubCurrentEvent.id, user_id: pubCurrentUser.id, paid: true }, { onConflict: 'event_id,user_id' });
 
         if (error) throw error;
 
         // Refresh raffle section
         pubRenderRaffleSection(pubCurrentEvent);
+        pubInitBottomNav(pubCurrentEvent);
     } catch (err) {
         console.error('Free raffle entry error:', err);
         alert(err.message || 'Failed to enter raffle. Please try again.');
@@ -255,8 +279,15 @@ async function pubHandleFreeRaffle() {
 async function pubHandleGuestPaidRaffle(nameOverride, emailOverride) {
     if (!pubCurrentEvent) return;
 
-    const name  = nameOverride || document.getElementById('guestRaffleName')?.value.trim();
-    const email = emailOverride || document.getElementById('guestRaffleEmail')?.value.trim();
+    if (!pubGuestRsvp) {
+        alert('Please RSVP before entering the raffle.');
+        if (document.getElementById('evtCtaBar')) pubOpenRsvpForRaffle();
+        else pubOpenRsvpSheet();
+        return;
+    }
+
+    const name  = nameOverride || pubGuestRsvp.guest_name;
+    const email = emailOverride || pubGuestRsvp.guest_email;
 
     if (!name || !email) { alert('Please enter your name and email.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Please enter a valid email.'); return; }
@@ -286,8 +317,15 @@ async function pubHandleGuestPaidRaffle(nameOverride, emailOverride) {
 async function pubHandleGuestFreeRaffle(nameOverride, emailOverride) {
     if (!pubCurrentEvent) return;
 
-    const name  = nameOverride || document.getElementById('guestRaffleName')?.value.trim();
-    const email = emailOverride || document.getElementById('guestRaffleEmail')?.value.trim();
+    if (!pubGuestRsvp) {
+        alert('Please RSVP before entering the raffle.');
+        if (document.getElementById('evtCtaBar')) pubOpenRsvpForRaffle();
+        else pubOpenRsvpSheet();
+        return;
+    }
+
+    const name  = nameOverride || pubGuestRsvp.guest_name;
+    const email = emailOverride || pubGuestRsvp.guest_email;
 
     if (!name || !email) { alert('Please enter your name and email.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Please enter a valid email.'); return; }
@@ -325,6 +363,7 @@ async function pubHandleGuestFreeRaffle(nameOverride, emailOverride) {
                     </div>
                 </div>`;
         }
+        pubRenderRaffleSection(pubCurrentEvent);
         pubInitBottomNav(pubCurrentEvent);
     } catch (err) {
         console.error('Guest free raffle error:', err);

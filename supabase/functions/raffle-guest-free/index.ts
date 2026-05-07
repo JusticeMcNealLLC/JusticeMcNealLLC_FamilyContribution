@@ -71,9 +71,7 @@ serve(async (req) => {
     }
 
     const emailLower = guest_email.trim().toLowerCase()
-    const nameTrimmed = guest_name.trim()
-
-    // Get or create guest_rsvp record for guest_token
+    // Guest must already have an RSVP so raffle entry reuses that identity.
     let guestToken: string
 
     const { data: existingGuest } = await supabase
@@ -83,26 +81,10 @@ serve(async (req) => {
       .eq('guest_email', emailLower)
       .maybeSingle()
 
-    if (existingGuest) {
-      guestToken = existingGuest.guest_token
-    } else {
-      guestToken = crypto.randomUUID()
-      const { error: guestErr } = await supabase
-        .from('event_guest_rsvps')
-        .insert({
-          event_id,
-          guest_name: nameTrimmed,
-          guest_email: emailLower,
-          guest_token: guestToken,
-          status: 'going',
-          paid: false,
-          amount_paid_cents: 0,
-        })
-      if (guestErr) {
-        console.error('Guest RSVP insert error:', guestErr)
-        throw new Error('Failed to register guest. Please try again.')
-      }
+    if (!existingGuest) {
+      throw new Error('Please RSVP before entering the raffle')
     }
+    guestToken = existingGuest.guest_token
 
     // Check for existing raffle entry
     const { data: existingEntry } = await supabase

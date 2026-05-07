@@ -159,6 +159,17 @@ serve(async (req) => {
 
       // Check for existing raffle entry
       if (!isGuest) {
+        const { data: raffleRsvp } = await supabase
+          .from('event_rsvps')
+          .select('id, status, paid')
+          .eq('event_id', event_id)
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (!(raffleRsvp?.status === 'going' || raffleRsvp?.paid)) {
+          throw new Error('Please RSVP before entering the raffle')
+        }
+
         const { data: existingEntry } = await supabase
           .from('event_raffle_entries')
           .select('id')
@@ -189,6 +200,8 @@ serve(async (req) => {
           if (existingEntry) {
             throw new Error('This email already has a raffle entry for this event')
           }
+        } else {
+          throw new Error('Please RSVP before entering the raffle')
         }
       }
 

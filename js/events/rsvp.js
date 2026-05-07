@@ -143,6 +143,10 @@ async function pubHandleRsvp(status) {
         }
 
         await pubLoadEvent(pubCurrentEvent.slug, false);
+        if (status === 'going' && window.pubCtaRaffleIntent && document.getElementById('evtCtaBar')) {
+            window.pubCtaRaffleIntent = false;
+            pubOpenCtaPanel('raffle');
+        }
     } catch (err) {
         console.error('RSVP error:', err);
         alert('Failed to update RSVP. Please try again.');
@@ -304,13 +308,20 @@ async function pubHandleGuestRsvp() {
                 // Show QR ticket if attendee_ticket mode
                 if (pubCurrentEvent.checkin_mode === 'attendee_ticket') {
                     await pubShowGuestTicket(pubGuestRsvp);
-                    if (window.matchMedia('(max-width: 1023px)').matches) {
+                    if (window.pubCtaRaffleIntent && document.getElementById('evtCtaBar')) {
+                        window.pubCtaRaffleIntent = false;
+                        pubOpenCtaPanel('raffle');
+                    } else if (window.matchMedia('(max-width: 1023px)').matches) {
                         if (document.getElementById('evtCtaBar')) pubOpenCtaPanel('ticket');
                         else {
                             pubCloseRsvpSheet();
                             pubOpenGuestTicketSheet();
                         }
                     }
+                }
+                if (window.pubCtaRaffleIntent && document.getElementById('evtCtaBar')) {
+                    window.pubCtaRaffleIntent = false;
+                    pubOpenCtaPanel('raffle');
                 }
                 pubInitBottomNav(pubCurrentEvent);
             }

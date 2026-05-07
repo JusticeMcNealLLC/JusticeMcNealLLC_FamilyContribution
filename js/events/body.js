@@ -20,7 +20,17 @@ function pubCloseCtaPanel() {
     if (bar) bar.classList.remove('evt-cta-bar-expanded');
 }
 
-function pubOpenCtaPanel(kind) {
+function pubHasRaffleEligibleRsvp() {
+    if (pubCurrentUser) return pubCurrentRsvp?.status === 'going' || !!pubCurrentRsvp?.paid;
+    return !!pubGuestRsvp;
+}
+
+function pubOpenRsvpForRaffle() {
+    window.pubCtaRaffleIntent = true;
+    pubOpenCtaPanel('rsvp', { raffleIntent: true });
+}
+
+function pubOpenCtaPanel(kind, opts = {}) {
     const panel = document.getElementById('evtCtaPanel');
     const bar = document.getElementById('evtCtaBar');
     if (!panel || !bar || !pubCurrentEvent) return;
@@ -35,13 +45,21 @@ function pubOpenCtaPanel(kind) {
     }
 
     if (kind === 'raffle') {
+        if (!pubHasRaffleEligibleRsvp()) {
+            pubOpenRsvpForRaffle();
+            return;
+        }
         pubRenderCtaRaffle(panel, closeBtn);
         return;
     }
 
+    const rafflePrompt = opts.raffleIntent
+        ? '<div class="evt-cta-note">RSVP first, then your same name and email will be used for the raffle entry.</div>'
+        : '';
     panel.innerHTML = `
         ${closeBtn}
         <div class="evt-cta-panel-head"><strong>RSVP for this event</strong><span>No account needed. Your ticket appears here after RSVP.</span></div>
+        ${rafflePrompt}
         <div class="evt-cta-field-stack">
             <input type="text" id="ctaGuestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name">
             <input type="email" id="ctaGuestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address">
@@ -67,6 +85,11 @@ function pubRenderCtaTicket(panel, closeBtn) {
 }
 
 function pubRenderCtaRaffle(panel, closeBtn) {
+    if (!pubHasRaffleEligibleRsvp()) {
+        pubOpenRsvpForRaffle();
+        return;
+    }
+
     if (pubCurrentUser) {
         const cost = pubCurrentEvent.raffle_entry_cost_cents || 0;
         panel.innerHTML = `
@@ -82,12 +105,12 @@ function pubRenderCtaRaffle(panel, closeBtn) {
     }
 
     const cost = pubCurrentEvent.raffle_entry_cost_cents || 0;
+    const guestName = pubEscapeHtml(pubGuestRsvp?.guest_name || 'Guest');
+    const guestEmail = pubEscapeHtml(pubGuestRsvp?.guest_email || '');
     panel.innerHTML = `
         ${closeBtn}
-        <div class="evt-cta-panel-head"><strong>Enter the raffle</strong><span>No account needed. Enter your info to join the draw.</span></div>
+        <div class="evt-cta-panel-head"><strong>Enter the raffle</strong><span>Using your RSVP info: ${guestName}${guestEmail ? ` · ${guestEmail}` : ''}</span></div>
         <div class="evt-cta-field-stack">
-            <input type="text" id="ctaGuestRaffleName" placeholder="Your name" class="evt-input" aria-label="Your name">
-            <input type="email" id="ctaGuestRaffleEmail" placeholder="Email address" class="evt-input" aria-label="Email address">
             <button type="button" onclick="pubSubmitCtaGuestRaffle()" id="ctaGuestRaffleBtn" class="evt-raffle-buy">${cost > 0 ? `Buy Raffle Entry — ${pubFormatCurrency(cost)}` : 'Enter Raffle — Free'}</button>
             ${cost > 0 ? '<p class="evt-cta-fineprint">Non-refundable raffle ticket</p>' : ''}
         </div>`;
@@ -108,8 +131,12 @@ async function pubSubmitCtaGuestRsvp() {
 }
 
 async function pubSubmitCtaGuestRaffle() {
-    const name = document.getElementById('ctaGuestRaffleName')?.value.trim() || '';
-    const email = document.getElementById('ctaGuestRaffleEmail')?.value.trim() || '';
+    if (!pubGuestRsvp) {
+        pubOpenRsvpForRaffle();
+        return;
+    }
+    const name = pubGuestRsvp.guest_name || '';
+    const email = pubGuestRsvp.guest_email || '';
     if (pubCurrentEvent?.raffle_entry_cost_cents > 0) await pubHandleGuestPaidRaffle(name, email);
     else await pubHandleGuestFreeRaffle(name, email);
 }

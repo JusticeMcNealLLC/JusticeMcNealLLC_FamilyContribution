@@ -158,7 +158,10 @@ function pubInitBottomNav(event) {
         } else if (pubGuestRaffleEntry) {
             raffleBtn = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${PUB_CTA_ICONS.check} Entered</button>`;
         } else {
-            const label = event.raffle_entry_cost_cents > 0 ? `Raffle — ${pubFormatCurrency(event.raffle_entry_cost_cents)}` : 'Enter Raffle';
+            const hasRsvp = pubCurrentUser ? (pubCurrentRsvp?.status === 'going' || !!pubCurrentRsvp?.paid) : !!pubGuestRsvp;
+            const label = hasRsvp
+                ? (event.raffle_entry_cost_cents > 0 ? `Raffle — ${pubFormatCurrency(event.raffle_entry_cost_cents)}` : 'Enter Raffle')
+                : 'RSVP for Raffle';
             raffleBtn = `<button class="evt-cta-btn evt-cta-raffle" onclick="pubOpenCtaPanel('raffle')">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel(label)}</button>`;
         }
     }

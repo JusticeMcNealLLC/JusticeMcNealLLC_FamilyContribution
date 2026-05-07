@@ -603,6 +603,7 @@ async function evtOpenDetail(eventId) {
         const prizesHtml = evtDetailRafflePrizesHtml(event);
 
         let entryStatusHtml = '';
+        const hasRaffleRsvp = rsvp?.status === 'going' || !!rsvp?.paid;
         if (myRaffleEntry) {
             entryStatusHtml = `<div class="ed-raffle-entry-chip">🎟️ Entered</div>`;
         } else if (entriesClosed && !myRaffleEntry) {
@@ -611,10 +612,12 @@ async function evtOpenDetail(eventId) {
             else if (isPast) lockedReason = 'Event in progress';
             else if (deadlinePassed) lockedReason = 'RSVP deadline passed';
             entryStatusHtml = `<div class="ed-notice"><span class="ed-notice-emoji">🔒</span><div><p class="ed-notice-title">Entries Closed</p><p class="ed-notice-sub">${lockedReason}</p></div></div>`;
+        } else if (event.pricing_mode !== 'paid' && !hasRaffleRsvp) {
+            entryStatusHtml = `<div class="ed-raffle-desktop-action"><p class="ed-hint" style="font-style:italic">RSVP first to enter the raffle.</p><button onclick="evtHandleRsvp('${eventId}','going')" class="ed-raffle-btn">RSVP to Enter Raffle</button></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">RSVP first using the sticky CTA below, then enter the raffle.</p>`;
         } else if (event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0 && !entriesClosed) {
-            entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
+            entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
         } else if (event.pricing_mode !== 'paid' && (!event.raffle_entry_cost_cents || event.raffle_entry_cost_cents === 0) && !entriesClosed) {
-            entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
+            entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleFreeRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Enter Raffle — Free</button></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
         } else if (event.pricing_mode === 'paid' && !rsvp?.paid) {
             entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Raffle entry included with paid RSVP</p>`;
         }
@@ -1285,6 +1288,8 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
                     raffleSlot = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${EVT_CTA_ICONS.check} Entered</button>`;
                 } else if (entriesClosed) {
                     raffleSlot = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Entries Closed</button>`;
+                } else if (!(rsvp?.status === 'going' || !!rsvp?.paid)) {
+                    raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId}')">${EVT_CTA_ICONS.ticket} RSVP for Raffle</button>`;
                 } else if (event.raffle_entry_cost_cents > 0) {
                     raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId}')">${EVT_CTA_ICONS.ticket} Raffle — ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
                 } else {
@@ -1357,6 +1362,14 @@ function evtOpenCtaPanel(kind, eventId) {
             const canvas = document.getElementById('evtCtaTicketQR');
             QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`, { width: 172, margin: 2 });
         }
+        return;
+    }
+
+    if (!(rsvp?.status === 'going' || !!rsvp?.paid)) {
+        panel.innerHTML = `
+            ${closeBtn}
+            <div class="evt-cta-panel-head"><strong>RSVP first</strong><span>Once you are going, this same member RSVP will be used for the raffle entry.</span></div>
+            <button type="button" onclick="window.evtCtaRaffleIntent='${eventId}';evtHandleRsvp('${eventId}','going')" class="evt-raffle-buy">RSVP to Enter Raffle</button>`;
         return;
     }
 

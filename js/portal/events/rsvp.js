@@ -96,6 +96,10 @@ async function evtHandleRsvp(eventId, status) {
         // Refresh detail and card list
         evtRenderEvents();
         await evtOpenDetail(eventId);
+        if (status === 'going' && window.evtCtaRaffleIntent === eventId) {
+            window.evtCtaRaffleIntent = null;
+            evtOpenCtaPanel('raffle', eventId);
+        }
     } catch (err) {
         console.error('RSVP error:', err);
         alert('Failed to update RSVP. Please try again.');
@@ -121,6 +125,12 @@ async function evtHandleRaffleEntry(eventId) {
 
         if (event.pricing_mode === 'paid' || !event.raffle_entry_cost_cents) {
             alert('Raffle entry is included with your RSVP for this event.');
+            return;
+        }
+
+        const rsvp = (window.evtAllRsvps || evtAllRsvps)[eventId];
+        if (!(rsvp?.status === 'going' || !!rsvp?.paid)) {
+            alert('Please RSVP before entering the raffle.');
             return;
         }
 
@@ -163,9 +173,15 @@ async function evtHandleFreeRaffleEntry(eventId) {
         const { data: session } = await supabaseClient.auth.getSession();
         if (!session?.session?.user) { alert('Please sign in to enter.'); return; }
 
+        const rsvp = (window.evtAllRsvps || evtAllRsvps)[eventId];
+        if (!(rsvp?.status === 'going' || !!rsvp?.paid)) {
+            alert('Please RSVP before entering the raffle.');
+            return;
+        }
+
         const { error } = await supabaseClient
             .from('event_raffle_entries')
-            .insert({ event_id: eventId, user_id: session.session.user.id, paid: true });
+            .upsert({ event_id: eventId, user_id: session.session.user.id, paid: true }, { onConflict: 'event_id,user_id' });
 
         if (error) throw error;
 

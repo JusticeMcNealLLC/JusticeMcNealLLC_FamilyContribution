@@ -136,11 +136,15 @@ body {
 .public-raffle-block { margin-top:8px; }
 .public-raffle-prize-rail { margin-top:2px; }
 .public-raffle-empty { margin:0 0 12px; font-size:13px; color:#999; font-style:italic; }
+.public-raffle-action { margin-top:16px; }
+.public-raffle-mobile-hint { display:none; margin-top:14px; }
 .public-raffle-winners { margin-top:18px; }
 body.public-event-detail #raffleSection { margin-top:16px; }
 @media(max-width:639px){
     .public-raffle-head { flex-direction:column; align-items:flex-start; }
     .public-raffle-title { font-size:18px; }
+    .public-raffle-desktop-action { display:none; }
+    .public-raffle-mobile-hint { display:block; }
 }
 
 /* Status banner (hidden — replaced by hero badge) */
@@ -273,6 +277,7 @@ body.public-event-detail #raffleSection { margin-top:16px; }
     .evt-cta-panel-head span { display:block; margin-top:3px; color:#6b7280; font-size:12px; line-height:1.35; }
     .evt-cta-field-stack { display:flex; flex-direction:column; gap:9px; }
     .evt-cta-fineprint { margin:0; color:#9ca3af; font-size:12px; text-align:center; }
+    .evt-cta-note { margin:0 0 12px; padding:10px 12px; border-radius:12px; background:#fff7ed; color:#9a3412; font-size:12px; line-height:1.4; font-weight:700; }
     .evt-cta-ticket-card { text-align:center; }
     .evt-cta-ticket-card canvas { display:block; margin:0 auto 8px; border-radius:12px; }
     .evt-cta-ticket-card p { margin:0; font-size:12px; color:#6b7280; }
