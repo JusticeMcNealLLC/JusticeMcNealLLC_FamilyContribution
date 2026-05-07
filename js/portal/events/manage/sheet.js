@@ -77,6 +77,17 @@
                 .em-tab.placeholder { color:#cbd5e1; }
                 .em-tab.placeholder.active { color:#9ca3af; border-bottom-color:#cbd5e1; }
                 .em-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; }
+                .em-op-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
+                .em-op-card { min-height:150px; display:flex; flex-direction:column; gap:12px; }
+                .em-op-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+                .em-op-kicker { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; margin:0 0 3px; }
+                .em-op-title { font-size:15px; font-weight:800; color:#111827; margin:0; line-height:1.15; }
+                .em-op-icon { width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#f3f4f6; flex-shrink:0; }
+                .em-op-copy { font-size:12px; line-height:1.45; color:#6b7280; margin:0; }
+                .em-op-meta { margin-top:auto; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+                .em-op-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#f8fafc; color:#475569; font-size:11px; font-weight:700; }
+                .em-op-progress { height:7px; border-radius:999px; overflow:hidden; background:#eef2f7; margin-top:auto; }
+                .em-op-progress span { display:block; height:100%; width:0; border-radius:inherit; background:#4f46e5; }
                 .em-stat { display:flex; flex-direction:column; gap:4px; }
                 .em-stat-label { font-size:11px; text-transform:uppercase; letter-spacing:.04em; font-weight:600; color:#6b7280; }
                 .em-stat-num { font-size:24px; font-weight:800; color:#111827; }
@@ -106,7 +117,9 @@
                 .em-placeholder svg { width:48px; height:48px; margin-bottom:12px; opacity:.4; }
                 @media(max-width:639px){
                     #emSheetPanel { max-height: 92vh; }
+                    .em-op-grid { grid-template-columns:1fr; }
                 }
+                @media(min-width:640px) and (max-width:900px){ .em-op-grid { grid-template-columns:1fr 1fr; } }
             </style>
         `;
         document.body.appendChild(root);
@@ -252,8 +265,44 @@
         const checked = STATE.checkins.length;
         const revenue = paid * (e.rsvp_cost_cents || 0);
         const startLocal = new Date(e.start_date).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+        const isLlc = e.event_type === 'llc';
+        const minNeeded = Number(e.min_participants || 0);
+        const thresholdPct = minNeeded ? Math.min(100, Math.round((going / minNeeded) * 100)) : 0;
+        const thresholdMet = minNeeded ? going >= minNeeded : false;
+        const deadline = e.rsvp_deadline ? new Date(e.rsvp_deadline).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '';
+        const transportMode = e.transportation_mode;
+        const transportEstimate = e.transportation_estimate_cents ? _money(e.transportation_estimate_cents) : '';
 
         const portalLink = `<a href="../portal/events.html?event=${encodeURIComponent(e.slug || '')}" class="em-btn-ghost" style="text-decoration:none;display:inline-block">Open in portal →</a>`;
+        const thresholdCard = isLlc && minNeeded ? `
+            <div class="em-card em-op-card">
+                <div class="em-op-head">
+                    <div><p class="em-op-kicker">Minimum</p><p class="em-op-title">${thresholdMet ? 'Threshold met' : 'Needs momentum'}</p></div>
+                    <span class="em-op-icon">${thresholdMet ? '✅' : '⚠️'}</span>
+                </div>
+                <p class="em-op-copy">${going} of ${minNeeded} required RSVPs${deadline ? ` by ${deadline}` : ''}. ${thresholdMet ? 'This event can stay confirmed.' : `${Math.max(0, minNeeded - going)} more RSVP${minNeeded - going === 1 ? '' : 's'} needed.`}</p>
+                <div class="em-op-progress"><span style="width:${thresholdPct}%"></span></div>
+                <div class="em-op-meta"><span class="em-op-chip">${thresholdPct}% filled</span><button class="em-btn-ghost" data-overview-tab="rsvps">Review RSVPs</button></div>
+            </div>` : '';
+        const transportCard = isLlc && transportMode ? `
+            <div class="em-card em-op-card">
+                <div class="em-op-head">
+                    <div><p class="em-op-kicker">Transportation</p><p class="em-op-title">${transportMode === 'llc_provides' ? 'LLC provided' : 'Self-arranged'}</p></div>
+                    <span class="em-op-icon">${transportMode === 'llc_provides' ? '✈️' : '🧳'}</span>
+                </div>
+                <p class="em-op-copy">${transportMode === 'llc_provides' ? 'Upload tickets or travel documents in Docs when they are ready for members.' : `Members book travel themselves${transportEstimate ? `, estimated around ${transportEstimate}` : ''}.`}</p>
+                <div class="em-op-meta"><button class="em-btn-ghost" data-overview-tab="docs">Open Docs</button><span class="em-op-chip">${transportMode === 'llc_provides' ? 'Document handoff' : 'Member-owned'}</span></div>
+            </div>` : '';
+        const documentsCard = isLlc ? `
+            <div class="em-card em-op-card">
+                <div class="em-op-head">
+                    <div><p class="em-op-kicker">Documents</p><p class="em-op-title">Handoff hub</p></div>
+                    <span class="em-op-icon">📄</span>
+                </div>
+                <p class="em-op-copy">Upload group files or member-specific tickets here. Attendees only see a retrieval button on the event page.</p>
+                <div class="em-op-meta"><button class="em-btn-primary" data-overview-tab="docs">Manage Docs</button></div>
+            </div>` : '';
+        const operationsHtml = [thresholdCard, transportCard, documentsCard].filter(Boolean).join('');
 
         return `
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -262,6 +311,8 @@
                 <div class="em-card em-stat"><span class="em-stat-label">Checked In</span><span class="em-stat-num" style="color:#7c3aed">${checked}</span></div>
                 <div class="em-card em-stat"><span class="em-stat-label">Revenue</span><span class="em-stat-num" style="color:#059669">${_money(revenue)}</span></div>
             </div>
+
+            ${operationsHtml ? `<div class="em-op-grid">${operationsHtml}</div>` : ''}
 
             <div class="em-card mb-3">
                 <h3 class="font-bold text-gray-800 text-sm mb-3">Details</h3>
@@ -385,6 +436,13 @@
         if (canvas && e.venue_qr_token && typeof QRCode !== 'undefined') {
             QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${encodeURIComponent(e.slug || '')}&checkin=1`, { width: 200, margin: 2 });
         }
+        document.getElementById('emSheetContent').querySelectorAll('[data-overview-tab]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.activeTab = btn.dataset.overviewTab;
+                _renderTabs();
+                _renderTab(STATE.activeTab);
+            });
+        });
     }
 
     function _wireDanger() {
