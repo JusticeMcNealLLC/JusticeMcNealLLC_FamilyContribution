@@ -308,6 +308,9 @@
         const deadline = e.rsvp_deadline ? new Date(e.rsvp_deadline).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '';
         const transportMode = e.transportation_mode;
         const transportEstimate = e.transportation_estimate_cents ? _money(e.transportation_estimate_cents) : '';
+        const thresholdCopy = thresholdMet
+            ? `${going} confirmed RSVP${going === 1 ? '' : 's'}; minimum was ${minNeeded}${deadline ? ` by ${deadline}` : ''}. This event can stay confirmed.`
+            : `${going} of ${minNeeded} required RSVP${minNeeded === 1 ? '' : 's'}${deadline ? ` by ${deadline}` : ''}. ${Math.max(0, minNeeded - going)} more RSVP${minNeeded - going === 1 ? '' : 's'} needed.`;
 
         const portalLink = `<a href="../portal/events.html?event=${encodeURIComponent(e.slug || '')}" class="em-btn-ghost" style="text-decoration:none;display:inline-block">Open in portal →</a>`;
         const thresholdCard = isLlc && minNeeded ? `
@@ -316,7 +319,7 @@
                     <div><p class="em-op-kicker">Minimum</p><p class="em-op-title">${thresholdMet ? 'Threshold met' : 'Needs momentum'}</p></div>
                     <span class="em-op-icon">${thresholdMet ? '✅' : '⚠️'}</span>
                 </div>
-                <p class="em-op-copy">${going} of ${minNeeded} required RSVPs${deadline ? ` by ${deadline}` : ''}. ${thresholdMet ? 'This event can stay confirmed.' : `${Math.max(0, minNeeded - going)} more RSVP${minNeeded - going === 1 ? '' : 's'} needed.`}</p>
+                <p class="em-op-copy">${thresholdCopy}</p>
                 <div class="em-op-progress"><span style="width:${thresholdPct}%"></span></div>
                 <div class="em-op-meta"><span class="em-op-chip">${thresholdPct}% filled</span><button class="em-btn-ghost" data-overview-tab="rsvps">Review RSVPs</button></div>
             </div>` : '';
