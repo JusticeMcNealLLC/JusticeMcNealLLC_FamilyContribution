@@ -399,6 +399,7 @@
                 <canvas id="emInviteQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
                 <p class="text-xs text-gray-400 text-center mt-2 break-all">${_esc(inviteUrl)}</p>
                 <div class="flex flex-wrap justify-center gap-2 mt-3">
+                    <button class="em-btn-primary" data-share-invite-url>Share invite</button>
                     <button class="em-btn-primary" data-download-invite-qr>Download QR</button>
                     <button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>
                 </div>
@@ -554,6 +555,9 @@
                 btn.textContent = 'Copied ✓';
                 setTimeout(() => { btn.textContent = 'Copy invite link'; }, 1500);
             });
+        });
+        document.getElementById('emSheetContent').querySelectorAll('[data-share-invite-url]').forEach(btn => {
+            btn.addEventListener('click', () => _shareInviteUrl(inviteUrl, e, btn));
         });
         document.getElementById('emSheetContent').querySelectorAll('[data-download-invite-qr]').forEach(btn => {
             btn.addEventListener('click', () => _downloadCanvasPng('emInviteQR', `${_safeFilename(e.slug || e.title || 'event')}-invite-qr.png`));
@@ -1388,6 +1392,24 @@
         link.download = filename;
         link.href = canvas.toDataURL('image/png');
         link.click();
+    }
+
+    async function _shareInviteUrl(url, event, btn) {
+        const title = event?.title ? `${event.title} | Justice McNeal LLC` : 'Justice McNeal LLC Event';
+        const text = event?.rsvp_enabled === false ? 'View event details.' : 'RSVP today.';
+        if (navigator.share) {
+            try {
+                await navigator.share({ title, text, url });
+                return;
+            } catch (_) {
+                // User cancelled or native share failed; copy fallback below.
+            }
+        }
+        await navigator.clipboard.writeText(url);
+        if (btn) {
+            btn.textContent = 'Link copied ✓';
+            setTimeout(() => { btn.textContent = 'Share invite'; }, 1500);
+        }
     }
 
     function _esc(s) {
