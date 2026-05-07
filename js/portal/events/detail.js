@@ -1173,6 +1173,7 @@ async function evtOpenDetail(eventId) {
 // Fullscreen Map (mobile)
 // ═══════════════════════════════════════════════════════════
 let _fullscreenMap = null;
+let _fullscreenMapCoords = null;
 
 function evtOpenFullscreenMap(lat, lng, label) {
     const overlay = document.getElementById('fullscreenMapOverlay');
@@ -1193,6 +1194,7 @@ function evtOpenFullscreenMap(lat, lng, label) {
 
     // Init map after overlay is visible
     setTimeout(() => {
+        _fullscreenMapCoords = { lat, lng };
         if (_fullscreenMap) { _fullscreenMap.remove(); _fullscreenMap = null; }
         _fullscreenMap = L.map('fullscreenMapContainer', {
             zoomControl: true,
@@ -1204,6 +1206,11 @@ function evtOpenFullscreenMap(lat, lng, label) {
         L.marker([lat, lng]).addTo(_fullscreenMap).bindPopup(evtEscapeHtml(label || 'Event Location')).openPopup();
         setTimeout(() => _fullscreenMap.invalidateSize(), 50);
     }, 50);
+}
+
+function evtRecenterFullscreenMap() {
+    if (!_fullscreenMap || !_fullscreenMapCoords) return;
+    _fullscreenMap.setView([_fullscreenMapCoords.lat, _fullscreenMapCoords.lng], 16, { animate: true, duration: 0.5 });
 }
 
 function evtCloseFullscreenMap() {
@@ -1379,6 +1386,7 @@ function evtOpenCtaPanel(kind, eventId) {
 window.evtOpenDetail            = evtOpenDetail;
 window.evtOpenLightbox          = evtOpenLightbox;
 window.evtOpenFullscreenMap     = evtOpenFullscreenMap;
+window.evtRecenterFullscreenMap = evtRecenterFullscreenMap;
 window.evtCloseFullscreenMap    = evtCloseFullscreenMap;
 window.evtMiniMarkdown          = evtMiniMarkdown;
 window.evtInitSectionAnimations = evtInitSectionAnimations;
