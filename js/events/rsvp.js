@@ -305,8 +305,11 @@ async function pubHandleGuestRsvp() {
                 if (pubCurrentEvent.checkin_mode === 'attendee_ticket') {
                     await pubShowGuestTicket(pubGuestRsvp);
                     if (window.matchMedia('(max-width: 1023px)').matches) {
-                        pubCloseRsvpSheet();
-                        pubOpenGuestTicketSheet();
+                        if (document.getElementById('evtCtaBar')) pubOpenCtaPanel('ticket');
+                        else {
+                            pubCloseRsvpSheet();
+                            pubOpenGuestTicketSheet();
+                        }
                     }
                 }
                 pubInitBottomNav(pubCurrentEvent);

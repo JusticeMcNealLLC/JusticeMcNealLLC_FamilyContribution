@@ -21,6 +21,7 @@ var pubCurrentUser  = null;
 var pubCurrentRsvp  = null;
 var pubGuestToken   = null;
 var pubGuestRsvp    = null;
+var pubGuestRaffleEntry = false;
 
 function pubMiniMarkdown(text) {
     if (!text) return '';

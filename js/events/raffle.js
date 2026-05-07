@@ -31,7 +31,8 @@ async function pubRenderRaffleSection(event) {
     const totalWinners = pubRaffleWinnerCount(raffleConfig, event);
     const prizesHtml = pubRafflePrizesHtml(event);
 
-    // Check if current user has raffle entry
+    // Check if current user has raffle entry. Primary entry actions live in
+    // the mobile CTA; this section now shows raffle details and status only.
     let myEntryHtml = '';
     let lockedBtnHtml = '';
 
@@ -59,62 +60,11 @@ async function pubRenderRaffleSection(event) {
 
         if (myEntry) {
             myEntryHtml = `<div class="ed-raffle-entry-chip" style="margin-top:14px">🎟️ Entered</div>`;
-        } else if (event.raffle_entry_cost_cents > 0) {
-            myEntryHtml = `
-                <button onclick="pubHandlePaidRaffle()" class="evt-raffle-buy" style="margin-top:16px">
-                    🎟️ Buy Raffle Entry — ${pubFormatCurrency(event.raffle_entry_cost_cents)}
-                </button>
-                <p style="font-size:13px;color:#b0b0b0;text-align:center;margin-top:8px">Non-refundable raffle ticket</p>`;
-        } else {
-            // Free raffle — one-click enter
-            myEntryHtml = `
-                <button onclick="pubHandleFreeRaffle()" class="evt-raffle-buy" style="margin-top:16px">
-                    🎟️ Enter Raffle — Free
-                </button>`;
-        }
+        } else myEntryHtml = `<p class="public-raffle-empty" style="margin-top:14px">Use the sticky CTA below to enter the raffle.</p>`;
     } else {
-        // ── Not signed in ──
-        if (event.member_only) {
-            myEntryHtml = `
-                <div style="text-align:center;margin-top:16px">
-                    <a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-raffle-buy" style="display:inline-flex;text-decoration:none;justify-content:center">
-                        🎟️ Sign In to Enter Raffle
-                    </a>
-                </div>`;
-        } else if (event.raffle_entry_cost_cents > 0) {
-            // Non-member-only event with paid raffle — show guest raffle entry form
-            myEntryHtml = `
-                <div style="margin-top:16px" id="guestRaffleForm">
-                    <p style="font-size:13px;color:#717171;margin-bottom:10px">Enter your info to join the raffle</p>
-                    <div style="display:flex;flex-direction:column;gap:8px">
-                        <input type="text" id="guestRaffleName" placeholder="Your name" class="evt-guest-input" style="padding:10px 14px;border:1px solid #ddd;border-radius:10px;font-size:14px">
-                        <input type="email" id="guestRaffleEmail" placeholder="Email address" class="evt-guest-input" style="padding:10px 14px;border:1px solid #ddd;border-radius:10px;font-size:14px">
-                        <button onclick="pubHandleGuestPaidRaffle()" class="evt-raffle-buy">
-                            🎟️ Buy Raffle Entry — ${pubFormatCurrency(event.raffle_entry_cost_cents)}
-                        </button>
-                        <p style="font-size:12px;color:#b0b0b0;text-align:center">Non-refundable raffle ticket</p>
-                    </div>
-                    <p style="font-size:13px;color:#717171;margin-top:12px;text-align:center">
-                        <a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" style="color:#222;font-weight:600">Sign in</a> if you have an account
-                    </p>
-                </div>`;
-        } else {
-            // Free raffle — guest can enter with name+email
-            myEntryHtml = `
-                <div style="margin-top:16px" id="guestRaffleForm">
-                    <p style="font-size:13px;color:#717171;margin-bottom:10px">Enter your info to join the raffle</p>
-                    <div style="display:flex;flex-direction:column;gap:8px">
-                        <input type="text" id="guestRaffleName" placeholder="Your name" class="evt-guest-input" style="padding:10px 14px;border:1px solid #ddd;border-radius:10px;font-size:14px">
-                        <input type="email" id="guestRaffleEmail" placeholder="Email address" class="evt-guest-input" style="padding:10px 14px;border:1px solid #ddd;border-radius:10px;font-size:14px">
-                        <button onclick="pubHandleGuestFreeRaffle()" class="evt-raffle-buy">
-                            🎟️ Enter Raffle — Free
-                        </button>
-                    </div>
-                    <p style="font-size:13px;color:#717171;margin-top:12px;text-align:center">
-                        <a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" style="color:#222;font-weight:600">Sign in</a> if you have an account
-                    </p>
-                </div>`;
-        }
+        myEntryHtml = pubGuestRaffleEntry
+            ? `<div class="ed-raffle-entry-chip" style="margin-top:14px">🎟️ Entered</div>`
+            : `<p class="public-raffle-empty" style="margin-top:14px">Use the sticky CTA below to enter the raffle.</p>`;
     }
 
     // Load winners
@@ -302,11 +252,11 @@ async function pubHandleFreeRaffle() {
 
 /* ── Guest Paid Raffle Handler ─────────────── */
 
-async function pubHandleGuestPaidRaffle() {
+async function pubHandleGuestPaidRaffle(nameOverride, emailOverride) {
     if (!pubCurrentEvent) return;
 
-    const name  = document.getElementById('guestRaffleName')?.value.trim();
-    const email = document.getElementById('guestRaffleEmail')?.value.trim();
+    const name  = nameOverride || document.getElementById('guestRaffleName')?.value.trim();
+    const email = emailOverride || document.getElementById('guestRaffleEmail')?.value.trim();
 
     if (!name || !email) { alert('Please enter your name and email.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Please enter a valid email.'); return; }
@@ -333,11 +283,11 @@ async function pubHandleGuestPaidRaffle() {
 
 /* ── Guest Free Raffle Handler ─────────────── */
 
-async function pubHandleGuestFreeRaffle() {
+async function pubHandleGuestFreeRaffle(nameOverride, emailOverride) {
     if (!pubCurrentEvent) return;
 
-    const name  = document.getElementById('guestRaffleName')?.value.trim();
-    const email = document.getElementById('guestRaffleEmail')?.value.trim();
+    const name  = nameOverride || document.getElementById('guestRaffleName')?.value.trim();
+    const email = emailOverride || document.getElementById('guestRaffleEmail')?.value.trim();
 
     if (!name || !email) { alert('Please enter your name and email.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Please enter a valid email.'); return; }
@@ -348,6 +298,8 @@ async function pubHandleGuestFreeRaffle() {
             guest_name: name,
             guest_email: email,
         });
+
+        pubGuestRaffleEntry = true;
 
         // Show confirmed state
         const form = document.getElementById('guestRaffleForm');
@@ -361,6 +313,19 @@ async function pubHandleGuestFreeRaffle() {
                     </div>
                 </div>`;
         }
+        const panel = document.getElementById('evtCtaPanel');
+        if (panel) {
+            panel.innerHTML = `
+                <button type="button" class="evt-cta-panel-close" onclick="pubCloseCtaPanel()" aria-label="Close">×</button>
+                <div class="evt-info-card">
+                    <span class="evt-info-card-icon">🎟️</span>
+                    <div>
+                        <p class="evt-info-card-title">You're entered!</p>
+                        <p class="evt-info-card-sub">${pubEscapeHtml(name)} — Good luck in the draw</p>
+                    </div>
+                </div>`;
+        }
+        pubInitBottomNav(pubCurrentEvent);
     } catch (err) {
         console.error('Guest free raffle error:', err);
         alert(err.message || 'Failed to enter raffle. Please try again.');

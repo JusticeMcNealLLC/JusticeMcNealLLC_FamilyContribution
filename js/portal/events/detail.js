@@ -610,9 +610,9 @@ async function evtOpenDetail(eventId) {
             else if (deadlinePassed) lockedReason = 'RSVP deadline passed';
             entryStatusHtml = `<div class="ed-notice"><span class="ed-notice-emoji">🔒</span><div><p class="ed-notice-title">Entries Closed</p><p class="ed-notice-sub">${lockedReason}</p></div></div>`;
         } else if (event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0 && !entriesClosed) {
-            entryStatusHtml = `<button onclick="evtHandleRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p>`;
+            entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
         } else if (event.pricing_mode !== 'paid' && (!event.raffle_entry_cost_cents || event.raffle_entry_cost_cents === 0) && !entriesClosed) {
-            entryStatusHtml = `<button onclick="evtHandleFreeRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Enter Raffle — Free</button>`;
+            entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
         } else if (event.pricing_mode === 'paid' && !rsvp?.paid) {
             entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Raffle entry included with paid RSVP</p>`;
         }
@@ -1256,9 +1256,9 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
         // ── RSVP button (primary) ────────────────────────
         if (rsvpEnabled) {
             if (rsvp?.paid) {
-                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${EVT_CTA_ICONS.check} RSVP'd</button>`;
+                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="evtOpenCtaPanel('ticket','${eventId}')">${EVT_CTA_ICONS.ticket} RSVP'd · Ticket</button>`;
             } else if (rsvp?.status === 'going') {
-                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${EVT_CTA_ICONS.check} Going</button>`;
+                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="evtOpenCtaPanel('ticket','${eventId}')">${EVT_CTA_ICONS.ticket} Going · Ticket</button>`;
             } else if (canRsvp && !eventIsFull && event.pricing_mode === 'paid') {
                 primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId}','going')">RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>`;
             } else if (canRsvp && !eventIsFull) {
@@ -1284,9 +1284,9 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
                 } else if (entriesClosed) {
                     raffleSlot = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Entries Closed</button>`;
                 } else if (event.raffle_entry_cost_cents > 0) {
-                    raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtHandleRaffleEntry('${eventId}')">${EVT_CTA_ICONS.ticket} Raffle — ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
+                    raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId}')">${EVT_CTA_ICONS.ticket} Raffle — ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
                 } else {
-                    raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtHandleFreeRaffleEntry('${eventId}')">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
+                    raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId}')">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
                 }
                 if (hasPrimary) {
                     secondaryBtn = raffleSlot;
@@ -1302,7 +1302,7 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
     const bar = document.createElement('div');
     bar.id = 'evtCtaBar';
     bar.className = 'evt-cta-bar';
-    bar.innerHTML = primaryBtn + secondaryBtn;
+    bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${primaryBtn + secondaryBtn}</div>`;
     document.body.appendChild(bar);
     document.body.classList.add('evt-cta-active');
 
@@ -1320,6 +1320,49 @@ function evtCleanupBottomNav() {
     document.body.classList.remove('evt-cta-active');
     // Clean up hero collapse / sticky header
     evtCleanupHeroCollapse();
+}
+
+function evtCloseCtaPanel() {
+    const panel = document.getElementById('evtCtaPanel');
+    const bar = document.getElementById('evtCtaBar');
+    if (panel) {
+        panel.classList.add('hidden');
+        panel.innerHTML = '';
+    }
+    if (bar) bar.classList.remove('evt-cta-bar-expanded');
+}
+
+function evtOpenCtaPanel(kind, eventId) {
+    const panel = document.getElementById('evtCtaPanel');
+    const bar = document.getElementById('evtCtaBar');
+    const event = evtAllEvents.find(e => e.id === eventId);
+    if (!panel || !bar || !event) return;
+
+    const rsvp = evtAllRsvps[eventId];
+    const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">×</button>';
+    bar.classList.add('evt-cta-bar-expanded');
+    panel.classList.remove('hidden');
+
+    if (kind === 'ticket') {
+        const hasQr = rsvp?.qr_token && event.checkin_mode === 'attendee_ticket';
+        panel.innerHTML = `
+            ${closeBtn}
+            <div class="evt-cta-panel-head"><strong>You're going</strong><span>${evtEscapeHtml(event.title || 'Event')}</span></div>
+            <div class="evt-cta-ticket-card">
+                ${hasQr ? '<canvas id="evtCtaTicketQR"></canvas><p>Show this QR code at check-in</p>' : '<div class="ed-notice"><span class="ed-notice-emoji">✅</span><div><p class="ed-notice-title">You are on the RSVP list</p><p class="ed-notice-sub">No QR ticket is required for this event.</p></div></div>'}
+            </div>`;
+        if (hasQr && typeof QRCode !== 'undefined') {
+            const canvas = document.getElementById('evtCtaTicketQR');
+            QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`, { width: 172, margin: 2 });
+        }
+        return;
+    }
+
+    const cost = event.raffle_entry_cost_cents || 0;
+    panel.innerHTML = `
+        ${closeBtn}
+        <div class="evt-cta-panel-head"><strong>Enter the raffle</strong><span>${cost > 0 ? 'Confirm to start checkout. Raffle tickets are non-refundable.' : 'One tap and you are in the draw.'}</span></div>
+        <button type="button" onclick="${cost > 0 ? `evtHandleRaffleEntry('${eventId}')` : `evtHandleFreeRaffleEntry('${eventId}')`}" class="evt-raffle-buy">${cost > 0 ? `Buy Raffle Entry — ${formatCurrency(cost)}` : 'Enter Raffle — Free'}</button>`;
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -121,13 +121,14 @@
 .evt-cta-bar { display: none; }
 @media (max-width: 1023px) {
     .evt-cta-bar {
-        display: flex; align-items: center; justify-content: center; gap: 10px;
+        display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 10px;
         position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom, 0px));
         z-index: 49;
         background: #fff;
         border-top: 1px solid #f3f4f6;
         padding: 12px 16px max(12px, env(safe-area-inset-bottom));
     }
+    .evt-cta-actions { display: flex; align-items: center; justify-content: center; gap: 10px; }
     .evt-cta-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 18px; border-radius: 14px; font-size: 15px; font-weight: 700; letter-spacing: .01em; border: none; cursor: pointer; text-decoration: none; white-space: nowrap; transition: transform .15s, opacity .15s; -webkit-tap-highlight-color: transparent; }
     .evt-cta-btn:active { transform: scale(.97); }
     .evt-cta-btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -140,5 +141,14 @@
     .evt-cta-raffle-done { background: #16a34a; color: #fff; }
     .evt-cta-host { background: #e5e7eb; color: #374151; }
     .evt-cta-disabled { background: #e5e7eb; color: #9ca3af; }
+    .evt-cta-panel { position: relative; width: 100%; max-height: 56vh; overflow: auto; border: 1px solid #e5e7eb; border-radius: 16px; background: #fff; box-shadow: 0 12px 38px rgba(15,23,42,.16); padding: 16px; }
+    .evt-cta-panel.hidden { display: none; }
+    .evt-cta-panel-close { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; color: #374151; font-size: 20px; line-height: 1; font-weight: 700; }
+    .evt-cta-panel-head { padding-right: 34px; margin-bottom: 12px; }
+    .evt-cta-panel-head strong { display: block; color: #111827; font-size: 15px; line-height: 1.25; }
+    .evt-cta-panel-head span { display: block; margin-top: 3px; color: #6b7280; font-size: 12px; line-height: 1.35; }
+    .evt-cta-ticket-card { text-align: center; }
+    .evt-cta-ticket-card canvas { display: block; margin: 0 auto 8px; border-radius: 12px; }
+    .evt-cta-ticket-card p { margin: 0; font-size: 12px; color: #6b7280; }
     body.evt-cta-active.has-bottom-bar { padding-bottom: calc(72px + 56px + env(safe-area-inset-bottom, 0px)); }
 }

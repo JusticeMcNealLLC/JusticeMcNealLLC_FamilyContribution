@@ -106,6 +106,10 @@ const PUB_CTA_ICONS = {
     lock: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
 };
 
+function pubPublicCtaLabel(text) {
+    return `<span>${text}</span>`;
+}
+
 
 function pubInitBottomNav(event) {
     const prev = document.getElementById('evtCtaBar');
@@ -123,25 +127,25 @@ function pubInitBottomNav(event) {
     let rsvpBtn = '';
     if (rsvpEnabled) {
         if (pubGuestRsvp) {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="pubOpenGuestTicketSheet()">${PUB_CTA_ICONS.ticket} View Ticket</button>`;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="pubOpenCtaPanel('ticket')">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel('Going · View Ticket')}</button>`;
         } else if (pubCurrentRsvp?.paid) {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${PUB_CTA_ICONS.check} RSVP'd</button>`;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="pubOpenCtaPanel('ticket')">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel('RSVP\'d · View Ticket')}</button>`;
         } else if (pubCurrentRsvp?.status === 'going') {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${PUB_CTA_ICONS.check} Going</button>`;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="pubOpenCtaPanel('ticket')">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel('Going · View Ticket')}</button>`;
         } else if (pubCurrentRsvp?.status === 'not_going') {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>Not going</button>`;
         } else if (entriesClosed) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${PUB_CTA_ICONS.lock} ${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
         } else if (pubCurrentUser && event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="document.getElementById('rsvpSection').scrollIntoView({behavior:'smooth'})">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubHandlePaidRsvp()">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
         } else if (pubCurrentUser) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubHandleRsvp('going')">RSVP</button>`;
         } else if (event.member_only) {
             rsvpBtn = `<a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-cta-btn evt-cta-rsvp">Sign In to RSVP</a>`;
         } else if (event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenRsvpSheet()">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenCtaPanel('rsvp')">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
         } else {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenRsvpSheet()">RSVP</button>`;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenCtaPanel('rsvp')">RSVP</button>`;
         }
     }
 
@@ -151,8 +155,11 @@ function pubInitBottomNav(event) {
             raffleBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${PUB_CTA_ICONS.lock} Closed</button>`;
         } else if (event.pricing_mode === 'paid') {
             // included with RSVP — no separate button
+        } else if (pubGuestRaffleEntry) {
+            raffleBtn = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${PUB_CTA_ICONS.check} Entered</button>`;
         } else {
-            raffleBtn = `<button class="evt-cta-btn evt-cta-raffle" onclick="document.getElementById('raffleSection')?.scrollIntoView({behavior:'smooth'})">${PUB_CTA_ICONS.ticket} Raffle</button>`;
+            const label = event.raffle_entry_cost_cents > 0 ? `Raffle — ${pubFormatCurrency(event.raffle_entry_cost_cents)}` : 'Enter Raffle';
+            raffleBtn = `<button class="evt-cta-btn evt-cta-raffle" onclick="pubOpenCtaPanel('raffle')">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel(label)}</button>`;
         }
     }
 
@@ -161,7 +168,7 @@ function pubInitBottomNav(event) {
     const bar = document.createElement('div');
     bar.id = 'evtCtaBar';
     bar.className = 'evt-cta-bar';
-    bar.innerHTML = rsvpBtn + raffleBtn;
+    bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${rsvpBtn + raffleBtn}</div>`;
     document.body.appendChild(bar);
     document.body.style.paddingBottom = '80px';
 

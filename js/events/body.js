@@ -5,8 +5,113 @@
 
 /* ── RSVP Bottom Sheet (mobile) ─────────── */
 function pubCloseAllBottomSheets() {
+    pubCloseCtaPanel();
     pubCloseRsvpSheet();
     pubCloseGuestTicketSheet();
+}
+
+function pubCloseCtaPanel() {
+    const panel = document.getElementById('evtCtaPanel');
+    const bar = document.getElementById('evtCtaBar');
+    if (panel) {
+        panel.classList.add('hidden');
+        panel.innerHTML = '';
+    }
+    if (bar) bar.classList.remove('evt-cta-bar-expanded');
+}
+
+function pubOpenCtaPanel(kind) {
+    const panel = document.getElementById('evtCtaPanel');
+    const bar = document.getElementById('evtCtaBar');
+    if (!panel || !bar || !pubCurrentEvent) return;
+
+    const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="pubCloseCtaPanel()" aria-label="Close">×</button>';
+    bar.classList.add('evt-cta-bar-expanded');
+    panel.classList.remove('hidden');
+
+    if (kind === 'ticket') {
+        pubRenderCtaTicket(panel, closeBtn);
+        return;
+    }
+
+    if (kind === 'raffle') {
+        pubRenderCtaRaffle(panel, closeBtn);
+        return;
+    }
+
+    panel.innerHTML = `
+        ${closeBtn}
+        <div class="evt-cta-panel-head"><strong>RSVP for this event</strong><span>No account needed. Your ticket appears here after RSVP.</span></div>
+        <div class="evt-cta-field-stack">
+            <input type="text" id="ctaGuestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name">
+            <input type="email" id="ctaGuestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address">
+            <label class="evt-checkbox-label${pubCurrentEvent.pricing_mode === 'paid' && pubCurrentEvent.rsvp_cost_cents > 0 ? '' : ' hidden'}"><input type="checkbox" id="ctaGuestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label>
+            <button type="button" onclick="pubSubmitCtaGuestRsvp()" id="ctaGuestRsvpBtn" class="evt-rsvp-pay">${pubCurrentEvent.pricing_mode === 'paid' && pubCurrentEvent.rsvp_cost_cents > 0 ? `RSVP as Guest — ${pubFormatCurrency(pubCurrentEvent.rsvp_cost_cents)}` : 'RSVP as Guest'}</button>
+        </div>`;
+}
+
+function pubRenderCtaTicket(panel, closeBtn) {
+    const attendeeName = pubGuestRsvp?.guest_name || (pubCurrentUser ? 'Member' : 'Guest');
+    const token = pubGuestRsvp?.guest_token || pubCurrentRsvp?.qr_token || '';
+    const hasQr = token && pubCurrentEvent.checkin_mode === 'attendee_ticket';
+    panel.innerHTML = `
+        ${closeBtn}
+        <div class="evt-cta-panel-head"><strong>${pubGuestRsvp || pubCurrentRsvp ? 'You\'re going' : 'Ticket unavailable'}</strong><span>${pubEscapeHtml(attendeeName)}</span></div>
+        <div class="evt-cta-ticket-card">
+            ${hasQr ? '<canvas id="ctaTicketQR"></canvas><p>Show this QR code at check-in</p>' : '<div class="evt-info-card"><span class="evt-info-card-icon">✅</span><div><p class="evt-info-card-title">You are on the RSVP list</p><p class="evt-info-card-sub">No QR ticket is required for this event.</p></div></div>'}
+        </div>`;
+    if (hasQr && typeof QRCode !== 'undefined') {
+        const canvas = document.getElementById('ctaTicketQR');
+        QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${pubCurrentEvent.slug}&ticket=${token}`, { width: 172, margin: 2, color: { dark: '#111827', light: '#ffffff' } });
+    }
+}
+
+function pubRenderCtaRaffle(panel, closeBtn) {
+    if (pubCurrentUser) {
+        const cost = pubCurrentEvent.raffle_entry_cost_cents || 0;
+        panel.innerHTML = `
+            ${closeBtn}
+            <div class="evt-cta-panel-head"><strong>Enter the raffle</strong><span>${cost > 0 ? 'Confirm to start checkout.' : 'One tap and you are in the draw.'}</span></div>
+            <button type="button" onclick="${cost > 0 ? 'pubHandlePaidRaffle()' : 'pubHandleFreeRaffle()'}" class="evt-raffle-buy">${cost > 0 ? `Buy Raffle Entry — ${pubFormatCurrency(cost)}` : 'Enter Raffle — Free'}</button>`;
+        return;
+    }
+
+    if (pubCurrentEvent.member_only) {
+        panel.innerHTML = `${closeBtn}<div class="evt-cta-panel-head"><strong>Members only</strong><span>Sign in with your member account to enter.</span></div><a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-raffle-buy" style="text-decoration:none">Sign In to Enter Raffle</a>`;
+        return;
+    }
+
+    const cost = pubCurrentEvent.raffle_entry_cost_cents || 0;
+    panel.innerHTML = `
+        ${closeBtn}
+        <div class="evt-cta-panel-head"><strong>Enter the raffle</strong><span>No account needed. Enter your info to join the draw.</span></div>
+        <div class="evt-cta-field-stack">
+            <input type="text" id="ctaGuestRaffleName" placeholder="Your name" class="evt-input" aria-label="Your name">
+            <input type="email" id="ctaGuestRaffleEmail" placeholder="Email address" class="evt-input" aria-label="Email address">
+            <button type="button" onclick="pubSubmitCtaGuestRaffle()" id="ctaGuestRaffleBtn" class="evt-raffle-buy">${cost > 0 ? `Buy Raffle Entry — ${pubFormatCurrency(cost)}` : 'Enter Raffle — Free'}</button>
+            ${cost > 0 ? '<p class="evt-cta-fineprint">Non-refundable raffle ticket</p>' : ''}
+        </div>`;
+}
+
+async function pubSubmitCtaGuestRsvp() {
+    const name = document.getElementById('ctaGuestNameInput')?.value.trim() || '';
+    const email = document.getElementById('ctaGuestEmailInput')?.value.trim() || '';
+    const noRefund = document.getElementById('ctaGuestNoRefundCheck');
+    const targetName = document.getElementById('guestNameInput');
+    const targetEmail = document.getElementById('guestEmailInput');
+    const targetNoRefund = document.getElementById('guestNoRefundCheck');
+    if (targetName) targetName.value = name;
+    if (targetEmail) targetEmail.value = email;
+    if (targetNoRefund && noRefund) targetNoRefund.checked = noRefund.checked;
+    await pubHandleGuestRsvp();
+    if (pubGuestRsvp) pubOpenCtaPanel('ticket');
+}
+
+async function pubSubmitCtaGuestRaffle() {
+    const name = document.getElementById('ctaGuestRaffleName')?.value.trim() || '';
+    const email = document.getElementById('ctaGuestRaffleEmail')?.value.trim() || '';
+    if (pubCurrentEvent?.raffle_entry_cost_cents > 0) await pubHandleGuestPaidRaffle(name, email);
+    else await pubHandleGuestFreeRaffle(name, email);
 }
 
 function pubEnsureSheetBackdrop() {
