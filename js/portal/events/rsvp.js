@@ -6,7 +6,7 @@
 async function evtHandleRsvp(eventId, status) {
     try {
         // Look up event to check pricing mode
-        const event = evtAllEvents.find(e => e.id === eventId);
+        const event = (window.evtAllEvents || evtAllEvents).find(e => e.id === eventId);
         if (!event) return;
 
         // ── Time-based guard (defense-in-depth) ─────────────
@@ -20,7 +20,8 @@ async function evtHandleRsvp(eventId, status) {
         }
 
         const isPaid = event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0;
-        const existing = evtAllRsvps[eventId];
+        const rsvpMap = window.evtAllRsvps || evtAllRsvps;
+        const existing = rsvpMap[eventId];
 
         // ── Paid RSVP path ──────────────────────────────────
         if (isPaid && status === 'going') {
@@ -67,6 +68,7 @@ async function evtHandleRsvp(eventId, status) {
                     .eq('id', existing.id);
                 if (error) throw error;
                 delete evtAllRsvps[eventId];
+                if (window.evtAllRsvps) delete window.evtAllRsvps[eventId];
             } else {
                 // Update status
                 const { error } = await supabaseClient
@@ -74,17 +76,21 @@ async function evtHandleRsvp(eventId, status) {
                     .update({ status })
                     .eq('id', existing.id);
                 if (error) throw error;
-                evtAllRsvps[eventId].status = status;
+                if (evtAllRsvps[eventId]) evtAllRsvps[eventId].status = status;
+                if (window.evtAllRsvps?.[eventId]) window.evtAllRsvps[eventId].status = status;
             }
         } else {
-            // Create new free RSVP
+            // Create or restore free RSVP. Local state can be stale after login,
+            // so upsert protects the unique (event_id, user_id) row.
             const { data, error } = await supabaseClient
                 .from('event_rsvps')
-                .insert({ event_id: eventId, user_id: evtCurrentUser.id, status })
+                .upsert({ event_id: eventId, user_id: evtCurrentUser.id, status }, { onConflict: 'event_id,user_id' })
                 .select()
                 .single();
             if (error) throw error;
             evtAllRsvps[eventId] = data;
+            window.evtAllRsvps = window.evtAllRsvps || {};
+            window.evtAllRsvps[eventId] = data;
         }
 
         // Refresh detail and card list

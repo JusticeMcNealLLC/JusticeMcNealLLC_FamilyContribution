@@ -136,7 +136,7 @@ async function pubHandleRsvp(status) {
         } else {
             const { data } = await supabaseClient
                 .from('event_rsvps')
-                .insert({ event_id: pubCurrentEvent.id, user_id: pubCurrentUser.id, status })
+                .upsert({ event_id: pubCurrentEvent.id, user_id: pubCurrentUser.id, status }, { onConflict: 'event_id,user_id' })
                 .select()
                 .single();
             pubCurrentRsvp = data;

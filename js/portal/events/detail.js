@@ -192,10 +192,12 @@ function evtDetailRaffleWinnersHtml(winners) {
 // ═══════════════════════════════════════════════════════════
 
 async function evtOpenDetail(eventId) {
-    const event = evtAllEvents.find(e => e.id === eventId);
+    const events = window.evtAllEvents || evtAllEvents;
+    const rsvpMap = window.evtAllRsvps || evtAllRsvps;
+    const event = events.find(e => e.id === eventId);
     if (!event) return;
 
-    const rsvp = evtAllRsvps[eventId];
+    const rsvp = rsvpMap[eventId];
     const start = new Date(event.start_date);
     const end = event.end_date ? new Date(event.end_date) : null;
     const dateStr = start.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
@@ -1335,10 +1337,10 @@ function evtCloseCtaPanel() {
 function evtOpenCtaPanel(kind, eventId) {
     const panel = document.getElementById('evtCtaPanel');
     const bar = document.getElementById('evtCtaBar');
-    const event = evtAllEvents.find(e => e.id === eventId);
+    const event = (window.evtAllEvents || evtAllEvents).find(e => e.id === eventId);
     if (!panel || !bar || !event) return;
 
-    const rsvp = evtAllRsvps[eventId];
+    const rsvp = (window.evtAllRsvps || evtAllRsvps)[eventId];
     const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">×</button>';
     bar.classList.add('evt-cta-bar-expanded');
     panel.classList.remove('hidden');
@@ -1379,6 +1381,8 @@ window.evtInitHeroCollapse      = evtInitHeroCollapse;
 window.evtCleanupHeroCollapse   = evtCleanupHeroCollapse;
 window.evtInitBottomNav         = evtInitBottomNav;
 window.evtCleanupBottomNav      = evtCleanupBottomNav;
+window.evtOpenCtaPanel          = evtOpenCtaPanel;
+window.evtCloseCtaPanel         = evtCloseCtaPanel;
 
 detail.open                = evtOpenDetail;
 detail.openLightbox        = evtOpenLightbox;
@@ -1386,6 +1390,8 @@ detail.openFullscreenMap   = evtOpenFullscreenMap;
 detail.closeFullscreenMap  = evtCloseFullscreenMap;
 detail.initBottomNav       = evtInitBottomNav;
 detail.cleanupBottomNav    = evtCleanupBottomNav;
+detail.openCtaPanel        = evtOpenCtaPanel;
+detail.closeCtaPanel       = evtCloseCtaPanel;
 detail.startLiveCountdown  = evtStartLiveCountdown;
 detail.initSectionAnimations = evtInitSectionAnimations;
 
