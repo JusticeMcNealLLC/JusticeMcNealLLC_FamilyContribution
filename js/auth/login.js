@@ -1,6 +1,40 @@
 // Login page logic
 // Only loaded on auth/login.html
 
+function getSafeLoginRedirect() {
+    const raw = new URLSearchParams(window.location.search).get('redirect');
+    if (!raw) return '';
+
+    try {
+        const target = new URL(raw, window.location.origin);
+        const allowedOrigins = new Set([
+            window.location.origin,
+            'https://justicemcneal.com',
+            'https://www.justicemcneal.com',
+        ]);
+
+        if (!allowedOrigins.has(target.origin)) return '';
+        if (target.pathname.startsWith('/auth/')) return '';
+        return target.href;
+    } catch (_) {
+        return '';
+    }
+}
+
+function getPostLoginUrl(profile) {
+    const redirect = getSafeLoginRedirect();
+
+    if (profile?.role === 'admin') {
+        return redirect || APP_CONFIG.ADMIN_URL;
+    }
+
+    if (!profile || !profile.setup_completed) {
+        return APP_CONFIG.ONBOARDING_URL;
+    }
+
+    return redirect || APP_CONFIG.PORTAL_URL;
+}
+
 // Check if already logged in (for login page)
 async function checkAlreadyLoggedIn() {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -13,13 +47,7 @@ async function checkAlreadyLoggedIn() {
             .eq('id', session.user.id)
             .single();
 
-        if (profile?.role === 'admin') {
-            window.location.href = APP_CONFIG.ADMIN_URL;
-        } else if (!profile?.setup_completed) {
-            window.location.href = APP_CONFIG.ONBOARDING_URL;
-        } else {
-            window.location.href = APP_CONFIG.PORTAL_URL;
-        }
+        window.location.href = getPostLoginUrl(profile);
         return true;
     }
     return false;
@@ -63,13 +91,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     .eq('id', data.user.id)
                     .single();
 
-                if (profile?.role === 'admin') {
-                    window.location.href = APP_CONFIG.ADMIN_URL;
-                } else if (!profile?.setup_completed) {
-                    window.location.href = APP_CONFIG.ONBOARDING_URL;
-                } else {
-                    window.location.href = APP_CONFIG.PORTAL_URL;
-                }
+                window.location.href = getPostLoginUrl(profile);
 
             } catch (error) {
                 showError('loginError', error.message || 'Failed to sign in');
