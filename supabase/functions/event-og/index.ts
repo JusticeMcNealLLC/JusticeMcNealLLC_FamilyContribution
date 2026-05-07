@@ -98,7 +98,10 @@ serve(async (req) => {
     if (rawDesc) descParts.push(rawDesc.length > 150 ? rawDesc.slice(0, 147) + '...' : rawDesc)
     const ogDescription = descParts.join(' \u2014 ')
 
-    const ogImage = event.embed_image_url || event.banner_url || `${SITE_URL}/assets/icons/icon-512.png`
+    const rawImage = event.embed_image_url || event.banner_url || `${SITE_URL}/assets/icons/icon-512.png`
+    const ogImage = rawImage.startsWith('http://') || rawImage.startsWith('https://')
+      ? rawImage
+      : new URL(rawImage, SITE_URL).toString()
 
     // XML-safe escape
     const esc = (s: string) =>

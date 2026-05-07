@@ -18,6 +18,7 @@ assert(legacyCreate.includes('evtEmbedImageFile'), 'legacy create flow should up
 assert(legacyCreate.includes('embed_image_url: embedImageUrl'), 'legacy create flow should insert embed_image_url');
 assert(eventOg.includes('banner_url, embed_image_url'), 'event-og should select embed_image_url');
 assert(/event\.embed_image_url \|\| event\.banner_url/.test(eventOg), 'event-og should prefer embed image and fall back to banner');
+assert(eventOg.includes('new URL(rawImage, SITE_URL).toString()'), 'event-og should normalize relative image URLs to absolute URLs');
 assert(eventOg.includes('og:image:alt'), 'event-og should include image alt metadata');
 assert(/ADD COLUMN IF NOT EXISTS embed_image_url TEXT/.test(migration), 'migration should add embed_image_url column');
 
