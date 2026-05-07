@@ -749,18 +749,21 @@
             });
 
         const distributedCount = docs.filter(d => d.distributed).length;
+        const pendingCount = docs.length - distributedCount;
+        const distributedPct = docs.length ? Math.round((distributedCount / docs.length) * 100) : 0;
+        const totalBytes = docs.reduce((sum, d) => sum + (d.file_size_bytes || 0), 0);
 
         function docRow(d) {
             const distBtn = d.distributed
                 ? `<button class="em-pill em-pill-checked" data-doc-action="undistribute" data-id="${d.id}" style="border:none;cursor:pointer">Distributed ✓</button>`
                 : `<button class="em-pill em-pill-paid" data-doc-action="distribute" data-id="${d.id}" style="border:none;cursor:pointer">Mark sent</button>`;
             return `
-                <div class="em-row">
+                <div class="em-attendee-card">
                     <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:16px">${_docTypeIcon(d.doc_type)}</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm font-semibold text-gray-800 truncate">${_esc(d.label || d.file_name || 'Document')}</div>
-                        <div class="text-xs text-gray-400">${_esc(d.file_name || '')} · ${_formatBytes(d.file_size_bytes)}</div>
-                        <div class="flex flex-wrap gap-1 mt-1">${distBtn}</div>
+                    <div class="em-attendee-main">
+                        <p class="em-attendee-name">${_esc(d.label || d.file_name || 'Document')}</p>
+                        <p class="em-attendee-sub">${_esc(d.file_name || '')} · ${_formatBytes(d.file_size_bytes)}</p>
+                        <div class="flex flex-wrap gap-1 mt-2">${distBtn}<span class="em-pill em-pill-going">${d.target_user_id ? 'Member file' : 'Group file'}</span></div>
                     </div>
                     <button data-doc-action="delete" data-id="${d.id}" class="text-xs text-red-600 font-semibold hover:underline" style="background:none;border:none;cursor:pointer">Delete</button>
                 </div>
@@ -792,8 +795,22 @@
         const typeOptions = DOC_TYPES.map(t => `<option value="${_esc(t.value)}">${_esc(t.label)}</option>`).join('');
 
         return `
+            <div class="em-card em-command-card mb-4">
+                <p class="em-command-eyebrow">Document handoff</p>
+                <h3 class="em-command-title">${pendingCount ? `${pendingCount} document${pendingCount === 1 ? '' : 's'} pending` : 'Documents are caught up'}</h3>
+                <p class="em-command-copy">Upload group files or member-specific travel docs here. Attendees only see a retrieval button on the event page.</p>
+                <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${distributedPct}%;background:#a7f3d0"></span></div>
+            </div>
+
+            <div class="em-metric-grid mb-4">
+                <div class="em-metric"><span>Total files</span><strong>${docs.length}</strong><small>${_formatBytes(totalBytes)}</small></div>
+                <div class="em-metric"><span>Distributed</span><strong>${distributedCount}</strong><small>${distributedPct}% complete</small></div>
+                <div class="em-metric"><span>Pending</span><strong>${pendingCount}</strong><small>Need handoff</small></div>
+                <div class="em-metric"><span>Member files</span><strong>${memberDocs.length}</strong><small>${groupDocs.length} group</small></div>
+            </div>
+
             <div class="em-card mb-4">
-                <h3 class="font-bold text-gray-800 text-sm mb-2">Upload document</h3>
+                <div class="em-section-head"><div><h3 class="em-section-title">Upload document</h3><p class="em-section-sub">Choose who can retrieve this file from the attendee-facing document viewer.</p></div></div>
                 <div class="grid sm:grid-cols-2 gap-3">
                     <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Visible to
                         <select id="emDocTargetMode" class="em-input mt-1">
@@ -822,19 +839,13 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 gap-3 mb-4">
-                <div class="em-card em-stat"><span class="em-stat-label">Total</span><span class="em-stat-num">${docs.length}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Distributed</span><span class="em-stat-num" style="color:#059669">${distributedCount}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Pending</span><span class="em-stat-num" style="color:#dc2626">${docs.length - distributedCount}</span></div>
-            </div>
-
             <div class="em-card mb-3">
-                <h3 class="font-bold text-gray-800 text-sm mb-2">Group documents <span class="text-gray-400 font-normal">· ${groupDocs.length}</span></h3>
+                <div class="em-section-head"><div><h3 class="em-section-title">Group documents <span class="text-gray-400 font-normal">· ${groupDocs.length}</span></h3><p class="em-section-sub">Visible to everyone with RSVP access.</p></div></div>
                 ${groupDocs.length ? groupDocs.map(docRow).join('') : `<p class="text-xs text-gray-400 italic py-2">No group documents yet.</p>`}
             </div>
 
             <div class="em-card">
-                <h3 class="font-bold text-gray-800 text-sm mb-2">Per-member documents <span class="text-gray-400 font-normal">· ${memberDocs.length}</span></h3>
+                <div class="em-section-head"><div><h3 class="em-section-title">Per-member documents <span class="text-gray-400 font-normal">· ${memberDocs.length}</span></h3><p class="em-section-sub">Private files for individual attendees, like tickets or receipts.</p></div></div>
                 ${memberSection(memberDocs)}
             </div>
         `;
