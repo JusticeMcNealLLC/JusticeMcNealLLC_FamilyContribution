@@ -20,6 +20,7 @@
 
     const M3A_TABS = [
         { key: 'overview', label: 'Overview' },
+        { key: 'images',   label: 'Images'   },
         { key: 'rsvps',    label: 'RSVPs'    },
         { key: 'money',    label: 'Money'    },
         { key: 'docs',     label: 'Docs'     },
@@ -265,6 +266,7 @@
 
     function _renderTab(tab) {
         if (tab === 'overview') { _renderContent(_overviewHtml()); _wireOverview(); return; }
+        if (tab === 'images')   { _renderContent(_imagesHtml());   _wireImages();   return; }
         if (tab === 'rsvps')    return _renderContent(_rsvpsHtml());
         if (tab === 'danger')   { _renderContent(_dangerHtml()); _wireDanger(); return; }
         // Lazy-loaded M3b tabs:
@@ -568,6 +570,95 @@
                 _renderTabs();
                 _renderTab(STATE.activeTab);
             });
+        });
+    }
+
+    // ─── Images tab ─────────────────────────────────────────────────
+    function _imagesHtml() {
+        const e = STATE.event;
+        const bannerUrl = e.banner_url || '';
+        const embedUrl  = e.embed_image_url || '';
+        return `
+            <div class="em-card em-command-card mb-4">
+                <p class="em-command-eyebrow">Images</p>
+                <h3 class="em-command-title">Banner &amp; embed image</h3>
+                <p class="em-command-copy">The banner is shown at the top of the event detail page. The embed image is used for social media previews — if none is set, the banner is used as fallback.</p>
+            </div>
+
+            <div class="em-card mb-3">
+                <div class="em-section-head" style="margin-bottom:10px">
+                    <div>
+                        <h3 class="em-section-title">Event banner</h3>
+                        <p class="em-section-sub">Displayed as the hero image on the public event page.</p>
+                    </div>
+                </div>
+                <img id="emBannerPreview" src="${_esc(bannerUrl)}" alt="" style="width:100%;border-radius:12px;object-fit:cover;max-height:200px;margin-bottom:12px;${bannerUrl ? '' : 'display:none'}">
+                <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">Banner URL</label>
+                <input id="emBannerUrlInput" class="em-input" type="url" placeholder="https://…" value="${_esc(bannerUrl)}" style="margin-top:6px">
+                <p style="font-size:11px;color:#9ca3af;margin-top:5px">Direct image link (JPG, PNG, WebP). Min 1200×400 px recommended.</p>
+            </div>
+
+            <div class="em-card mb-4">
+                <div class="em-section-head" style="margin-bottom:10px">
+                    <div>
+                        <h3 class="em-section-title">Embed / social preview image</h3>
+                        <p class="em-section-sub">Shown when this event link is shared on social media or in messages. Falls back to the banner.</p>
+                    </div>
+                </div>
+                <img id="emEmbedPreview" src="${_esc(embedUrl)}" alt="" style="width:100%;border-radius:12px;object-fit:cover;max-height:200px;margin-bottom:12px;${embedUrl ? '' : 'display:none'}">
+                <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">Embed image URL</label>
+                <input id="emEmbedUrlInput" class="em-input" type="url" placeholder="https://… (optional)" value="${_esc(embedUrl)}" style="margin-top:6px">
+                <p style="font-size:11px;color:#9ca3af;margin-top:5px">1200×630 px is ideal for social card previews. Leave blank to fall back to the banner.</p>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px">
+                <button id="emImagesSave" class="em-btn-primary">Save images</button>
+                <span id="emImagesSaveStatus" style="font-size:12px;color:#6b7280"></span>
+            </div>
+        `;
+    }
+
+    function _wireImages() {
+        const e = STATE.event;
+
+        // Live preview as URL is typed
+        ['Banner', 'Embed'].forEach(key => {
+            const input   = document.getElementById(`em${key}UrlInput`);
+            const preview = document.getElementById(`em${key}Preview`);
+            if (!input || !preview) return;
+            input.addEventListener('input', () => {
+                const val = input.value.trim();
+                if (val) { preview.src = val; preview.style.display = ''; }
+                else { preview.style.display = 'none'; }
+            });
+        });
+
+        document.getElementById('emImagesSave')?.addEventListener('click', async () => {
+            const bannerUrl = document.getElementById('emBannerUrlInput')?.value.trim() || null;
+            const embedUrl  = document.getElementById('emEmbedUrlInput')?.value.trim()  || null;
+            const saveBtn   = document.getElementById('emImagesSave');
+            const status    = document.getElementById('emImagesSaveStatus');
+
+            saveBtn.disabled = true;
+            status.textContent = 'Saving…';
+
+            const { error } = await supabaseClient
+                .from('events')
+                .update({ banner_url: bannerUrl, embed_image_url: embedUrl })
+                .eq('id', e.id);
+
+            if (error) {
+                status.textContent = 'Error: ' + (error.message || 'save failed');
+                saveBtn.disabled = false;
+                return;
+            }
+
+            STATE.event.banner_url    = bannerUrl;
+            STATE.event.embed_image_url = embedUrl;
+            status.textContent = 'Saved ✓';
+            saveBtn.disabled = false;
+            setTimeout(() => { status.textContent = ''; }, 2500);
+            _notifyParent('updated', e.id);
         });
     }
 
