@@ -28,6 +28,8 @@
         { key: 'danger',   label: 'Danger Zone' },
     ];
 
+    const PUBLIC_SITE_URL = 'https://justicemcneal.com';
+
     const STATE = {
         eventId: null,
         event:   null,
@@ -312,6 +314,7 @@
             ? `${going} confirmed RSVP${going === 1 ? '' : 's'}; minimum was ${minNeeded}${deadline ? ` by ${deadline}` : ''}. This event can stay confirmed.`
             : `${going} of ${minNeeded} required RSVP${minNeeded === 1 ? '' : 's'}${deadline ? ` by ${deadline}` : ''}. ${Math.max(0, minNeeded - going)} more RSVP${minNeeded - going === 1 ? '' : 's'} needed.`;
 
+        const inviteUrl = _publicEventUrl(e);
         const portalLink = `<a href="../portal/events.html?event=${encodeURIComponent(e.slug || '')}" class="em-btn-ghost" style="text-decoration:none;display:inline-block">Open in portal →</a>`;
         const thresholdCard = isLlc && minNeeded ? `
             <div class="em-card em-op-card">
@@ -385,11 +388,21 @@
                 <h3 class="font-bold text-gray-800 text-sm mb-3">Quick actions</h3>
                 <div class="flex flex-wrap gap-2">
                     ${portalLink}
-                    ${e.slug ? `<button class="em-btn-ghost" onclick="navigator.clipboard.writeText('${window.location.origin}/portal/events.html?event=${encodeURIComponent(e.slug)}');this.textContent='Copied ✓';setTimeout(()=>this.textContent='Copy share link',1500)">Copy share link</button>` : ''}
+                    ${e.slug ? `<button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>` : ''}
                     ${e.checkin_enabled !== false && e.checkin_mode === 'attendee_ticket' && ['open','confirmed','active'].includes(e.status) ? `<button class="em-btn-ghost" onclick="window.EventsManage.close();setTimeout(()=>window.evtOpenScanner&&window.evtOpenScanner('${STATE.eventId}'),150)"><svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>Scan Attendees</button>` : ''}
                 </div>
                 <p class="text-xs text-gray-400 mt-3">Tap any tab above for Money, Docs, Raffle, or Comp details.</p>
             </div>
+            ${e.slug ? `
+            <div class="em-card mt-3">
+                <div class="em-section-head"><div><h3 class="em-section-title">Invitation QR</h3><p class="em-section-sub">Use this public event link on printed or digital invitations.</p></div></div>
+                <canvas id="emInviteQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
+                <p class="text-xs text-gray-400 text-center mt-2 break-all">${_esc(inviteUrl)}</p>
+                <div class="flex flex-wrap justify-center gap-2 mt-3">
+                    <button class="em-btn-primary" data-download-invite-qr>Download QR</button>
+                    <button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>
+                </div>
+            </div>` : ''}
             ${e.checkin_enabled !== false && e.checkin_mode === 'venue_scan' && e.venue_qr_token ? `
             <div class="em-card mt-3">
                 <h3 class="font-bold text-gray-800 text-sm mb-3">📍 Venue QR Code</h3>
@@ -525,11 +538,26 @@
     function _wireOverview() {
         const e = STATE.event;
         if (!e) return;
+        const inviteUrl = _publicEventUrl(e);
+        const inviteCanvas = document.getElementById('emInviteQR');
+        if (inviteCanvas && e.slug && typeof QRCode !== 'undefined') {
+            QRCode.toCanvas(inviteCanvas, inviteUrl, { width: 220, margin: 2, color: { dark: '#111827', light: '#ffffff' } });
+        }
         // Render venue QR if present
         const canvas = document.getElementById('emVenueQR');
         if (canvas && e.venue_qr_token && typeof QRCode !== 'undefined') {
             QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${encodeURIComponent(e.slug || '')}&checkin=1`, { width: 200, margin: 2 });
         }
+        document.getElementById('emSheetContent').querySelectorAll('[data-copy-invite-url]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                navigator.clipboard.writeText(inviteUrl);
+                btn.textContent = 'Copied ✓';
+                setTimeout(() => { btn.textContent = 'Copy invite link'; }, 1500);
+            });
+        });
+        document.getElementById('emSheetContent').querySelectorAll('[data-download-invite-qr]').forEach(btn => {
+            btn.addEventListener('click', () => _downloadCanvasPng('emInviteQR', `${_safeFilename(e.slug || e.title || 'event')}-invite-qr.png`));
+        });
         document.getElementById('emSheetContent').querySelectorAll('[data-overview-tab]').forEach(btn => {
             btn.addEventListener('click', () => {
                 STATE.activeTab = btn.dataset.overviewTab;
@@ -1345,6 +1373,23 @@
     function _wireComp() { /* read-only in M3b */ }
 
     // ─── Helpers ────────────────────────────────────────────────────
+    function _publicEventUrl(event) {
+        return `${PUBLIC_SITE_URL}/events/?e=${encodeURIComponent(event?.slug || '')}`;
+    }
+
+    function _safeFilename(value) {
+        return String(value || 'event').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'event';
+    }
+
+    function _downloadCanvasPng(canvasId, filename) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+
     function _esc(s) {
         const el = document.createElement('span');
         el.textContent = s == null ? '' : String(s);

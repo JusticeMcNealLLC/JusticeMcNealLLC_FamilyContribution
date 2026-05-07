@@ -33,5 +33,8 @@ assert(/guestByToken/.test(manageSheet), 'raffle command view should resolve gue
 assert(/STATE\.event\?\.event_type !== 'competition'/.test(manageSheet), 'non-competition events should skip competition data queries');
 assert(/thresholdCopy/.test(manageSheet), 'overview should use normalized threshold copy');
 assert(!/9 of 4 required RSVPs/.test(manageSheet), 'manage threshold copy should avoid exceeded-minimum phrasing');
+assert(/Invitation QR/.test(manageSheet), 'overview should render a public invitation QR card');
+assert(/data-download-invite-qr/.test(manageSheet), 'overview should expose invite QR download action');
+assert(/https:\/\/justicemcneal\.com/.test(manageSheet), 'invitation QR should use the production public domain');
 
 console.log('events_010 manage command tabs smoke: all pass');

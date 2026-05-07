@@ -39,7 +39,7 @@ serve(async (req) => {
     // Fetch event data
     const { data: event } = await supabase
       .from('events')
-      .select('title, description, banner_url, start_date, end_date, location_text, slug')
+      .select('title, description, banner_url, start_date, end_date, location_text, slug, event_type, rsvp_enabled, rsvp_deadline, creator:profiles!events_created_by_fkey(first_name, last_name)')
       .eq('slug', slug)
       .maybeSingle()
 
@@ -78,13 +78,22 @@ serve(async (req) => {
       hour12: true,
     })
 
+    const creator = Array.isArray(event.creator) ? event.creator[0] : event.creator
+    const creatorName = creator
+      ? `${creator.first_name || ''} ${creator.last_name || ''}`.trim()
+      : ''
+    const hostName = event.event_type === 'llc'
+      ? 'Justice McNeal LLC'
+      : (creatorName || inviterName || 'Justice McNeal LLC')
+    const rsvpDeadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date()
+    const canRsvp = event.rsvp_enabled !== false && !rsvpDeadlinePassed
+
     // Build OG fields
-    const ogTitle = inviterName
-      ? `${inviterName} invited you to ${event.title}`
-      : `You're invited to ${event.title}!`
+    const ogTitle = `${hostName} has invited you to ${event.title}`
 
     const descParts: string[] = [`${dateStr} at ${timeStr}`]
     if (event.location_text) descParts.push(event.location_text)
+    descParts.push(canRsvp ? 'RSVP today.' : 'View event details.')
     const rawDesc = event.description || ''
     if (rawDesc) descParts.push(rawDesc.length > 150 ? rawDesc.slice(0, 147) + '...' : rawDesc)
     const ogDescription = descParts.join(' \u2014 ')
