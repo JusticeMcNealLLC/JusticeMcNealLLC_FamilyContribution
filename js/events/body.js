@@ -323,6 +323,12 @@ function pubOpenFullscreenMap() {
 }
 
 
+function pubRecenterFullscreenMap() {
+    if (!_pubFullscreenMap || !_pubMapCoords) return;
+    const { lat, lng } = _pubMapCoords;
+    _pubFullscreenMap.setView([lat, lng], 16, { animate: true, duration: 0.5 });
+}
+
 function pubCloseFullscreenMap() {
     const overlay = document.getElementById('fullscreenMapOverlay');
     if (overlay) overlay.classList.add('hidden');

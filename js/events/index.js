@@ -588,7 +588,7 @@ function pubCallDeferred(name, args) {
     'pubHandleRsvp', 'pubHandlePaidRsvp', 'pubHandlePaidRaffle', 'pubHandleFreeRaffle',
     'pubHandleGuestPaidRaffle', 'pubHandleGuestFreeRaffle', 'pubHandleGuestRsvp',
     'pubDoVenueCheckin', 'pubDoGuestVenueCheckin', 'pubToggleLookup', 'pubLookupGuestTicket',
-    'pubOpenFullscreenMap', 'pubCloseFullscreenMap', 'pubDownloadIcs', 'pubPostComment',
+    'pubOpenFullscreenMap', 'pubCloseFullscreenMap', 'pubRecenterFullscreenMap', 'pubDownloadIcs', 'pubPostComment',
     'pubOpenLightbox', 'pubOpenRsvpSheet', 'pubCloseRsvpSheet'
 ].forEach(name => {
     window[`_${name}Wrapper`] = function () { return pubCallDeferred(name, arguments); };

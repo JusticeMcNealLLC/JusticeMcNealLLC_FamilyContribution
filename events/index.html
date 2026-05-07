@@ -251,9 +251,14 @@
         <div id="fullscreenMapContainer" class="absolute inset-0"></div>
         <!-- Controls layer — sits above Leaflet entirely -->
         <div class="absolute inset-0" style="z-index:9999; pointer-events:none;">
-            <button onclick="pubCloseFullscreenMap()" class="absolute top-0 right-0 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg" style="pointer-events:auto; margin-top:max(1rem, env(safe-area-inset-top)); margin-right:1rem;">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+            <div class="absolute top-0 right-0 flex flex-col gap-2" style="pointer-events:auto; margin-top:max(1rem, env(safe-area-inset-top)); margin-right:1rem;">
+                <button onclick="pubCloseFullscreenMap()" class="w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg" aria-label="Close map">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <button onclick="pubRecenterFullscreenMap()" class="w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg" aria-label="Re-center map">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 0v4m0 12v-4m10-6h-4M6 12H2"/><circle cx="12" cy="12" r="3" stroke-width="2" fill="none"/></svg>
+                </button>
+            </div>
             <div class="absolute bottom-0 left-0 right-0 p-4" style="pointer-events:auto; padding-bottom:max(1rem, env(safe-area-inset-bottom, 0px));">
                 <a id="fullscreenMapDirections" href="#" target="_blank" rel="noopener"
                    class="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-3.5 rounded-2xl text-sm font-bold transition shadow-xl">
