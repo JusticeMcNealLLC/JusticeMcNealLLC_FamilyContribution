@@ -30,6 +30,8 @@
         bannerFile: null,
         bannerPreviewUrl: null,
         geocode: null, // { lat, lng, display } or null
+        prizeImageFiles: {},    // item.id → File
+        prizeImagePreviews: {}, // item.id → data-URL
         form: {
             event_type: 'member',
             title: '',
@@ -141,6 +143,15 @@
                 .ec-mini-btn:hover { border-color:#c7d2fe; color:#4f46e5; background:#eef2ff; }
                 .ec-raffle-summary { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
                 .ec-raffle-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#4338ca; font-size:11px; font-weight:700; }
+                .ec-raffle-item-wrap { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fff; margin-top:8px; }
+                .ec-prize-img-row { margin-top:8px; display:flex; align-items:center; gap:8px; }
+                .ec-prize-img-drop { flex:0 0 auto; width:72px; height:72px; border:2px dashed #d1d5db; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer; transition:border-color .15s,background .15s; font-size:11px; color:#9ca3af; text-align:center; overflow:hidden; }
+                .ec-prize-img-drop:hover, .ec-prize-img-drop--over { border-color:#4f46e5; background:#eef2ff; color:#4f46e5; }
+                .ec-prize-img-drop img { width:100%; height:100%; object-fit:cover; border-radius:8px; display:block; }
+                .ec-prize-img-label { flex:1; min-width:0; font-size:11px; color:#6b7280; }
+                .ec-prize-img-label strong { display:block; color:#374151; font-size:12px; margin-bottom:1px; }
+                .ec-prize-img-clear { border:1px solid #fecaca; background:#fef2f2; color:#dc2626; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:700; white-space:nowrap; }
+                .ec-prize-img-clear:hover { background:#fee2e2; }
                 @media(max-width:560px) { .ec-raffle-grid, .ec-raffle-item-grid { grid-template-columns:1fr; } .ec-icon-btn { width:100%; } }
                 @media(max-width:639px){ #ecSheetPanel { max-height: 94vh; } }
             </style>
@@ -161,6 +172,8 @@
         STATE.bannerFile = null;
         STATE.bannerPreviewUrl = null;
         STATE.geocode = null;
+        STATE.prizeImageFiles = {};
+        STATE.prizeImagePreviews = {};
         Object.assign(STATE.form, {
             event_type: 'member', title: '', category: 'other', description: '',
             start_date: '', end_date: '', timezone: 'America/New_York',
@@ -558,33 +571,51 @@
                     </div>
                     <button type="button" class="ec-mini-btn" data-ec-raffle-add-item>Add item</button>
                 </div>
-                ${items.length ? items.map((item, index) => `
-                    <div class="ec-raffle-item-grid" data-ec-item-row="${index}">
-                        <div>
-                            <label class="ec-label">Emoji</label>
-                            <input class="ec-input" data-ec-item-field="emoji" data-ec-item-id="${_esc(item.id)}" value="${_esc(item.emoji || '🎁')}" maxlength="4">
+                ${items.length ? items.map((item, index) => {
+                    const preview = STATE.prizeImagePreviews[item.id] || item.image_url || null;
+                    const fileName = STATE.prizeImageFiles[item.id]?.name || null;
+                    return `
+                    <div class="ec-raffle-item-wrap" data-ec-item-row="${index}">
+                        <div class="ec-raffle-item-grid">
+                            <div>
+                                <label class="ec-label">Emoji</label>
+                                <input class="ec-input" data-ec-item-field="emoji" data-ec-item-id="${_esc(item.id)}" value="${_esc(item.emoji || '🎁')}" maxlength="4">
+                            </div>
+                            <div>
+                                <label class="ec-label">Item name</label>
+                                <input class="ec-input" data-ec-item-field="name" data-ec-item-id="${_esc(item.id)}" value="${_esc(item.name)}" maxlength="120">
+                            </div>
+                            <div>
+                                <label class="ec-label">Category</label>
+                                <select class="ec-input" data-ec-item-field="category_id" data-ec-item-id="${_esc(item.id)}">
+                                    ${categories.map(category => `<option value="${_esc(category.id)}" ${item.category_id === category.id ? 'selected' : ''}>${_esc(category.label)}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="ec-label">Qty</label>
+                                <input class="ec-input" type="number" min="1" step="1" data-ec-item-field="quantity" data-ec-item-id="${_esc(item.id)}" value="${item.quantity || 1}">
+                            </div>
+                            <div style="display:flex;gap:4px">
+                                <button type="button" class="ec-icon-btn" title="Move up" data-ec-item-move="up" data-ec-item-id="${_esc(item.id)}">↑</button>
+                                <button type="button" class="ec-icon-btn" title="Move down" data-ec-item-move="down" data-ec-item-id="${_esc(item.id)}">↓</button>
+                                <button type="button" class="ec-icon-btn" title="Remove" data-ec-item-remove="${_esc(item.id)}">×</button>
+                            </div>
                         </div>
-                        <div>
-                            <label class="ec-label">Item name</label>
-                            <input class="ec-input" data-ec-item-field="name" data-ec-item-id="${_esc(item.id)}" value="${_esc(item.name)}" maxlength="120">
+                        <div class="ec-prize-img-row">
+                            <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-ec-prize-file="${_esc(item.id)}">
+                            <div class="ec-prize-img-drop" data-ec-prize-drop="${_esc(item.id)}" title="Click or drag an image here">
+                                ${preview ? `<img src="${_esc(preview)}" alt="Prize image">` : `<span style="font-size:18px">📷</span>`}
+                            </div>
+                            <div class="ec-prize-img-label">
+                                ${preview
+                                    ? `<strong>${fileName ? _esc(fileName) : 'Image set'}</strong><span>Drag a new image or click the thumbnail to replace</span>`
+                                    : `<strong>Prize image</strong><span>Click or drag &amp; drop a photo (PNG/JPG/WebP · max 5 MB)</span>`
+                                }
+                            </div>
+                            ${preview ? `<button type="button" class="ec-prize-img-clear" data-ec-prize-clear="${_esc(item.id)}">Remove</button>` : ''}
                         </div>
-                        <div>
-                            <label class="ec-label">Category</label>
-                            <select class="ec-input" data-ec-item-field="category_id" data-ec-item-id="${_esc(item.id)}">
-                                ${categories.map(category => `<option value="${_esc(category.id)}" ${item.category_id === category.id ? 'selected' : ''}>${_esc(category.label)}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div>
-                            <label class="ec-label">Qty</label>
-                            <input class="ec-input" type="number" min="1" step="1" data-ec-item-field="quantity" data-ec-item-id="${_esc(item.id)}" value="${item.quantity || 1}">
-                        </div>
-                        <div style="display:flex;gap:4px">
-                            <button type="button" class="ec-icon-btn" title="Move up" data-ec-item-move="up" data-ec-item-id="${_esc(item.id)}">↑</button>
-                            <button type="button" class="ec-icon-btn" title="Move down" data-ec-item-move="down" data-ec-item-id="${_esc(item.id)}">↓</button>
-                            <button type="button" class="ec-icon-btn" title="Remove" data-ec-item-remove="${_esc(item.id)}">×</button>
-                        </div>
-                    </div>
-                `).join('') : `<div class="text-xs text-gray-500 bg-white border border-dashed border-gray-300 rounded-xl p-3">No prize items yet. Add at least one item before publishing.</div>`}
+                    </div>`;
+                }).join('') : `<div class="text-xs text-gray-500 bg-white border border-dashed border-gray-300 rounded-xl p-3">No prize items yet. Add at least one item before publishing.</div>`}
 
                 <div class="ec-raffle-summary">
                     <span class="ec-raffle-chip">${categories.length} categories</span>
@@ -659,6 +690,57 @@
         document.querySelectorAll('[data-ec-item-move]').forEach(button => {
             button.addEventListener('click', () => _moveItem(button.dataset.ecItemId, button.dataset.ecItemMove));
         });
+
+        // ── Prize image upload (click + drag & drop) ──
+        document.querySelectorAll('[data-ec-prize-drop]').forEach(zone => {
+            const itemId = zone.dataset.ecPrizeDrop;
+            const fileInput = document.querySelector(`[data-ec-prize-file="${CSS.escape(itemId)}"]`);
+            if (!fileInput) return;
+
+            zone.addEventListener('click', () => fileInput.click());
+
+            zone.addEventListener('dragover', e => {
+                e.preventDefault();
+                zone.classList.add('ec-prize-img-drop--over');
+            });
+            zone.addEventListener('dragleave', e => {
+                if (!zone.contains(e.relatedTarget)) zone.classList.remove('ec-prize-img-drop--over');
+            });
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('ec-prize-img-drop--over');
+                const f = e.dataTransfer?.files?.[0];
+                if (!f) return;
+                _setPrizeImage(itemId, f);
+            });
+
+            fileInput.addEventListener('change', () => {
+                const f = fileInput.files?.[0];
+                if (!f) return;
+                _setPrizeImage(itemId, f);
+            });
+        });
+        document.querySelectorAll('[data-ec-prize-clear]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const itemId = btn.dataset.ecPrizeClear;
+                delete STATE.prizeImageFiles[itemId];
+                delete STATE.prizeImagePreviews[itemId];
+                // Also clear stored image_url on the item
+                const config = _ensureRaffleConfig();
+                const item = config.items.find(i => i.id === itemId);
+                if (item) item.image_url = null;
+                _render();
+            });
+        });
+    }
+
+    function _setPrizeImage(itemId, file) {
+        if (!file.type.match(/^image\/(png|jpeg|webp)$/)) { alert('Please use a PNG, JPG, or WebP image.'); return; }
+        if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return; }
+        STATE.prizeImageFiles[itemId] = file;
+        const reader = new FileReader();
+        reader.onload = () => { STATE.prizeImagePreviews[itemId] = reader.result; _render(); };
+        reader.readAsDataURL(file);
     }
 
     function _raffleModel() {
@@ -892,12 +974,27 @@
                 bannerUrl = supabaseClient.storage.from('event-banners').getPublicUrl(path).data.publicUrl;
             }
 
+            // Prize image uploads (if any)
+            const raffleConfig = f.raffle_enabled ? _raffleModel().normalizeConfig(_ensureRaffleConfig()) : null;
+            if (raffleConfig) {
+                const prizeUploads = Object.entries(STATE.prizeImageFiles);
+                for (const [itemId, imgFile] of prizeUploads) {
+                    const item = raffleConfig.items.find(i => i.id === itemId);
+                    if (!item) continue;
+                    const ext  = imgFile.name.split('.').pop().toLowerCase() || 'jpg';
+                    const path = `${slug}/${itemId}-${Date.now()}.${ext}`;
+                    const up   = await supabaseClient.storage
+                        .from('event-raffle-prizes')
+                        .upload(path, imgFile, { contentType: imgFile.type });
+                    if (up.error) throw new Error(`Prize image upload failed: ${up.error.message}`);
+                    item.image_url = supabaseClient.storage.from('event-raffle-prizes').getPublicUrl(path).data.publicUrl;
+                }
+            }
             const startISO = f.start_date ? new Date(f.start_date).toISOString() : null;
             const endISO   = f.end_date   ? new Date(f.end_date).toISOString()   : null;
             const deadline = f.rsvp_deadline ? new Date(f.rsvp_deadline).toISOString() : null;
             const rsvpCents = f.pricing_mode === 'paid' ? Math.round(Number(f.rsvp_cost_dollars || 0) * 100) : 0;
             const raffleCents = f.raffle_enabled ? Math.round(Number(f.raffle_entry_cost_dollars || 0) * 100) : 0;
-            const raffleConfig = f.raffle_enabled ? _raffleModel().normalizeConfig(_ensureRaffleConfig()) : null;
             const raffleWinnerCount = raffleConfig ? _raffleModel().getTotalWinnerCount(raffleConfig) : 0;
 
             const record = {
