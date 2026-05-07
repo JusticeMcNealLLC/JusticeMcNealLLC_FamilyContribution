@@ -48,3 +48,24 @@ verify_jwt = false
 
 [functions.event-og]
 verify_jwt = false
+
+[functions.rsvp-guest-free]
+verify_jwt = false
+
+[functions.raffle-guest-free]
+verify_jwt = false
+
+[functions.create-event-checkout]
+verify_jwt = false
+
+[functions.manage-event-waitlist]
+verify_jwt = false
+
+[functions.geocode-address]
+verify_jwt = false
+
+[functions.send-event-reminders]
+verify_jwt = false
+
+[functions.process-event-cancellation]
+verify_jwt = false
