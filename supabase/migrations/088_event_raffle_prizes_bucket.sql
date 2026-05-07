@@ -11,10 +11,12 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- Anyone can read prize images (public event pages need them)
+DROP POLICY IF EXISTS "raffle_prizes_read" ON storage.objects;
 CREATE POLICY "raffle_prizes_read" ON storage.objects FOR SELECT
     USING (bucket_id = 'event-raffle-prizes');
 
 -- Only authenticated admins/hosts can upload prize images
+DROP POLICY IF EXISTS "raffle_prizes_upload" ON storage.objects;
 CREATE POLICY "raffle_prizes_upload" ON storage.objects FOR INSERT
     WITH CHECK (
         bucket_id = 'event-raffle-prizes'
@@ -23,6 +25,7 @@ CREATE POLICY "raffle_prizes_upload" ON storage.objects FOR INSERT
     );
 
 -- Only admins can delete prize images
+DROP POLICY IF EXISTS "raffle_prizes_delete" ON storage.objects;
 CREATE POLICY "raffle_prizes_delete" ON storage.objects FOR DELETE
     USING (
         bucket_id = 'event-raffle-prizes'
@@ -31,6 +34,7 @@ CREATE POLICY "raffle_prizes_delete" ON storage.objects FOR DELETE
     );
 
 -- Allow replace/update (for re-uploading a prize image)
+DROP POLICY IF EXISTS "raffle_prizes_update" ON storage.objects;
 CREATE POLICY "raffle_prizes_update" ON storage.objects FOR UPDATE
     USING (
         bucket_id = 'event-raffle-prizes'
