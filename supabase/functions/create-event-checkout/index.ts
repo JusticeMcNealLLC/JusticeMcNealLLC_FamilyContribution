@@ -49,6 +49,8 @@ serve(async (req) => {
     }
 
     const isGuest = !user
+    const guestEmailNormalized = isGuest && guest_email ? String(guest_email).trim().toLowerCase() : null
+    const guestNameNormalized = isGuest && guest_name ? String(guest_name).trim() : null
     if (isGuest && (!guest_name || !guest_email)) {
       throw new Error('Guest RSVP requires guest_name and guest_email')
     }
@@ -104,7 +106,9 @@ serve(async (req) => {
           .from('event_guest_rsvps')
           .select('id, paid')
           .eq('event_id', event_id)
-          .eq('guest_email', guest_email)
+          .ilike('guest_email', guestEmailNormalized!)
+          .order('created_at', { ascending: true })
+          .limit(1)
           .maybeSingle()
 
         if (existingGuestRsvp?.paid) {
@@ -186,7 +190,9 @@ serve(async (req) => {
           .from('event_guest_rsvps')
           .select('guest_token')
           .eq('event_id', event_id)
-          .eq('guest_email', guest_email)
+          .ilike('guest_email', guestEmailNormalized!)
+          .order('created_at', { ascending: true })
+          .limit(1)
           .maybeSingle()
 
         if (guestRsvp) {
@@ -289,7 +295,7 @@ serve(async (req) => {
       customerConfig = { customer: stripeCustomerId }
     } else {
       // For guests: pre-fill email, don't attach to a Stripe customer
-      customerConfig = { customer_email: guest_email }
+      customerConfig = { customer_email: guestEmailNormalized! }
     }
 
     // Generate a guest token for guest RSVPs
@@ -306,8 +312,8 @@ serve(async (req) => {
     if (!isGuest) {
       metadata.supabase_user_id = user.id
     } else {
-      metadata.guest_name = guest_name
-      metadata.guest_email = guest_email
+      metadata.guest_name = guestNameNormalized!
+      metadata.guest_email = guestEmailNormalized!
       metadata.guest_token = guestToken!
     }
 

@@ -235,7 +235,7 @@ async function pubHandleGuestRsvp() {
     if (!pubCurrentEvent) return;
 
     const name  = document.getElementById('guestNameInput').value.trim();
-    const email = document.getElementById('guestEmailInput').value.trim();
+    const email = pubNormalizeGuestEmail(document.getElementById('guestEmailInput').value);
     const noRefund = document.getElementById('guestNoRefundCheck');
     const btn   = document.getElementById('guestRsvpBtn');
 
@@ -261,6 +261,15 @@ async function pubHandleGuestRsvp() {
     btn.textContent = 'Processing...';
 
     try {
+        const existingGuest = await pubFindGuestRsvpByEmail(email);
+        if (existingGuest && (!isPaid || existingGuest.paid)) {
+            await pubUseExistingGuestRsvp(existingGuest, 'You already RSVP\'d. Here is your ticket.');
+            if (window.matchMedia('(max-width: 1023px)').matches && document.getElementById('evtCtaBar')) {
+                pubOpenCtaPanel('ticket');
+            }
+            return;
+        }
+
         if (isPaid) {
             // Paid event → Stripe checkout
             const { url } = await callEdgeFunctionPublic('create-event-checkout', {
@@ -280,7 +289,7 @@ async function pubHandleGuestRsvp() {
 
             if (result.guest_token) {
                 pubGuestToken = result.guest_token;
-                pubGuestRsvp = {
+                pubGuestRsvp = result.guest_rsvp || {
                     guest_name: name,
                     guest_email: email,
                     guest_token: result.guest_token,
@@ -294,8 +303,8 @@ async function pubHandleGuestRsvp() {
                     <div class="evt-info-card">
                         <span style="font-size:1.5rem">✅</span>
                         <div>
-                            <p style="font-size:14px;font-weight:700;color:#059669">You're RSVP'd!</p>
-                            <p style="font-size:13px;color:#059669">${pubEscapeHtml(name)} · ${pubEscapeHtml(email)}</p>
+                            <p style="font-size:14px;font-weight:700;color:#059669">${result.already_exists ? 'You already RSVP\'d' : 'You\'re RSVP\'d!'}</p>
+                            <p style="font-size:13px;color:#059669">${pubEscapeHtml(pubGuestRsvp.guest_name || name)} · ${pubEscapeHtml(pubGuestRsvp.guest_email || email)}</p>
                         </div>
                     </div>`;
 

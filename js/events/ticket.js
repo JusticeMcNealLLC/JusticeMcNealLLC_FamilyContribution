@@ -416,14 +416,59 @@ async function pubShowGuestTicket(guestRsvp) {
 /* ── Guest Lookup ────────────────────────── */
 
 function pubToggleLookup() {
-    // Legacy — lookup is now a tab in the unified RSVP card. No-op.
+    const panel = document.getElementById('lookupPanel');
+    if (!panel) return;
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) {
+        const emailInput = document.getElementById('lookupEmailInput');
+        const guestEmail = document.getElementById('guestEmailInput')?.value?.trim();
+        if (guestEmail && emailInput && !emailInput.value) emailInput.value = guestEmail;
+        setTimeout(() => emailInput?.focus(), 50);
+    }
+}
+
+function pubNormalizeGuestEmail(email) {
+    return String(email || '').trim().toLowerCase();
+}
+
+async function pubFindGuestRsvpByEmail(email) {
+    if (!pubCurrentEvent) return null;
+    const normalized = pubNormalizeGuestEmail(email);
+    if (!normalized) return null;
+
+    const { data } = await supabaseClient
+        .from('event_guest_rsvps')
+        .select('*')
+        .eq('event_id', pubCurrentEvent.id)
+        .ilike('guest_email', normalized)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+    return data || null;
+}
+
+async function pubUseExistingGuestRsvp(gRsvp, message) {
+    pubGuestRsvp = gRsvp;
+    pubGuestToken = gRsvp.guest_token;
+    await pubShowGuestTicket(gRsvp);
+    pubInitBottomNav(pubCurrentEvent);
+
+    if (pubCurrentEvent.gated_notes) {
+        document.getElementById('gatedSection').classList.remove('hidden');
+        document.getElementById('gatedNotes').textContent = pubCurrentEvent.gated_notes;
+    }
+
+    const resultEl = document.getElementById('lookupResult');
+    if (resultEl && message) {
+        resultEl.innerHTML = `<p style="font-size:13px;color:#059669;font-weight:600">${pubEscapeHtml(message)}</p>`;
+    }
 }
 
 
 async function pubLookupGuestTicket() {
     if (!pubCurrentEvent) return;
 
-    const email = document.getElementById('lookupEmailInput').value.trim();
+    const email = pubNormalizeGuestEmail(document.getElementById('lookupEmailInput').value);
     const resultEl = document.getElementById('lookupResult');
     const btn = document.getElementById('lookupBtn');
 
@@ -436,28 +481,12 @@ async function pubLookupGuestTicket() {
     btn.textContent = 'Searching...';
 
     try {
-        const { data: gRsvp } = await supabaseClient
-            .from('event_guest_rsvps')
-            .select('*')
-            .eq('event_id', pubCurrentEvent.id)
-            .eq('guest_email', email)
-            .maybeSingle();
+        const gRsvp = await pubFindGuestRsvpByEmail(email);
 
         if (!gRsvp) {
             resultEl.innerHTML = '<p style="font-size:13px;color:#dc2626">No RSVP found for this email.</p>';
         } else {
-            pubGuestRsvp = gRsvp;
-            pubGuestToken = gRsvp.guest_token;
-            pubShowGuestTicket(gRsvp);
-            pubInitBottomNav(pubCurrentEvent);
-
-            // Show gated notes if applicable
-            if (pubCurrentEvent.gated_notes) {
-                document.getElementById('gatedSection').classList.remove('hidden');
-                document.getElementById('gatedNotes').textContent = pubCurrentEvent.gated_notes;
-            }
-
-            resultEl.innerHTML = '<p style="font-size:13px;color:#059669;font-weight:600">✅ Ticket found! Scroll up to see your QR code.</p>';
+            await pubUseExistingGuestRsvp(gRsvp, 'Ticket found. Your QR code is ready.');
         }
     } catch (err) {
         console.error('Lookup error:', err);

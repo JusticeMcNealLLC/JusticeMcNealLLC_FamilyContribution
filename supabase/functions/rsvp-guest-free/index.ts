@@ -66,9 +66,11 @@ serve(async (req) => {
     // Check for existing guest RSVP
     const { data: existingGuest } = await supabase
       .from('event_guest_rsvps')
-      .select('id, guest_token, status')
+      .select('id, guest_name, guest_email, guest_token, status, paid, created_at')
       .eq('event_id', event_id)
-      .eq('guest_email', emailLower)
+      .ilike('guest_email', emailLower)
+      .order('created_at', { ascending: true })
+      .limit(1)
       .maybeSingle()
 
     if (existingGuest) {
@@ -76,6 +78,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         guest_token: existingGuest.guest_token,
         status: existingGuest.status,
+        guest_rsvp: existingGuest,
         already_exists: true,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -121,12 +124,34 @@ serve(async (req) => {
 
     if (insertErr) {
       console.error('Insert error:', insertErr)
+      if (insertErr.code === '23505') {
+        const { data: existingAfterConflict } = await supabase
+          .from('event_guest_rsvps')
+          .select('id, guest_name, guest_email, guest_token, status, paid, created_at')
+          .eq('event_id', event_id)
+          .ilike('guest_email', emailLower)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+
+        if (existingAfterConflict) {
+          return new Response(JSON.stringify({
+            guest_token: existingAfterConflict.guest_token,
+            status: existingAfterConflict.status,
+            guest_rsvp: existingAfterConflict,
+            already_exists: true,
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+      }
       throw new Error('Failed to create RSVP. Please try again.')
     }
 
     return new Response(JSON.stringify({
       guest_token: guestToken,
       status: 'going',
+      guest_rsvp: guestRsvp,
       already_exists: false,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

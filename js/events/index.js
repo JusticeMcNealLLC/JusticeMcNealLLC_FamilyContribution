@@ -105,15 +105,18 @@ async function pubLoadEvent(slug, isCheckin, ticketToken) {
         pubCurrentRsvp = rsvp;
     }
 
-    // If guest token in URL, load guest RSVP
-    if (pubGuestToken) {
+    // If guest token in URL, load guest RSVP. Guest ticket URLs use ?ticket=.
+    const guestTicketToken = !pubCurrentUser && ticketToken ? ticketToken : null;
+    const guestLookupToken = pubGuestToken || guestTicketToken;
+    if (guestLookupToken) {
         const { data: gRsvp } = await supabaseClient
             .from('event_guest_rsvps')
             .select('*')
             .eq('event_id', event.id)
-            .eq('guest_token', pubGuestToken)
+            .eq('guest_token', guestLookupToken)
             .maybeSingle();
         pubGuestRsvp = gRsvp;
+        if (gRsvp) pubGuestToken = gRsvp.guest_token;
     }
 
     pubRenderEvent(event, goingCount, isCheckin, ticketToken);
@@ -262,7 +265,7 @@ function pubBuildPublicDetailShell(event, goingCount) {
                         </div>
                     </div>
                     <div id="memberRsvpCard" class="hidden ed-card ed-card-rsvp event-detail-card-tight public-action-card"><p class="ed-summary-heading">Your RSVP</p><div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div></div>
-                    <div id="guestRsvpSection" class="hidden ed-card event-detail-card-tight public-action-card"><p class="ed-summary-heading">RSVP for This Event</p><p class="public-ed-muted" style="margin-bottom:14px">No account needed. Enter your name and email.</p><div class="public-ed-field-stack"><input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name"><input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address"><label class="evt-checkbox-label hidden"><input type="checkbox" id="guestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label><button onclick="pubHandleGuestRsvp()" id="guestRsvpBtn" class="evt-rsvp-pay">RSVP as Guest</button></div><div class="pub-rsvp-links"><a id="signinRsvpLink" href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="pub-rsvp-text-link">Have an account? Sign in</a><button type="button" onclick="var p=document.getElementById('lookupPanel');if(p)p.classList.toggle('hidden')" class="pub-rsvp-text-link">Already RSVP'd? Find my ticket</button></div><div id="lookupPanel" class="hidden" style="margin-top:14px"><div class="public-ed-field-stack"><input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" aria-label="Email used for RSVP"><button onclick="pubLookupGuestTicket()" id="lookupBtn" class="evt-action-btn">Find My Ticket</button></div><div id="lookupResult" style="margin-top:10px"></div></div></div>
+                    <div id="guestRsvpSection" class="hidden ed-card event-detail-card-tight public-action-card"><p class="ed-summary-heading">RSVP for This Event</p><p class="public-ed-muted" style="margin-bottom:14px">No account needed. Enter your name and email.</p><div class="public-ed-field-stack"><input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name"><input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address"><label class="evt-checkbox-label hidden"><input type="checkbox" id="guestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label><button onclick="pubHandleGuestRsvp()" id="guestRsvpBtn" class="evt-rsvp-pay">RSVP as Guest</button></div><div class="pub-rsvp-links"><a id="signinRsvpLink" href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="pub-rsvp-text-link">Have an account? Sign in</a><button type="button" onclick="pubToggleLookup()" class="pub-rsvp-text-link">Already RSVP'd? Look up your ticket</button></div><div id="lookupPanel" class="hidden" style="margin-top:14px"><p class="public-ed-muted" style="margin-bottom:10px">Enter the email you used to RSVP and your ticket will show here.</p><div class="public-ed-field-stack"><input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" aria-label="Email used for RSVP"><button onclick="pubLookupGuestTicket()" id="lookupBtn" class="evt-action-btn">Find My Ticket</button></div><div id="lookupResult" style="margin-top:10px"></div></div></div>
                     <div id="memberOnlyNotice" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-notice-card"><span class="evt-notice-icon">🔒</span><div><p class="evt-notice-title">Members-only event</p><p class="evt-notice-sub">Sign in with your member account to RSVP.</p></div></div></div>
                     <div id="ticketSection" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-qr-card"><h3 class="evt-qr-title">🎫 Your Event Ticket</h3><canvas id="ticketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p></div></div>
                     <div id="guestTicketSection" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-qr-card"><div style="font-size:36px;margin-bottom:8px">🎉</div><h3 class="evt-qr-title">You're In!</h3><p id="guestTicketName" style="font-size:13px;color:#717171;margin-bottom:16px"></p><canvas id="guestTicketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p><p style="font-size:13px;color:#f59e0b;font-weight:600;margin-top:10px">Bookmark this page. This is your ticket.</p></div></div>

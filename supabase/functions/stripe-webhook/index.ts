@@ -208,7 +208,7 @@ async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Se
   if (isGuest) {
     // ── Guest RSVP ────────────────────────────────────────
     const guestName = session.metadata?.guest_name
-    const guestEmail = session.metadata?.guest_email
+    const guestEmail = session.metadata?.guest_email?.trim().toLowerCase()
     const guestToken = session.metadata?.guest_token
 
     if (!guestName || !guestEmail || !guestToken) {
