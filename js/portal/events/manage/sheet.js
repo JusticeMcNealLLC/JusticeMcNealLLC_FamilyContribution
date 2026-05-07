@@ -38,6 +38,14 @@
         tabData: {}, // lazy per-tab cache: { money, docs, raffle, comp }
     };
 
+    const DOC_TYPES = [
+        { value: 'plane_ticket', label: 'Plane Ticket', perMember: true },
+        { value: 'group_ticket', label: 'Group Ticket / Pass', perMember: false },
+        { value: 'itinerary', label: 'Itinerary', perMember: false },
+        { value: 'receipt', label: 'Receipt', perMember: false },
+        { value: 'other', label: 'Other', perMember: false },
+    ];
+
     // ─── DOM injection ──────────────────────────────────────────────
     function _ensureMounted() {
         if (document.getElementById('emSheetRoot')) return;
@@ -89,6 +97,11 @@
                 .em-btn-danger:hover { background:#b91c1c; }
                 .em-btn-ghost { background:#f3f4f6; color:#374151; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
                 .em-btn-ghost:hover { background:#e5e7eb; }
+                .em-btn-primary { background:#4f46e5; color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; }
+                .em-btn-primary:hover { background:#4338ca; }
+                .em-btn-primary:disabled { opacity:.55; cursor:not-allowed; }
+                .em-input { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; }
+                .em-input:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
                 .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
                 .em-placeholder svg { width:48px; height:48px; margin-bottom:12px; opacity:.4; }
                 @media(max-width:639px){
@@ -565,6 +578,15 @@
         const docs = STATE.tabData.docs.docs;
         const groupDocs = docs.filter(d => !d.target_user_id);
         const memberDocs = docs.filter(d => d.target_user_id);
+        const goingMembers = STATE.rsvps
+            .filter(r => r.status === 'going')
+            .map(r => {
+                const profile = r.profiles || {};
+                return {
+                    id: r.user_id,
+                    name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Member',
+                };
+            });
 
         const distributedCount = docs.filter(d => d.distributed).length;
 
@@ -606,7 +628,40 @@
             }).join('');
         }
 
+        const memberOptions = goingMembers.map(m => `<option value="${_esc(m.id)}">${_esc(m.name)}</option>`).join('');
+        const typeOptions = DOC_TYPES.map(t => `<option value="${_esc(t.value)}">${_esc(t.label)}</option>`).join('');
+
         return `
+            <div class="em-card mb-4">
+                <h3 class="font-bold text-gray-800 text-sm mb-2">Upload document</h3>
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Visible to
+                        <select id="emDocTargetMode" class="em-input mt-1">
+                            <option value="group">Everyone RSVP'd</option>
+                            <option value="member">Specific member</option>
+                        </select>
+                    </label>
+                    <label id="emDocMemberWrap" class="text-xs font-bold uppercase tracking-wide text-gray-500 hidden">Member
+                        <select id="emDocMember" class="em-input mt-1">
+                            ${memberOptions || '<option value="">No RSVP\'d members yet</option>'}
+                        </select>
+                    </label>
+                    <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Label
+                        <input id="emDocLabel" type="text" class="em-input mt-1" placeholder="Flight ticket, itinerary, receipt">
+                    </label>
+                    <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Type
+                        <select id="emDocType" class="em-input mt-1">${typeOptions}</select>
+                    </label>
+                    <label class="text-xs font-bold uppercase tracking-wide text-gray-500 sm:col-span-2">File
+                        <input id="emDocFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" class="em-input mt-1">
+                    </label>
+                </div>
+                <div class="flex items-center justify-between gap-3 mt-3">
+                    <p class="text-xs text-gray-400">Uploads live here in Manage Event. Members only see a document viewer button on the event page.</p>
+                    <button id="emDocUploadBtn" class="em-btn-primary">Upload</button>
+                </div>
+            </div>
+
             <div class="grid grid-cols-3 gap-3 mb-4">
                 <div class="em-card em-stat"><span class="em-stat-label">Total</span><span class="em-stat-num">${docs.length}</span></div>
                 <div class="em-card em-stat"><span class="em-stat-label">Distributed</span><span class="em-stat-num" style="color:#059669">${distributedCount}</span></div>
@@ -621,18 +676,29 @@
             <div class="em-card">
                 <h3 class="font-bold text-gray-800 text-sm mb-2">Per-member documents <span class="text-gray-400 font-normal">· ${memberDocs.length}</span></h3>
                 ${memberSection(memberDocs)}
-                <p class="text-xs text-gray-400 mt-3">Upload via the portal detail page → Documents section. Per-tab uploader lands in M4.</p>
             </div>
         `;
     }
 
     function _wireDocs() {
+        const targetMode = document.getElementById('emDocTargetMode');
+        const memberWrap = document.getElementById('emDocMemberWrap');
+        const type = document.getElementById('emDocType');
+        if (type) type.value = 'itinerary';
+        targetMode?.addEventListener('change', () => {
+            memberWrap?.classList.toggle('hidden', targetMode.value !== 'member');
+            if (type) type.value = targetMode.value === 'member' ? 'plane_ticket' : 'itinerary';
+        });
+        document.getElementById('emDocUploadBtn')?.addEventListener('click', _uploadDocFromManage);
+
         document.getElementById('emSheetContent').querySelectorAll('[data-doc-action]').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const action = btn.dataset.docAction;
                 const id = btn.dataset.id;
                 if (action === 'delete') {
                     if (!confirm('Delete this document? This cannot be undone.')) return;
+                    const doc = STATE.tabData.docs.docs.find(d => d.id === id);
+                    if (doc?.file_path) await supabaseClient.storage.from('event-documents').remove([doc.file_path]);
                     const { error } = await supabaseClient.from('event_documents').delete().eq('id', id);
                     if (error) return alert('Delete failed: ' + error.message);
                 } else {
@@ -644,8 +710,57 @@
                 }
                 STATE.tabData.docs = null;
                 _renderTab('docs');
+                _notifyParent('updated', STATE.eventId);
             });
         });
+    }
+
+    async function _uploadDocFromManage() {
+        const btn = document.getElementById('emDocUploadBtn');
+        const mode = document.getElementById('emDocTargetMode')?.value || 'group';
+        const targetUserId = mode === 'member' ? (document.getElementById('emDocMember')?.value || '') : '';
+        const label = (document.getElementById('emDocLabel')?.value || '').trim();
+        const docType = document.getElementById('emDocType')?.value || 'other';
+        const file = document.getElementById('emDocFile')?.files?.[0];
+
+        if (mode === 'member' && !targetUserId) return alert('Choose a member for this document.');
+        if (!label) return alert('Add a document label.');
+        if (!file) return alert('Choose a file to upload.');
+
+        btn.disabled = true;
+        btn.textContent = 'Uploading...';
+        try {
+            const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+            const storagePath = `${STATE.eventId}/${targetUserId || 'group'}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+            const { error: uploadErr } = await supabaseClient.storage
+                .from('event-documents')
+                .upload(storagePath, file, { contentType: file.type || 'application/octet-stream' });
+            if (uploadErr) throw uploadErr;
+
+            const { error: dbErr } = await supabaseClient
+                .from('event_documents')
+                .insert({
+                    event_id: STATE.eventId,
+                    uploaded_by: evtCurrentUser.id,
+                    target_user_id: targetUserId || null,
+                    doc_type: docType,
+                    label,
+                    file_path: storagePath,
+                    file_name: file.name,
+                    file_size_bytes: file.size,
+                    mime_type: file.type,
+                });
+            if (dbErr) throw dbErr;
+
+            STATE.tabData.docs = null;
+            _renderTab('docs');
+            _notifyParent('updated', STATE.eventId);
+        } catch (err) {
+            alert('Upload failed: ' + (err.message || err));
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Upload';
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════

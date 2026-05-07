@@ -562,6 +562,36 @@
 #eventsDetailView.portal-event-detail-v2 .ed-action-btn { background:#0f172a; }
 #eventsDetailView.portal-event-detail-v2 .ed-primary-btn { background:#4f46e5; }
 #eventsDetailView.portal-event-detail-v2 .ed-comment-body { background:#f8fafc; border:1px solid #eef2f7; }
+#eventsDetailView.portal-event-detail-v2 .ed-context-list { display:grid; gap:10px; margin-top:18px; padding-top:18px; border-top:1px solid rgba(15,23,42,.08); }
+#eventsDetailView.portal-event-detail-v2 .ed-context-row { display:flex; gap:12px; align-items:flex-start; padding:12px; border:1px solid rgba(15,23,42,.07); border-radius:16px; background:#f8fafc; }
+#eventsDetailView.portal-event-detail-v2 .ed-context-row > span { width:30px; height:30px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:#fff; flex-shrink:0; }
+#eventsDetailView.portal-event-detail-v2 .ed-context-row strong { display:block; font-size:13px; color:#0f172a; }
+#eventsDetailView.portal-event-detail-v2 .ed-context-row p { margin:2px 0 0; font-size:12px; line-height:1.45; color:#64748b; }
+#eventsDetailView.portal-event-detail-v2 .ed-docs-launch { display:flex; flex-direction:column; gap:14px; }
+#eventsDetailView.portal-event-detail-v2 .ed-docs-launch-copy { display:flex; align-items:flex-start; gap:12px; }
+#eventsDetailView.portal-event-detail-v2 .ed-docs-launch-icon { width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:14px; background:#eef2ff; flex-shrink:0; }
+#eventsDetailView.portal-event-detail-v2 .ed-docs-launch-title { margin:0; color:#0f172a; font-size:15px; font-weight:800; }
+#eventsDetailView.portal-event-detail-v2 .ed-docs-launch-sub { margin:2px 0 0; color:#64748b; font-size:12px; line-height:1.45; }
+#eventsDetailView.portal-event-detail-v2 .ed-docs-launch-btn { background:#0f172a; }
+.evt-docs-panel-root { position:fixed; inset:0; z-index:80; pointer-events:none; }
+.evt-docs-panel-backdrop { position:absolute; inset:0; background:rgba(15,23,42,.42); opacity:0; transition:opacity .18s ease; }
+.evt-docs-panel { position:absolute; left:50%; top:50%; width:min(92vw,560px); max-height:min(78vh,680px); transform:translate(-50%,-45%) scale(.98); opacity:0; overflow:hidden; border-radius:24px; background:#fff; box-shadow:0 24px 80px rgba(15,23,42,.24); transition:opacity .18s ease, transform .18s ease; display:flex; flex-direction:column; }
+.evt-docs-panel-root.open { pointer-events:auto; }
+.evt-docs-panel-root.open .evt-docs-panel-backdrop { opacity:1; }
+.evt-docs-panel-root.open .evt-docs-panel { opacity:1; transform:translate(-50%,-50%) scale(1); }
+.evt-docs-panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding:18px 20px; border-bottom:1px solid #eef2f7; }
+.evt-docs-panel-head p { margin:0 0 2px; color:#64748b; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+.evt-docs-panel-head h3 { margin:0; color:#0f172a; font-size:20px; font-weight:850; }
+.evt-docs-panel-head button { width:36px; height:36px; border:0; border-radius:50%; background:#f1f5f9; color:#334155; font-size:22px; line-height:1; cursor:pointer; }
+.evt-docs-list { overflow:auto; padding:8px 20px 20px; }
+.evt-doc-row { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid #f1f5f9; }
+.evt-doc-row:last-child { border-bottom:0; }
+.evt-doc-icon { width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:13px; background:#f8fafc; flex-shrink:0; }
+.evt-doc-copy { min-width:0; flex:1; }
+.evt-doc-copy p { margin:0; color:#0f172a; font-size:14px; font-weight:750; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.evt-doc-copy span { display:block; margin-top:2px; color:#64748b; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.evt-doc-download { border:0; border-radius:12px; padding:8px 11px; background:#eef2ff; color:#4338ca; font-size:12px; font-weight:800; cursor:pointer; }
+.evt-doc-download:hover { background:#e0e7ff; }
 
 @media (max-width:1023px) {
     #eventsDetailView.portal-event-detail-v2 .portal-event-shell { padding-top:0; }
@@ -578,4 +608,6 @@
     #eventsDetailView.portal-event-detail-v2 .ed-about-right { display:none; }
     #eventsDetailView.portal-event-detail-v2 .portal-event-rail { position:static; padding:0 16px; }
     #eventsDetailView.portal-event-detail-v2 .portal-event-rail .ed-card { margin-left:0; margin-right:0; }
+    .evt-docs-panel { left:0; right:0; top:auto; bottom:0; width:100%; max-height:82vh; border-radius:24px 24px 0 0; transform:translateY(100%); }
+    .evt-docs-panel-root.open .evt-docs-panel { transform:translateY(0); }
 }

@@ -254,6 +254,8 @@ window.evtUploadDocument = evtUploadDocument;
 window.evtDownloadDocument = evtDownloadDocument;
 window.evtMarkDistributed = evtMarkDistributed;
 window.evtDeleteDocument = evtDeleteDocument;
+window.evtOpenDocumentsPanel = evtOpenDocumentsPanel;
+window.evtCloseDocumentsPanel = evtCloseDocumentsPanel;
 // Live map exports
 window.evtInitMap = evtInitMap;
 window.evtToggleLocationSharing = evtToggleLocationSharing;

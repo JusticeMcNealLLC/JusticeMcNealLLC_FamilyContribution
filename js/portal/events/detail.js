@@ -341,14 +341,10 @@ async function evtOpenDetail(eventId) {
         : `background:linear-gradient(135deg, #312e81 0%, #6d28d9 50%, #a855f7 100%);`;
 
     // ── Transportation notice ────────────────────────────
-    let transportHtml = '';
+    let transportContextHtml = '';
     if (isLlc && event.transportation_enabled !== false && event.transportation_mode) {
         const isProvided = event.transportation_mode === 'llc_provides';
-        transportHtml = _edNotice(
-            isProvided ? '✈️' : '🧳',
-            isProvided ? 'LLC Provides Transportation' : 'Self-Arranged Transportation',
-            isProvided ? 'Tickets will be uploaded to your documents' : `Members book their own travel${event.transportation_estimate_cents ? ` — est. ~${formatCurrency(event.transportation_estimate_cents)}` : ''}`
-        );
+        transportContextHtml = `<div class="ed-context-row"><span>${isProvided ? '✈️' : '🧳'}</span><div><strong>${isProvided ? 'LLC provides transportation' : 'Self-arranged transportation'}</strong><p>${isProvided ? 'Tickets will appear in documents when available.' : `Members book their own travel${event.transportation_estimate_cents ? ` — est. ~${formatCurrency(event.transportation_estimate_cents)}` : ''}.`}</p></div></div>`;
     }
 
     // ── Location-required badge ──────────────────────────
@@ -448,6 +444,7 @@ async function evtOpenDetail(eventId) {
 
     // ── Threshold / Social Proof (LLC) ───────────────────
     let thresholdHtml = '';
+    let thresholdContextHtml = '';
     if (isLlc && event.min_participants) {
         const currentGoing = goingList.length;
         const minNeeded = event.min_participants;
@@ -457,30 +454,16 @@ async function evtOpenDetail(eventId) {
         const socialThreshold = Math.min(Math.floor(minNeeded * 0.5), 3);
         const showExactCount = currentGoing >= socialThreshold;
 
-        if (isHost) {
-            thresholdHtml = `
-            <div class="ed-threshold">
-                <div class="ed-threshold-header">
-                    <span class="ed-threshold-label">${isMet ? '✅ Minimum Met!' : '⚠️ Minimum Threshold'}</span>
-                    <span class="ed-threshold-count">${currentGoing} / ${minNeeded} by ${deadlineStr}</span>
-                </div>
-                <div class="ed-progress"><div class="ed-progress-fill${isMet ? ' met' : ''}" style="width:${pct}%"></div></div>
-                ${!isMet ? `<p class="ed-threshold-note">If ${minNeeded - currentGoing} more spot${minNeeded - currentGoing > 1 ? 's aren\'t' : ' isn\'t'} filled by the deadline, the event auto-cancels and all RSVPs are refunded.</p>` : ''}
-            </div>`;
-        } else {
+        if (!isHost) {
             let socialText = '';
-            if (isMet) socialText = `<span class="ed-social-confirmed">✅ Event confirmed!</span> <span class="ed-social-count">${currentGoing} going${event.max_participants ? ' · ' + (event.max_participants - currentGoing) + ' spots left' : ''}</span>`;
-            else if (showExactCount) socialText = `<span class="ed-social-confirmed">${currentGoing} going</span> <span class="ed-social-count">· spots remaining</span>`;
-            else socialText = `<span class="ed-social-confirmed">Spots available — be one of the first to RSVP!</span>`;
-            thresholdHtml = `
-            <div class="ed-threshold">
-                <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
-                    <div>${socialText}</div>
-                    ${event.rsvp_deadline ? `<span class="ed-threshold-deadline">RSVP by ${deadlineStr}</span>` : ''}
-                </div>
-            </div>`;
+            if (isMet) socialText = `Event confirmed · ${currentGoing} going${event.max_participants ? ' · ' + (event.max_participants - currentGoing) + ' spots left' : ''}`;
+            else if (showExactCount) socialText = `${currentGoing} going toward ${minNeeded} needed`;
+            else socialText = `Minimum of ${minNeeded} needed to confirm`;
+            thresholdContextHtml = `<div class="ed-context-row"><span>${isMet ? '✅' : '⚠️'}</span><div><strong>${isMet ? 'Minimum met' : 'Minimum threshold'}</strong><p>${socialText}${event.rsvp_deadline ? ` · RSVP by ${deadlineStr}` : ''}</p></div></div>`;
         }
     }
+
+    const eventContextHtml = [thresholdContextHtml, transportContextHtml].filter(Boolean).join('');
 
     // ── Waitlist (LLC) ───────────────────────────────────
     let waitlistHtml = '';
@@ -941,6 +924,7 @@ async function evtOpenDetail(eventId) {
                                 <p class="ed-about-heading">About This Event</p>
                                 <div class="ed-desc${descIsLong ? ' ed-desc-collapsed' : ''}" id="evtDescWrap">${descHtml}</div>
                                 ${descIsLong ? '<button class="ed-read-more" onclick="document.getElementById(\'evtDescWrap\').classList.remove(\'ed-desc-collapsed\');this.remove()">Read more</button>' : ''}
+                                ${eventContextHtml ? `<div class="ed-context-list">${eventContextHtml}</div>` : ''}
                             </div>
                             ${attendeePreviewHtml ? `
                             <div class="ed-about-desc-col">
@@ -975,7 +959,7 @@ async function evtOpenDetail(eventId) {
 
             <!-- Dynamic sections (notices, QR, cost, raffle…) -->
             <!-- scannerBtn + venueQrHtml moved into Manage Event sheet -->
-            ${[waitlistHtml, thresholdHtml, costBreakdownHtml, transportHtml, locationReqHtml, graceHtml, raffleHtml, documentsHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => _edCard(s, 'event-detail-card')).join('')}
+            ${[waitlistHtml, thresholdHtml, costBreakdownHtml, locationReqHtml, graceHtml, raffleHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => _edCard(s, 'event-detail-card')).join('')}
 
             <!-- Stats & Breakdown moved into Manage Event sheet (EventsManage) -->
 
@@ -1050,6 +1034,10 @@ async function evtOpenDetail(eventId) {
                     ${qrHtml ? `
                     <div class="ed-card event-detail-card-tight portal-action-card portal-ticket-card">
                         ${qrHtml}
+                    </div>` : ''}
+                    ${documentsHtml ? `
+                    <div class="ed-card event-detail-card-tight portal-action-card portal-docs-card">
+                        ${documentsHtml}
                     </div>` : ''}
                     ${!isPast && !isClosed ? `
                     <div class="ed-card ed-countdown-card event-detail-card-tight portal-utility-card" id="edCountdownCard">
