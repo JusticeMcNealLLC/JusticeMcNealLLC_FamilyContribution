@@ -1,0 +1,10 @@
+{
+  "name": "event-preview-worker",
+  "account_id": "c0768c91f67f1f9e6d8d97556390fa2b",
+  "compatibility_date": "2026-05-07",
+  "main": "cloudflare/event-preview-worker.js",
+  "routes": [
+    "justicemcneal.com/events*",
+    "www.justicemcneal.com/events*"
+  ]
+}
