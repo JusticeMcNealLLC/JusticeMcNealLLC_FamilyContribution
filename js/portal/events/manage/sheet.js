@@ -111,7 +111,7 @@
         _ensureMounted();
         STATE.eventId = eventId;
         STATE.source  = opts.source || 'admin';
-        STATE.activeTab = 'overview';
+        STATE.activeTab = M3A_TABS.some(t => t.key === opts.tab) ? opts.tab : 'overview';
         STATE.tabData = {}; // clear cache between events
 
         // Show shell immediately with skeleton
@@ -683,27 +683,65 @@
         const d = STATE.tabData.raffle;
         const fmt = window.formatCurrency || _money;
         const paidEntries = d.entries.filter(en => en.paid);
-        const prizes = Array.isArray(e.raffle_prizes) ? e.raffle_prizes : [];
+        const raffleConfig = _raffleConfig(e);
+        const categories = _raffleCategories(raffleConfig);
+        const drawQueue = _raffleDrawQueue(raffleConfig, d.winners);
         const winnersDrawn = d.winners.length;
-        const totalPrizes = prizes.length || winnersDrawn;
+        const totalPrizes = _raffleTotalWinners(raffleConfig) || e.raffle_winner_count || winnersDrawn;
+        const remainingDraws = Math.max(0, totalPrizes - winnersDrawn);
         const allDrawn = totalPrizes > 0 && winnersDrawn >= totalPrizes;
+        const canDraw = typeof window.evtOpenRaffleDraw === 'function' && paidEntries.length > 0 && !allDrawn;
 
         const winnerRows = d.winners.length ? d.winners.map(w => {
             const p = w.profiles || {};
             const name = w.user_id ? (`${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Member') : (`Guest · ${(w.guest_token || '').slice(0,8)}`);
             const medal = ['🥇','🥈','🥉'][w.place - 1] || `#${w.place}`;
+            const choiceHtml = _winnerChoiceHtml(w, raffleConfig, d.winners);
             return `
                 <div class="em-row">
                     <div style="font-size:22px;flex-shrink:0">${medal}</div>
                     <div class="flex-1 min-w-0">
                         <div class="text-sm font-semibold text-gray-800 truncate">${_esc(name)}</div>
                         <div class="text-xs text-gray-400 truncate">${_ord(w.place)} place · ${_esc(w.prize_description || '')}</div>
+                        ${choiceHtml}
                     </div>
                 </div>
             `;
         }).join('') : `<p class="text-xs text-gray-400 italic py-2">No winners drawn yet.</p>`;
 
         const entryRevenue = paidEntries.reduce((s, en) => s + (en.amount_paid_cents || 0), 0);
+        const categoryHtml = categories.length ? categories.map(cat => {
+            const items = _raffleItems(raffleConfig, cat.id);
+            const pendingSlots = drawQueue.filter(slot => slot.category_id === cat.id).length;
+            const drawnCount = Math.max(0, (cat.winner_count || 0) - pendingSlots);
+            const itemPreview = items.length ? items.map(item => `${item.emoji || '🎁'} ${_esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ''}`).join(', ') : 'Prize details pending';
+            return `
+                <div class="em-card mb-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <h3 class="font-bold text-gray-800 text-sm truncate">${_esc(cat.label || 'Prize category')}</h3>
+                            <p class="text-xs text-gray-400 mt-0.5">${_drawModeLabel(cat.draw_mode)} · ${drawnCount}/${cat.winner_count || 0} drawn</p>
+                        </div>
+                        <span class="em-pill em-pill-checked">${pendingSlots} left</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3 leading-relaxed">${itemPreview}</p>
+                </div>
+            `;
+        }).join('') : '';
+
+        const nextSlot = drawQueue[0] || null;
+        const nextDrawHtml = !allDrawn ? `
+            <div class="em-card mb-3" style="border-color:#ddd6fe;background:#faf5ff">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-sm">Next draw</h3>
+                        <p class="text-xs text-violet-700 mt-1">${nextSlot ? _esc(_prizeSlotLabel(nextSlot)) : 'Next available prize'}${nextSlot?.category_label ? ` · ${_esc(nextSlot.category_label)}` : ''}</p>
+                    </div>
+                    <span class="em-pill em-pill-paid">${remainingDraws} remaining</span>
+                </div>
+                ${canDraw ? `<button id="emRaffleDrawBtn" type="button" class="w-full mt-4 bg-violet-600 hover:bg-violet-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition">Draw next winner</button>` : `<p class="text-xs text-gray-500 mt-4">${paidEntries.length ? 'Draw controls are unavailable on this page.' : 'No paid or valid raffle entries yet.'}</p>`}
+            </div>
+        ` : '';
 
         return `
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -713,6 +751,8 @@
                 <div class="em-card em-stat"><span class="em-stat-label">Drawn</span><span class="em-stat-num" style="color:#7c3aed">${winnersDrawn}</span></div>
             </div>
 
+            ${nextDrawHtml}
+
             <div class="em-card mb-3">
                 <h3 class="font-bold text-gray-800 text-sm mb-3">Configuration</h3>
                 <div class="space-y-2 text-sm">
@@ -720,18 +760,136 @@
                     <div class="flex justify-between"><span class="text-gray-500">Draw trigger</span><span class="font-medium uppercase tracking-wide text-xs">${e.raffle_draw_trigger || 'manual'}</span></div>
                     <div class="flex justify-between"><span class="text-gray-500">Entry cost</span><span class="font-medium">${e.raffle_entry_cost_cents ? fmt(e.raffle_entry_cost_cents) : 'Free'}</span></div>
                 </div>
-                ${prizes.length ? `<div class="mt-3 pt-3 border-t border-gray-100"><p class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">Prizes</p>${prizes.map((pr, i) => `<div class="text-sm flex justify-between gap-2"><span class="text-gray-600">${['🥇','🥈','🥉'][i] || '#'+(i+1)} ${_esc(pr.label || pr.title || ('Prize '+(i+1)))}</span></div>`).join('')}</div>` : ''}
             </div>
+
+            ${categoryHtml}
 
             <div class="em-card">
                 <h3 class="font-bold text-gray-800 text-sm mb-2">Winners <span class="text-gray-400 font-normal">· ${winnersDrawn}${totalPrizes ? '/' + totalPrizes : ''}</span></h3>
                 ${winnerRows}
-                ${allDrawn ? `<p class="text-xs text-emerald-600 font-semibold mt-3">All winners drawn ✓</p>` : `<p class="text-xs text-gray-400 mt-3">Draw winners on the portal detail page (Raffle section). Per-tab draw button lands in M4.</p>`}
+                ${allDrawn ? `<p class="text-xs text-emerald-600 font-semibold mt-3">All winners drawn ✓</p>` : `<p class="text-xs text-gray-400 mt-3">Draws follow category sort order, starting with the smallest/lower-sort categories.</p>`}
             </div>
         `;
     }
 
-    function _wireRaffle() { /* read-only in M3b */ }
+    function _wireRaffle() {
+        const drawBtn = document.getElementById('emRaffleDrawBtn');
+        if (drawBtn) {
+            drawBtn.onclick = () => window.evtOpenRaffleDraw?.(STATE.eventId, STATE.event);
+        }
+        document.getElementById('emSheetContent')?.querySelectorAll('[data-raffle-assign-choice]').forEach(btn => {
+            btn.onclick = () => _assignWinnerChoice(btn.dataset.winnerId);
+        });
+    }
+
+    function _winnerChoiceHtml(winner, config, winners) {
+        if (winner.selection_status !== 'pending_choice') return '';
+        const items = _availableChoiceItems(config, winners, winner);
+        if (!items.length) {
+            return `<div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">No unassigned items are available in this category.</div>`;
+        }
+        const options = items.map(item => `<option value="${_esc(item.id)}">${_esc(item.emoji || '🎁')} ${_esc(item.name)}${item.quantity > 1 ? ` (${item.quantity} total)` : ''}</option>`).join('');
+        return `
+            <div class="mt-3 flex flex-col sm:flex-row gap-2">
+                <select id="emWinnerChoice_${_esc(winner.id)}" class="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-200">
+                    ${options}
+                </select>
+                <button type="button" data-raffle-assign-choice="1" data-winner-id="${_esc(winner.id)}" class="rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition">Assign prize</button>
+            </div>
+        `;
+    }
+
+    function _availableChoiceItems(config, winners, currentWinner) {
+        const items = _raffleItems(config, currentWinner.category_id);
+        const used = new Map();
+        (winners || []).forEach(winner => {
+            if (!winner.prize_id || winner.id === currentWinner.id) return;
+            if (winner.selection_status === 'pending_choice') return;
+            used.set(winner.prize_id, (used.get(winner.prize_id) || 0) + 1);
+        });
+        return items.filter(item => (used.get(item.id) || 0) < item.quantity);
+    }
+
+    async function _assignWinnerChoice(winnerId) {
+        const winner = (STATE.tabData.raffle?.winners || []).find(row => row.id === winnerId);
+        if (!winner) return;
+        const select = document.getElementById(`emWinnerChoice_${winnerId}`);
+        const itemId = select?.value;
+        if (!itemId) return alert('Choose a prize item first.');
+
+        const config = _raffleConfig(STATE.event);
+        const item = _raffleItems(config, winner.category_id).find(row => row.id === itemId);
+        if (!item) return alert('Prize item is no longer available. Refresh and try again.');
+
+        const { error } = await supabaseClient
+            .from('event_raffle_winners')
+            .update({
+                prize_id: item.id,
+                prize_description: item.name,
+                prize_image_url: item.image_url || null,
+                prize_emoji: item.emoji || window.EventsRaffleModel?.DEFAULT_EMOJI || '🎁',
+                selection_status: 'assigned',
+            })
+            .eq('id', winnerId)
+            .eq('event_id', STATE.eventId)
+            .eq('selection_status', 'pending_choice');
+        if (error) return alert('Prize assignment failed: ' + error.message);
+
+        STATE.tabData.raffle = null;
+        await _renderTabAsync('raffle', _loadRaffle, _raffleHtml, _wireRaffle);
+        document.dispatchEvent(new CustomEvent('events:raffle:drawn', { detail: { eventId: STATE.eventId } }));
+    }
+
+    function _raffleConfig(event) {
+        if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
+        return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
+    }
+
+    function _raffleCategories(config) {
+        if (!window.EventsRaffleModel) return [];
+        return window.EventsRaffleModel.getOrderedCategories(config);
+    }
+
+    function _raffleItems(config, categoryId) {
+        if (!window.EventsRaffleModel) return [];
+        return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
+    }
+
+    function _raffleTotalWinners(config) {
+        if (!window.EventsRaffleModel) return 0;
+        return window.EventsRaffleModel.getTotalWinnerCount(config);
+    }
+
+    function _raffleDrawQueue(config, winners) {
+        if (!window.EventsRaffleModel) return [];
+        return window.EventsRaffleModel.getDrawQueue(config, winners || []);
+    }
+
+    function _drawModeLabel(drawMode) {
+        if (drawMode === 'random_item') return 'Random prize assigned';
+        if (drawMode === 'winner_choice') return 'Winner chooses later';
+        return 'Specific prize';
+    }
+
+    function _prizeSlotLabel(slot) {
+        if (!slot) return '';
+        if (slot.prize_name) return slot.prize_name;
+        if (slot.draw_mode === 'winner_choice') return `${slot.category_label || 'Prize tier'} choice`;
+        return slot.category_label || 'Prize';
+    }
+
+    function _winnerBelongsToCategory(winner, category, config) {
+        if (!winner || !category) return false;
+        if (winner.category_id) return winner.category_id === category.id;
+        if (winner.category_label) return winner.category_label === category.label;
+        const slot = _raffleSlotByPlace(config, winner.place);
+        return slot?.category_id === category.id;
+    }
+
+    function _raffleSlotByPlace(config, place) {
+        if (!window.EventsRaffleModel || place == null) return null;
+        return window.EventsRaffleModel.getDrawQueue(config, []).find(slot => Number(slot.place) === Number(place)) || null;
+    }
 
     // ═══════════════════════════════════════════════════════════════
     // M3b — COMPETITION TAB
@@ -874,8 +1032,16 @@
         document.dispatchEvent(new CustomEvent('events:manage:updated', { detail: { eventId: STATE.event.id } }));
     };
 
+    function refreshRaffle(eventId) {
+        if (eventId && eventId !== STATE.eventId) return;
+        STATE.tabData.raffle = null;
+        if (STATE.activeTab === 'raffle') _renderTab('raffle');
+    }
+
+    document.addEventListener('events:raffle:drawn', (evt) => refreshRaffle(evt.detail?.eventId));
+
     // ─── Public surface ─────────────────────────────────────────────
-    window.EventsManage = { open, close };
+    window.EventsManage = { open, close, refreshRaffle };
 
     // Also register on PortalEvents.detail registry (if available)
     if (window.PortalEvents && window.PortalEvents.detail && typeof window.PortalEvents.detail.register === 'function') {

@@ -59,6 +59,8 @@ function evtHandleBannerSelect() {
 // ─── Page Navigation (list ↔ detail) ────────────────────
 
 function evtNavigateToEvent(slug) {
+    if (slug && typeof slug === 'object') slug = slug.slug || slug.id || '';
+    if (!slug) return;
     const url = new URL(window.location);
     url.searchParams.set('event', slug);
     history.pushState({ view: 'detail', slug }, '', url);

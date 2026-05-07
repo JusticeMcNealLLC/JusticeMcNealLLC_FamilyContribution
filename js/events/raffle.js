@@ -21,19 +21,10 @@ async function pubRenderRaffleSection(event) {
         else return;
     }
 
-    const prizes = event.raffle_prizes || [];
-    const ordinal = n => n===1?'1st':n===2?'2nd':n===3?'3rd':`${n}th`;
-    const prizesHtml = prizes.map((p, i) => {
-        const place = p.place || i + 1;
-        return `
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#f9f9f4;border-radius:12px;margin-bottom:6px">
-            <div class="evt-raffle-rank">${place}</div>
-            <div>
-                <p style="font-size:13px;color:#717171;font-weight:600;margin:0">${ordinal(place)} Place</p>
-                <p style="font-size:15px;color:#222;font-weight:600;margin:2px 0 0">${pubEscapeHtml(p.label || p.description || p)}</p>
-            </div>
-        </div>`;
-    }).join('');
+    const raffleConfig = pubRaffleConfig(event);
+    const categories = pubRaffleCategories(raffleConfig);
+    const totalWinners = pubRaffleWinnerCount(raffleConfig, event);
+    const prizesHtml = pubRafflePrizesHtml(event);
 
     // Check if current user has raffle entry
     let myEntryHtml = '';
@@ -122,56 +113,163 @@ async function pubRenderRaffleSection(event) {
     }
 
     // Load winners
-    const { data: winners } = await supabaseClient
-        .from('event_raffle_winners')
-        .select('place, prize_description, profiles:user_id(first_name, last_name)')
-        .eq('event_id', event.id)
-        .order('place', { ascending: true });
-
-    let winnersHtml = '';
-    if (winners && winners.length > 0) {
-        winnersHtml = `
-        <div style="margin-top:16px">
-            <h5 style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px">🏆 Winners</h5>
-            ${winners.map(w => {
-                const name = w.profiles ? `${w.profiles.first_name || ''} ${w.profiles.last_name || ''}`.trim() : 'Guest';
-                return `<div style="display:flex;align-items:center;gap:12px;padding:6px 0">
-                    <div class="evt-raffle-rank">${w.place}</div>
-                    <span style="font-size:14px;font-weight:600;color:#222">${pubEscapeHtml(name)}</span>
-                    ${w.prize_description ? `<span style="font-size:13px;color:#717171">— ${pubEscapeHtml(w.prize_description)}</span>` : ''}
-                </div>`;
-            }).join('')}
-        </div>`;
+    const winners = await pubLoadRaffleWinners(event.id);
+    const guestWinnerTokens = [...new Set((winners || []).map(w => w.guest_token).filter(Boolean))];
+    let guestWinnerNames = new Map();
+    if (guestWinnerTokens.length) {
+        const { data: guestRows } = await supabaseClient
+            .from('event_guest_rsvps')
+            .select('guest_token, guest_name')
+            .in('guest_token', guestWinnerTokens);
+        guestWinnerNames = new Map((guestRows || []).map(row => [row.guest_token, row.guest_name]));
     }
 
-    el.innerHTML = `
-        <div class="evt-section">
-            <h4 class="evt-section-title" style="font-size:18px">🎲 Raffle</h4>
+    const winnersHtml = pubRaffleWinnersHtml(winners || [], guestWinnerNames);
+    const entryPillsHtml = pubRafflePillsHtml(event, totalWinners);
+    const hasPrizes = categories.length > 0;
 
-            <!-- Details -->
-            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
-                ${event.raffle_type ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_type === 'digital' ? '💻' : '🎁'} ${event.raffle_type === 'digital' ? 'Digital Prize' : 'Physical Prize'}</span>` : ''}
-                ${event.raffle_draw_trigger ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">${event.raffle_draw_trigger === 'auto' ? '⚡ Auto Draw' : '🎰 Manual Draw'}</span>` : ''}
-                ${event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0 ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">🎟️ Entry: ${pubFormatCurrency(event.raffle_entry_cost_cents)}</span>` : ''}
-                ${event.pricing_mode === 'paid' ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;background:#f7f7f7;font-size:13px;font-weight:600;color:#222">✅ Included with RSVP</span>` : ''}
+    const sectionHtml = `
+        <div class="public-raffle-head">
+            <div>
+                <p class="public-raffle-eyebrow">Raffle</p>
+                <h4 class="evt-section-title public-raffle-title">Prize Drawing</h4>
             </div>
-
-            <!-- Prizes -->
-            ${prizes.length > 0 ? `
-                <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#717171;margin-bottom:10px">🏆 Prizes</p>
-                <div style="margin-bottom:12px">${prizesHtml}</div>
-            ` : `
-                <p style="font-size:13px;color:#999;font-style:italic;margin-bottom:12px">🏆 Prizes to be announced</p>
-            `}
-
-            <!-- Entry status / Locked button -->
-            ${myEntryHtml}
-            ${lockedBtnHtml}
-
-            <!-- Winners -->
-            ${winnersHtml}
+            ${totalWinners ? `<span class="public-raffle-count">${totalWinners} ${totalWinners === 1 ? 'winner' : 'winners'}</span>` : ''}
         </div>
-        <hr class="evt-divider">`;
+
+        <div class="ed-pill-row public-raffle-pills">${entryPillsHtml}</div>
+
+        ${hasPrizes ? `
+            <div class="public-raffle-block">
+                <div class="ed-section-head"><h3>Prizes</h3></div>
+                ${prizesHtml}
+            </div>
+        ` : `
+            <p class="public-raffle-empty">Prizes to be announced</p>
+        `}
+
+        ${myEntryHtml}
+        ${lockedBtnHtml}
+        ${winnersHtml}
+    `;
+
+    const isCardMount = el.classList.contains('ed-card');
+    el.innerHTML = isCardMount ? sectionHtml : `<div class="evt-section public-raffle-section">${sectionHtml}</div><hr class="evt-divider">`;
+}
+
+function pubRaffleConfig(event) {
+    if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
+    return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
+}
+
+function pubRaffleCategories(config) {
+    if (!window.EventsRaffleModel) return [];
+    return window.EventsRaffleModel.getOrderedCategories(config);
+}
+
+function pubRaffleItems(config, categoryId) {
+    if (!window.EventsRaffleModel) return [];
+    return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
+}
+
+function pubRaffleWinnerCount(config, event) {
+    if (window.EventsRaffleModel) return window.EventsRaffleModel.getTotalWinnerCount(config);
+    return event?.raffle_winner_count || (Array.isArray(event?.raffle_prizes) ? event.raffle_prizes.length : 0);
+}
+
+function pubRaffleDrawModeLabel(drawMode) {
+    if (drawMode === 'random_item') return 'Random prize assigned';
+    if (drawMode === 'winner_choice') return 'Winners choose from this tier';
+    return 'Drawing specific prizes';
+}
+
+function pubRafflePrizeMedia(item) {
+    if (item?.image_url) return `<img src="${pubEscapeHtml(item.image_url)}" alt="" loading="lazy">`;
+    return `<span>${pubEscapeHtml(item?.emoji || window.EventsRaffleModel?.DEFAULT_EMOJI || '🎁')}</span>`;
+}
+
+function pubRafflePrizesHtml(event) {
+    const config = pubRaffleConfig(event);
+    const categories = pubRaffleCategories(config);
+    if (!categories.length) return '';
+
+    return `<div class="ed-raffle-categories public-raffle-categories">${categories.map(category => {
+        const items = pubRaffleItems(config, category.id);
+        const itemsHtml = items.length ? items.map(item => `
+            <div class="ed-raffle-item">
+                <div class="ed-raffle-item-media">${pubRafflePrizeMedia(item)}</div>
+                <div class="ed-raffle-item-copy">
+                    <span class="ed-raffle-item-name">${pubEscapeHtml(item.name)}</span>
+                    <span class="ed-raffle-item-meta">${item.quantity > 1 ? `${item.quantity} available` : '1 available'}</span>
+                </div>
+            </div>
+        `).join('') : `<p class="public-raffle-empty">Prizes to be announced</p>`;
+        const winnerCount = category.winner_count || 0;
+        return `
+            <section class="ed-raffle-category">
+                <div class="ed-raffle-category-head">
+                    <div>
+                        <h4>${pubEscapeHtml(category.label || 'Prize tier')}</h4>
+                        <p>${pubRaffleDrawModeLabel(category.draw_mode)}</p>
+                    </div>
+                    <span>${winnerCount} ${winnerCount === 1 ? 'winner' : 'winners'}</span>
+                </div>
+                <div class="ed-raffle-items">${itemsHtml}</div>
+            </section>
+        `;
+    }).join('')}</div>`;
+}
+
+function pubRafflePillsHtml(event, totalWinners) {
+    const pills = [];
+    if (event.raffle_type) pills.push(`${event.raffle_type === 'digital' ? '💻' : '🎁'} ${event.raffle_type === 'digital' ? 'Digital prize' : 'Physical prize'}`);
+    if (event.raffle_draw_trigger) pills.push(`${event.raffle_draw_trigger === 'auto' ? '⚡ Auto draw' : '🎰 Manual draw'}`);
+    if (totalWinners) pills.push(`${totalWinners} ${totalWinners === 1 ? 'winner' : 'winners'}`);
+    if (event.pricing_mode === 'paid') pills.push('✅ Included with RSVP');
+    else if (event.raffle_entry_cost_cents > 0) pills.push(`🎟️ Entry: ${pubFormatCurrency(event.raffle_entry_cost_cents)}`);
+    else pills.push('🎟️ Free entry');
+    return pills.map(text => `<span class="ed-pill">${pubEscapeHtml(text)}</span>`).join('');
+}
+
+async function pubLoadRaffleWinners(eventId) {
+    const fullSelect = 'place, guest_token, prize_description, prize_id, category_id, category_label, draw_mode, prize_emoji, selection_status, profiles:user_id(first_name, last_name)';
+    const full = await supabaseClient
+        .from('event_raffle_winners')
+        .select(fullSelect)
+        .eq('event_id', eventId)
+        .order('place', { ascending: true });
+    if (!full.error) return full.data || [];
+
+    const message = full.error.message || '';
+    if (!/prize_id|category_id|category_label|draw_mode|prize_emoji|selection_status|schema cache|column/i.test(message)) return [];
+
+    const legacy = await supabaseClient
+        .from('event_raffle_winners')
+        .select('place, guest_token, prize_description, profiles:user_id(first_name, last_name)')
+        .eq('event_id', eventId)
+        .order('place', { ascending: true });
+    return legacy.data || [];
+}
+
+function pubRaffleWinnersHtml(winners, guestWinnerNames) {
+    if (!winners.length) return '';
+    const groups = winners.reduce((acc, winner) => {
+        const key = winner.category_label || 'Winners';
+        (acc[key] = acc[key] || []).push(winner);
+        return acc;
+    }, {});
+    const groupHtml = Object.entries(groups).map(([label, rows]) => `
+        <div class="ed-raffle-winner-group">
+            <p class="ed-raffle-winner-group-title">${pubEscapeHtml(label)}</p>
+            ${rows.map(winner => {
+                const profileName = winner.profiles ? `${winner.profiles.first_name || ''} ${winner.profiles.last_name || ''}`.trim() : '';
+                const name = profileName || guestWinnerNames.get(winner.guest_token) || (winner.guest_token ? 'Guest' : 'Winner');
+                const prize = winner.selection_status === 'pending_choice' ? 'Choosing later' : (winner.prize_description || 'Prize pending');
+                return `<div class="ed-winner-row"><div class="ed-prize-rank">${winner.place}</div><span class="ed-winner-name">${pubEscapeHtml(name)}</span><span class="ed-winner-prize">— ${pubEscapeHtml(prize)}</span></div>`;
+            }).join('')}
+        </div>
+    `).join('');
+    return `<div class="ed-winners public-raffle-winners"><div class="ed-section-head"><h3>Winners</h3></div>${groupHtml}</div>`;
 }
 
 /* ── Paid RSVP Handler (Public Page) ─────── */

@@ -5,9 +5,12 @@
 // ═══════════════════════════════════════════════════════════
 
 /* ── Open the Raffle Draw Modal ───────────────────────── */
-async function evtOpenRaffleDraw(eventId) {
-    const event = evtAllEvents.find(e => e.id === eventId);
+async function evtOpenRaffleDraw(eventId, eventOverride) {
+    const eventList = typeof evtAllEvents !== 'undefined' ? evtAllEvents : [];
+    const event = eventOverride || eventList.find(e => e.id === eventId);
     if (!event || !event.raffle_enabled) return;
+    window.__evtRaffleEventCache = window.__evtRaffleEventCache || {};
+    window.__evtRaffleEventCache[eventId] = event;
 
     const modal = document.getElementById('raffleDrawModal');
     const content = document.getElementById('raffleDrawContent');
@@ -31,10 +34,7 @@ async function evtOpenRaffleDraw(eventId) {
         const pool = entries || [];
 
         // Load existing winners to exclude them from pool
-        const { data: existingWinners } = await supabaseClient
-            .from('event_raffle_winners')
-            .select('user_id, guest_token, place')
-            .eq('event_id', eventId);
+        const existingWinners = await evtLoadRaffleWinnersForDraw(eventId);
         const wonUserIds = new Set((existingWinners || []).map(w => w.user_id).filter(Boolean));
         const wonGuestTokens = new Set((existingWinners || []).map(w => w.guest_token).filter(Boolean));
         const alreadyDrawnCount = (existingWinners || []).length;
@@ -44,12 +44,13 @@ async function evtOpenRaffleDraw(eventId) {
             !(e.guest_token && wonGuestTokens.has(e.guest_token))
         );
 
-        const prizes = event.raffle_prizes || [];
-        const winnerCount = event.raffle_winner_count || prizes.length || 1;
-        const remainingDraws = Math.max(0, winnerCount - alreadyDrawnCount);
+        const raffleConfig = evtGetRaffleConfig(event);
+        const drawQueue = evtGetRaffleDrawQueue(event, existingWinners || []);
+        const winnerCount = event.raffle_winner_count || window.EventsRaffleModel?.getTotalWinnerCount(raffleConfig) || drawQueue.length || 1;
+        const remainingDraws = Math.max(0, drawQueue.length || (winnerCount - alreadyDrawnCount));
 
         // Render draw UI
-        content.innerHTML = evtRenderDrawUI(eventId, eligible, prizes, alreadyDrawnCount, remainingDraws, existingWinners || []);
+        content.innerHTML = evtRenderDrawUI(eventId, eligible, raffleConfig, drawQueue, alreadyDrawnCount, remainingDraws, existingWinners || []);
 
     } catch (err) {
         console.error('Raffle draw error:', err);
@@ -58,7 +59,7 @@ async function evtOpenRaffleDraw(eventId) {
 }
 
 /* ── Render the Draw UI ──────────────────────────────── */
-function evtRenderDrawUI(eventId, eligible, prizes, alreadyDrawnCount, remainingDraws, existingWinners) {
+function evtRenderDrawUI(eventId, eligible, raffleConfig, drawQueue, alreadyDrawnCount, remainingDraws, existingWinners) {
     // Show existing winners
     let winnersHtml = '';
     if (existingWinners.length > 0) {
@@ -86,7 +87,8 @@ function evtRenderDrawUI(eventId, eligible, prizes, alreadyDrawnCount, remaining
     }
 
     const nextPlace = alreadyDrawnCount + 1;
-    const nextPrize = prizes[nextPlace - 1];
+    const nextSlot = drawQueue[0] || null;
+    const nextPrizeLabel = evtPrizeSlotLabel(nextSlot) || evtLegacyPrizeLabel(raffleConfig, nextPlace);
 
     return `
         <div class="text-center">
@@ -99,7 +101,8 @@ function evtRenderDrawUI(eventId, eligible, prizes, alreadyDrawnCount, remaining
 
         <div class="mt-4 p-4 bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200 rounded-xl text-center">
             <p class="text-xs font-bold text-violet-600 uppercase tracking-wide">Drawing for Place #${nextPlace}</p>
-            ${nextPrize ? `<p class="text-sm font-semibold text-gray-800 mt-1">${evtEscapeHtml(nextPrize.label || nextPrize)}</p>` : ''}
+            ${nextPrizeLabel ? `<p class="text-sm font-semibold text-gray-800 mt-1">${evtEscapeHtml(nextPrizeLabel)}</p>` : ''}
+            ${nextSlot?.category_label ? `<p class="text-xs text-violet-500 mt-1">${evtEscapeHtml(nextSlot.category_label)} · ${evtDrawModeLabel(nextSlot.draw_mode)}</p>` : ''}
         </div>
 
         <div id="raffleAnimation" class="mt-4 h-20 flex items-center justify-center hidden">
@@ -121,6 +124,109 @@ function evtRenderDrawUI(eventId, eligible, prizes, alreadyDrawnCount, remaining
         <button onclick="evtToggleModal('raffleDrawModal',false)" class="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition">Close</button>`;
 }
 
+function evtGetRaffleConfig(event) {
+    if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
+    return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
+}
+
+function evtGetRaffleDrawQueue(event, existingWinners) {
+    if (!window.EventsRaffleModel) return [];
+    return window.EventsRaffleModel.getDrawQueue(evtGetRaffleConfig(event), existingWinners || []);
+}
+
+function evtResolvePrizeSlot(event, existingWinners, place) {
+    const queue = evtGetRaffleDrawQueue(event, existingWinners);
+    let slot = queue.find(entry => entry.place === place) || queue[0] || null;
+    if (!slot) return null;
+    if (slot.draw_mode === 'random_item') {
+        slot = evtAssignRandomPrizeSlot(event, existingWinners, slot);
+    }
+    return slot;
+}
+
+function evtAssignRandomPrizeSlot(event, existingWinners, slot) {
+    const model = window.EventsRaffleModel;
+    if (!model) return slot;
+    const config = evtGetRaffleConfig(event);
+    const items = model.getItemsForCategory(config, slot.category_id);
+    const usedByPrize = new Map();
+    (existingWinners || []).forEach(winner => {
+        if (!winner.prize_id) return;
+        usedByPrize.set(winner.prize_id, (usedByPrize.get(winner.prize_id) || 0) + 1);
+    });
+    const availableItems = items.filter(item => (usedByPrize.get(item.id) || 0) < item.quantity);
+    if (!availableItems.length) return slot;
+    const item = availableItems[evtCryptoRandomInt(availableItems.length)];
+    return {
+        ...slot,
+        prize_id: item.id,
+        prize_name: item.name,
+        prize_image_url: item.image_url || null,
+        prize_emoji: item.emoji || model.DEFAULT_EMOJI || '🎁',
+        selection_status: 'assigned',
+    };
+}
+
+function evtPrizeSlotLabel(slot) {
+    if (!slot) return '';
+    if (slot.prize_name) return slot.prize_name;
+    if (slot.draw_mode === 'winner_choice') return `${slot.category_label || 'Prize tier'} choice`;
+    if (slot.category_label) return slot.category_label;
+    return '';
+}
+
+function evtLegacyPrizeLabel(raffleConfig, place) {
+    if (Array.isArray(raffleConfig)) return raffleConfig[place - 1]?.label || raffleConfig[place - 1] || '';
+    if (!window.EventsRaffleModel || !raffleConfig) return '';
+    const queue = window.EventsRaffleModel.getDrawQueue(raffleConfig, []);
+    return evtPrizeSlotLabel(queue.find(slot => slot.place === place));
+}
+
+function evtDrawModeLabel(drawMode) {
+    if (drawMode === 'random_item') return 'Random prize assigned';
+    if (drawMode === 'winner_choice') return 'Winner chooses later';
+    return 'Specific prize';
+}
+
+async function evtInsertRaffleWinner(winnerRecord) {
+    const result = await supabaseClient.from('event_raffle_winners').insert(winnerRecord);
+    if (!result.error) return result;
+
+    const message = result.error.message || '';
+    const canRetryLegacy = /prize_id|category_id|category_label|draw_mode|prize_image_url|prize_emoji|selection_status|schema cache|column/i.test(message);
+    if (!canRetryLegacy) return result;
+
+    const legacyRecord = {
+        event_id: winnerRecord.event_id,
+        place: winnerRecord.place,
+        user_id: winnerRecord.user_id,
+        guest_token: winnerRecord.guest_token,
+        prize_description: winnerRecord.prize_description,
+    };
+    return supabaseClient.from('event_raffle_winners').insert(legacyRecord);
+}
+
+async function evtLoadRaffleWinnersForDraw(eventId) {
+    const fullSelect = 'user_id, guest_token, place, prize_id, category_id, category_label, draw_mode, prize_description, prize_image_url, prize_emoji, selection_status';
+    const full = await supabaseClient
+        .from('event_raffle_winners')
+        .select(fullSelect)
+        .eq('event_id', eventId);
+    if (!full.error) return full.data || [];
+
+    const message = full.error.message || '';
+    if (!/prize_id|category_id|category_label|draw_mode|prize_image_url|prize_emoji|selection_status|schema cache|column/i.test(message)) {
+        throw full.error;
+    }
+
+    const legacy = await supabaseClient
+        .from('event_raffle_winners')
+        .select('user_id, guest_token, place, prize_description')
+        .eq('event_id', eventId);
+    if (legacy.error) throw legacy.error;
+    return legacy.data || [];
+}
+
 /* ── Draw a Winner (crypto-random) ───────────────────── */
 async function evtDrawWinner(eventId, place) {
     const btn = document.getElementById('drawWinnerBtn');
@@ -139,10 +245,7 @@ async function evtDrawWinner(eventId, place) {
             .eq('event_id', eventId)
             .eq('paid', true);
 
-        const { data: existingWinners } = await supabaseClient
-            .from('event_raffle_winners')
-            .select('user_id, guest_token')
-            .eq('event_id', eventId);
+        const existingWinners = await evtLoadRaffleWinnersForDraw(eventId);
 
         const wonUserIds = new Set((existingWinners || []).map(w => w.user_id).filter(Boolean));
         const wonGuestTokens = new Set((existingWinners || []).map(w => w.guest_token).filter(Boolean));
@@ -165,15 +268,23 @@ async function evtDrawWinner(eventId, place) {
         // Simulate draw animation (1.5s)
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        const event = evtAllEvents.find(e => e.id === eventId);
-        const prizes = event?.raffle_prizes || [];
-        const prizeDesc = prizes[place - 1]?.label || prizes[place - 1] || null;
+        const eventList = typeof evtAllEvents !== 'undefined' ? evtAllEvents : [];
+        const event = window.__evtRaffleEventCache?.[eventId] || eventList.find(e => e.id === eventId);
+        const slot = evtResolvePrizeSlot(event, existingWinners || [], place);
+        const prizeDesc = evtPrizeSlotLabel(slot) || evtLegacyPrizeLabel(evtGetRaffleConfig(event), place) || null;
 
         // Insert winner record
         const winnerRecord = {
             event_id: eventId,
             place: place,
             prize_description: prizeDesc,
+            prize_id: slot?.prize_id || null,
+            category_id: slot?.category_id || null,
+            category_label: slot?.category_label || null,
+            draw_mode: slot?.draw_mode || null,
+            prize_image_url: slot?.prize_image_url || null,
+            prize_emoji: slot?.prize_emoji || null,
+            selection_status: slot?.selection_status || 'assigned',
         };
 
         if (winner.user_id) {
@@ -182,9 +293,7 @@ async function evtDrawWinner(eventId, place) {
             winnerRecord.guest_token = winner.guest_token;
         }
 
-        const { error } = await supabaseClient
-            .from('event_raffle_winners')
-            .insert(winnerRecord);
+        const { error } = await evtInsertRaffleWinner(winnerRecord);
 
         if (error) throw error;
 
@@ -230,11 +339,12 @@ async function evtDrawWinner(eventId, place) {
 
         // Confetti burst
         evtCelebrate();
+        document.dispatchEvent(new CustomEvent('events:raffle:drawn', { detail: { eventId } }));
 
         // Replace draw button with "Next Draw" or "Done"
         if (btn) {
             const nextPlace = place + 1;
-            const totalWinners = event?.raffle_winner_count || prizes.length || 1;
+            const totalWinners = event?.raffle_winner_count || window.EventsRaffleModel?.getTotalWinnerCount(evtGetRaffleConfig(event)) || 1;
             if (nextPlace <= totalWinners) {
                 btn.textContent = `🎲 Draw Winner #${nextPlace}`;
                 btn.onclick = () => evtDrawWinner(eventId, nextPlace);

@@ -1772,24 +1772,15 @@
                     renderEvents();
                     return;
                 }
-                // F7 — RSVP footer button: if already going → open detail; otherwise RSVP
+                // F7 — footer details button opens detail; RSVP actions live elsewhere.
                 const rsvpBtn = e.target.closest('button[data-evt-card-rsvp]');
                 if (rsvpBtn && link.contains(rsvpBtn)) {
                     e.preventDefault();
                     e.stopPropagation();
-                    const alreadyGoing = rsvpBtn.getAttribute('aria-pressed') === 'true';
-                    if (alreadyGoing) {
-                        // Navigate to event detail — don't touch the RSVP
-                        if (ev.slug && typeof window.evtNavigateToEvent === 'function') {
-                            window.evtNavigateToEvent(ev.slug);
-                        } else if (typeof window.evtOpenDetail === 'function') {
-                            window.evtOpenDetail(ev.id);
-                        }
-                    } else if (typeof window.evtHandleRsvp === 'function') {
-                        rsvpBtn.disabled = true;
-                        Promise.resolve(window.evtHandleRsvp(ev.id, 'going'))
-                            .catch(err => console.error('Card RSVP failed', err))
-                            .finally(() => { rsvpBtn.disabled = false; });
+                    if (ev.slug && typeof window.evtNavigateToEvent === 'function') {
+                        window.evtNavigateToEvent(ev.slug);
+                    } else if (typeof window.evtOpenDetail === 'function') {
+                        window.evtOpenDetail(ev.id);
                     }
                     return;
                 }
