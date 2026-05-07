@@ -27,6 +27,8 @@ ok('css_portal_mobile_rail_hidden', /#eventsDetailView\.portal-event-detail-v2 \
 ok('css_phone_featured_hero_block', /F22 \u2014 Phone featured hero compaction/.test(css));
 ok('css_phone_featured_hero_taller', /@media \(max-width:\s*639px\)[\s\S]*\.evt-hero-vlift > a\s*{[^}]*height:\s*264px\s*!important/m.test(css));
 ok('css_phone_featured_hero_cta_full_width', /@media \(max-width:\s*639px\)[\s\S]*\.evt-hero-cta\s*{[^}]*width:\s*calc\(100% - 32px\)/m.test(css));
+ok('css_portal_mobile_hero_subtitle_clearance', /#eventsDetailView\.portal-event-detail-v2 \.ed-hero-bottom-content\s*{[^}]*padding:\s*20px 20px 60px/m.test(css));
+ok('css_portal_mobile_qi_bar_below_hero', /#eventsDetailView\.portal-event-detail-v2 \.ed-qi-bar\s*{[^}]*margin:\s*10px 16px 12px/m.test(css));
 
 // (3) SW bumped
 const m = sw.match(/jm-portal-v(\d+)/);
