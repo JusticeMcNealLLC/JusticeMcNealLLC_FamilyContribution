@@ -72,7 +72,7 @@ async function pubRenderRaffleSection(event) {
         if (pubGuestRaffleEntry) {
             myEntryHtml = `<div class="ed-raffle-entry-chip" style="margin-top:14px">🎟️ Entered</div>`;
         } else if (!hasRsvp) {
-            myEntryHtml = `<div class="public-raffle-action public-raffle-desktop-action"><p class="public-raffle-empty">RSVP first to enter the raffle.</p><button onclick="pubOpenRsvpSheet()" class="evt-raffle-buy">RSVP to Enter Raffle</button></div><p class="public-raffle-empty public-raffle-mobile-hint">RSVP first using the sticky CTA below, then enter the raffle.</p>`;
+            myEntryHtml = `<div class="public-raffle-action public-raffle-desktop-action"><p class="public-raffle-empty">RSVP first to enter the raffle.</p><button onclick="pubFocusGuestRsvpForRaffle()" class="evt-raffle-buy">RSVP to Enter Raffle</button></div><p class="public-raffle-empty public-raffle-mobile-hint">RSVP first using the sticky CTA below, then enter the raffle.</p>`;
         } else if (event.raffle_entry_cost_cents > 0) {
             myEntryHtml = `<div class="public-raffle-action public-raffle-desktop-action"><button onclick="pubHandleGuestPaidRaffle()" class="evt-raffle-buy">🎟️ Buy Raffle Entry — ${pubFormatCurrency(event.raffle_entry_cost_cents)}</button><p style="font-size:13px;color:#b0b0b0;text-align:center;margin-top:8px">Using RSVP info for ${pubEscapeHtml(pubGuestRsvp.guest_name || 'Guest')}</p></div><p class="public-raffle-empty public-raffle-mobile-hint">Use the sticky CTA below to enter the raffle.</p>`;
         } else {

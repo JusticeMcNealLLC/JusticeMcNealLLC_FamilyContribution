@@ -183,6 +183,15 @@ function pubOpenRsvpSheet() {
     document.body.style.overflow = 'hidden';
 }
 
+function pubFocusGuestRsvpForRaffle() {
+    const section = document.getElementById('guestRsvpSection');
+    if (!section) return;
+    section.classList.remove('hidden');
+    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const firstInput = section.querySelector('#guestNameInput, #guestEmailInput');
+    if (firstInput) setTimeout(() => firstInput.focus(), 250);
+}
+
 function pubCloseRsvpSheet() {
     const section = document.getElementById('guestRsvpSection');
     const backdrop = document.getElementById('rsvpSheetBackdrop');
