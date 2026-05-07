@@ -101,6 +101,14 @@ assert(/EventsManage\.open/.test(detail), 'detail page should reference EventsMa
 assert(!/Draw Raffle Winners/.test(detail), 'detail page should not expose inline draw winners button');
 assert(/id="emRaffleDrawBtn"/.test(manageSheet), 'manage raffle tab should render draw button');
 assert(/evtOpenRaffleDraw\?\.\(STATE\.eventId, STATE\.event\)/.test(manageSheet), 'manage raffle tab should open draw modal with sheet event context');
+assert(/Raffle command/.test(manageSheet), 'manage raffle tab should use command-center copy');
+assert(/eligibleEntries\.length/.test(manageSheet), 'manage raffle tab should count eligible entries');
+assert(/guestByToken/.test(manageSheet), 'manage raffle tab should resolve guest winner names');
+assert(/Document handoff/.test(manageSheet), 'manage docs tab should use command-center copy');
+assert(/Attendance command/.test(manageSheet), 'manage RSVPs tab should use command-center copy');
+assert(/Money command/.test(manageSheet), 'manage money tab should use command-center copy');
+assert(/Danger zone/.test(manageSheet), 'manage danger tab should use command-center copy');
+assert(/STATE\.event\?\.event_type !== 'competition'/.test(manageSheet), 'manage comp tab should skip competition queries for non-competition events');
 assert(/events:raffle:drawn/.test(portalRaffle), 'draw modal should notify manage sheet after winner draw');
 assert(/refreshRaffle/.test(manageSheet), 'manage sheet should expose raffle refresh after draws');
 assert(/_winnerBelongsToCategory/.test(manageSheet), 'manage sheet should count legacy winners by category fallback');
@@ -118,7 +126,7 @@ assert(/function pubRaffleWinnersHtml\(/.test(publicRaffle), 'public event page 
 assert(/pubLoadRaffleWinners/.test(publicRaffle), 'public raffle should load winner metadata with legacy fallback');
 assert(!/evtOpenRaffleDraw/.test(publicRaffle), 'public raffle should not expose host draw controls');
 assert(/public-raffle-head/.test(publicCss), 'public CSS should style the public raffle header');
-assert(/id="raffleSection" class="ed-card"/.test(read('js/events/index.js')), 'public raffle should mount in the main content flow');
+assert(/id="raffleSection" class="ed-card event-detail-card"/.test(read('js/events/index.js')), 'public raffle should mount in the main content flow');
 assert(/id="raffleDrawModal" class="fixed inset-0 z-\[75\] hidden"/.test(html), 'raffle draw modal should stack above manage sheet');
 assert(/footer details button opens detail/.test(list), 'card footer Details click should navigate without changing RSVP');
 assert(/typeof slug === 'object'/.test(utils), 'event navigation should tolerate event objects');
