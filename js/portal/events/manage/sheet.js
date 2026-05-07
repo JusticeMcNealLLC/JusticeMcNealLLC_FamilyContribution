@@ -867,11 +867,10 @@
         }
 
         try {
-            const deleteOrder = ['event_raffle_winners', 'event_raffle_entries', 'event_checkins', 'event_guest_rsvps', 'event_rsvps'];
-            for (const table of deleteOrder) {
-                const { error } = await supabaseClient.from(table).delete().eq('event_id', e.id);
-                if (error) throw error;
-            }
+            await callEdgeFunction('manage-event-participation', {
+                action: 'reset_participation',
+                event_id: e.id,
+            });
             await _refreshEventManager('danger');
             alert('Participation reset complete. The event is still intact.');
         } catch (err) {
@@ -893,35 +892,28 @@
                 const guestToken = btn.dataset.guestToken;
                 const rsvpId = btn.dataset.rsvpId;
                 if (!guestToken || !rsvpId) throw new Error('Missing guest RSVP details.');
-                await _deleteByEventAndColumn('event_raffle_winners', 'guest_token', guestToken);
-                await _deleteByEventAndColumn('event_raffle_entries', 'guest_token', guestToken);
-                await _deleteByEventAndColumn('event_checkins', 'guest_token', guestToken);
-                const { error } = await supabaseClient.from('event_guest_rsvps').delete().eq('id', rsvpId).eq('event_id', STATE.eventId);
-                if (error) throw error;
+                await callEdgeFunction('manage-event-participation', {
+                    action: 'remove_rsvp',
+                    event_id: STATE.eventId,
+                    kind: 'guest',
+                    guest_token: guestToken,
+                    rsvp_id: rsvpId,
+                });
             } else {
                 const userId = btn.dataset.userId;
-                const rsvpId = btn.dataset.rsvpId;
-                if (!userId || !rsvpId) throw new Error('Missing member RSVP details.');
-                await _deleteByEventAndColumn('event_raffle_winners', 'user_id', userId);
-                await _deleteByEventAndColumn('event_raffle_entries', 'user_id', userId);
-                await _deleteByEventAndColumn('event_checkins', 'user_id', userId);
-                const { error } = await supabaseClient.from('event_rsvps').delete().eq('id', rsvpId).eq('event_id', STATE.eventId);
-                if (error) throw error;
+                if (!userId) throw new Error('Missing member RSVP details.');
+                await callEdgeFunction('manage-event-participation', {
+                    action: 'remove_rsvp',
+                    event_id: STATE.eventId,
+                    kind: 'member',
+                    user_id: userId,
+                });
             }
             await _refreshEventManager('rsvps');
         } catch (err) {
             alert('Remove failed: ' + (err.message || 'unknown error'));
             _renderTab('rsvps');
         }
-    }
-
-    async function _deleteByEventAndColumn(table, column, value) {
-        const { error } = await supabaseClient
-            .from(table)
-            .delete()
-            .eq('event_id', STATE.eventId)
-            .eq(column, value);
-        if (error) throw error;
     }
 
     async function _refreshEventManager(tab) {
@@ -1480,18 +1472,11 @@
         btn.disabled = true;
         btn.textContent = 'Removing...';
         try {
-            if (btn.dataset.guestToken) {
-                await _deleteByEventAndColumn('event_raffle_winners', 'guest_token', btn.dataset.guestToken);
-            }
-            if (btn.dataset.userId) {
-                await _deleteByEventAndColumn('event_raffle_winners', 'user_id', btn.dataset.userId);
-            }
-            const { error } = await supabaseClient
-                .from('event_raffle_entries')
-                .delete()
-                .eq('id', btn.dataset.removeRaffleEntry)
-                .eq('event_id', STATE.eventId);
-            if (error) throw error;
+            await callEdgeFunction('manage-event-participation', {
+                action: 'remove_raffle_entry',
+                event_id: STATE.eventId,
+                entry_id: btn.dataset.removeRaffleEntry,
+            });
             STATE.tabData.raffle = null;
             await _renderTabAsync('raffle', _loadRaffle, _raffleHtml, _wireRaffle);
             _notifyParent('updated', STATE.eventId);
