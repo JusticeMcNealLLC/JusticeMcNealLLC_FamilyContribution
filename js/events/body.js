@@ -455,7 +455,7 @@ async function pubRenderComments(event) {
             return `<div class="evt-comment">
                 <div class="evt-comment-avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="">` : initials}</div>
                 <div class="evt-comment-body">
-                    <span class="evt-comment-name">${name}</span><span class="evt-comment-time">${timeAgo}</span>
+                    <div class="evt-comment-meta"><span class="evt-comment-name">${name}</span><span class="evt-comment-time">${timeAgo}</span></div>
                     <p class="evt-comment-text">${pubEscapeHtml(c.body)}</p>
                 </div>
             </div>`;

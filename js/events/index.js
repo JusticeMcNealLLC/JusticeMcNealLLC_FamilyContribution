@@ -133,7 +133,8 @@ function pubBuildPublicDetailShell(event, goingCount) {
     if (!content) return;
 
     document.body.classList.add('public-event-detail');
-    content.classList.add('public-ed-detail');
+    document.body.classList.add('event-detail-surface');
+    content.classList.add('public-ed-detail', 'public-event-v2');
 
     const start = new Date(event.start_date);
     const end = event.end_date ? new Date(event.end_date) : null;
@@ -160,9 +161,9 @@ function pubBuildPublicDetailShell(event, goingCount) {
     content.innerHTML = `
         <input type="hidden" id="shareUrl" value="">
 
-        <div class="ed-content">
-            <div class="ed-detail-body">
-                <div class="ed-main">
+        <div class="ed-content event-detail-shell public-event-shell">
+            <div class="ed-detail-body event-detail-grid public-event-grid">
+                <div class="ed-main event-detail-main public-event-story">
                     <div id="eventBanner" class="ed-hero" style="${bannerStyle}" role="img" aria-label="Event banner">
                         <div class="ed-hero-scrim"></div>
                         <div class="ed-hero-nav">
@@ -184,7 +185,7 @@ function pubBuildPublicDetailShell(event, goingCount) {
                         </div>
                     </div>
 
-                    <div class="ed-content-cards">
+                    <div class="ed-content-cards public-event-sections">
                         <div class="ed-qi-bar">
                             <div class="ed-qi-col"><svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="ed-qi-main">${dateMain}</span><span class="ed-qi-sub">${weekday}</span></div>
                             ${showTime ? `<div class="ed-qi-col"><svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="ed-qi-main">${timeStr}</span><span class="ed-qi-sub">Start time</span></div>` : ''}
@@ -208,7 +209,7 @@ function pubBuildPublicDetailShell(event, goingCount) {
                         <div id="attendeeCount" class="hidden ed-card"></div>
                         <div id="calendarSection" class="hidden"></div>
 
-                        <div class="ed-about-grid public-ed-about-grid">
+                        <div class="ed-about-grid public-ed-about-grid event-detail-card">
                             <div class="ed-about-left">
                                 <div class="ed-about-desc-col">
                                     <p class="ed-about-heading">About This Event</p>
@@ -230,9 +231,9 @@ function pubBuildPublicDetailShell(event, goingCount) {
                             </div>
                         </div>
 
-                        <div id="gatedSection" class="hidden ed-card evt-section"><div class="evt-info-card"><span class="evt-info-card-icon">🔓</span><div><p class="evt-info-card-title">Attendee Details</p><p id="gatedNotes" class="evt-info-card-sub" style="white-space:pre-line"></p></div></div></div>
-                        <div id="raffleSection" class="ed-card"></div>
-                        <div id="commentsSection" class="hidden ed-card" role="region" aria-label="Discussion">
+                        <div id="gatedSection" class="hidden ed-card event-detail-card evt-section"><div class="evt-info-card"><span class="evt-info-card-icon">🔓</span><div><p class="evt-info-card-title">Attendee Details</p><p id="gatedNotes" class="evt-info-card-sub" style="white-space:pre-line"></p></div></div></div>
+                        <div id="raffleSection" class="ed-card event-detail-card"></div>
+                        <div id="commentsSection" class="hidden ed-card event-detail-card" role="region" aria-label="Discussion">
                             <div class="ed-section-head"><h3>Discussion</h3></div>
                             <div id="commentsList" class="ed-comments-list"></div>
                             <div id="commentForm" class="hidden ed-comment-input-row">
@@ -245,8 +246,8 @@ function pubBuildPublicDetailShell(event, goingCount) {
                     </div>
                 </div>
 
-                <div class="ed-sidebar public-ed-sidebar">
-                    <div class="ed-card ed-summary-card">
+                <div class="ed-sidebar public-ed-sidebar event-detail-rail">
+                    <div class="ed-card ed-summary-card event-detail-card-tight public-summary-card">
                         <p class="ed-summary-heading">Event Summary</p>
                         <div class="ed-summary-header-row">
                             ${event.banner_url ? `<img src="${event.banner_url}" class="ed-summary-thumb" alt="">` : '<div class="ed-summary-thumb ed-summary-thumb-placeholder"></div>'}
@@ -260,12 +261,12 @@ function pubBuildPublicDetailShell(event, goingCount) {
                             ${goingCount >= 3 ? `<div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857"/></svg></div><div><span class="ed-summary-main">${goingCount} going</span>${event.max_participants ? `<span class="ed-summary-sub2">${event.max_participants - goingCount > 0 ? `${event.max_participants - goingCount} spots left` : 'Sold out'}</span>` : ''}</div></div>` : ''}
                         </div>
                     </div>
-                    <div id="memberRsvpCard" class="hidden ed-card ed-card-rsvp"><p class="ed-summary-heading">Your RSVP</p><div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div></div>
-                    <div id="guestRsvpSection" class="hidden ed-card"><p class="ed-summary-heading">RSVP for This Event</p><p class="public-ed-muted" style="margin-bottom:14px">No account needed. Enter your name and email.</p><div class="public-ed-field-stack"><input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name"><input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address"><label class="evt-checkbox-label hidden"><input type="checkbox" id="guestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label><button onclick="pubHandleGuestRsvp()" id="guestRsvpBtn" class="evt-rsvp-pay">RSVP as Guest</button></div><div class="pub-rsvp-links"><a id="signinRsvpLink" href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="pub-rsvp-text-link">Have an account? Sign in</a><button type="button" onclick="var p=document.getElementById('lookupPanel');if(p)p.classList.toggle('hidden')" class="pub-rsvp-text-link">Already RSVP'd? Find my ticket</button></div><div id="lookupPanel" class="hidden" style="margin-top:14px"><div class="public-ed-field-stack"><input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" aria-label="Email used for RSVP"><button onclick="pubLookupGuestTicket()" id="lookupBtn" class="evt-action-btn">Find My Ticket</button></div><div id="lookupResult" style="margin-top:10px"></div></div></div>
-                    <div id="memberOnlyNotice" class="hidden ed-card evt-section"><div class="evt-notice-card"><span class="evt-notice-icon">🔒</span><div><p class="evt-notice-title">Members-only event</p><p class="evt-notice-sub">Sign in with your member account to RSVP.</p></div></div></div>
-                    <div id="ticketSection" class="hidden ed-card evt-section"><div class="evt-qr-card"><h3 class="evt-qr-title">🎫 Your Event Ticket</h3><canvas id="ticketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p></div></div>
-                    <div id="guestTicketSection" class="hidden ed-card evt-section"><div class="evt-qr-card"><div style="font-size:36px;margin-bottom:8px">🎉</div><h3 class="evt-qr-title">You're In!</h3><p id="guestTicketName" style="font-size:13px;color:#717171;margin-bottom:16px"></p><canvas id="guestTicketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p><p style="font-size:13px;color:#f59e0b;font-weight:600;margin-top:10px">Bookmark this page. This is your ticket.</p></div></div>
-                    <div id="venueCheckin" class="hidden ed-card evt-section"><div id="checkinResult"></div></div>
+                    <div id="memberRsvpCard" class="hidden ed-card ed-card-rsvp event-detail-card-tight public-action-card"><p class="ed-summary-heading">Your RSVP</p><div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div></div>
+                    <div id="guestRsvpSection" class="hidden ed-card event-detail-card-tight public-action-card"><p class="ed-summary-heading">RSVP for This Event</p><p class="public-ed-muted" style="margin-bottom:14px">No account needed. Enter your name and email.</p><div class="public-ed-field-stack"><input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name"><input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address"><label class="evt-checkbox-label hidden"><input type="checkbox" id="guestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label><button onclick="pubHandleGuestRsvp()" id="guestRsvpBtn" class="evt-rsvp-pay">RSVP as Guest</button></div><div class="pub-rsvp-links"><a id="signinRsvpLink" href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="pub-rsvp-text-link">Have an account? Sign in</a><button type="button" onclick="var p=document.getElementById('lookupPanel');if(p)p.classList.toggle('hidden')" class="pub-rsvp-text-link">Already RSVP'd? Find my ticket</button></div><div id="lookupPanel" class="hidden" style="margin-top:14px"><div class="public-ed-field-stack"><input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" aria-label="Email used for RSVP"><button onclick="pubLookupGuestTicket()" id="lookupBtn" class="evt-action-btn">Find My Ticket</button></div><div id="lookupResult" style="margin-top:10px"></div></div></div>
+                    <div id="memberOnlyNotice" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-notice-card"><span class="evt-notice-icon">🔒</span><div><p class="evt-notice-title">Members-only event</p><p class="evt-notice-sub">Sign in with your member account to RSVP.</p></div></div></div>
+                    <div id="ticketSection" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-qr-card"><h3 class="evt-qr-title">🎫 Your Event Ticket</h3><canvas id="ticketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p></div></div>
+                    <div id="guestTicketSection" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-qr-card"><div style="font-size:36px;margin-bottom:8px">🎉</div><h3 class="evt-qr-title">You're In!</h3><p id="guestTicketName" style="font-size:13px;color:#717171;margin-bottom:16px"></p><canvas id="guestTicketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p><p style="font-size:13px;color:#f59e0b;font-weight:600;margin-top:10px">Bookmark this page. This is your ticket.</p></div></div>
+                    <div id="venueCheckin" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div id="checkinResult"></div></div>
 
                 </div>
             </div>

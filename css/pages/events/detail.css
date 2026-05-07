@@ -1,0 +1,93 @@
+/* Shared event detail foundation.
+   Public and member event detail pages should converge here over time.
+   Page-specific files should only add shell/auth differences. */
+
+.event-detail-surface {
+    --event-card-border: rgba(15, 23, 42, 0.08);
+    --event-card-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+    --event-soft-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    background: #f6f7f9;
+}
+
+.event-detail-shell {
+    width: min(100%, 1280px);
+    margin: 0 auto;
+    padding: 24px 20px 56px;
+}
+
+.event-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 28px;
+    align-items: start;
+}
+
+.event-detail-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.event-detail-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 88px;
+}
+
+.event-detail-card {
+    background: #fff;
+    border: 1px solid var(--event-card-border);
+    border-radius: 22px;
+    box-shadow: var(--event-card-shadow);
+}
+
+.event-detail-card-tight {
+    border-radius: 18px;
+    box-shadow: var(--event-soft-shadow);
+}
+
+.event-detail-kicker {
+    margin: 0 0 10px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.event-detail-section-title {
+    margin: 0 0 14px;
+    color: #0f172a;
+    font-size: 20px;
+    font-weight: 850;
+    line-height: 1.15;
+    letter-spacing: 0;
+}
+
+@media (max-width: 1023px) {
+    .event-detail-shell {
+        padding: 12px 0 92px;
+    }
+
+    .event-detail-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .event-detail-main,
+    .event-detail-rail {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .event-detail-rail {
+        position: static;
+        top: auto;
+    }
+}
