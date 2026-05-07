@@ -619,9 +619,8 @@ async function evtOpenDetail(eventId) {
         raffleHtml = `
             <div class="ed-raffle-compact">
                 <div class="ed-raffle-compact-head">
-                    <div>${_edSectionHead('Raffle')}<p>${raffleEntryCount} ${raffleEntryCount === 1 ? 'entry' : 'entries'}${prizeCount ? ` · ${prizeCount} ${prizeCount === 1 ? 'winner' : 'winners'}` : ''}</p></div>
+                    <div>${_edSectionHead('Raffle')}<div class="ed-raffle-compact-info-row"><p>${raffleEntryCount} ${raffleEntryCount === 1 ? 'entry' : 'entries'}${prizeCount ? ` · ${prizeCount} ${prizeCount === 1 ? 'winner' : 'winners'}` : ''}</p>${rafflePills}</div></div>
                 </div>
-                ${rafflePills ? `<div class="ed-pill-row ed-raffle-compact-pills">${rafflePills}</div>` : ''}
                 <div class="ed-raffle-content-grid">
                     ${prizesHtml ? `<div class="ed-raffle-panel">${_edSectionHead('Prizes')}${prizesHtml}</div>` : `<p class="ed-hint" style="font-style:italic">Prizes to be announced</p>`}
                     ${winnersHtml ? `<div class="ed-raffle-panel">${winnersHtml}</div>` : ''}
@@ -923,7 +922,7 @@ async function evtOpenDetail(eventId) {
                                 ${deadlinePassed && !isClosed && !isPast ? '<div class="ed-deadline-banner" style="margin-bottom:14px">🔒 RSVP deadline passed</div>' : ''}
                                 <p class="ed-about-heading">About This Event</p>
                                 <div class="ed-desc${descIsLong ? ' ed-desc-collapsed' : ''}" id="evtDescWrap">${descHtml}</div>
-                                ${descIsLong ? '<button class="ed-read-more" onclick="document.getElementById(\'evtDescWrap\').classList.remove(\'ed-desc-collapsed\');this.remove()">Read more</button>' : ''}
+                                ${descIsLong ? '<button class="ed-read-more" onclick="var w=document.getElementById(\'evtDescWrap\'),c=w.classList.toggle(\'ed-desc-collapsed\');this.textContent=c?\'Read more\':\'Show less\'">Read more</button>' : ''}
                                 ${eventContextHtml ? `<div class="ed-context-list">${eventContextHtml}</div>` : ''}
                             </div>
                             ${attendeePreviewHtml ? `

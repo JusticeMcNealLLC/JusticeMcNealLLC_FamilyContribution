@@ -132,6 +132,7 @@ body {
 .public-raffle-eyebrow { margin:0 0 3px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#717171; font-weight:800; }
 .public-raffle-title { margin:0; font-size:20px; }
 .public-raffle-count { flex-shrink:0; padding:5px 10px; border-radius:999px; background:#f7f7f7; color:#444; font-size:12px; font-weight:800; }
+.public-raffle-meta { display:flex; align-items:center; gap:8px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
 .public-raffle-pills { margin-bottom:16px; }
 .public-raffle-block { margin-top:8px; }
 .public-raffle-prize-rail { margin-top:2px; }

@@ -102,10 +102,11 @@ async function pubRenderRaffleSection(event) {
                 <p class="public-raffle-eyebrow">Raffle</p>
                 <h4 class="evt-section-title public-raffle-title">Prize Drawing</h4>
             </div>
-            ${totalWinners ? `<span class="public-raffle-count">${totalWinners} ${totalWinners === 1 ? 'winner' : 'winners'}</span>` : ''}
+            <div class="public-raffle-meta">
+                ${totalWinners ? `<span class="public-raffle-count">${totalWinners} ${totalWinners === 1 ? 'winner' : 'winners'}</span>` : ''}
+                ${entryPillsHtml}
+            </div>
         </div>
-
-        <div class="ed-pill-row public-raffle-pills">${entryPillsHtml}</div>
 
         <div class="ed-raffle-content-grid public-raffle-content-grid">
             ${hasPrizes ? `

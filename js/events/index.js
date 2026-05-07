@@ -435,8 +435,8 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
             btn.className = 'evt-read-more';
             btn.textContent = 'Read more';
             btn.addEventListener('click', () => {
-                descEl.classList.remove('evt-desc-collapsed');
-                btn.remove();
+                const isCollapsed = descEl.classList.toggle('evt-desc-collapsed');
+                btn.textContent = isCollapsed ? 'Read more' : 'Show less';
             });
             descEl.parentNode.insertBefore(btn, descEl.nextSibling);
         }
