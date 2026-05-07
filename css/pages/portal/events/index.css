@@ -12,4 +12,5 @@
 @import url('./cards.css');
 @import url('./calendar.css');
 @import url('./rail.css');
+@import url('../../events/detail.css');
 @import url('./detail.css');

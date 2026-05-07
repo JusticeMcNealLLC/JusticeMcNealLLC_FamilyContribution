@@ -803,7 +803,9 @@ async function evtOpenDetail(eventId) {
     // Final HTML assembly — new card-based layout
     // ═══════════════════════════════════════════════════════
 
-    document.getElementById('eventsDetailView').innerHTML = `
+    const detailView = document.getElementById('eventsDetailView');
+    detailView.classList.add('event-detail-surface', 'portal-event-detail-v2');
+    detailView.innerHTML = `
         <!-- ─── Detail Page Header ─── -->
         <div class="ed-page-header">
             <div class="ed-page-header-inner">
@@ -832,9 +834,9 @@ async function evtOpenDetail(eventId) {
         </div>
 
         <!-- ─── Two-column layout: hero+content LEFT, summary sidebar RIGHT ─── -->
-        <div class="ed-content">
-            <div class="ed-detail-body">
-                <div class="ed-main">
+        <div class="ed-content event-detail-shell portal-event-shell">
+            <div class="ed-detail-body event-detail-grid portal-event-grid">
+                <div class="ed-main event-detail-main portal-event-story">
 
                 <!-- ─── Immersive Hero ─── -->
                 <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `onclick="evtOpenLightbox('${event.banner_url}')"` : ''} role="img" aria-label="Event banner">
@@ -876,7 +878,7 @@ async function evtOpenDetail(eventId) {
                     </div>
                 </div><!-- /ed-hero -->
 
-                <div class="ed-content-cards">
+                <div class="ed-content-cards portal-event-sections">
                     <!-- Quick-Info Bar (mobile only: date / time / location) -->
                     <div class="ed-qi-bar">
                         <div class="ed-qi-col">
@@ -932,7 +934,7 @@ async function evtOpenDetail(eventId) {
                         ${creatorProfile ? `<svg class="ed-mh-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>` : ''}
                     </div>` : ''}
                     <!-- About Card -->
-                    <div class="ed-about-grid">
+                    <div class="ed-about-grid event-detail-card">
                         <div class="ed-about-left">
                             <div class="ed-about-desc-col">
                                 ${deadlinePassed && !isClosed && !isPast ? '<div class="ed-deadline-banner" style="margin-bottom:14px">🔒 RSVP deadline passed</div>' : ''}
@@ -967,18 +969,18 @@ async function evtOpenDetail(eventId) {
                     </div>
 
             <!-- Gated Notes Card -->
-            ${showNotes && event.gated_notes ? `<div class="ed-card">${_edSectionHead('Attendee Details')}<p class="ed-body-text whitespace-pre-line">${evtEscapeHtml(event.gated_notes)}</p></div>` : ''}
+            ${showNotes && event.gated_notes ? `<div class="ed-card event-detail-card">${_edSectionHead('Attendee Details')}<p class="ed-body-text whitespace-pre-line">${evtEscapeHtml(event.gated_notes)}</p></div>` : ''}
 
             <!-- Attendees Card moved into about grid right column -->
 
             <!-- Dynamic sections (notices, QR, cost, raffle…) -->
             <!-- scannerBtn + venueQrHtml moved into Manage Event sheet -->
-            ${[waitlistHtml, qrHtml, thresholdHtml, costBreakdownHtml, transportHtml, locationReqHtml, graceHtml, raffleHtml, documentsHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => _edCard(s)).join('')}
+            ${[waitlistHtml, thresholdHtml, costBreakdownHtml, transportHtml, locationReqHtml, graceHtml, raffleHtml, documentsHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map(s => _edCard(s, 'event-detail-card')).join('')}
 
             <!-- Stats & Breakdown moved into Manage Event sheet (EventsManage) -->
 
             <!-- Comments -->
-            <div class="ed-card" id="portalCommentsSection" role="region" aria-label="Discussion">
+            <div class="ed-card event-detail-card" id="portalCommentsSection" role="region" aria-label="Discussion">
                 ${_edSectionHead('Discussion')}
                 <div id="portalCommentsList" class="ed-comments-list"></div>
                 <div class="ed-comment-input-row">
@@ -991,11 +993,11 @@ async function evtOpenDetail(eventId) {
             </div>
 
             <!-- Related Events -->
-            ${relatedHtml ? _edCard(relatedHtml) : ''}
+            ${relatedHtml ? _edCard(relatedHtml, 'event-detail-card') : ''}
 
             <!-- Host Controls inline card removed — opens via Manage Event sheet -->
 
-            ${event.cancellation_note ? _edCard(`<div class="ed-cancel-banner"><p class="ed-cancel-title">Cancellation Note</p><p class="ed-cancel-text">${evtEscapeHtml(event.cancellation_note)}</p></div>`) : ''}
+            ${event.cancellation_note ? _edCard(`<div class="ed-cancel-banner"><p class="ed-cancel-title">Cancellation Note</p><p class="ed-cancel-text">${evtEscapeHtml(event.cancellation_note)}</p></div>`, 'event-detail-card') : ''}
 
                     <div style="height:80px" class="lg:hidden"></div>
                     <div style="height:32px" class="hidden lg:block"></div>
@@ -1003,8 +1005,8 @@ async function evtOpenDetail(eventId) {
                 </div><!-- /ed-main -->
 
                 <!-- ─── Event Summary Sidebar ─── -->
-                <div class="ed-sidebar">
-                    <div class="ed-card ed-summary-card">
+                <div class="ed-sidebar event-detail-rail portal-event-rail">
+                    <div class="ed-card ed-summary-card event-detail-card-tight portal-summary-card">
                         <p class="ed-summary-heading">Event Summary</p>
                         <div class="ed-summary-header-row">
                             ${event.banner_url ? `<img src="${event.banner_url}" class="ed-summary-thumb" alt="">` : `<div class="ed-summary-thumb ed-summary-thumb-placeholder"></div>`}
@@ -1041,12 +1043,16 @@ async function evtOpenDetail(eventId) {
                         </div>
                     </div>
                     ${rsvpButtons && rsvpEnabled ? `
-                    <div class="ed-card ed-card-rsvp">
+                    <div class="ed-card ed-card-rsvp event-detail-card-tight portal-action-card">
                         <p class="ed-summary-heading">Your RSVP</p>
                         ${rsvpButtons}
                     </div>` : ''}
+                    ${qrHtml ? `
+                    <div class="ed-card event-detail-card-tight portal-action-card portal-ticket-card">
+                        ${qrHtml}
+                    </div>` : ''}
                     ${!isPast && !isClosed ? `
-                    <div class="ed-card ed-countdown-card" id="edCountdownCard">
+                    <div class="ed-card ed-countdown-card event-detail-card-tight portal-utility-card" id="edCountdownCard">
                         <p class="ed-summary-heading">Starts In</p>
                         <div class="ed-countdown-grid">
                             <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdDays">--</span><span class="ed-countdown-lbl">Days</span></div>
@@ -1055,7 +1061,7 @@ async function evtOpenDetail(eventId) {
                             <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdSecs">--</span><span class="ed-countdown-lbl">Secs</span></div>
                         </div>
                     </div>` : ''}
-                    <div class="ed-card ed-share-card">
+                    <div class="ed-card ed-share-card event-detail-card-tight portal-utility-card">
                         <p class="ed-summary-heading">Share This Event</p>
                         <div class="ed-share-row">
                             <button class="ed-share-btn" title="Copy link" onclick="(function(){navigator.clipboard.writeText(window.location.href);const b=this;b.classList.add('ed-share-btn-copied');setTimeout(()=>b.classList.remove('ed-share-btn-copied'),1500)}).call(this)">
