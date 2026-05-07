@@ -928,7 +928,7 @@
     // ═══════════════════════════════════════════════════════════════
     async function _loadRaffle() {
         const eventId = STATE.eventId;
-        const [entriesRes, winnersRes] = await Promise.all([
+        const [entriesRes, winnersRes, guestsRes] = await Promise.all([
             supabaseClient
                 .from('event_raffle_entries')
                 .select('id, user_id, guest_token, paid, amount_paid_cents, profiles:user_id(first_name, last_name, profile_picture_url)')
@@ -938,10 +938,15 @@
                 .select('*, profiles:user_id(first_name, last_name, profile_picture_url)')
                 .eq('event_id', eventId)
                 .order('place', { ascending: true }),
+            supabaseClient
+                .from('event_guest_rsvps')
+                .select('guest_token, guest_name, guest_email')
+                .eq('event_id', eventId),
         ]);
         return {
             entries: entriesRes.data || [],
             winners: winnersRes.data || [],
+            guests: guestsRes.data || [],
         };
     }
 
@@ -957,7 +962,10 @@
         }
         const d = STATE.tabData.raffle;
         const fmt = window.formatCurrency || _money;
-        const paidEntries = d.entries.filter(en => en.paid);
+        const guestByToken = new Map((d.guests || []).map(g => [g.guest_token, g]));
+        const eligibleEntries = d.entries.filter(en => en.paid || !e.raffle_entry_cost_cents);
+        const memberEntries = eligibleEntries.filter(en => en.user_id);
+        const guestEntries = eligibleEntries.filter(en => en.guest_token);
         const raffleConfig = _raffleConfig(e);
         const categories = _raffleCategories(raffleConfig);
         const drawQueue = _raffleDrawQueue(raffleConfig, d.winners);
@@ -965,84 +973,101 @@
         const totalPrizes = _raffleTotalWinners(raffleConfig) || e.raffle_winner_count || winnersDrawn;
         const remainingDraws = Math.max(0, totalPrizes - winnersDrawn);
         const allDrawn = totalPrizes > 0 && winnersDrawn >= totalPrizes;
-        const canDraw = typeof window.evtOpenRaffleDraw === 'function' && paidEntries.length > 0 && !allDrawn;
+        const canDraw = typeof window.evtOpenRaffleDraw === 'function' && eligibleEntries.length > 0 && !allDrawn;
+        const drawPct = totalPrizes ? Math.round((winnersDrawn / totalPrizes) * 100) : 0;
 
         const winnerRows = d.winners.length ? d.winners.map(w => {
             const p = w.profiles || {};
-            const name = w.user_id ? (`${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Member') : (`Guest · ${(w.guest_token || '').slice(0,8)}`);
+            const guest = w.guest_token ? guestByToken.get(w.guest_token) : null;
+            const name = w.user_id ? (`${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Member') : (guest?.guest_name || `Guest · ${(w.guest_token || '').slice(0,8)}`);
             const medal = ['🥇','🥈','🥉'][w.place - 1] || `#${w.place}`;
             const choiceHtml = _winnerChoiceHtml(w, raffleConfig, d.winners);
             return `
-                <div class="em-row">
-                    <div style="font-size:22px;flex-shrink:0">${medal}</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm font-semibold text-gray-800 truncate">${_esc(name)}</div>
-                        <div class="text-xs text-gray-400 truncate">${_ord(w.place)} place · ${_esc(w.prize_description || '')}</div>
+                <div class="em-attendee-card">
+                    <div class="em-avatar" style="background:#faf5ff;color:#7c3aed;font-size:18px">${medal}</div>
+                    <div class="em-attendee-main">
+                        <p class="em-attendee-name">${_esc(name)}</p>
+                        <p class="em-attendee-sub">${_ord(w.place)} place · ${_esc(w.prize_description || 'Prize pending')}</p>
+                        <div class="flex flex-wrap gap-1 mt-2">
+                            <span class="em-pill em-pill-checked">${w.user_id ? 'Member' : 'Guest'}</span>
+                            ${w.selection_status === 'pending_choice' ? '<span class="em-pill em-pill-paid">Needs prize choice</span>' : '<span class="em-pill em-pill-going">Prize assigned</span>'}
+                        </div>
                         ${choiceHtml}
                     </div>
                 </div>
             `;
         }).join('') : `<p class="text-xs text-gray-400 italic py-2">No winners drawn yet.</p>`;
 
-        const entryRevenue = paidEntries.reduce((s, en) => s + (en.amount_paid_cents || 0), 0);
+        const entryRevenue = eligibleEntries.reduce((s, en) => s + (en.amount_paid_cents || 0), 0);
         const categoryHtml = categories.length ? categories.map(cat => {
             const items = _raffleItems(raffleConfig, cat.id);
             const pendingSlots = drawQueue.filter(slot => slot.category_id === cat.id).length;
             const drawnCount = Math.max(0, (cat.winner_count || 0) - pendingSlots);
-            const itemPreview = items.length ? items.map(item => `${item.emoji || '🎁'} ${_esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ''}`).join(', ') : 'Prize details pending';
+            const itemPreview = items.length ? items.slice(0, 3).map(item => `${item.emoji || '🎁'} ${_esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ''}`).join(', ') : 'Prize details pending';
+            const extraItems = Math.max(0, items.length - 3);
             return `
-                <div class="em-card mb-3">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <h3 class="font-bold text-gray-800 text-sm truncate">${_esc(cat.label || 'Prize category')}</h3>
-                            <p class="text-xs text-gray-400 mt-0.5">${_drawModeLabel(cat.draw_mode)} · ${drawnCount}/${cat.winner_count || 0} drawn</p>
-                        </div>
-                        <span class="em-pill em-pill-checked">${pendingSlots} left</span>
+                <div class="em-card em-op-card">
+                    <div class="em-op-head">
+                        <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${_esc(cat.label || 'Prize category')}</p></div>
+                        <span class="em-op-icon">🎁</span>
                     </div>
-                    <p class="text-xs text-gray-500 mt-3 leading-relaxed">${itemPreview}</p>
+                    <p class="em-op-copy">${_drawModeLabel(cat.draw_mode)} · ${drawnCount}/${cat.winner_count || 0} drawn</p>
+                    <div class="em-op-progress"><span style="width:${cat.winner_count ? Math.round((drawnCount / cat.winner_count) * 100) : 0}%"></span></div>
+                    <p class="em-op-copy">${itemPreview}${extraItems ? `, +${extraItems} more` : ''}</p>
+                    <div class="em-op-meta"><span class="em-op-chip">${pendingSlots} left</span><span class="em-op-chip">${items.length} item${items.length === 1 ? '' : 's'}</span></div>
                 </div>
             `;
         }).join('') : '';
 
         const nextSlot = drawQueue[0] || null;
         const nextDrawHtml = !allDrawn ? `
-            <div class="em-card mb-3" style="border-color:#ddd6fe;background:#faf5ff">
-                <div class="flex items-start justify-between gap-3">
+            <div class="em-card mb-4" style="border-color:#ddd6fe;background:#faf5ff">
+                <div class="em-section-head">
                     <div>
-                        <h3 class="font-bold text-gray-900 text-sm">Next draw</h3>
-                        <p class="text-xs text-violet-700 mt-1">${nextSlot ? _esc(_prizeSlotLabel(nextSlot)) : 'Next available prize'}${nextSlot?.category_label ? ` · ${_esc(nextSlot.category_label)}` : ''}</p>
+                        <h3 class="em-section-title">Next draw</h3>
+                        <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? _esc(_prizeSlotLabel(nextSlot)) : 'Next available prize'}${nextSlot?.category_label ? ` · ${_esc(nextSlot.category_label)}` : ''}</p>
                     </div>
                     <span class="em-pill em-pill-paid">${remainingDraws} remaining</span>
                 </div>
-                ${canDraw ? `<button id="emRaffleDrawBtn" type="button" class="w-full mt-4 bg-violet-600 hover:bg-violet-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition">Draw next winner</button>` : `<p class="text-xs text-gray-500 mt-4">${paidEntries.length ? 'Draw controls are unavailable on this page.' : 'No paid or valid raffle entries yet.'}</p>`}
+                ${canDraw ? `<button id="emRaffleDrawBtn" type="button" class="w-full bg-violet-600 hover:bg-violet-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition">Draw next winner</button>` : `<p class="text-xs text-gray-500">${eligibleEntries.length ? 'Draw controls are unavailable on this page.' : 'No valid raffle entries yet.'}</p>`}
             </div>
         ` : '';
 
         return `
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                <div class="em-card em-stat"><span class="em-stat-label">Entries</span><span class="em-stat-num">${paidEntries.length}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Revenue</span><span class="em-stat-num" style="color:#059669">${fmt(entryRevenue)}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Prizes</span><span class="em-stat-num">${totalPrizes || '—'}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Drawn</span><span class="em-stat-num" style="color:#7c3aed">${winnersDrawn}</span></div>
+            <div class="em-card em-command-card mb-4">
+                <p class="em-command-eyebrow">Raffle command</p>
+                <h3 class="em-command-title">${allDrawn ? 'All winners drawn' : `${remainingDraws} draw${remainingDraws === 1 ? '' : 's'} remaining`}</h3>
+                <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? 'y' : 'ies'} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : 'No eligible raffle entries yet.'} ${nextSlot ? `Next up: ${_esc(_prizeSlotLabel(nextSlot))}.` : ''}</p>
+                <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${drawPct}%;background:#a78bfa"></span></div>
+            </div>
+
+            <div class="em-metric-grid mb-4">
+                <div class="em-metric"><span>Eligible entries</span><strong>${eligibleEntries.length}</strong><small>${memberEntries.length} member · ${guestEntries.length} guest</small></div>
+                <div class="em-metric"><span>Revenue</span><strong>${fmt(entryRevenue)}</strong><small>${e.raffle_entry_cost_cents ? 'Paid entries' : 'Free raffle'}</small></div>
+                <div class="em-metric"><span>Prizes</span><strong>${totalPrizes || '—'}</strong><small>${categories.length} group${categories.length === 1 ? '' : 's'}</small></div>
+                <div class="em-metric"><span>Drawn</span><strong>${winnersDrawn}</strong><small>${drawPct}% complete</small></div>
             </div>
 
             ${nextDrawHtml}
 
-            <div class="em-card mb-3">
-                <h3 class="font-bold text-gray-800 text-sm mb-3">Configuration</h3>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between"><span class="text-gray-500">Type</span><span class="font-medium uppercase tracking-wide text-xs">${e.raffle_type || 'digital'}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Draw trigger</span><span class="font-medium uppercase tracking-wide text-xs">${e.raffle_draw_trigger || 'manual'}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Entry cost</span><span class="font-medium">${e.raffle_entry_cost_cents ? fmt(e.raffle_entry_cost_cents) : 'Free'}</span></div>
+            <div class="em-money-layout">
+                <div>
+                    ${categories.length ? `<div class="em-op-grid" style="grid-template-columns:1fr;margin-bottom:12px">${categoryHtml}</div>` : ''}
+                    <div class="em-card">
+                        <div class="em-section-head"><div><h3 class="em-section-title">Winners <span class="text-gray-400 font-normal">· ${winnersDrawn}${totalPrizes ? '/' + totalPrizes : ''}</span></h3><p class="em-section-sub">Draw results and pending prize choices.</p></div></div>
+                        ${winnerRows}
+                        ${allDrawn ? `<p class="text-xs text-emerald-600 font-semibold mt-3">All winners drawn ✓</p>` : `<p class="text-xs text-gray-400 mt-3">Draws follow category sort order, starting with the smallest/lower-sort categories.</p>`}
+                    </div>
                 </div>
-            </div>
 
-            ${categoryHtml}
-
-            <div class="em-card">
-                <h3 class="font-bold text-gray-800 text-sm mb-2">Winners <span class="text-gray-400 font-normal">· ${winnersDrawn}${totalPrizes ? '/' + totalPrizes : ''}</span></h3>
-                ${winnerRows}
-                ${allDrawn ? `<p class="text-xs text-emerald-600 font-semibold mt-3">All winners drawn ✓</p>` : `<p class="text-xs text-gray-400 mt-3">Draws follow category sort order, starting with the smallest/lower-sort categories.</p>`}
+                <div class="em-card">
+                    <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving the draw.</p></div></div>
+                    <div class="em-money-row"><span>Type</span><strong>${_esc(e.raffle_type || 'digital')}</strong></div>
+                    <div class="em-money-row"><span>Draw trigger</span><strong>${_esc(e.raffle_draw_trigger || 'manual')}</strong></div>
+                    <div class="em-money-row"><span>Entry cost</span><strong>${e.raffle_entry_cost_cents ? fmt(e.raffle_entry_cost_cents) : 'Free'}</strong></div>
+                    <div class="em-money-row"><span>Member entries</span><strong>${memberEntries.length}</strong></div>
+                    <div class="em-money-row"><span>Guest entries</span><strong>${guestEntries.length}</strong></div>
+                </div>
             </div>
         `;
     }
