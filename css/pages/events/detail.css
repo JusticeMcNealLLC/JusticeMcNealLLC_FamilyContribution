@@ -67,6 +67,24 @@
     letter-spacing: 0;
 }
 
+.evt-comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.evt-comment-time::before {
+    content: '·';
+    margin-right: 6px;
+    color: #cbd5e1;
+}
+
+.evt-comment-meta .evt-comment-time {
+    margin-left: 0;
+}
+
 @media (max-width: 1023px) {
     .event-detail-shell {
         padding: 12px 0 92px;

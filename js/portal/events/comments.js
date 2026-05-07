@@ -64,7 +64,7 @@ async function evtLoadComments(eventId) {
         return `<div class="evt-comment">
             <div class="evt-comment-avatar">${avatarUrl ? `<img src="${evtEscapeHtml(avatarUrl)}" alt="">` : initials}</div>
             <div class="evt-comment-body">
-                <span class="evt-comment-name">${name}</span><span class="evt-comment-time">${timeAgo}</span>
+                <div class="evt-comment-meta"><span class="evt-comment-name">${name}</span><span class="evt-comment-time">${timeAgo}</span></div>
                 <p class="evt-comment-text">${evtEscapeHtml(c.body)}</p>
             </div>
         </div>`;
