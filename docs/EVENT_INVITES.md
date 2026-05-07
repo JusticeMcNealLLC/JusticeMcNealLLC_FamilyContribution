@@ -19,6 +19,10 @@ www.justicemcneal.com/events*
 
 Normal browsers pass through to GitHub Pages. Preview crawlers such as Applebot, iMessage, Facebook, Slack, Discord, and Twitter/X are routed to the Supabase `event-og` function.
 
+Both DNS records must be proxied in Cloudflare, not DNS-only. In Cloudflare DNS, `justicemcneal.com` and `www` should show the orange cloud. If crawler responses show `Server: GitHub.com` and no `cf-ray` header, Cloudflare is being bypassed and rich previews will fall back to the generic static tags in `events/index.html`.
+
+The Worker returns the Supabase metadata to crawlers as `text/html` so Discord, iMessage, and other embed parsers read the Open Graph tags reliably.
+
 ## Open Graph Source
 
 The deployed Supabase Edge Function is:
@@ -55,6 +59,7 @@ Crawler verification through Cloudflare can be checked with:
 
 ```powershell
 curl.exe -A "Applebot/0.1" -s -D - "https://justicemcneal.com/events/?e=testevent-moushuj2&ref=worker-test" | Select-String -Pattern "HTTP/|server:|cf-ray|content-type:|og:title|og:description"
+curl.exe -A "Discordbot/2.0" -s -D - "https://justicemcneal.com/events/?e=testevent-moushuj2&ref=discord-test" | Select-String -Pattern "HTTP/|server:|cf-ray|content-type:|og:title|og:description|twitter:card"
 ```
 
 Normal visitor requests should still return the static event app HTML.

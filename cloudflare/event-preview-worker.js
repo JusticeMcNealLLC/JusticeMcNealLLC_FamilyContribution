@@ -24,7 +24,7 @@ export default {
     const ref = url.searchParams.get('ref');
     if (ref) ogUrl.searchParams.set('ref', ref);
 
-    return fetch(ogUrl.toString(), {
+    const ogResponse = await fetch(ogUrl.toString(), {
       headers: {
         'User-Agent': userAgent,
       },
@@ -32,6 +32,20 @@ export default {
         cacheTtl: 300,
         cacheEverything: true,
       },
+    });
+
+    if (!ogResponse.ok) {
+      return fetch(request);
+    }
+
+    const headers = new Headers(ogResponse.headers);
+    headers.set('Content-Type', 'text/html; charset=utf-8');
+    headers.set('Cache-Control', 'public, max-age=300, s-maxage=300');
+    headers.set('Vary', 'User-Agent');
+
+    return new Response(await ogResponse.text(), {
+      status: ogResponse.status,
+      headers,
     });
   },
 };
