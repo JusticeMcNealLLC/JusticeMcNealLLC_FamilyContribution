@@ -603,11 +603,11 @@
     #eventsDetailView.portal-event-detail-v2 .portal-event-story,
     #eventsDetailView.portal-event-detail-v2 .portal-event-sections { gap:12px; }
     #eventsDetailView.portal-event-detail-v2 .ed-hero { min-height:280px !important; height:280px; margin:12px 16px 0; border-radius:24px; }
-    #eventsDetailView.portal-event-detail-v2 .ed-hero-bottom-content { padding:20px 20px 60px; }
+    #eventsDetailView.portal-event-detail-v2 .ed-hero-bottom-content { padding:20px 20px 96px; }
     #eventsDetailView.portal-event-detail-v2 .ed-hero-title { max-width:13ch; font-size:30px; }
     #eventsDetailView.portal-event-detail-v2 .ed-hero-subtitle { margin-bottom:0; }
     #eventsDetailView.portal-event-detail-v2 .ed-hero-info-bar { display:none; }
-    #eventsDetailView.portal-event-detail-v2 .ed-qi-bar { margin:10px 16px 12px; }
+    #eventsDetailView.portal-event-detail-v2 .ed-qi-bar { margin:-44px 24px 12px; }
     #eventsDetailView.portal-event-detail-v2 .ed-about-grid,
     #eventsDetailView.portal-event-detail-v2 .ed-card.event-detail-card { margin-left:16px; margin-right:16px; border-radius:20px !important; }
     #eventsDetailView.portal-event-detail-v2 .ed-about-desc-col { padding:20px; }
