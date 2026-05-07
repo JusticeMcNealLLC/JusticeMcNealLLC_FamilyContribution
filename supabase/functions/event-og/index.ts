@@ -39,7 +39,7 @@ serve(async (req) => {
     // Fetch event data
     const { data: event } = await supabase
       .from('events')
-      .select('title, description, banner_url, start_date, end_date, location_text, slug, event_type, rsvp_enabled, rsvp_deadline, creator:profiles!events_created_by_fkey(first_name, last_name)')
+      .select('title, description, banner_url, embed_image_url, start_date, end_date, location_text, slug, event_type, rsvp_enabled, rsvp_deadline, creator:profiles!events_created_by_fkey(first_name, last_name)')
       .eq('slug', slug)
       .maybeSingle()
 
@@ -98,7 +98,7 @@ serve(async (req) => {
     if (rawDesc) descParts.push(rawDesc.length > 150 ? rawDesc.slice(0, 147) + '...' : rawDesc)
     const ogDescription = descParts.join(' \u2014 ')
 
-    const ogImage = event.banner_url || `${SITE_URL}/assets/icons/icon-512.png`
+    const ogImage = event.embed_image_url || event.banner_url || `${SITE_URL}/assets/icons/icon-512.png`
 
     // XML-safe escape
     const esc = (s: string) =>
@@ -116,6 +116,7 @@ serve(async (req) => {
 <meta property="og:title" content="${esc(ogTitle)}" />
 <meta property="og:description" content="${esc(ogDescription)}" />
 <meta property="og:image" content="${esc(ogImage)}" />
+<meta property="og:image:alt" content="${esc(event.title)} event preview" />
 <meta property="og:url" content="${esc(canonicalUrl)}" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Justice McNeal LLC" />

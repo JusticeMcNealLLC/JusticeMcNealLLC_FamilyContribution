@@ -56,6 +56,27 @@ function evtHandleBannerSelect() {
     reader.readAsDataURL(file);
 }
 
+function evtHandleEmbedImageSelect() {
+    const file = document.getElementById('embedImageFile').files[0];
+    if (!file) return;
+    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+        alert('Please choose a PNG, JPG, or WebP image.');
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be under 5 MB.');
+        return;
+    }
+    evtEmbedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('embedImagePreview').src = e.target.result;
+        document.getElementById('embedImagePreviewWrap').classList.remove('hidden');
+        document.getElementById('embedImageUploadHint').classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+}
+
 // ─── Page Navigation (list ↔ detail) ────────────────────
 
 function evtNavigateToEvent(slug) {

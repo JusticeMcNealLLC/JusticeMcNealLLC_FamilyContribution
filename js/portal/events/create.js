@@ -395,6 +395,20 @@ async function evtHandleCreate(e) {
             bannerUrl = publicUrl;
         }
 
+        let embedImageUrl = null;
+        if (evtEmbedImageFile) {
+            const ext = evtEmbedImageFile.name.split('.').pop();
+            const path = `embeds/${slug}-${Date.now()}.${ext}`;
+            const { error: upErr } = await supabaseClient.storage
+                .from('event-banners')
+                .upload(path, evtEmbedImageFile, { contentType: evtEmbedImageFile.type });
+            if (upErr) throw upErr;
+            const { data: { publicUrl } } = supabaseClient.storage
+                .from('event-banners')
+                .getPublicUrl(path);
+            embedImageUrl = publicUrl;
+        }
+
         // Build event record
         const pricingMode = document.getElementById('pricingMode').value;
         const raffleEnabled = document.getElementById('raffleEnabled').checked;
@@ -437,6 +451,7 @@ async function evtHandleCreate(e) {
             description: document.getElementById('eventDescription').value.trim(),
             gated_notes: document.getElementById('eventGatedNotes').value.trim() || null,
             banner_url: bannerUrl,
+            embed_image_url: embedImageUrl,
             start_date: new Date(document.getElementById('eventStart').value).toISOString(),
             end_date: document.getElementById('eventEnd').value ? new Date(document.getElementById('eventEnd').value).toISOString() : null,
             timezone: document.getElementById('eventTimezone').value,
@@ -593,12 +608,15 @@ async function evtHandleCreate(e) {
         // Reset form
         document.getElementById('createEventForm').reset();
         evtBannerFile = null;
+        evtEmbedImageFile = null;
         evtCostItems = [];
         _evtLocGeoCache = null;
         evtSetLocationIcon('hide');
         evtSetLocationStatus('', '');
         document.getElementById('bannerPreviewWrap').classList.add('hidden');
         document.getElementById('bannerUploadHint').classList.remove('hidden');
+        document.getElementById('embedImagePreviewWrap')?.classList.add('hidden');
+        document.getElementById('embedImageUploadHint')?.classList.remove('hidden');
         document.getElementById('llcFieldsSection')?.classList.add('hidden');
         document.getElementById('compFieldsSection')?.classList.add('hidden');
         document.getElementById('costItemsList') && (document.getElementById('costItemsList').innerHTML = '');

@@ -115,6 +115,21 @@ function evtSetupListeners() {
         }
     });
 
+    const embedDropzone = document.getElementById('embedImageDropzone');
+    const embedFileInput = document.getElementById('embedImageFile');
+    embedDropzone?.addEventListener('click', () => embedFileInput?.click());
+    embedFileInput?.addEventListener('change', evtHandleEmbedImageSelect);
+    embedDropzone?.addEventListener('dragover', e => { e.preventDefault(); embedDropzone.classList.add('border-brand-400'); });
+    embedDropzone?.addEventListener('dragleave', () => embedDropzone.classList.remove('border-brand-400'));
+    embedDropzone?.addEventListener('drop', e => {
+        e.preventDefault();
+        embedDropzone.classList.remove('border-brand-400');
+        if (e.dataTransfer.files[0]) {
+            embedFileInput.files = e.dataTransfer.files;
+            evtHandleEmbedImageSelect();
+        }
+    });
+
     // Create form
     document.getElementById('createEventForm')?.addEventListener('submit', evtHandleCreate);
 

@@ -29,6 +29,8 @@
         step: 0,
         bannerFile: null,
         bannerPreviewUrl: null,
+        embedImageFile: null,
+        embedImagePreviewUrl: null,
         geocode: null, // { lat, lng, display } or null
         prizeImageFiles: {},    // item.id → File
         prizeImagePreviews: {}, // item.id → data-URL
@@ -121,6 +123,7 @@
                 .ec-banner-drop:hover { border-color:#a5b4fc; background:#fafafa; }
                 .ec-banner-drop--over { border-color:#4f46e5; background:#eef2ff; }
                 .ec-banner-preview { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; }
+                .ec-embed-preview { width:100%; max-width:240px; aspect-ratio:4/5; object-fit:cover; border-radius:12px; display:block; }
                 .ec-pill { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; background:#f3f4f6; color:#374151; cursor:pointer; border:1px solid transparent; }
                 .ec-pill.active { background:#4f46e5; color:#fff; }
                 .ec-checkbox-row { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #e5e7eb; border-radius:10px; cursor:pointer; }
@@ -171,6 +174,8 @@
         STATE.step = 0;
         STATE.bannerFile = null;
         STATE.bannerPreviewUrl = null;
+        STATE.embedImageFile = null;
+        STATE.embedImagePreviewUrl = null;
         STATE.geocode = null;
         STATE.prizeImageFiles = {};
         STATE.prizeImagePreviews = {};
@@ -213,7 +218,7 @@
     }
 
     function _confirmClose() {
-        if (STATE.form.title || STATE.bannerFile) {
+        if (STATE.form.title || STATE.bannerFile || STATE.embedImageFile) {
             if (!confirm('Discard this event? Your draft will not be saved.')) return;
         }
         close();
@@ -294,8 +299,69 @@
                             <div class="text-xs text-gray-400">PNG / JPG / WebP · max 5 MB</div>
                        </div>`
                 }
+                <p class="ec-help">Landscape image for event pages and cards.</p>
+            </div>
+
+            <div class="ec-row">
+                <label class="ec-label">Embed image (optional)</label>
+                <input id="ecEmbedImageFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
+                ${STATE.embedImagePreviewUrl
+                    ? `<div><img src="${STATE.embedImagePreviewUrl}" class="ec-embed-preview" alt=""><button type="button" id="ecEmbedImageClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>`
+                    : `<div id="ecEmbedImageDrop" class="ec-banner-drop">
+                            <div style="font-size:28px">▣</div>
+                            <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drag &amp; drop or click to upload</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
+                            <div class="text-xs text-gray-400">Portrait works best · PNG / JPG / WebP · max 5 MB</div>
+                       </div>`
+                }
+                <p class="ec-help">Used only for iMessage, Discord, and other link previews. Falls back to the banner if empty.</p>
             </div>
         `;
+    }
+
+    function _setImageFile(imageFile, fileKey, previewKey) {
+        if (!imageFile) return;
+        if (!imageFile.type.match(/^image\/(png|jpeg|webp)$/)) { alert('Please choose a PNG, JPG, or WebP image.'); return; }
+        if (imageFile.size > 5 * 1024 * 1024) { alert('File must be under 5 MB.'); return; }
+        STATE[fileKey] = imageFile;
+        const reader = new FileReader();
+        reader.onload = () => { STATE[previewKey] = reader.result; _render(); };
+        reader.readAsDataURL(imageFile);
+    }
+
+    function _wireImageUpload(dropId, fileId, clearId, fileKey, previewKey) {
+        const drop = document.getElementById(dropId);
+        const file = document.getElementById(fileId);
+
+        if (drop && window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
+            const dt = drop.querySelector('.ec-drop-hint-desktop');
+            const tt = drop.querySelector('.ec-drop-hint-touch');
+            if (dt) dt.style.display = '';
+            if (tt) tt.style.display = 'none';
+        }
+
+        drop?.addEventListener('click', () => file.click());
+        drop?.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            drop.classList.add('ec-banner-drop--over');
+        });
+        drop?.addEventListener('dragleave', (e) => {
+            if (!drop.contains(e.relatedTarget)) {
+                drop.classList.remove('ec-banner-drop--over');
+            }
+        });
+        drop?.addEventListener('drop', (e) => {
+            e.preventDefault();
+            drop.classList.remove('ec-banner-drop--over');
+            _setImageFile(e.dataTransfer?.files?.[0], fileKey, previewKey);
+        });
+
+        file?.addEventListener('change', () => _setImageFile(file.files[0], fileKey, previewKey));
+        document.getElementById(clearId)?.addEventListener('click', () => {
+            STATE[fileKey] = null;
+            STATE[previewKey] = null;
+            if (file) file.value = '';
+            _render();
+        });
     }
 
     function _wireBasics() {
@@ -315,54 +381,8 @@
         document.getElementById('ecTitle')?.addEventListener('input', e => STATE.form.title = e.target.value);
         document.getElementById('ecDesc')?.addEventListener('input', e => STATE.form.description = e.target.value);
 
-        const drop = document.getElementById('ecBannerDrop');
-        const file = document.getElementById('ecBannerFile');
-
-        // Show desktop hint on non-touch devices
-        if (drop && window.matchMedia('(hover:hover) and (pointer:fine)').matches) {
-            const dt = drop.querySelector('.ec-drop-hint-desktop');
-            const tt = drop.querySelector('.ec-drop-hint-touch');
-            if (dt) dt.style.display = '';
-            if (tt) tt.style.display = 'none';
-        }
-
-        drop?.addEventListener('click', () => file.click());
-
-        // Drag & drop (desktop only — touch devices don't fire dragover)
-        drop?.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            drop.classList.add('ec-banner-drop--over');
-        });
-        drop?.addEventListener('dragleave', (e) => {
-            if (!drop.contains(e.relatedTarget)) {
-                drop.classList.remove('ec-banner-drop--over');
-            }
-        });
-        drop?.addEventListener('drop', (e) => {
-            e.preventDefault();
-            drop.classList.remove('ec-banner-drop--over');
-            const f = e.dataTransfer?.files?.[0];
-            if (!f) return;
-            if (!f.type.match(/^image\/(png|jpeg|webp)$/)) { alert('Please drop a PNG, JPG, or WebP image.'); return; }
-            if (f.size > 5 * 1024 * 1024) { alert('File must be under 5 MB.'); return; }
-            STATE.bannerFile = f;
-            const r = new FileReader();
-            r.onload = () => { STATE.bannerPreviewUrl = r.result; _render(); };
-            r.readAsDataURL(f);
-        });
-
-        file?.addEventListener('change', () => {
-            const f = file.files[0];
-            if (!f) return;
-            if (f.size > 5 * 1024 * 1024) { alert('File must be under 5 MB.'); return; }
-            STATE.bannerFile = f;
-            const r = new FileReader();
-            r.onload = () => { STATE.bannerPreviewUrl = r.result; _render(); };
-            r.readAsDataURL(f);
-        });
-        document.getElementById('ecBannerClear')?.addEventListener('click', () => {
-            STATE.bannerFile = null; STATE.bannerPreviewUrl = null; _render();
-        });
+        _wireImageUpload('ecBannerDrop', 'ecBannerFile', 'ecBannerClear', 'bannerFile', 'bannerPreviewUrl');
+        _wireImageUpload('ecEmbedImageDrop', 'ecEmbedImageFile', 'ecEmbedImageClear', 'embedImageFile', 'embedImagePreviewUrl');
     }
 
     // ─── Step 2 — When & Where ──────────────────────────────────────
@@ -974,6 +994,17 @@
                 bannerUrl = supabaseClient.storage.from('event-banners').getPublicUrl(path).data.publicUrl;
             }
 
+            let embedImageUrl = null;
+            if (STATE.embedImageFile) {
+                const ext  = STATE.embedImageFile.name.split('.').pop();
+                const path = `embeds/${slug}-${Date.now()}.${ext}`;
+                const up = await supabaseClient.storage
+                    .from('event-banners')
+                    .upload(path, STATE.embedImageFile, { contentType: STATE.embedImageFile.type });
+                if (up.error) throw new Error('Embed image upload failed: ' + up.error.message);
+                embedImageUrl = supabaseClient.storage.from('event-banners').getPublicUrl(path).data.publicUrl;
+            }
+
             // Prize image uploads (if any)
             const raffleConfig = f.raffle_enabled ? _raffleModel().normalizeConfig(_ensureRaffleConfig()) : null;
             if (raffleConfig) {
@@ -1005,6 +1036,7 @@
                 category: f.category,
                 description: f.description.trim() || null,
                 banner_url: bannerUrl,
+                embed_image_url: embedImageUrl,
                 start_date: startISO,
                 end_date: endISO,
                 timezone: f.timezone,

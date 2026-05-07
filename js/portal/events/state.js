@@ -7,6 +7,7 @@ let evtCurrentUser = null;
 let evtCurrentUserRole = null;
 let evtActiveTab = 'upcoming';
 let evtBannerFile = null;
+let evtEmbedImageFile = null;
 let evtAllEvents = [];
 let evtAllRsvps = {};      // event_id → rsvp record
 let evtScannerStream = null;
