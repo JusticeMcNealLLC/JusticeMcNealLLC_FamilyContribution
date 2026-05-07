@@ -561,3 +561,102 @@ body.evt-vlift .evt-hero-meta {
     body.evt-vlift .evt-hero-side__desc { text-align: left !important; }
     body.evt-vlift .evt-hero-side__cta { align-self: flex-start !important; }
 }
+
+/* ============================================================
+ * F22 — Phone featured hero compaction
+ * ============================================================ */
+@media (max-width: 639px) {
+    body.evt-vlift #evtShell {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    body.evt-vlift .evt-hero-vlift > a {
+        height: 264px !important;
+        border-radius: 22px !important;
+    }
+    body.evt-vlift .evt-hero-vlift > a::before {
+        background: linear-gradient(180deg,
+            rgba(15, 23, 42, .48) 0%,
+            rgba(15, 23, 42, .26) 32%,
+            rgba(15, 23, 42, .78) 72%,
+            rgba(15, 23, 42, .92) 100%);
+    }
+    body.evt-vlift .evt-hero-vlift .absolute.top-3.right-3,
+    body.evt-vlift .evt-hero-side,
+    body.evt-vlift .evt-hero-timeloc {
+        display: none !important;
+    }
+    body.evt-vlift .evt-hero-vlift [data-f14-kicker] {
+        top: .875rem !important;
+        left: 1rem !important;
+        padding: .25rem .6rem !important;
+        font-size: .625rem !important;
+        letter-spacing: .12em !important;
+    }
+    body.evt-vlift .evt-hero-meta {
+        top: auto !important;
+        bottom: 72px !important;
+        display: grid !important;
+        grid-template-columns: 52px minmax(0, 1fr) !important;
+        align-items: end !important;
+        gap: 12px !important;
+        padding: 0 16px !important;
+        max-width: none !important;
+    }
+    body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
+        width: 52px !important;
+        height: 86px !important;
+        align-self: end !important;
+        padding: 8px 4px !important;
+        border-radius: 14px !important;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, .2) !important;
+    }
+    body.evt-vlift .evt-hero-datechip__mon,
+    body.evt-vlift .evt-hero-datechip__dow {
+        font-size: .6rem !important;
+        letter-spacing: .08em !important;
+    }
+    body.evt-vlift .evt-hero-datechip__day {
+        font-size: 1.45rem !important;
+        line-height: 1 !important;
+    }
+    body.evt-vlift .evt-hero-meta-body {
+        min-width: 0;
+        gap: 4px;
+    }
+    body.evt-vlift .evt-hero-cluster {
+        width: max-content !important;
+        max-width: 100% !important;
+        margin: 0 0 2px !important;
+        padding: 3px 9px 3px 3px !important;
+        background: rgba(15, 23, 42, .68) !important;
+        box-shadow: none !important;
+    }
+    body.evt-vlift .evt-hero-cluster-label {
+        font-size: 11px !important;
+    }
+    body.evt-vlift .evt-hero-meta h2 {
+        margin: 0 !important;
+        font-size: 20px !important;
+        line-height: 1.08 !important;
+        letter-spacing: 0 !important;
+    }
+    body.evt-vlift .evt-hero-host {
+        max-width: 100%;
+        margin: 0 !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px !important;
+        line-height: 1.35 !important;
+        color: rgba(255, 255, 255, .82) !important;
+    }
+    body.evt-vlift .evt-hero-cta {
+        bottom: 16px;
+        width: calc(100% - 32px);
+        height: 44px;
+        border-radius: 14px;
+        font-size: 14px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
+    }
+}

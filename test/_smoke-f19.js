@@ -22,6 +22,11 @@ ok('css_f19_block', /F19 -- Hero refinements/.test(css));
 ok('css_datechip_bottom', /\.evt-hero-datechip\s*{[^}]*top:\s*auto[^}]*bottom:\s*1\.25rem/m.test(css));
 ok('css_side_no_scrim', /\.evt-hero-side\s*{[^}]*background:\s*none\s*!important/m.test(css));
 ok('css_side_desc_transparent', /\.evt-hero-side__desc\s*{[^}]*background:\s*transparent\s*!important/m.test(css));
+ok('css_portal_mobile_grid_single_column', /#eventsDetailView\.portal-event-detail-v2 \.portal-event-grid\s*{[^}]*display:\s*block[^}]*grid-template-columns:\s*minmax\(0,1fr\)/m.test(css));
+ok('css_portal_mobile_rail_hidden', /#eventsDetailView\.portal-event-detail-v2 \.portal-event-rail\s*{[^}]*display:\s*none/m.test(css));
+ok('css_phone_featured_hero_block', /F22 \u2014 Phone featured hero compaction/.test(css));
+ok('css_phone_featured_hero_taller', /@media \(max-width:\s*639px\)[\s\S]*\.evt-hero-vlift > a\s*{[^}]*height:\s*264px\s*!important/m.test(css));
+ok('css_phone_featured_hero_cta_full_width', /@media \(max-width:\s*639px\)[\s\S]*\.evt-hero-cta\s*{[^}]*width:\s*calc\(100% - 32px\)/m.test(css));
 
 // (3) SW bumped
 const m = sw.match(/jm-portal-v(\d+)/);

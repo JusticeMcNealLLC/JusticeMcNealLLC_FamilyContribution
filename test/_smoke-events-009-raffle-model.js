@@ -126,6 +126,9 @@ assert(/function pubRaffleWinnersHtml\(/.test(publicRaffle), 'public event page 
 assert(/pubLoadRaffleWinners/.test(publicRaffle), 'public raffle should load winner metadata with legacy fallback');
 assert(!/evtOpenRaffleDraw/.test(publicRaffle), 'public raffle should not expose host draw controls');
 assert(/public-raffle-head/.test(publicCss), 'public CSS should style the public raffle header');
+assert(/body\.public-event-detail \.public-event-grid\s*{[^}]*display:\s*block/s.test(publicCss), 'public event mobile grid should become single-column');
+assert(/body\.public-event-detail \.public-ed-sidebar\s*{[^}]*display:\s*none/s.test(publicCss), 'public event mobile sidebar should not reserve layout width');
+assert(/#guestRsvpSection\.rsvp-sheet-open,[\s\S]*#guestTicketSection\.ticket-sheet-open\s*{[^}]*display:\s*block\s*!important/s.test(publicCss), 'public event mobile sheets should be allowed when opened');
 assert(/id="raffleSection" class="ed-card event-detail-card"/.test(read('js/events/index.js')), 'public raffle should mount in the main content flow');
 assert(/id="raffleDrawModal" class="fixed inset-0 z-\[75\] hidden"/.test(html), 'raffle draw modal should stack above manage sheet');
 assert(/footer details button opens detail/.test(list), 'card footer Details click should navigate without changing RSVP');

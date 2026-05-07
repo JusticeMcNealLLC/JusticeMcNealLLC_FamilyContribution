@@ -597,6 +597,8 @@
 
 @media (max-width:1023px) {
     #eventsDetailView.portal-event-detail-v2 .portal-event-shell { padding-top:0; }
+    #eventsDetailView.portal-event-detail-v2 .portal-event-grid { display:block; grid-template-columns:minmax(0,1fr); width:100%; }
+    #eventsDetailView.portal-event-detail-v2 .portal-event-story { width:100%; max-width:100%; min-width:0; }
     #eventsDetailView.portal-event-detail-v2 .portal-event-grid,
     #eventsDetailView.portal-event-detail-v2 .portal-event-story,
     #eventsDetailView.portal-event-detail-v2 .portal-event-sections { gap:12px; }
@@ -608,7 +610,7 @@
     #eventsDetailView.portal-event-detail-v2 .ed-card.event-detail-card { margin-left:16px; margin-right:16px; border-radius:20px !important; }
     #eventsDetailView.portal-event-detail-v2 .ed-about-desc-col { padding:20px; }
     #eventsDetailView.portal-event-detail-v2 .ed-about-right { display:none; }
-    #eventsDetailView.portal-event-detail-v2 .portal-event-rail { position:static; padding:0 16px; }
+    #eventsDetailView.portal-event-detail-v2 .portal-event-rail { display:none; position:static; padding:0; margin:0; }
     #eventsDetailView.portal-event-detail-v2 .portal-event-rail .ed-card { margin-left:0; margin-right:0; }
     .evt-docs-panel { left:0; right:0; top:auto; bottom:0; width:100%; max-height:82vh; border-radius:24px 24px 0 0; transform:translateY(100%); }
     .evt-docs-panel-root.open .evt-docs-panel { transform:translateY(0); }
