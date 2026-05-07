@@ -32,6 +32,7 @@
         eventId: null,
         event:   null,
         rsvps:   [],
+        guestRsvps: [],
         checkins: [],
         activeTab: 'overview',
         source:  'admin', // 'admin' | 'portal'
@@ -88,6 +89,29 @@
                 .em-op-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#f8fafc; color:#475569; font-size:11px; font-weight:700; }
                 .em-op-progress { height:7px; border-radius:999px; overflow:hidden; background:#eef2f7; margin-top:auto; }
                 .em-op-progress span { display:block; height:100%; width:0; border-radius:inherit; background:#4f46e5; }
+                .em-command-card { background:linear-gradient(135deg,#111827,#312e81); color:#fff; border:0; overflow:hidden; position:relative; }
+                .em-command-card:after { content:""; position:absolute; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,.08); right:-70px; top:-80px; }
+                .em-command-eyebrow { font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#c7d2fe; margin:0 0 6px; }
+                .em-command-title { font-size:20px; font-weight:850; margin:0; line-height:1.15; }
+                .em-command-copy { font-size:12px; line-height:1.5; color:#dbeafe; margin:8px 0 0; max-width:560px; }
+                .em-metric-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+                .em-metric { background:#fff; border:1px solid rgba(15,23,42,.06); border-radius:16px; padding:13px; min-width:0; }
+                .em-metric span { display:block; font-size:10px; font-weight:800; letter-spacing:.08em; color:#94a3b8; text-transform:uppercase; }
+                .em-metric strong { display:block; margin-top:5px; font-size:22px; line-height:1; color:#0f172a; }
+                .em-metric small { display:block; margin-top:5px; color:#64748b; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+                .em-section-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
+                .em-section-title { margin:0; color:#111827; font-size:14px; font-weight:850; }
+                .em-section-sub { margin:3px 0 0; color:#94a3b8; font-size:12px; line-height:1.4; }
+                .em-attendee-card { display:flex; gap:12px; align-items:flex-start; padding:13px 0; border-top:1px solid #f1f5f9; }
+                .em-attendee-card:first-of-type { border-top:0; padding-top:0; }
+                .em-attendee-main { flex:1; min-width:0; }
+                .em-attendee-name { margin:0; font-size:14px; font-weight:800; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+                .em-attendee-sub { margin:2px 0 0; color:#64748b; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+                .em-money-layout { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr); gap:12px; align-items:start; }
+                .em-money-row { display:flex; justify-content:space-between; gap:14px; padding:11px 0; border-top:1px solid #f1f5f9; font-size:13px; }
+                .em-money-row:first-child { border-top:0; padding-top:0; }
+                .em-money-row span { color:#64748b; }
+                .em-money-row strong { color:#111827; }
                 .em-stat { display:flex; flex-direction:column; gap:4px; }
                 .em-stat-label { font-size:11px; text-transform:uppercase; letter-spacing:.04em; font-weight:600; color:#6b7280; }
                 .em-stat-num { font-size:24px; font-weight:800; color:#111827; }
@@ -118,8 +142,10 @@
                 @media(max-width:639px){
                     #emSheetPanel { max-height: 92vh; }
                     .em-op-grid { grid-template-columns:1fr; }
+                    .em-metric-grid { grid-template-columns:1fr 1fr; }
+                    .em-money-layout { grid-template-columns:1fr; }
                 }
-                @media(min-width:640px) and (max-width:900px){ .em-op-grid { grid-template-columns:1fr 1fr; } }
+                @media(min-width:640px) and (max-width:900px){ .em-op-grid { grid-template-columns:1fr 1fr; } .em-money-layout { grid-template-columns:1fr; } }
             </style>
         `;
         document.body.appendChild(root);
@@ -192,9 +218,15 @@
             .eq('event_id', eventId);
         STATE.rsvps = rsvps || [];
 
+        const { data: guestRsvps } = await supabaseClient
+            .from('event_guest_rsvps')
+            .select('id, guest_name, guest_email, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at')
+            .eq('event_id', eventId);
+        STATE.guestRsvps = guestRsvps || [];
+
         const { data: checkins } = await supabaseClient
             .from('event_checkins')
-            .select('user_id, checked_in_at')
+            .select('user_id, guest_token, checked_in_at')
             .eq('event_id', eventId);
         STATE.checkins = checkins || [];
     }
@@ -259,9 +291,10 @@
     // ─── Overview tab ───────────────────────────────────────────────
     function _overviewHtml() {
         const e = STATE.event;
-        const going = STATE.rsvps.filter(r => r.status === 'going').length;
+        const guestGoing = STATE.guestRsvps.filter(r => r.status === 'going').length;
+        const going = STATE.rsvps.filter(r => r.status === 'going').length + guestGoing;
         const maybe = STATE.rsvps.filter(r => r.status === 'maybe').length;
-        const paid  = STATE.rsvps.filter(r => r.paid).length;
+        const paid  = STATE.rsvps.filter(r => r.paid).length + STATE.guestRsvps.filter(r => r.paid).length;
         const checked = STATE.checkins.length;
         const revenue = paid * (e.rsvp_cost_cents || 0);
         const startLocal = new Date(e.start_date).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
@@ -362,12 +395,22 @@
 
     // ─── RSVPs tab ──────────────────────────────────────────────────
     function _rsvpsHtml() {
+        const e = STATE.event;
         const going = STATE.rsvps.filter(r => r.status === 'going');
         const maybe = STATE.rsvps.filter(r => r.status === 'maybe');
         const not   = STATE.rsvps.filter(r => r.status === 'not_going');
+        const guestGoing = STATE.guestRsvps.filter(r => r.status === 'going');
         const checkedSet = new Set(STATE.checkins.map(c => c.user_id));
+        const guestCheckedSet = new Set(STATE.checkins.map(c => c.guest_token).filter(Boolean));
+        const totalGoing = going.length + guestGoing.length;
+        const checkedTotal = STATE.checkins.length;
+        const capacity = e.max_participants || 0;
+        const capacityLeft = capacity ? Math.max(0, capacity - totalGoing) : null;
+        const minNeeded = Number(e.min_participants || 0);
+        const thresholdLeft = minNeeded ? Math.max(0, minNeeded - totalGoing) : 0;
+        const checkedPct = totalGoing ? Math.round((checkedTotal / totalGoing) * 100) : 0;
 
-        function row(r) {
+        function memberRow(r) {
             const p = r.profiles || {};
             const name = `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Member';
             const initials = ((p.first_name?.[0] || '') + (p.last_name?.[0] || '')).toUpperCase() || '?';
@@ -380,21 +423,48 @@
             else pills.push('<span class="em-pill em-pill-not">Not going</span>');
             if (r.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
             if (checkedSet.has(r.user_id)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
-            return `<div class="em-row"><div class="em-avatar">${avatar}</div><div class="flex-1 min-w-0"><div class="text-sm font-semibold text-gray-800 truncate">${_esc(name)}</div><div class="flex flex-wrap gap-1 mt-0.5">${pills.join('')}</div></div></div>`;
+            return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${_esc(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? ' · ticket ready' : ''}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join('')}</div></div></div>`;
+        }
+
+        function guestRow(g) {
+            const initials = (g.guest_name || 'G').slice(0, 1).toUpperCase();
+            const pills = ['<span class="em-pill em-pill-going">Guest</span>'];
+            if (g.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
+            if (guestCheckedSet.has(g.guest_token)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
+            return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${_esc(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${_esc(g.guest_name || 'Guest')}</p><p class="em-attendee-sub">${_esc(g.guest_email || 'Public guest')}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join('')}</div></div></div>`;
         }
 
         function section(title, list, emptyText) {
             return `
                 <div class="em-card mb-3">
-                    <h3 class="font-bold text-gray-800 text-sm mb-2">${title} <span class="text-gray-400 font-normal">· ${list.length}</span></h3>
-                    ${list.length ? list.map(row).join('') : `<p class="text-xs text-gray-400 italic py-2">${emptyText}</p>`}
+                    <div class="em-section-head"><div><h3 class="em-section-title">${title} <span class="text-gray-400 font-normal">· ${list.length}</span></h3></div></div>
+                    ${list.length ? list.map(memberRow).join('') : `<p class="text-xs text-gray-400 italic py-2">${emptyText}</p>`}
                 </div>
             `;
         }
 
-        return section('Going', going, 'No one is going yet.')
-             + section('Interested', maybe, 'No interested members.')
-             + (not.length ? section('Not going', not, '') : '');
+        return `
+            <div class="em-card em-command-card mb-4">
+                <p class="em-command-eyebrow">Attendance command</p>
+                <h3 class="em-command-title">${totalGoing ? `${totalGoing} attending` : 'No confirmed attendees yet'}</h3>
+                <p class="em-command-copy">${thresholdLeft ? `${thresholdLeft} more RSVP${thresholdLeft === 1 ? '' : 's'} needed to meet the minimum.` : 'Minimum and attendance signals are in good shape.'} ${capacityLeft !== null ? `${capacityLeft} spot${capacityLeft === 1 ? '' : 's'} still available.` : 'Capacity is open-ended.'}</p>
+            </div>
+
+            <div class="em-metric-grid mb-4">
+                <div class="em-metric"><span>Total going</span><strong>${totalGoing}</strong><small>${going.length} member · ${guestGoing.length} guest</small></div>
+                <div class="em-metric"><span>Checked in</span><strong>${checkedTotal}</strong><small>${checkedPct}% of going</small></div>
+                <div class="em-metric"><span>Interested</span><strong>${maybe.length}</strong><small>Member maybes</small></div>
+                <div class="em-metric"><span>Capacity</span><strong>${capacityLeft === null ? 'Open' : capacityLeft}</strong><small>${capacity ? `${totalGoing}/${capacity} filled` : 'No max set'}</small></div>
+            </div>
+
+            ${section('Going members', going, 'No members are going yet.')}
+            <div class="em-card mb-3">
+                <div class="em-section-head"><div><h3 class="em-section-title">Public guests <span class="text-gray-400 font-normal">· ${guestGoing.length}</span></h3><p class="em-section-sub">Guests from the public event link and ticket flow.</p></div></div>
+                ${guestGoing.length ? guestGoing.map(guestRow).join('') : '<p class="text-xs text-gray-400 italic py-2">No public guests yet.</p>'}
+            </div>
+            ${section('Interested', maybe, 'No interested members.')}
+            ${not.length ? section('Not going', not, '') : ''}
+        `;
     }
 
     // ─── Danger Zone tab ────────────────────────────────────────────
@@ -523,10 +593,14 @@
     // ═══════════════════════════════════════════════════════════════
     async function _loadMoney() {
         const eventId = STATE.eventId;
-        const [rsvpsRes, raffleRes, poolRes] = await Promise.all([
+        const [rsvpsRes, guestRes, raffleRes, poolRes] = await Promise.all([
             supabaseClient
                 .from('event_rsvps')
-                .select('id, user_id, amount_paid_cents, paid, refunded, refund_amount_cents, stripe_payment_intent_id, profiles!event_rsvps_user_id_fkey(first_name, last_name, profile_picture_url)')
+                .select('id, user_id, status, amount_paid_cents, paid, refunded, refund_amount_cents, stripe_payment_intent_id, profiles!event_rsvps_user_id_fkey(first_name, last_name, profile_picture_url)')
+                .eq('event_id', eventId),
+            supabaseClient
+                .from('event_guest_rsvps')
+                .select('id, guest_name, guest_email, status, paid, amount_paid_cents, stripe_payment_intent_id')
                 .eq('event_id', eventId),
             supabaseClient
                 .from('event_raffle_entries')
@@ -539,6 +613,7 @@
         ]);
         return {
             rsvps:    rsvpsRes.data    || [],
+            guests:   guestRes.data    || [],
             raffle:   raffleRes.data   || [],
             poolPays: poolRes.data     || [],
         };
@@ -546,59 +621,86 @@
 
     function _moneyHtml() {
         const d = STATE.tabData.money;
+        const isPaidEvent = STATE.event?.pricing_mode === 'paid' || Number(STATE.event?.rsvp_cost_cents || 0) > 0;
         const paidRsvps = d.rsvps.filter(r => r.paid);
+        const paidGuests = d.guests.filter(g => g.paid);
         const refundedRsvps = d.rsvps.filter(r => r.refunded);
+        const unpaidGoing = isPaidEvent ? STATE.rsvps.filter(r => r.status === 'going' && !r.paid).length + STATE.guestRsvps.filter(g => g.status === 'going' && !g.paid).length : 0;
 
         const rsvpRevenue   = paidRsvps.reduce((s, r) => s + (r.amount_paid_cents || 0), 0);
+        const guestRevenue  = paidGuests.reduce((s, g) => s + (g.amount_paid_cents || 0), 0);
         const raffleRevenue = d.raffle.filter(e => e.paid).reduce((s, e) => s + (e.amount_paid_cents || 0), 0);
         const poolRevenue   = d.poolPays.reduce((s, p) => s + (p.amount_cents || 0), 0);
         const refunded      = refundedRsvps.reduce((s, r) => s + (r.refund_amount_cents || 0), 0);
-        const grossRevenue  = rsvpRevenue + raffleRevenue + poolRevenue;
+        const grossRevenue  = rsvpRevenue + guestRevenue + raffleRevenue + poolRevenue;
         const netRevenue    = grossRevenue - refunded;
 
         const fmt = window.formatCurrency || _money;
+        const ticketLabel = isPaidEvent ? 'Paid RSVPs' : 'Ticketed RSVPs';
 
-        const rsvpRows = paidRsvps.length ? paidRsvps.map(r => {
+        function paymentRow({ name, sub, amount, refundedAmount, stripeId, avatarHtml, isGuest }) {
+            const refundPill = refundedAmount
+                ? `<span class="em-pill em-pill-not">Refunded ${fmt(refundedAmount)}</span>`
+                : `<span class="em-pill em-pill-paid">${amount > 0 ? `Paid ${fmt(amount)}` : 'Ticketed'}</span>`;
+            return `
+                <div class="em-attendee-card">
+                    <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ''}>${avatarHtml}</div>
+                    <div class="em-attendee-main">
+                        <p class="em-attendee-name">${_esc(name)}</p>
+                        <p class="em-attendee-sub">${_esc(sub)}</p>
+                        <div class="flex flex-wrap gap-1 mt-2">${refundPill}${isGuest ? '<span class="em-pill em-pill-going">Guest</span>' : ''}</div>
+                    </div>
+                    ${stripeId ? `<a href="https://dashboard.stripe.com/payments/${encodeURIComponent(stripeId)}" target="_blank" rel="noopener" class="text-xs text-brand-600 font-semibold hover:underline whitespace-nowrap">Stripe ↗</a>` : ''}
+                </div>`;
+        }
+
+        const memberRows = paidRsvps.map(r => {
             const p = r.profiles || {};
             const name = `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Member';
             const initials = ((p.first_name?.[0] || '') + (p.last_name?.[0] || '')).toUpperCase() || '?';
             const avatar = p.profile_picture_url ? `<img src="${_esc(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
-            const refundPill = r.refunded
-                ? `<span class="em-pill em-pill-not">Refunded ${fmt(r.refund_amount_cents)}</span>`
-                : `<span class="em-pill em-pill-paid">Paid ${fmt(r.amount_paid_cents)}</span>`;
-            return `
-                <div class="em-row">
-                    <div class="em-avatar">${avatar}</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm font-semibold text-gray-800 truncate">${_esc(name)}</div>
-                        <div class="flex flex-wrap gap-1 mt-0.5">${refundPill}</div>
-                    </div>
-                    ${r.stripe_payment_intent_id ? `<a href="https://dashboard.stripe.com/payments/${encodeURIComponent(r.stripe_payment_intent_id)}" target="_blank" rel="noopener" class="text-xs text-brand-600 font-semibold hover:underline">Stripe ↗</a>` : ''}
-                </div>
-            `;
-        }).join('') : `<p class="text-xs text-gray-400 italic py-2">No paid RSVPs yet.</p>`;
+            return paymentRow({ name, sub: 'Member RSVP payment', amount: r.amount_paid_cents || 0, refundedAmount: r.refund_amount_cents || 0, stripeId: r.stripe_payment_intent_id, avatarHtml: avatar });
+        });
+        const guestRows = paidGuests.map(g => paymentRow({
+            name: g.guest_name || 'Guest',
+            sub: g.guest_email || 'Public guest payment',
+            amount: g.amount_paid_cents || 0,
+            refundedAmount: 0,
+            stripeId: g.stripe_payment_intent_id,
+            avatarHtml: `<span>${_esc((g.guest_name || 'G').slice(0, 1).toUpperCase())}</span>`,
+            isGuest: true,
+        }));
+        const paymentRows = [...memberRows, ...guestRows].join('') || `<p class="text-xs text-gray-400 italic py-2">No paid RSVPs yet.</p>`;
 
         return `
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                <div class="em-card em-stat"><span class="em-stat-label">Gross</span><span class="em-stat-num" style="color:#059669">${fmt(grossRevenue)}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Refunded</span><span class="em-stat-num" style="color:#dc2626">${fmt(refunded)}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Net</span><span class="em-stat-num">${fmt(netRevenue)}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Paid RSVPs</span><span class="em-stat-num">${paidRsvps.length}</span></div>
+            <div class="em-card em-command-card mb-4">
+                <p class="em-command-eyebrow">Money command</p>
+                <h3 class="em-command-title">${fmt(netRevenue)} net collected</h3>
+                <p class="em-command-copy">${grossRevenue ? `${fmt(grossRevenue)} gross across RSVP, guest, raffle, and prize-pool activity.` : (isPaidEvent ? 'No paid activity has landed yet.' : 'This free event has no RSVP revenue to collect.')} ${unpaidGoing ? `${unpaidGoing} going attendee${unpaidGoing === 1 ? '' : 's'} still show unpaid.` : (isPaidEvent ? 'No unpaid going attendees are currently flagged.' : 'Ticketed attendees are tracked for access and check-in.')}</p>
             </div>
 
-            <div class="em-card mb-3">
-                <h3 class="font-bold text-gray-800 text-sm mb-3">Revenue breakdown</h3>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between"><span class="text-gray-500">RSVP payments</span><span class="font-medium">${fmt(rsvpRevenue)}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Raffle entries</span><span class="font-medium">${fmt(raffleRevenue)}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Prize-pool contributions</span><span class="font-medium">${fmt(poolRevenue)}</span></div>
+            <div class="em-metric-grid mb-4">
+                <div class="em-metric"><span>Gross</span><strong>${fmt(grossRevenue)}</strong><small>All sources</small></div>
+                <div class="em-metric"><span>Net</span><strong>${fmt(netRevenue)}</strong><small>After refunds</small></div>
+                <div class="em-metric"><span>Refunded</span><strong>${fmt(refunded)}</strong><small>${refundedRsvps.length} member RSVP${refundedRsvps.length === 1 ? '' : 's'}</small></div>
+                <div class="em-metric"><span>${ticketLabel}</span><strong>${paidRsvps.length + paidGuests.length}</strong><small>${paidRsvps.length} member · ${paidGuests.length} guest</small></div>
+            </div>
+
+            <div class="em-money-layout">
+                <div class="em-card">
+                    <div class="em-section-head"><div><h3 class="em-section-title">${isPaidEvent ? 'Paid attendees' : 'Ticketed attendees'} <span class="text-gray-400 font-normal">· ${paidRsvps.length + paidGuests.length}</span></h3><p class="em-section-sub">${isPaidEvent ? 'Member and public guest RSVP payments.' : 'Members and public guests with issued event tickets.'}</p></div></div>
+                    ${paymentRows}
                 </div>
-            </div>
 
-            <div class="em-card">
-                <h3 class="font-bold text-gray-800 text-sm mb-2">Paid RSVPs <span class="text-gray-400 font-normal">· ${paidRsvps.length}</span></h3>
-                ${rsvpRows}
-                <p class="text-xs text-gray-400 mt-3">Refunds are processed via the Stripe dashboard. Per-row refund button lands in M4.</p>
+                <div class="em-card">
+                    <div class="em-section-head"><div><h3 class="em-section-title">Revenue sources</h3><p class="em-section-sub">Quick audit of how money entered this event.</p></div></div>
+                    <div class="em-money-row"><span>Member RSVP payments</span><strong>${fmt(rsvpRevenue)}</strong></div>
+                    <div class="em-money-row"><span>Guest RSVP payments</span><strong>${fmt(guestRevenue)}</strong></div>
+                    <div class="em-money-row"><span>Raffle entries</span><strong>${fmt(raffleRevenue)}</strong></div>
+                    <div class="em-money-row"><span>Prize-pool contributions</span><strong>${fmt(poolRevenue)}</strong></div>
+                    <div class="em-money-row"><span>Refunds recorded</span><strong>${fmt(refunded)}</strong></div>
+                    <p class="text-xs text-gray-400 mt-3">Refunds are still handled through Stripe/dashboard tooling. This panel keeps the host-facing audit trail together.</p>
+                </div>
             </div>
         `;
     }
