@@ -269,7 +269,10 @@
         if (tab === 'money')    return _renderTabAsync('money',  _loadMoney,  _moneyHtml,  _wireMoney);
         if (tab === 'docs')     return _renderTabAsync('docs',   _loadDocs,   _docsHtml,   _wireDocs);
         if (tab === 'raffle')   return _renderTabAsync('raffle', _loadRaffle, _raffleHtml, _wireRaffle);
-        if (tab === 'comp')     return _renderTabAsync('comp',   _loadComp,   _compHtml,   _wireComp);
+        if (tab === 'comp') {
+            if (STATE.event?.event_type !== 'competition') { _renderContent(_compHtml()); _wireComp(); return; }
+            return _renderTabAsync('comp', _loadComp, _compHtml, _wireComp);
+        }
     }
 
     async function _renderTabAsync(key, loader, render, wire) {
@@ -472,9 +475,24 @@
         const e = STATE.event;
         const isCancelled = e.status === 'cancelled';
         const isCompleted = e.status === 'completed';
+        const totalRsvps = STATE.rsvps.length + STATE.guestRsvps.length;
+        const paidTickets = STATE.rsvps.filter(r => r.paid).length + STATE.guestRsvps.filter(r => r.paid).length;
+        const checkins = STATE.checkins.length;
+        const statusLabel = (e.status || 'draft').toUpperCase();
 
         return `
-            <p class="text-xs text-gray-500 mb-3">Irreversible operations. Double-check before tapping.</p>
+            <div class="em-card em-command-card mb-4" style="background:linear-gradient(135deg,#7f1d1d,#111827)">
+                <p class="em-command-eyebrow">Danger zone</p>
+                <h3 class="em-command-title">High-impact event controls</h3>
+                <p class="em-command-copy">These actions change availability, visibility, or stored event records. Review attendance and money before making a destructive change.</p>
+            </div>
+
+            <div class="em-metric-grid mb-4">
+                <div class="em-metric"><span>Status</span><strong style="font-size:18px">${_esc(statusLabel)}</strong><small>Current lifecycle</small></div>
+                <div class="em-metric"><span>RSVP records</span><strong>${totalRsvps}</strong><small>Member + guest</small></div>
+                <div class="em-metric"><span>Paid tickets</span><strong>${paidTickets}</strong><small>Refund review</small></div>
+                <div class="em-metric"><span>Check-ins</span><strong>${checkins}</strong><small>Attendance history</small></div>
+            </div>
 
             ${!isCancelled && !isCompleted ? `
             <div class="em-danger-card">
@@ -489,6 +507,9 @@
                 <p class="em-danger-sub" style="color:#78350f">Closes RSVPs and locks the event. Use this after the event has ended.</p>
                 <button class="em-btn-ghost" data-action="complete" style="background:#fde68a;color:#78350f">Mark completed</button>
             </div>` : ''}
+
+            ${isCancelled ? `<div class="em-card mb-3"><div class="em-section-head"><div><h3 class="em-section-title">Event already cancelled</h3><p class="em-section-sub">Cancellation controls are hidden because this event is no longer open.</p></div></div></div>` : ''}
+            ${isCompleted ? `<div class="em-card mb-3"><div class="em-section-head"><div><h3 class="em-section-title">Event completed</h3><p class="em-section-sub">Completion controls are hidden because this event has already been closed.</p></div></div></div>` : ''}
 
             <div class="em-danger-card">
                 <p class="em-danger-title">Delete event permanently</p>
@@ -1236,6 +1257,9 @@
         const poolTotal = (e.total_prize_pool_cents || 0) + d.contribs.reduce((s, c) => s + (c.amount_cents || 0), 0);
         const housePct = Number(cfg.house_pct || 0);
         const netPool  = Math.round(poolTotal * (1 - housePct / 100));
+        const activePhase = d.phases.find(ph => ph.status === 'active') || null;
+        const entryTarget = Number(cfg.min_entries || 0);
+        const entryPct = entryTarget ? Math.min(100, Math.round((liveEntries.length / entryTarget) * 100)) : 100;
 
         const phaseStatusColor = { pending:'#9ca3af', active:'#4f46e5', completed:'#059669', extended:'#d97706', cancelled:'#dc2626' };
         const phaseRows = d.phases.length ? d.phases.map(ph => {
@@ -1244,11 +1268,12 @@
                 ? `${ph.starts_at ? new Date(ph.starts_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—'} → ${ph.ends_at ? new Date(ph.ends_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—'}`
                 : '';
             return `
-                <div class="em-row">
-                    <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm font-semibold text-gray-800 truncate">Phase ${ph.phase_num} · ${_esc(ph.name || '')}</div>
-                        <div class="text-xs text-gray-400">${dates} · <span style="color:${color};font-weight:600;text-transform:uppercase;letter-spacing:.04em">${ph.status}</span>${ph.extended_once ? ' · extended' : ''}</div>
+                <div class="em-attendee-card">
+                    <div class="em-avatar" style="background:${color}22;color:${color};font-weight:900">${ph.phase_num}</div>
+                    <div class="em-attendee-main">
+                        <p class="em-attendee-name">${_esc(ph.name || 'Competition phase')}</p>
+                        <p class="em-attendee-sub">${dates || 'Dates not set'}</p>
+                        <div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked" style="background:${color}22;color:${color}">${_esc(ph.status || 'pending')}</span>${ph.extended_once ? '<span class="em-pill em-pill-paid">Extended</span>' : ''}</div>
                     </div>
                 </div>
             `;
@@ -1266,43 +1291,48 @@
                 failed:     '<span class="em-pill em-pill-not">Failed</span>',
             })[w.payout_status] || '';
             return `
-                <div class="em-row">
-                    <div style="font-size:22px;flex-shrink:0">${medal}</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm font-semibold text-gray-800 truncate">${_esc(name)}</div>
-                        <div class="text-xs text-gray-400 truncate">${_esc(entry.title || '')} · ${fmt(w.prize_amount_cents)}${w.needs_1099 ? ' · 1099' : ''}</div>
-                        <div class="flex flex-wrap gap-1 mt-1">${payoutBadge}</div>
+                <div class="em-attendee-card">
+                    <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:18px">${medal}</div>
+                    <div class="em-attendee-main">
+                        <p class="em-attendee-name">${_esc(name)}</p>
+                        <p class="em-attendee-sub">${_esc(entry.title || 'Winning entry')} · ${fmt(w.prize_amount_cents)}${w.needs_1099 ? ' · 1099 needed' : ''}</p>
+                        <div class="flex flex-wrap gap-1 mt-2">${payoutBadge}</div>
                     </div>
                 </div>
             `;
         }).join('') : `<p class="text-xs text-gray-400 italic py-2">No winners finalized yet.</p>`;
 
         return `
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                <div class="em-card em-stat"><span class="em-stat-label">Entries</span><span class="em-stat-num">${liveEntries.length}${cfg.min_entries ? `<span style="font-size:14px;color:#9ca3af;font-weight:500">/${cfg.min_entries}</span>` : ''}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Votes</span><span class="em-stat-num" style="color:#7c3aed">${d.voteCount}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Pool</span><span class="em-stat-num" style="color:#059669">${fmt(poolTotal)}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Net payout</span><span class="em-stat-num">${fmt(netPool)}</span></div>
+            <div class="em-card em-command-card mb-4">
+                <p class="em-command-eyebrow">Competition command</p>
+                <h3 class="em-command-title">${activePhase ? `Phase ${activePhase.phase_num}: ${_esc(activePhase.name || 'Active')}` : 'Competition setup'}</h3>
+                <p class="em-command-copy">${liveEntries.length} live entr${liveEntries.length === 1 ? 'y' : 'ies'}${entryTarget ? ` toward ${entryTarget} minimum` : ''}. ${d.voteCount} vote${d.voteCount === 1 ? '' : 's'} recorded with ${fmt(netPool)} net payout available.</p>
+                <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${entryPct}%;background:#a78bfa"></span></div>
+            </div>
+
+            <div class="em-metric-grid mb-4">
+                <div class="em-metric"><span>Entries</span><strong>${liveEntries.length}</strong><small>${entryTarget ? `${entryPct}% of minimum` : 'No minimum set'}</small></div>
+                <div class="em-metric"><span>Votes</span><strong>${d.voteCount}</strong><small>Submitted votes</small></div>
+                <div class="em-metric"><span>Pool</span><strong>${fmt(poolTotal)}</strong><small>Gross prize pool</small></div>
+                <div class="em-metric"><span>Net payout</span><strong>${fmt(netPool)}</strong><small>${housePct}% house cut</small></div>
             </div>
 
             <div class="em-card mb-3">
-                <h3 class="font-bold text-gray-800 text-sm mb-3">Phases</h3>
+                <div class="em-section-head"><div><h3 class="em-section-title">Phases <span class="text-gray-400 font-normal">· ${d.phases.length}</span></h3><p class="em-section-sub">Timeline and moderation state for the competition.</p></div></div>
                 ${phaseRows}
             </div>
 
             <div class="em-card mb-3">
-                <h3 class="font-bold text-gray-800 text-sm mb-3">Configuration</h3>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between"><span class="text-gray-500">Entry type</span><span class="font-medium uppercase tracking-wide text-xs">${cfg.entry_type || 'any'}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Entry fee</span><span class="font-medium">${cfg.entry_fee_cents ? fmt(cfg.entry_fee_cents) : 'Free'}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">House cut</span><span class="font-medium">${housePct}%</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Voter eligibility</span><span class="font-medium uppercase tracking-wide text-xs">${cfg.voter_eligibility || 'all_members'}</span></div>
-                    ${moderatedCount ? `<div class="flex justify-between"><span class="text-gray-500">Moderated entries</span><span class="font-medium text-red-600">${moderatedCount}</span></div>` : ''}
-                </div>
+                <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving entries, voting, and payouts.</p></div></div>
+                <div class="em-money-row"><span>Entry type</span><strong>${_esc(cfg.entry_type || 'any')}</strong></div>
+                <div class="em-money-row"><span>Entry fee</span><strong>${cfg.entry_fee_cents ? fmt(cfg.entry_fee_cents) : 'Free'}</strong></div>
+                <div class="em-money-row"><span>House cut</span><strong>${housePct}%</strong></div>
+                <div class="em-money-row"><span>Voter eligibility</span><strong>${_esc(cfg.voter_eligibility || 'all_members')}</strong></div>
+                ${moderatedCount ? `<div class="em-money-row"><span>Moderated entries</span><strong style="color:#dc2626">${moderatedCount}</strong></div>` : ''}
             </div>
 
             <div class="em-card">
-                <h3 class="font-bold text-gray-800 text-sm mb-2">Winners <span class="text-gray-400 font-normal">· ${d.winners.length}</span></h3>
+                <div class="em-section-head"><div><h3 class="em-section-title">Winners <span class="text-gray-400 font-normal">· ${d.winners.length}</span></h3><p class="em-section-sub">Final results and payout status.</p></div></div>
                 ${winnerRows}
                 <p class="text-xs text-gray-400 mt-3">Phase advancement and winner finalization happen on the portal detail page. Per-tab controls land in M4.</p>
             </div>
