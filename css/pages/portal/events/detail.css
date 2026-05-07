@@ -417,31 +417,42 @@
 .ed-prize-rank { width:28px; height:28px; border-radius:50%; background:#222; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
 .ed-prize-place { font-size:12px; color:#717171; font-weight:600; display:block; }
 .ed-prize-label { font-size:15px; color:#222; font-weight:600; display:block; margin-top:1px; }
-.ed-raffle-categories { display:flex; flex-direction:column; gap:12px; }
-.ed-raffle-category { padding:14px; border:1px solid #ecece7; border-radius:14px; background:#fbfbf8; }
-.ed-raffle-category-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
-.ed-raffle-category-head h4 { margin:0; font-size:15px; font-weight:700; color:#222; }
-.ed-raffle-category-head p { margin:3px 0 0; font-size:12px; color:#717171; }
-.ed-raffle-category-head span { flex-shrink:0; padding:4px 9px; border-radius:999px; background:#fff; border:1px solid #e7e5df; color:#444; font-size:11px; font-weight:700; }
-.ed-raffle-items { display:flex; flex-direction:column; gap:8px; }
-.ed-raffle-item { display:flex; align-items:center; gap:12px; min-height:56px; padding:8px; border-radius:10px; background:#fff; }
-.ed-raffle-item-media { width:40px; height:40px; border-radius:10px; background:#f4f4f0; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
-.ed-raffle-item-media img { width:100%; height:100%; object-fit:cover; display:block; }
-.ed-raffle-item-media span { font-size:22px; line-height:1; }
-.ed-raffle-item-copy { min-width:0; display:flex; flex-direction:column; gap:2px; }
-.ed-raffle-item-name { font-size:14px; font-weight:700; color:#222; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.ed-raffle-item-meta { font-size:12px; color:#888; }
-.ed-winners { margin-top:16px; }
-.ed-raffle-winner-group { padding-top:4px; }
-.ed-raffle-winner-group + .ed-raffle-winner-group { margin-top:12px; border-top:1px solid #f0f0eb; padding-top:12px; }
-.ed-raffle-winner-group-title { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:#717171; font-weight:700; }
-.ed-winner-row { display:flex; align-items:center; gap:10px; padding:8px 0; }
-.ed-winner-name { font-size:15px; font-weight:600; color:#222; }
-.ed-winner-prize { font-size:14px; color:#717171; }
-@media(max-width:480px){
-    .ed-raffle-category-head { flex-direction:column; align-items:flex-start; }
-    .ed-winner-row { align-items:flex-start; flex-wrap:wrap; }
-    .ed-winner-prize { width:100%; padding-left:38px; }
+.ed-card:has(.ed-raffle-compact) { margin-top:24px; }
+.ed-raffle-compact { display:flex; flex-direction:column; gap:14px; }
+.ed-raffle-compact-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; }
+.ed-raffle-compact-head .ed-section-head h3 { margin-bottom:4px; }
+.ed-raffle-compact-head p { margin:0; color:#717171; font-size:13px; }
+.ed-raffle-compact-head .ed-outline-btn { width:auto; padding:9px 14px; flex-shrink:0; }
+.ed-raffle-compact-pills { margin-bottom:0; }
+.ed-raffle-content-grid { display:block; }
+.ed-raffle-content-grid .ed-section-head h3 { margin-bottom:10px; }
+.ed-raffle-panel { min-width:0; }
+.ed-raffle-panel + .ed-raffle-panel { margin-top:14px; }
+.ed-raffle-prize-rail { display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding:1px 2px 4px; }
+.ed-raffle-prize-tile { flex:0 0 132px; min-width:0; border:1px solid #eceff3; border-radius:14px; background:#fff; overflow:hidden; scroll-snap-align:start; }
+.ed-raffle-prize-media { aspect-ratio:4/3; background:#f4f4f0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.ed-raffle-prize-media img { width:100%; height:100%; object-fit:cover; display:block; }
+.ed-raffle-prize-media span { font-size:34px; line-height:1; }
+.ed-raffle-prize-tile p { margin:0; padding:8px 9px 9px; font-size:12px; font-weight:750; color:#222; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ed-winners { margin-top:0; }
+.ed-winner-rail { display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; padding:1px 2px 4px; }
+.ed-winner-rail::-webkit-scrollbar, .ed-raffle-prize-rail::-webkit-scrollbar { display:none; }
+.ed-winner-card { min-width:190px; max-width:220px; flex:0 0 190px; display:flex; align-items:center; gap:10px; padding:10px; border:1px solid #eceff3; border-radius:14px; background:#fff; scroll-snap-align:start; }
+.ed-winner-avatar { position:relative; width:46px; height:46px; border-radius:50%; background:#eef2ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:visible; color:#4f46e5; font-size:13px; font-weight:800; }
+.ed-winner-avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover; display:block; }
+.ed-winner-avatar b { position:absolute; top:-5px; left:-5px; min-width:20px; height:20px; padding:0 5px; border-radius:999px; background:#111827; color:#fff; border:2px solid #fff; display:flex; align-items:center; justify-content:center; font-size:10px; line-height:1; }
+.ed-winner-copy { min-width:0; display:grid; grid-template-columns:auto minmax(0,1fr); gap:7px; align-items:center; }
+.ed-winner-copy span { font-size:18px; line-height:1; }
+.ed-winner-copy p { margin:0; font-size:13px; font-weight:750; color:#222; line-height:1.25; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.ed-raffle-entry-status { margin-top:2px; }
+.ed-raffle-entry-chip { display:inline-flex; align-items:center; justify-content:center; gap:7px; width:max-content; max-width:100%; padding:7px 11px; border-radius:999px; background:#ecfdf5; color:#047857; font-size:12px; font-weight:800; }
+@media(max-width:767px){
+    .ed-card:has(.ed-raffle-compact) { margin-top:12px; }
+    .ed-raffle-compact-head { flex-direction:column; gap:10px; }
+    .ed-raffle-compact-head .ed-outline-btn { width:100%; }
+    .ed-raffle-prize-media { aspect-ratio:1/1; }
+    .ed-raffle-prize-tile { flex:0 0 132px; scroll-snap-align:start; }
+    .ed-winner-card { min-width:200px; flex-basis:200px; }
 }
 
 /* ─── Stats (host) ─── */

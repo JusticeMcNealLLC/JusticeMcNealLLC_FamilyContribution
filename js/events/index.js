@@ -230,6 +230,7 @@ function pubBuildPublicDetailShell(event, goingCount) {
                         </div>
 
                         <div id="gatedSection" class="hidden ed-card evt-section"><div class="evt-info-card"><span class="evt-info-card-icon">🔓</span><div><p class="evt-info-card-title">Attendee Details</p><p id="gatedNotes" class="evt-info-card-sub" style="white-space:pre-line"></p></div></div></div>
+                        <div id="raffleSection" class="ed-card"></div>
                         <div id="commentsSection" class="hidden ed-card" role="region" aria-label="Discussion">
                             <div class="ed-section-head"><h3>Discussion</h3></div>
                             <div id="commentsList" class="ed-comments-list"></div>
@@ -264,7 +265,6 @@ function pubBuildPublicDetailShell(event, goingCount) {
                     <div id="ticketSection" class="hidden ed-card evt-section"><div class="evt-qr-card"><h3 class="evt-qr-title">🎫 Your Event Ticket</h3><canvas id="ticketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p></div></div>
                     <div id="guestTicketSection" class="hidden ed-card evt-section"><div class="evt-qr-card"><div style="font-size:36px;margin-bottom:8px">🎉</div><h3 class="evt-qr-title">You're In!</h3><p id="guestTicketName" style="font-size:13px;color:#717171;margin-bottom:16px"></p><canvas id="guestTicketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p><p style="font-size:13px;color:#f59e0b;font-weight:600;margin-top:10px">Bookmark this page. This is your ticket.</p></div></div>
                     <div id="venueCheckin" class="hidden ed-card evt-section"><div id="checkinResult"></div></div>
-                    <div id="raffleSection" class="ed-card"></div>
 
                 </div>
             </div>

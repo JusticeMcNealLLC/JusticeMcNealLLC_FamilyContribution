@@ -225,6 +225,9 @@ Use a versioned JSON shape in `events.raffle_prizes` so we can evolve without im
 - [x] Redesign portal raffle section as a polished, scan-friendly card/group rather than flat rows.
 - [x] Show raffle state clearly: entry cost/free, included with paid RSVP, entries open/closed, entered/not entered.
 - [x] Group prizes by category in draw order.
+- [x] Follow-up refinement: simplify attendee-facing detail pages by hiding category, draw mode, and quantity metadata while keeping that operational detail in Manage Event.
+- [x] Follow-up refinement: render prizes as compact image/emoji tiles in a horizontal carousel rail.
+- [x] Follow-up refinement: render winners as compact horizontal cards with place badges on avatar/profile circles, no winner names, and prize won beside the avatar.
 - [x] Display optional prize images with stable aspect ratios and graceful emoji/initial fallbacks.
 - [x] Display prize emoji fallbacks when an item has no uploaded image.
 - [x] Show item quantity where applicable.
@@ -337,6 +340,9 @@ Use a versioned JSON shape in `events.raffle_prizes` so we can evolve without im
 - [x] Assigned the Grand Prize winner to `Grand Prize Choice` from the Manage Raffle UI.
 - [x] Confirmed the assigned winner row persisted `prize_id = weekend-choice`, `prize_emoji = 🏆`, and `selection_status = assigned`.
 - [x] Reloaded the public event page after assignment and confirmed the winner now shows `Grand Prize Choice` instead of `Choosing later`.
+- [x] Compact follow-up: verified portal/member raffle detail uses carousel rails for prizes and winners, hides winner names, and shows a small entered chip.
+- [x] Compact follow-up: verified public raffle detail renders in the main content above Discussion instead of the side panel.
+- [x] Compact follow-up: verified public RSVP options are simplified to `Going` and `Not going`, with no `Interested` button.
 
 ---
 

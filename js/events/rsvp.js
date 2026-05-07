@@ -66,7 +66,7 @@ function pubRenderRsvpSection(event) {
 
     // ── Free RSVP (any non-paid event) ──────────────────
     const goingCls = pubCurrentRsvp?.status === 'going' ? ' active-going' : '';
-    const intCls   = pubCurrentRsvp?.status === 'maybe' ? ' active-interested' : '';
+    const notGoingCls = pubCurrentRsvp?.status === 'not_going' ? ' active-not' : '';
 
     section.innerHTML = `
         <p style="font-size:12px;font-weight:700;color:#717171;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Your RSVP</p>
@@ -74,8 +74,8 @@ function pubRenderRsvpSection(event) {
             <button onclick="pubHandleRsvp('going')" class="evt-rsvp-btn${goingCls}" aria-pressed="${pubCurrentRsvp?.status === 'going'}">
                 <span class="evt-rsvp-icon">✅</span> Going
             </button>
-            <button onclick="pubHandleRsvp('maybe')" class="evt-rsvp-btn${intCls}" aria-pressed="${pubCurrentRsvp?.status === 'maybe'}">
-                <span class="evt-rsvp-icon">❤️</span> Interested
+            <button onclick="pubHandleRsvp('not_going')" class="evt-rsvp-btn${notGoingCls}" aria-pressed="${pubCurrentRsvp?.status === 'not_going'}">
+                <span class="evt-rsvp-icon">✕</span> Not going
             </button>
         </div>
         ${pubCurrentRsvp ? '<p style="font-size:13px;color:#b0b0b0;text-align:center;margin-top:10px">Tap your current response to cancel</p>' : ''}

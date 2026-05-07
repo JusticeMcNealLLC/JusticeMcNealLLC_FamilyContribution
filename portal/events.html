@@ -78,15 +78,6 @@
 
                 <!-- F19 — Hero card moved BELOW the filter+chip strip so the banner sits under the event-type chips. Empty placeholder kept here for legacy queries; live mount is #evtHero further down. -->
 
-                <!-- "You're going" rail (hidden by default — populated in Phase B) -->
-                <section id="evtGoingRail" class="hidden mt-6">
-                    <header class="flex items-center justify-between mb-3">
-                        <h2 class="text-xs font-bold uppercase tracking-[0.14em] text-gray-500">You're going</h2>
-                        <a href="#" data-action="see-all-going" class="text-xs font-semibold text-brand-600 hover:text-brand-700">See all →</a>
-                    </header>
-                    <div id="evtGoingRailScroll" class="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 evt-scroll-hide"></div>
-                </section>
-
                 <!-- E5 — Top Picks rail (vlift only; conditional on >=2 pinned-LLC-future) -->
                 <section id="evtTopPicks" class="hidden mt-6" data-evt-section="top-picks">
                     <header class="flex items-center justify-between mb-3">
@@ -186,6 +177,15 @@
 
                 <!-- F19 — Featured hero now renders here, directly under the event-type chip rail -->
                 <section id="evtHero"></section>
+
+                <!-- "You're going" rail (hidden by default — populated in Phase B) -->
+                <section id="evtGoingRail" class="hidden mt-6">
+                    <header class="flex items-center justify-between mb-3">
+                        <h2 class="text-xs font-bold uppercase tracking-[0.14em] text-gray-500">You're going</h2>
+                        <a href="#" data-action="see-all-going" class="text-xs font-semibold text-brand-600 hover:text-brand-700">See all →</a>
+                    </header>
+                    <div id="evtGoingRailScroll" class="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 evt-scroll-hide"></div>
+                </section>
 
                 <!-- Bucketed groups -->
                 <div id="evtGroups" class="mt-6 space-y-8"></div>

@@ -128,8 +128,8 @@ function pubInitBottomNav(event) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${PUB_CTA_ICONS.check} RSVP'd</button>`;
         } else if (pubCurrentRsvp?.status === 'going') {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled>${PUB_CTA_ICONS.check} Going</button>`;
-        } else if (pubCurrentRsvp?.status === 'maybe') {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" disabled style="background:#e11d48">❤️ Interested</button>`;
+        } else if (pubCurrentRsvp?.status === 'not_going') {
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>Not going</button>`;
         } else if (entriesClosed) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${PUB_CTA_ICONS.lock} ${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
         } else if (pubCurrentUser && event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {

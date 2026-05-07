@@ -153,56 +153,38 @@ function evtDetailPrizeMedia(item) {
     return `<span>${evtEscapeHtml(item?.emoji || window.EventsRaffleModel?.DEFAULT_EMOJI || '🎁')}</span>`;
 }
 
+function evtDetailRafflePrizeItems(config) {
+    return evtDetailRaffleCategories(config).flatMap(category => evtDetailRaffleItems(config, category.id));
+}
+
 function evtDetailRafflePrizesHtml(event) {
     const config = evtDetailRaffleConfig(event);
-    const categories = evtDetailRaffleCategories(config);
-    if (!categories.length) return '';
+    const items = evtDetailRafflePrizeItems(config);
+    if (!items.length) return '';
 
-    return `<div class="ed-raffle-categories">${categories.map((category) => {
-        const items = evtDetailRaffleItems(config, category.id);
-        const itemsHtml = items.length ? items.map(item => `
-            <div class="ed-raffle-item">
-                <div class="ed-raffle-item-media">${evtDetailPrizeMedia(item)}</div>
-                <div class="ed-raffle-item-copy">
-                    <span class="ed-raffle-item-name">${evtEscapeHtml(item.name)}</span>
-                    <span class="ed-raffle-item-meta">${item.quantity > 1 ? `${item.quantity} available` : '1 available'}</span>
-                </div>
-            </div>
-        `).join('') : `<p class="ed-hint" style="margin:0">Prizes to be announced</p>`;
-        return `
-            <section class="ed-raffle-category">
-                <div class="ed-raffle-category-head">
-                    <div>
-                        <h4>${evtEscapeHtml(category.label || 'Prize tier')}</h4>
-                        <p>${evtDetailDrawModeLabel(category.draw_mode)}</p>
-                    </div>
-                    <span>${category.winner_count || 0} ${category.winner_count === 1 ? 'winner' : 'winners'}</span>
-                </div>
-                <div class="ed-raffle-items">${itemsHtml}</div>
-            </section>
-        `;
-    }).join('')}</div>`;
+    return `<div class="ed-raffle-prize-rail">${items.map(item => `
+        <article class="ed-raffle-prize-tile" title="${evtEscapeHtml(item.name)}">
+            <div class="ed-raffle-prize-media">${evtDetailPrizeMedia(item)}</div>
+            <p>${evtEscapeHtml(item.name)}</p>
+        </article>
+    `).join('')}</div>`;
 }
 
 function evtDetailRaffleWinnersHtml(winners) {
     if (!winners.length) return '';
-    const groups = winners.reduce((acc, winner) => {
-        const key = winner.category_label || 'Winners';
-        (acc[key] = acc[key] || []).push(winner);
-        return acc;
-    }, {});
-    const groupHtml = Object.entries(groups).map(([label, rows]) => `
-        <div class="ed-raffle-winner-group">
-            <p class="ed-raffle-winner-group-title">${evtEscapeHtml(label)}</p>
-            ${rows.map(w => {
-                const name = w.profiles ? `${w.profiles.first_name || ''} ${w.profiles.last_name || ''}`.trim() : (w.guest_token ? 'Guest' : 'Unknown');
-                const pending = w.selection_status === 'pending_choice';
-                const prize = pending ? 'Choosing later' : (w.prize_description || 'Prize pending');
-                return `<div class="ed-winner-row"><div class="ed-prize-rank">${w.place}</div><span class="ed-winner-name">${evtEscapeHtml(name)}</span><span class="ed-winner-prize">— ${evtEscapeHtml(prize)}</span></div>`;
-            }).join('')}
-        </div>
-    `).join('');
-    return `<div class="ed-winners">${_edSectionHead('Winners')}${groupHtml}</div>`;
+    const rows = winners.map(w => {
+        const initials = w.profiles ? `${w.profiles.first_name?.[0] || ''}${w.profiles.last_name?.[0] || ''}`.toUpperCase() : '';
+        const avatar = w.profiles?.profile_picture_url
+            ? `<img src="${evtEscapeHtml(w.profiles.profile_picture_url)}" alt="" loading="lazy">`
+            : `<span>${evtEscapeHtml(initials || (w.guest_token ? 'G' : 'W'))}</span>`;
+        const prize = w.selection_status === 'pending_choice' ? 'Choosing later' : (w.prize_description || 'Prize pending');
+        const emoji = evtEscapeHtml(w.prize_emoji || '🎁');
+        return `<article class="ed-winner-card">
+            <div class="ed-winner-avatar">${avatar}<b>${w.place}</b></div>
+            <div class="ed-winner-copy"><span>${emoji}</span><p>${evtEscapeHtml(prize)}</p></div>
+        </article>`;
+    }).join('');
+    return `<div class="ed-winners ed-winners-compact">${_edSectionHead('Winners')}<div class="ed-winner-rail">${rows}</div></div>`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -285,7 +267,7 @@ async function evtOpenDetail(eventId) {
         myRaffleEntry = myEntry;
         const { data: winners } = await supabaseClient
             .from('event_raffle_winners')
-            .select('*, profiles:user_id(first_name, last_name)')
+            .select('*, profiles:user_id(first_name, last_name, profile_picture_url)')
             .eq('event_id', eventId)
             .order('place', { ascending: true });
         raffleWinners = winners || [];
@@ -620,7 +602,7 @@ async function evtOpenDetail(eventId) {
 
         let entryStatusHtml = '';
         if (myRaffleEntry) {
-            entryStatusHtml = _edNotice('🎟️', "You're entered!", 'Good luck in the drawing');
+            entryStatusHtml = `<div class="ed-raffle-entry-chip">🎟️ Entered</div>`;
         } else if (entriesClosed && !myRaffleEntry) {
             let lockedReason = '';
             if (isClosed) lockedReason = event.status === 'cancelled' ? 'Event cancelled' : 'Event ended';
@@ -640,26 +622,24 @@ async function evtOpenDetail(eventId) {
             winnersHtml = evtDetailRaffleWinnersHtml(raffleWinners);
         }
 
-        let manageRaffleHtml = '';
-        if (isHost) {
-            manageRaffleHtml = `<button onclick="window.EventsManage ? window.EventsManage.open('${eventId}',{source:'portal',tab:'raffle'}) : (window.location='../admin/events.html?id=${eventId}')" class="ed-outline-btn" style="margin-top:12px">Manage raffle</button>`;
-        }
-
         const rafflePills = [
-            event.raffle_type ? _edPill(`${event.raffle_type === 'digital' ? '💻 Digital' : '🎁 Physical'} Prize`) : '',
-            event.raffle_draw_trigger ? _edPill(`${event.raffle_draw_trigger === 'auto' ? '⚡ Auto' : '🎰 Manual'} Draw`) : '',
             event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0 ? _edPill(`🎟️ Entry: ${formatCurrency(event.raffle_entry_cost_cents)}`) : '',
             event.pricing_mode === 'paid' ? _edPill('✅ Included with RSVP') : '',
-            prizeCount ? _edPill(`${prizeCount} ${prizeCount === 1 ? 'Winner' : 'Winners'}`) : '',
+            !event.raffle_entry_cost_cents && event.pricing_mode !== 'paid' ? _edPill('🎟️ Free entry') : '',
         ].filter(Boolean).join('');
 
         raffleHtml = `
-            ${_edSectionHead('Raffle')}
-            <div class="ed-pill-row">${rafflePills}</div>
-            <p class="ed-sub-count">${raffleEntryCount} ${raffleEntryCount === 1 ? 'entry' : 'entries'}</p>
-            ${prizesHtml ? `<div class="ed-prizes">${_edSectionHead('Prizes')}${prizesHtml}</div>` : `<p class="ed-hint" style="font-style:italic">Prizes to be announced</p>`}
-            <div style="margin-top:16px">${entryStatusHtml}</div>
-                ${winnersHtml}${manageRaffleHtml}`;
+            <div class="ed-raffle-compact">
+                <div class="ed-raffle-compact-head">
+                    <div>${_edSectionHead('Raffle')}<p>${raffleEntryCount} ${raffleEntryCount === 1 ? 'entry' : 'entries'}${prizeCount ? ` · ${prizeCount} ${prizeCount === 1 ? 'winner' : 'winners'}` : ''}</p></div>
+                </div>
+                ${rafflePills ? `<div class="ed-pill-row ed-raffle-compact-pills">${rafflePills}</div>` : ''}
+                <div class="ed-raffle-content-grid">
+                    ${prizesHtml ? `<div class="ed-raffle-panel">${_edSectionHead('Prizes')}${prizesHtml}</div>` : `<p class="ed-hint" style="font-style:italic">Prizes to be announced</p>`}
+                    ${winnersHtml ? `<div class="ed-raffle-panel">${winnersHtml}</div>` : ''}
+                </div>
+                ${entryStatusHtml ? `<div class="ed-raffle-entry-status">${entryStatusHtml}</div>` : ''}
+            </div>`;
     }
 
     // ── Helper: avatar + name row ────────────────────────
