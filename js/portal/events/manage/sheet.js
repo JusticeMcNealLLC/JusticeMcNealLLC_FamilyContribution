@@ -30,6 +30,8 @@
     ];
 
     const PUBLIC_SITE_URL = 'https://justicemcneal.com';
+    const QR_CODE_SRC = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';
+    let qrCodeLoadPromise = null;
 
     const STATE = {
         eventId: null,
@@ -57,8 +59,8 @@
         root.id = 'emSheetRoot';
         root.innerHTML = `
             <div id="emSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
-            <div id="emSheet" class="fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
-                <div id="emSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-auto translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
+            <div id="emSheet" class="hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
+                <div id="emSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
                     <header id="emSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
                         <div class="flex-1 min-w-0">
                             <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Manage Event</p>
@@ -178,11 +180,12 @@
         const sheet = document.getElementById('emSheet');
         const panel = document.getElementById('emSheetPanel');
         const backdrop = document.getElementById('emSheetBackdrop');
+        sheet.classList.remove('hidden');
         sheet.classList.add('em-open');
         backdrop.classList.remove('opacity-0', 'pointer-events-none');
         backdrop.classList.add('opacity-100');
         requestAnimationFrame(() => {
-            panel.classList.remove('translate-y-full', 'sm:translate-y-4', 'sm:opacity-0');
+            panel.classList.remove('pointer-events-none', 'translate-y-full', 'sm:translate-y-4', 'sm:opacity-0');
             panel.classList.add('translate-y-0', 'sm:opacity-100');
         });
         document.body.style.overflow = 'hidden';
@@ -198,12 +201,15 @@
         const panel = document.getElementById('emSheetPanel');
         const backdrop = document.getElementById('emSheetBackdrop');
         if (!sheet || !sheet.classList.contains('em-open')) return;
-        panel.classList.add('translate-y-full', 'sm:translate-y-4', 'sm:opacity-0');
+        panel.classList.add('pointer-events-none', 'translate-y-full', 'sm:translate-y-4', 'sm:opacity-0');
         panel.classList.remove('translate-y-0', 'sm:opacity-100');
         backdrop.classList.add('opacity-0', 'pointer-events-none');
         backdrop.classList.remove('opacity-100');
         document.body.style.overflow = '';
-        setTimeout(() => sheet.classList.remove('em-open'), 250);
+        setTimeout(() => {
+            sheet.classList.remove('em-open');
+            sheet.classList.add('hidden');
+        }, 250);
     }
 
     // ─── Data loading ───────────────────────────────────────────────
@@ -555,15 +561,7 @@
         const e = STATE.event;
         if (!e) return;
         const inviteUrl = _publicEventUrl(e);
-        const inviteCanvas = document.getElementById('emInviteQR');
-        if (inviteCanvas && e.slug && typeof QRCode !== 'undefined') {
-            QRCode.toCanvas(inviteCanvas, inviteUrl, { width: 220, margin: 2, color: { dark: '#111827', light: '#ffffff' } });
-        }
-        // Render venue QR if present
-        const canvas = document.getElementById('emVenueQR');
-        if (canvas && e.venue_qr_token && typeof QRCode !== 'undefined') {
-            QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${encodeURIComponent(e.slug || '')}&checkin=1`, { width: 200, margin: 2 });
-        }
+        _renderOverviewQrs(inviteUrl, e);
         document.getElementById('emSheetContent').querySelectorAll('[data-copy-invite-url]').forEach(btn => {
             btn.addEventListener('click', () => {
                 navigator.clipboard.writeText(inviteUrl);
@@ -584,6 +582,39 @@
                 _renderTab(STATE.activeTab);
             });
         });
+    }
+
+    async function _ensureQrCode() {
+        if (globalThis.QRCode) return globalThis.QRCode;
+        if (!qrCodeLoadPromise) {
+            qrCodeLoadPromise = new Promise((resolve, reject) => {
+                const existing = document.querySelector(`script[src="${QR_CODE_SRC}"]`);
+                const script = existing || document.createElement('script');
+                script.src = QR_CODE_SRC;
+                script.async = true;
+                script.onload = () => globalThis.QRCode ? resolve(globalThis.QRCode) : reject(new Error('QR library did not initialize'));
+                script.onerror = () => reject(new Error('QR library failed to load'));
+                if (!existing) document.head.appendChild(script);
+            });
+        }
+        return qrCodeLoadPromise;
+    }
+
+    async function _renderOverviewQrs(inviteUrl, e) {
+        const inviteCanvas = document.getElementById('emInviteQR');
+        const venueCanvas = document.getElementById('emVenueQR');
+        if ((!inviteCanvas || !e.slug) && (!venueCanvas || !e.venue_qr_token)) return;
+        try {
+            const qr = await _ensureQrCode();
+            if (inviteCanvas?.isConnected && e.slug) {
+                qr.toCanvas(inviteCanvas, inviteUrl, { width: 220, margin: 2, color: { dark: '#111827', light: '#ffffff' } });
+            }
+            if (venueCanvas?.isConnected && e.venue_qr_token) {
+                qr.toCanvas(venueCanvas, `${window.location.origin}/events/?e=${encodeURIComponent(e.slug || '')}&checkin=1`, { width: 200, margin: 2 });
+            }
+        } catch (err) {
+            console.warn('[events/manage] QR code renderer unavailable', err);
+        }
     }
 
     // ─── Images tab ─────────────────────────────────────────────────
