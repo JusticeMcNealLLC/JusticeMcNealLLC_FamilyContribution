@@ -41,7 +41,8 @@ assert(/data-share-invite-url/.test(manageSheet), 'overview should expose native
 assert(/navigator\.share/.test(manageSheet), 'invite sharing should use native share when available');
 assert(/QR_CODE_SRC/.test(manageSheet) && /_ensureQrCode/.test(manageSheet), 'manage sheet should lazy-load QRCode when the host page does not include it');
 assert(/https:\/\/justicemcneal\.com/.test(manageSheet), 'invitation QR should use the production public domain');
-assert(/id="emSheet" class="hidden/.test(manageSheet), 'manage sheet should be hidden when closed so it cannot intercept page clicks');
+assert(/em-sheet-hidden/.test(manageSheet), 'manage sheet should use a dedicated hidden class so responsive display utilities cannot keep it mounted');
+assert(/panel\.classList\.add\('pointer-events-auto'/.test(manageSheet), 'manage sheet panel should restore pointer events on open');
 assert(/panel\.classList\.add\('pointer-events-none'/.test(manageSheet), 'manage sheet panel should disable pointer events on close');
 assert(/Reset test participation/.test(manageSheet), 'danger zone should expose participation reset');
 assert(/_resetParticipation/.test(manageSheet), 'manage sheet should implement participation reset action');

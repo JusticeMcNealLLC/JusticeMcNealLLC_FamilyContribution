@@ -59,7 +59,7 @@
         root.id = 'emSheetRoot';
         root.innerHTML = `
             <div id="emSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
-            <div id="emSheet" class="hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
+            <div id="emSheet" class="em-sheet-hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
                 <div id="emSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
                     <header id="emSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
                         <div class="flex-1 min-w-0">
@@ -76,6 +76,7 @@
                 </div>
             </div>
             <style>
+                .em-sheet-hidden { display:none !important; }
                 #emSheetTabs::-webkit-scrollbar { display: none; }
                 .em-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; }
                 .em-tab:hover { color:#374151; }
@@ -180,13 +181,13 @@
         const sheet = document.getElementById('emSheet');
         const panel = document.getElementById('emSheetPanel');
         const backdrop = document.getElementById('emSheetBackdrop');
-        sheet.classList.remove('hidden');
+        sheet.classList.remove('em-sheet-hidden');
         sheet.classList.add('em-open');
         backdrop.classList.remove('opacity-0', 'pointer-events-none');
         backdrop.classList.add('opacity-100');
         requestAnimationFrame(() => {
             panel.classList.remove('pointer-events-none', 'translate-y-full', 'sm:translate-y-4', 'sm:opacity-0');
-            panel.classList.add('translate-y-0', 'sm:opacity-100');
+            panel.classList.add('pointer-events-auto', 'translate-y-0', 'sm:opacity-100');
         });
         document.body.style.overflow = 'hidden';
 
@@ -202,13 +203,13 @@
         const backdrop = document.getElementById('emSheetBackdrop');
         if (!sheet || !sheet.classList.contains('em-open')) return;
         panel.classList.add('pointer-events-none', 'translate-y-full', 'sm:translate-y-4', 'sm:opacity-0');
-        panel.classList.remove('translate-y-0', 'sm:opacity-100');
+        panel.classList.remove('pointer-events-auto', 'translate-y-0', 'sm:opacity-100');
         backdrop.classList.add('opacity-0', 'pointer-events-none');
         backdrop.classList.remove('opacity-100');
         document.body.style.overflow = '';
         setTimeout(() => {
             sheet.classList.remove('em-open');
-            sheet.classList.add('hidden');
+            sheet.classList.add('em-sheet-hidden');
         }, 250);
     }
 
