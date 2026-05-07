@@ -384,6 +384,8 @@ async function pubRenderInviteBanner(event) {
             .maybeSingle();
         if (gRsvp) inviterName = gRsvp.guest_name;
     } else {
+        if (!pubCurrentUser) return;
+
         // Member referrer — look up profile
         const { data: profiles } = await supabaseClient
             .from('profiles')
