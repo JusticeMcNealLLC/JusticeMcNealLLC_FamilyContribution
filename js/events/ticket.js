@@ -450,6 +450,9 @@ async function pubFindGuestRsvpByEmail(email) {
 async function pubUseExistingGuestRsvp(gRsvp, message) {
     pubGuestRsvp = gRsvp;
     pubGuestToken = gRsvp.guest_token;
+    if (typeof pubRefreshGuestRaffleEntry === 'function') {
+        await pubRefreshGuestRaffleEntry(gRsvp.guest_token);
+    }
     await pubShowGuestTicket(gRsvp);
     pubInitBottomNav(pubCurrentEvent);
 

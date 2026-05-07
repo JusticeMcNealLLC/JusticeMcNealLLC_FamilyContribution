@@ -128,6 +128,24 @@ async function pubRenderRaffleSection(event) {
     el.innerHTML = isCardMount ? sectionHtml : `<div class="evt-section public-raffle-section">${sectionHtml}</div><hr class="evt-divider">`;
 }
 
+async function pubRefreshGuestRaffleEntry(guestToken) {
+    const token = guestToken || pubGuestRsvp?.guest_token || pubGuestToken;
+    if (!pubCurrentEvent || !token) {
+        pubGuestRaffleEntry = false;
+        return null;
+    }
+
+    const { data } = await supabaseClient
+        .from('event_raffle_entries')
+        .select('id, paid')
+        .eq('event_id', pubCurrentEvent.id)
+        .eq('guest_token', token)
+        .maybeSingle();
+
+    pubGuestRaffleEntry = !!data;
+    return data || null;
+}
+
 function pubRaffleConfig(event) {
     if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
     return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
@@ -305,6 +323,7 @@ async function pubHandleGuestPaidRaffle(nameOverride, emailOverride) {
             type: 'raffle_entry',
             guest_name: name,
             guest_email: email,
+            guest_token: pubGuestRsvp.guest_token || pubGuestToken,
         });
         if (url) window.location.href = url;
     } catch (err) {

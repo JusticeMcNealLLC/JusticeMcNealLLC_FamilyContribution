@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const slug   = params.get('e');
     const isCheckin   = params.get('checkin') === '1';
     const ticketToken  = params.get('ticket') || null;
+    const paidType     = params.get('paid') || null;
     pubGuestToken     = params.get('guest_token') || null;
 
     if (!slug) return pubShowNotFound();
@@ -63,11 +64,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (session) pubCurrentUser = session.user;
     } catch (_) { /* not logged in */ }
 
-    await pubLoadEvent(slug, isCheckin, ticketToken);
+    await pubLoadEvent(slug, isCheckin, ticketToken, paidType);
 });
 
 
-async function pubLoadEvent(slug, isCheckin, ticketToken) {
+async function pubLoadEvent(slug, isCheckin, ticketToken, paidType) {
     const { data: event, error } = await supabaseClient
         .from('events')
         .select('*, creator:profiles!events_created_by_fkey(first_name, last_name, profile_picture_url)')
@@ -116,7 +117,14 @@ async function pubLoadEvent(slug, isCheckin, ticketToken) {
             .eq('guest_token', guestLookupToken)
             .maybeSingle();
         pubGuestRsvp = gRsvp;
-        if (gRsvp) pubGuestToken = gRsvp.guest_token;
+        if (gRsvp) {
+            pubGuestToken = gRsvp.guest_token;
+            if (paidType === 'raffle_entry') {
+                pubGuestRaffleEntry = true;
+            } else if (typeof pubRefreshGuestRaffleEntry === 'function') {
+                await pubRefreshGuestRaffleEntry(gRsvp.guest_token);
+            }
+        }
     }
 
     pubRenderEvent(event, goingCount, isCheckin, ticketToken);

@@ -27,9 +27,10 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Parse body
-    const { event_id, type, guest_name, guest_email, from_waitlist, invest_eligible_acknowledged, amount_cents } = await req.json()
+    const { event_id, type, guest_name, guest_email, guest_token, from_waitlist, invest_eligible_acknowledged, amount_cents } = await req.json()
     // type: 'rsvp' | 'raffle_entry' | 'competition_entry' | 'prize_pool'
     // guest_name + guest_email: for non-member (public event) RSVP
+    // guest_token: existing public guest RSVP token for guest raffle checkout
     // from_waitlist: true when claiming a waitlist spot
     // invest_eligible_acknowledged: true when user acknowledged Fidelity risk
     // amount_cents: custom amount for prize_pool contributions
@@ -83,6 +84,7 @@ serve(async (req) => {
     let amountCents = 0
     let productName = ''
     let productDescription = ''
+    let guestRaffleToken: string | null = null
 
     if (type === 'rsvp') {
       if (event.pricing_mode === 'free') {
@@ -196,6 +198,12 @@ serve(async (req) => {
           .maybeSingle()
 
         if (guestRsvp) {
+          if (guest_token && guest_token !== guestRsvp.guest_token) {
+            throw new Error('Please use the same ticket you RSVP\'d with to enter the raffle')
+          }
+
+          guestRaffleToken = guestRsvp.guest_token
+
           const { data: existingEntry } = await supabase
             .from('event_raffle_entries')
             .select('id')
@@ -298,8 +306,14 @@ serve(async (req) => {
       customerConfig = { customer_email: guestEmailNormalized! }
     }
 
-    // Generate a guest token for guest RSVPs
-    const guestToken = isGuest ? crypto.randomUUID() : null
+    // Guest RSVPs need a fresh token; guest raffle entries must attach to the existing RSVP token.
+    const guestToken = isGuest
+      ? (type === 'raffle_entry' ? String(guest_token || guestRaffleToken || '') : crypto.randomUUID())
+      : null
+
+    if (isGuest && type === 'raffle_entry' && !guestToken) {
+      throw new Error('Please RSVP before entering the raffle')
+    }
 
     // Build metadata
     const metadata: Record<string, string> = {
