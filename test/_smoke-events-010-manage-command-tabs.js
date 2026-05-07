@@ -38,5 +38,11 @@ assert(/data-download-invite-qr/.test(manageSheet), 'overview should expose invi
 assert(/data-share-invite-url/.test(manageSheet), 'overview should expose native invite sharing action');
 assert(/navigator\.share/.test(manageSheet), 'invite sharing should use native share when available');
 assert(/https:\/\/justicemcneal\.com/.test(manageSheet), 'invitation QR should use the production public domain');
+assert(/Reset test participation/.test(manageSheet), 'danger zone should expose participation reset');
+assert(/_resetParticipation/.test(manageSheet), 'manage sheet should implement participation reset action');
+assert(/event_raffle_winners', 'event_raffle_entries', 'event_checkins', 'event_guest_rsvps', 'event_rsvps'/.test(manageSheet), 'participation reset should delete dependent records before RSVPs');
+assert(/data-remove-rsvp/.test(manageSheet), 'RSVP tab should expose per-person removal controls');
+assert(/data-remove-raffle-entry/.test(manageSheet), 'raffle tab should expose per-entry removal controls');
+assert(/does not refund Stripe payments/.test(manageSheet), 'destructive paid cleanup should warn about Stripe refunds');
 
 console.log('events_010 manage command tabs smoke: all pass');

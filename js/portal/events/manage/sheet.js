@@ -217,7 +217,7 @@
 
         const { data: rsvps } = await supabaseClient
             .from('event_rsvps')
-            .select('user_id, status, paid, qr_token, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)')
+            .select('id, user_id, status, paid, qr_token, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)')
             .eq('event_id', eventId);
         STATE.rsvps = rsvps || [];
 
@@ -267,7 +267,7 @@
     function _renderTab(tab) {
         if (tab === 'overview') { _renderContent(_overviewHtml()); _wireOverview(); return; }
         if (tab === 'images')   { _renderContent(_imagesHtml());   _wireImages();   return; }
-        if (tab === 'rsvps')    return _renderContent(_rsvpsHtml());
+        if (tab === 'rsvps')    { _renderContent(_rsvpsHtml()); _wireRsvps(); return; }
         if (tab === 'danger')   { _renderContent(_dangerHtml()); _wireDanger(); return; }
         // Lazy-loaded M3b tabs:
         if (tab === 'money')    return _renderTabAsync('money',  _loadMoney,  _moneyHtml,  _wireMoney);
@@ -445,7 +445,7 @@
             else pills.push('<span class="em-pill em-pill-not">Not going</span>');
             if (r.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
             if (checkedSet.has(r.user_id)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
-            return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${_esc(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? ' · ticket ready' : ''}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join('')}</div></div></div>`;
+            return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${_esc(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? ' · ticket ready' : ''}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join('')}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="member" data-rsvp-id="${_esc(r.id)}" data-user-id="${_esc(r.user_id)}" data-paid="${r.paid ? '1' : '0'}" data-name="${_esc(name)}">Remove</button></div>`;
         }
 
         function guestRow(g) {
@@ -453,7 +453,8 @@
             const pills = ['<span class="em-pill em-pill-going">Guest</span>'];
             if (g.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
             if (guestCheckedSet.has(g.guest_token)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
-            return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${_esc(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${_esc(g.guest_name || 'Guest')}</p><p class="em-attendee-sub">${_esc(g.guest_email || 'Public guest')}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join('')}</div></div></div>`;
+            const name = g.guest_name || 'Guest';
+            return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${_esc(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${_esc(name)}</p><p class="em-attendee-sub">${_esc(g.guest_email || 'Public guest')}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join('')}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="guest" data-rsvp-id="${_esc(g.id)}" data-guest-token="${_esc(g.guest_token)}" data-paid="${g.paid ? '1' : '0'}" data-name="${_esc(name)}">Remove</button></div>`;
         }
 
         function section(title, list, emptyText) {
@@ -487,6 +488,12 @@
             ${section('Interested', maybe, 'No interested members.')}
             ${not.length ? section('Not going', not, '') : ''}
         `;
+    }
+
+    function _wireRsvps() {
+        document.getElementById('emSheetContent')?.querySelectorAll('[data-remove-rsvp]').forEach(btn => {
+            btn.addEventListener('click', () => _removeParticipationPerson(btn));
+        });
     }
 
     // ─── Danger Zone tab ────────────────────────────────────────────
@@ -529,6 +536,12 @@
 
             ${isCancelled ? `<div class="em-card mb-3"><div class="em-section-head"><div><h3 class="em-section-title">Event already cancelled</h3><p class="em-section-sub">Cancellation controls are hidden because this event is no longer open.</p></div></div></div>` : ''}
             ${isCompleted ? `<div class="em-card mb-3"><div class="em-section-head"><div><h3 class="em-section-title">Event completed</h3><p class="em-section-sub">Completion controls are hidden because this event has already been closed.</p></div></div></div>` : ''}
+
+            <div class="em-danger-card" style="background:#fff7ed;border-color:#fed7aa">
+                <p class="em-danger-title" style="color:#9a3412">Reset test participation</p>
+                <p class="em-danger-sub" style="color:#7c2d12">Keeps the event, images, date, pricing, location, and public URL. Removes RSVPs, guest RSVPs, check-ins, raffle entries, and drawn raffle winners. This does not refund Stripe payments.</p>
+                <button class="em-btn-danger" data-action="reset-participation" style="background:#ea580c">Reset participation</button>
+            </div>
 
             <div class="em-danger-card">
                 <p class="em-danger-title">Delete event permanently</p>
@@ -792,6 +805,11 @@
             return;
         }
 
+        if (action === 'reset-participation') {
+            await _resetParticipation();
+            return;
+        }
+
         if (action === 'complete') {
             if (!confirm(`Mark "${e.title}" as completed?`)) return;
             try {
@@ -805,6 +823,115 @@
                 alert('Complete failed: ' + (err.message || 'unknown error'));
             }
         }
+    }
+
+    async function _getParticipationResetCounts() {
+        const eventId = STATE.eventId;
+        const tables = [
+            ['member RSVPs', 'event_rsvps'],
+            ['guest RSVPs', 'event_guest_rsvps'],
+            ['check-ins', 'event_checkins'],
+            ['raffle entries', 'event_raffle_entries'],
+            ['raffle winners', 'event_raffle_winners'],
+        ];
+        const results = await Promise.all(tables.map(async ([label, table]) => {
+            const { count, error } = await supabaseClient
+                .from(table)
+                .select('id', { count: 'exact', head: true })
+                .eq('event_id', eventId);
+            if (error) throw error;
+            return { label, table, count: count || 0 };
+        }));
+        return results;
+    }
+
+    async function _resetParticipation() {
+        const e = STATE.event;
+        if (!e) return;
+        let counts = [];
+        try {
+            counts = await _getParticipationResetCounts();
+        } catch (err) {
+            alert('Could not load participation counts: ' + (err.message || 'unknown error'));
+            return;
+        }
+
+        const paidTickets = STATE.rsvps.filter(r => r.paid).length + STATE.guestRsvps.filter(r => r.paid).length;
+        const summary = counts.map(item => `${item.count} ${item.label}`).join('\n');
+        const typed = prompt(
+            `Reset participation for "${e.title}"?\n\nThis will delete:\n${summary}\n\nThe event itself, images, links, pricing, and settings stay in place. Stripe payments are NOT refunded${paidTickets ? ` (${paidTickets} paid RSVP record${paidTickets === 1 ? '' : 's'} found)` : ''}.\n\nType RESET to continue.`
+        );
+        if (!typed || typed.trim().toUpperCase() !== 'RESET') {
+            if (typed !== null) alert('Reset cancelled.');
+            return;
+        }
+
+        try {
+            const deleteOrder = ['event_raffle_winners', 'event_raffle_entries', 'event_checkins', 'event_guest_rsvps', 'event_rsvps'];
+            for (const table of deleteOrder) {
+                const { error } = await supabaseClient.from(table).delete().eq('event_id', e.id);
+                if (error) throw error;
+            }
+            await _refreshEventManager('danger');
+            alert('Participation reset complete. The event is still intact.');
+        } catch (err) {
+            alert('Reset failed: ' + (err.message || 'unknown error'));
+        }
+    }
+
+    async function _removeParticipationPerson(btn) {
+        const kind = btn.dataset.removeRsvp;
+        const name = btn.dataset.name || (kind === 'guest' ? 'this guest' : 'this member');
+        const isPaid = btn.dataset.paid === '1';
+        const warning = isPaid ? '\n\nThis was marked paid. Removing the record does not refund Stripe payments.' : '';
+        if (!confirm(`Remove ${name} from this event? This also clears their check-in and raffle entry.${warning}`)) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Removing...';
+        try {
+            if (kind === 'guest') {
+                const guestToken = btn.dataset.guestToken;
+                const rsvpId = btn.dataset.rsvpId;
+                if (!guestToken || !rsvpId) throw new Error('Missing guest RSVP details.');
+                await _deleteByEventAndColumn('event_raffle_winners', 'guest_token', guestToken);
+                await _deleteByEventAndColumn('event_raffle_entries', 'guest_token', guestToken);
+                await _deleteByEventAndColumn('event_checkins', 'guest_token', guestToken);
+                const { error } = await supabaseClient.from('event_guest_rsvps').delete().eq('id', rsvpId).eq('event_id', STATE.eventId);
+                if (error) throw error;
+            } else {
+                const userId = btn.dataset.userId;
+                const rsvpId = btn.dataset.rsvpId;
+                if (!userId || !rsvpId) throw new Error('Missing member RSVP details.');
+                await _deleteByEventAndColumn('event_raffle_winners', 'user_id', userId);
+                await _deleteByEventAndColumn('event_raffle_entries', 'user_id', userId);
+                await _deleteByEventAndColumn('event_checkins', 'user_id', userId);
+                const { error } = await supabaseClient.from('event_rsvps').delete().eq('id', rsvpId).eq('event_id', STATE.eventId);
+                if (error) throw error;
+            }
+            await _refreshEventManager('rsvps');
+        } catch (err) {
+            alert('Remove failed: ' + (err.message || 'unknown error'));
+            _renderTab('rsvps');
+        }
+    }
+
+    async function _deleteByEventAndColumn(table, column, value) {
+        const { error } = await supabaseClient
+            .from(table)
+            .delete()
+            .eq('event_id', STATE.eventId)
+            .eq(column, value);
+        if (error) throw error;
+    }
+
+    async function _refreshEventManager(tab) {
+        await _loadEventData(STATE.eventId);
+        STATE.tabData = {};
+        if (tab) STATE.activeTab = tab;
+        _renderHeader();
+        _renderTabs();
+        _renderTab(STATE.activeTab);
+        _notifyParent('updated', STATE.eventId);
     }
 
     function _notifyParent(type, eventId) {
@@ -1278,6 +1405,16 @@
             </div>
         ` : '';
 
+        const entryRows = eligibleEntries.length ? eligibleEntries.map(en => {
+            const p = en.profiles || {};
+            const guest = en.guest_token ? guestByToken.get(en.guest_token) : null;
+            const name = en.user_id ? (`${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Member') : (guest?.guest_name || 'Guest');
+            const sub = en.user_id ? 'Member raffle entry' : (guest?.guest_email || 'Guest raffle entry');
+            const tokenAttr = en.guest_token ? ` data-guest-token="${_esc(en.guest_token)}"` : '';
+            const userAttr = en.user_id ? ` data-user-id="${_esc(en.user_id)}"` : '';
+            return `<div class="em-attendee-card"><div class="em-avatar" style="background:#f5f3ff;color:#6d28d9"><span>🎟</span></div><div class="em-attendee-main"><p class="em-attendee-name">${_esc(name)}</p><p class="em-attendee-sub">${_esc(sub)}</p><div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked">${en.user_id ? 'Member' : 'Guest'}</span>${en.paid ? '<span class="em-pill em-pill-paid">Paid</span>' : ''}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-raffle-entry="${_esc(en.id)}"${userAttr}${tokenAttr} data-paid="${en.paid ? '1' : '0'}" data-name="${_esc(name)}">Remove</button></div>`;
+        }).join('') : `<p class="text-xs text-gray-400 italic py-2">No eligible entries yet.</p>`;
+
         return `
             <div class="em-card em-command-card mb-4">
                 <p class="em-command-eyebrow">Raffle command</p>
@@ -1313,6 +1450,11 @@
                     <div class="em-money-row"><span>Member entries</span><strong>${memberEntries.length}</strong></div>
                     <div class="em-money-row"><span>Guest entries</span><strong>${guestEntries.length}</strong></div>
                 </div>
+
+                <div class="em-card mt-3">
+                    <div class="em-section-head"><div><h3 class="em-section-title">Entries <span class="text-gray-400 font-normal">· ${eligibleEntries.length}</span></h3><p class="em-section-sub">Remove accidental or test raffle entries without deleting the event.</p></div></div>
+                    ${entryRows}
+                </div>
             </div>
         `;
     }
@@ -1325,6 +1467,39 @@
         document.getElementById('emSheetContent')?.querySelectorAll('[data-raffle-assign-choice]').forEach(btn => {
             btn.onclick = () => _assignWinnerChoice(btn.dataset.winnerId);
         });
+        document.getElementById('emSheetContent')?.querySelectorAll('[data-remove-raffle-entry]').forEach(btn => {
+            btn.onclick = () => _removeRaffleEntry(btn);
+        });
+    }
+
+    async function _removeRaffleEntry(btn) {
+        const name = btn.dataset.name || 'this entry';
+        const isPaid = btn.dataset.paid === '1';
+        const warning = isPaid ? '\n\nThis was marked paid. Removing the record does not refund Stripe payments.' : '';
+        if (!confirm(`Remove raffle entry for ${name}? Any winner record for this entry will also be removed.${warning}`)) return;
+        btn.disabled = true;
+        btn.textContent = 'Removing...';
+        try {
+            if (btn.dataset.guestToken) {
+                await _deleteByEventAndColumn('event_raffle_winners', 'guest_token', btn.dataset.guestToken);
+            }
+            if (btn.dataset.userId) {
+                await _deleteByEventAndColumn('event_raffle_winners', 'user_id', btn.dataset.userId);
+            }
+            const { error } = await supabaseClient
+                .from('event_raffle_entries')
+                .delete()
+                .eq('id', btn.dataset.removeRaffleEntry)
+                .eq('event_id', STATE.eventId);
+            if (error) throw error;
+            STATE.tabData.raffle = null;
+            await _renderTabAsync('raffle', _loadRaffle, _raffleHtml, _wireRaffle);
+            _notifyParent('updated', STATE.eventId);
+        } catch (err) {
+            alert('Raffle entry remove failed: ' + (err.message || 'unknown error'));
+            STATE.tabData.raffle = null;
+            await _renderTabAsync('raffle', _loadRaffle, _raffleHtml, _wireRaffle);
+        }
     }
 
     function _winnerChoiceHtml(winner, config, winners) {
