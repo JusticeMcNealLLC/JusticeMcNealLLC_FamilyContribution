@@ -1371,6 +1371,8 @@
         const allDrawn = totalPrizes > 0 && winnersDrawn >= totalPrizes;
         const canDraw = typeof window.evtOpenRaffleDraw === 'function' && eligibleEntries.length > 0 && !allDrawn;
         const drawPct = totalPrizes ? Math.round((winnersDrawn / totalPrizes) * 100) : 0;
+        const raffleEntryPriceDollars = (Number(e.raffle_entry_cost_cents || 0) / 100).toFixed(2);
+        const paidEventRaffleIncluded = e.pricing_mode === 'paid';
 
         const winnerRows = d.winners.length ? d.winners.map(w => {
             const p = w.profiles || {};
@@ -1471,6 +1473,15 @@
                     <div class="em-money-row"><span>Type</span><strong>${_esc(e.raffle_type || 'digital')}</strong></div>
                     <div class="em-money-row"><span>Draw trigger</span><strong>${_esc(e.raffle_draw_trigger || 'manual')}</strong></div>
                     <div class="em-money-row"><span>Entry cost</span><strong>${e.raffle_entry_cost_cents ? fmt(e.raffle_entry_cost_cents) : 'Free'}</strong></div>
+                    <div style="margin:12px 0;padding:12px;border:1px solid #eef2ff;border-radius:12px;background:#f8fafc">
+                        <label for="emRaffleEntryPrice" style="display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Raffle entry price</label>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <span style="font-size:13px;font-weight:800;color:#475569">$</span>
+                            <input id="emRaffleEntryPrice" class="em-input" type="number" min="0" max="500" step="0.01" value="${_esc(raffleEntryPriceDollars)}" ${paidEventRaffleIncluded ? 'disabled' : ''} style="flex:1;min-width:0">
+                            <button id="emRafflePriceSave" type="button" class="em-btn-primary" ${paidEventRaffleIncluded ? 'disabled' : ''}>Save</button>
+                        </div>
+                        <p id="emRafflePriceStatus" class="text-xs text-gray-400 mt-2">${paidEventRaffleIncluded ? 'Paid RSVP events include raffle entry with the RSVP, so separate raffle pricing is not used.' : 'Set 0 for a free raffle. Changes apply to future raffle checkouts only.'}</p>
+                    </div>
                     <div class="em-money-row"><span>Member entries</span><strong>${memberEntries.length}</strong></div>
                     <div class="em-money-row"><span>Guest entries</span><strong>${guestEntries.length}</strong></div>
                 </div>
@@ -1494,6 +1505,45 @@
         document.getElementById('emSheetContent')?.querySelectorAll('[data-remove-raffle-entry]').forEach(btn => {
             btn.onclick = () => _removeRaffleEntry(btn);
         });
+        document.getElementById('emRafflePriceSave')?.addEventListener('click', _saveRaffleEntryPrice);
+    }
+
+    async function _saveRaffleEntryPrice() {
+        const input = document.getElementById('emRaffleEntryPrice');
+        const btn = document.getElementById('emRafflePriceSave');
+        const status = document.getElementById('emRafflePriceStatus');
+        const dollars = Number(input?.value || 0);
+        if (!Number.isFinite(dollars) || dollars < 0) {
+            if (status) status.textContent = 'Enter a price of 0 or higher.';
+            input?.focus();
+            return;
+        }
+        if (dollars > 500) {
+            if (status) status.textContent = 'Raffle entry price cannot be more than $500.';
+            input?.focus();
+            return;
+        }
+        const cents = Math.round(dollars * 100);
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+        }
+        if (status) status.textContent = 'Saving raffle price...';
+        try {
+            const { error } = await supabaseClient
+                .from('events')
+                .update({ raffle_entry_cost_cents: cents })
+                .eq('id', STATE.eventId);
+            if (error) throw error;
+            STATE.event.raffle_entry_cost_cents = cents;
+            await _refreshEventManager('raffle');
+        } catch (err) {
+            if (status) status.textContent = 'Save failed: ' + (err.message || 'unknown error');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Save';
+            }
+        }
     }
 
     async function _removeRaffleEntry(btn) {
