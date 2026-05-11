@@ -1373,6 +1373,7 @@
         const drawPct = totalPrizes ? Math.round((winnersDrawn / totalPrizes) * 100) : 0;
         const raffleEntryPriceDollars = (Number(e.raffle_entry_cost_cents || 0) / 100).toFixed(2);
         const paidEventRaffleIncluded = e.pricing_mode === 'paid';
+        const prizeSetupHtml = _rafflePrizeSetupHtml(raffleConfig, d.winners);
 
         const winnerRows = d.winners.length ? d.winners.map(w => {
             const p = w.profiles || {};
@@ -1486,6 +1487,8 @@
                     <div class="em-money-row"><span>Guest entries</span><strong>${guestEntries.length}</strong></div>
                 </div>
 
+                ${prizeSetupHtml}
+
                 <div class="em-card mt-3">
                     <div class="em-section-head"><div><h3 class="em-section-title">Entries <span class="text-gray-400 font-normal">· ${eligibleEntries.length}</span></h3><p class="em-section-sub">Remove accidental or test raffle entries without deleting the event.</p></div></div>
                     ${entryRows}
@@ -1506,6 +1509,209 @@
             btn.onclick = () => _removeRaffleEntry(btn);
         });
         document.getElementById('emRafflePriceSave')?.addEventListener('click', _saveRaffleEntryPrice);
+        document.getElementById('emRafflePrizeSave')?.addEventListener('click', () => _saveRafflePrizeSetup());
+        document.querySelector('[data-em-raffle-add-category]')?.addEventListener('click', () => _saveRafflePrizeSetup({ addCategory: true }));
+        document.querySelector('[data-em-raffle-add-item]')?.addEventListener('click', () => _saveRafflePrizeSetup({ addItem: true }));
+        document.querySelectorAll('[data-em-raffle-remove-category]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const label = btn.dataset.categoryLabel || 'this category';
+                if (confirm(`Remove ${label}? Prize items in this category will move to the first remaining category.`)) {
+                    _saveRafflePrizeSetup({ removeCategoryId: btn.dataset.emRaffleRemoveCategory });
+                }
+            });
+        });
+        document.querySelectorAll('[data-em-raffle-remove-item]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const label = btn.dataset.itemLabel || 'this prize';
+                if (confirm(`Remove ${label} from the raffle prize setup? Existing drawn winner records are not deleted.`)) {
+                    _saveRafflePrizeSetup({ removeItemId: btn.dataset.emRaffleRemoveItem });
+                }
+            });
+        });
+    }
+
+    function _rafflePrizeSetupHtml(config, winners = []) {
+        const model = window.EventsRaffleModel;
+        if (!model) {
+            return `<div class="em-card mt-3"><div class="em-section-head"><div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Raffle editor unavailable because the raffle model helper did not load.</p></div></div></div>`;
+        }
+        const normalized = model.normalizeConfig(config || []);
+        const categories = model.getOrderedCategories(normalized);
+        const items = normalized.items || [];
+        const validation = model.validateConfig(normalized);
+        const categoryOptions = categories.map(category => `<option value="${_esc(category.id)}">${_esc(category.label)}</option>`).join('');
+        const usedPrizeIds = new Set((winners || []).map(winner => winner.prize_id).filter(Boolean));
+        const drawModeOptions = (selected) => [
+            ['specific_item', 'Specific items'],
+            ['random_item', 'Random item in category'],
+            ['winner_choice', 'Winner chooses later'],
+        ].map(([value, label]) => `<option value="${value}" ${selected === value ? 'selected' : ''}>${label}</option>`).join('');
+
+        const categoryRows = categories.length ? categories.map((category, index) => `
+            <div class="em-raffle-edit-row" data-em-raffle-category-row="${_esc(category.id)}" data-sort-order="${(index + 1) * 10}">
+                <div>
+                    <label class="em-raffle-edit-label">Category</label>
+                    <input class="em-input" data-em-raffle-category-field="label" value="${_esc(category.label)}" maxlength="80">
+                </div>
+                <div>
+                    <label class="em-raffle-edit-label">Draw mode</label>
+                    <select class="em-input" data-em-raffle-category-field="draw_mode">${drawModeOptions(category.draw_mode)}</select>
+                </div>
+                <div>
+                    <label class="em-raffle-edit-label">Winners</label>
+                    <input class="em-input" type="number" min="0" step="1" data-em-raffle-category-field="winner_count" value="${category.winner_count ?? ''}">
+                </div>
+                <button type="button" class="em-btn-ghost" data-em-raffle-remove-category="${_esc(category.id)}" data-category-label="${_esc(category.label)}" ${categories.length <= 1 ? 'disabled' : ''}>Remove</button>
+            </div>
+        `).join('') : `<p class="text-xs text-gray-400 italic py-2">No prize categories yet.</p>`;
+
+        const itemRows = items.length ? items.map((item, index) => `
+            <div class="em-raffle-edit-row em-raffle-item-row" data-em-raffle-item-row="${_esc(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${_esc(item.image_url || '')}">
+                <div>
+                    <label class="em-raffle-edit-label">Emoji</label>
+                    <input class="em-input" data-em-raffle-item-field="emoji" value="${_esc(item.emoji || '🎁')}" maxlength="4">
+                </div>
+                <div>
+                    <label class="em-raffle-edit-label">Prize</label>
+                    <input class="em-input" data-em-raffle-item-field="name" value="${_esc(item.name)}" maxlength="120">
+                </div>
+                <div>
+                    <label class="em-raffle-edit-label">Category</label>
+                    <select class="em-input" data-em-raffle-item-field="category_id">
+                        ${categories.map(category => `<option value="${_esc(category.id)}" ${item.category_id === category.id ? 'selected' : ''}>${_esc(category.label)}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label class="em-raffle-edit-label">Qty</label>
+                    <input class="em-input" type="number" min="1" step="1" data-em-raffle-item-field="quantity" value="${item.quantity || 1}">
+                </div>
+                <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${_esc(item.id)}" data-item-label="${_esc(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ''}>Remove</button>
+            </div>
+        `).join('') : `<p class="text-xs text-gray-400 italic py-2">No prize items yet. Add a prize before drawing winners.</p>`;
+
+        return `
+            <div class="em-card mt-3">
+                <style>
+                    .em-raffle-edit-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 88px auto; gap:8px; align-items:end; padding:10px 0; border-top:1px solid #f1f5f9; }
+                    .em-raffle-edit-row:first-of-type { border-top:0; padding-top:0; }
+                    .em-raffle-item-row { grid-template-columns:62px minmax(0,1.2fr) minmax(0,.9fr) 70px auto; }
+                    .em-raffle-edit-label { display:block; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#94a3b8; margin-bottom:5px; }
+                    @media(max-width:700px){ .em-raffle-edit-row, .em-raffle-item-row { grid-template-columns:1fr; } }
+                </style>
+                <div class="em-section-head">
+                    <div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Add, edit, or remove raffle prizes after event creation. Existing drawn winners stay in the winner history.</p></div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0">
+                    <p class="em-raffle-edit-label" style="margin:0">Categories</p>
+                    <button type="button" class="em-btn-ghost" data-em-raffle-add-category>Add category</button>
+                </div>
+                ${categoryRows}
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 8px;border-top:1px solid #f1f5f9;padding-top:12px">
+                    <p class="em-raffle-edit-label" style="margin:0">Prize items</p>
+                    <button type="button" class="em-btn-ghost" data-em-raffle-add-item>Add prize</button>
+                </div>
+                ${itemRows}
+                ${validation.valid ? '' : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(_esc).join('<br>')}</div>`}
+                <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+                    <button type="button" id="emRafflePrizeSave" class="em-btn-primary">Save prize setup</button>
+                    <span id="emRafflePrizeStatus" class="text-xs text-gray-400">${categories.length} categor${categories.length === 1 ? 'y' : 'ies'} · ${items.length} item${items.length === 1 ? '' : 's'}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function _collectRafflePrizeConfigFromDom() {
+        const model = window.EventsRaffleModel;
+        if (!model) throw new Error('Raffle model helper is not loaded.');
+        const categoryRows = Array.from(document.querySelectorAll('[data-em-raffle-category-row]'));
+        const itemRows = Array.from(document.querySelectorAll('[data-em-raffle-item-row]'));
+        if (!categoryRows.length && !itemRows.length) return model.normalizeConfig(STATE.event?.raffle_prizes || []);
+        const categories = categoryRows.map((row, index) => {
+            const field = name => row.querySelector(`[data-em-raffle-category-field="${name}"]`)?.value;
+            return model.createCategory({
+                id: row.dataset.emRaffleCategoryRow,
+                label: field('label') || 'Prize Tier',
+                draw_mode: field('draw_mode') || 'specific_item',
+                winner_count: Math.max(0, Math.floor(Number(field('winner_count')) || 0)),
+                sort_order: (index + 1) * 10,
+            });
+        });
+        const fallbackCategory = categories[0]?.id || 'general';
+        const categoryIds = new Set(categories.map(category => category.id));
+        const items = itemRows.map((row, index) => {
+            const field = name => row.querySelector(`[data-em-raffle-item-field="${name}"]`)?.value;
+            const categoryId = categoryIds.has(field('category_id')) ? field('category_id') : fallbackCategory;
+            return model.createItem({
+                id: row.dataset.emRaffleItemRow,
+                emoji: field('emoji') || model.DEFAULT_EMOJI || '🎁',
+                name: field('name') || 'Prize item',
+                category_id: categoryId,
+                quantity: Math.max(1, Math.floor(Number(field('quantity')) || 1)),
+                image_url: row.dataset.imageUrl || null,
+                sort_order: (index + 1) * 10,
+            });
+        });
+        return model.normalizeConfig({ version: 2, categories, items });
+    }
+
+    async function _saveRafflePrizeSetup(action = {}) {
+        const model = window.EventsRaffleModel;
+        const status = document.getElementById('emRafflePrizeStatus');
+        const saveBtn = document.getElementById('emRafflePrizeSave');
+        try {
+            if (!model) throw new Error('Raffle model helper is not loaded.');
+            let config = _collectRafflePrizeConfigFromDom();
+            if (action.addCategory) {
+                config.categories.push(model.createCategory({ label: 'New Tier', sort_order: (config.categories.length + 1) * 10, winner_count: 1 }));
+            }
+            if (action.addItem) {
+                if (!config.categories.length) config.categories.push(model.createCategory({ id: 'general', label: 'Raffle Prizes', sort_order: 10, winner_count: 1 }));
+                const category = config.categories[0];
+                config.items.push(model.createItem({ category_id: category.id, name: 'New prize item', sort_order: (config.items.length + 1) * 10 }));
+                category.winner_count = Math.max(Number(category.winner_count || 0), _categoryPrizeQuantity(config, category.id));
+            }
+            if (action.removeCategoryId) {
+                if (config.categories.length <= 1) throw new Error('Keep at least one prize category.');
+                config.categories = config.categories.filter(category => category.id !== action.removeCategoryId);
+                const fallbackCategoryId = config.categories[0]?.id || 'general';
+                config.items.forEach(item => { if (item.category_id === action.removeCategoryId) item.category_id = fallbackCategoryId; });
+            }
+            if (action.removeItemId) {
+                const alreadyDrawn = (STATE.tabData.raffle?.winners || []).some(winner => winner.prize_id === action.removeItemId);
+                if (alreadyDrawn) throw new Error('This prize is already assigned to a winner and cannot be removed from setup.');
+                config.items = config.items.filter(item => item.id !== action.removeItemId);
+                _capRaffleWinnerCounts(config);
+            }
+            config = model.normalizeConfig(config);
+            const winnerCount = model.getTotalWinnerCount(config);
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+            if (status) status.textContent = 'Saving prize setup...';
+            const { error } = await supabaseClient
+                .from('events')
+                .update({ raffle_prizes: config, raffle_winner_count: winnerCount })
+                .eq('id', STATE.eventId);
+            if (error) throw error;
+            STATE.event.raffle_prizes = config;
+            STATE.event.raffle_winner_count = winnerCount;
+            await _refreshEventManager('raffle');
+        } catch (err) {
+            if (status) status.textContent = 'Save failed: ' + (err.message || 'unknown error');
+            else alert('Prize setup save failed: ' + (err.message || 'unknown error'));
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save prize setup'; }
+        }
+    }
+
+    function _categoryPrizeQuantity(config, categoryId) {
+        return (config.items || [])
+            .filter(item => item.category_id === categoryId)
+            .reduce((sum, item) => sum + Math.max(1, Number(item.quantity || 1)), 0);
+    }
+
+    function _capRaffleWinnerCounts(config) {
+        (config.categories || []).forEach(category => {
+            const quantity = _categoryPrizeQuantity(config, category.id);
+            category.winner_count = Math.min(Number(category.winner_count || 0), quantity);
+        });
     }
 
     async function _saveRaffleEntryPrice() {
