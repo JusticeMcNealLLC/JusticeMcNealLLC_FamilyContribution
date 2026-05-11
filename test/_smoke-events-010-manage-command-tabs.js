@@ -46,8 +46,8 @@ assert(/https:\/\/justicemcneal\.com/.test(manageSheet), 'invitation QR should u
 assert(/em-sheet-hidden/.test(manageSheet), 'manage sheet should use a dedicated hidden class so responsive display utilities cannot keep it mounted');
 assert(/panel\.classList\.add\('pointer-events-auto'/.test(manageSheet), 'manage sheet panel should restore pointer events on open');
 assert(/panel\.classList\.add\('pointer-events-none'/.test(manageSheet), 'manage sheet panel should disable pointer events on close');
-assert(/manage\/sheet\.js\?v=111/.test(adminEventsHtml), 'admin events should request a versioned manage sheet to bypass stale SW caches');
-assert(/manage\/sheet\.js\?v=111/.test(portalEventsHtml), 'portal events should request a versioned manage sheet to bypass stale SW caches');
+assert(/manage\/sheet\.js\?v=112/.test(adminEventsHtml), 'admin events should request a versioned manage sheet to bypass stale SW caches');
+assert(/manage\/sheet\.js\?v=112/.test(portalEventsHtml), 'portal events should request a versioned manage sheet to bypass stale SW caches');
 assert(/Reset test participation/.test(manageSheet), 'danger zone should expose participation reset');
 assert(/_resetParticipation/.test(manageSheet), 'manage sheet should implement participation reset action');
 assert(participationFn.indexOf("deleteByEvent(supabase, 'event_raffle_winners', eventId)") < participationFn.indexOf("deleteByEvent(supabase, 'event_rsvps', eventId)"), 'participation reset should delete dependent records before RSVPs');
@@ -64,6 +64,10 @@ assert(/function _saveRafflePrizeSetup\(/.test(manageSheet), 'raffle tab should 
 assert(/raffle_prizes: config/.test(manageSheet), 'raffle prize setup should update events.raffle_prizes');
 assert(/raffle_winner_count: winnerCount/.test(manageSheet), 'raffle prize setup should update raffle winner count');
 assert(/function _capRaffleWinnerCounts\(/.test(manageSheet), 'raffle prize removal should keep winner counts within available prize quantity');
+assert(/data-em-prize-drop/.test(manageSheet), 'raffle prize setup should support prize image drop zones');
+assert(/function _uploadPendingRafflePrizeImages\(/.test(manageSheet), 'raffle prize setup should upload pending prize images on save');
+assert(/event-raffle-prizes/.test(manageSheet), 'raffle prize images should use the event-raffle-prizes storage bucket');
+assert(/data-em-prize-clear/.test(manageSheet), 'raffle prize setup should support clearing prize images');
 assert(/does not refund Stripe payments/.test(manageSheet), 'destructive paid cleanup should warn about Stripe refunds');
 assert(/rsvps_delete_managed_events/.test(rsvpPolicy), 'member RSVP admin cleanup policy should exist');
 assert(/public\.has_permission\('events\.manage_all'\)/.test(rsvpPolicy), 'member RSVP admin cleanup policy should allow event admins');

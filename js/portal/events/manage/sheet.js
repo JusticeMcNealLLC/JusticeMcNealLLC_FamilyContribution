@@ -44,6 +44,9 @@
         tabData: {}, // lazy per-tab cache: { money, docs, raffle, comp }
     };
 
+    const RAFFLE_PRIZE_IMAGE_FILES = {};
+    const RAFFLE_PRIZE_IMAGE_PREVIEWS = {};
+
     const DOC_TYPES = [
         { value: 'plane_ticket', label: 'Plane Ticket', perMember: true },
         { value: 'group_ticket', label: 'Group Ticket / Pass', perMember: false },
@@ -171,6 +174,7 @@
         STATE.source  = opts.source || 'admin';
         STATE.activeTab = M3A_TABS.some(t => t.key === opts.tab) ? opts.tab : 'overview';
         STATE.tabData = {}; // clear cache between events
+        _clearRafflePrizeImageState();
 
         // Show shell immediately with skeleton
         document.getElementById('emSheetTitle').textContent = 'Loading event…';
@@ -1528,6 +1532,7 @@
                 }
             });
         });
+        _wireRafflePrizeImages();
     }
 
     function _rafflePrizeSetupHtml(config, winners = []) {
@@ -1565,38 +1570,66 @@
             </div>
         `).join('') : `<p class="text-xs text-gray-400 italic py-2">No prize categories yet.</p>`;
 
-        const itemRows = items.length ? items.map((item, index) => `
-            <div class="em-raffle-edit-row em-raffle-item-row" data-em-raffle-item-row="${_esc(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${_esc(item.image_url || '')}">
-                <div>
-                    <label class="em-raffle-edit-label">Emoji</label>
-                    <input class="em-input" data-em-raffle-item-field="emoji" value="${_esc(item.emoji || '🎁')}" maxlength="4">
+        const itemRows = items.length ? items.map((item, index) => {
+            const previewUrl = RAFFLE_PRIZE_IMAGE_PREVIEWS[item.id] || item.image_url || '';
+            const pendingName = RAFFLE_PRIZE_IMAGE_FILES[item.id]?.name || '';
+            return `
+            <div class="em-raffle-item-wrap" data-em-raffle-item-row="${_esc(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${_esc(item.image_url || '')}">
+                <div class="em-raffle-edit-row em-raffle-item-row">
+                    <div>
+                        <label class="em-raffle-edit-label">Emoji</label>
+                        <input class="em-input" data-em-raffle-item-field="emoji" value="${_esc(item.emoji || '🎁')}" maxlength="4">
+                    </div>
+                    <div>
+                        <label class="em-raffle-edit-label">Prize</label>
+                        <input class="em-input" data-em-raffle-item-field="name" value="${_esc(item.name)}" maxlength="120">
+                    </div>
+                    <div>
+                        <label class="em-raffle-edit-label">Category</label>
+                        <select class="em-input" data-em-raffle-item-field="category_id">
+                            ${categories.map(category => `<option value="${_esc(category.id)}" ${item.category_id === category.id ? 'selected' : ''}>${_esc(category.label)}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="em-raffle-edit-label">Qty</label>
+                        <input class="em-input" type="number" min="1" step="1" data-em-raffle-item-field="quantity" value="${item.quantity || 1}">
+                    </div>
+                    <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${_esc(item.id)}" data-item-label="${_esc(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ''}>Remove</button>
                 </div>
-                <div>
-                    <label class="em-raffle-edit-label">Prize</label>
-                    <input class="em-input" data-em-raffle-item-field="name" value="${_esc(item.name)}" maxlength="120">
+                <div class="em-prize-img-row">
+                    <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-em-prize-file="${_esc(item.id)}">
+                    <div class="em-prize-img-drop" data-em-prize-drop="${_esc(item.id)}" title="Click or drag an image here">
+                        ${previewUrl ? `<img src="${_esc(previewUrl)}" alt="Prize image">` : '<span>📷</span>'}
+                    </div>
+                    <div class="em-prize-img-copy" data-em-prize-copy="${_esc(item.id)}">
+                        <strong>${pendingName ? _esc(pendingName) : (previewUrl ? 'Image set' : 'Prize image')}</strong>
+                        <span>${previewUrl ? 'Click or drop to replace. Save prize setup to keep changes.' : 'Click or drag a PNG, JPG, or WebP image here.'}</span>
+                    </div>
+                    ${previewUrl ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-em-prize-clear="${_esc(item.id)}">Remove image</button>` : ''}
                 </div>
-                <div>
-                    <label class="em-raffle-edit-label">Category</label>
-                    <select class="em-input" data-em-raffle-item-field="category_id">
-                        ${categories.map(category => `<option value="${_esc(category.id)}" ${item.category_id === category.id ? 'selected' : ''}>${_esc(category.label)}</option>`).join('')}
-                    </select>
-                </div>
-                <div>
-                    <label class="em-raffle-edit-label">Qty</label>
-                    <input class="em-input" type="number" min="1" step="1" data-em-raffle-item-field="quantity" value="${item.quantity || 1}">
-                </div>
-                <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${_esc(item.id)}" data-item-label="${_esc(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ''}>Remove</button>
             </div>
-        `).join('') : `<p class="text-xs text-gray-400 italic py-2">No prize items yet. Add a prize before drawing winners.</p>`;
+        `;
+        }).join('') : `<p class="text-xs text-gray-400 italic py-2">No prize items yet. Add a prize before drawing winners.</p>`;
 
         return `
             <div class="em-card mt-3">
                 <style>
                     .em-raffle-edit-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 88px auto; gap:8px; align-items:end; padding:10px 0; border-top:1px solid #f1f5f9; }
                     .em-raffle-edit-row:first-of-type { border-top:0; padding-top:0; }
+                    .em-raffle-item-wrap { padding:10px 0; border-top:1px solid #f1f5f9; }
+                    .em-raffle-item-wrap:first-of-type { border-top:0; padding-top:0; }
+                    .em-raffle-item-wrap .em-raffle-edit-row { border-top:0; padding:0; }
                     .em-raffle-item-row { grid-template-columns:62px minmax(0,1.2fr) minmax(0,.9fr) 70px auto; }
                     .em-raffle-edit-label { display:block; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#94a3b8; margin-bottom:5px; }
+                    .em-prize-img-row { margin-top:10px; display:flex; align-items:center; gap:9px; }
+                    .em-prize-img-drop { width:72px; height:72px; border:2px dashed #d1d5db; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer; color:#9ca3af; background:#fff; flex-shrink:0; }
+                    .em-prize-img-drop:hover, .em-prize-img-drop.em-drag-over { border-color:#818cf8; background:#f5f3ff; color:#4f46e5; }
+                    .em-prize-img-drop img { width:100%; height:100%; object-fit:cover; display:block; }
+                    .em-prize-img-drop span { font-size:19px; }
+                    .em-prize-img-copy { flex:1; min-width:0; font-size:11px; color:#6b7280; line-height:1.35; }
+                    .em-prize-img-copy strong { display:block; color:#374151; font-size:12px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
                     @media(max-width:700px){ .em-raffle-edit-row, .em-raffle-item-row { grid-template-columns:1fr; } }
+                    @media(max-width:520px){ .em-prize-img-row { align-items:flex-start; flex-wrap:wrap; } .em-prize-img-copy { flex-basis:calc(100% - 82px); } }
                 </style>
                 <div class="em-section-head">
                     <div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Add, edit, or remove raffle prizes after event creation. Existing drawn winners stay in the winner history.</p></div>
@@ -1654,12 +1687,100 @@
         return model.normalizeConfig({ version: 2, categories, items });
     }
 
+    function _wireRafflePrizeImages() {
+        document.querySelectorAll('[data-em-prize-drop]').forEach(zone => {
+            const itemId = zone.dataset.emPrizeDrop;
+            const fileInput = document.querySelector(`[data-em-prize-file="${CSS.escape(itemId)}"]`);
+            if (!itemId || !fileInput) return;
+            zone.addEventListener('click', () => fileInput.click());
+            zone.addEventListener('dragover', event => {
+                event.preventDefault();
+                zone.classList.add('em-drag-over');
+            });
+            zone.addEventListener('dragleave', event => {
+                if (!zone.contains(event.relatedTarget)) zone.classList.remove('em-drag-over');
+            });
+            zone.addEventListener('drop', event => {
+                event.preventDefault();
+                zone.classList.remove('em-drag-over');
+                const file = event.dataTransfer?.files?.[0];
+                if (file) _setRafflePrizeImage(itemId, file);
+            });
+            fileInput.addEventListener('change', () => {
+                const file = fileInput.files?.[0];
+                if (file) _setRafflePrizeImage(itemId, file);
+            });
+        });
+        document.querySelectorAll('[data-em-prize-clear]').forEach(btn => {
+            btn.addEventListener('click', () => _clearRafflePrizeImage(btn.dataset.emPrizeClear));
+        });
+    }
+
+    function _setRafflePrizeImage(itemId, file) {
+        if (!file.type.match(/^image\/(png|jpeg|webp)$/)) { alert('Please use a PNG, JPG, or WebP image.'); return; }
+        if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return; }
+        RAFFLE_PRIZE_IMAGE_FILES[itemId] = file;
+        const reader = new FileReader();
+        reader.onload = () => {
+            RAFFLE_PRIZE_IMAGE_PREVIEWS[itemId] = reader.result;
+            const zone = document.querySelector(`[data-em-prize-drop="${CSS.escape(itemId)}"]`);
+            if (zone) zone.innerHTML = `<img src="${_esc(reader.result)}" alt="Prize image">`;
+            const copy = document.querySelector(`[data-em-prize-copy="${CSS.escape(itemId)}"]`);
+            if (copy) copy.innerHTML = `<strong>${_esc(file.name)}</strong><span>Ready to upload. Save prize setup to keep this image.</span>`;
+            const status = document.getElementById('emRafflePrizeStatus');
+            if (status) status.textContent = 'Image selected. Save prize setup to upload it.';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function _clearRafflePrizeImage(itemId) {
+        if (!itemId) return;
+        delete RAFFLE_PRIZE_IMAGE_FILES[itemId];
+        delete RAFFLE_PRIZE_IMAGE_PREVIEWS[itemId];
+        const row = document.querySelector(`[data-em-raffle-item-row="${CSS.escape(itemId)}"]`);
+        if (row) row.dataset.imageUrl = '';
+        const zone = document.querySelector(`[data-em-prize-drop="${CSS.escape(itemId)}"]`);
+        if (zone) zone.innerHTML = '<span>📷</span>';
+        const copy = document.querySelector(`[data-em-prize-copy="${CSS.escape(itemId)}"]`);
+        if (copy) copy.innerHTML = '<strong>Prize image</strong><span>Image removed. Save prize setup to keep this change.</span>';
+        const btn = document.querySelector(`[data-em-prize-clear="${CSS.escape(itemId)}"]`);
+        if (btn) btn.remove();
+        const status = document.getElementById('emRafflePrizeStatus');
+        if (status) status.textContent = 'Image removed. Save prize setup to keep this change.';
+    }
+
+    function _clearRafflePrizeImageState() {
+        Object.keys(RAFFLE_PRIZE_IMAGE_FILES).forEach(key => delete RAFFLE_PRIZE_IMAGE_FILES[key]);
+        Object.keys(RAFFLE_PRIZE_IMAGE_PREVIEWS).forEach(key => delete RAFFLE_PRIZE_IMAGE_PREVIEWS[key]);
+    }
+
+    async function _uploadPendingRafflePrizeImages(config) {
+        const uploads = Object.entries(RAFFLE_PRIZE_IMAGE_FILES);
+        if (!uploads.length) return config;
+        const slug = _safeFilename(STATE.event?.slug || STATE.event?.title || STATE.eventId || 'event');
+        for (const [itemId, file] of uploads) {
+            const item = (config.items || []).find(entry => entry.id === itemId);
+            if (!item) continue;
+            const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+            const path = `${slug}/${itemId}-${Date.now()}.${ext}`;
+            const up = await supabaseClient.storage
+                .from('event-raffle-prizes')
+                .upload(path, file, { contentType: file.type || 'image/jpeg' });
+            if (up.error) throw new Error(`Prize image upload failed: ${up.error.message}`);
+            item.image_url = supabaseClient.storage.from('event-raffle-prizes').getPublicUrl(path).data.publicUrl;
+        }
+        _clearRafflePrizeImageState();
+        return config;
+    }
+
     async function _saveRafflePrizeSetup(action = {}) {
         const model = window.EventsRaffleModel;
         const status = document.getElementById('emRafflePrizeStatus');
         const saveBtn = document.getElementById('emRafflePrizeSave');
         try {
             if (!model) throw new Error('Raffle model helper is not loaded.');
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+            if (status) status.textContent = Object.keys(RAFFLE_PRIZE_IMAGE_FILES).length ? 'Uploading prize images...' : 'Saving prize setup...';
             let config = _collectRafflePrizeConfigFromDom();
             if (action.addCategory) {
                 config.categories.push(model.createCategory({ label: 'New Tier', sort_order: (config.categories.length + 1) * 10, winner_count: 1 }));
@@ -1680,11 +1801,13 @@
                 const alreadyDrawn = (STATE.tabData.raffle?.winners || []).some(winner => winner.prize_id === action.removeItemId);
                 if (alreadyDrawn) throw new Error('This prize is already assigned to a winner and cannot be removed from setup.');
                 config.items = config.items.filter(item => item.id !== action.removeItemId);
+                delete RAFFLE_PRIZE_IMAGE_FILES[action.removeItemId];
+                delete RAFFLE_PRIZE_IMAGE_PREVIEWS[action.removeItemId];
                 _capRaffleWinnerCounts(config);
             }
             config = model.normalizeConfig(config);
+            config = await _uploadPendingRafflePrizeImages(config);
             const winnerCount = model.getTotalWinnerCount(config);
-            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
             if (status) status.textContent = 'Saving prize setup...';
             const { error } = await supabaseClient
                 .from('events')
