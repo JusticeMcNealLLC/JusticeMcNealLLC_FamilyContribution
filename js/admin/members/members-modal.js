@@ -203,6 +203,7 @@
 
                 <div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
                     ${_kvRow('Member since', created)}
+                    ${_kvRow('Birthday', m.birthday ? _formatDate(m.birthday + 'T00:00:00') : 'Not set')}
                     ${_kvRow('Last active', _formatRelative(m.lastSignInAt))}
                     ${_kvRow('Push notifications', pushOn ? 'Enabled' : 'Off')}
                     ${_kvRow('Payout setup', payoutOn ? 'Complete' : 'Incomplete')}
@@ -444,6 +445,20 @@
                     </form>
                 </div>
 
+                <div class="bg-white border border-amber-200 rounded-xl p-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="text-sm font-semibold text-gray-900">Reset onboarding</div>
+                            <div class="text-xs text-gray-500">Sends this member back through onboarding on their next login without deleting profile data.</div>
+                        </div>
+                        <button data-action="reset-onboarding" ${m.setup_completed ? '' : 'disabled'}
+                            class="w-full sm:w-auto px-3 py-2 text-sm font-semibold border rounded-lg whitespace-nowrap ${m.setup_completed ? 'border-amber-300 text-amber-700 hover:bg-amber-50' : 'border-gray-200 text-gray-400 cursor-not-allowed'}">
+                            ${m.setup_completed ? 'Reset onboarding' : 'Already in onboarding'}
+                        </button>
+                    </div>
+                    <div data-onboarding-status class="text-xs text-gray-500 mt-2 h-4"></div>
+                </div>
+
                 ${showResend ? `
                 <div class="bg-white border border-gray-200 rounded-xl p-4">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -581,6 +596,11 @@
             await _onSaveContact(member, form, action, status);
             return;
         }
+        if (kind === 'reset-onboarding') {
+            const status = action.parentElement.parentElement.querySelector('[data-onboarding-status]');
+            await _onResetOnboarding(member, action, status);
+            return;
+        }
         if (kind === 'deactivate' || kind === 'reactivate') {
             const status = action.parentElement.parentElement.querySelector('[data-danger-status]');
             await _onToggleActive(member, kind === 'deactivate' ? false : true, action, status);
@@ -690,6 +710,60 @@
         } finally {
             btn.disabled = false;
             setTimeout(() => { if (status) status.textContent = ''; }, 2500);
+        }
+    }
+
+    async function _onResetOnboarding(member, btn, status) {
+        if (!member.setup_completed) {
+            if (status) status.textContent = 'Member is already in onboarding.';
+            setTimeout(() => { if (status) status.textContent = ''; }, 2000);
+            return;
+        }
+        if (btn.dataset.confirming !== '1') {
+            const original = btn.innerHTML;
+            btn.dataset.confirming = '1';
+            btn.dataset.original = original;
+            btn.classList.add('ring-2', 'ring-offset-1', 'ring-amber-400');
+            btn.innerHTML = 'Tap again to reset';
+            if (status) status.textContent = 'They will revisit onboarding next time they sign in.';
+            const t = setTimeout(() => {
+                if (btn.dataset.confirming === '1') {
+                    btn.dataset.confirming = '';
+                    btn.innerHTML = btn.dataset.original || original;
+                    btn.classList.remove('ring-2', 'ring-offset-1', 'ring-amber-400');
+                    if (status) status.textContent = '';
+                }
+            }, 4000);
+            btn.dataset.confirmTimer = String(t);
+            return;
+        }
+
+        if (btn.dataset.confirmTimer) clearTimeout(Number(btn.dataset.confirmTimer));
+        btn.dataset.confirming = '';
+        btn.classList.remove('ring-2', 'ring-offset-1', 'ring-amber-400');
+        btn.innerHTML = btn.dataset.original || btn.innerHTML;
+
+        btn.disabled = true;
+        if (status) status.textContent = 'Resetting...';
+        try {
+            const { error } = await supabaseClient
+                .from('profiles')
+                .update({ setup_completed: false, updated_at: new Date().toISOString() })
+                .eq('id', member.id);
+            if (error) throw error;
+            member.setup_completed = false;
+            if (status) status.textContent = 'Onboarding reset.';
+            if (global.membersPage && typeof global.membersPage.refresh === 'function') {
+                await global.membersPage.refresh();
+            }
+            const updated = _findMember(member.id) || member;
+            const content = document.getElementById('memberSheetContent');
+            if (content && state.currentTab === 'settings') content.innerHTML = _renderSettings(updated);
+            _renderHeader(updated);
+        } catch (err) {
+            console.error('[member-modal] reset onboarding failed:', err);
+            if (status) status.textContent = (err && err.message) || 'Failed to reset.';
+            btn.disabled = false;
         }
     }
 

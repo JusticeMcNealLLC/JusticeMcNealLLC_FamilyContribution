@@ -50,7 +50,7 @@ async function loadProfile(userId) {
     try {
         const { data: profile, error } = await supabaseClient
             .from('profiles')
-            .select('first_name, last_name, profile_picture_url')
+            .select('first_name, last_name, birthday, profile_picture_url')
             .eq('id', userId)
             .single();
 
@@ -58,11 +58,13 @@ async function loadProfile(userId) {
 
         const firstNameInput = document.getElementById('settingsFirstName');
         const lastNameInput = document.getElementById('settingsLastName');
+        const birthdayInput = document.getElementById('settingsBirthday');
         const avatarImage = document.getElementById('avatarImage');
         const avatarInitials = document.getElementById('avatarInitials');
 
         if (profile.first_name) firstNameInput.value = profile.first_name;
         if (profile.last_name) lastNameInput.value = profile.last_name;
+        if (birthdayInput && profile.birthday) birthdayInput.value = profile.birthday;
 
         if (profile.profile_picture_url) {
             // Add cache-buster so updated photos show immediately
@@ -225,6 +227,7 @@ async function handleSaveProfile() {
 
     const firstName = document.getElementById('settingsFirstName').value.trim();
     const lastName = document.getElementById('settingsLastName').value.trim();
+    const birthday = (document.getElementById('settingsBirthday')?.value || '').trim();
     const saveBtn = document.getElementById('saveProfileBtn');
 
     if (!firstName) {
@@ -235,6 +238,15 @@ async function handleSaveProfile() {
         showError('profileError', 'Last name is required');
         return;
     }
+    if (birthday) {
+        const birthdayDate = new Date(birthday + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (Number.isNaN(birthdayDate.getTime()) || birthdayDate >= today) {
+            showError('profileError', 'Birthday must be in the past');
+            return;
+        }
+    }
 
     setButtonLoading(saveBtn, true, 'Save Profile');
 
@@ -244,6 +256,7 @@ async function handleSaveProfile() {
             .update({
                 first_name: firstName,
                 last_name: lastName,
+                birthday: birthday || null,
                 updated_at: new Date().toISOString(),
             })
             .eq('id', settingsUser.id);
