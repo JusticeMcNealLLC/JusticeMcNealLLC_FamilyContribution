@@ -1406,8 +1406,20 @@ detail.initBottomNav       = evtInitBottomNav;
 detail.cleanupBottomNav    = evtCleanupBottomNav;
 detail.openCtaPanel        = evtOpenCtaPanel;
 detail.closeCtaPanel       = evtCloseCtaPanel;
-detail.startLiveCountdown  = evtStartLiveCountdown;
+detail.startLiveCountdown    = evtStartLiveCountdown;
 detail.initSectionAnimations = evtInitSectionAnimations;
+// Phase 3B additions — mirror remaining window.evt* globals + raffle helpers
+detail.recenterFullscreenMap = evtRecenterFullscreenMap;
+detail.initHeroCollapse      = evtInitHeroCollapse;
+detail.cleanupHeroCollapse   = evtCleanupHeroCollapse;
+detail.miniMarkdown          = evtMiniMarkdown;
+detail.raffleConfig          = evtDetailRaffleConfig;
+detail.raffleCategories      = evtDetailRaffleCategories;
+detail.raffleItems           = evtDetailRaffleItems;
+detail.raffleWinnerCount     = evtDetailRaffleWinnerCount;
+detail.drawModeLabel         = evtDetailDrawModeLabel;
+detail.rafflePrizesHtml      = evtDetailRafflePrizesHtml;
+detail.raffleWinnersHtml     = evtDetailRaffleWinnersHtml;
 
 // Pre-register known sub-modules (M3 management sheet will register itself here)
 detail.register('rsvp',        { handle: () => window.evtHandleRsvp });
