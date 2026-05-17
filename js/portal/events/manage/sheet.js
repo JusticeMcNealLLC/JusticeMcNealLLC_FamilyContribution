@@ -41,6 +41,7 @@
         checkins: [],
         activeTab: 'overview',
         source:  'admin', // 'admin' | 'portal'
+        editCopyOnOpen: false,
         tabData: {}, // lazy per-tab cache: { money, docs, raffle, comp }
     };
 
@@ -146,6 +147,8 @@
                 .em-btn-primary:disabled { opacity:.55; cursor:not-allowed; }
                 .em-input { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; }
                 .em-input:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
+                .em-textarea { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; resize:vertical; min-height:92px; }
+                .em-textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
                 .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
                 .em-placeholder svg { width:48px; height:48px; margin-bottom:12px; opacity:.4; }
                 @media(max-width:639px){
@@ -173,6 +176,7 @@
         STATE.eventId = eventId;
         STATE.source  = opts.source || 'admin';
         STATE.activeTab = M3A_TABS.some(t => t.key === opts.tab) ? opts.tab : 'overview';
+        STATE.editCopyOnOpen = !!opts.editCopy;
         STATE.tabData = {}; // clear cache between events
         _clearRafflePrizeImageState();
 
@@ -378,6 +382,30 @@
                     <div class="flex justify-between gap-3"><span class="text-gray-500">Pricing</span><span class="text-gray-800 font-medium">${e.pricing_mode === 'paid' ? `Paid · ${_money(e.rsvp_cost_cents)}` : 'Free'}</span></div>
                     ${e.rsvp_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">RSVP deadline</span><span class="text-gray-800 font-medium">${new Date(e.rsvp_deadline).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span></div>` : ''}
                 </div>
+            </div>
+
+            <div class="em-card mb-3" id="emCopyEditorCard">
+                <div class="em-section-head" style="margin-bottom:12px">
+                    <div>
+                        <h3 class="em-section-title">Event copy</h3>
+                        <p class="em-section-sub">Edit the title and description shown across the portal and invite page.</p>
+                    </div>
+                </div>
+                <form id="emCopyForm" class="space-y-3">
+                    <div>
+                        <label for="emCopyTitle" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Title *</label>
+                        <input id="emCopyTitle" class="em-input" type="text" maxlength="120" required value="${_esc(e.title || '')}">
+                    </div>
+                    <div>
+                        <label for="emCopyDescription" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Description</label>
+                        <textarea id="emCopyDescription" class="em-textarea" rows="4" maxlength="2000">${_esc(e.description || '')}</textarea>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="submit" id="emCopySave" class="em-btn-primary">Save changes</button>
+                        <button type="button" id="emCopyCancel" class="em-btn-ghost">Cancel</button>
+                        <span id="emCopyStatus" class="text-xs text-gray-400"></span>
+                    </div>
+                </form>
             </div>
 
             ${STATE.source === 'admin' ? `
@@ -587,6 +615,85 @@
                 _renderTab(STATE.activeTab);
             });
         });
+        const copyForm = document.getElementById('emCopyForm');
+        const copyTitle = document.getElementById('emCopyTitle');
+        const copyDescription = document.getElementById('emCopyDescription');
+        const copyStatus = document.getElementById('emCopyStatus');
+        copyForm?.addEventListener('submit', (ev) => {
+            ev.preventDefault();
+            _saveEventCopy(copyForm);
+        });
+        document.getElementById('emCopyCancel')?.addEventListener('click', () => {
+            if (copyTitle) copyTitle.value = STATE.event?.title || '';
+            if (copyDescription) copyDescription.value = STATE.event?.description || '';
+            if (copyStatus) {
+                copyStatus.className = 'text-xs text-gray-400';
+                copyStatus.textContent = 'Changes discarded';
+                setTimeout(() => { copyStatus.textContent = ''; }, 1800);
+            }
+        });
+        if (STATE.editCopyOnOpen) {
+            STATE.editCopyOnOpen = false;
+            setTimeout(() => {
+                document.getElementById('emCopyEditorCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                copyTitle?.focus();
+                copyTitle?.select();
+            }, 100);
+        }
+    }
+
+    async function _saveEventCopy(form) {
+        const e = STATE.event;
+        if (!e || !form) return;
+        const titleInput = document.getElementById('emCopyTitle');
+        const descriptionInput = document.getElementById('emCopyDescription');
+        const saveBtn = document.getElementById('emCopySave');
+        const status = document.getElementById('emCopyStatus');
+        const title = (titleInput?.value || '').trim();
+        const description = (descriptionInput?.value || '').trim();
+
+        function setStatus(message, isError) {
+            if (!status) return;
+            status.className = isError ? 'text-xs text-red-600' : 'text-xs text-gray-400';
+            status.textContent = message;
+        }
+
+        if (!title) {
+            setStatus('Title is required.', true);
+            titleInput?.focus();
+            return;
+        }
+
+        if (saveBtn) saveBtn.disabled = true;
+        setStatus('Saving...', false);
+
+        try {
+            const { data, error } = await supabaseClient
+                .from('events')
+                .update({ title, description: description || null })
+                .eq('id', e.id)
+                .select('title, description')
+                .single();
+            if (error) throw error;
+
+            STATE.event.title = data?.title || title;
+            STATE.event.description = data?.description || null;
+            _renderHeader();
+            _renderTab('overview');
+            setTimeout(() => {
+                const refreshedStatus = document.getElementById('emCopyStatus');
+                if (refreshedStatus) {
+                    refreshedStatus.className = 'text-xs text-emerald-600';
+                    refreshedStatus.textContent = 'Saved changes.';
+                    setTimeout(() => { refreshedStatus.textContent = ''; }, 2500);
+                }
+            }, 0);
+            _notifyParent('updated', e.id);
+        } catch (err) {
+            setStatus('Update failed: ' + (err.message || 'unknown error'), true);
+        } finally {
+            if (saveBtn) saveBtn.disabled = false;
+        }
     }
 
     async function _ensureQrCode() {
@@ -2202,6 +2309,14 @@
 
     // ─── Public surface ─────────────────────────────────────────────
     window.EventsManage = { open, close, refreshRaffle };
+
+    // PortalEvents.manage namespace bridge (additive — preserves window.EventsManage)
+    if (window.PortalEvents) {
+        window.PortalEvents.manage = window.PortalEvents.manage || {};
+        window.PortalEvents.manage.open = open;
+        window.PortalEvents.manage.close = close;
+        window.PortalEvents.manage.refreshRaffle = refreshRaffle;
+    }
 
     // Also register on PortalEvents.detail registry (if available)
     if (window.PortalEvents && window.PortalEvents.detail && typeof window.PortalEvents.detail.register === 'function') {
