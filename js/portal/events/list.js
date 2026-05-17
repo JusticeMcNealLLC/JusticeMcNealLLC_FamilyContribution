@@ -2857,18 +2857,37 @@
 
     // =========================================================
     // PortalEvents.list public surface
+    //
+    // Phase 3A: expanded namespace. All entries remain closure-
+    // scoped — this is a discovery surface for Phase 5 splitting.
+    // No behavior change; all classic-script globals preserved.
     // =========================================================
     window.PortalEvents = window.PortalEvents || {};
     window.PortalEvents.list = {
-        load:           loadEvents,
-        render:         renderEvents,
-        renderHero:     _renderHero,
-        pickHero:       _pickHero,
-        setupSearch:    setupSearch,
-        initFilterChips: initFilterChips,
-        renderSkeletons: renderSkeletons,
-        initStickyHeader: _initStickyHeader,
-        initMobileFab:    _initMobileFab,
+        // ── Core public API (init.js consumers) ─────────────
+        load:              loadEvents,
+        render:            renderEvents,
+        setupSearch:       setupSearch,
+        initFilterChips:   initFilterChips,
+        // ── Sub-renderers ────────────────────────────────────
+        renderHero:        _renderHero,
+        pickHero:          _pickHero,
+        renderSkeletons:   renderSkeletons,
+        renderCalendar:    _renderCalendar,
+        renderGoingRail:   _renderGoingRail,
+        renderTopPicks:    _renderTopPicks,
+        renderMiniCalendar: _renderMiniCalendar,
+        renderMyRsvps:     _renderMyRsvps,
+        renderStatsCard:   _renderStatsCard,
+        renderBucket:      _renderBucket,
+        // ── Filter predicates ────────────────────────────────
+        matchesType:       _matchesType,
+        matchesCategory:   _matchesCategory,
+        matchesLifecycle:  _matchesLifecycle,
+        matchesDate:       _matchesDate,
+        // ── UI initializers ──────────────────────────────────
+        initStickyHeader:  _initStickyHeader,
+        initMobileFab:     _initMobileFab,
     };
 
     // Mobile-only: relocate the search input row + filter button next to it,
