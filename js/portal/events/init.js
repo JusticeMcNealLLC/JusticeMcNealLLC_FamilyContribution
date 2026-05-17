@@ -3,7 +3,16 @@
 // This file must load LAST — it depends on all other modules.
 // ═══════════════════════════════════════════════════════════
 
-document.addEventListener('DOMContentLoaded', async () => {
+// ── One-time init guard ──────────────────────────────────
+// Prevents duplicate initialization if initEventsPage() is called
+// more than once (e.g. when index.js takes over as orchestrator in
+// Phase 5 and the DOMContentLoaded listener fires at the same time).
+let _eventsPageInitialized = false;
+
+async function initEventsPage() {
+    if (_eventsPageInitialized) return;
+    _eventsPageInitialized = true;
+
     evtCurrentUser = await checkAuth();
     if (!evtCurrentUser) return;
 
@@ -41,7 +50,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ── Browser back/forward support ──
     window.addEventListener('popstate', () => evtRouteByUrl());
-});
+}
+
+// Classic script bootstrap — preserved so the page initializes exactly
+// as before under the current HTML script-list loading order.
+document.addEventListener('DOMContentLoaded', initEventsPage);
 
 // ─── Raffle Cost Hint Helper ────────────────────────────
 
@@ -252,6 +265,13 @@ window.evtToggleModal = evtToggleModal;
 window.evtUpdateStatus = evtUpdateStatus;
 window.evtCopyShareUrl = evtCopyShareUrl;
 window.evtCloseScanner = evtCloseScanner;
+
+// ── Bridge exposure ──────────────────────────────────────
+// Makes initEventsPage callable from the PortalEvents namespace.
+// In Phase 5, index.js will import/call this directly once the HTML
+// is switched to a single module entry. Until then it is unused.
+window.PortalEvents = window.PortalEvents || {};
+window.PortalEvents.initEventsPage = initEventsPage;
 window.evtCloseRaffleDraw = evtCloseRaffleDraw;
 window.evtAddCostItem = evtAddCostItem;
 window.evtRemoveCostItem = evtRemoveCostItem;

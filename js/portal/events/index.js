@@ -17,4 +17,6 @@
     //   PortalEvents.detail ← detail.js (M2)
     //   PortalEvents.create ← create.js (M4)
     //   PortalEvents.manage ← manage/   (M3)
+    // Future (Phase 5): call window.PortalEvents.initEventsPage() here
+    //   once the HTML is switched to a single module entry.
 })();
