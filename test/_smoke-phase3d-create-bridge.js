@@ -94,8 +94,12 @@ check('window.PortalEvents.create.close assigned',
 check('window.PortalEvents.create.isFlagOn assigned',
     sheet.includes('window.PortalEvents.create.isFlagOn = isFlagOn'));
 
-check('window.PortalEvents guard wraps create bridge (if (window.PortalEvents))',
-    sheet.includes('if (window.PortalEvents)'));
+check('window.PortalEvents safe seed guard present before create bridge',
+    sheet.includes('window.PortalEvents = window.PortalEvents || {}'));
+
+check('PortalEvents seed guard appears before PortalEvents.create assignment',
+    sheet.indexOf('window.PortalEvents = window.PortalEvents || {}')
+    < sheet.indexOf('window.PortalEvents.create = window.PortalEvents.create || {}'));
 
 check('Phase 3D bridge placed after window.EventsCreate assignment',
     sheet.indexOf('window.PortalEvents.create = window.PortalEvents.create || {}')
