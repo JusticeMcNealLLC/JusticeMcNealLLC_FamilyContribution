@@ -1089,4 +1089,12 @@
 
     // ─── Public surface ─────────────────────────────────────────────
     window.EventsCreate = { open, close, isFlagOn };
+
+    // PortalEvents.create namespace bridge (additive — preserves window.EventsCreate)
+    if (window.PortalEvents) {
+        window.PortalEvents.create = window.PortalEvents.create || {};
+        window.PortalEvents.create.open = open;
+        window.PortalEvents.create.close = close;
+        window.PortalEvents.create.isFlagOn = isFlagOn;
+    }
 })();

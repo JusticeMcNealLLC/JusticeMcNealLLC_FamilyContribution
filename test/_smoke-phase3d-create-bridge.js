@@ -1,0 +1,270 @@
+// ══════════════════════════════════════════════════════════════════
+// Phase 3D static smoke test — create/sheet.js PortalEvents bridge
+//
+// Checks (60 total):
+//   1.  File structure (IIFE, use strict, no export, file size)
+//   2.  window.EventsCreate original global preserved
+//   3.  window.PortalEvents.create bridge (Phase 3D new entries)
+//   4.  Custom event: events:created
+//   5.  Core internal functions still present
+//   6.  Dependencies expected (supabaseClient, evtCurrentUser, etc.)
+//   7.  portal/events.html invariants (no module mode)
+//   8.  File split safety (no orphaned new create/ files loaded)
+//   9.  Phase 1 bridge regression
+//  10.  Phase 2 bridges regression
+//  11.  Phase 3A list bridge regression
+//  12.  Phase 3B detail bridge regression
+//  13.  Phase 3C manage bridge regression
+//
+// Run: node test/_smoke-phase3d-create-bridge.js
+// ══════════════════════════════════════════════════════════════════
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.join(__dirname, '..');
+const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+
+let passed = 0;
+let failed = 0;
+const failures = [];
+
+function check(label, ok, detail) {
+    if (ok) {
+        console.log(`  ✓ ${label}`);
+        passed++;
+    } else {
+        console.log(`  ✗ ${label}${detail ? ` — ${detail}` : ''}`);
+        failed++;
+        failures.push(label);
+    }
+}
+
+const sheet  = read('js/portal/events/create/sheet.js');
+const events = read('portal/events.html');
+
+// ── File structure ─────────────────────────────────────────────────────────
+console.log('\n── js/portal/events/create/sheet.js — file structure ─────────────────────');
+
+check('IIFE wrapper present ((function () {)',
+    sheet.includes('(function () {'));
+
+check("'use strict' present inside IIFE",
+    sheet.includes("'use strict'"));
+
+check('No native export statement (stays classic-script safe)',
+    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(sheet)));
+
+check('File size reasonable (no accidental truncation)',
+    sheet.length > 50000,
+    `${sheet.length} chars`);
+console.log(`  ℹ File length: ${sheet.length} chars`);
+
+// ── window.EventsCreate (original global preserved) ───────────────────────
+console.log('\n── create/sheet.js — window.EventsCreate (original global preserved) ──────');
+
+check("window.EventsCreate = { open, close, isFlagOn } present",
+    sheet.includes('window.EventsCreate = { open, close, isFlagOn }'));
+
+check('window.EventsCreate.open referenced in source',
+    sheet.includes('window.EventsCreate') && sheet.includes('open, close, isFlagOn'));
+
+check('window.EventsCreate.close referenced in source',
+    sheet.includes('close, isFlagOn'));
+
+check('window.EventsCreate.isFlagOn present',
+    sheet.includes('isFlagOn'));
+
+check('function isFlagOn() present (always returns true)',
+    sheet.includes('function isFlagOn()'));
+
+// ── window.PortalEvents.create bridge (Phase 3D) ──────────────────────────
+console.log('\n── create/sheet.js — window.PortalEvents.create bridge (Phase 3D) ─────────');
+
+check('window.PortalEvents.create safe-init guard present',
+    sheet.includes('window.PortalEvents.create = window.PortalEvents.create || {}'));
+
+check('window.PortalEvents.create.open assigned',
+    sheet.includes('window.PortalEvents.create.open = open'));
+
+check('window.PortalEvents.create.close assigned',
+    sheet.includes('window.PortalEvents.create.close = close'));
+
+check('window.PortalEvents.create.isFlagOn assigned',
+    sheet.includes('window.PortalEvents.create.isFlagOn = isFlagOn'));
+
+check('window.PortalEvents guard wraps create bridge (if (window.PortalEvents))',
+    sheet.includes('if (window.PortalEvents)'));
+
+check('Phase 3D bridge placed after window.EventsCreate assignment',
+    sheet.indexOf('window.PortalEvents.create = window.PortalEvents.create || {}')
+    > sheet.indexOf('window.EventsCreate = { open, close, isFlagOn }'));
+
+// ── Custom event dispatch ──────────────────────────────────────────────────
+console.log('\n── create/sheet.js — custom event dispatch ───────────────────────────────');
+
+check("'events:created' custom event present",
+    sheet.includes("'events:created'"));
+
+check("CustomEvent('events:created', ...) dispatch call present",
+    sheet.includes("new CustomEvent('events:created'"));
+
+// ── Core internal functions ────────────────────────────────────────────────
+console.log('\n── create/sheet.js — core internal functions ─────────────────────────────');
+
+const coreFns = [
+    ['function open(',           'open (entry point)'],
+    ['function close(',          'close'],
+    ['function _ensureMounted(', '_ensureMounted (DOM injection)'],
+    ['function _render(',        '_render (step renderer)'],
+    ['function _basicsHtml(',    '_basicsHtml (step 1 HTML)'],
+    ['function _whenHtml(',      '_whenHtml (step 2 HTML)'],
+    ['function _pricingHtml(',   '_pricingHtml (step 3 HTML)'],
+    ['function _reviewHtml(',    '_reviewHtml (step 4 HTML)'],
+    ['function _wireBasics(',    '_wireBasics'],
+    ['function _wireWhen(',      '_wireWhen'],
+    ['function _wirePricing(',   '_wirePricing'],
+    ['function _validateStep(',  '_validateStep'],
+    ['function _back(',          '_back'],
+    ['function _next(',          '_next'],
+    ['function _submit(',        '_submit (async Supabase insert)'],
+    ['function _esc(',           '_esc (HTML escape helper)'],
+    ['function _raffleModel(',   '_raffleModel'],
+    ['function _ensureRaffleConfig(', '_ensureRaffleConfig'],
+    ['function _doGeocode(',     '_doGeocode (geocoding)'],
+    ['function _raffleBuilderHtml(', '_raffleBuilderHtml'],
+    ['function _wireRaffleBuilder(', '_wireRaffleBuilder'],
+    ['function _wireImageUpload(', '_wireImageUpload'],
+];
+coreFns.forEach(([pattern, label]) => {
+    check(`${label} present in source`, sheet.includes(pattern));
+});
+
+// ── External dependency references ─────────────────────────────────────────
+console.log('\n── create/sheet.js — external dependencies ───────────────────────────────');
+
+check("supabaseClient used in _submit (bare identifier)",
+    sheet.includes('supabaseClient.from('));
+
+check("window.EventsRaffleModel accessed lazily via _raffleModel()",
+    sheet.includes('window.EventsRaffleModel'));
+
+check("window.evtCurrentUser used for creator ID",
+    sheet.includes('window.evtCurrentUser'));
+
+check("window.evtGeocodeAddress optional call present",
+    sheet.includes('window.evtGeocodeAddress'));
+
+check("events:created dispatch uses { event: data, status } detail",
+    sheet.includes('{ event: data, status }'));
+
+// ── portal/events.html invariants ─────────────────────────────────────────
+console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
+
+check('create/sheet.js still loaded as classic script in events.html',
+    events.includes('create/sheet.js'));
+
+check('create/sheet.js does NOT have type="module" in events.html',
+    !events.match(/create\/sheet\.js[^"]*"[^>]*type="module"/));
+
+check('No portal/events/* scripts use type="module" yet (correct)',
+    !events.match(/<script[^>]+js\/portal\/events\/[^>]+type="module"/));
+
+// ── File split safety ─────────────────────────────────────────────────────
+console.log('\n── File split safety — no orphaned new create/ sub-files loaded ───────────');
+
+// The only file that should exist under create/ is sheet.js
+const createDir = path.join(ROOT, 'js/portal/events/create');
+const createFiles = fs.readdirSync(createDir).filter(f => f !== 'sheet.js');
+
+check('No unexpected files added under js/portal/events/create/ (only sheet.js exists)',
+    createFiles.length === 0,
+    createFiles.length > 0 ? `unexpected: ${createFiles.join(', ')}` : undefined);
+
+check('create/sheet.js referenced in events.html (not orphaned)',
+    events.includes('create/sheet.js'));
+
+// ── Phase 1 bridge regression ──────────────────────────────────────────────
+console.log('\n── Phase 1 bridge (init.js) — regression check ───────────────────────────');
+
+const init = read('js/portal/events/init.js');
+
+check('window.PortalEvents.initEventsPage still present (Phase 1 bridge intact)',
+    init.includes('window.PortalEvents.initEventsPage'));
+
+check('Phase 1 duplicate-init guard still present in init.js',
+    init.includes('_eventsPageInitialized'));
+
+// ── Phase 2 bridges regression ────────────────────────────────────────────
+console.log('\n── Phase 2 bridges — regression check ─────────────────────────────────────');
+
+const constants   = read('js/portal/events/constants.js');
+const raffleModel = read('js/portal/events/raffle-model.js');
+
+check('window.PortalEvents.constants still present (Phase 2 constants bridge intact)',
+    constants.includes('window.PortalEvents.constants'));
+
+check('root.PortalEvents.raffleModel still present (Phase 2 raffle bridge intact)',
+    raffleModel.includes('root.PortalEvents.raffleModel'));
+
+check('root.EventsRaffleModel still present (primary classic global preserved)',
+    raffleModel.includes('root.EventsRaffleModel'));
+
+// ── Phase 3A regression ───────────────────────────────────────────────────
+console.log('\n── Phase 3A bridge (list.js) — regression check ──────────────────────────');
+
+const list = read('js/portal/events/list.js');
+
+check('window.PortalEvents.list namespace still present (Phase 3A intact)',
+    list.includes('window.PortalEvents.list'));
+
+check('list.js still IIFE (Phase 3A structure intact)',
+    list.includes('(function () {'));
+
+// ── Phase 3B regression ───────────────────────────────────────────────────
+console.log('\n── Phase 3B bridge (detail.js) — regression check ────────────────────────');
+
+const detail = read('js/portal/events/detail.js');
+
+check('window.PortalEvents.detail safe-init still present (Phase 3B intact)',
+    detail.includes('window.PortalEvents.detail'));
+
+check('detail.register function still present (Phase 3B intact)',
+    detail.includes('detail.register = function'));
+
+check('detail.js still IIFE (Phase 3B structure intact)',
+    detail.includes('(function () {'));
+
+// ── Phase 3C regression ───────────────────────────────────────────────────
+console.log('\n── Phase 3C bridge (manage/sheet.js) — regression check ──────────────────');
+
+const manage = read('js/portal/events/manage/sheet.js');
+
+check('window.PortalEvents.manage safe-init still present (Phase 3C intact)',
+    manage.includes('window.PortalEvents.manage = window.PortalEvents.manage || {}'));
+
+check('window.PortalEvents.manage.open still present (Phase 3C intact)',
+    manage.includes('window.PortalEvents.manage.open = open'));
+
+check('window.PortalEvents.manage.close still present (Phase 3C intact)',
+    manage.includes('window.PortalEvents.manage.close = close'));
+
+check('window.EventsManage still preserved (Phase 3C original global)',
+    manage.includes('window.EventsManage = { open, close, refreshRaffle }'));
+
+// ── Summary ───────────────────────────────────────────────────────────────
+const total = passed + failed;
+console.log(`\n${'═'.repeat(54)}`);
+console.log(`Phase 3D static smoke: ${total} checks — ${passed} pass, ${failed} fail`);
+console.log('═'.repeat(54));
+
+if (failed > 0) {
+    console.log('\nFailed checks:');
+    failures.forEach(f => console.log(`  ✗ ${f}`));
+    console.log('\nPhase 3D static smoke: NEEDS REVIEW');
+    process.exit(1);
+} else {
+    console.log('\nPhase 3D static smoke: ALL PASS');
+    process.exit(0);
+}
