@@ -323,4 +323,10 @@
 
     root.EventsRaffleModel = api;
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
+
+    // ── Phase 2 bridge — PortalEvents namespace exposure ─────────────────────
+    // window.EventsRaffleModel above is the primary classic-script global.
+    // PortalEvents.raffleModel is a namespaced alias for Phase 5 bridge use.
+    if (typeof root.PortalEvents === 'undefined') root.PortalEvents = {};
+    root.PortalEvents.raffleModel = api;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

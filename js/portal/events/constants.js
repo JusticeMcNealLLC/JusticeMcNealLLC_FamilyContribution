@@ -22,3 +22,15 @@ const STATUS_COLORS = {
     completed: 'bg-gray-100 text-gray-500',
     cancelled: 'bg-red-100 text-red-600',
 };
+
+// ── Phase 2 bridge — PortalEvents namespace exposure ─────────────────────────
+// Bare const declarations above are preserved as-is so classic-script
+// consumers (e.g. detail.js referencing TYPE_COLORS as a bare identifier)
+// continue to work without any changes. This block adds a namespaced alias
+// for future import/bridge use in Phase 5.
+window.PortalEvents = window.PortalEvents || {};
+window.PortalEvents.constants = {
+    CATEGORY_EMOJI,
+    TYPE_COLORS,
+    STATUS_COLORS,
+};
