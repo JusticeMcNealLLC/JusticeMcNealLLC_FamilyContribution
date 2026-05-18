@@ -833,3 +833,19 @@ function evtRecalcCompTiers() {
         totalEl.classList.toggle('text-gray-400', total === 100);
     }
 }
+
+// PortalEvents.competition namespace bridge (additive — preserves evt* globals)
+window.PortalEvents = window.PortalEvents || {};
+window.PortalEvents.competition = window.PortalEvents.competition || {};
+window.PortalEvents.competition.buildHtml = evtBuildCompetitionHtml;
+window.PortalEvents.competition.buildSubmitFormHtml = evtBuildSubmitFormHtml;
+window.PortalEvents.competition.join = evtJoinCompetition;
+window.PortalEvents.competition.submitEntry = evtSubmitEntry;
+window.PortalEvents.competition.castVote = evtCastVote;
+window.PortalEvents.competition.moderateEntry = evtModerateEntry;
+window.PortalEvents.competition.contributeToPrizePool = evtContributeToPrizePool;
+window.PortalEvents.competition.startPhase = evtStartPhase;
+window.PortalEvents.competition.advancePhase = evtAdvancePhase;
+window.PortalEvents.competition.extendPhase = evtExtendPhase;
+window.PortalEvents.competition.finalize = evtFinalizeCompetition;
+window.PortalEvents.competition.recalcTiers = evtRecalcCompTiers;
