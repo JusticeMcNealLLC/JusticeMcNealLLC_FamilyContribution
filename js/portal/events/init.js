@@ -21,7 +21,7 @@ async function initEventsPage() {
         .from('profiles')
         .select('role, first_name, last_name, profile_picture_url')
         .eq('id', evtCurrentUser.id)
-        .single();
+        .maybeSingle();
     evtCurrentUserRole = profile?.role;
     // Expose first name for personalized greeting (events_003 §8.1 / B5)
     window.evtCurrentUserName = profile?.first_name || '';

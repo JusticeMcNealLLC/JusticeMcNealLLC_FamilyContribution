@@ -186,7 +186,7 @@ async function evtHandleLocationChange(payload) {
         .from('profiles')
         .select('first_name, last_name, profile_picture_url')
         .eq('id', loc.user_id)
-        .single();
+        .maybeSingle();
 
     evtAddMapMarker({ ...loc, profiles: profile });
 }

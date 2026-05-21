@@ -284,14 +284,25 @@ async function evtOpenDetail(eventId) {
         .maybeSingle();
     const isHost = isCreator || !!hostRecord || (typeof canManageEvents === 'function' && canManageEvents());
 
-    let creatorProfile = null;
+    let creatorProfile = (event.creator && event.creator.id) ? { ...event.creator } : null;
     if (event.created_by) {
         const { data: cp } = await supabaseClient
             .from('profiles')
             .select('id, first_name, last_name, profile_picture_url, displayed_badge, title, bio')
             .eq('id', event.created_by)
-            .single();
-        creatorProfile = cp;
+            .maybeSingle();
+        if (cp) creatorProfile = { ...(creatorProfile || {}), ...cp };
+        else if (!creatorProfile) {
+            creatorProfile = {
+                id: event.created_by,
+                first_name: '',
+                last_name: '',
+                profile_picture_url: null,
+                displayed_badge: null,
+                title: 'Member',
+                bio: null,
+            };
+        }
     }
     const cpName = creatorProfile ? ([creatorProfile.first_name, creatorProfile.last_name].filter(Boolean).join(' ') || 'Member') : '';
     const cpInitials = creatorProfile ? ((creatorProfile.first_name || '?')[0] + (creatorProfile.last_name || '')[0]).toUpperCase() : '';
@@ -721,7 +732,7 @@ async function evtOpenDetail(eventId) {
 
     // ── Organizer row ────────────────────────────────────
     let organizerHtml = '';
-    if (!isLlc && creatorProfile) {
+    if (!isLlc && event.created_by) {
         const avatarImg = creatorProfile.profile_picture_url
             ? `<img src="${creatorProfile.profile_picture_url}" class="ed-org-avatar" alt="${evtEscapeHtml(cpName)}">`
             : `<div class="ed-org-avatar ed-org-avatar-fallback">${cpInitials}</div>`;
