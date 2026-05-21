@@ -78,6 +78,28 @@ function canAccessAdminDashboard() {
     return hasPermission('admin.dashboard');
 }
 
+// ── Deactivated account gate (profiles.is_active === false only) ──
+
+/** Hard block only when is_active is explicitly false (not subscription status). */
+function isProfileDeactivated(profile) {
+    return profile != null && profile.is_active === false;
+}
+
+/** Sign out and send user to login with account_deactivated error. */
+async function rejectDeactivatedAccount() {
+    try {
+        await supabaseClient.auth.signOut({ scope: 'global' });
+    } catch (e) {
+        console.error('Signout error:', e);
+    }
+    window.__userRoles = null;
+    window.__userPermissions = null;
+    const loginUrl = APP_CONFIG.LOGIN_URL || '/auth/login.html';
+    const joiner = loginUrl.includes('?') ? '&' : '?';
+    window.location.href = loginUrl + joiner + 'error=account_deactivated';
+    return null;
+}
+
 // Check if user is logged in
 // Usage:
 //   checkAuth()                               — portal page, no admin check
@@ -106,14 +128,18 @@ async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
         return null;
     }
 
+    const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('role, setup_completed, is_active')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+    if (isProfileDeactivated(profile)) {
+        return await rejectDeactivatedAccount();
+    }
+
     // Backward compat: admin hub still expects profiles.role = admin (synced from admin.dashboard)
     if (needsLegacyAdminProfile) {
-        const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('role, setup_completed')
-            .eq('id', session.user.id)
-            .single();
-
         if (!profile || profile.role !== 'admin') {
             // Not an admin, redirect to portal
             window.location.href = APP_CONFIG.PORTAL_URL;
@@ -130,12 +156,6 @@ async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
     if (!needsLegacyAdminProfile && !skipOnboardingCheck && !skipOnboardingForPermissionGatedAdmin) {
         const isOnboardingPage = window.location.pathname.includes('/onboarding');
         if (!isOnboardingPage) {
-            const { data: profile } = await supabaseClient
-                .from('profiles')
-                .select('setup_completed, role')
-                .eq('id', session.user.id)
-                .single();
-
             // Admins skip onboarding check — they manage, not onboard
             if (profile && !profile.setup_completed && profile.role !== 'admin') {
                 window.location.href = APP_CONFIG.ONBOARDING_URL;

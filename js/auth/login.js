@@ -1,6 +1,18 @@
 // Login page logic
 // Only loaded on auth/login.html
 
+const DEACTIVATED_LOGIN_MESSAGE = 'This account has been deactivated. Please contact support.';
+
+function isProfileDeactivated(profile) {
+    return profile != null && profile.is_active === false;
+}
+
+async function signOutDeactivatedUser() {
+    try {
+        await supabaseClient.auth.signOut({ scope: 'global' });
+    } catch (_) { /* ignore */ }
+}
+
 function getSafeLoginRedirect() {
     const raw = new URLSearchParams(window.location.search).get('redirect');
     if (!raw) return '';
@@ -43,9 +55,15 @@ async function checkAlreadyLoggedIn() {
         // Check role + onboarding status
         const { data: profile } = await supabaseClient
             .from('profiles')
-            .select('role, setup_completed')
+            .select('role, setup_completed, is_active')
             .eq('id', session.user.id)
             .single();
+
+        if (isProfileDeactivated(profile)) {
+            await signOutDeactivatedUser();
+            showError('loginError', DEACTIVATED_LOGIN_MESSAGE);
+            return true;
+        }
 
         window.location.href = getPostLoginUrl(profile);
         return true;
@@ -58,6 +76,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     const forgotPasswordForm = document.getElementById('forgotPasswordForm');
     const forgotPasswordLink = document.getElementById('forgotPasswordLink');
     const backToLoginLink = document.getElementById('backToLoginLink');
+
+    const loginErrorParam = new URLSearchParams(window.location.search).get('error');
+    if (loginErrorParam === 'account_deactivated') {
+        showError('loginError', DEACTIVATED_LOGIN_MESSAGE);
+    }
 
     // Check if already logged in (only on login page)
     if (loginForm) {
@@ -87,9 +110,16 @@ document.addEventListener('DOMContentLoaded', async function() {
                 // Check user role + onboarding status and redirect
                 const { data: profile } = await supabaseClient
                     .from('profiles')
-                    .select('role, setup_completed')
+                    .select('role, setup_completed, is_active')
                     .eq('id', data.user.id)
                     .single();
+
+                if (isProfileDeactivated(profile)) {
+                    await signOutDeactivatedUser();
+                    showError('loginError', DEACTIVATED_LOGIN_MESSAGE);
+                    setButtonLoading(loginBtn, false, 'Sign In');
+                    return;
+                }
 
                 window.location.href = getPostLoginUrl(profile);
 

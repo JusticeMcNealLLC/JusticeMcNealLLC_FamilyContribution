@@ -1,6 +1,51 @@
 // Reset password page logic
 // Only loaded on auth/reset-password.html
 
+const DEACTIVATED_RESET_MESSAGE = 'This account has been deactivated. Please contact support.';
+
+function isProfileDeactivated(profile) {
+    return profile != null && profile.is_active === false;
+}
+
+function loginUrlForDeactivated() {
+    const base = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.LOGIN_URL) || '/auth/login.html';
+    const joiner = base.includes('?') ? '&' : '?';
+    return base + joiner + 'error=account_deactivated';
+}
+
+async function signOutDeactivatedUser() {
+    try {
+        await supabaseClient.auth.signOut({ scope: 'global' });
+    } catch (_) { /* ignore */ }
+}
+
+/** Returns false if user was signed out (deactivated). */
+async function guardDeactivatedRecoverySession() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return true;
+
+    const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('is_active, role, setup_completed')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+    if (!isProfileDeactivated(profile)) return true;
+
+    await signOutDeactivatedUser();
+    window.location.href = loginUrlForDeactivated();
+    return false;
+}
+
+function showDeactivatedRecoveryState(passwordForm, errorState) {
+    if (passwordForm) passwordForm.classList.add('hidden');
+    if (errorState) {
+        errorState.classList.remove('hidden');
+        const msg = errorState.querySelector('p');
+        if (msg) msg.textContent = DEACTIVATED_RESET_MESSAGE;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     const passwordForm = document.getElementById('passwordForm');
     const errorState = document.getElementById('errorState');
@@ -11,55 +56,55 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Check for access_token in URL hash (Supabase redirects with hash)
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
 
     // Also check query params (some flows use these)
     const queryParams = new URLSearchParams(window.location.search);
     const token = queryParams.get('token');
-    const tokenType = queryParams.get('type');
 
-    // If we have an access_token in hash, Supabase has already processed the link
-    // and we have a valid session
     if (accessToken) {
-        // Session should be automatically set by Supabase
-        console.log('Access token found, session should be active');
-    } else if (!token && !accessToken) {
-        // Check if there's an existing session from the recovery flow
+        // Session should be set by Supabase after hash is processed
+        await new Promise(r => setTimeout(r, 0));
+    }
+
+    if (!await guardDeactivatedRecoverySession()) {
+        showDeactivatedRecoveryState(passwordForm, errorState);
+        return;
+    }
+
+    if (!token && !accessToken) {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (!session) {
-            // No valid token or session
             passwordForm.classList.add('hidden');
             errorState.classList.remove('hidden');
             return;
         }
     }
 
-    // Handle form submit
     passwordForm.addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
 
-        // Hide previous messages
         formError.classList.add('hidden');
         formSuccess.classList.add('hidden');
 
-        // Validate passwords match
         if (password !== confirmPassword) {
             formError.textContent = 'Passwords do not match';
             formError.classList.remove('hidden');
             return;
         }
 
-        // Validate password length
         if (password.length < 6) {
             formError.textContent = 'Password must be at least 6 characters';
             formError.classList.remove('hidden');
             return;
         }
 
-        // Disable button
+        if (!await guardDeactivatedRecoverySession()) {
+            return;
+        }
+
         submitBtn.disabled = true;
         submitBtn.innerHTML = `
             <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -69,41 +114,42 @@ document.addEventListener('DOMContentLoaded', async function() {
         `;
 
         try {
-            // Update the user's password
-            const { error } = await supabaseClient.auth.updateUser({
-                password: password
-            });
-
+            const { error } = await supabaseClient.auth.updateUser({ password: password });
             if (error) throw error;
 
-            // Note: setup_completed is NOT set here — the onboarding wizard handles that.
-            // This allows new users to go through onboarding after setting their password.
+            if (!await guardDeactivatedRecoverySession()) {
+                return;
+            }
 
-            // Success!
             formSuccess.textContent = 'Password set successfully! Redirecting...';
             formSuccess.classList.remove('hidden');
             passwordForm.querySelector('button').textContent = 'Success!';
 
-            // Redirect to portal after a moment
             setTimeout(async () => {
-                // Check if user is admin or needs onboarding
                 const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session) {
-                    const { data: profile } = await supabaseClient
-                        .from('profiles')
-                        .select('role, setup_completed')
-                        .eq('id', session.user.id)
-                        .single();
-
-                    if (profile?.role === 'admin') {
-                        window.location.href = '../admin/index.html';
-                    } else if (!profile?.setup_completed) {
-                        window.location.href = '../portal/onboarding.html';
-                    } else {
-                        window.location.href = '../portal/index.html';
-                    }
-                } else {
+                if (!session) {
                     window.location.href = 'login.html';
+                    return;
+                }
+
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('role, setup_completed, is_active')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                if (isProfileDeactivated(profile)) {
+                    await signOutDeactivatedUser();
+                    window.location.href = loginUrlForDeactivated();
+                    return;
+                }
+
+                if (profile?.role === 'admin') {
+                    window.location.href = '../admin/index.html';
+                } else if (!profile?.setup_completed) {
+                    window.location.href = '../portal/onboarding.html';
+                } else {
+                    window.location.href = '../portal/index.html';
                 }
             }, 1500);
 
