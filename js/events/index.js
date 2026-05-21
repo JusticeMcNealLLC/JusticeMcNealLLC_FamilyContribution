@@ -143,6 +143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!slug) return pubShowNotFound();
 
+    pubApplyPublicSignInLinks(slug);
+
     // Check if user is logged in (optional — don't redirect)
     try {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -454,6 +456,7 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
 
     // ── Host / Organizer (no personal profile fields on public page) ──
     const hostEl = document.getElementById('hostSection');
+    const typeInfo = PUB_TYPE_COLORS[event.event_type] || PUB_TYPE_COLORS.llc;
     if (event.event_type === 'llc') {
         hostEl.innerHTML = `
             <div class="evt-info-row">

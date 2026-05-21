@@ -27,11 +27,23 @@ function getSafeLoginRedirect() {
 
         if (!allowedOrigins.has(target.origin)) return '';
         if (target.pathname.startsWith('/auth/')) return '';
-        // Public event share links → member portal event detail after login
-        const publicSlug = target.pathname.includes('/events') ? target.searchParams.get('e') : null;
-        if (publicSlug) {
-            return `${target.origin}/portal/events.html?event=${encodeURIComponent(publicSlug)}`;
+
+        // Portal event detail (?event=slug)
+        if (/\/portal\/events\.html$/i.test(target.pathname)) {
+            const portalSlug = target.searchParams.get('event');
+            if (portalSlug) {
+                return `${target.origin}/portal/events.html?event=${encodeURIComponent(portalSlug)}`;
+            }
         }
+
+        // Public share page (/events/?e=slug) → portal detail
+        if (/^\/events\/?$/i.test(target.pathname)) {
+            const publicSlug = target.searchParams.get('e');
+            if (publicSlug) {
+                return `${target.origin}/portal/events.html?event=${encodeURIComponent(publicSlug)}`;
+            }
+        }
+
         return target.href;
     } catch (_) {
         return '';
