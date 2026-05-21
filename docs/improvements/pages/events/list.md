@@ -9,3 +9,5 @@ Introduce an `event_coordinator` role that can create, manage, and modify events
 **Scope (v1):** Global Events admin actions for all events (not per-event assignment).
 
 **Out of scope (v1):** Per-event coordinator assignment, Phase 5 module entry, `portal/events.html` script-list changes.
+
+**Phase 4 plan:** `moderation/001_event_coordinator_supabase_rls_plan.md` (RBAC seed + RLS gap audit — not applied yet).
