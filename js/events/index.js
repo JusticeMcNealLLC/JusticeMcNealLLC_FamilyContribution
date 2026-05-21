@@ -23,6 +23,91 @@ var pubGuestToken   = null;
 var pubGuestRsvp    = null;
 var pubGuestRaffleEntry = false;
 
+/** After login, land on portal event detail (not public /events/). */
+function pubPortalLoginHref(eventSlug) {
+    if (!eventSlug) return '/auth/login.html';
+    const dest = `/portal/events.html?event=${encodeURIComponent(eventSlug)}`;
+    return `/auth/login.html?redirect=${encodeURIComponent(dest)}`;
+}
+
+function pubApplyPublicSignInLinks(eventSlug) {
+    const href = pubPortalLoginHref(eventSlug);
+    document.querySelectorAll('a[href="/auth/login.html"], a[href^="/auth/login.html?"]').forEach(link => {
+        link.setAttribute('href', href);
+    });
+}
+
+/**
+ * Going count = member RSVPs (status going) + guest RSVPs (going or paid).
+ * Aligns with portal Events (list.js / detail.js). Member rows need auth or RPC for anon.
+ */
+async function pubFetchGoingCount(eventId) {
+    const [{ count: memberCount }, { count: guestCount }, rpcRes] = await Promise.all([
+        supabaseClient
+            .from('event_rsvps')
+            .select('id', { count: 'exact', head: true })
+            .eq('event_id', eventId)
+            .eq('status', 'going'),
+        supabaseClient
+            .from('event_guest_rsvps')
+            .select('id', { count: 'exact', head: true })
+            .eq('event_id', eventId)
+            .or('status.eq.going,paid.eq.true'),
+        supabaseClient.rpc('public_event_going_count', { p_event_id: eventId }),
+    ]);
+
+    if (!rpcRes.error && rpcRes.data != null && !Number.isNaN(Number(rpcRes.data))) {
+        return Number(rpcRes.data);
+    }
+
+    return (memberCount || 0) + (guestCount || 0);
+}
+
+function pubGenericAvatarStackHtml(count) {
+    const total = Math.max(0, Number(count) || 0);
+    const shown = Math.min(5, total);
+    if (!shown) return '';
+    let html = '<div class="ed-avatar-stack" style="margin-right:8px">';
+    for (let i = 0; i < shown; i++) {
+        html += '<div class="ed-avatar ed-avatar-sm" style="background:#e0e7ff"><span style="font-size:11px;color:#4f46e5">👤</span></div>';
+    }
+    if (total > 5) {
+        html += `<div class="ed-avatar ed-avatar-sm ed-avatar-overflow"><span>+${total - 5}</span></div>`;
+    }
+    html += '</div>';
+    return html;
+}
+
+function pubAttendanceLabel(count) {
+    const n = Math.max(0, Number(count) || 0);
+    if (n === 0) return 'Be the first to RSVP';
+    return `${n} ${n === 1 ? 'person' : 'people'} going`;
+}
+
+function pubRenderPublicAttendance(goingCount, event) {
+    const countEl = document.getElementById('attendeeCount');
+    if (!countEl) return;
+
+    const n = Math.max(0, Number(goingCount) || 0);
+    const stack = n > 0 ? pubGenericAvatarStackHtml(n) : '';
+    const primary = pubAttendanceLabel(n);
+    const sub = event.max_participants && n > 0
+        ? (event.max_participants - n > 0
+            ? `${event.max_participants - n} spots left`
+            : 'Sold out')
+        : (n === 0 ? 'RSVP to join this event' : '');
+
+    countEl.innerHTML = `
+        <div class="evt-info-row" style="align-items:center">
+            ${stack}
+            <div>
+                <p class="evt-info-primary">${pubEscapeHtml(primary)}</p>
+                ${sub ? `<p class="evt-info-secondary">${pubEscapeHtml(sub)}</p>` : ''}
+            </div>
+        </div>`;
+    countEl.classList.remove('hidden');
+}
+
 function pubMiniMarkdown(text) {
     if (!text) return '';
     return text
@@ -71,7 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function pubLoadEvent(slug, isCheckin, ticketToken, paidType) {
     const { data: event, error } = await supabaseClient
         .from('events')
-        .select('*, creator:profiles!events_created_by_fkey(first_name, last_name, profile_picture_url)')
+        .select('*')
         .eq('slug', slug)
         .not('status', 'eq', 'draft')
         .single();
@@ -80,20 +165,7 @@ async function pubLoadEvent(slug, isCheckin, ticketToken, paidType) {
 
     pubCurrentEvent = event;
 
-    // Load RSVP counts (members + guests)
-    const { count: memberGoingCount } = await supabaseClient
-        .from('event_rsvps')
-        .select('*', { count: 'exact', head: true })
-        .eq('event_id', event.id)
-        .eq('status', 'going');
-
-    const { count: guestGoingCount } = await supabaseClient
-        .from('event_guest_rsvps')
-        .select('*', { count: 'exact', head: true })
-        .eq('event_id', event.id)
-        .eq('paid', true);
-
-    const goingCount = (memberGoingCount || 0) + (guestGoingCount || 0);
+    const goingCount = await pubFetchGoingCount(event.id);
 
     // If user is signed in, load their RSVP
     if (pubCurrentUser) {
@@ -158,11 +230,7 @@ function pubBuildPublicDetailShell(event, goingCount) {
     const showLocation = !event.gate_location || pubCurrentRsvp || pubGuestRsvp;
     const typeInfo = PUB_TYPE_COLORS[event.event_type] || PUB_TYPE_COLORS.llc;
     const isLlc = event.event_type === 'llc';
-    const creator = event.creator || null;
-    const creatorName = creator
-        ? `${creator.first_name || ''} ${creator.last_name || ''}`.trim() || 'Member'
-        : '';
-    const hostName = isLlc ? 'Justice McNeal LLC' : (creatorName || typeInfo.label);
+    const hostName = isLlc ? 'Justice McNeal LLC' : typeInfo.label;
     const categoryLabel = event.category ? (event.category || '').replace(/_/g, ' ') : '';
     const bannerStyle = event.banner_url
         ? `background-image:url('${event.banner_url}');background-size:cover;background-position:center;`
@@ -269,11 +337,11 @@ function pubBuildPublicDetailShell(event, goingCount) {
                             <div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25"/></svg></div><div><span class="ed-summary-main">${dateLong}</span><span class="ed-summary-sub2">${weekday}</span></div></div>
                             ${showTime ? `<div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><span class="ed-summary-main">${timeStr}</span><span class="ed-summary-sub2">${endTimeStr ? `Ends ${endTimeStr}` : 'Start time'}</span></div></div>` : ''}
                             ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg></div><div><span class="ed-summary-main">${pubEscapeHtml(event.location_nickname || event.location_text || '')}</span>${event.location_text && event.location_nickname ? `<span class="ed-summary-sub2">${pubEscapeHtml(event.location_text)}</span>` : ''}${event.location_text ? `<a href="${mapsHref}" target="_blank" rel="noopener" class="ed-maps-link">View on Maps</a>` : ''}</div></div>` : ''}
-                            ${goingCount >= 3 ? `<div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857"/></svg></div><div><span class="ed-summary-main">${goingCount} going</span>${event.max_participants ? `<span class="ed-summary-sub2">${event.max_participants - goingCount > 0 ? `${event.max_participants - goingCount} spots left` : 'Sold out'}</span>` : ''}</div></div>` : ''}
+                            <div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857"/></svg></div><div><span class="ed-summary-main">${pubEscapeHtml(pubAttendanceLabel(goingCount))}</span>${event.max_participants && goingCount > 0 ? `<span class="ed-summary-sub2">${event.max_participants - goingCount > 0 ? `${event.max_participants - goingCount} spots left` : 'Sold out'}</span>` : ''}</div></div>
                         </div>
                     </div>
                     <div id="memberRsvpCard" class="hidden ed-card ed-card-rsvp event-detail-card-tight public-action-card"><p class="ed-summary-heading">Your RSVP</p><div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div></div>
-                    <div id="guestRsvpSection" class="hidden ed-card event-detail-card-tight public-action-card"><p class="ed-summary-heading">RSVP for This Event</p><p class="public-ed-muted" style="margin-bottom:14px">No account needed. Enter your name and email.</p><div class="public-ed-field-stack"><input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name"><input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address"><label class="evt-checkbox-label hidden"><input type="checkbox" id="guestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label><button onclick="pubHandleGuestRsvp()" id="guestRsvpBtn" class="evt-rsvp-pay">RSVP as Guest</button></div><div class="pub-rsvp-links"><a id="signinRsvpLink" href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="pub-rsvp-text-link">Have an account? Sign in</a><button type="button" onclick="pubToggleLookup()" class="pub-rsvp-text-link">Already RSVP'd? Look up your ticket</button></div><div id="lookupPanel" class="hidden" style="margin-top:14px"><p class="public-ed-muted" style="margin-bottom:10px">Enter the email you used to RSVP and your ticket will show here.</p><div class="public-ed-field-stack"><input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" aria-label="Email used for RSVP"><button onclick="pubLookupGuestTicket()" id="lookupBtn" class="evt-action-btn">Find My Ticket</button></div><div id="lookupResult" style="margin-top:10px"></div></div></div>
+                    <div id="guestRsvpSection" class="hidden ed-card event-detail-card-tight public-action-card"><p class="ed-summary-heading">RSVP for This Event</p><p class="public-ed-muted" style="margin-bottom:14px">No account needed. Enter your name and email.</p><div class="public-ed-field-stack"><input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name"><input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address"><label class="evt-checkbox-label hidden"><input type="checkbox" id="guestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label><button onclick="pubHandleGuestRsvp()" id="guestRsvpBtn" class="evt-rsvp-pay">RSVP as Guest</button></div><div class="pub-rsvp-links"><a id="signinRsvpLink" href="${pubPortalLoginHref(event.slug)}" class="pub-rsvp-text-link">Have an account? Sign in</a><button type="button" onclick="pubToggleLookup()" class="pub-rsvp-text-link">Already RSVP'd? Look up your ticket</button></div><div id="lookupPanel" class="hidden" style="margin-top:14px"><p class="public-ed-muted" style="margin-bottom:10px">Enter the email you used to RSVP and your ticket will show here.</p><div class="public-ed-field-stack"><input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" aria-label="Email used for RSVP"><button onclick="pubLookupGuestTicket()" id="lookupBtn" class="evt-action-btn">Find My Ticket</button></div><div id="lookupResult" style="margin-top:10px"></div></div></div>
                     <div id="memberOnlyNotice" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-notice-card"><span class="evt-notice-icon">🔒</span><div><p class="evt-notice-title">Members-only event</p><p class="evt-notice-sub">Sign in with your member account to RSVP.</p></div></div></div>
                     <div id="ticketSection" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-qr-card"><h3 class="evt-qr-title">🎫 Your Event Ticket</h3><canvas id="ticketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p></div></div>
                     <div id="guestTicketSection" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-qr-card"><div style="font-size:36px;margin-bottom:8px">🎉</div><h3 class="evt-qr-title">You're In!</h3><p id="guestTicketName" style="font-size:13px;color:#717171;margin-bottom:16px"></p><canvas id="guestTicketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p><p style="font-size:13px;color:#f59e0b;font-weight:600;margin-top:10px">Bookmark this page. This is your ticket.</p></div></div>
@@ -382,21 +450,9 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         statusBanner.classList.remove('hidden');
     }
 
-    // ── Attendee Count (show only when ≥ 3) ─────────
-    if (goingCount >= 3) {
-        const countEl = document.getElementById('attendeeCount');
-        countEl.innerHTML = `
-            <div class="evt-info-row">
-                <div class="evt-info-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
-                <div>
-                    <p class="evt-info-primary">${goingCount} going</p>
-                    ${event.max_participants ? `<p class="evt-info-secondary">${event.max_participants - goingCount > 0 ? (event.max_participants - goingCount) + ' spots left' : 'Sold out'}</p>` : ''}
-                </div>
-            </div>`;
-        countEl.classList.remove('hidden');
-    }
+    pubRenderPublicAttendance(goingCount, event);
 
-    // ── Host / Organizer ────────────────────────────
+    // ── Host / Organizer (no personal profile fields on public page) ──
     const hostEl = document.getElementById('hostSection');
     if (event.event_type === 'llc') {
         hostEl.innerHTML = `
@@ -407,19 +463,13 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
                     <p class="evt-info-secondary">Organizer</p>
                 </div>
             </div>`;
-    } else if (event.creator) {
-        const c = event.creator;
-        const fullName = `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Member';
-        const initials = ((c.first_name?.[0] || '') + (c.last_name?.[0] || '')).toUpperCase();
-        const avatarHtml = c.profile_picture_url
-            ? `<img src="${c.profile_picture_url}" style="width:48px;height:48px;border-radius:12px;object-fit:cover" alt="${pubEscapeHtml(fullName)}">`
-            : `<div class="evt-info-icon" style="background:#222;color:#fff;font-size:16px;font-weight:700">${initials}</div>`;
+    } else {
         hostEl.innerHTML = `
             <div class="evt-info-row">
-                ${avatarHtml}
+                <div class="evt-info-icon" style="background:#e0e7ff;color:#4f46e5;font-size:18px">📅</div>
                 <div>
-                    <p class="evt-info-primary">${pubEscapeHtml(fullName)}</p>
-                    <p class="evt-info-secondary">Organizer</p>
+                    <p class="evt-info-primary">${pubEscapeHtml(typeInfo.label)}</p>
+                    <p class="evt-info-secondary">Hosted by a member</p>
                 </div>
             </div>`;
     }
@@ -514,12 +564,7 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     // Comments section
     pubRenderComments(event);
 
-    // Update sign-in link to redirect back after login
-    const loginLinks = document.querySelectorAll('a[href="/auth/login.html"]');
-    const returnUrl = encodeURIComponent(window.location.href);
-    loginLinks.forEach(link => {
-        link.href = `/auth/login.html?redirect=${returnUrl}`;
-    });
+    pubApplyPublicSignInLinks(event.slug);
 
     // Add section fade-in animations
     content.querySelectorAll('.evt-section').forEach(s => s.classList.add('evt-anim'));

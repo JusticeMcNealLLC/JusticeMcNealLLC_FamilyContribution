@@ -100,7 +100,7 @@ function pubRenderCtaRaffle(panel, closeBtn) {
     }
 
     if (pubCurrentEvent.member_only) {
-        panel.innerHTML = `${closeBtn}<div class="evt-cta-panel-head"><strong>Members only</strong><span>Sign in with your member account to enter.</span></div><a href="/auth/login.html?redirect=${encodeURIComponent(window.location.href)}" class="evt-raffle-buy" style="text-decoration:none">Sign In to Enter Raffle</a>`;
+        panel.innerHTML = `${closeBtn}<div class="evt-cta-panel-head"><strong>Members only</strong><span>Sign in with your member account to enter.</span></div><a href="${typeof pubPortalLoginHref === 'function' && pubCurrentEvent ? pubPortalLoginHref(pubCurrentEvent.slug) : '/auth/login.html'}" class="evt-raffle-buy" style="text-decoration:none">Sign In to Enter Raffle</a>`;
         return;
     }
 
