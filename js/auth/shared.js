@@ -56,22 +56,46 @@ function hasAllPermissions(keys) {
     return keys.every(k => window.__userPermissions.has(k));
 }
 
+// ── Events / admin dashboard permission helpers (Event Coordinator v1) ──
+
+/** Create events — events.create or full event admin */
+function canCreateEvents() {
+    return hasPermission('events.create') || hasPermission('events.manage_all');
+}
+
+/** Manage any event (edit, cancel, RSVP admin tools, etc.) */
+function canManageEvents() {
+    return hasPermission('events.manage_all');
+}
+
+/** Award event banners on the admin events dashboard */
+function canManageEventBanners() {
+    return hasPermission('events.banners') || hasPermission('events.manage_all');
+}
+
+/** Full Admin Hub and general admin pages — not granted to Event Coordinators */
+function canAccessAdminDashboard() {
+    return hasPermission('admin.dashboard');
+}
+
 // Check if user is logged in
 // Usage:
 //   checkAuth()                               — portal page, no admin check
 //   checkAuth(true)                           — legacy: requires admin.dashboard
 //   checkAuth({ permission: 'finance.expenses' }) — requires specific permission
+//   checkAuth({ permission: 'events.manage_all' }) — Events admin (profile.role may stay member)
 // skipOnboardingCheck: set true on the onboarding page itself to avoid redirect loops
 async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
-    // Normalise arg: true → { permission: 'admin.dashboard' }, object stays as-is
+    // Normalise arg: true → admin.dashboard; object → that permission key only
     let permissionKey = null;
-    let needsAdmin = false;
+    let needsLegacyAdminProfile = false;
     if (requireAdmin === true) {
-        needsAdmin = true;
+        needsLegacyAdminProfile = true;
         permissionKey = 'admin.dashboard';
     } else if (requireAdmin && typeof requireAdmin === 'object' && requireAdmin.permission) {
-        needsAdmin = true;
         permissionKey = requireAdmin.permission;
+        // Legacy profiles.role gate applies only to full admin hub access, not every permission.
+        needsLegacyAdminProfile = (permissionKey === 'admin.dashboard');
     }
 
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -82,8 +106,8 @@ async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
         return null;
     }
 
-    // If admin required, check role (backward compat gate)
-    if (needsAdmin) {
+    // Backward compat: admin hub still expects profiles.role = admin (synced from admin.dashboard)
+    if (needsLegacyAdminProfile) {
         const { data: profile } = await supabaseClient
             .from('profiles')
             .select('role, setup_completed')
@@ -97,8 +121,13 @@ async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
         }
     }
 
+    // Permission-gated admin subpages (e.g. admin/events.html) skip member onboarding here;
+    // access is enforced by permissionKey after loadUserPermissions().
+    const skipOnboardingForPermissionGatedAdmin =
+        !!permissionKey && window.location.pathname.includes('/admin/');
+
     // Check onboarding status for non-admin portal pages
-    if (!needsAdmin && !skipOnboardingCheck) {
+    if (!needsLegacyAdminProfile && !skipOnboardingCheck && !skipOnboardingForPermissionGatedAdmin) {
         const isOnboardingPage = window.location.pathname.includes('/onboarding');
         if (!isOnboardingPage) {
             const { data: profile } = await supabaseClient
@@ -134,8 +163,8 @@ async function addAdminDashboardLink() {
         return;
     }
 
-    // Use cached permissions if available, else check profile role
-    if (!hasPermission('admin.dashboard')) {
+    // Use cached permissions if available, else check profile role (legacy sync)
+    if (!canAccessAdminDashboard()) {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (!session) return;
         const { data: profile } = await supabaseClient
