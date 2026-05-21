@@ -263,8 +263,10 @@ async function pubHandleTicketScan(event, ticketToken) {
                 .maybeSingle();
             if (hostRec) isHost = true;
 
-            // Also check for admin role
-            if (!isHost) {
+            // Global event manager (shared.js) or legacy profiles.role admin
+            if (!isHost && typeof canManageEvents === 'function' && canManageEvents()) {
+                isHost = true;
+            } else if (!isHost) {
                 const { data: prof } = await supabaseClient
                     .from('profiles')
                     .select('role')

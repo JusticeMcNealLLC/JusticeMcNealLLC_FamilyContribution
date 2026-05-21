@@ -362,6 +362,7 @@
                 <div class="em-op-meta"><button class="em-btn-primary" data-overview-tab="docs">Manage Docs</button></div>
             </div>` : '';
         const operationsHtml = [thresholdCard, transportCard, documentsCard].filter(Boolean).join('');
+        const showFeaturedToggle = typeof canManageEventBanners === 'function' && canManageEventBanners();
 
         return `
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -408,7 +409,7 @@
                 </form>
             </div>
 
-            ${STATE.source === 'admin' ? `
+            ${showFeaturedToggle ? `
             <div class="em-card mb-3">
                 <div class="flex items-center justify-between">
                     <div>
@@ -2277,7 +2278,7 @@
         return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', minimumFractionDigits:0, maximumFractionDigits:2 }).format((cents || 0) / 100);
     }
 
-    // ─── Featured toggle (admin only) ───────────────────────────────
+    // ─── Featured toggle (events.banners / events.manage_all) ─────
     window._emToggleFeatured = async function () {
         const btn = document.getElementById('emFeaturedToggle');
         if (!btn) return;

@@ -966,7 +966,7 @@
             window.evtAllEvents = events || [];
 
             // Drafts (admin-created, only visible to creator)
-            if (evtCurrentUserRole === 'admin' && evtCurrentUser) {
+            if (typeof canManageEvents === 'function' && canManageEvents() && evtCurrentUser) {
                 const { data: drafts } = await supabaseClient
                     .from('events')
                     .select('*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)')
@@ -1453,8 +1453,7 @@
         // F8 — Create-event tile: prepend to the first upcoming-tab bucket when user can create
         let createTile = '';
         if (useVlift && !_createTileInjected && (window.evtActiveTab || 'upcoming') === 'upcoming') {
-            const canCreate = (typeof hasPermission === 'function' && hasPermission('events.create')) ||
-                              evtCurrentUserRole === 'admin';
+            const canCreate = typeof canCreateEvents === 'function' && canCreateEvents();
             if (canCreate) {
                 createTile =
                     '<button type="button" data-evt-create-tile class="evt-create-tile" aria-label="Create new event">' +
@@ -2250,8 +2249,7 @@
         // F8 — If no buckets rendered (e.g. all events are the hero) but user can create,
         // inject the standalone create tile so it's still reachable.
         if (!_createTileInjected && document.body.classList.contains('evt-vlift') && tab === 'upcoming') {
-            const canCreate = (typeof hasPermission === 'function' && hasPermission('events.create')) ||
-                              evtCurrentUserRole === 'admin';
+            const canCreate = typeof canCreateEvents === 'function' && canCreateEvents();
             if (canCreate) {
                 const tileWrap =
                     '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' +
@@ -2292,8 +2290,7 @@
         const ctaBtn  = document.getElementById('emptyCreateBtn');
         const secBtn  = document.getElementById('emptySecondaryBtn');
 
-        const canCreate = (typeof hasPermission === 'function' && hasPermission('events.create')) ||
-                          evtCurrentUserRole === 'admin';
+        const canCreate = typeof canCreateEvents === 'function' && canCreateEvents();
 
         let title, sub, showCta = false, secText = '', secAction = null;
 
@@ -2701,8 +2698,7 @@
     function _initMobileFab() {
         const fab = document.getElementById('evtCreateFab');
         if (!fab) return;
-        const canCreate = (typeof hasPermission === 'function' && hasPermission('events.create')) ||
-                          evtCurrentUserRole === 'admin';
+        const canCreate = typeof canCreateEvents === 'function' && canCreateEvents();
         if (!canCreate) return;
         fab.classList.remove('hidden');
         fab.classList.add('flex');

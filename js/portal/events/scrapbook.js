@@ -18,7 +18,7 @@ async function evtBuildScrapbookHtml(event, hasRsvp) {
         .order('uploaded_at', { ascending: false });
 
     const photoList = photos || [];
-    const canUpload = hasRsvp || evtCurrentUserRole === 'admin';
+    const canUpload = hasRsvp || (typeof canManageEvents === 'function' && canManageEvents());
 
     let galleryHtml = '';
     if (photoList.length) {
@@ -26,7 +26,7 @@ async function evtBuildScrapbookHtml(event, hasRsvp) {
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
                 ${photoList.map(p => {
                     const name = p.profiles ? `${p.profiles.first_name || ''} ${p.profiles.last_name || ''}`.trim() : 'Member';
-                    const canDelete = p.user_id === evtCurrentUser.id || evtCurrentUserRole === 'admin';
+                    const canDelete = p.user_id === evtCurrentUser.id || (typeof canManageEvents === 'function' && canManageEvents());
                     return `
                         <div class="relative group rounded-xl overflow-hidden bg-gray-100 aspect-square">
                             <img src="${p.file_url}" alt="${evtEscapeHtml(p.caption || '')}" class="w-full h-full object-cover cursor-pointer" onclick="evtViewPhoto('${p.file_url}', '${evtEscapeHtml(p.caption || '')}', '${evtEscapeHtml(name)}')">

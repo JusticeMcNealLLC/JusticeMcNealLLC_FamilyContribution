@@ -441,8 +441,8 @@ async function evtDeleteEvent(eventId) {
     if (!event) return;
 
     // Only allow admins to delete
-    if (evtCurrentUserRole !== 'admin') {
-        alert('Only admins can delete events.');
+    if (typeof canManageEvents !== 'function' || !canManageEvents()) {
+        alert('Only users with event management permission can delete events.');
         return;
     }
 

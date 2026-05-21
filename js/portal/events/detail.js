@@ -282,7 +282,7 @@ async function evtOpenDetail(eventId) {
         .eq('event_id', eventId)
         .eq('user_id', evtCurrentUser.id)
         .maybeSingle();
-    const isHost = isCreator || !!hostRecord || evtCurrentUserRole === 'admin';
+    const isHost = isCreator || !!hostRecord || (typeof canManageEvents === 'function' && canManageEvents());
 
     let creatorProfile = null;
     if (event.created_by) {
@@ -681,7 +681,7 @@ async function evtOpenDetail(eventId) {
             if (isLlc) dropdownItems += `<button onclick="evtRescheduleEvent('${eventId}')">📅 Reschedule</button>`;
         }
         dropdownItems += `<button onclick="evtDuplicateEvent('${eventId}')">📋 Duplicate Event</button>`;
-        if (evtCurrentUserRole === 'admin') dropdownItems += `<button onclick="evtDeleteEvent('${eventId}')" class="danger">🗑 Delete Event</button>`;
+        if (typeof canManageEvents === 'function' && canManageEvents()) dropdownItems += `<button onclick="evtDeleteEvent('${eventId}')" class="danger">🗑 Delete Event</button>`;
         // M3a: "Manage event" button now opens the EventsManage sheet (3 tabs).
         // The legacy dropdown is kept as a fallback only if the sheet module didn't load.
         const manageOnClick = `if(window.EventsManage){window.EventsManage.open('${eventId}',{source:'portal'})}else{this.nextElementSibling.classList.toggle('open')}`;

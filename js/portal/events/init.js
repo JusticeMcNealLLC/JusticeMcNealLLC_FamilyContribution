@@ -28,7 +28,7 @@ async function initEventsPage() {
     window.evtCurrentUserPic = profile?.profile_picture_url || null;
     window.evtCurrentUserInitials = ((profile?.first_name?.[0] || '') + (profile?.last_name?.[0] || '')).toUpperCase() || '?';
 
-    if (hasPermission('events.create') || evtCurrentUserRole === 'admin') {
+    if (typeof canCreateEvents === 'function' && canCreateEvents()) {
         document.getElementById('createEventBtn')?.classList.remove('hidden');
         document.getElementById('createEventBtn')?.classList.add('flex');
     }
