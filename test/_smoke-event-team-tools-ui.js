@@ -21,7 +21,7 @@ assert(/evtApplyDesktopTeamToolsOverlay/.test(detail), 'detail.js should upgrade
 assert(/evt-cta-floating-shell.*evt-team-tools-overlay/.test(detail), 'desktop team open should apply overlay classes');
 assert(/window\.evtOpenTeamToolsPanel/.test(detail), 'evtOpenTeamToolsPanel should be exported on window');
 assert(/evt-cta-team|Open event team tools/.test(detail), 'Team button with accessible label');
-assert(/Team Chat/.test(detail) && /Coming soon/.test(detail), 'Team Chat placeholder');
+assert(/Team Chat/.test(detail) && /evtOpenTeamChat/.test(detail), 'Team Chat opens real chat UI');
 assert(/RSVP as Myself/.test(detail), 'RSVP as Myself in team tools');
 assert(/Enter Raffle/.test(detail), 'Enter Raffle in team tools');
 assert(!/RSVP for Raffle/.test(detail), 'no legacy RSVP for Raffle sticky CTA');
@@ -37,8 +37,7 @@ assert(/isHost = canManageEvent/.test(detail), 'isHost still maps to canManageEv
 assert(/evt-cta-manage/.test(detail) && /evt-cta-team/.test(detail), 'mobile CTA: Manage and Team for hosts');
 assert(/secondaryBtn = teamBtn/.test(detail), 'Team is secondary when host has Manage primary');
 
-// No chat DB in portal JS yet; only 093 may define event_chats
-assert(!/event_chats/.test(detail), 'detail.js must not reference event_chats');
+// Chat tables only in 093 migration + detail.js UI (Phase 4)
 const migrationDir = path.join(root, 'supabase/migrations');
 if (fs.existsSync(migrationDir)) {
     const migrations = fs.readdirSync(migrationDir).filter(f => f.endsWith('.sql'));
@@ -60,9 +59,9 @@ assert(!/detail\.register\('teamChat'/.test(detail), 'no teamChat module registr
 assert(!/PortalEvents\.loadModule/.test(detail), 'no dynamic module loader in detail');
 
 pass('Team/Tools panel logic present in detail.js');
-pass('Team Chat is placeholder only');
+pass('Team Chat opens from Team tools');
 pass('Manage Event + personal actions reachable via team tools');
-pass('No event_chats in UI; portal HTML unchanged (093 migration allowed)');
+pass('Portal HTML unchanged; chat schema only in 093 + detail.js');
 pass('Host permission model preserved');
 
 console.log('\nevent team tools UI smoke: all pass');
