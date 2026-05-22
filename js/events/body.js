@@ -56,6 +56,9 @@ function pubOpenCtaPanel(kind, opts = {}) {
     const rafflePrompt = opts.raffleIntent
         ? '<div class="evt-cta-note">RSVP first, then your same name and email will be used for the raffle entry.</div>'
         : '';
+    const memberPrompt = typeof pubMemberRsvpPromptHtml === 'function'
+        ? pubMemberRsvpPromptHtml(pubCurrentEvent.slug)
+        : '';
     panel.innerHTML = `
         ${closeBtn}
         <div class="evt-cta-panel-head"><strong>RSVP for this event</strong><span>No account needed. Your ticket appears here after RSVP.</span></div>
@@ -65,7 +68,8 @@ function pubOpenCtaPanel(kind, opts = {}) {
             <input type="email" id="ctaGuestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address">
             <label class="evt-checkbox-label${pubCurrentEvent.pricing_mode === 'paid' && pubCurrentEvent.rsvp_cost_cents > 0 ? '' : ' hidden'}"><input type="checkbox" id="ctaGuestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label>
             <button type="button" onclick="pubSubmitCtaGuestRsvp()" id="ctaGuestRsvpBtn" class="evt-rsvp-pay">${pubCurrentEvent.pricing_mode === 'paid' && pubCurrentEvent.rsvp_cost_cents > 0 ? `RSVP as Guest — ${pubFormatCurrency(pubCurrentEvent.rsvp_cost_cents)}` : 'RSVP as Guest'}</button>
-        </div>`;
+        </div>
+        ${memberPrompt}`;
 }
 
 function pubRenderCtaTicket(panel, closeBtn) {

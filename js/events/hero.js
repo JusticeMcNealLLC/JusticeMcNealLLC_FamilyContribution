@@ -110,6 +110,11 @@ function pubPublicCtaLabel(text) {
     return `<span>${text}</span>`;
 }
 
+/** Sticky bar: disabled raffle button (hint renders below the action row) */
+function pubRaffleLockedCtaBtnHtml() {
+    return `<button type="button" class="evt-cta-btn evt-cta-raffle-locked" disabled aria-disabled="true">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel('Enter Raffle')}</button>`;
+}
+
 
 function pubInitBottomNav(event) {
     const prev = document.getElementById('evtCtaBar');
@@ -150,6 +155,7 @@ function pubInitBottomNav(event) {
     }
 
     let raffleBtn = '';
+    let ctaFootnote = '';
     if (raffleEnabled) {
         if (entriesClosed) {
             raffleBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${PUB_CTA_ICONS.lock} Closed</button>`;
@@ -159,10 +165,15 @@ function pubInitBottomNav(event) {
             raffleBtn = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${PUB_CTA_ICONS.check} Entered</button>`;
         } else {
             const hasRsvp = pubCurrentUser ? (pubCurrentRsvp?.status === 'going' || !!pubCurrentRsvp?.paid) : !!pubGuestRsvp;
-            const label = hasRsvp
-                ? (event.raffle_entry_cost_cents > 0 ? `Raffle — ${pubFormatCurrency(event.raffle_entry_cost_cents)}` : 'Enter Raffle')
-                : 'RSVP for Raffle';
-            raffleBtn = `<button class="evt-cta-btn evt-cta-raffle" onclick="pubOpenCtaPanel('raffle')">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel(label)}</button>`;
+            if (!hasRsvp) {
+                raffleBtn = pubRaffleLockedCtaBtnHtml();
+                ctaFootnote = '<p class="evt-cta-footnote">RSVP first to enter the raffle</p>';
+            } else {
+                const label = event.raffle_entry_cost_cents > 0
+                    ? `Raffle — ${pubFormatCurrency(event.raffle_entry_cost_cents)}`
+                    : 'Enter Raffle';
+                raffleBtn = `<button class="evt-cta-btn evt-cta-raffle" onclick="pubOpenCtaPanel('raffle')">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel(label)}</button>`;
+            }
         }
     }
 
@@ -170,10 +181,10 @@ function pubInitBottomNav(event) {
 
     const bar = document.createElement('div');
     bar.id = 'evtCtaBar';
-    bar.className = 'evt-cta-bar';
-    bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${rsvpBtn + raffleBtn}</div>`;
+    bar.className = 'evt-cta-bar' + (ctaFootnote ? ' evt-cta-bar-has-footnote' : '');
+    bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${rsvpBtn + raffleBtn}</div>${ctaFootnote}`;
     document.body.appendChild(bar);
-    document.body.style.paddingBottom = '80px';
+    document.body.style.paddingBottom = ctaFootnote ? '92px' : '80px';
 
     // Hide swipe-hint so it doesn't overlap the CTA bar
     const hint = document.querySelector('.bottom-tab-bar .swipe-hint, .pub-nav .swipe-hint');

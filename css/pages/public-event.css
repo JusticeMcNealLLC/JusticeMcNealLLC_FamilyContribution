@@ -124,6 +124,10 @@ body {
 /* Raffle */
 .evt-raffle-buy { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:16px; border-radius:12px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px; font-weight:700; border:none; cursor:pointer; transition:opacity .2s; box-shadow:0 4px 14px rgba(245,158,11,.3); }
 .evt-raffle-buy:hover { opacity:.9; }
+.evt-raffle-buy-locked { background:#e5e7eb; color:#9ca3af; box-shadow:none; cursor:not-allowed; opacity:1; }
+.evt-raffle-buy-locked:hover { opacity:1; }
+.public-raffle-locked-block { text-align:center; }
+.public-raffle-locked-hint { margin:8px 0 0; font-size:12px; line-height:1.4; color:#6b7280; font-weight:600; font-style:normal; }
 .evt-raffle-rank { width:28px; height:28px; border-radius:50%; background:#222; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
 .evt-raffle-locked { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:16px; border-radius:12px; background:#ebebeb; color:#999; font-size:15px; font-weight:600; border:none; cursor:not-allowed; }
 .evt-raffle-locked svg { width:16px; height:16px; stroke:#999; }
@@ -260,10 +264,13 @@ body.public-event-detail #raffleSection { margin-top:16px; }
 @media(max-width:767px){
     .evt-cta-bar { display:flex; flex-direction:column; align-items:stretch; justify-content:center; gap:10px; position:fixed; left:0; right:0; bottom:0; z-index:49; background:rgba(255,255,255,.9); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-top:1px solid rgba(0,0,0,.06); padding:10px 16px max(12px, env(safe-area-inset-bottom)); animation:evtCtaSlideUp .35s cubic-bezier(.16,1,.3,1); }
     @keyframes evtCtaSlideUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
-    .evt-cta-actions { display:flex; align-items:center; justify-content:center; gap:10px; }
-    .evt-cta-btn { flex:1; max-width:280px; display:flex; align-items:center; justify-content:center; gap:8px; padding:13px 18px; border-radius:50px; font-size:15px; font-weight:700; letter-spacing:.01em; border:none; cursor:pointer; text-decoration:none; white-space:nowrap; transition:transform .15s,opacity .15s; -webkit-tap-highlight-color:transparent; }
+    .evt-cta-actions { display:flex; align-items:stretch; justify-content:center; gap:10px; }
+    .evt-cta-btn { flex:1; max-width:280px; min-height:48px; display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 16px; border-radius:50px; font-size:15px; font-weight:700; letter-spacing:.01em; border:none; cursor:pointer; text-decoration:none; white-space:nowrap; transition:transform .15s,opacity .15s,box-shadow .15s; -webkit-tap-highlight-color:transparent; box-sizing:border-box; }
     .evt-cta-btn:active { transform:scale(.97); }
-    .evt-cta-btn:disabled { opacity:.5; cursor:not-allowed; }
+    .evt-cta-btn:disabled { opacity:1; cursor:not-allowed; transform:none; }
+    .evt-cta-raffle-locked { background:#f3f4f6; color:#9ca3af; border:1.5px solid #e5e7eb; box-shadow:none; }
+    .evt-cta-bar-has-footnote { gap:6px; padding-top:8px; }
+    .evt-cta-footnote { margin:0; padding:0 4px 2px; text-align:center; font-size:11px; line-height:1.35; color:#6b7280; font-weight:600; letter-spacing:.01em; }
     .evt-cta-btn svg { width:18px; height:18px; stroke-width:2.5; fill:none; stroke:currentColor; flex-shrink:0; }
     .evt-cta-rsvp { background:#4f46e5; color:#fff; }
     .evt-cta-rsvp-done { background:#16a34a; color:#fff; }
@@ -402,6 +409,53 @@ body.public-event-detail .public-ed-map-col .ed-map {
     body.public-event-detail .public-ed-lookup-form .evt-action-btn {
         width: 100%;
     }
+}
+
+/* ── Member sign-in prompt (guest RSVP — compact inline) ── */
+.public-member-rsvp-inline {
+    margin: 10px 0 0;
+    padding: 0;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #6b7280;
+}
+.public-member-rsvp-inline span {
+    margin-right: 4px;
+}
+.public-member-rsvp-link {
+    color: #4f46e5;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.public-member-rsvp-link:hover {
+    text-decoration: underline;
+}
+#evtCtaPanel .public-member-rsvp-inline {
+    margin-top: 10px;
+}
+
+/* Members-only events: keep a clear primary sign-in button */
+.pub-member-rsvp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+    padding: 12px 18px;
+    border-radius: 50px;
+    background: #fff;
+    border: 1.5px solid #4f46e5;
+    color: #4f46e5;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .15s, color .15s;
+    box-sizing: border-box;
+}
+.pub-member-rsvp-btn:hover {
+    background: #4f46e5;
+    color: #fff;
 }
 
 /* ── Unified RSVP card — text link row ── */
