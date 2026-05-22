@@ -211,14 +211,14 @@ async function evtOpenDetail(eventId) {
     const [{ data: rsvps }, { data: guestRsvps }] = await Promise.all([
         supabaseClient
             .from('event_rsvps')
-            .select('user_id, status, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)')
+            .select('user_id, status, paid, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)')
             .eq('event_id', eventId),
         supabaseClient
             .from('event_guest_rsvps')
             .select('id, guest_name, guest_email, status, paid')
             .eq('event_id', eventId),
     ]);
-    const goingList = (rsvps || []).filter(r => r.status === 'going');
+    const goingList = (rsvps || []).filter(r => (typeof window.evtIsGoingRsvp === 'function' ? window.evtIsGoingRsvp(r) : (r.status === 'going' || r.paid === true)));
     const maybeList = (rsvps || []).filter(r => r.status === 'maybe');
     const notGoingList = (rsvps || []).filter(r => r.status === 'not_going');
     // Guests who confirmed (free events use status='going'; paid events require paid=true)
@@ -311,7 +311,8 @@ async function evtOpenDetail(eventId) {
     const cpBadge = creatorProfile ? evtBadgeChip(creatorProfile.displayed_badge) : '';
     const cpTitle = creatorProfile ? (creatorProfile.title || 'Member') : '';
 
-    const hasRsvp = rsvp && (rsvp.status === 'going' || rsvp.status === 'maybe');
+    const memberGoing = typeof window.evtIsGoingRsvp === 'function' ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
+    const hasRsvp = rsvp && (memberGoing || rsvp.status === 'maybe');
     const documentsHtml = await evtBuildDocumentsHtml(event, isHost, hasRsvp);
     const mapHtml = evtBuildMapHtml(event, hasRsvp, isHost);
     const competitionHtml = isComp ? await evtBuildCompetitionHtml(event, isHost) : '';
@@ -370,7 +371,7 @@ async function evtOpenDetail(eventId) {
     let qrHtml = '';
     let myCheckin = null;
     const checkinEnabled = event.checkin_enabled !== false;
-    if (checkinEnabled && rsvp && rsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
+    if (checkinEnabled && memberGoing && event.checkin_mode === 'attendee_ticket') {
         const { data: ci } = await supabaseClient
             .from('event_checkins')
             .select('checked_in_at')
@@ -606,7 +607,10 @@ async function evtOpenDetail(eventId) {
         const prizesHtml = evtDetailRafflePrizesHtml(event);
 
         let entryStatusHtml = '';
-        const hasRaffleRsvp = rsvp?.status === 'going' || !!rsvp?.paid;
+        const hasRaffleRsvp = memberGoing;
+        const raffleBundled = typeof window.evtIsRaffleBundledWithPaidRsvp === 'function'
+            ? window.evtIsRaffleBundledWithPaidRsvp(event)
+            : (event.pricing_mode === 'paid' && rsvpEnabled);
         if (myRaffleEntry) {
             entryStatusHtml = `<div class="ed-raffle-entry-chip">🎟️ Entered</div>`;
         } else if (entriesClosed && !myRaffleEntry) {
@@ -615,16 +619,14 @@ async function evtOpenDetail(eventId) {
             else if (isPast) lockedReason = 'Event in progress';
             else if (deadlinePassed) lockedReason = 'RSVP deadline passed';
             entryStatusHtml = `<div class="ed-notice"><span class="ed-notice-emoji">🔒</span><div><p class="ed-notice-title">Entries Closed</p><p class="ed-notice-sub">${lockedReason}</p></div></div>`;
-        } else if (isHost && canAccessTeamHub && !myRaffleEntry && !entriesClosed && event.pricing_mode !== 'paid') {
-            entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Open <button type="button" class="ed-link-btn" onclick="evtOpenTeamToolsPanel('${eventId}')">Team</button> to RSVP as yourself and enter the raffle.</p>`;
-        } else if (event.pricing_mode !== 'paid' && !hasRaffleRsvp) {
-            entryStatusHtml = `<div class="ed-raffle-desktop-action"><p class="ed-hint" style="font-style:italic">RSVP first to enter the raffle.</p><button onclick="evtHandleRsvp('${eventId}','going')" class="ed-raffle-btn">RSVP to Enter Raffle</button></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">RSVP first using the sticky CTA below, then enter the raffle.</p>`;
-        } else if (event.pricing_mode !== 'paid' && event.raffle_entry_cost_cents > 0 && !entriesClosed) {
-            entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
-        } else if (event.pricing_mode !== 'paid' && (!event.raffle_entry_cost_cents || event.raffle_entry_cost_cents === 0) && !entriesClosed) {
-            entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleFreeRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Enter Raffle — Free</button></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
-        } else if (event.pricing_mode === 'paid' && !rsvp?.paid) {
+        } else if (raffleBundled && !rsvp?.paid) {
             entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Raffle entry included with paid RSVP</p>`;
+        } else if (!hasRaffleRsvp) {
+            entryStatusHtml = evtRaffleLockedDesktopHtml(eventId, isHost && canAccessTeamHub);
+        } else if (event.raffle_entry_cost_cents > 0 && !entriesClosed) {
+            entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
+        } else if ((!event.raffle_entry_cost_cents || event.raffle_entry_cost_cents === 0) && !entriesClosed) {
+            entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleFreeRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Enter Raffle — Free</button></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
         }
 
         let winnersHtml = '';
@@ -1187,7 +1189,7 @@ async function evtOpenDetail(eventId) {
 
     // QR codes + map after DOM render
     setTimeout(() => {
-        if (rsvp && rsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
+        if (memberGoing && event.checkin_mode === 'attendee_ticket') {
             const canvas = document.getElementById('myTicketQR');
             if (canvas && typeof QRCode !== 'undefined') {
                 QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`, { width: 180, margin: 2 });
@@ -1288,6 +1290,11 @@ function evtInjectTeamToolsStyles() {
         .evt-team-tool-main { line-height: 1.25; }
         .evt-team-tool-sub { font-size: 12px; font-weight: 500; color: #6b7280; line-height: 1.35; }
         .evt-cta-btn.evt-cta-team { background: #fff; color: #4f46e5; border: 2px solid #c7d2fe; }
+        .evt-cta-btn.evt-cta-raffle-locked { background: #f3f4f6; color: #9ca3af; border: 1.5px solid #e5e7eb; box-shadow: none; cursor: not-allowed; }
+        .evt-cta-footnote { margin: 0; padding: 0 4px 2px; text-align: center; font-size: 11px; line-height: 1.35; color: #6b7280; font-weight: 600; }
+        .ed-raffle-locked-block { text-align: center; }
+        .ed-raffle-locked-hint { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: #6b7280; font-weight: 600; font-style: normal; }
+        .ed-raffle-btn.ed-raffle-btn-locked { background: #ebebeb; color: #999; border: none; cursor: not-allowed; width: 100%; }
         @media (min-width: 1024px) {
             .evt-cta-bar.evt-cta-floating-shell.evt-team-tools-overlay {
                 display: flex !important; position: fixed; inset: 0; z-index: 60;
@@ -1301,6 +1308,20 @@ function evtInjectTeamToolsStyles() {
         }
     `;
     document.head.appendChild(style);
+}
+
+function evtRaffleLockedCtaBtnHtml() {
+    return `<button type="button" class="evt-cta-btn evt-cta-raffle-locked" disabled aria-disabled="true">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
+}
+
+function evtRaffleLockedDesktopHtml(eventId, showTeamHint) {
+    const mobileHint = showTeamHint
+        ? `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the bar below, or open <button type="button" class="ed-link-btn" onclick="evtOpenTeamToolsPanel('${eventId}')">Team</button> to RSVP as yourself.</p>`
+        : `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the sticky bar below, then enter the raffle.</p>`;
+    return `<div class="ed-raffle-desktop-action ed-raffle-locked-block">
+        <button type="button" class="ed-raffle-btn ed-raffle-btn-locked" disabled aria-disabled="true">🎟️ Enter Raffle</button>
+        <p class="ed-raffle-locked-hint">RSVP first to enter the raffle</p>
+    </div>${mobileHint}`;
 }
 
 function evtCanUseEventScanner(event, canManageEvent) {
@@ -1323,7 +1344,9 @@ function evtBuildTeamToolsPanelHtml(event, eventId, rsvp, myRaffleEntry, entries
     const rsvpEnabled = event.rsvp_enabled !== false;
     const raffleEnabled = !!event.raffle_enabled;
     const canRsvp = rsvpEnabled && ['open', 'confirmed', 'active'].includes(event.status) && !entriesClosed;
-    const hasGoingRsvp = rsvp?.status === 'going' || !!rsvp?.paid;
+    const hasGoingRsvp = typeof window.evtIsGoingRsvp === 'function'
+        ? window.evtIsGoingRsvp(rsvp)
+        : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
     const rows = [];
 
     rows.push(evtTeamToolsRow('Team Chat', 'Coming soon', '', true));
@@ -1331,7 +1354,7 @@ function evtBuildTeamToolsPanelHtml(event, eventId, rsvp, myRaffleEntry, entries
     if (rsvpEnabled) {
         if (!canRsvp) {
             rows.push(evtTeamToolsRow('RSVP as Myself', 'RSVP is closed for this event', '', true));
-        } else if (eventIsFull && rsvp?.status !== 'going' && !rsvp?.paid) {
+        } else if (eventIsFull && !hasGoingRsvp) {
             rows.push(evtTeamToolsRow('RSVP as Myself', 'Event is full', '', true));
         } else if (hasGoingRsvp) {
             rows.push(evtTeamToolsRow('RSVP as Myself', "You're RSVP'd — tap to update", `evtCloseCtaPanel();evtHandleRsvp('${eventId}','going')`, false));
@@ -1343,15 +1366,17 @@ function evtBuildTeamToolsPanelHtml(event, eventId, rsvp, myRaffleEntry, entries
     }
 
     if (raffleEnabled) {
-        const raffleBundled = event.pricing_mode === 'paid' && rsvpEnabled;
-        if (raffleBundled && !rsvp?.paid) {
-            rows.push(evtTeamToolsRow('Enter Raffle', 'Included with paid RSVP', '', true));
+        const raffleBundled = typeof window.evtIsRaffleBundledWithPaidRsvp === 'function'
+            ? window.evtIsRaffleBundledWithPaidRsvp(event)
+            : (event.pricing_mode === 'paid' && rsvpEnabled);
+        if (raffleBundled) {
+            rows.push(evtTeamToolsRow('Enter Raffle', rsvp?.paid ? 'Included with your paid RSVP' : 'Included with paid RSVP', '', true));
         } else if (myRaffleEntry) {
             rows.push(evtTeamToolsRow('Enter Raffle', 'Already entered', '', true));
         } else if (entriesClosed) {
             rows.push(evtTeamToolsRow('Enter Raffle', 'Entries are closed', '', true));
         } else if (!hasGoingRsvp) {
-            rows.push(evtTeamToolsRow('Enter Raffle', 'RSVP as yourself first', `evtCloseCtaPanel();evtHandleRsvp('${eventId}','going')`, false));
+            rows.push(evtTeamToolsRow('Enter Raffle', 'RSVP first to enter the raffle', '', true));
         } else {
             rows.push(evtTeamToolsRow('Enter Raffle', event.raffle_entry_cost_cents > 0 ? formatCurrency(event.raffle_entry_cost_cents) : 'Free entry', `evtOpenCtaPanel('raffle','${eventId}')`, false));
         }
@@ -1436,6 +1461,7 @@ const EVT_CTA_ICONS = {
 
 function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub) {
     evtCleanupBottomNav();
+    evtInjectTeamToolsStyles();
 
     const rsvpEnabled  = event.rsvp_enabled !== false;
     const raffleEnabled = !!event.raffle_enabled;
@@ -1451,6 +1477,7 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
 
     let primaryBtn   = '';
     let secondaryBtn = '';
+    let ctaFootnote  = '';
 
     const teamBtn = `<button type="button" class="evt-cta-btn evt-cta-team" onclick="evtOpenTeamToolsPanel('${eventId}')" aria-label="Open event team tools">Team</button>`;
 
@@ -1481,7 +1508,12 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
         // ── Raffle button (secondary when RSVP present, primary when alone) ──
         if (raffleEnabled) {
             // Raffle is bundled with paid RSVP — no separate button
-            const raffleIncluded = event.pricing_mode === 'paid' && rsvpEnabled;
+            const raffleIncluded = typeof window.evtIsRaffleBundledWithPaidRsvp === 'function'
+                ? window.evtIsRaffleBundledWithPaidRsvp(event)
+                : (event.pricing_mode === 'paid' && rsvpEnabled);
+            const memberGoingNav = typeof window.evtIsGoingRsvp === 'function'
+                ? window.evtIsGoingRsvp(rsvp)
+                : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
             if (!raffleIncluded) {
                 const hasPrimary = !!primaryBtn;
                 // Use outline style when raffle is the secondary action alongside RSVP
@@ -1491,8 +1523,9 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
                     raffleSlot = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${EVT_CTA_ICONS.check} Entered</button>`;
                 } else if (entriesClosed) {
                     raffleSlot = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Entries Closed</button>`;
-                } else if (!(rsvp?.status === 'going' || !!rsvp?.paid)) {
-                    raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId}')">${EVT_CTA_ICONS.ticket} RSVP for Raffle</button>`;
+                } else if (!memberGoingNav) {
+                    raffleSlot = evtRaffleLockedCtaBtnHtml();
+                    ctaFootnote = '<p class="evt-cta-footnote">RSVP first to enter the raffle</p>';
                 } else if (event.raffle_entry_cost_cents > 0) {
                     raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId}')">${EVT_CTA_ICONS.ticket} Raffle — ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
                 } else {
@@ -1511,8 +1544,8 @@ function evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, ev
 
     const bar = document.createElement('div');
     bar.id = 'evtCtaBar';
-    bar.className = 'evt-cta-bar';
-    bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${primaryBtn + secondaryBtn}</div>`;
+    bar.className = 'evt-cta-bar' + (ctaFootnote ? ' evt-cta-bar-has-footnote' : '');
+    bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${primaryBtn + secondaryBtn}</div>${ctaFootnote}`;
     document.body.appendChild(bar);
     document.body.classList.add('evt-cta-active');
 
@@ -1561,8 +1594,12 @@ function evtOpenCtaPanel(kind, eventId) {
     bar.classList.add('evt-cta-bar-expanded');
     panel.classList.remove('hidden');
 
+    const memberGoing = typeof window.evtIsGoingRsvp === 'function'
+        ? window.evtIsGoingRsvp(rsvp)
+        : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
+
     if (kind === 'ticket') {
-        const hasQr = rsvp?.qr_token && event.checkin_mode === 'attendee_ticket';
+        const hasQr = memberGoing && rsvp?.qr_token && event.checkin_mode === 'attendee_ticket';
         panel.innerHTML = `
             ${closeBtn}
             <div class="evt-cta-panel-head"><strong>You're going</strong><span>${evtEscapeHtml(event.title || 'Event')}</span></div>
@@ -1576,7 +1613,17 @@ function evtOpenCtaPanel(kind, eventId) {
         return;
     }
 
-    if (!(rsvp?.status === 'going' || !!rsvp?.paid)) {
+    const raffleBundled = typeof window.evtIsRaffleBundledWithPaidRsvp === 'function'
+        ? window.evtIsRaffleBundledWithPaidRsvp(event)
+        : (event.pricing_mode === 'paid' && event.rsvp_enabled !== false);
+    if (raffleBundled) {
+        panel.innerHTML = `
+            ${closeBtn}
+            <div class="evt-cta-panel-head"><strong>Raffle included</strong><span>Raffle entry is included when you complete your paid RSVP for this event.</span></div>`;
+        return;
+    }
+
+    if (!memberGoing) {
         panel.innerHTML = `
             ${closeBtn}
             <div class="evt-cta-panel-head"><strong>RSVP first</strong><span>Once you are going, this same member RSVP will be used for the raffle entry.</span></div>

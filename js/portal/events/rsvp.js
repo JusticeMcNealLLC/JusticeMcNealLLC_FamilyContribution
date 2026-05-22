@@ -3,6 +3,36 @@
 // Supports free RSVP (direct DB) and paid RSVP (Stripe).
 // ═══════════════════════════════════════════════════════════
 
+/** Member RSVP counts as "going" for raffle/ticket (parity with public pubHasRaffleEligibleRsvp). */
+function evtIsGoingRsvp(rsvp) {
+    return !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
+}
+
+function evtIsRaffleEntriesOpen(event) {
+    if (!event) return false;
+    const now = new Date();
+    const isClosed = event.status === 'completed' || event.status === 'cancelled';
+    const isPast = new Date(event.start_date) < now && event.status !== 'active';
+    const deadlined = event.rsvp_deadline && new Date(event.rsvp_deadline) < now;
+    return !isClosed && !isPast && !deadlined;
+}
+
+/** Paid events bundle raffle with RSVP checkout (no separate raffle CTA on public page). */
+function evtIsRaffleBundledWithPaidRsvp(event) {
+    return event.pricing_mode === 'paid' && event.rsvp_enabled !== false;
+}
+
+function evtCanEnterMemberRaffle(event, rsvp, myRaffleEntry) {
+    if (!event?.raffle_enabled || !evtIsRaffleEntriesOpen(event) || myRaffleEntry) return false;
+    if (evtIsRaffleBundledWithPaidRsvp(event)) return !!(rsvp && rsvp.paid === true);
+    return evtIsGoingRsvp(rsvp);
+}
+
+window.evtIsGoingRsvp = evtIsGoingRsvp;
+window.evtIsRaffleEntriesOpen = evtIsRaffleEntriesOpen;
+window.evtIsRaffleBundledWithPaidRsvp = evtIsRaffleBundledWithPaidRsvp;
+window.evtCanEnterMemberRaffle = evtCanEnterMemberRaffle;
+
 async function evtHandleRsvp(eventId, status) {
     try {
         // Look up event to check pricing mode
@@ -123,13 +153,17 @@ async function evtHandleRaffleEntry(eventId) {
             return;
         }
 
-        if (event.pricing_mode === 'paid' || !event.raffle_entry_cost_cents) {
-            alert('Raffle entry is included with your RSVP for this event.');
+        if (!event.raffle_entry_cost_cents) {
+            alert('Use Enter Raffle — Free for no-cost raffle entries.');
             return;
         }
 
         const rsvp = (window.evtAllRsvps || evtAllRsvps)[eventId];
-        if (!(rsvp?.status === 'going' || !!rsvp?.paid)) {
+        if (evtIsRaffleBundledWithPaidRsvp(event)) {
+            alert('Raffle entry is included with your paid RSVP for this event.');
+            return;
+        }
+        if (!evtIsGoingRsvp(rsvp)) {
             alert('Please RSVP before entering the raffle.');
             return;
         }
@@ -174,7 +208,11 @@ async function evtHandleFreeRaffleEntry(eventId) {
         if (!session?.session?.user) { alert('Please sign in to enter.'); return; }
 
         const rsvp = (window.evtAllRsvps || evtAllRsvps)[eventId];
-        if (!(rsvp?.status === 'going' || !!rsvp?.paid)) {
+        if (evtIsRaffleBundledWithPaidRsvp(event)) {
+            alert('Raffle entry is included with your paid RSVP for this event.');
+            return;
+        }
+        if (!evtIsGoingRsvp(rsvp)) {
             alert('Please RSVP before entering the raffle.');
             return;
         }
