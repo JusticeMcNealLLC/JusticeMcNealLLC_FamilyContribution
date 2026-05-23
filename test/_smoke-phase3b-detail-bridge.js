@@ -234,6 +234,17 @@ detailSections.includes('function evtBuildDetailHostControlsHtml')
     ? pass('evtBuildDetailHostControlsHtml defined in detail/sections.js')
     : fail('evtBuildDetailHostControlsHtml missing from detail/sections.js');
 
+[
+    ['function evtBuildDetailWaitlistHtml', 'evtBuildDetailWaitlistHtml'],
+    ['function evtBuildDetailGraceNoticeHtml', 'evtBuildDetailGraceNoticeHtml'],
+    ['function evtBuildDetailCostBreakdownHtml', 'evtBuildDetailCostBreakdownHtml'],
+    ['function evtBuildDetailAttendeeBreakdownHtml', 'evtBuildDetailAttendeeBreakdownHtml'],
+].forEach(([substr, label]) => {
+    detailSections.includes(substr)
+        ? pass(`${label} defined in detail/sections.js (Phase 5H.3)`)
+        : fail(`${label} missing from detail/sections.js`);
+});
+
 detailSections.includes('PortalEvents.detail.sections')
     ? pass('PortalEvents.detail.sections namespace present')
     : fail('PortalEvents.detail.sections namespace missing');
@@ -249,6 +260,26 @@ detail.includes('window.evtBuildDetailRaffleSectionHtml(ctx)')
 detail.includes('window.evtBuildDetailHostControlsHtml(ctx)')
     ? pass('detail.js calls window.evtBuildDetailHostControlsHtml')
     : fail('detail.js must call window.evtBuildDetailHostControlsHtml');
+
+detail.includes('window.evtBuildDetailWaitlistHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailWaitlistHtml (Phase 5H.3)')
+    : fail('detail.js must call window.evtBuildDetailWaitlistHtml');
+
+detail.includes('window.evtBuildDetailGraceNoticeHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailGraceNoticeHtml (Phase 5H.3)')
+    : fail('detail.js must call window.evtBuildDetailGraceNoticeHtml');
+
+detail.includes('window.evtBuildDetailCostBreakdownHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailCostBreakdownHtml (Phase 5H.3)')
+    : fail('detail.js must call window.evtBuildDetailCostBreakdownHtml');
+
+detail.includes('window.evtBuildDetailAttendeeBreakdownHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailAttendeeBreakdownHtml (Phase 5H.3)')
+    : fail('detail.js must call window.evtBuildDetailAttendeeBreakdownHtml');
+
+!detail.includes('evtClaimWaitlistSpot(')
+    ? pass('waitlist inline handlers moved out of detail.js (Phase 5H.3)')
+    : fail('evtClaimWaitlistSpot still inline in detail.js — should be in detail/sections.js');
 
 detail.includes('detail.sections = window.PortalEvents.detail.sections')
     ? pass('detail.sections bridges to PortalEvents.detail.sections')

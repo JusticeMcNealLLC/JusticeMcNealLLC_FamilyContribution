@@ -51,7 +51,7 @@ detailData.includes('PortalEvents.detail.data')
     ? pass('PortalEvents.detail.data namespace present')
     : fail('PortalEvents.detail.data namespace missing');
 
-console.log('\n── Phase 5H.2 — detail/sections.js ───────────────────────────────────────');
+console.log('\n── Phase 5H.2–5H.3 — detail/sections.js ────────────────────────────────────');
 
 fs.existsSync(path.join(root, 'js/portal/events/detail/sections.js'))
     ? pass('js/portal/events/detail/sections.js exists')
@@ -76,6 +76,21 @@ detailSections.includes('function evtBuildDetailRaffleSectionHtml')
 detailSections.includes('function evtBuildDetailHostControlsHtml')
     ? pass('evtBuildDetailHostControlsHtml defined in detail/sections.js')
     : fail('evtBuildDetailHostControlsHtml missing');
+
+[
+    'evtBuildDetailWaitlistHtml',
+    'evtBuildDetailGraceNoticeHtml',
+    'evtBuildDetailCostBreakdownHtml',
+    'evtBuildDetailAttendeeBreakdownHtml',
+].forEach((name) => {
+    detailSections.includes(`function ${name}`)
+        ? pass(`${name} defined in detail/sections.js (Phase 5H.3)`)
+        : fail(`${name} missing from detail/sections.js`);
+});
+
+detailSections.includes('buildWaitlistHtml: evtBuildDetailWaitlistHtml')
+    ? pass('PortalEvents.detail.sections.buildWaitlistHtml present')
+    : fail('PortalEvents.detail.sections.buildWaitlistHtml missing');
 
 detailSections.includes('PortalEvents.detail.sections')
     ? pass('PortalEvents.detail.sections namespace present')
@@ -128,6 +143,22 @@ detail.includes('window.evtBuildDetailRaffleSectionHtml(ctx)')
 detail.includes('window.evtBuildDetailHostControlsHtml(ctx)')
     ? pass('evtOpenDetail delegates host controls HTML to sections.js')
     : fail('detail.js must call window.evtBuildDetailHostControlsHtml');
+
+detail.includes('window.evtBuildDetailWaitlistHtml(ctx)')
+    ? pass('evtOpenDetail delegates waitlist HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailWaitlistHtml');
+
+detail.includes('window.evtBuildDetailGraceNoticeHtml(ctx)')
+    ? pass('evtOpenDetail delegates grace notice HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailGraceNoticeHtml');
+
+detail.includes('window.evtBuildDetailCostBreakdownHtml(ctx)')
+    ? pass('evtOpenDetail delegates cost breakdown HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailCostBreakdownHtml');
+
+detail.includes('window.evtBuildDetailAttendeeBreakdownHtml(ctx)')
+    ? pass('evtOpenDetail delegates attendee breakdown HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailAttendeeBreakdownHtml');
 
 detail.includes('window.evtOpenDetail            = evtOpenDetail')
     ? pass('window.evtOpenDetail still assigned from detail.js')

@@ -24,7 +24,7 @@
 // Presentation helpers — Phase 5D.1: js/portal/events/detail/presentation.js
 // Fragment helpers — Phase 5F-prep: js/portal/events/detail/fragments.js
 // Detail data context — Phase 5H.1: js/portal/events/detail/data.js
-// Detail section HTML — Phase 5H.2: js/portal/events/detail/sections.js
+// Detail section HTML — Phase 5H.2–5H.3: js/portal/events/detail/sections.js
 
 const _edMetaRow = window.evtEdMetaRow;
 const _edPill = window.evtEdPill;
@@ -174,47 +174,7 @@ async function evtOpenDetail(eventId) {
         scannerBtn = `<button onclick="evtOpenScanner('${eventId}')" class="ed-action-btn"><svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>Scan Attendee QR</button>`;
     }
 
-    // ── Cost Breakdown (LLC) ─────────────────────────────
-    let costBreakdownHtml = '';
-    const showBreakdownToAttendees = event.show_cost_breakdown !== false;
-    if (isLlc && costItems.length > 0 && (showBreakdownToAttendees || isHost)) {
-        const CATEGORY_ICONS = { lodging: '🏠', transportation: '🚗', food: '🍕', gear: '🎿', entertainment: '🎭', other: '📦' };
-        const included = costItems.filter(i => i.included_in_buyin);
-        const oop = costItems.filter(i => !i.included_in_buyin);
-        const totalIncluded = included.reduce((s, i) => s + (i.total_cost_cents || 0), 0);
-        const totalOop = oop.reduce((s, i) => s + (i.avg_per_person_cents || 0), 0);
-        const minP = event.min_participants || event.max_participants || 0;
-        const baseBuyIn = minP > 0 ? Math.ceil(totalIncluded / minP) : 0;
-        const llcCut = Math.round(baseBuyIn * (event.llc_cut_pct || 0) / 100);
-        const finalBuyIn = baseBuyIn + llcCut;
-        const lockedLabel = event.cost_breakdown_locked ? ` ${_edPill('🔒 Locked', 'ed-pill-muted')}` : '';
-        const hostOnlyLabel = !showBreakdownToAttendees ? ` ${_edPill('Host Only', 'ed-pill-muted')}` : '';
-
-        const itemRows = costItems.map(i => `
-            <div class="ed-cost-item">
-                <div class="ed-cost-item-left"><span class="ed-cost-item-icon">${CATEGORY_ICONS[i.category] || '📦'}</span><span>${evtEscapeHtml(i.name)}</span></div>
-                <div class="ed-cost-item-right">
-                    ${i.included_in_buyin
-                        ? `<span class="ed-cost-item-amount">${formatCurrency(i.total_cost_cents)}</span>${_edPill('INCLUDED', 'ed-pill-green')}`
-                        : `<span class="ed-cost-item-amount" style="color:#8b8b8b">~${formatCurrency(i.avg_per_person_cents)}/pp</span>${_edPill('OOP', 'ed-pill-muted')}`}
-                </div>
-            </div>`).join('');
-
-        costBreakdownHtml = `
-            ${_edSectionHead(`Cost Breakdown${lockedLabel}${hostOnlyLabel}`)}
-            <div class="ed-cost-list">${itemRows}</div>
-            <div class="ed-cost-summary">
-                <div class="ed-cost-line"><span>Total Included</span><span>${formatCurrency(totalIncluded)}</span></div>
-                <div class="ed-cost-line"><span>Min Participants</span><span>${minP}</span></div>
-                <div class="ed-cost-divider"></div>
-                <div class="ed-cost-line ed-cost-line-bold"><span>💡 Suggested Buy-In</span><span>${formatCurrency(finalBuyIn)}/person</span></div>
-                <div class="ed-cost-line ed-cost-line-bold"><span>💳 Actual RSVP</span><span>${formatCurrency(event.rsvp_cost_cents)}/person</span></div>
-                ${event.llc_cut_pct > 0 ? `<div class="ed-cost-line ed-cost-line-muted"><span>Includes ${event.llc_cut_pct}% LLC contribution</span><span>+${formatCurrency(llcCut)}</span></div>` : ''}
-                <div class="ed-cost-line"><span>✈ Est. Out-of-Pocket</span><span>~${formatCurrency(totalOop)}/person</span></div>
-                <div class="ed-cost-divider thick"></div>
-                <div class="ed-cost-line ed-cost-total"><span>💰 Est. Total/Person</span><span>~${formatCurrency((event.rsvp_cost_cents || finalBuyIn) + totalOop)}</span></div>
-            </div>`;
-    }
+    const costBreakdownHtml = window.evtBuildDetailCostBreakdownHtml(ctx);
 
     // ── Threshold / Social Proof (LLC) ───────────────────
     let thresholdHtml = '';
@@ -239,97 +199,12 @@ async function evtOpenDetail(eventId) {
 
     const eventContextHtml = [thresholdContextHtml, transportContextHtml].filter(Boolean).join('');
 
-    // ── Waitlist (LLC) ───────────────────────────────────
-    let waitlistHtml = '';
-    if (isLlc && event.max_participants) {
-        const isFull = goingList.length >= event.max_participants;
-        const canRsvpWl = ['open', 'confirmed', 'active'].includes(event.status);
-        const activeWaitlist = waitlist.filter(w => ['waiting', 'offered'].includes(w.status));
-        if (isFull && canRsvpWl) {
-            const hasOffer = myWaitlistEntry?.status === 'offered' && myWaitlistEntry.offer_expires_at && new Date(myWaitlistEntry.offer_expires_at) > new Date();
-            const isWaiting = myWaitlistEntry?.status === 'waiting';
-            let waitlistAction = '';
-            if (hasOffer) {
-                const expiresStr = new Date(myWaitlistEntry.offer_expires_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-                waitlistAction = `
-                    <div class="ed-notice ed-notice-highlight">
-                        <span class="ed-notice-emoji">🎉</span>
-                        <div style="flex:1">
-                            <p class="ed-notice-title">A spot opened up for you!</p>
-                            <p class="ed-notice-sub">Complete your RSVP by ${expiresStr}</p>
-                            <button onclick="evtClaimWaitlistSpot('${eventId}')" class="ed-primary-btn" style="margin-top:10px">Claim Spot — ${formatCurrency(event.rsvp_cost_cents)}</button>
-                        </div>
-                    </div>`;
-            } else if (isWaiting) {
-                const pos = activeWaitlist.findIndex(w => w.user_id === evtCurrentUser.id) + 1;
-                waitlistAction = `
-                    <div class="ed-notice" style="justify-content:space-between">
-                        <div><p class="ed-notice-title">You're #${pos} on the waitlist</p><p class="ed-notice-sub">We'll notify you if a spot opens</p></div>
-                        <button onclick="evtLeaveWaitlist('${eventId}')" class="ed-link-btn danger">Leave</button>
-                    </div>`;
-            } else if (!rsvp?.paid) {
-                waitlistAction = `<button onclick="evtJoinWaitlist('${eventId}')" class="ed-action-btn">Join Waitlist</button>
-                    <p class="ed-hint">No payment required to join the waitlist</p>`;
-            }
-            waitlistHtml = `${_edSectionHead('Waitlist')}<p class="ed-sub-count">${activeWaitlist.length} waiting</p>${waitlistAction}`;
-        }
-    }
-
-    // ── Grace Window ─────────────────────────────────────
-    let graceHtml = '';
-    if (event.rescheduled_at && event.grace_window_end && new Date(event.grace_window_end) > new Date()) {
-        const graceEnd = new Date(event.grace_window_end).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-        graceHtml = `<div class="ed-notice ed-notice-warn">
-            <span class="ed-notice-emoji">📅</span>
-            <div>
-                <p class="ed-notice-title">This event was rescheduled</p>
-                <p class="ed-notice-sub">Request a full refund until <strong>${graceEnd}</strong> if the new date doesn't work.</p>
-                ${rsvp?.paid ? `<button onclick="evtRequestGraceRefund('${eventId}')" class="ed-link-btn danger" style="margin-top:8px">Request Full Refund</button>` : ''}
-            </div>
-        </div>`;
-    }
+    const waitlistHtml = window.evtBuildDetailWaitlistHtml(ctx);
+    const graceHtml = window.evtBuildDetailGraceNoticeHtml(ctx);
 
     const rsvpButtons = window.evtBuildDetailRsvpSectionHtml(ctx);
     const raffleHtml = window.evtBuildDetailRaffleSectionHtml(ctx);
-
-    // ── Helper: avatar + name row ────────────────────────
-    function buildPersonRow(p) {
-        const initials = ((p?.first_name?.[0] || '') + (p?.last_name?.[0] || '')).toUpperCase() || '?';
-        const avatar = p?.profile_picture_url
-            ? `<img src="${p.profile_picture_url}" class="w-7 h-7 rounded-full object-cover" alt="">`
-            : `<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xs font-bold">${initials}</div>`;
-        return `<div class="flex items-center gap-2">${avatar}<span class="text-sm text-gray-700">${evtEscapeHtml(p?.first_name || '')} ${evtEscapeHtml(p?.last_name || '')}</span></div>`;
-    }
-
-    // ── Attendee Breakdown (host) ────────────────────────
-    let attendeeBreakdownHtml = '';
-    if (isHost) {
-        const checkinUserIds = new Set((checkins || []).map(c => c.user_id));
-
-        function buildSection(emoji, label, list, color) {
-            if (!list.length) return `<p class="text-xs text-gray-400 italic ml-6">None</p>`;
-            return list.map(r => buildPersonRow(r.profiles)).join('');
-        }
-
-        const checkinRows = (checkins || []).map(c => buildPersonRow(c.profiles)).join('') || `<p class="text-xs text-gray-400 italic ml-6">None</p>`;
-
-        attendeeBreakdownHtml = `
-            <div>
-                ${_edSectionHead('Attendee Breakdown')}
-                <div class="mb-3">
-                    <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">✅</span><span class="text-xs font-bold text-emerald-700 uppercase tracking-wide">Going (${goingList.length})</span></div>
-                    <div class="space-y-1.5 ml-6">${goingList.length ? goingList.map(r => buildPersonRow(r.profiles)).join('') : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
-                </div>
-                <div class="mb-3">
-                    <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">❤️</span><span class="text-xs font-bold text-pink-700 uppercase tracking-wide">Interested (${maybeList.length})</span></div>
-                    <div class="space-y-1.5 ml-6">${maybeList.length ? maybeList.map(r => buildPersonRow(r.profiles)).join('') : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">📍</span><span class="text-xs font-bold text-violet-700 uppercase tracking-wide">Checked In (${checkinCount || 0})</span></div>
-                    <div class="space-y-1.5 ml-6">${checkinRows}</div>
-                </div>
-            </div>`;
-    }
+    const attendeeBreakdownHtml = window.evtBuildDetailAttendeeBreakdownHtml(ctx);
 
     const hostControlsHtml = window.evtBuildDetailHostControlsHtml(ctx);
 
