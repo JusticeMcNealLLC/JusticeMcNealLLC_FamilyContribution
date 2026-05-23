@@ -8,6 +8,7 @@ const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
+const teamTools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
 const rsvp = fs.readFileSync(path.join(root, 'js/portal/events/rsvp.js'), 'utf8');
 const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
 const publicBody = fs.readFileSync(path.join(root, 'js/events/body.js'), 'utf8');
@@ -33,20 +34,21 @@ assert(/memberGoing/.test(detail), 'detail.js uses memberGoing for ticket/raffle
 assert(/select\('user_id, status, paid/.test(detail), 'attendee query includes paid for going counts');
 
 // Locked Enter Raffle + footnote (parity with public pubRaffleLockedCtaBtnHtml)
-assert(/evtRaffleLockedCtaBtnHtml/.test(detail), 'portal locked raffle CTA helper');
-assert(/evt-cta-raffle-locked/.test(detail), 'disabled Enter Raffle CTA class');
-assert(/evt-cta-footnote/.test(detail) && /RSVP first to enter the raffle/.test(detail), 'CTA footnote for RSVP-first');
-assert(!/RSVP for Raffle/.test(detail), 'portal must not use old RSVP for Raffle sticky label');
+assert(/raffleLockedCtaBtnHtml/.test(teamTools), 'portal locked raffle CTA helper (team/tools.js)');
+assert(/evt-cta-raffle-locked/.test(teamTools), 'disabled Enter Raffle CTA class');
+assert(/evt-cta-footnote/.test(teamTools) && /RSVP first to enter the raffle/.test(teamTools), 'CTA footnote for RSVP-first');
+assert(/evtRaffleLockedDesktopHtml/.test(detail), 'desktop locked raffle block in detail render');
+assert(!/RSVP for Raffle/.test(detail) && !/RSVP for Raffle/.test(teamTools), 'portal must not use old RSVP for Raffle sticky label');
 
-// Team Tools still wires RSVP/Raffle
-assert(/evtOpenTeamToolsPanel/.test(detail), 'Team Tools panel present');
-assert(/RSVP as Myself/.test(detail), 'Team Tools RSVP as Myself');
-assert(/Enter Raffle/.test(detail), 'Team Tools Enter Raffle');
-assert(/evtHandleRsvp/.test(detail), 'Team Tools links to evtHandleRsvp');
-assert(/evtOpenCtaPanel\('raffle'/.test(detail), 'Team Tools opens raffle CTA panel');
+// Team Tools still wires RSVP/Raffle (Phase 5C: team/tools.js)
+assert(/evtOpenTeamToolsPanel/.test(detail), 'detail render still opens Team Tools');
+assert(/RSVP as Myself/.test(teamTools), 'Team Tools RSVP as Myself');
+assert(/Enter Raffle/.test(teamTools), 'Team Tools Enter Raffle');
+assert(/evtHandleRsvp/.test(teamTools), 'Team Tools links to evtHandleRsvp');
+assert(/evtOpenCtaPanel\('raffle'/.test(teamTools), 'Team Tools opens raffle CTA panel');
 
 // Hosts not manage-only
-assert(/evt-cta-manage/.test(detail) && /evt-cta-team/.test(detail), 'mobile Manage + Team for hosts');
+assert(/evt-cta-manage/.test(teamTools) && /evt-cta-team/.test(teamTools), 'mobile Manage + Team for hosts');
 assert(/You're hosting!/.test(detail), 'host messaging preserved');
 
 // Raffle handler bugfix: no false "included" on free raffle paid handler
@@ -55,7 +57,8 @@ assert(!/pricing_mode === 'paid' \|\| !event\.raffle_entry_cost_cents/.test(rsvp
 
 // Scope guards
 assert(!/event_chats/.test(detail) && !/event_chats/.test(rsvp), 'no chat tables');
-assert(!/evtOpenTeamToolsPanel/.test(portalHtml), 'portal/events.html unchanged');
+assert(!/evtOpenTeamToolsPanel/.test(portalHtml), 'portal/events.html must not inline team tools handlers');
+assert(/detail\/presentation\.js/.test(portalHtml), 'portal/events.html loads detail/presentation.js');
 
 pass('portal RSVP/raffle parity helpers and detail wiring verified');
 pass('public reference files untouched');

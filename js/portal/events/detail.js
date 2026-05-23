@@ -21,72 +21,7 @@
     detail.register = function (name, fn) { detail._registry[name] = fn; };
     detail.get = function (name) { return detail._registry[name]; };
 
-// ── Lightweight inline markdown (bold, italic, links) ────
-function evtMiniMarkdown(text) {
-    if (!text) return '';
-    let html = evtEscapeHtml(text);
-    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    return html;
-}
-
-// ── Banner lightbox ──────────────────────────────────────
-function evtOpenLightbox(imgUrl) {
-    if (!imgUrl) return;
-    const lb = document.createElement('div');
-    lb.className = 'evt-lightbox';
-    lb.innerHTML = `<button class="evt-lightbox-close" aria-label="Close"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button><img src="${imgUrl}" alt="Event banner">`;
-    lb.onclick = e => { if (e.target === lb || e.target.closest('.evt-lightbox-close')) { lb.classList.remove('active'); setTimeout(() => lb.remove(), 250); } };
-    document.body.appendChild(lb);
-    requestAnimationFrame(() => lb.classList.add('active'));
-}
-
-// ── Section fade-in observer ─────────────────────────────
-function evtInitSectionAnimations() {
-    const sections = document.querySelectorAll('#eventsDetailView .ed-card');
-    if (!sections.length) return;
-    const obs = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('ed-visible'); obs.unobserve(e.target); } });
-    }, { threshold: 0.08 });
-    sections.forEach((s, i) => { s.style.animationDelay = `${i * 0.06}s`; obs.observe(s); });
-}
-
-// ── Live countdown (ticks every second when < 1 hour) ────
-var _evtCountdownInterval = null;
-function evtStartLiveCountdown(startDate) {
-    if (_evtCountdownInterval) clearInterval(_evtCountdownInterval);
-    const badgeEl = document.querySelector('#eventsDetailView .evt-status-badge');
-    if (!badgeEl) return;
-
-    function tick() {
-        const ms = new Date(startDate) - new Date();
-        if (ms <= 0) {
-            badgeEl.className = 'evt-status-badge evt-status-live';
-            badgeEl.innerHTML = '<span class="evt-status-dot pulse"></span>Live';
-            clearInterval(_evtCountdownInterval);
-            return;
-        }
-        const d = Math.floor(ms / 86400000);
-        const h = Math.floor((ms % 86400000) / 3600000);
-        const m = Math.floor((ms % 3600000) / 60000);
-        const s = Math.floor((ms % 60000) / 1000);
-        let lbl;
-        if (d > 0) lbl = `${d}d ${h}h`;
-        else if (h > 0) lbl = `${h}h ${m}m`;
-        else lbl = `${m}m ${s}s`;
-        badgeEl.innerHTML = `<span class="evt-status-dot${d === 0 ? ' pulse' : ''}"></span>${lbl}`;
-    }
-    const msUntil = new Date(startDate) - new Date();
-    const interval = msUntil < 3600000 ? 1000 : 60000;
-    _evtCountdownInterval = setInterval(tick, interval);
-    if (interval === 60000) {
-        const upgradeIn = msUntil - 3600000;
-        if (upgradeIn > 0) {
-            setTimeout(() => { clearInterval(_evtCountdownInterval); _evtCountdownInterval = setInterval(tick, 1000); }, upgradeIn);
-        }
-    }
-}
+// Presentation helpers — Phase 5D.1: js/portal/events/detail/presentation.js
 
 // ═══════════════════════════════════════════════════════════
 // Render helpers — small composable blocks
@@ -740,7 +675,7 @@ async function evtOpenDetail(eventId) {
 
     // ── Description ──────────────────────────────────────
     const rawDesc = event.description || '';
-    const descHtml = rawDesc ? evtMiniMarkdown(rawDesc) : '<span class="ed-no-desc">No details yet — check back closer to the event.</span>';
+    const descHtml = rawDesc ? window.evtMiniMarkdown(rawDesc) : '<span class="ed-no-desc">No details yet — check back closer to the event.</span>';
     const descIsLong = rawDesc.length > 500;
 
     // ── Organizer row ────────────────────────────────────
@@ -1108,7 +1043,7 @@ async function evtOpenDetail(eventId) {
     // ── Post-render setup ────────────────────────────────
     document.title = `${event.title} | Events | Justice McNeal LLC`;
     window.scrollTo({ top: 0, behavior: 'instant' });
-    evtInitSectionAnimations();
+    window.evtInitSectionAnimations();
     // ── Sidebar countdown tick ───────────────────────────
     if (!isPast && !isClosed) {
         const _cdTarget = new Date(event.start_date).getTime();
@@ -1291,17 +1226,13 @@ function evtRaffleLockedDesktopHtml(eventId, showTeamHint) {
 // Public surface — preserve legacy evt* globals + register PortalEvents.detail namespace
 // ═══════════════════════════════════════════════════════════
 window.evtOpenDetail            = evtOpenDetail;
-window.evtOpenLightbox          = evtOpenLightbox;
 window.evtOpenFullscreenMap     = evtOpenFullscreenMap;
 window.evtRecenterFullscreenMap = evtRecenterFullscreenMap;
 window.evtCloseFullscreenMap    = evtCloseFullscreenMap;
-window.evtMiniMarkdown          = evtMiniMarkdown;
-window.evtInitSectionAnimations = evtInitSectionAnimations;
-window.evtStartLiveCountdown    = evtStartLiveCountdown;
 window.evtInitHeroCollapse      = evtInitHeroCollapse;
 window.evtCleanupHeroCollapse   = evtCleanupHeroCollapse;
 detail.open                = evtOpenDetail;
-detail.openLightbox        = evtOpenLightbox;
+detail.openLightbox        = window.evtOpenLightbox;
 detail.openFullscreenMap   = evtOpenFullscreenMap;
 detail.closeFullscreenMap  = evtCloseFullscreenMap;
 detail.initBottomNav       = window.evtInitBottomNav;
@@ -1310,13 +1241,13 @@ detail.openCtaPanel        = window.evtOpenCtaPanel;
 detail.closeCtaPanel       = window.evtCloseCtaPanel;
 detail.openTeamToolsPanel  = window.evtOpenTeamToolsPanel;
 detail.openTeamChat        = window.evtOpenTeamChat;
-detail.startLiveCountdown    = evtStartLiveCountdown;
-detail.initSectionAnimations = evtInitSectionAnimations;
+detail.startLiveCountdown    = window.evtStartLiveCountdown;
+detail.initSectionAnimations = window.evtInitSectionAnimations;
 // Phase 3B additions — mirror remaining window.evt* globals + raffle helpers
 detail.recenterFullscreenMap = evtRecenterFullscreenMap;
 detail.initHeroCollapse      = evtInitHeroCollapse;
 detail.cleanupHeroCollapse   = evtCleanupHeroCollapse;
-detail.miniMarkdown          = evtMiniMarkdown;
+detail.miniMarkdown          = window.evtMiniMarkdown;
 detail.raffleConfig          = evtDetailRaffleConfig;
 detail.raffleCategories      = evtDetailRaffleCategories;
 detail.raffleItems           = evtDetailRaffleItems;

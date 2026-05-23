@@ -50,12 +50,16 @@ if (fs.existsSync(migrationDir)) {
 
 const chatTag = 'src="../js/portal/events/team/chat.js"';
 const toolsTag = 'src="../js/portal/events/team/tools.js"';
+const presentationTag = 'src="../js/portal/events/detail/presentation.js"';
 const detailTag = 'src="../js/portal/events/detail.js"';
 const chatIdx = portalHtml.indexOf(chatTag);
 const toolsIdx = portalHtml.indexOf(toolsTag);
+const presentationIdx = portalHtml.indexOf(presentationTag);
 const detailIdx = portalHtml.indexOf(detailTag);
 assert(toolsIdx >= 0, 'portal/events.html must load team/tools.js');
-assert(chatIdx < toolsIdx && toolsIdx < detailIdx, 'chat → tools → detail load order');
+assert(presentationIdx >= 0, 'portal/events.html must load detail/presentation.js');
+assert(chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < detailIdx,
+    'chat → tools → presentation → detail load order');
 assert(!/evtOpenTeamToolsPanel/.test(portalHtml), 'portal/events.html must not inline team tools handlers');
 
 assert(/canManageEvents\(\)/.test(detail), 'canManageEvents() still used for host/manage');
@@ -65,7 +69,7 @@ assert(!/PortalEvents\.loadModule/.test(detail), 'no dynamic module loader in de
 
 pass('Team/Tools implementation in team/tools.js');
 pass('detail.js bridges Team Tools + bottom nav');
-pass('HTML load order: chat → tools → detail');
+pass('HTML load order: chat → tools → presentation → detail');
 pass('Host permission model preserved in detail render');
 
 console.log('\nevent team tools UI smoke: all pass');
