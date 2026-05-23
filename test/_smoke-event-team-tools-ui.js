@@ -10,7 +10,9 @@ const root = path.resolve(__dirname, '..');
 const tools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
 const detailData = fs.readFileSync(path.join(root, 'js/portal/events/detail/data.js'), 'utf8');
+const detailSections = fs.readFileSync(path.join(root, 'js/portal/events/detail/sections.js'), 'utf8');
 const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const detailRender = detail + '\n' + detailSections;
 
 function pass(msg) { console.log(`  ✓ ${msg}`); }
 
@@ -35,7 +37,8 @@ assert(/canManageEvent/.test(detail), 'canManageEvent in detail render path');
 assert(/canAccessTeamHub/.test(detail), 'canAccessTeamHub for team tools access');
 assert(/isHost = canManageEvent/.test(detail) || /isHost = canManageEvent/.test(detailData),
     'isHost still maps to canManageEvent (detail.js or detail/data.js)');
-assert(/evtOpenTeamToolsPanel/.test(detail), 'detail render still calls evtOpenTeamToolsPanel');
+assert(/evtOpenTeamToolsPanel/.test(detailRender),
+    'detail render still calls evtOpenTeamToolsPanel (detail.js or detail/sections.js after 5H.2)');
 assert(/detail\.openTeamToolsPanel\s*=\s*window\.evtOpenTeamToolsPanel/.test(detail), 'detail bridges openTeamToolsPanel');
 assert(/detail\.initBottomNav\s*=\s*window\.evtInitBottomNav/.test(detail), 'detail bridges initBottomNav');
 assert(!/function evtOpenTeamToolsPanel/.test(detail), 'implementation not in detail.js');
@@ -64,7 +67,10 @@ assert(chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < det
     'chat → tools → presentation → detail load order');
 assert(!/evtOpenTeamToolsPanel/.test(portalHtml), 'portal/events.html must not inline team tools handlers');
 
-assert(/canManageEvents\(\)/.test(detail), 'canManageEvents() still used for host/manage');
+assert(/canManageEvents\(\)/.test(detailSections),
+    'canManageEvents() still used for host/manage (Phase 5H.2: host controls in detail/sections.js)');
+assert(!/canManageEvents\(\)/.test(detail) || /evtBuildDetailHostControlsHtml/.test(detail),
+    'canManageEvents() not orphaned — host controls delegated to sections.js');
 assert(!/evtCurrentUserRole === 'admin'/.test(detail), 'no legacy admin role checks in detail');
 assert(!/detail\.register\('teamChat'/.test(detail), 'no teamChat module registration');
 assert(!/PortalEvents\.loadModule/.test(detail), 'no dynamic module loader in detail');
@@ -72,6 +78,6 @@ assert(!/PortalEvents\.loadModule/.test(detail), 'no dynamic module loader in de
 pass('Team/Tools implementation in team/tools.js');
 pass('detail.js bridges Team Tools + bottom nav');
 pass('HTML load order: chat → tools → presentation → detail');
-pass('Host permission model preserved in detail render');
+pass('Host permission model preserved in detail render (data.js + sections.js)');
 
 console.log('\nevent team tools UI smoke: all pass');
