@@ -8,6 +8,7 @@ const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
+const detailData = fs.readFileSync(path.join(root, 'js/portal/events/detail/data.js'), 'utf8');
 const raffleRender = fs.readFileSync(path.join(root, 'js/portal/events/detail/raffle-render.js'), 'utf8');
 const teamTools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
 const rsvp = fs.readFileSync(path.join(root, 'js/portal/events/rsvp.js'), 'utf8');
@@ -29,10 +30,11 @@ assert(/evtCanEnterMemberRaffle/.test(rsvp), 'evtCanEnterMemberRaffle helper pre
 assert(/pubHasRaffleEligibleRsvp/.test(publicBody), 'public pubHasRaffleEligibleRsvp still present');
 assert(/pubCurrentRsvp\?\.status === 'going'/.test(publicBody), 'public member going check');
 
-// detail.js uses shared going logic
-assert(/evtIsGoingRsvp/.test(detail), 'detail.js references evtIsGoingRsvp');
+// detail.js uses shared going logic (Phase 5H.1: memberGoing computed in detail/data.js)
+assert(/evtIsGoingRsvp/.test(detail) || /evtIsGoingRsvp/.test(detailData), 'detail path references evtIsGoingRsvp');
 assert(/memberGoing/.test(detail), 'detail.js uses memberGoing for ticket/raffle');
-assert(/select\('user_id, status, paid/.test(detail), 'attendee query includes paid for going counts');
+assert(/select\('user_id, status, paid/.test(detail) || /select\('user_id, status, paid/.test(detailData),
+    'attendee query includes paid for going counts');
 
 // Locked Enter Raffle + footnote (parity with public pubRaffleLockedCtaBtnHtml)
 assert(/raffleLockedCtaBtnHtml/.test(teamTools), 'portal locked raffle CTA helper (team/tools.js)');

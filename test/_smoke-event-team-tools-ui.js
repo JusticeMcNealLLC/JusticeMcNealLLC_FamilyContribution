@@ -9,6 +9,7 @@ const assert = require('assert');
 const root = path.resolve(__dirname, '..');
 const tools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
+const detailData = fs.readFileSync(path.join(root, 'js/portal/events/detail/data.js'), 'utf8');
 const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
 
 function pass(msg) { console.log(`  ✓ ${msg}`); }
@@ -32,7 +33,8 @@ assert(/function initBottomNav/.test(tools) && /window\.evtInitBottomNav/.test(t
 
 assert(/canManageEvent/.test(detail), 'canManageEvent in detail render path');
 assert(/canAccessTeamHub/.test(detail), 'canAccessTeamHub for team tools access');
-assert(/isHost = canManageEvent/.test(detail), 'isHost still maps to canManageEvent');
+assert(/isHost = canManageEvent/.test(detail) || /isHost = canManageEvent/.test(detailData),
+    'isHost still maps to canManageEvent (detail.js or detail/data.js)');
 assert(/evtOpenTeamToolsPanel/.test(detail), 'detail render still calls evtOpenTeamToolsPanel');
 assert(/detail\.openTeamToolsPanel\s*=\s*window\.evtOpenTeamToolsPanel/.test(detail), 'detail bridges openTeamToolsPanel');
 assert(/detail\.initBottomNav\s*=\s*window\.evtInitBottomNav/.test(detail), 'detail bridges initBottomNav');

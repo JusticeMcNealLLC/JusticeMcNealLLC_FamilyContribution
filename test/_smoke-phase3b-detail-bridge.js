@@ -44,6 +44,7 @@ const detailPresentation = read('js/portal/events/detail/presentation.js');
 const detailRaffleRender = read('js/portal/events/detail/raffle-render.js');
 const detailMapOverlay = read('js/portal/events/detail/map-overlay.js');
 const detailFragments = read('js/portal/events/detail/fragments.js');
+const detailData = read('js/portal/events/detail/data.js');
 
 detail.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
@@ -180,6 +181,40 @@ detailFragments.includes('PortalEvents.detail.fragments')
     ? pass('PortalEvents.detail.fragments namespace present')
     : fail('PortalEvents.detail.fragments namespace missing');
 
+console.log('\n── detail/data.js — public globals (Phase 5H.1) ──────────────────────────');
+
+detailData.includes('(function ()')
+    ? pass('detail/data.js IIFE wrapper present')
+    : fail('detail/data.js IIFE wrapper missing');
+
+detailData.includes('async function evtLoadDetailContext')
+    ? pass('evtLoadDetailContext defined in detail/data.js')
+    : fail('evtLoadDetailContext missing from detail/data.js');
+
+detailData.includes('window.evtLoadDetailContext = evtLoadDetailContext')
+    ? pass('window.evtLoadDetailContext assigned in detail/data.js')
+    : fail('window.evtLoadDetailContext missing from detail/data.js');
+
+detailData.includes('PortalEvents.detail.data')
+    ? pass('PortalEvents.detail.data namespace present')
+    : fail('PortalEvents.detail.data namespace missing');
+
+detail.includes('await window.evtLoadDetailContext(eventId)')
+    ? pass('detail.js calls window.evtLoadDetailContext in evtOpenDetail')
+    : fail('detail.js must call window.evtLoadDetailContext in evtOpenDetail');
+
+detail.includes('detail.loadContext = window.evtLoadDetailContext')
+    ? pass('detail.loadContext bridges to window.evtLoadDetailContext')
+    : fail('detail.loadContext bridge missing');
+
+detail.includes('detail.data = window.PortalEvents.detail.data')
+    ? pass('detail.data bridges to PortalEvents.detail.data')
+    : fail('detail.data bridge missing');
+
+!detail.includes(".from('event_rsvps')")
+    ? pass('Supabase RSVP fetch moved out of detail.js (Phase 5H.1)')
+    : fail('event_rsvps fetch still in detail.js — should be in detail/data.js');
+
 const REQUIRED_TOOLS_WINDOW_GLOBALS = [
     ['window.evtInitBottomNav', 'sticky CTA bar init (team/tools.js)'],
     ['window.evtCleanupBottomNav', 'sticky CTA bar cleanup (team/tools.js)'],
@@ -263,6 +298,8 @@ const NESTED_NAMESPACE_ALIASES = [
     ['detail.raffleRender = window.PortalEvents.detail.raffleRender', 'raffleRender → detail.raffleRender'],
     ['detail.mapOverlay = window.PortalEvents.detail.mapOverlay', 'mapOverlay → detail.mapOverlay'],
     ['detail.fragments = window.PortalEvents.detail.fragments', 'fragments → detail.fragments'],
+    ['detail.data = window.PortalEvents.detail.data', 'data → detail.data'],
+    ['detail.loadContext = window.evtLoadDetailContext', 'loadContext → window.evtLoadDetailContext'],
     ['detail.team = window.PortalEvents.team', 'team → detail.team'],
 ];
 
@@ -468,6 +505,7 @@ const presentationTag = 'src="../js/portal/events/detail/presentation.js"';
 const raffleRenderTag = 'src="../js/portal/events/detail/raffle-render.js"';
 const mapOverlayTag = 'src="../js/portal/events/detail/map-overlay.js"';
 const fragmentsTag = 'src="../js/portal/events/detail/fragments.js"';
+const dataTag = 'src="../js/portal/events/detail/data.js"';
 const detailTag = 'src="../js/portal/events/detail.js"';
 const chatIdx = html.indexOf(chatTag);
 const toolsIdx = html.indexOf(toolsTag);
@@ -475,6 +513,7 @@ const presentationIdx = html.indexOf(presentationTag);
 const raffleRenderIdx = html.indexOf(raffleRenderTag);
 const mapOverlayIdx = html.indexOf(mapOverlayTag);
 const fragmentsIdx = html.indexOf(fragmentsTag);
+const dataIdx = html.indexOf(dataTag);
 const detailIdx = html.indexOf(detailTag);
 html.includes(chatTag)
     ? pass('team/chat.js is referenced in events.html')
@@ -494,6 +533,9 @@ html.includes(mapOverlayTag)
 html.includes(fragmentsTag)
     ? pass('detail/fragments.js is referenced in events.html')
     : fail('detail/fragments.js not in events.html — would never load');
+html.includes(dataTag)
+    ? pass('detail/data.js is referenced in events.html')
+    : fail('detail/data.js not in events.html — would never load');
 !html.includes('js/portal/events/detail/exports.js')
     ? pass('detail/exports.js not in events.html (Phase 5E.1 — no loader change)')
     : fail('detail/exports.js must not be added in 5E.1 — use nested aliases in detail.js only');
@@ -501,11 +543,11 @@ html.includes(fragmentsTag)
     ? pass('compat/window-exports.js not in events.html (5E.1 — no compat wiring)')
     : fail('compat/window-exports.js must not be wired in 5E.1');
 chatIdx >= 0 && toolsIdx >= 0 && presentationIdx >= 0 && raffleRenderIdx >= 0
-    && mapOverlayIdx >= 0 && fragmentsIdx >= 0 && detailIdx >= 0
+    && mapOverlayIdx >= 0 && fragmentsIdx >= 0 && dataIdx >= 0 && detailIdx >= 0
     && chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < raffleRenderIdx
-    && raffleRenderIdx < mapOverlayIdx && mapOverlayIdx < fragmentsIdx && fragmentsIdx < detailIdx
-    ? pass('load order: chat → tools → presentation → raffle-render → map-overlay → fragments → detail')
-    : fail('script order must be chat → tools → presentation → raffle-render → map-overlay → fragments → detail');
+    && raffleRenderIdx < mapOverlayIdx && mapOverlayIdx < fragmentsIdx && fragmentsIdx < dataIdx && dataIdx < detailIdx
+    ? pass('load order: chat → tools → presentation → raffle-render → map-overlay → fragments → data → detail')
+    : fail('script order must be chat → tools → presentation → raffle-render → map-overlay → fragments → data → detail');
 
 const initTag = 'src="../js/portal/events/init.js"';
 const portalBlock = html.slice(html.indexOf('<!-- Events modules'));
