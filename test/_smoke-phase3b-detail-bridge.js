@@ -234,6 +234,22 @@ DETAIL_DIRECT_KEYS.forEach(([substr, label]) => {
         : fail(`detail.${label} assignment missing`);
 });
 
+// ─── Phase 5E.1 nested namespace aliases ───────────────────
+console.log('\n── detail.js — Phase 5E.1 nested namespace aliases ───────────────────────');
+
+const NESTED_NAMESPACE_ALIASES = [
+    ['detail.presentation = window.PortalEvents.detail.presentation', 'presentation → detail.presentation'],
+    ['detail.raffleRender = window.PortalEvents.detail.raffleRender', 'raffleRender → detail.raffleRender'],
+    ['detail.mapOverlay = window.PortalEvents.detail.mapOverlay', 'mapOverlay → detail.mapOverlay'],
+    ['detail.team = window.PortalEvents.team', 'team → detail.team'],
+];
+
+NESTED_NAMESPACE_ALIASES.forEach(([substr, label]) => {
+    detail.includes(substr)
+        ? pass(`Phase 5E.1: ${label}`)
+        : fail(`Phase 5E.1 nested alias missing: ${label}`);
+});
+
 // ─── window.PortalEvents.detail registry sub-modules ──────
 console.log('\n── detail.js — detail.register() sub-module entries ──────────────────────');
 
@@ -424,6 +440,12 @@ html.includes(raffleRenderTag)
 html.includes(mapOverlayTag)
     ? pass('detail/map-overlay.js is referenced in events.html')
     : fail('detail/map-overlay.js not in events.html — would never load');
+!html.includes('js/portal/events/detail/exports.js')
+    ? pass('detail/exports.js not in events.html (Phase 5E.1 — no loader change)')
+    : fail('detail/exports.js must not be added in 5E.1 — use nested aliases in detail.js only');
+!html.includes('js/portal/events/compat/window-exports.js')
+    ? pass('compat/window-exports.js not in events.html (5E.1 — no compat wiring)')
+    : fail('compat/window-exports.js must not be wired in 5E.1');
 chatIdx >= 0 && toolsIdx >= 0 && presentationIdx >= 0 && raffleRenderIdx >= 0 && mapOverlayIdx >= 0 && detailIdx >= 0
     && chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < raffleRenderIdx
     && raffleRenderIdx < mapOverlayIdx && mapOverlayIdx < detailIdx

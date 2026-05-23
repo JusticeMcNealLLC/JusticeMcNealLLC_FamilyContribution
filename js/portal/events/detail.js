@@ -1133,6 +1133,20 @@ detail.rafflePrizesHtml      = window.evtDetailRafflePrizesHtml;
 detail.raffleWinnersHtml     = window.evtDetailRaffleWinnersHtml;
 detail.raffleLockedDesktopHtml = window.evtRaffleLockedDesktopHtml;
 
+// Phase 5E.1 — nested namespace aliases (discoverability; flat bridges unchanged)
+if (window.PortalEvents.detail.presentation) {
+    detail.presentation = window.PortalEvents.detail.presentation;
+}
+if (window.PortalEvents.detail.raffleRender) {
+    detail.raffleRender = window.PortalEvents.detail.raffleRender;
+}
+if (window.PortalEvents.detail.mapOverlay) {
+    detail.mapOverlay = window.PortalEvents.detail.mapOverlay;
+}
+if (window.PortalEvents.team) {
+    detail.team = window.PortalEvents.team;
+}
+
 // Pre-register known sub-modules (M3 management sheet will register itself here)
 detail.register('rsvp',        { handle: () => window.evtHandleRsvp });
 detail.register('raffle',      { handle: () => window.evtHandleRaffleEntry });
