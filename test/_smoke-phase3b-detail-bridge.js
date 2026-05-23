@@ -38,6 +38,7 @@ function read(relPath) {
 console.log('\n── js/portal/events/detail.js — file structure ───────────────────────────');
 
 const detail = read('js/portal/events/detail.js');
+const teamChat = read('js/portal/events/team/chat.js');
 
 detail.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
@@ -104,6 +105,23 @@ REQUIRED_WINDOW_GLOBALS.forEach(([assign, note]) => {
         : fail(`${assign} assignment missing — ${note}`);
 });
 
+// ─── Phase 5B Team Chat (team/chat.js + detail bridge) ─────
+console.log('\n── team/chat.js — public globals (Phase 5B) ─────────────────────────────');
+
+[
+    ['window.evtOpenTeamChat', 'team chat open (team/chat.js)'],
+    ['window.evtSendTeamChatMessage', 'team chat send (team/chat.js)'],
+    ['window.evtCleanupTeamChat', 'team chat cleanup (team/chat.js)'],
+].forEach(([assign, note]) => {
+    teamChat.includes(assign)
+        ? pass(`${assign} assigned in team/chat.js (${note})`)
+        : fail(`${assign} missing from team/chat.js — ${note}`);
+});
+
+detail.includes('detail.openTeamChat        = window.evtOpenTeamChat')
+    ? pass('detail.openTeamChat bridges to window.evtOpenTeamChat')
+    : fail('detail.openTeamChat bridge missing');
+
 // ─── window.PortalEvents.detail direct assignments ────────
 console.log('\n── detail.js — window.PortalEvents.detail direct entries ─────────────────');
 
@@ -131,6 +149,7 @@ const DETAIL_DIRECT_KEYS = [
     ['detail.drawModeLabel ',        'drawModeLabel (Phase 3B)'],
     ['detail.rafflePrizesHtml ',     'rafflePrizesHtml (Phase 3B)'],
     ['detail.raffleWinnersHtml ',    'raffleWinnersHtml (Phase 3B)'],
+    ['detail.openTeamChat ',         'openTeamChat (Phase 5B bridge)'],
 ];
 
 DETAIL_DIRECT_KEYS.forEach(([substr, label]) => {
@@ -216,24 +235,32 @@ html.includes('src="../js/portal/events/detail.js"')
     ? fail('A portal/events/* script has type="module" — premature')
     : pass('No portal/events/* scripts use type="module" yet (correct)');
 
-// ─── No split file created without being loaded ──────────
-console.log('\n── File split safety — no orphaned new detail/ files ─────────────────────');
+// ─── Phase 5B split files must be loaded in events.html ───
+console.log('\n── File split safety — team/ and detail/ scripts in events.html ─────────');
+
+const chatTag = 'src="../js/portal/events/team/chat.js"';
+const detailTag = 'src="../js/portal/events/detail.js"';
+html.includes(chatTag)
+    ? pass('team/chat.js is referenced in events.html')
+    : fail('team/chat.js not in events.html — would never load');
+html.indexOf(chatTag) < html.indexOf(detailTag)
+    ? pass('team/chat.js loads before detail.js')
+    : fail('team/chat.js must load before detail.js');
 
 const detailDir = path.join(root, 'js', 'portal', 'events', 'detail');
 if (fs.existsSync(detailDir)) {
     const files = fs.readdirSync(detailDir).filter(f => f.endsWith('.js'));
+    files.forEach(f => {
+        const scriptRef = 'js/portal/events/detail/' + f;
+        html.includes(scriptRef)
+            ? pass(`detail/${f} is referenced in events.html (not orphaned)`)
+            : fail(`detail/${f} exists but NOT in events.html — would never load`, `File: ${scriptRef}`);
+    });
     if (files.length === 0) {
-        pass('js/portal/events/detail/ directory exists but is empty (no orphaned files)');
-    } else {
-        files.forEach(f => {
-            const scriptRef = 'js/portal/events/detail/' + f;
-            html.includes(scriptRef)
-                ? pass(`detail/${f} is referenced in events.html (not orphaned)`)
-                : fail(`detail/${f} exists but NOT in events.html — would never load`, `File: ${scriptRef}`);
-        });
+        pass('js/portal/events/detail/ exists but has no .js files yet');
     }
 } else {
-    pass('js/portal/events/detail/ directory does not exist (no premature split — correct)');
+    pass('js/portal/events/detail/ directory does not exist yet (ok for Phase 5B)');
 }
 
 // ─── Phase 1 bridge still intact ─────────────────────────
