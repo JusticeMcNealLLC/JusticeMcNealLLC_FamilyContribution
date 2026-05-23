@@ -8,6 +8,7 @@ const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
+const raffleRender = fs.readFileSync(path.join(root, 'js/portal/events/detail/raffle-render.js'), 'utf8');
 const teamTools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
 const rsvp = fs.readFileSync(path.join(root, 'js/portal/events/rsvp.js'), 'utf8');
 const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
@@ -37,7 +38,11 @@ assert(/select\('user_id, status, paid/.test(detail), 'attendee query includes p
 assert(/raffleLockedCtaBtnHtml/.test(teamTools), 'portal locked raffle CTA helper (team/tools.js)');
 assert(/evt-cta-raffle-locked/.test(teamTools), 'disabled Enter Raffle CTA class');
 assert(/evt-cta-footnote/.test(teamTools) && /RSVP first to enter the raffle/.test(teamTools), 'CTA footnote for RSVP-first');
-assert(/evtRaffleLockedDesktopHtml/.test(detail), 'desktop locked raffle block in detail render');
+assert(/evtRaffleLockedDesktopHtml/.test(raffleRender), 'desktop locked raffle block in raffle-render.js');
+assert(/window\.evtRaffleLockedDesktopHtml/.test(raffleRender), 'locked desktop helper on window');
+assert(/evtOpenTeamToolsPanel/.test(raffleRender), 'locked hint opens Team Tools');
+assert(/evtDetailRafflePrizesHtml/.test(raffleRender), 'prize rail helper in raffle-render.js');
+assert(/window\.evtDetailRaffleConfig/.test(detail), 'detail render calls window.evtDetailRaffleConfig');
 assert(!/RSVP for Raffle/.test(detail) && !/RSVP for Raffle/.test(teamTools), 'portal must not use old RSVP for Raffle sticky label');
 
 // Team Tools still wires RSVP/Raffle (Phase 5C: team/tools.js)
@@ -59,6 +64,11 @@ assert(!/pricing_mode === 'paid' \|\| !event\.raffle_entry_cost_cents/.test(rsvp
 assert(!/event_chats/.test(detail) && !/event_chats/.test(rsvp), 'no chat tables');
 assert(!/evtOpenTeamToolsPanel/.test(portalHtml), 'portal/events.html must not inline team tools handlers');
 assert(/detail\/presentation\.js/.test(portalHtml), 'portal/events.html loads detail/presentation.js');
+assert(/detail\/raffle-render\.js/.test(portalHtml), 'portal/events.html loads detail/raffle-render.js');
+const presIdx = portalHtml.indexOf('detail/presentation.js');
+const raffleIdx = portalHtml.indexOf('detail/raffle-render.js');
+const detailIdx = portalHtml.indexOf('portal/events/detail.js');
+assert(presIdx >= 0 && raffleIdx > presIdx && detailIdx > raffleIdx, 'presentation → raffle-render → detail load order');
 
 pass('portal RSVP/raffle parity helpers and detail wiring verified');
 pass('public reference files untouched');

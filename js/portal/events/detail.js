@@ -57,70 +57,7 @@ function _edSectionHead(title) {
     return `<div class="ed-section-head"><h3>${title}</h3></div>`;
 }
 
-function evtDetailRaffleConfig(event) {
-    if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
-    return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
-}
-
-function evtDetailRaffleCategories(config) {
-    if (!window.EventsRaffleModel) return [];
-    return window.EventsRaffleModel.getOrderedCategories(config);
-}
-
-function evtDetailRaffleItems(config, categoryId) {
-    if (!window.EventsRaffleModel) return [];
-    return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
-}
-
-function evtDetailRaffleWinnerCount(config, event) {
-    if (window.EventsRaffleModel) return window.EventsRaffleModel.getTotalWinnerCount(config);
-    return event?.raffle_winner_count || (Array.isArray(event?.raffle_prizes) ? event.raffle_prizes.length : 0);
-}
-
-function evtDetailDrawModeLabel(drawMode) {
-    if (drawMode === 'random_item') return 'Random prize assigned';
-    if (drawMode === 'winner_choice') return 'Winner chooses from this tier';
-    return 'Drawing specific prizes';
-}
-
-function evtDetailPrizeMedia(item) {
-    if (item?.image_url) return `<img src="${evtEscapeHtml(item.image_url)}" alt="" loading="lazy">`;
-    return `<span>${evtEscapeHtml(item?.emoji || window.EventsRaffleModel?.DEFAULT_EMOJI || '🎁')}</span>`;
-}
-
-function evtDetailRafflePrizeItems(config) {
-    return evtDetailRaffleCategories(config).flatMap(category => evtDetailRaffleItems(config, category.id));
-}
-
-function evtDetailRafflePrizesHtml(event) {
-    const config = evtDetailRaffleConfig(event);
-    const items = evtDetailRafflePrizeItems(config);
-    if (!items.length) return '';
-
-    return `<div class="ed-raffle-prize-rail">${items.map(item => `
-        <article class="ed-raffle-prize-tile" title="${evtEscapeHtml(item.name)}">
-            <div class="ed-raffle-prize-media">${evtDetailPrizeMedia(item)}</div>
-            <p>${evtEscapeHtml(item.name)}</p>
-        </article>
-    `).join('')}</div>`;
-}
-
-function evtDetailRaffleWinnersHtml(winners) {
-    if (!winners.length) return '';
-    const rows = winners.map(w => {
-        const initials = w.profiles ? `${w.profiles.first_name?.[0] || ''}${w.profiles.last_name?.[0] || ''}`.toUpperCase() : '';
-        const avatar = w.profiles?.profile_picture_url
-            ? `<img src="${evtEscapeHtml(w.profiles.profile_picture_url)}" alt="" loading="lazy">`
-            : `<span>${evtEscapeHtml(initials || (w.guest_token ? 'G' : 'W'))}</span>`;
-        const prize = w.selection_status === 'pending_choice' ? 'Choosing later' : (w.prize_description || 'Prize pending');
-        const emoji = evtEscapeHtml(w.prize_emoji || '🎁');
-        return `<article class="ed-winner-card">
-            <div class="ed-winner-avatar">${avatar}<b>${w.place}</b></div>
-            <div class="ed-winner-copy"><span>${emoji}</span><p>${evtEscapeHtml(prize)}</p></div>
-        </article>`;
-    }).join('');
-    return `<div class="ed-winners ed-winners-compact">${_edSectionHead('Winners')}<div class="ed-winner-rail">${rows}</div></div>`;
-}
+// Raffle render helpers — Phase 5D.2: js/portal/events/detail/raffle-render.js
 
 // ═══════════════════════════════════════════════════════════
 // Main render — evtOpenDetail
@@ -537,9 +474,9 @@ async function evtOpenDetail(eventId) {
     // ── Raffle Section ───────────────────────────────────
     let raffleHtml = '';
     if (event.raffle_enabled) {
-        const raffleConfig = evtDetailRaffleConfig(event);
-        const prizeCount = evtDetailRaffleWinnerCount(raffleConfig, event);
-        const prizesHtml = evtDetailRafflePrizesHtml(event);
+        const raffleConfig = window.evtDetailRaffleConfig(event);
+        const prizeCount = window.evtDetailRaffleWinnerCount(raffleConfig, event);
+        const prizesHtml = window.evtDetailRafflePrizesHtml(event);
 
         let entryStatusHtml = '';
         const hasRaffleRsvp = memberGoing;
@@ -557,7 +494,7 @@ async function evtOpenDetail(eventId) {
         } else if (raffleBundled && !rsvp?.paid) {
             entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Raffle entry included with paid RSVP</p>`;
         } else if (!hasRaffleRsvp) {
-            entryStatusHtml = evtRaffleLockedDesktopHtml(eventId, isHost && canAccessTeamHub);
+            entryStatusHtml = window.evtRaffleLockedDesktopHtml(eventId, isHost && canAccessTeamHub);
         } else if (event.raffle_entry_cost_cents > 0 && !entriesClosed) {
             entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
         } else if ((!event.raffle_entry_cost_cents || event.raffle_entry_cost_cents === 0) && !entriesClosed) {
@@ -566,7 +503,7 @@ async function evtOpenDetail(eventId) {
 
         let winnersHtml = '';
         if (raffleWinners.length > 0) {
-            winnersHtml = evtDetailRaffleWinnersHtml(raffleWinners);
+            winnersHtml = window.evtDetailRaffleWinnersHtml(raffleWinners);
         }
 
         const rafflePills = [
@@ -1211,16 +1148,7 @@ function evtInitHeroCollapse() { /* no-op since M2 — hero scrolls naturally */
 function evtCleanupHeroCollapse() { /* no-op since M2 */ }
 
 // Team Tools / CTA bar — Phase 5C: js/portal/events/team/tools.js
-
-function evtRaffleLockedDesktopHtml(eventId, showTeamHint) {
-    const mobileHint = showTeamHint
-        ? `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the bar below, or open <button type="button" class="ed-link-btn" onclick="evtOpenTeamToolsPanel('${eventId}')">Team</button> to RSVP as yourself.</p>`
-        : `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the sticky bar below, then enter the raffle.</p>`;
-    return `<div class="ed-raffle-desktop-action ed-raffle-locked-block">
-        <button type="button" class="ed-raffle-btn ed-raffle-btn-locked" disabled aria-disabled="true">🎟️ Enter Raffle</button>
-        <p class="ed-raffle-locked-hint">RSVP first to enter the raffle</p>
-    </div>${mobileHint}`;
-}
+// Locked raffle desktop HTML — Phase 5D.2: js/portal/events/detail/raffle-render.js
 
 // ═══════════════════════════════════════════════════════════
 // Public surface — preserve legacy evt* globals + register PortalEvents.detail namespace
@@ -1248,13 +1176,14 @@ detail.recenterFullscreenMap = evtRecenterFullscreenMap;
 detail.initHeroCollapse      = evtInitHeroCollapse;
 detail.cleanupHeroCollapse   = evtCleanupHeroCollapse;
 detail.miniMarkdown          = window.evtMiniMarkdown;
-detail.raffleConfig          = evtDetailRaffleConfig;
-detail.raffleCategories      = evtDetailRaffleCategories;
-detail.raffleItems           = evtDetailRaffleItems;
-detail.raffleWinnerCount     = evtDetailRaffleWinnerCount;
-detail.drawModeLabel         = evtDetailDrawModeLabel;
-detail.rafflePrizesHtml      = evtDetailRafflePrizesHtml;
-detail.raffleWinnersHtml     = evtDetailRaffleWinnersHtml;
+detail.raffleConfig          = window.evtDetailRaffleConfig;
+detail.raffleCategories      = window.evtDetailRaffleCategories;
+detail.raffleItems           = window.evtDetailRaffleItems;
+detail.raffleWinnerCount     = window.evtDetailRaffleWinnerCount;
+detail.drawModeLabel         = window.evtDetailDrawModeLabel;
+detail.rafflePrizesHtml      = window.evtDetailRafflePrizesHtml;
+detail.raffleWinnersHtml     = window.evtDetailRaffleWinnersHtml;
+detail.raffleLockedDesktopHtml = window.evtRaffleLockedDesktopHtml;
 
 // Pre-register known sub-modules (M3 management sheet will register itself here)
 detail.register('rsvp',        { handle: () => window.evtHandleRsvp });

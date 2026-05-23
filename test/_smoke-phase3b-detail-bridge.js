@@ -41,6 +41,7 @@ const detail = read('js/portal/events/detail.js');
 const teamChat = read('js/portal/events/team/chat.js');
 const teamTools = read('js/portal/events/team/tools.js');
 const detailPresentation = read('js/portal/events/detail/presentation.js');
+const detailRaffleRender = read('js/portal/events/detail/raffle-render.js');
 
 detail.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
@@ -118,6 +119,30 @@ detailPresentation.includes('PortalEvents.detail.presentation')
     ? pass('PortalEvents.detail.presentation namespace present')
     : fail('PortalEvents.detail.presentation namespace missing');
 
+console.log('\n── detail/raffle-render.js — public globals (Phase 5D.2) ───────────────');
+
+const REQUIRED_RAFFLE_RENDER_WINDOW_GLOBALS = [
+    ['window.evtDetailRaffleConfig', 'raffle config normalize'],
+    ['window.evtDetailRaffleCategories', 'raffle categories'],
+    ['window.evtDetailRaffleItems', 'raffle items per category'],
+    ['window.evtDetailRaffleWinnerCount', 'raffle winner count'],
+    ['window.evtDetailDrawModeLabel', 'draw mode label (detail)'],
+    ['window.evtDrawModeLabel', 'draw mode label alias'],
+    ['window.evtDetailRafflePrizesHtml', 'prize rail HTML'],
+    ['window.evtDetailRaffleWinnersHtml', 'winners rail HTML'],
+    ['window.evtRaffleLockedDesktopHtml', 'locked desktop raffle block'],
+];
+
+REQUIRED_RAFFLE_RENDER_WINDOW_GLOBALS.forEach(([assign, note]) => {
+    detailRaffleRender.includes(assign)
+        ? pass(`${assign} assigned in detail/raffle-render.js (${note})`)
+        : fail(`${assign} missing from detail/raffle-render.js — ${note}`);
+});
+
+detailRaffleRender.includes('PortalEvents.detail.raffleRender')
+    ? pass('PortalEvents.detail.raffleRender namespace present')
+    : fail('PortalEvents.detail.raffleRender namespace missing');
+
 const REQUIRED_TOOLS_WINDOW_GLOBALS = [
     ['window.evtInitBottomNav', 'sticky CTA bar init (team/tools.js)'],
     ['window.evtCleanupBottomNav', 'sticky CTA bar cleanup (team/tools.js)'],
@@ -171,13 +196,14 @@ const DETAIL_DIRECT_KEYS = [
     ['detail.initHeroCollapse ',     'initHeroCollapse (Phase 3B)'],
     ['detail.cleanupHeroCollapse ',  'cleanupHeroCollapse (Phase 3B)'],
     ['detail.miniMarkdown          = window.evtMiniMarkdown', 'miniMarkdown (Phase 5D.1 bridge)'],
-    ['detail.raffleConfig ',         'raffleConfig (Phase 3B)'],
-    ['detail.raffleCategories ',     'raffleCategories (Phase 3B)'],
-    ['detail.raffleItems ',          'raffleItems (Phase 3B)'],
-    ['detail.raffleWinnerCount ',    'raffleWinnerCount (Phase 3B)'],
-    ['detail.drawModeLabel ',        'drawModeLabel (Phase 3B)'],
-    ['detail.rafflePrizesHtml ',     'rafflePrizesHtml (Phase 3B)'],
-    ['detail.raffleWinnersHtml ',    'raffleWinnersHtml (Phase 3B)'],
+    ['detail.raffleConfig          = window.evtDetailRaffleConfig', 'raffleConfig (Phase 5D.2 bridge)'],
+    ['detail.raffleCategories      = window.evtDetailRaffleCategories', 'raffleCategories (Phase 5D.2 bridge)'],
+    ['detail.raffleItems           = window.evtDetailRaffleItems', 'raffleItems (Phase 5D.2 bridge)'],
+    ['detail.raffleWinnerCount     = window.evtDetailRaffleWinnerCount', 'raffleWinnerCount (Phase 5D.2 bridge)'],
+    ['detail.drawModeLabel         = window.evtDetailDrawModeLabel', 'drawModeLabel (Phase 5D.2 bridge)'],
+    ['detail.rafflePrizesHtml      = window.evtDetailRafflePrizesHtml', 'rafflePrizesHtml (Phase 5D.2 bridge)'],
+    ['detail.raffleWinnersHtml     = window.evtDetailRaffleWinnersHtml', 'raffleWinnersHtml (Phase 5D.2 bridge)'],
+    ['detail.raffleLockedDesktopHtml = window.evtRaffleLockedDesktopHtml', 'raffleLockedDesktopHtml (Phase 5D.2 bridge)'],
     ['detail.openTeamChat ',         'openTeamChat (Phase 5B bridge)'],
     ['detail.openTeamToolsPanel  = window.evtOpenTeamToolsPanel', 'openTeamToolsPanel (Phase 5C bridge)'],
     ['detail.initBottomNav       = window.evtInitBottomNav', 'initBottomNav (Phase 5C bridge)'],
@@ -242,12 +268,7 @@ PRESENTATION_INTERNAL_FNS.forEach(fn => {
         : fail(`${fn} still defined in detail.js — should be in presentation.js only`);
 });
 
-const INTERNAL_FNS = [
-    'function _edMetaRow',
-    'function _edPill',
-    'function _edCard',
-    'function _edNotice',
-    'function _edSectionHead',
+const RAFFLE_RENDER_INTERNAL_FNS = [
     'function evtDetailRaffleConfig',
     'function evtDetailRaffleCategories',
     'function evtDetailRaffleItems',
@@ -256,6 +277,39 @@ const INTERNAL_FNS = [
     'function evtDetailPrizeMedia',
     'function evtDetailRafflePrizesHtml',
     'function evtDetailRaffleWinnersHtml',
+    'function evtRaffleLockedDesktopHtml',
+];
+
+console.log('\n── detail/raffle-render.js — internal functions (Phase 5D.2) ────────────');
+
+RAFFLE_RENDER_INTERNAL_FNS.forEach(fn => {
+    detailRaffleRender.includes(fn)
+        ? pass(`${fn} present in detail/raffle-render.js`)
+        : fail(`${fn} missing from detail/raffle-render.js`);
+});
+
+[
+    'function evtDetailRaffleConfig',
+    'function evtDetailRaffleCategories',
+    'function evtDetailRaffleItems',
+    'function evtDetailRaffleWinnerCount',
+    'function evtDetailDrawModeLabel',
+    'function evtDetailPrizeMedia',
+    'function evtDetailRafflePrizesHtml',
+    'function evtDetailRaffleWinnersHtml',
+    'function evtRaffleLockedDesktopHtml',
+].forEach(fn => {
+    !detail.includes(fn)
+        ? pass(`${fn} not reimplemented in detail.js`)
+        : fail(`${fn} still defined in detail.js — should be in raffle-render.js only`);
+});
+
+const INTERNAL_FNS = [
+    'function _edMetaRow',
+    'function _edPill',
+    'function _edCard',
+    'function _edNotice',
+    'function _edSectionHead',
     'async function evtOpenDetail',
     'function evtOpenFullscreenMap',
     'function evtRecenterFullscreenMap',
@@ -309,10 +363,12 @@ console.log('\n── File split safety — team/ and detail/ scripts in events.
 const chatTag = 'src="../js/portal/events/team/chat.js"';
 const toolsTag = 'src="../js/portal/events/team/tools.js"';
 const presentationTag = 'src="../js/portal/events/detail/presentation.js"';
+const raffleRenderTag = 'src="../js/portal/events/detail/raffle-render.js"';
 const detailTag = 'src="../js/portal/events/detail.js"';
 const chatIdx = html.indexOf(chatTag);
 const toolsIdx = html.indexOf(toolsTag);
 const presentationIdx = html.indexOf(presentationTag);
+const raffleRenderIdx = html.indexOf(raffleRenderTag);
 const detailIdx = html.indexOf(detailTag);
 html.includes(chatTag)
     ? pass('team/chat.js is referenced in events.html')
@@ -323,10 +379,13 @@ html.includes(toolsTag)
 html.includes(presentationTag)
     ? pass('detail/presentation.js is referenced in events.html')
     : fail('detail/presentation.js not in events.html — would never load');
-chatIdx >= 0 && toolsIdx >= 0 && presentationIdx >= 0 && detailIdx >= 0
-    && chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < detailIdx
-    ? pass('load order: chat → tools → presentation → detail')
-    : fail('script order must be chat → tools → presentation → detail');
+html.includes(raffleRenderTag)
+    ? pass('detail/raffle-render.js is referenced in events.html')
+    : fail('detail/raffle-render.js not in events.html — would never load');
+chatIdx >= 0 && toolsIdx >= 0 && presentationIdx >= 0 && raffleRenderIdx >= 0 && detailIdx >= 0
+    && chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < raffleRenderIdx && raffleRenderIdx < detailIdx
+    ? pass('load order: chat → tools → presentation → raffle-render → detail')
+    : fail('script order must be chat → tools → presentation → raffle-render → detail');
 
 const initTag = 'src="../js/portal/events/init.js"';
 const portalBlock = html.slice(html.indexOf('<!-- Events modules'));
