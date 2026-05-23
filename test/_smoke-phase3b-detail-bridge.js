@@ -43,6 +43,7 @@ const teamTools = read('js/portal/events/team/tools.js');
 const detailPresentation = read('js/portal/events/detail/presentation.js');
 const detailRaffleRender = read('js/portal/events/detail/raffle-render.js');
 const detailMapOverlay = read('js/portal/events/detail/map-overlay.js');
+const detailFragments = read('js/portal/events/detail/fragments.js');
 
 detail.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
@@ -159,6 +160,26 @@ detailMapOverlay.includes('PortalEvents.detail.mapOverlay')
     ? pass('PortalEvents.detail.mapOverlay namespace present')
     : fail('PortalEvents.detail.mapOverlay namespace missing');
 
+console.log('\n── detail/fragments.js — public globals (Phase 5F-prep) ─────────────────');
+
+const REQUIRED_FRAGMENTS_WINDOW_GLOBALS = [
+    ['window.evtEdMetaRow', 'detail meta row HTML fragment'],
+    ['window.evtEdPill', 'detail pill HTML fragment'],
+    ['window.evtEdCard', 'detail card wrapper HTML fragment'],
+    ['window.evtEdNotice', 'detail notice HTML fragment'],
+    ['window.evtEdSectionHead', 'detail section head HTML fragment'],
+];
+
+REQUIRED_FRAGMENTS_WINDOW_GLOBALS.forEach(([assign, note]) => {
+    detailFragments.includes(assign)
+        ? pass(`${assign} assigned in detail/fragments.js (${note})`)
+        : fail(`${assign} missing from detail/fragments.js — ${note}`);
+});
+
+detailFragments.includes('PortalEvents.detail.fragments')
+    ? pass('PortalEvents.detail.fragments namespace present')
+    : fail('PortalEvents.detail.fragments namespace missing');
+
 const REQUIRED_TOOLS_WINDOW_GLOBALS = [
     ['window.evtInitBottomNav', 'sticky CTA bar init (team/tools.js)'],
     ['window.evtCleanupBottomNav', 'sticky CTA bar cleanup (team/tools.js)'],
@@ -241,6 +262,7 @@ const NESTED_NAMESPACE_ALIASES = [
     ['detail.presentation = window.PortalEvents.detail.presentation', 'presentation → detail.presentation'],
     ['detail.raffleRender = window.PortalEvents.detail.raffleRender', 'raffleRender → detail.raffleRender'],
     ['detail.mapOverlay = window.PortalEvents.detail.mapOverlay', 'mapOverlay → detail.mapOverlay'],
+    ['detail.fragments = window.PortalEvents.detail.fragments', 'fragments → detail.fragments'],
     ['detail.team = window.PortalEvents.team', 'team → detail.team'],
 ];
 
@@ -360,12 +382,39 @@ MAP_OVERLAY_INTERNAL_FNS.forEach(fn => {
         : fail(`${fn} still defined in detail.js — should be in map-overlay.js only`);
 });
 
-const INTERNAL_FNS = [
+const FRAGMENTS_INTERNAL_FNS = [
+    'function metaRow',
+    'function pill',
+    'function card',
+    'function notice',
+    'function sectionHead',
+];
+
+console.log('\n── detail/fragments.js — internal functions (Phase 5F-prep) ─────────────');
+
+FRAGMENTS_INTERNAL_FNS.forEach(fn => {
+    detailFragments.includes(fn)
+        ? pass(`${fn} present in detail/fragments.js`)
+        : fail(`${fn} missing from detail/fragments.js`);
+});
+
+[
     'function _edMetaRow',
     'function _edPill',
     'function _edCard',
     'function _edNotice',
     'function _edSectionHead',
+].forEach(fn => {
+    !detail.includes(fn)
+        ? pass(`${fn} not reimplemented in detail.js`)
+        : fail(`${fn} still defined in detail.js — should be in fragments.js only`);
+});
+
+detail.includes('const _edMetaRow = window.evtEdMetaRow')
+    ? pass('detail.js aliases _edMetaRow from window.evtEdMetaRow')
+    : fail('detail.js must alias _edMetaRow from fragments export');
+
+const INTERNAL_FNS = [
     'async function evtOpenDetail',
     'function evtInitHeroCollapse',
     'function evtCleanupHeroCollapse',
@@ -418,12 +467,14 @@ const toolsTag = 'src="../js/portal/events/team/tools.js"';
 const presentationTag = 'src="../js/portal/events/detail/presentation.js"';
 const raffleRenderTag = 'src="../js/portal/events/detail/raffle-render.js"';
 const mapOverlayTag = 'src="../js/portal/events/detail/map-overlay.js"';
+const fragmentsTag = 'src="../js/portal/events/detail/fragments.js"';
 const detailTag = 'src="../js/portal/events/detail.js"';
 const chatIdx = html.indexOf(chatTag);
 const toolsIdx = html.indexOf(toolsTag);
 const presentationIdx = html.indexOf(presentationTag);
 const raffleRenderIdx = html.indexOf(raffleRenderTag);
 const mapOverlayIdx = html.indexOf(mapOverlayTag);
+const fragmentsIdx = html.indexOf(fragmentsTag);
 const detailIdx = html.indexOf(detailTag);
 html.includes(chatTag)
     ? pass('team/chat.js is referenced in events.html')
@@ -440,17 +491,21 @@ html.includes(raffleRenderTag)
 html.includes(mapOverlayTag)
     ? pass('detail/map-overlay.js is referenced in events.html')
     : fail('detail/map-overlay.js not in events.html — would never load');
+html.includes(fragmentsTag)
+    ? pass('detail/fragments.js is referenced in events.html')
+    : fail('detail/fragments.js not in events.html — would never load');
 !html.includes('js/portal/events/detail/exports.js')
     ? pass('detail/exports.js not in events.html (Phase 5E.1 — no loader change)')
     : fail('detail/exports.js must not be added in 5E.1 — use nested aliases in detail.js only');
 !html.includes('js/portal/events/compat/window-exports.js')
     ? pass('compat/window-exports.js not in events.html (5E.1 — no compat wiring)')
     : fail('compat/window-exports.js must not be wired in 5E.1');
-chatIdx >= 0 && toolsIdx >= 0 && presentationIdx >= 0 && raffleRenderIdx >= 0 && mapOverlayIdx >= 0 && detailIdx >= 0
+chatIdx >= 0 && toolsIdx >= 0 && presentationIdx >= 0 && raffleRenderIdx >= 0
+    && mapOverlayIdx >= 0 && fragmentsIdx >= 0 && detailIdx >= 0
     && chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < raffleRenderIdx
-    && raffleRenderIdx < mapOverlayIdx && mapOverlayIdx < detailIdx
-    ? pass('load order: chat → tools → presentation → raffle-render → map-overlay → detail')
-    : fail('script order must be chat → tools → presentation → raffle-render → map-overlay → detail');
+    && raffleRenderIdx < mapOverlayIdx && mapOverlayIdx < fragmentsIdx && fragmentsIdx < detailIdx
+    ? pass('load order: chat → tools → presentation → raffle-render → map-overlay → fragments → detail')
+    : fail('script order must be chat → tools → presentation → raffle-render → map-overlay → fragments → detail');
 
 const initTag = 'src="../js/portal/events/init.js"';
 const portalBlock = html.slice(html.indexOf('<!-- Events modules'));

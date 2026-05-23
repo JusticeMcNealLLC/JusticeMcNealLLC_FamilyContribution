@@ -22,40 +22,13 @@
     detail.get = function (name) { return detail._registry[name]; };
 
 // Presentation helpers — Phase 5D.1: js/portal/events/detail/presentation.js
+// Fragment helpers — Phase 5F-prep: js/portal/events/detail/fragments.js
 
-// ═══════════════════════════════════════════════════════════
-// Render helpers — small composable blocks
-// ═══════════════════════════════════════════════════════════
-
-function _edMetaRow(icon, label, value, extra) {
-    return `<div class="ed-meta-row">
-        <div class="ed-meta-icon">${icon}</div>
-        <div class="ed-meta-text">
-            <span class="ed-meta-label">${label}</span>
-            <span class="ed-meta-value">${value}</span>
-            ${extra || ''}
-        </div>
-    </div>`;
-}
-
-function _edPill(text, cls) {
-    return `<span class="ed-pill ${cls || ''}">${text}</span>`;
-}
-
-function _edCard(content, extraCls) {
-    return `<div class="ed-card ${extraCls || ''}">${content}</div>`;
-}
-
-function _edNotice(emoji, title, sub) {
-    return `<div class="ed-notice">
-        <span class="ed-notice-emoji">${emoji}</span>
-        <div><p class="ed-notice-title">${title}</p><p class="ed-notice-sub">${sub}</p></div>
-    </div>`;
-}
-
-function _edSectionHead(title) {
-    return `<div class="ed-section-head"><h3>${title}</h3></div>`;
-}
+const _edMetaRow = window.evtEdMetaRow;
+const _edPill = window.evtEdPill;
+const _edCard = window.evtEdCard;
+const _edNotice = window.evtEdNotice;
+const _edSectionHead = window.evtEdSectionHead;
 
 // Raffle render helpers — Phase 5D.2: js/portal/events/detail/raffle-render.js
 
@@ -1145,6 +1118,9 @@ if (window.PortalEvents.detail.mapOverlay) {
 }
 if (window.PortalEvents.team) {
     detail.team = window.PortalEvents.team;
+}
+if (window.PortalEvents.detail.fragments) {
+    detail.fragments = window.PortalEvents.detail.fragments;
 }
 
 // Pre-register known sub-modules (M3 management sheet will register itself here)
