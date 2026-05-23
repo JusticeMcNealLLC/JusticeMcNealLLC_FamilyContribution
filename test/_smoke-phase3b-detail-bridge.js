@@ -39,6 +39,7 @@ console.log('\n── js/portal/events/detail.js — file structure ────
 
 const detail = read('js/portal/events/detail.js');
 const teamChat = read('js/portal/events/team/chat.js');
+const teamTools = read('js/portal/events/team/tools.js');
 
 detail.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
@@ -82,7 +83,7 @@ detail.includes('detail.get = function')
 // ─── Public globals (window.evt*) ─────────────────────────
 console.log('\n── detail.js — public globals (window.evt*) ──────────────────────────────');
 
-const REQUIRED_WINDOW_GLOBALS = [
+const REQUIRED_DETAIL_WINDOW_GLOBALS = [
     ['window.evtOpenDetail',            'evtOpenDetail must be on window for init.js + other scripts'],
     ['window.evtOpenLightbox',          'used in banner onclick handlers'],
     ['window.evtOpenFullscreenMap',     'used in map overlay click handlers'],
@@ -93,16 +94,28 @@ const REQUIRED_WINDOW_GLOBALS = [
     ['window.evtStartLiveCountdown',    'live countdown ticker'],
     ['window.evtInitHeroCollapse',      'kept as no-op — external callers must not crash'],
     ['window.evtCleanupHeroCollapse',   'kept as no-op — external callers must not crash'],
-    ['window.evtInitBottomNav',         'sticky CTA bar init'],
-    ['window.evtCleanupBottomNav',      'sticky CTA bar cleanup'],
-    ['window.evtOpenCtaPanel',          'CTA panel open'],
-    ['window.evtCloseCtaPanel',         'CTA panel close'],
 ];
 
-REQUIRED_WINDOW_GLOBALS.forEach(([assign, note]) => {
+REQUIRED_DETAIL_WINDOW_GLOBALS.forEach(([assign, note]) => {
     detail.includes(assign)
         ? pass(`${assign} assigned (${note})`)
         : fail(`${assign} assignment missing — ${note}`);
+});
+
+const REQUIRED_TOOLS_WINDOW_GLOBALS = [
+    ['window.evtInitBottomNav', 'sticky CTA bar init (team/tools.js)'],
+    ['window.evtCleanupBottomNav', 'sticky CTA bar cleanup (team/tools.js)'],
+    ['window.evtOpenCtaPanel', 'CTA panel open (team/tools.js)'],
+    ['window.evtCloseCtaPanel', 'CTA panel close (team/tools.js)'],
+    ['window.evtOpenTeamToolsPanel', 'team tools panel open (team/tools.js)'],
+];
+
+console.log('\n── team/tools.js — public globals (Phase 5C) ─────────────────────────────');
+
+REQUIRED_TOOLS_WINDOW_GLOBALS.forEach(([assign, note]) => {
+    teamTools.includes(assign)
+        ? pass(`${assign} assigned in team/tools.js (${note})`)
+        : fail(`${assign} missing from team/tools.js — ${note}`);
 });
 
 // ─── Phase 5B Team Chat (team/chat.js + detail bridge) ─────
@@ -150,6 +163,11 @@ const DETAIL_DIRECT_KEYS = [
     ['detail.rafflePrizesHtml ',     'rafflePrizesHtml (Phase 3B)'],
     ['detail.raffleWinnersHtml ',    'raffleWinnersHtml (Phase 3B)'],
     ['detail.openTeamChat ',         'openTeamChat (Phase 5B bridge)'],
+    ['detail.openTeamToolsPanel  = window.evtOpenTeamToolsPanel', 'openTeamToolsPanel (Phase 5C bridge)'],
+    ['detail.initBottomNav       = window.evtInitBottomNav', 'initBottomNav (Phase 5C bridge)'],
+    ['detail.cleanupBottomNav    = window.evtCleanupBottomNav', 'cleanupBottomNav (Phase 5C bridge)'],
+    ['detail.openCtaPanel        = window.evtOpenCtaPanel', 'openCtaPanel (Phase 5C bridge)'],
+    ['detail.closeCtaPanel       = window.evtCloseCtaPanel', 'closeCtaPanel (Phase 5C bridge)'],
 ];
 
 DETAIL_DIRECT_KEYS.forEach(([substr, label]) => {
@@ -206,16 +224,28 @@ const INTERNAL_FNS = [
     'function evtCloseFullscreenMap',
     'function evtInitHeroCollapse',
     'function evtCleanupHeroCollapse',
-    'function evtInitBottomNav',
-    'function evtCleanupBottomNav',
-    'function evtCloseCtaPanel',
-    'function evtOpenCtaPanel',
 ];
 
 INTERNAL_FNS.forEach(fn => {
     detail.includes(fn)
-        ? pass(`${fn} present in source`)
-        : fail(`${fn} missing from source — required for runtime`);
+        ? pass(`${fn} present in detail.js`)
+        : fail(`${fn} missing from detail.js — required for runtime`);
+});
+
+const TOOLS_INTERNAL_FNS = [
+    'function initBottomNav',
+    'function cleanupBottomNav',
+    'function closeCtaPanel',
+    'function openCtaPanel',
+    'function openTeamToolsPanel',
+];
+
+console.log('\n── team/tools.js — internal functions (Phase 5C) ───────────────────────');
+
+TOOLS_INTERNAL_FNS.forEach(fn => {
+    teamTools.includes(fn)
+        ? pass(`${fn} present in team/tools.js`)
+        : fail(`${fn} missing from team/tools.js`);
 });
 
 // ─── portal/events.html invariants ───────────────────────
@@ -239,13 +269,20 @@ html.includes('src="../js/portal/events/detail.js"')
 console.log('\n── File split safety — team/ and detail/ scripts in events.html ─────────');
 
 const chatTag = 'src="../js/portal/events/team/chat.js"';
+const toolsTag = 'src="../js/portal/events/team/tools.js"';
 const detailTag = 'src="../js/portal/events/detail.js"';
+const chatIdx = html.indexOf(chatTag);
+const toolsIdx = html.indexOf(toolsTag);
+const detailIdx = html.indexOf(detailTag);
 html.includes(chatTag)
     ? pass('team/chat.js is referenced in events.html')
     : fail('team/chat.js not in events.html — would never load');
-html.indexOf(chatTag) < html.indexOf(detailTag)
-    ? pass('team/chat.js loads before detail.js')
-    : fail('team/chat.js must load before detail.js');
+html.includes(toolsTag)
+    ? pass('team/tools.js is referenced in events.html')
+    : fail('team/tools.js not in events.html — would never load');
+chatIdx >= 0 && toolsIdx >= 0 && detailIdx >= 0 && chatIdx < toolsIdx && toolsIdx < detailIdx
+    ? pass('team scripts load chat → tools → detail')
+    : fail('team/chat.js must load before team/tools.js before detail.js');
 
 const detailDir = path.join(root, 'js', 'portal', 'events', 'detail');
 if (fs.existsSync(detailDir)) {

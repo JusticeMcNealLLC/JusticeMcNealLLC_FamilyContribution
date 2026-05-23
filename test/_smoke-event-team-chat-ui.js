@@ -8,6 +8,7 @@ const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
 const chat = fs.readFileSync(path.join(root, 'js/portal/events/team/chat.js'), 'utf8');
+const tools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
 const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
 
@@ -34,7 +35,7 @@ assert(/evtOpenTeamChat/.test(detail) && !/Team Chat', 'Coming soon'/.test(detai
 assert(/not been started yet/i.test(chat), 'host-only not-started message');
 assert(/detail\.openTeamChat\s*=\s*window\.evtOpenTeamChat/.test(detail),
     'detail.js must bridge openTeamChat to team/chat.js');
-assert(/evtOpenTeamChat\('/.test(detail), 'detail.js Team Tools row still calls evtOpenTeamChat');
+assert(/evtOpenTeamChat\('/.test(tools), 'team/tools.js Team Tools row still calls evtOpenTeamChat');
 
 assert(!/event_volunteers/.test(chat), 'no volunteers table yet');
 assert(!/event_tasks/.test(chat), 'no tasks table yet');
@@ -49,18 +50,21 @@ if (fs.existsSync(migrationDir)) {
 }
 
 const chatTag = 'src="../js/portal/events/team/chat.js"';
+const toolsTag = 'src="../js/portal/events/team/tools.js"';
 const detailTag = 'src="../js/portal/events/detail.js"';
 const chatIdx = portalHtml.indexOf(chatTag);
+const toolsIdx = portalHtml.indexOf(toolsTag);
 const detailIdx = portalHtml.indexOf(detailTag);
 assert(chatIdx >= 0, 'portal/events.html must load team/chat.js');
+assert(toolsIdx >= 0, 'portal/events.html must load team/tools.js');
 assert(detailIdx >= 0, 'portal/events.html must load detail.js');
-assert(chatIdx < detailIdx, 'team/chat.js must load before detail.js');
+assert(chatIdx < toolsIdx && toolsIdx < detailIdx, 'team/chat.js → team/tools.js → detail.js');
 assert(!/type="module"/.test(portalHtml.match(/team\/chat\.js[^>]*/)?.[0] || ''),
     'team/chat.js must not use type=module');
 
 const initIdx = portalHtml.indexOf('src="../js/portal/events/init.js"');
-const chatScriptIdx = portalHtml.lastIndexOf(chatTag);
-assert(initIdx > chatScriptIdx, 'init.js must remain after team/chat.js');
+const toolsScriptIdx = portalHtml.lastIndexOf(toolsTag);
+assert(initIdx > toolsScriptIdx, 'init.js must remain after team/tools.js');
 
 pass('Team Chat UI wired in team/chat.js');
 pass('ensure / load / send / deleted_at filter / realtime');
