@@ -42,6 +42,7 @@ const teamChat = read('js/portal/events/team/chat.js');
 const teamTools = read('js/portal/events/team/tools.js');
 const detailPresentation = read('js/portal/events/detail/presentation.js');
 const detailRaffleRender = read('js/portal/events/detail/raffle-render.js');
+const detailMapOverlay = read('js/portal/events/detail/map-overlay.js');
 
 detail.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
@@ -87,9 +88,6 @@ console.log('\n── detail.js — public globals (window.evt*) ─────
 
 const REQUIRED_DETAIL_WINDOW_GLOBALS = [
     ['window.evtOpenDetail',            'evtOpenDetail must be on window for init.js + other scripts'],
-    ['window.evtOpenFullscreenMap',     'used in map overlay click handlers'],
-    ['window.evtRecenterFullscreenMap', 'used by fullscreen map recenter button'],
-    ['window.evtCloseFullscreenMap',    'used by fullscreen map close button'],
     ['window.evtInitHeroCollapse',      'kept as no-op — external callers must not crash'],
     ['window.evtCleanupHeroCollapse',   'kept as no-op — external callers must not crash'],
 ];
@@ -143,6 +141,24 @@ detailRaffleRender.includes('PortalEvents.detail.raffleRender')
     ? pass('PortalEvents.detail.raffleRender namespace present')
     : fail('PortalEvents.detail.raffleRender namespace missing');
 
+console.log('\n── detail/map-overlay.js — public globals (Phase 5D.3) ───────────────────');
+
+const REQUIRED_MAP_OVERLAY_WINDOW_GLOBALS = [
+    ['window.evtOpenFullscreenMap',     'used in map overlay click handlers'],
+    ['window.evtRecenterFullscreenMap', 'used by fullscreen map recenter button'],
+    ['window.evtCloseFullscreenMap',    'used by fullscreen map close button'],
+];
+
+REQUIRED_MAP_OVERLAY_WINDOW_GLOBALS.forEach(([assign, note]) => {
+    detailMapOverlay.includes(assign)
+        ? pass(`${assign} assigned in detail/map-overlay.js (${note})`)
+        : fail(`${assign} missing from detail/map-overlay.js — ${note}`);
+});
+
+detailMapOverlay.includes('PortalEvents.detail.mapOverlay')
+    ? pass('PortalEvents.detail.mapOverlay namespace present')
+    : fail('PortalEvents.detail.mapOverlay namespace missing');
+
 const REQUIRED_TOOLS_WINDOW_GLOBALS = [
     ['window.evtInitBottomNav', 'sticky CTA bar init (team/tools.js)'],
     ['window.evtCleanupBottomNav', 'sticky CTA bar cleanup (team/tools.js)'],
@@ -183,8 +199,8 @@ const DETAIL_DIRECT_KEYS = [
     // Pre-3B entries
     ['detail.open ',                 'open (evtOpenDetail)'],
     ['detail.openLightbox        = window.evtOpenLightbox', 'openLightbox (Phase 5D.1 bridge)'],
-    ['detail.openFullscreenMap ',    'openFullscreenMap'],
-    ['detail.closeFullscreenMap ',   'closeFullscreenMap'],
+    ['detail.openFullscreenMap   = window.evtOpenFullscreenMap', 'openFullscreenMap (Phase 5D.3 bridge)'],
+    ['detail.closeFullscreenMap  = window.evtCloseFullscreenMap', 'closeFullscreenMap (Phase 5D.3 bridge)'],
     ['detail.initBottomNav ',        'initBottomNav'],
     ['detail.cleanupBottomNav ',     'cleanupBottomNav'],
     ['detail.openCtaPanel ',         'openCtaPanel'],
@@ -192,7 +208,7 @@ const DETAIL_DIRECT_KEYS = [
     ['detail.startLiveCountdown    = window.evtStartLiveCountdown', 'startLiveCountdown (Phase 5D.1 bridge)'],
     ['detail.initSectionAnimations = window.evtInitSectionAnimations', 'initSectionAnimations (Phase 5D.1 bridge)'],
     // Phase 3B additions
-    ['detail.recenterFullscreenMap', 'recenterFullscreenMap (Phase 3B)'],
+    ['detail.recenterFullscreenMap = window.evtRecenterFullscreenMap', 'recenterFullscreenMap (Phase 5D.3 bridge)'],
     ['detail.initHeroCollapse ',     'initHeroCollapse (Phase 3B)'],
     ['detail.cleanupHeroCollapse ',  'cleanupHeroCollapse (Phase 3B)'],
     ['detail.miniMarkdown          = window.evtMiniMarkdown', 'miniMarkdown (Phase 5D.1 bridge)'],
@@ -304,6 +320,30 @@ RAFFLE_RENDER_INTERNAL_FNS.forEach(fn => {
         : fail(`${fn} still defined in detail.js — should be in raffle-render.js only`);
 });
 
+const MAP_OVERLAY_INTERNAL_FNS = [
+    'function evtOpenFullscreenMap',
+    'function evtRecenterFullscreenMap',
+    'function evtCloseFullscreenMap',
+];
+
+console.log('\n── detail/map-overlay.js — internal functions (Phase 5D.3) ──────────────');
+
+MAP_OVERLAY_INTERNAL_FNS.forEach(fn => {
+    detailMapOverlay.includes(fn)
+        ? pass(`${fn} present in detail/map-overlay.js`)
+        : fail(`${fn} missing from detail/map-overlay.js`);
+});
+
+[
+    'function evtOpenFullscreenMap',
+    'function evtRecenterFullscreenMap',
+    'function evtCloseFullscreenMap',
+].forEach(fn => {
+    !detail.includes(fn)
+        ? pass(`${fn} not reimplemented in detail.js`)
+        : fail(`${fn} still defined in detail.js — should be in map-overlay.js only`);
+});
+
 const INTERNAL_FNS = [
     'function _edMetaRow',
     'function _edPill',
@@ -311,9 +351,6 @@ const INTERNAL_FNS = [
     'function _edNotice',
     'function _edSectionHead',
     'async function evtOpenDetail',
-    'function evtOpenFullscreenMap',
-    'function evtRecenterFullscreenMap',
-    'function evtCloseFullscreenMap',
     'function evtInitHeroCollapse',
     'function evtCleanupHeroCollapse',
 ];
@@ -364,11 +401,13 @@ const chatTag = 'src="../js/portal/events/team/chat.js"';
 const toolsTag = 'src="../js/portal/events/team/tools.js"';
 const presentationTag = 'src="../js/portal/events/detail/presentation.js"';
 const raffleRenderTag = 'src="../js/portal/events/detail/raffle-render.js"';
+const mapOverlayTag = 'src="../js/portal/events/detail/map-overlay.js"';
 const detailTag = 'src="../js/portal/events/detail.js"';
 const chatIdx = html.indexOf(chatTag);
 const toolsIdx = html.indexOf(toolsTag);
 const presentationIdx = html.indexOf(presentationTag);
 const raffleRenderIdx = html.indexOf(raffleRenderTag);
+const mapOverlayIdx = html.indexOf(mapOverlayTag);
 const detailIdx = html.indexOf(detailTag);
 html.includes(chatTag)
     ? pass('team/chat.js is referenced in events.html')
@@ -382,10 +421,14 @@ html.includes(presentationTag)
 html.includes(raffleRenderTag)
     ? pass('detail/raffle-render.js is referenced in events.html')
     : fail('detail/raffle-render.js not in events.html — would never load');
-chatIdx >= 0 && toolsIdx >= 0 && presentationIdx >= 0 && raffleRenderIdx >= 0 && detailIdx >= 0
-    && chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < raffleRenderIdx && raffleRenderIdx < detailIdx
-    ? pass('load order: chat → tools → presentation → raffle-render → detail')
-    : fail('script order must be chat → tools → presentation → raffle-render → detail');
+html.includes(mapOverlayTag)
+    ? pass('detail/map-overlay.js is referenced in events.html')
+    : fail('detail/map-overlay.js not in events.html — would never load');
+chatIdx >= 0 && toolsIdx >= 0 && presentationIdx >= 0 && raffleRenderIdx >= 0 && mapOverlayIdx >= 0 && detailIdx >= 0
+    && chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < raffleRenderIdx
+    && raffleRenderIdx < mapOverlayIdx && mapOverlayIdx < detailIdx
+    ? pass('load order: chat → tools → presentation → raffle-render → map-overlay → detail')
+    : fail('script order must be chat → tools → presentation → raffle-render → map-overlay → detail');
 
 const initTag = 'src="../js/portal/events/init.js"';
 const portalBlock = html.slice(html.indexOf('<!-- Events modules'));

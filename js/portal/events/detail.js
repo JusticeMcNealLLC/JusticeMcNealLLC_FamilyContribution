@@ -1080,7 +1080,7 @@ async function evtOpenDetail(eventId) {
                 L.marker([event.location_lat, event.location_lng]).addTo(dMap);
                 setTimeout(() => dMap.invalidateSize(), 100);
                 // Leaflet's own click event fires only on a clean tap (not after a drag)
-                dMap.on('click', () => evtOpenFullscreenMap(event.location_lat, event.location_lng, evtEscapeHtml(event.location_text || '')));
+                dMap.on('click', () => window.evtOpenFullscreenMap(event.location_lat, event.location_lng, evtEscapeHtml(event.location_text || '')));
             };
             _initMap('detailEventMap');
             _initMap('detailEventMapMobile');
@@ -1088,56 +1088,7 @@ async function evtOpenDetail(eventId) {
     }, 100);
 }
 
-// ═══════════════════════════════════════════════════════════
-// Fullscreen Map (mobile)
-// ═══════════════════════════════════════════════════════════
-let _fullscreenMap = null;
-let _fullscreenMapCoords = null;
-
-function evtOpenFullscreenMap(lat, lng, label) {
-    const overlay = document.getElementById('fullscreenMapOverlay');
-    if (!overlay || typeof L === 'undefined') return;
-
-    overlay.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-
-    // Directions link
-    const dirBtn = document.getElementById('fullscreenMapDirections');
-    if (dirBtn) {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const addr = encodeURIComponent(label || `${lat},${lng}`);
-        dirBtn.href = isIOS
-            ? `https://maps.apple.com/?daddr=${addr}`
-            : `https://www.google.com/maps/dir/?api=1&destination=${addr}`;
-    }
-
-    // Init map after overlay is visible
-    setTimeout(() => {
-        _fullscreenMapCoords = { lat, lng };
-        if (_fullscreenMap) { _fullscreenMap.remove(); _fullscreenMap = null; }
-        _fullscreenMap = L.map('fullscreenMapContainer', {
-            zoomControl: true,
-            attributionControl: false,
-            dragging: true,
-            scrollWheelZoom: true
-        }).setView([lat, lng], 16);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(_fullscreenMap);
-        L.marker([lat, lng]).addTo(_fullscreenMap).bindPopup(evtEscapeHtml(label || 'Event Location')).openPopup();
-        setTimeout(() => _fullscreenMap.invalidateSize(), 50);
-    }, 50);
-}
-
-function evtRecenterFullscreenMap() {
-    if (!_fullscreenMap || !_fullscreenMapCoords) return;
-    _fullscreenMap.setView([_fullscreenMapCoords.lat, _fullscreenMapCoords.lng], 16, { animate: true, duration: 0.5 });
-}
-
-function evtCloseFullscreenMap() {
-    const overlay = document.getElementById('fullscreenMapOverlay');
-    if (overlay) overlay.classList.add('hidden');
-    if (_fullscreenMap) { _fullscreenMap.remove(); _fullscreenMap = null; }
-    document.body.style.overflow = '';
-}
+// Fullscreen map overlay — Phase 5D.3: js/portal/events/detail/map-overlay.js
 
 // ═══════════════════════════════════════════════════════════
 // Hero collapse — DEPRECATED (M2)
@@ -1154,15 +1105,12 @@ function evtCleanupHeroCollapse() { /* no-op since M2 */ }
 // Public surface — preserve legacy evt* globals + register PortalEvents.detail namespace
 // ═══════════════════════════════════════════════════════════
 window.evtOpenDetail            = evtOpenDetail;
-window.evtOpenFullscreenMap     = evtOpenFullscreenMap;
-window.evtRecenterFullscreenMap = evtRecenterFullscreenMap;
-window.evtCloseFullscreenMap    = evtCloseFullscreenMap;
 window.evtInitHeroCollapse      = evtInitHeroCollapse;
 window.evtCleanupHeroCollapse   = evtCleanupHeroCollapse;
 detail.open                = evtOpenDetail;
 detail.openLightbox        = window.evtOpenLightbox;
-detail.openFullscreenMap   = evtOpenFullscreenMap;
-detail.closeFullscreenMap  = evtCloseFullscreenMap;
+detail.openFullscreenMap   = window.evtOpenFullscreenMap;
+detail.closeFullscreenMap  = window.evtCloseFullscreenMap;
 detail.initBottomNav       = window.evtInitBottomNav;
 detail.cleanupBottomNav    = window.evtCleanupBottomNav;
 detail.openCtaPanel        = window.evtOpenCtaPanel;
@@ -1172,7 +1120,7 @@ detail.openTeamChat        = window.evtOpenTeamChat;
 detail.startLiveCountdown    = window.evtStartLiveCountdown;
 detail.initSectionAnimations = window.evtInitSectionAnimations;
 // Phase 3B additions — mirror remaining window.evt* globals + raffle helpers
-detail.recenterFullscreenMap = evtRecenterFullscreenMap;
+detail.recenterFullscreenMap = window.evtRecenterFullscreenMap;
 detail.initHeroCollapse      = evtInitHeroCollapse;
 detail.cleanupHeroCollapse   = evtCleanupHeroCollapse;
 detail.miniMarkdown          = window.evtMiniMarkdown;
