@@ -245,6 +245,19 @@ detailSections.includes('function evtBuildDetailHostControlsHtml')
         : fail(`${label} missing from detail/sections.js`);
 });
 
+[
+    ['function evtBuildDetailHeroStatusBadgeHtml', 'evtBuildDetailHeroStatusBadgeHtml'],
+    ['function evtBuildDetailTransportNoticeHtml', 'evtBuildDetailTransportNoticeHtml'],
+    ['function evtBuildDetailLocationNoticeHtml', 'evtBuildDetailLocationNoticeHtml'],
+    ['function evtBuildDetailThresholdHtml', 'evtBuildDetailThresholdHtml'],
+    ['function evtBuildDetailAttendeePreviewHtml', 'evtBuildDetailAttendeePreviewHtml'],
+    ['function evtBuildDetailShareCardHtml', 'evtBuildDetailShareCardHtml'],
+].forEach(([substr, label]) => {
+    detailSections.includes(substr)
+        ? pass(`${label} defined in detail/sections.js (Phase 5H.4)`)
+        : fail(`${label} missing from detail/sections.js`);
+});
+
 detailSections.includes('PortalEvents.detail.sections')
     ? pass('PortalEvents.detail.sections namespace present')
     : fail('PortalEvents.detail.sections namespace missing');
@@ -276,6 +289,30 @@ detail.includes('window.evtBuildDetailCostBreakdownHtml(ctx)')
 detail.includes('window.evtBuildDetailAttendeeBreakdownHtml(ctx)')
     ? pass('detail.js calls window.evtBuildDetailAttendeeBreakdownHtml (Phase 5H.3)')
     : fail('detail.js must call window.evtBuildDetailAttendeeBreakdownHtml');
+
+detail.includes('window.evtBuildDetailHeroStatusBadgeHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailHeroStatusBadgeHtml (Phase 5H.4)')
+    : fail('detail.js must call window.evtBuildDetailHeroStatusBadgeHtml');
+
+detail.includes('window.evtBuildDetailTransportNoticeHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailTransportNoticeHtml (Phase 5H.4)')
+    : fail('detail.js must call window.evtBuildDetailTransportNoticeHtml');
+
+detail.includes('window.evtBuildDetailLocationNoticeHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailLocationNoticeHtml (Phase 5H.4)')
+    : fail('detail.js must call window.evtBuildDetailLocationNoticeHtml');
+
+detail.includes('window.evtBuildDetailThresholdHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailThresholdHtml (Phase 5H.4)')
+    : fail('detail.js must call window.evtBuildDetailThresholdHtml');
+
+detail.includes('window.evtBuildDetailAttendeePreviewHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailAttendeePreviewHtml (Phase 5H.4)')
+    : fail('detail.js must call window.evtBuildDetailAttendeePreviewHtml');
+
+detail.includes('window.evtBuildDetailShareCardHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailShareCardHtml (Phase 5H.4)')
+    : fail('detail.js must call window.evtBuildDetailShareCardHtml');
 
 !detail.includes('evtClaimWaitlistSpot(')
     ? pass('waitlist inline handlers moved out of detail.js (Phase 5H.3)')

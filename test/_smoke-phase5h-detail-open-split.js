@@ -51,7 +51,7 @@ detailData.includes('PortalEvents.detail.data')
     ? pass('PortalEvents.detail.data namespace present')
     : fail('PortalEvents.detail.data namespace missing');
 
-console.log('\n── Phase 5H.2–5H.3 — detail/sections.js ────────────────────────────────────');
+console.log('\n── Phase 5H.2–5H.4 — detail/sections.js ────────────────────────────────────');
 
 fs.existsSync(path.join(root, 'js/portal/events/detail/sections.js'))
     ? pass('js/portal/events/detail/sections.js exists')
@@ -87,6 +87,23 @@ detailSections.includes('function evtBuildDetailHostControlsHtml')
         ? pass(`${name} defined in detail/sections.js (Phase 5H.3)`)
         : fail(`${name} missing from detail/sections.js`);
 });
+
+[
+    'evtBuildDetailHeroStatusBadgeHtml',
+    'evtBuildDetailTransportNoticeHtml',
+    'evtBuildDetailLocationNoticeHtml',
+    'evtBuildDetailThresholdHtml',
+    'evtBuildDetailAttendeePreviewHtml',
+    'evtBuildDetailShareCardHtml',
+].forEach((name) => {
+    detailSections.includes(`function ${name}`)
+        ? pass(`${name} defined in detail/sections.js (Phase 5H.4)`)
+        : fail(`${name} missing from detail/sections.js`);
+});
+
+detailSections.includes('buildThresholdHtml: evtBuildDetailThresholdHtml')
+    ? pass('PortalEvents.detail.sections.buildThresholdHtml present')
+    : fail('PortalEvents.detail.sections.buildThresholdHtml missing');
 
 detailSections.includes('buildWaitlistHtml: evtBuildDetailWaitlistHtml')
     ? pass('PortalEvents.detail.sections.buildWaitlistHtml present')
@@ -159,6 +176,38 @@ detail.includes('window.evtBuildDetailCostBreakdownHtml(ctx)')
 detail.includes('window.evtBuildDetailAttendeeBreakdownHtml(ctx)')
     ? pass('evtOpenDetail delegates attendee breakdown HTML to sections.js')
     : fail('detail.js must call window.evtBuildDetailAttendeeBreakdownHtml');
+
+detail.includes('window.evtBuildDetailHeroStatusBadgeHtml(ctx)')
+    ? pass('evtOpenDetail delegates hero status badge HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailHeroStatusBadgeHtml');
+
+detail.includes('window.evtBuildDetailTransportNoticeHtml(ctx)')
+    ? pass('evtOpenDetail delegates transport notice HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailTransportNoticeHtml');
+
+detail.includes('window.evtBuildDetailLocationNoticeHtml(ctx)')
+    ? pass('evtOpenDetail delegates location notice HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailLocationNoticeHtml');
+
+detail.includes('window.evtBuildDetailThresholdHtml(ctx)')
+    ? pass('evtOpenDetail delegates threshold context HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailThresholdHtml');
+
+detail.includes('window.evtBuildDetailAttendeePreviewHtml(ctx)')
+    ? pass('evtOpenDetail delegates attendee preview HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailAttendeePreviewHtml');
+
+detail.includes('window.evtBuildDetailShareCardHtml(ctx)')
+    ? pass('evtOpenDetail delegates share card HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailShareCardHtml');
+
+!detail.includes('LLC provides transportation')
+    ? pass('transport notice moved out of detail.js (Phase 5H.4)')
+    : fail('transport notice still inline in detail.js');
+
+!detail.includes('ed-attendee-row')
+    ? pass('attendee preview markup moved out of detail.js (Phase 5H.4)')
+    : fail('attendee preview still inline in detail.js');
 
 detail.includes('window.evtOpenDetail            = evtOpenDetail')
     ? pass('window.evtOpenDetail still assigned from detail.js')

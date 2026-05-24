@@ -24,7 +24,7 @@
 // Presentation helpers — Phase 5D.1: js/portal/events/detail/presentation.js
 // Fragment helpers — Phase 5F-prep: js/portal/events/detail/fragments.js
 // Detail data context — Phase 5H.1: js/portal/events/detail/data.js
-// Detail section HTML — Phase 5H.2–5H.3: js/portal/events/detail/sections.js
+// Detail section HTML — Phase 5H.2–5H.4: js/portal/events/detail/sections.js
 
 const _edMetaRow = window.evtEdMetaRow;
 const _edPill = window.evtEdPill;
@@ -95,37 +95,15 @@ async function evtOpenDetail(eventId) {
     // Build visual sections
     // ═══════════════════════════════════════════════════════
 
-    // ── Hero status badge ────────────────────────────────
-    let badgeLabel = '', badgeCls = '', dotPulse = false;
-    if (event.status === 'cancelled') { badgeLabel = 'Cancelled'; badgeCls = 'evt-status-cancelled'; }
-    else if (event.status === 'completed' || isPast) { badgeLabel = 'Ended'; badgeCls = 'evt-status-ended'; }
-    else if (event.status === 'active') { badgeLabel = 'Live'; badgeCls = 'evt-status-live'; dotPulse = true; }
-    else {
-        const msUntil = new Date(event.start_date) - new Date();
-        const d = Math.floor(msUntil / 86400000);
-        const h = Math.floor((msUntil % 86400000) / 3600000);
-        const m = Math.floor((msUntil % 3600000) / 60000);
-        if (d > 0) badgeLabel = `${d}d ${h}h`; else if (h > 0) badgeLabel = `${h}h ${m}m`; else badgeLabel = `${m}m`;
-        badgeCls = 'evt-status-soon'; dotPulse = d === 0;
-    }
+    const heroStatusBadgeHtml = window.evtBuildDetailHeroStatusBadgeHtml(ctx);
 
     // ── Banner bg ────────────────────────────────────────
     const bannerBg = event.banner_url
         ? `background-image:url('${event.banner_url}');background-size:cover;background-position:center;`
         : `background:linear-gradient(135deg, #312e81 0%, #6d28d9 50%, #a855f7 100%);`;
 
-    // ── Transportation notice ────────────────────────────
-    let transportContextHtml = '';
-    if (isLlc && event.transportation_enabled !== false && event.transportation_mode) {
-        const isProvided = event.transportation_mode === 'llc_provides';
-        transportContextHtml = `<div class="ed-context-row"><span>${isProvided ? '✈️' : '🧳'}</span><div><strong>${isProvided ? 'LLC provides transportation' : 'Self-arranged transportation'}</strong><p>${isProvided ? 'Tickets will appear in documents when available.' : `Members book their own travel${event.transportation_estimate_cents ? ` — est. ~${formatCurrency(event.transportation_estimate_cents)}` : ''}.`}</p></div></div>`;
-    }
-
-    // ── Location-required badge ──────────────────────────
-    let locationReqHtml = '';
-    if (isLlc && event.location_required) {
-        locationReqHtml = _edNotice('📍', 'Location sharing required', "You'll need to enable location sharing at check-in");
-    }
+    const transportContextHtml = window.evtBuildDetailTransportNoticeHtml(ctx);
+    const locationReqHtml = window.evtBuildDetailLocationNoticeHtml(ctx);
 
     // ── QR Code for attendee ticket ──────────────────────
     let qrHtml = '';
@@ -176,27 +154,8 @@ async function evtOpenDetail(eventId) {
 
     const costBreakdownHtml = window.evtBuildDetailCostBreakdownHtml(ctx);
 
-    // ── Threshold / Social Proof (LLC) ───────────────────
-    let thresholdHtml = '';
-    let thresholdContextHtml = '';
-    if (isLlc && event.min_participants) {
-        const currentGoing = goingList.length;
-        const minNeeded = event.min_participants;
-        const pct = Math.min(100, Math.round((currentGoing / minNeeded) * 100));
-        const isMet = currentGoing >= minNeeded;
-        const deadlineStr = event.rsvp_deadline ? new Date(event.rsvp_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD';
-        const socialThreshold = Math.min(Math.floor(minNeeded * 0.5), 3);
-        const showExactCount = currentGoing >= socialThreshold;
-
-        if (!isHost) {
-            let socialText = '';
-            if (isMet) socialText = `Event confirmed · ${currentGoing} going${event.max_participants ? ' · ' + (event.max_participants - currentGoing) + ' spots left' : ''}`;
-            else if (showExactCount) socialText = `${currentGoing} going toward ${minNeeded} needed`;
-            else socialText = `Minimum of ${minNeeded} needed to confirm`;
-            thresholdContextHtml = `<div class="ed-context-row"><span>${isMet ? '✅' : '⚠️'}</span><div><strong>${isMet ? 'Minimum met' : 'Minimum threshold'}</strong><p>${socialText}${event.rsvp_deadline ? ` · RSVP by ${deadlineStr}` : ''}</p></div></div>`;
-        }
-    }
-
+    const thresholdHtml = '';
+    const thresholdContextHtml = window.evtBuildDetailThresholdHtml(ctx);
     const eventContextHtml = [thresholdContextHtml, transportContextHtml].filter(Boolean).join('');
 
     const waitlistHtml = window.evtBuildDetailWaitlistHtml(ctx);
@@ -207,30 +166,9 @@ async function evtOpenDetail(eventId) {
     const attendeeBreakdownHtml = window.evtBuildDetailAttendeeBreakdownHtml(ctx);
 
     const hostControlsHtml = window.evtBuildDetailHostControlsHtml(ctx);
-
-    // ── Attendee Preview (visible to all) ────────────────
-    let attendeePreviewHtml = '';
+    const attendeePreviewHtml = window.evtBuildDetailAttendeePreviewHtml(ctx);
     const totalGoing = goingList.length + guestGoingList.length;
-    if (totalGoing > 0 || maybeList.length > 0) {
-        // Build flat ordered avatar data list (members first, then guests)
-        const _allAvatars = [
-            ...goingList.map(r => {
-                const p = r.profiles;
-                return { type: 'member', id: p?.id, name: evtEscapeHtml((p?.first_name || '') + ' ' + (p?.last_name || '')).trim(), img: p?.profile_picture_url || null };
-            }),
-            ...guestGoingList.map(g => ({ type: 'guest', name: evtEscapeHtml(g.guest_name || 'Guest'), img: null }))
-        ];
-        window._edAvatarData = window._edAvatarData || {};
-        window._edAvatarData[eventId] = { avatars: _allAvatars, totalGoing, maybeCount: maybeList.length };
-        const countParts = [];
-        if (totalGoing > 0) countParts.push(`${totalGoing} going`);
-        if (maybeList.length > 0) countParts.push(`${maybeList.length} interested`);
-        attendeePreviewHtml = `
-            <div class="ed-attendee-row" id="edAttendeeRow-${eventId}">
-                <div class="ed-avatar-stack" id="edAvatarStack-${eventId}"></div>
-                <span class="ed-attendee-count">${countParts.join(' · ')}</span>
-            </div>`;
-    }
+    const shareCardHtml = window.evtBuildDetailShareCardHtml(ctx);
 
     // ── Description ──────────────────────────────────────
     const rawDesc = event.description || '';
@@ -353,7 +291,7 @@ async function evtOpenDetail(eventId) {
                 <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `onclick="evtOpenLightbox('${event.banner_url}')"` : ''} role="img" aria-label="Event banner">
                     <div class="ed-hero-scrim"></div>
                     <div class="ed-hero-nav">
-                        <span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>
+                        ${heroStatusBadgeHtml}
                         <div class="ed-hero-pill-row">
                             <button onclick="event.stopPropagation();evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
@@ -579,21 +517,7 @@ async function evtOpenDetail(eventId) {
                         </div>
                     </div>` : ''}
                     <div class="ed-card ed-share-card event-detail-card-tight portal-utility-card">
-                        <p class="ed-summary-heading">Share This Event</p>
-                        <div class="ed-share-row">
-                            <button class="ed-share-btn" title="Copy link" onclick="(function(){navigator.clipboard.writeText(window.location.href);const b=this;b.classList.add('ed-share-btn-copied');setTimeout(()=>b.classList.remove('ed-share-btn-copied'),1500)}).call(this)">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                            </button>
-                            <a class="ed-share-btn" title="Share on Facebook" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}" target="_blank" rel="noopener">
-                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                            </a>
-                            <a class="ed-share-btn" title="Share on X" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(event.title)}" target="_blank" rel="noopener">
-                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                            </a>
-                            <a class="ed-share-btn" title="Share on Instagram" href="https://instagram.com" target="_blank" rel="noopener">
-                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                            </a>
-                        </div>
+                        ${shareCardHtml}
                     </div>
             </div><!-- /ed-detail-body -->
         </div>
