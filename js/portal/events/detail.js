@@ -131,26 +131,8 @@ async function evtOpenDetail(eventId) {
             </div>`;
     }
 
-    // ── Venue QR (host) ──────────────────────────────────
-    let venueQrHtml = '';
-    if (checkinEnabled && isHost && event.checkin_mode === 'venue_scan' && event.venue_qr_token) {
-        venueQrHtml = `
-            <div class="ed-qr-wrap">
-                <div class="ed-qr-header">📍 Venue QR Code</div>
-                <canvas id="venueQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
-                <p class="ed-qr-hint">Display this at the entrance for attendees to scan</p>
-            </div>`;
-    }
-
-    // ── Scanner button ───────────────────────────────────
-    let scannerBtn = '';
-    if (checkinEnabled && isHost && event.checkin_mode === 'attendee_ticket' && ['open', 'confirmed', 'active'].includes(event.status)) {
-        scannerBtn = `<button onclick="evtOpenScanner('${eventId}')" class="ed-action-btn"><svg style="width:18px;height:18px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>Scan Attendee QR</button>`;
-    }
-
     let costBreakdownHtml = window.evtBuildDetailCostBreakdownHtml(ctx);
 
-    const thresholdHtml = '';
     const thresholdContextHtml = window.evtBuildDetailThresholdHtml(ctx);
     const eventContextHtml = [thresholdContextHtml, transportContextHtml].filter(Boolean).join('');
 
@@ -159,9 +141,6 @@ async function evtOpenDetail(eventId) {
 
     const rsvpButtons = window.evtBuildDetailRsvpSectionHtml(ctx);
     const raffleHtml = window.evtBuildDetailRaffleSectionHtml(ctx);
-    const attendeeBreakdownHtml = window.evtBuildDetailAttendeeBreakdownHtml(ctx);
-
-    const hostControlsHtml = window.evtBuildDetailHostControlsHtml(ctx);
     const attendeePreviewHtml = window.evtBuildDetailAttendeePreviewHtml(ctx);
     const shareCardHtml = window.evtBuildDetailShareCardHtml(ctx);
     const organizerHtml = window.evtBuildDetailOrganizerHtml(ctx);
@@ -217,7 +196,7 @@ async function evtOpenDetail(eventId) {
         attendeePreviewHtml,
         organizerHtml,
         waitlistHtml,
-        thresholdHtml,
+        thresholdHtml: '',
         costBreakdownHtml,
         locationReqHtml,
         graceHtml,

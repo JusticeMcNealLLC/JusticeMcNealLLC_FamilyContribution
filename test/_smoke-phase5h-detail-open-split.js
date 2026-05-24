@@ -181,9 +181,9 @@ detail.includes('window.evtBuildDetailRaffleSectionHtml(ctx)')
     ? pass('evtOpenDetail delegates raffle section HTML to sections.js')
     : fail('detail.js must call window.evtBuildDetailRaffleSectionHtml');
 
-detail.includes('window.evtBuildDetailHostControlsHtml(ctx)')
-    ? pass('evtOpenDetail delegates host controls HTML to sections.js')
-    : fail('detail.js must call window.evtBuildDetailHostControlsHtml');
+!detail.includes('window.evtBuildDetailHostControlsHtml(ctx)')
+    ? pass('unused hostControlsHtml builder not called from detail.js (Phase 5I.2)')
+    : fail('detail.js must not call evtBuildDetailHostControlsHtml — not in template');
 
 detail.includes('window.evtBuildDetailWaitlistHtml(ctx)')
     ? pass('evtOpenDetail delegates waitlist HTML to sections.js')
@@ -197,9 +197,9 @@ detail.includes('window.evtBuildDetailCostBreakdownHtml(ctx)')
     ? pass('evtOpenDetail delegates cost breakdown HTML to sections.js')
     : fail('detail.js must call window.evtBuildDetailCostBreakdownHtml');
 
-detail.includes('window.evtBuildDetailAttendeeBreakdownHtml(ctx)')
-    ? pass('evtOpenDetail delegates attendee breakdown HTML to sections.js')
-    : fail('detail.js must call window.evtBuildDetailAttendeeBreakdownHtml');
+!detail.includes('window.evtBuildDetailAttendeeBreakdownHtml(ctx)')
+    ? pass('unused attendeeBreakdownHtml builder not called from detail.js (Phase 5I.2)')
+    : fail('detail.js must not call evtBuildDetailAttendeeBreakdownHtml — not in template');
 
 detail.includes('window.evtBuildDetailHeroStatusBadgeHtml(ctx)')
     ? pass('evtOpenDetail delegates hero status badge HTML to sections.js')

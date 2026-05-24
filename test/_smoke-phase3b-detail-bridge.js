@@ -377,9 +377,9 @@ detail.includes('window.evtBuildDetailRaffleSectionHtml(ctx)')
     ? pass('detail.js calls window.evtBuildDetailRaffleSectionHtml')
     : fail('detail.js must call window.evtBuildDetailRaffleSectionHtml');
 
-detail.includes('window.evtBuildDetailHostControlsHtml(ctx)')
-    ? pass('detail.js calls window.evtBuildDetailHostControlsHtml')
-    : fail('detail.js must call window.evtBuildDetailHostControlsHtml');
+!detail.includes('window.evtBuildDetailHostControlsHtml(ctx)')
+    ? pass('detail.js does not call unused hostControlsHtml builder (Phase 5I.2)')
+    : fail('detail.js must not call evtBuildDetailHostControlsHtml — not in template');
 
 detail.includes('window.evtBuildDetailWaitlistHtml(ctx)')
     ? pass('detail.js calls window.evtBuildDetailWaitlistHtml (Phase 5H.3)')
@@ -393,9 +393,17 @@ detail.includes('window.evtBuildDetailCostBreakdownHtml(ctx)')
     ? pass('detail.js calls window.evtBuildDetailCostBreakdownHtml (Phase 5H.3)')
     : fail('detail.js must call window.evtBuildDetailCostBreakdownHtml');
 
-detail.includes('window.evtBuildDetailAttendeeBreakdownHtml(ctx)')
-    ? pass('detail.js calls window.evtBuildDetailAttendeeBreakdownHtml (Phase 5H.3)')
-    : fail('detail.js must call window.evtBuildDetailAttendeeBreakdownHtml');
+!detail.includes('window.evtBuildDetailAttendeeBreakdownHtml(ctx)')
+    ? pass('detail.js does not call unused attendeeBreakdownHtml builder (Phase 5I.2)')
+    : fail('detail.js must not call evtBuildDetailAttendeeBreakdownHtml — not in template');
+
+!detail.includes('venueQrHtml')
+    ? pass('dead venueQrHtml pre-template block removed from detail.js (Phase 5I.2)')
+    : fail('venueQrHtml should not remain in detail.js');
+
+!detail.includes('scannerBtn')
+    ? pass('dead scannerBtn pre-template block removed from detail.js (Phase 5I.2)')
+    : fail('scannerBtn should not remain in detail.js');
 
 detail.includes('window.evtBuildDetailHeroStatusBadgeHtml(ctx)')
     ? pass('detail.js calls window.evtBuildDetailHeroStatusBadgeHtml (Phase 5H.4)')

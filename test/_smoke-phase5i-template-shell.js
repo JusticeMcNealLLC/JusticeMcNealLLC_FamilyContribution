@@ -128,6 +128,14 @@ detail.includes('const templateCtx = {')
     ? pass('detail.js builds templateCtx before template render')
     : fail('detail.js must build templateCtx object');
 
+!detail.includes('venueQrHtml') && !detail.includes('scannerBtn')
+    ? pass('dead venueQrHtml/scannerBtn pre-template code removed from detail.js (Phase 5I.2)')
+    : fail('detail.js must not contain venueQrHtml or scannerBtn dead code');
+
+!detail.includes('evtBuildDetailHostControlsHtml') && !detail.includes('evtBuildDetailAttendeeBreakdownHtml')
+    ? pass('unused host/attendee breakdown builders not called from detail.js (Phase 5I.2)')
+    : fail('detail.js must not call unused hostControls or attendeeBreakdown builders');
+
 detail.includes('detail.buildTemplate = window.evtBuildDetailTemplate')
     ? pass('detail.buildTemplate bridge present')
     : fail('detail.buildTemplate bridge missing');
