@@ -1,7 +1,8 @@
 'use strict';
 
+// Inventory only — not loaded by portal/events.html until an explicit compat gate (Phase 5J.3+).
 var EXPECTED_HANDLER_GROUPS = {
-    rsvp: ['evtHandleRsvp'],
+    rsvp: ['evtHandleRsvp', 'evtHandleRaffleEntry', 'evtHandleFreeRaffleEntry', 'evtRequestGraceRefund'],
     waitlist: ['evtJoinWaitlist', 'evtLeaveWaitlist', 'evtClaimWaitlistSpot'],
     raffle: ['evtOpenRaffleDraw', 'evtDrawWinner'],
     competition: [
@@ -18,10 +19,37 @@ var EXPECTED_HANDLER_GROUPS = {
     scrapbook: ['evtUploadPhoto', 'evtDeletePhoto', 'evtViewPhoto'],
     map: ['evtInitMap', 'evtToggleLocationSharing'],
     scanner: ['evtOpenScanner', 'evtCloseScanner'],
-    detail: ['evtOpenDetail', 'evtOpenLightbox', 'evtOpenFullscreenMap', 'evtCloseFullscreenMap'],
+    team: ['evtOpenTeamToolsPanel', 'evtOpenTeamChat', 'evtCloseCtaPanel', 'evtInitBottomNav'],
+    detail: ['evtOpenDetail', 'evtNavigateToEvent', 'evtNavigateToList'],
+    detailTemplate: [
+        'evtOpenLightbox',
+        'evtOpenFullscreenMap',
+        'evtPostComment',
+        'evtNavigateToList'
+    ],
+    detailSections: [
+        'evtHandleRsvp',
+        'evtHandleRaffleEntry',
+        'evtHandleFreeRaffleEntry',
+        'evtOpenTeamToolsPanel',
+        'evtMessageHost',
+        'evtCopyShareUrl',
+        'evtDownloadIcs',
+        'evtJoinWaitlist',
+        'evtLeaveWaitlist',
+        'evtClaimWaitlistSpot',
+        'evtRequestGraceRefund',
+        'evtUpdateStatus',
+        'evtCancelEvent',
+        'evtRescheduleEvent',
+        'evtDuplicateEvent',
+        'evtDeleteEvent',
+        'EventsManage.open'
+    ],
+    postRender: [],
     create: [],
     manage: [],
-    comments: ['evtPostComment']
+    comments: ['evtPostComment', 'evtLoadComments']
 };
 
 function getRoot() {
