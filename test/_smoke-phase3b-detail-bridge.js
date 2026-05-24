@@ -100,13 +100,37 @@ detail.includes('detail.initInlineMaps = window.evtInitDetailInlineMaps')
     ? pass('detail.initInlineMaps bridge present (Phase 5H.6.3)')
     : fail('detail.initInlineMaps bridge missing');
 
-detail.includes('__evtTeamToolsCtx') && detail.includes('evtInitBottomNav')
-    ? pass('detail.js still owns Team Tools context + bottom nav init')
-    : fail('detail.js must still assign __evtTeamToolsCtx and call evtInitBottomNav');
+detailPostRender.includes('function evtRunDetailPostRenderUi')
+    ? pass('evtRunDetailPostRenderUi defined in detail/post-render.js (Phase 5H.6.4)')
+    : fail('evtRunDetailPostRenderUi missing from detail/post-render.js');
 
-detail.includes('_tickCd')
-    ? pass('detail.js still owns sidebar countdown post-render')
-    : fail('detail.js must still contain sidebar countdown (_tickCd)');
+detailPostRender.includes('__evtTeamToolsCtx') && detailPostRender.includes('window.evtInitBottomNav')
+    ? pass('post-render.js owns Team Tools context + bottom nav init (Phase 5H.6.4)')
+    : fail('post-render.js must assign __evtTeamToolsCtx and call evtInitBottomNav');
+
+detailPostRender.includes('function _tickCd')
+    ? pass('post-render.js owns sidebar countdown (_tickCd) (Phase 5H.6.4)')
+    : fail('post-render.js must contain sidebar countdown (_tickCd)');
+
+detail.includes('window.evtRunDetailPostRenderUi({')
+    ? pass('detail.js delegates post-render UI to post-render.js (Phase 5H.6.4)')
+    : fail('detail.js must call window.evtRunDetailPostRenderUi');
+
+detail.includes('detail.runPostRenderUi = window.evtRunDetailPostRenderUi')
+    ? pass('detail.runPostRenderUi bridge present (Phase 5H.6.4)')
+    : fail('detail.runPostRenderUi bridge missing');
+
+!detail.includes('__evtTeamToolsCtx')
+    ? pass('Team Tools context moved out of detail.js (Phase 5H.6.4)')
+    : fail('__evtTeamToolsCtx should not remain in detail.js');
+
+!detail.match(/evtInitBottomNav\s*\(/)
+    ? pass('evtInitBottomNav call moved out of detail.js (Phase 5H.6.4)')
+    : fail('evtInitBottomNav should not be called inline in detail.js');
+
+!detail.includes('function _tickCd')
+    ? pass('sidebar countdown moved out of detail.js (Phase 5H.6.4)')
+    : fail('_tickCd should not remain in detail.js');
 
 !detail.includes('function _buildAvatarHtml')
     ? pass('avatar paint not reimplemented in detail.js (lives in post-render.js)')
@@ -457,6 +481,14 @@ detail.includes('window.evtRenderDetailQrCanvases({ event, eventId, rsvp, member
 detail.includes('detail.renderQrCanvases = window.evtRenderDetailQrCanvases')
     ? pass('detail.renderQrCanvases bridge present (Phase 5H.6.2)')
     : fail('detail.renderQrCanvases bridge missing');
+
+detailPostRender.includes('window.evtRunDetailPostRenderUi = evtRunDetailPostRenderUi')
+    ? pass('window.evtRunDetailPostRenderUi assigned in detail/post-render.js (Phase 5H.6.4)')
+    : fail('window.evtRunDetailPostRenderUi not assigned');
+
+detailPostRender.includes('runUi: evtRunDetailPostRenderUi')
+    ? pass('PortalEvents.detail.postRender.runUi present (Phase 5H.6.4)')
+    : fail('PortalEvents.detail.postRender.runUi missing');
 
 !detail.includes('evtHandleRaffleEntry(')
     ? pass('RSVP/raffle inline handlers moved out of detail.js (Phase 5H.2)')

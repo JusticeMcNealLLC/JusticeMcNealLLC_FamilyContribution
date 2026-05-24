@@ -296,6 +296,26 @@ detail.includes('window.evtInitDetailInlineMaps({ event, showLocation })')
     ? pass('inline Leaflet moved out of detail.js (Phase 5H.6.3)')
     : fail('inline Leaflet should not remain in detail.js');
 
+detail.includes('window.evtRunDetailPostRenderUi({')
+    ? pass('evtOpenDetail delegates post-render UI (Phase 5H.6.4)')
+    : fail('detail.js must call window.evtRunDetailPostRenderUi');
+
+detail.includes('detail.runPostRenderUi = window.evtRunDetailPostRenderUi')
+    ? pass('detail.runPostRenderUi bridge present (Phase 5H.6.4)')
+    : fail('detail.runPostRenderUi bridge missing');
+
+!detail.includes('__evtTeamToolsCtx')
+    ? pass('Team Tools context moved out of detail.js (Phase 5H.6.4)')
+    : fail('__evtTeamToolsCtx should not remain in detail.js');
+
+!detail.match(/evtInitBottomNav\s*\(/)
+    ? pass('evtInitBottomNav call moved out of detail.js (Phase 5H.6.4)')
+    : fail('evtInitBottomNav should not be called inline in detail.js');
+
+!detail.includes('function _tickCd')
+    ? pass('sidebar countdown moved out of detail.js (Phase 5H.6.4)')
+    : fail('_tickCd should not remain in detail.js');
+
 console.log('\n── Phase 5H — inline handler names preserved ─────────────────────────────');
 
 const CRITICAL_HANDLERS = [

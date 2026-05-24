@@ -25,7 +25,7 @@
 // Fragment helpers — Phase 5F-prep: js/portal/events/detail/fragments.js
 // Detail data context — Phase 5H.1: js/portal/events/detail/data.js
 // Detail section HTML — Phase 5H.2–5H.5: js/portal/events/detail/sections.js
-// Detail post-render — Phase 5H.6.1–5H.6.3: js/portal/events/detail/post-render.js
+// Detail post-render — Phase 5H.6.1–5H.6.4: js/portal/events/detail/post-render.js
 
 const _edMetaRow = window.evtEdMetaRow;
 const _edPill = window.evtEdPill;
@@ -441,43 +441,19 @@ async function evtOpenDetail(eventId) {
     document.title = `${event.title} | Events | Justice McNeal LLC`;
     window.scrollTo({ top: 0, behavior: 'instant' });
     window.evtInitSectionAnimations();
-    // ── Sidebar countdown tick ───────────────────────────
-    if (!isPast && !isClosed) {
-        const _cdTarget = new Date(event.start_date).getTime();
-        const _cdEls = ['edCdDays','edCdHours','edCdMins','edCdSecs'].map(id => document.getElementById(id));
-        const _cdCard = document.getElementById('edCountdownCard');
-        function _tickCd() {
-            const diff = _cdTarget - Date.now();
-            if (!_cdEls[0] || diff < 0) { if (_cdCard) _cdCard.style.display = 'none'; return; }
-            const d = Math.floor(diff / 86400000);
-            const h = Math.floor((diff % 86400000) / 3600000);
-            const m = Math.floor((diff % 3600000) / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            _cdEls[0].textContent = String(d).padStart(2,'0');
-            _cdEls[1].textContent = String(h).padStart(2,'0');
-            _cdEls[2].textContent = String(m).padStart(2,'0');
-            _cdEls[3].textContent = String(s).padStart(2,'0');
-        }
-        _tickCd();
-        const _cdTimer = setInterval(_tickCd, 1000);
-        // Clean up on next navigation
-        const _cdCleanup = () => clearInterval(_cdTimer);
-        window.addEventListener('popstate', _cdCleanup, { once: true });
-        document.addEventListener('evtDetailUnmount', _cdCleanup, { once: true });
-    }
-
-    window.__evtTeamToolsCtx = {
+    window.evtRunDetailPostRenderUi({
+        event,
         eventId,
+        isPast,
+        isClosed,
+        rsvp,
         myRaffleEntry,
         entriesClosed,
         eventIsFull,
-        canManageEvent: isHost,
+        isHost,
         canAccessTeamHub,
         canCreateTeamChat,
-    };
-    if (typeof window.evtInitBottomNav === 'function') {
-        window.evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub);
-    }
+    });
     evtInitHeroCollapse();
     window.evtRunDetailPostRenderBasics({ eventId });
 
@@ -562,6 +538,7 @@ detail.loadContext = window.evtLoadDetailContext;
 detail.runPostRenderBasics = window.evtRunDetailPostRenderBasics;
 detail.renderQrCanvases = window.evtRenderDetailQrCanvases;
 detail.initInlineMaps = window.evtInitDetailInlineMaps;
+detail.runPostRenderUi = window.evtRunDetailPostRenderUi;
 
 // Pre-register known sub-modules (M3 management sheet will register itself here)
 detail.register('rsvp',        { handle: () => window.evtHandleRsvp });

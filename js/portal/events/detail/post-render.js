@@ -1,7 +1,8 @@
 /* ════════════════════════════════════════════════════════════
-   Portal Events — Detail post-render hooks (Phase 5H.6.1–5H.6.3)
+   Portal Events — Detail post-render hooks (Phase 5H.6.1–5H.6.4)
    Classic IIFE; loads after detail/sections.js, before detail.js.
-   Avatar paint, comments, host dropdown, ticket QR canvas, inline Leaflet maps.
+   Avatar paint, comments, host dropdown, ticket QR canvas, inline Leaflet maps,
+   sidebar countdown, Team Tools context, bottom nav init.
    ════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -120,13 +121,69 @@
         initMap('detailEventMapMobile');
     }
 
+    function evtRunDetailPostRenderUi(ctx) {
+        if (!ctx || !ctx.event || !ctx.eventId) return;
+
+        const {
+            event,
+            eventId,
+            isPast,
+            isClosed,
+            rsvp,
+            myRaffleEntry,
+            entriesClosed,
+            eventIsFull,
+            isHost,
+            canAccessTeamHub,
+            canCreateTeamChat,
+        } = ctx;
+
+        if (!isPast && !isClosed) {
+            const _cdTarget = new Date(event.start_date).getTime();
+            const _cdEls = ['edCdDays', 'edCdHours', 'edCdMins', 'edCdSecs'].map((id) => document.getElementById(id));
+            const _cdCard = document.getElementById('edCountdownCard');
+            function _tickCd() {
+                const diff = _cdTarget - Date.now();
+                if (!_cdEls[0] || diff < 0) { if (_cdCard) _cdCard.style.display = 'none'; return; }
+                const d = Math.floor(diff / 86400000);
+                const h = Math.floor((diff % 86400000) / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                _cdEls[0].textContent = String(d).padStart(2, '0');
+                _cdEls[1].textContent = String(h).padStart(2, '0');
+                _cdEls[2].textContent = String(m).padStart(2, '0');
+                _cdEls[3].textContent = String(s).padStart(2, '0');
+            }
+            _tickCd();
+            const _cdTimer = setInterval(_tickCd, 1000);
+            const _cdCleanup = () => clearInterval(_cdTimer);
+            window.addEventListener('popstate', _cdCleanup, { once: true });
+            document.addEventListener('evtDetailUnmount', _cdCleanup, { once: true });
+        }
+
+        window.__evtTeamToolsCtx = {
+            eventId,
+            myRaffleEntry,
+            entriesClosed,
+            eventIsFull,
+            canManageEvent: isHost,
+            canAccessTeamHub,
+            canCreateTeamChat,
+        };
+        if (typeof window.evtInitBottomNav === 'function') {
+            window.evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub);
+        }
+    }
+
     window.PortalEvents.detail.postRender = {
         runBasics: evtRunDetailPostRenderBasics,
         renderQrCanvases: evtRenderDetailQrCanvases,
         initInlineMaps: evtInitDetailInlineMaps,
+        runUi: evtRunDetailPostRenderUi,
     };
 
     window.evtRunDetailPostRenderBasics = evtRunDetailPostRenderBasics;
     window.evtRenderDetailQrCanvases = evtRenderDetailQrCanvases;
     window.evtInitDetailInlineMaps = evtInitDetailInlineMaps;
+    window.evtRunDetailPostRenderUi = evtRunDetailPostRenderUi;
 })();

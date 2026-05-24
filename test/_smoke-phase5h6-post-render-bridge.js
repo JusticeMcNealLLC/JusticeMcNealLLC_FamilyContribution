@@ -117,9 +117,33 @@ postRender.includes('L.map') && postRender.includes('evtOpenFullscreenMap')
     ? pass('post-render.js owns inline Leaflet + fullscreen click (Phase 5H.6.3)')
     : fail('post-render.js must contain inline Leaflet init');
 
-!postRender.includes('evtInitBottomNav')
-    ? pass('post-render.js does not reference evtInitBottomNav (5H.6.1 scope)')
-    : fail('post-render.js must not move Team Tools in 5H.6.1');
+postRender.includes('function evtRunDetailPostRenderUi')
+    ? pass('evtRunDetailPostRenderUi defined in detail/post-render.js (Phase 5H.6.4)')
+    : fail('evtRunDetailPostRenderUi missing from detail/post-render.js');
+
+postRender.includes('window.evtRunDetailPostRenderUi = evtRunDetailPostRenderUi')
+    ? pass('window.evtRunDetailPostRenderUi assigned')
+    : fail('window.evtRunDetailPostRenderUi not assigned');
+
+postRender.includes('runUi: evtRunDetailPostRenderUi')
+    ? pass('PortalEvents.detail.postRender.runUi present')
+    : fail('PortalEvents.detail.postRender.runUi missing');
+
+postRender.includes('function _tickCd')
+    ? pass('post-render.js owns sidebar countdown (_tickCd) (Phase 5H.6.4)')
+    : fail('post-render.js must contain _tickCd');
+
+postRender.includes('edCountdownCard')
+    ? pass('post-render.js targets #edCountdownCard sidebar countdown')
+    : fail('post-render.js must reference edCountdownCard');
+
+postRender.includes('__evtTeamToolsCtx')
+    ? pass('post-render.js owns Team Tools context assignment (Phase 5H.6.4)')
+    : fail('post-render.js must assign __evtTeamToolsCtx');
+
+postRender.includes('window.evtInitBottomNav')
+    ? pass('post-render.js calls evtInitBottomNav (Phase 5H.6.4)')
+    : fail('post-render.js must call window.evtInitBottomNav');
 
 sections.includes('window._edAvatarData')
     ? pass('sections.js still seeds window._edAvatarData (contract)')
@@ -194,17 +218,25 @@ detail.includes('window.evtInitDetailInlineMaps({ event, showLocation })')
     ? pass('avatar paint logic moved out of detail.js')
     : fail('avatar paint should not remain inline in detail.js');
 
-detail.includes('__evtTeamToolsCtx')
-    ? pass('detail.js still owns Team Tools context assignment')
-    : fail('detail.js must still assign __evtTeamToolsCtx');
+detail.includes('window.evtRunDetailPostRenderUi({')
+    ? pass('evtOpenDetail delegates post-render UI (Phase 5H.6.4)')
+    : fail('detail.js must call window.evtRunDetailPostRenderUi');
 
-detail.includes('evtInitBottomNav')
-    ? pass('detail.js still calls evtInitBottomNav')
-    : fail('detail.js must still call evtInitBottomNav');
+detail.includes('detail.runPostRenderUi = window.evtRunDetailPostRenderUi')
+    ? pass('detail.runPostRenderUi bridge present')
+    : fail('detail.runPostRenderUi bridge missing');
 
-detail.includes('_tickCd')
-    ? pass('detail.js still owns sidebar countdown (_tickCd)')
-    : fail('detail.js must still contain sidebar countdown');
+!detail.includes('__evtTeamToolsCtx')
+    ? pass('Team Tools context moved out of detail.js')
+    : fail('__evtTeamToolsCtx should not remain in detail.js');
+
+!detail.match(/evtInitBottomNav\s*\(/)
+    ? pass('evtInitBottomNav call moved out of detail.js')
+    : fail('evtInitBottomNav should not be called inline in detail.js');
+
+!detail.includes('function _tickCd')
+    ? pass('sidebar countdown moved out of detail.js')
+    : fail('_tickCd should not remain in detail.js');
 
 console.log('\n── Phase 5H.6 — module mode / init.js last ──────────────────────────────');
 
