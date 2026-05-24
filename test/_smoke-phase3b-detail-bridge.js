@@ -47,6 +47,7 @@ const detailFragments = read('js/portal/events/detail/fragments.js');
 const detailData = read('js/portal/events/detail/data.js');
 const detailSections = read('js/portal/events/detail/sections.js');
 const detailPostRender = read('js/portal/events/detail/post-render.js');
+const detailTemplate = read('js/portal/events/detail/template.js');
 
 detail.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
@@ -131,6 +132,22 @@ detail.includes('detail.runPostRenderUi = window.evtRunDetailPostRenderUi')
 !detail.includes('function _tickCd')
     ? pass('sidebar countdown moved out of detail.js (Phase 5H.6.4)')
     : fail('_tickCd should not remain in detail.js');
+
+detailTemplate.includes('function evtBuildDetailTemplate')
+    ? pass('evtBuildDetailTemplate defined in detail/template.js (Phase 5I.1)')
+    : fail('evtBuildDetailTemplate missing from detail/template.js');
+
+detail.includes('window.evtBuildDetailTemplate(templateCtx)')
+    ? pass('detail.js delegates template build to detail/template.js (Phase 5I.1)')
+    : fail('detail.js must call window.evtBuildDetailTemplate(templateCtx)');
+
+!detail.includes('detailView.innerHTML = `')
+    ? pass('detailView.innerHTML template moved out of detail.js (Phase 5I.1)')
+    : fail('detail.js must not contain inline detailView.innerHTML template');
+
+detail.includes('detail.buildTemplate = window.evtBuildDetailTemplate')
+    ? pass('detail.buildTemplate bridge present (Phase 5I.1)')
+    : fail('detail.buildTemplate bridge missing');
 
 !detail.includes('function _buildAvatarHtml')
     ? pass('avatar paint not reimplemented in detail.js (lives in post-render.js)')
@@ -490,6 +507,24 @@ detailPostRender.includes('runUi: evtRunDetailPostRenderUi')
     ? pass('PortalEvents.detail.postRender.runUi present (Phase 5H.6.4)')
     : fail('PortalEvents.detail.postRender.runUi missing');
 
+console.log('\n── detail/template.js — public globals (Phase 5I.1) ───────────────────────');
+
+detailTemplate.includes('(function ()')
+    ? pass('detail/template.js IIFE wrapper present')
+    : fail('detail/template.js IIFE wrapper missing');
+
+detailTemplate.includes('window.evtBuildDetailTemplate = evtBuildDetailTemplate')
+    ? pass('window.evtBuildDetailTemplate assigned in detail/template.js')
+    : fail('window.evtBuildDetailTemplate not assigned');
+
+detailTemplate.includes('build: evtBuildDetailTemplate')
+    ? pass('PortalEvents.detail.template.build present')
+    : fail('PortalEvents.detail.template.build missing');
+
+detailTemplate.includes('id="detailEventMap"')
+    ? pass('detail/template.js owns detailEventMap markup')
+    : fail('detail/template.js must contain #detailEventMap');
+
 !detail.includes('evtHandleRaffleEntry(')
     ? pass('RSVP/raffle inline handlers moved out of detail.js (Phase 5H.2)')
     : fail('evtHandleRaffleEntry still inline in detail.js — should be in detail/sections.js');
@@ -727,9 +762,10 @@ FRAGMENTS_INTERNAL_FNS.forEach(fn => {
         : fail(`${fn} still defined in detail.js — should be in fragments.js only`);
 });
 
-detail.includes('const _edMetaRow = window.evtEdMetaRow')
-    ? pass('detail.js aliases _edMetaRow from window.evtEdMetaRow')
-    : fail('detail.js must alias _edMetaRow from fragments export');
+!detail.includes('const _edMetaRow = window.evtEdMetaRow')
+    && detailTemplate.includes('window.evtEdCard')
+    ? pass('fragment aliases moved to template.js (Phase 5I.1)')
+    : fail('detail.js must not alias _edMetaRow; template.js must use window.evtEdCard');
 
 const INTERNAL_FNS = [
     'async function evtOpenDetail',
@@ -788,6 +824,7 @@ const fragmentsTag = 'src="../js/portal/events/detail/fragments.js"';
 const dataTag = 'src="../js/portal/events/detail/data.js"';
 const sectionsTag = 'src="../js/portal/events/detail/sections.js"';
 const postRenderTag = 'src="../js/portal/events/detail/post-render.js"';
+const templateTag = 'src="../js/portal/events/detail/template.js"';
 const detailTag = 'src="../js/portal/events/detail.js"';
 const chatIdx = html.indexOf(chatTag);
 const toolsIdx = html.indexOf(toolsTag);
@@ -798,6 +835,7 @@ const fragmentsIdx = html.indexOf(fragmentsTag);
 const dataIdx = html.indexOf(dataTag);
 const sectionsIdx = html.indexOf(sectionsTag);
 const postRenderIdx = html.indexOf(postRenderTag);
+const templateIdx = html.indexOf(templateTag);
 const detailIdx = html.indexOf(detailTag);
 html.includes(chatTag)
     ? pass('team/chat.js is referenced in events.html')
@@ -826,6 +864,9 @@ html.includes(sectionsTag)
 html.includes(postRenderTag)
     ? pass('detail/post-render.js is referenced in events.html')
     : fail('detail/post-render.js not in events.html — would never load');
+html.includes(templateTag)
+    ? pass('detail/template.js is referenced in events.html')
+    : fail('detail/template.js not in events.html — would never load');
 !html.includes('js/portal/events/detail/exports.js')
     ? pass('detail/exports.js not in events.html (Phase 5E.1 — no loader change)')
     : fail('detail/exports.js must not be added in 5E.1 — use nested aliases in detail.js only');
@@ -834,12 +875,12 @@ html.includes(postRenderTag)
     : fail('compat/window-exports.js must not be wired in 5E.1');
 chatIdx >= 0 && toolsIdx >= 0 && presentationIdx >= 0 && raffleRenderIdx >= 0
     && mapOverlayIdx >= 0 && fragmentsIdx >= 0 && dataIdx >= 0 && sectionsIdx >= 0
-    && postRenderIdx >= 0 && detailIdx >= 0
+    && postRenderIdx >= 0 && templateIdx >= 0 && detailIdx >= 0
     && chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < raffleRenderIdx
     && raffleRenderIdx < mapOverlayIdx && mapOverlayIdx < fragmentsIdx && fragmentsIdx < dataIdx
-    && dataIdx < sectionsIdx && sectionsIdx < postRenderIdx && postRenderIdx < detailIdx
-    ? pass('load order: chat → tools → presentation → raffle-render → map-overlay → fragments → data → sections → post-render → detail')
-    : fail('script order must be chat → tools → presentation → raffle-render → map-overlay → fragments → data → sections → post-render → detail');
+    && dataIdx < sectionsIdx && sectionsIdx < postRenderIdx && postRenderIdx < templateIdx && templateIdx < detailIdx
+    ? pass('load order: chat → tools → … → sections → post-render → template → detail')
+    : fail('script order must be … → sections → post-render → template → detail');
 
 const initTag = 'src="../js/portal/events/init.js"';
 const portalBlock = html.slice(html.indexOf('<!-- Events modules'));

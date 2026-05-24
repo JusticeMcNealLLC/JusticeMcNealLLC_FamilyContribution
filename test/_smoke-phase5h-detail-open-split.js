@@ -35,7 +35,8 @@ const detailData = read('js/portal/events/detail/data.js');
 const detailSections = read('js/portal/events/detail/sections.js');
 const detail = read('js/portal/events/detail.js');
 const html = read('portal/events.html');
-const handlerSources = detail + '\n' + detailSections;
+const detailTemplate = read('js/portal/events/detail/template.js');
+const handlerSources = detail + '\n' + detailSections + '\n' + detailTemplate;
 
 console.log('\n── Phase 5H.1 — detail/data.js ───────────────────────────────────────────');
 
@@ -315,6 +316,18 @@ detail.includes('detail.runPostRenderUi = window.evtRunDetailPostRenderUi')
 !detail.includes('function _tickCd')
     ? pass('sidebar countdown moved out of detail.js (Phase 5H.6.4)')
     : fail('_tickCd should not remain in detail.js');
+
+detail.includes('window.evtBuildDetailTemplate(templateCtx)')
+    ? pass('evtOpenDetail delegates template build (Phase 5I.1)')
+    : fail('detail.js must call window.evtBuildDetailTemplate(templateCtx)');
+
+!detail.includes('detailView.innerHTML = `')
+    ? pass('detailView.innerHTML template moved out of detail.js (Phase 5I.1)')
+    : fail('detail.js must not contain inline detailView.innerHTML template');
+
+detail.includes('detail.buildTemplate = window.evtBuildDetailTemplate')
+    ? pass('detail.buildTemplate bridge present (Phase 5I.1)')
+    : fail('detail.buildTemplate bridge missing');
 
 console.log('\n── Phase 5H — inline handler names preserved ─────────────────────────────');
 

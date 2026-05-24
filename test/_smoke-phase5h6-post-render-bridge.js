@@ -153,20 +153,26 @@ console.log('\n── Phase 5H.6 — portal/events.html load order ────�
 
 const sectionsTag = 'src="../js/portal/events/detail/sections.js"';
 const postRenderTag = 'src="../js/portal/events/detail/post-render.js"';
+const templateTag = 'src="../js/portal/events/detail/template.js"';
 const detailTag = 'src="../js/portal/events/detail.js"';
 
 html.includes(postRenderTag)
     ? pass('detail/post-render.js script tag in events.html')
     : fail('detail/post-render.js script tag missing from events.html');
 
+html.includes(templateTag)
+    ? pass('detail/template.js script tag in events.html (Phase 5I.1)')
+    : fail('detail/template.js script tag missing from events.html');
+
 const sectionsIdx = html.indexOf(sectionsTag);
 const postRenderIdx = html.indexOf(postRenderTag);
+const templateIdx = html.indexOf(templateTag);
 const detailIdx = html.indexOf(detailTag);
 
-sectionsIdx >= 0 && postRenderIdx >= 0 && detailIdx >= 0
-    && sectionsIdx < postRenderIdx && postRenderIdx < detailIdx
-    ? pass('load order: sections.js → post-render.js → detail.js')
-    : fail('sections → post-render → detail load order incorrect');
+sectionsIdx >= 0 && postRenderIdx >= 0 && templateIdx >= 0 && detailIdx >= 0
+    && sectionsIdx < postRenderIdx && postRenderIdx < templateIdx && templateIdx < detailIdx
+    ? pass('load order: sections.js → post-render.js → template.js → detail.js')
+    : fail('sections → post-render → template → detail load order incorrect');
 
 console.log('\n── Phase 5H.6 — detail.js orchestrator ─────────────────────────────────────');
 
