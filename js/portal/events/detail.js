@@ -25,7 +25,7 @@
 // Fragment helpers — Phase 5F-prep: js/portal/events/detail/fragments.js
 // Detail data context — Phase 5H.1: js/portal/events/detail/data.js
 // Detail section HTML — Phase 5H.2–5H.5: js/portal/events/detail/sections.js
-// Detail post-render basics — Phase 5H.6.1: js/portal/events/detail/post-render.js
+// Detail post-render — Phase 5H.6.1–5H.6.2: js/portal/events/detail/post-render.js
 
 const _edMetaRow = window.evtEdMetaRow;
 const _edPill = window.evtEdPill;
@@ -481,14 +481,9 @@ async function evtOpenDetail(eventId) {
     evtInitHeroCollapse();
     window.evtRunDetailPostRenderBasics({ eventId });
 
-    // QR codes + map after DOM render
+    // QR canvas + inline map after DOM render
     setTimeout(() => {
-        if (memberGoing && event.checkin_mode === 'attendee_ticket') {
-            const canvas = document.getElementById('myTicketQR');
-            if (canvas && typeof QRCode !== 'undefined') {
-                QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`, { width: 180, margin: 2 });
-            }
-        }
+        window.evtRenderDetailQrCanvases({ event, eventId, rsvp, memberGoing });
         // venueQR canvas moved into Manage Event sheet
         if (showLocation && event.location_lat && event.location_lng && typeof L !== 'undefined') {
             const _initMap = (id) => {
@@ -579,6 +574,7 @@ if (window.PortalEvents.detail.postRender) {
 }
 detail.loadContext = window.evtLoadDetailContext;
 detail.runPostRenderBasics = window.evtRunDetailPostRenderBasics;
+detail.renderQrCanvases = window.evtRenderDetailQrCanvases;
 
 // Pre-register known sub-modules (M3 management sheet will register itself here)
 detail.register('rsvp',        { handle: () => window.evtHandleRsvp });

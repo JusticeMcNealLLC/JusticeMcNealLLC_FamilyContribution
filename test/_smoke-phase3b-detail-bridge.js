@@ -76,9 +76,13 @@ detail.includes('detail.register(')
     ? pass('detail.js still contains detail.register block')
     : fail('detail.register block missing from detail.js');
 
-detail.includes('QRCode.toCanvas') && detail.includes("_initMap('detailEventMap')")
-    ? pass('detail.js still owns QR canvas + inline Leaflet post-render (5H.6.1 scope)')
-    : fail('detail.js must still contain QRCode.toCanvas and inline map init');
+!detail.includes('QRCode.toCanvas')
+    ? pass('QRCode.toCanvas moved out of detail.js (Phase 5H.6.2)')
+    : fail('QRCode.toCanvas should not remain in detail.js');
+
+detail.includes("_initMap('detailEventMap')")
+    ? pass('detail.js still owns inline Leaflet post-render (5H.6.2 scope)')
+    : fail('detail.js must still contain inline map init');
 
 detail.includes('__evtTeamToolsCtx') && detail.includes('evtInitBottomNav')
     ? pass('detail.js still owns Team Tools context + bottom nav init')
@@ -421,6 +425,22 @@ detail.includes('detail.postRender = window.PortalEvents.detail.postRender')
 detail.includes('detail.runPostRenderBasics = window.evtRunDetailPostRenderBasics')
     ? pass('detail.runPostRenderBasics bridge present')
     : fail('detail.runPostRenderBasics bridge missing');
+
+detailPostRender.includes('function evtRenderDetailQrCanvases')
+    ? pass('evtRenderDetailQrCanvases defined in detail/post-render.js (Phase 5H.6.2)')
+    : fail('evtRenderDetailQrCanvases missing from detail/post-render.js');
+
+detailPostRender.includes('QRCode.toCanvas')
+    ? pass('detail/post-render.js owns QRCode.toCanvas (Phase 5H.6.2)')
+    : fail('detail/post-render.js must contain QRCode.toCanvas');
+
+detail.includes('window.evtRenderDetailQrCanvases({ event, eventId, rsvp, memberGoing })')
+    ? pass('detail.js delegates QR canvas paint to post-render.js (Phase 5H.6.2)')
+    : fail('detail.js must call window.evtRenderDetailQrCanvases');
+
+detail.includes('detail.renderQrCanvases = window.evtRenderDetailQrCanvases')
+    ? pass('detail.renderQrCanvases bridge present (Phase 5H.6.2)')
+    : fail('detail.renderQrCanvases bridge missing');
 
 !detail.includes('evtHandleRaffleEntry(')
     ? pass('RSVP/raffle inline handlers moved out of detail.js (Phase 5H.2)')

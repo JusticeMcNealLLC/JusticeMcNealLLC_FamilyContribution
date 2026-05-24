@@ -77,9 +77,25 @@ postRender.includes('evt-host-dropdown')
     ? pass('host dropdown outside-click listener in post-render.js')
     : fail('host dropdown listener missing from post-render.js');
 
-!postRender.includes('QRCode')
-    ? pass('post-render.js does not reference QRCode (5H.6.1 scope)')
-    : fail('post-render.js must not move QR logic in 5H.6.1');
+postRender.includes('function evtRenderDetailQrCanvases')
+    ? pass('evtRenderDetailQrCanvases defined in detail/post-render.js')
+    : fail('evtRenderDetailQrCanvases missing from detail/post-render.js');
+
+postRender.includes('window.evtRenderDetailQrCanvases = evtRenderDetailQrCanvases')
+    ? pass('window.evtRenderDetailQrCanvases assigned')
+    : fail('window.evtRenderDetailQrCanvases not assigned');
+
+postRender.includes('renderQrCanvases: evtRenderDetailQrCanvases')
+    ? pass('PortalEvents.detail.postRender.renderQrCanvases present')
+    : fail('PortalEvents.detail.postRender.renderQrCanvases missing');
+
+postRender.includes('QRCode.toCanvas')
+    ? pass('post-render.js owns QRCode.toCanvas (Phase 5H.6.2)')
+    : fail('post-render.js must contain QRCode.toCanvas');
+
+postRender.includes('myTicketQR')
+    ? pass('post-render.js targets #myTicketQR canvas')
+    : fail('post-render.js must paint #myTicketQR');
 
 !postRender.includes('L.map')
     ? pass('post-render.js does not reference Leaflet L.map (5H.6.1 scope)')
@@ -130,6 +146,18 @@ detail.includes('detail.runPostRenderBasics = window.evtRunDetailPostRenderBasic
     ? pass('detail.runPostRenderBasics bridge present')
     : fail('detail.runPostRenderBasics bridge missing');
 
+detail.includes('detail.renderQrCanvases = window.evtRenderDetailQrCanvases')
+    ? pass('detail.renderQrCanvases bridge present')
+    : fail('detail.renderQrCanvases bridge missing');
+
+detail.includes('window.evtRenderDetailQrCanvases({ event, eventId, rsvp, memberGoing })')
+    ? pass('evtOpenDetail delegates QR canvas paint')
+    : fail('detail.js must call window.evtRenderDetailQrCanvases');
+
+!detail.includes('QRCode.toCanvas')
+    ? pass('QRCode.toCanvas moved out of detail.js')
+    : fail('QRCode.toCanvas should not remain in detail.js');
+
 !detail.includes('evtLoadComments(eventId)')
     ? pass('evtLoadComments call moved out of detail.js')
     : fail('evtLoadComments should not remain inline in detail.js');
@@ -137,10 +165,6 @@ detail.includes('detail.runPostRenderBasics = window.evtRunDetailPostRenderBasic
 !detail.includes('edAvatarStackMobile-${eventId}')
     ? pass('avatar paint logic moved out of detail.js')
     : fail('avatar paint should not remain inline in detail.js');
-
-detail.includes('QRCode.toCanvas')
-    ? pass('detail.js still owns QRCode.toCanvas (5H.6.2+ slice)')
-    : fail('detail.js must still contain QR canvas paint');
 
 detail.includes('_initMap(\'detailEventMap\')')
     ? pass('detail.js still owns inline Leaflet init')

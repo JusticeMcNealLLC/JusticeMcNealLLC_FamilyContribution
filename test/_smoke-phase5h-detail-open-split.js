@@ -280,6 +280,14 @@ detail.includes('detail.postRender = window.PortalEvents.detail.postRender')
     ? pass('detail.postRender bridge present (Phase 5H.6.1)')
     : fail('detail.postRender bridge missing');
 
+detail.includes('window.evtRenderDetailQrCanvases({ event, eventId, rsvp, memberGoing })')
+    ? pass('evtOpenDetail delegates QR canvas paint (Phase 5H.6.2)')
+    : fail('detail.js must call window.evtRenderDetailQrCanvases');
+
+!detail.includes('QRCode.toCanvas')
+    ? pass('QRCode.toCanvas moved out of detail.js (Phase 5H.6.2)')
+    : fail('QRCode.toCanvas should not remain in detail.js');
+
 console.log('\n── Phase 5H — inline handler names preserved ─────────────────────────────');
 
 const CRITICAL_HANDLERS = [

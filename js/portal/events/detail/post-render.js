@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════
-   Portal Events — Detail post-render hooks (Phase 5H.6.1)
+   Portal Events — Detail post-render hooks (Phase 5H.6.1–5H.6.2)
    Classic IIFE; loads after detail/sections.js, before detail.js.
-   Avatar paint, comments load, host dropdown listener.
+   Avatar paint, comments load, host dropdown listener, ticket QR canvas paint.
    ════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -68,9 +68,28 @@
         _paintAttendeeAvatars(eventId);
     }
 
+    function evtRenderDetailQrCanvases(ctx) {
+        if (!ctx || !ctx.event) return;
+        const { event, rsvp, memberGoing } = ctx;
+        if (!memberGoing || event.checkin_mode !== 'attendee_ticket') return;
+        if (!rsvp || !rsvp.qr_token) return;
+        if (typeof QRCode === 'undefined') return;
+
+        const canvas = document.getElementById('myTicketQR');
+        if (!canvas) return;
+
+        QRCode.toCanvas(
+            canvas,
+            `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`,
+            { width: 180, margin: 2 }
+        );
+    }
+
     window.PortalEvents.detail.postRender = {
         runBasics: evtRunDetailPostRenderBasics,
+        renderQrCanvases: evtRenderDetailQrCanvases,
     };
 
     window.evtRunDetailPostRenderBasics = evtRunDetailPostRenderBasics;
+    window.evtRenderDetailQrCanvases = evtRenderDetailQrCanvases;
 })();
