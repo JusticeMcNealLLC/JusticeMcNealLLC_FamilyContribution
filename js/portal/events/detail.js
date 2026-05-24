@@ -24,7 +24,7 @@
 // Presentation helpers — Phase 5D.1: js/portal/events/detail/presentation.js
 // Fragment helpers — Phase 5F-prep: js/portal/events/detail/fragments.js
 // Detail data context — Phase 5H.1: js/portal/events/detail/data.js
-// Detail section HTML — Phase 5H.2–5H.4: js/portal/events/detail/sections.js
+// Detail section HTML — Phase 5H.2–5H.5: js/portal/events/detail/sections.js
 
 const _edMetaRow = window.evtEdMetaRow;
 const _edPill = window.evtEdPill;
@@ -167,76 +167,18 @@ async function evtOpenDetail(eventId) {
 
     const hostControlsHtml = window.evtBuildDetailHostControlsHtml(ctx);
     const attendeePreviewHtml = window.evtBuildDetailAttendeePreviewHtml(ctx);
-    const totalGoing = goingList.length + guestGoingList.length;
     const shareCardHtml = window.evtBuildDetailShareCardHtml(ctx);
+    const organizerHtml = window.evtBuildDetailOrganizerHtml(ctx);
+    const teamHubCardHtml = window.evtBuildDetailTeamHubHtml(ctx);
+    const relatedHtml = window.evtBuildDetailRelatedEventsHtml(ctx);
+    const mobileAttendeesHtml = window.evtBuildDetailMobileAttendeesHtml(ctx);
+    const mobileHostedHtml = window.evtBuildDetailMobileHostedHtml(ctx);
+    const pageHeaderActionsHtml = window.evtBuildDetailPageHeaderActionsHtml(ctx);
 
     // ── Description ──────────────────────────────────────
     const rawDesc = event.description || '';
     const descHtml = rawDesc ? window.evtMiniMarkdown(rawDesc) : '<span class="ed-no-desc">No details yet — check back closer to the event.</span>';
     const descIsLong = rawDesc.length > 500;
-
-    // ── Organizer row ────────────────────────────────────
-    let organizerHtml = '';
-    if (!isLlc && event.created_by) {
-        const avatarImg = creatorProfile.profile_picture_url
-            ? `<img src="${creatorProfile.profile_picture_url}" class="ed-org-avatar" alt="${evtEscapeHtml(cpName)}">`
-            : `<div class="ed-org-avatar ed-org-avatar-fallback">${cpInitials}</div>`;
-        const avatarEl = cpBadge
-            ? `<div style="position:relative;flex-shrink:0">${avatarImg}<div style="position:absolute;bottom:-2px;right:-2px;transform:scale(.65);transform-origin:bottom right">${cpBadge}</div></div>`
-            : avatarImg;
-        organizerHtml = `
-            <a href="profile.html?id=${creatorProfile.id}" class="ed-org-block">
-                <div class="ed-org-block-row">
-                    ${avatarEl}
-                    <div>
-                        <span class="ed-org-block-label">Hosted By</span>
-                        <span class="ed-org-name-row"><span class="ed-org-name">${evtEscapeHtml(cpName)}</span><svg class="ed-org-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg></span>
-                    </div>
-                </div>
-            </a>
-        `;
-    } else if (isLlc) {
-        organizerHtml = `
-            <div class="ed-org-block ed-org-block-llc">
-                <div class="ed-org-block-row">
-                    <div class="ed-org-avatar ed-org-avatar-llc">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-                    </div>
-                    <div>
-                        <span class="ed-org-block-label">Hosted By</span>
-                        <span class="ed-org-name">LLC</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    // ── Team hub card (admin dashboard access without manage-event host UI) ──
-    let teamHubCardHtml = '';
-    if (canAccessTeamHub && !isHost) {
-        teamHubCardHtml = `
-            <div class="ed-card ed-card-rsvp event-detail-card-tight portal-action-card">
-                <p class="ed-summary-heading">Event Team</p>
-                <p class="ed-hint">Staff tools for coordination and your own attendance.</p>
-                <button type="button" onclick="evtOpenTeamToolsPanel('${eventId}')" class="ed-outline-btn" aria-label="Open event team tools">Team</button>
-            </div>`;
-    }
-
-    // ── Related Events ───────────────────────────────────
-    let relatedHtml = '';
-    if (typeof evtAllEvents !== 'undefined' && evtAllEvents.length > 1) {
-        const upcoming = evtAllEvents.filter(e => e.id !== eventId && e.status !== 'cancelled').slice(0, 4);
-        if (upcoming.length) {
-            const cards = upcoming.map(e => {
-                const d = new Date(e.start_date);
-                const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                const imgHtml = e.banner_url ? `<img src="${e.banner_url}" alt="" loading="lazy">` : `<div style="height:120px;background:linear-gradient(135deg,#6366f1,#8b5cf6)"></div>`;
-                const onclickHandler = e.slug ? `evtNavigateToEvent('${e.slug}')` : `evtOpenDetail('${e.id}')`;
-                return `<div class="evt-related-card" onclick="${onclickHandler}">${imgHtml}<div class="evt-related-card-body"><p class="evt-related-card-title">${evtEscapeHtml(e.title)}</p><p class="evt-related-card-meta">${dateLabel}${e.location_nickname ? ' · ' + evtEscapeHtml(e.location_nickname) : ''}</p></div></div>`;
-            }).join('');
-            relatedHtml = `${_edSectionHead('More Events')}<div class="evt-related-scroll">${cards}</div>`;
-        }
-    }
 
     // ── Collapsible cost wrapper ─────────────────────────
     if (costBreakdownHtml && event.rsvp_cost_cents) {
@@ -267,17 +209,7 @@ async function evtOpenDetail(eventId) {
                     <p class="ed-page-header-sub">Discover and join events in your community.</p>
                 </div>
                 <div class="ed-page-header-actions">
-                    <button onclick="evtCopyShareUrl('${event.slug}')" class="ed-page-header-btn" aria-label="Share event">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                        <span class="ed-page-header-btn-label">Share</span>
-                    </button>
-                    <button onclick="event.stopPropagation();evtDownloadIcs('${eventId}')" class="ed-page-header-btn ed-page-header-btn-cal" aria-label="Add to calendar">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        <span class="ed-page-header-btn-label">Add to Calendar</span>
-                    </button>
-                    <button onclick="event.stopPropagation();evtDownloadIcs('${eventId}')" class="ed-page-header-btn ed-page-header-btn-bookmark" aria-label="Save event">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
-                    </button>
+                    ${pageHeaderActionsHtml}
                 </div>
             </div>
         </div>
@@ -360,28 +292,9 @@ async function evtOpenDetail(eventId) {
                         </div>
                     </div>` : ''}
                     <!-- Mobile Attendees Card (S7) -->
-                    ${totalGoing > 0 || maybeList.length > 0 ? `
-                    <div class="ed-mobile-attendees-card">
-                        <div class="ed-avatar-stack ed-avatar-stack-sm" id="edAvatarStackMobile-${eventId}"></div>
-                        <span class="ed-mobile-att-count">${totalGoing > 0 ? `${totalGoing} going` : ''}${totalGoing > 0 && maybeList.length > 0 ? ' · ' : ''}${maybeList.length > 0 ? `${maybeList.length} interested` : ''}</span>
-                    </div>` : ''}
+                    ${mobileAttendeesHtml}
                     <!-- Mobile Hosted By Card (S8) -->
-                    ${creatorProfile || isLlc ? `
-                    <div class="ed-mobile-hosted-card" ${creatorProfile ? `onclick="window.location.href='profile.html?id=${creatorProfile.id}'" style="cursor:pointer"` : ''}>
-                        <div class="ed-mh-avatar-wrap" style="position:relative;flex-shrink:0">
-                            ${creatorProfile?.profile_picture_url
-                                ? `<img src="${creatorProfile.profile_picture_url}" class="ed-mh-avatar" alt="${evtEscapeHtml(cpName)}">`
-                                : `<div class="ed-mh-avatar ed-mh-avatar-fallback">${isLlc ? `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>` : cpInitials}</div>`
-                            }
-                            ${cpBadge ? cpBadge : ''}
-                        </div>
-                        <div class="ed-mh-body">
-                            <span class="ed-mh-label">Hosted by</span>
-                            <span class="ed-mh-name">${isLlc ? 'Justice McNeal LLC' : evtEscapeHtml(cpName)}</span>
-                            ${!isLlc ? `<span class="ed-mh-sub">Organizer of this event</span>` : ''}
-                        </div>
-                        ${creatorProfile ? `<svg class="ed-mh-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>` : ''}
-                    </div>` : ''}
+                    ${mobileHostedHtml}
                     <!-- About Card -->
                     <div class="ed-about-grid event-detail-card">
                         <div class="ed-about-left">

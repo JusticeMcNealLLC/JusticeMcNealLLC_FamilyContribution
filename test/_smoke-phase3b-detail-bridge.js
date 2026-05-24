@@ -258,6 +258,19 @@ detailSections.includes('function evtBuildDetailHostControlsHtml')
         : fail(`${label} missing from detail/sections.js`);
 });
 
+[
+    ['function evtBuildDetailOrganizerHtml', 'evtBuildDetailOrganizerHtml'],
+    ['function evtBuildDetailTeamHubHtml', 'evtBuildDetailTeamHubHtml'],
+    ['function evtBuildDetailRelatedEventsHtml', 'evtBuildDetailRelatedEventsHtml'],
+    ['function evtBuildDetailMobileAttendeesHtml', 'evtBuildDetailMobileAttendeesHtml'],
+    ['function evtBuildDetailMobileHostedHtml', 'evtBuildDetailMobileHostedHtml'],
+    ['function evtBuildDetailPageHeaderActionsHtml', 'evtBuildDetailPageHeaderActionsHtml'],
+].forEach(([substr, label]) => {
+    detailSections.includes(substr)
+        ? pass(`${label} defined in detail/sections.js (Phase 5H.5)`)
+        : fail(`${label} missing from detail/sections.js`);
+});
+
 detailSections.includes('PortalEvents.detail.sections')
     ? pass('PortalEvents.detail.sections namespace present')
     : fail('PortalEvents.detail.sections namespace missing');
@@ -313,6 +326,30 @@ detail.includes('window.evtBuildDetailAttendeePreviewHtml(ctx)')
 detail.includes('window.evtBuildDetailShareCardHtml(ctx)')
     ? pass('detail.js calls window.evtBuildDetailShareCardHtml (Phase 5H.4)')
     : fail('detail.js must call window.evtBuildDetailShareCardHtml');
+
+detail.includes('window.evtBuildDetailOrganizerHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailOrganizerHtml (Phase 5H.5)')
+    : fail('detail.js must call window.evtBuildDetailOrganizerHtml');
+
+detail.includes('window.evtBuildDetailTeamHubHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailTeamHubHtml (Phase 5H.5)')
+    : fail('detail.js must call window.evtBuildDetailTeamHubHtml');
+
+detail.includes('window.evtBuildDetailRelatedEventsHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailRelatedEventsHtml (Phase 5H.5)')
+    : fail('detail.js must call window.evtBuildDetailRelatedEventsHtml');
+
+detail.includes('window.evtBuildDetailMobileAttendeesHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailMobileAttendeesHtml (Phase 5H.5)')
+    : fail('detail.js must call window.evtBuildDetailMobileAttendeesHtml');
+
+detail.includes('window.evtBuildDetailMobileHostedHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailMobileHostedHtml (Phase 5H.5)')
+    : fail('detail.js must call window.evtBuildDetailMobileHostedHtml');
+
+detail.includes('window.evtBuildDetailPageHeaderActionsHtml(ctx)')
+    ? pass('detail.js calls window.evtBuildDetailPageHeaderActionsHtml (Phase 5H.5)')
+    : fail('detail.js must call window.evtBuildDetailPageHeaderActionsHtml');
 
 !detail.includes('evtClaimWaitlistSpot(')
     ? pass('waitlist inline handlers moved out of detail.js (Phase 5H.3)')

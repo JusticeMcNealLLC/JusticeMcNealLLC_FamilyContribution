@@ -51,7 +51,7 @@ detailData.includes('PortalEvents.detail.data')
     ? pass('PortalEvents.detail.data namespace present')
     : fail('PortalEvents.detail.data namespace missing');
 
-console.log('\n── Phase 5H.2–5H.4 — detail/sections.js ────────────────────────────────────');
+console.log('\n── Phase 5H.2–5H.5 — detail/sections.js ────────────────────────────────────');
 
 fs.existsSync(path.join(root, 'js/portal/events/detail/sections.js'))
     ? pass('js/portal/events/detail/sections.js exists')
@@ -100,6 +100,23 @@ detailSections.includes('function evtBuildDetailHostControlsHtml')
         ? pass(`${name} defined in detail/sections.js (Phase 5H.4)`)
         : fail(`${name} missing from detail/sections.js`);
 });
+
+[
+    'evtBuildDetailOrganizerHtml',
+    'evtBuildDetailTeamHubHtml',
+    'evtBuildDetailRelatedEventsHtml',
+    'evtBuildDetailMobileAttendeesHtml',
+    'evtBuildDetailMobileHostedHtml',
+    'evtBuildDetailPageHeaderActionsHtml',
+].forEach((name) => {
+    detailSections.includes(`function ${name}`)
+        ? pass(`${name} defined in detail/sections.js (Phase 5H.5)`)
+        : fail(`${name} missing from detail/sections.js`);
+});
+
+detailSections.includes('buildOrganizerHtml: evtBuildDetailOrganizerHtml')
+    ? pass('PortalEvents.detail.sections.buildOrganizerHtml present')
+    : fail('PortalEvents.detail.sections.buildOrganizerHtml missing');
 
 detailSections.includes('buildThresholdHtml: evtBuildDetailThresholdHtml')
     ? pass('PortalEvents.detail.sections.buildThresholdHtml present')
@@ -200,6 +217,38 @@ detail.includes('window.evtBuildDetailAttendeePreviewHtml(ctx)')
 detail.includes('window.evtBuildDetailShareCardHtml(ctx)')
     ? pass('evtOpenDetail delegates share card HTML to sections.js')
     : fail('detail.js must call window.evtBuildDetailShareCardHtml');
+
+detail.includes('window.evtBuildDetailOrganizerHtml(ctx)')
+    ? pass('evtOpenDetail delegates organizer HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailOrganizerHtml');
+
+detail.includes('window.evtBuildDetailTeamHubHtml(ctx)')
+    ? pass('evtOpenDetail delegates team hub HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailTeamHubHtml');
+
+detail.includes('window.evtBuildDetailRelatedEventsHtml(ctx)')
+    ? pass('evtOpenDetail delegates related events HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailRelatedEventsHtml');
+
+detail.includes('window.evtBuildDetailMobileAttendeesHtml(ctx)')
+    ? pass('evtOpenDetail delegates mobile attendees HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailMobileAttendeesHtml');
+
+detail.includes('window.evtBuildDetailMobileHostedHtml(ctx)')
+    ? pass('evtOpenDetail delegates mobile hosted HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailMobileHostedHtml');
+
+detail.includes('window.evtBuildDetailPageHeaderActionsHtml(ctx)')
+    ? pass('evtOpenDetail delegates page header actions HTML to sections.js')
+    : fail('detail.js must call window.evtBuildDetailPageHeaderActionsHtml');
+
+!detail.includes('ed-org-block ed-org-block-llc')
+    ? pass('organizer block moved out of detail.js (Phase 5H.5)')
+    : fail('organizer LLC block still inline in detail.js');
+
+!detail.includes('ed-mobile-attendees-card')
+    ? pass('mobile attendees card moved out of detail.js (Phase 5H.5)')
+    : fail('mobile attendees card still inline in detail.js');
 
 !detail.includes('LLC provides transportation')
     ? pass('transport notice moved out of detail.js (Phase 5H.4)')
