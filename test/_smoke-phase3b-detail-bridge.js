@@ -46,6 +46,7 @@ const detailMapOverlay = read('js/portal/events/detail/map-overlay.js');
 const detailFragments = read('js/portal/events/detail/fragments.js');
 const detailData = read('js/portal/events/detail/data.js');
 const detailSections = read('js/portal/events/detail/sections.js');
+const detailPostRender = read('js/portal/events/detail/post-render.js');
 
 detail.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
@@ -59,9 +60,41 @@ detail.includes("'use strict';")
     ? fail('Native export statement found — breaks classic script loading')
     : pass('No native export statement (stays classic-script safe)');
 
-detail.length > 40000
-    ? pass(`File size reasonable (${detail.length.toLocaleString()} chars — no accidental truncation)`)
-    : fail('detail.js appears truncated (< 40k chars)', `actual: ${detail.length}`);
+detail.includes('async function evtOpenDetail')
+    ? pass('detail.js still defines async function evtOpenDetail')
+    : fail('evtOpenDetail missing from detail.js');
+
+detail.includes('window.evtRunDetailPostRenderBasics({ eventId })')
+    ? pass('detail.js delegates post-render basics to post-render.js')
+    : fail('detail.js must call window.evtRunDetailPostRenderBasics');
+
+detail.includes('window.evtOpenDetail            = evtOpenDetail')
+    ? pass('detail.js still exports evtOpenDetail on window')
+    : fail('window.evtOpenDetail assignment missing from detail.js');
+
+detail.includes('detail.register(')
+    ? pass('detail.js still contains detail.register block')
+    : fail('detail.register block missing from detail.js');
+
+detail.includes('QRCode.toCanvas') && detail.includes("_initMap('detailEventMap')")
+    ? pass('detail.js still owns QR canvas + inline Leaflet post-render (5H.6.1 scope)')
+    : fail('detail.js must still contain QRCode.toCanvas and inline map init');
+
+detail.includes('__evtTeamToolsCtx') && detail.includes('evtInitBottomNav')
+    ? pass('detail.js still owns Team Tools context + bottom nav init')
+    : fail('detail.js must still assign __evtTeamToolsCtx and call evtInitBottomNav');
+
+detail.includes('_tickCd')
+    ? pass('detail.js still owns sidebar countdown post-render')
+    : fail('detail.js must still contain sidebar countdown (_tickCd)');
+
+!detail.includes('function _buildAvatarHtml')
+    ? pass('avatar paint not reimplemented in detail.js (lives in post-render.js)')
+    : fail('_buildAvatarHtml should not remain in detail.js');
+
+!detail.includes('evtLoadComments(eventId)')
+    ? pass('evtLoadComments call not inline in detail.js (delegated to post-render)')
+    : fail('evtLoadComments(eventId) should be delegated via evtRunDetailPostRenderBasics');
 
 // ─── Namespace infrastructure ──────────────────────────────
 console.log('\n── detail.js — window.PortalEvents.detail infrastructure ─────────────────');
@@ -358,6 +391,36 @@ detail.includes('window.evtBuildDetailPageHeaderActionsHtml(ctx)')
 detail.includes('detail.sections = window.PortalEvents.detail.sections')
     ? pass('detail.sections bridges to PortalEvents.detail.sections')
     : fail('detail.sections bridge missing');
+
+console.log('\n── detail/post-render.js — public globals (Phase 5H.6.1) ─────────────────');
+
+detailPostRender.includes('(function ()')
+    ? pass('detail/post-render.js IIFE wrapper present')
+    : fail('detail/post-render.js IIFE wrapper missing');
+
+detailPostRender.includes('function evtRunDetailPostRenderBasics')
+    ? pass('evtRunDetailPostRenderBasics defined in detail/post-render.js')
+    : fail('evtRunDetailPostRenderBasics missing from detail/post-render.js');
+
+detailPostRender.includes('window.evtRunDetailPostRenderBasics = evtRunDetailPostRenderBasics')
+    ? pass('window.evtRunDetailPostRenderBasics assigned in detail/post-render.js')
+    : fail('window.evtRunDetailPostRenderBasics not assigned');
+
+detailPostRender.includes('PortalEvents.detail.postRender')
+    ? pass('PortalEvents.detail.postRender namespace present')
+    : fail('PortalEvents.detail.postRender namespace missing');
+
+detail.includes('window.evtRunDetailPostRenderBasics({ eventId })')
+    ? pass('detail.js calls window.evtRunDetailPostRenderBasics (Phase 5H.6.1)')
+    : fail('detail.js must call window.evtRunDetailPostRenderBasics');
+
+detail.includes('detail.postRender = window.PortalEvents.detail.postRender')
+    ? pass('detail.postRender bridges to PortalEvents.detail.postRender')
+    : fail('detail.postRender bridge missing');
+
+detail.includes('detail.runPostRenderBasics = window.evtRunDetailPostRenderBasics')
+    ? pass('detail.runPostRenderBasics bridge present')
+    : fail('detail.runPostRenderBasics bridge missing');
 
 !detail.includes('evtHandleRaffleEntry(')
     ? pass('RSVP/raffle inline handlers moved out of detail.js (Phase 5H.2)')
@@ -656,6 +719,7 @@ const mapOverlayTag = 'src="../js/portal/events/detail/map-overlay.js"';
 const fragmentsTag = 'src="../js/portal/events/detail/fragments.js"';
 const dataTag = 'src="../js/portal/events/detail/data.js"';
 const sectionsTag = 'src="../js/portal/events/detail/sections.js"';
+const postRenderTag = 'src="../js/portal/events/detail/post-render.js"';
 const detailTag = 'src="../js/portal/events/detail.js"';
 const chatIdx = html.indexOf(chatTag);
 const toolsIdx = html.indexOf(toolsTag);
@@ -665,6 +729,7 @@ const mapOverlayIdx = html.indexOf(mapOverlayTag);
 const fragmentsIdx = html.indexOf(fragmentsTag);
 const dataIdx = html.indexOf(dataTag);
 const sectionsIdx = html.indexOf(sectionsTag);
+const postRenderIdx = html.indexOf(postRenderTag);
 const detailIdx = html.indexOf(detailTag);
 html.includes(chatTag)
     ? pass('team/chat.js is referenced in events.html')
@@ -690,6 +755,9 @@ html.includes(dataTag)
 html.includes(sectionsTag)
     ? pass('detail/sections.js is referenced in events.html')
     : fail('detail/sections.js not in events.html — would never load');
+html.includes(postRenderTag)
+    ? pass('detail/post-render.js is referenced in events.html')
+    : fail('detail/post-render.js not in events.html — would never load');
 !html.includes('js/portal/events/detail/exports.js')
     ? pass('detail/exports.js not in events.html (Phase 5E.1 — no loader change)')
     : fail('detail/exports.js must not be added in 5E.1 — use nested aliases in detail.js only');
@@ -697,12 +765,13 @@ html.includes(sectionsTag)
     ? pass('compat/window-exports.js not in events.html (5E.1 — no compat wiring)')
     : fail('compat/window-exports.js must not be wired in 5E.1');
 chatIdx >= 0 && toolsIdx >= 0 && presentationIdx >= 0 && raffleRenderIdx >= 0
-    && mapOverlayIdx >= 0 && fragmentsIdx >= 0 && dataIdx >= 0 && sectionsIdx >= 0 && detailIdx >= 0
+    && mapOverlayIdx >= 0 && fragmentsIdx >= 0 && dataIdx >= 0 && sectionsIdx >= 0
+    && postRenderIdx >= 0 && detailIdx >= 0
     && chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < raffleRenderIdx
     && raffleRenderIdx < mapOverlayIdx && mapOverlayIdx < fragmentsIdx && fragmentsIdx < dataIdx
-    && dataIdx < sectionsIdx && sectionsIdx < detailIdx
-    ? pass('load order: chat → tools → presentation → raffle-render → map-overlay → fragments → data → sections → detail')
-    : fail('script order must be chat → tools → presentation → raffle-render → map-overlay → fragments → data → sections → detail');
+    && dataIdx < sectionsIdx && sectionsIdx < postRenderIdx && postRenderIdx < detailIdx
+    ? pass('load order: chat → tools → presentation → raffle-render → map-overlay → fragments → data → sections → post-render → detail')
+    : fail('script order must be chat → tools → presentation → raffle-render → map-overlay → fragments → data → sections → post-render → detail');
 
 const initTag = 'src="../js/portal/events/init.js"';
 const portalBlock = html.slice(html.indexOf('<!-- Events modules'));

@@ -25,6 +25,7 @@
 // Fragment helpers — Phase 5F-prep: js/portal/events/detail/fragments.js
 // Detail data context — Phase 5H.1: js/portal/events/detail/data.js
 // Detail section HTML — Phase 5H.2–5H.5: js/portal/events/detail/sections.js
+// Detail post-render basics — Phase 5H.6.1: js/portal/events/detail/post-render.js
 
 const _edMetaRow = window.evtEdMetaRow;
 const _edPill = window.evtEdPill;
@@ -478,48 +479,7 @@ async function evtOpenDetail(eventId) {
         window.evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub);
     }
     evtInitHeroCollapse();
-    evtLoadComments(eventId);
-
-    document.addEventListener('click', (e) => {
-        const dd = document.querySelector('.evt-host-dropdown.open');
-        if (dd && !dd.parentElement.contains(e.target)) dd.classList.remove('open');
-    }, { once: false });
-
-    // Attendee avatar stack — size to fit panel width
-    setTimeout(() => {
-        const row = document.getElementById(`edAttendeeRow-${eventId}`);
-        const stack = document.getElementById(`edAvatarStack-${eventId}`);
-        const data = window._edAvatarData?.[eventId];
-        if (!row || !stack || !data) return;
-        function _buildAvatarHtml(avatars, overflow, sm) {
-            const cls = sm ? 'ed-avatar ed-avatar-sm' : 'ed-avatar';
-            return avatars.map(a => {
-                if (a.img) return `<div class="${cls}" ${a.id ? `onclick="window.location.href='profile.html?id=${a.id}'" style="cursor:pointer"` : ''} title="${a.name}" role="button"><img src="${a.img}" alt=""></div>`;
-                const ini = a.name.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2) || '?';
-                const gc = a.type === 'guest' ? ` ed-avatar-guest` : '';
-                return `<div class="${cls}${gc}" title="${a.name}"><span>${ini}</span></div>`;
-            }).join('') + (overflow > 0 ? `<div class="${cls} ed-avatar-overflow"><span>+${overflow}</span></div>` : '');
-        }
-        function _paintAvatars() {
-            // Reserve space for count text + gap; each avatar after first adds 32px (40-8 overlap)
-            const countEl = row.querySelector('.ed-attendee-count');
-            const countW = countEl ? countEl.offsetWidth + 12 : 90;
-            const available = row.offsetWidth - countW;
-            const maxAvatars = Math.min(5, available > 0 ? Math.max(1, Math.floor((available - 40) / 32) + 1) : 3);
-            const shown = data.avatars.slice(0, maxAvatars);
-            stack.innerHTML = _buildAvatarHtml(shown, data.avatars.length - shown.length, false);
-        }
-        _paintAvatars();
-        if (typeof ResizeObserver !== 'undefined') {
-            new ResizeObserver(_paintAvatars).observe(row);
-        }
-        // Mobile attendees card stack (fixed 4 max)
-        const mobileStack = document.getElementById(`edAvatarStackMobile-${eventId}`);
-        if (mobileStack && data) {
-            const shown = data.avatars.slice(0, 4);
-            mobileStack.innerHTML = _buildAvatarHtml(shown, data.avatars.length - shown.length, true);
-        }
-    }, 0);
+    window.evtRunDetailPostRenderBasics({ eventId });
 
     // QR codes + map after DOM render
     setTimeout(() => {
@@ -614,7 +574,11 @@ if (window.PortalEvents.detail.data) {
 if (window.PortalEvents.detail.sections) {
     detail.sections = window.PortalEvents.detail.sections;
 }
+if (window.PortalEvents.detail.postRender) {
+    detail.postRender = window.PortalEvents.detail.postRender;
+}
 detail.loadContext = window.evtLoadDetailContext;
+detail.runPostRenderBasics = window.evtRunDetailPostRenderBasics;
 
 // Pre-register known sub-modules (M3 management sheet will register itself here)
 detail.register('rsvp',        { handle: () => window.evtHandleRsvp });

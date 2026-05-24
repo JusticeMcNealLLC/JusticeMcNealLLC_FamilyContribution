@@ -135,6 +135,7 @@ console.log('\n── Phase 5H — portal/events.html load order ─────
 const fragmentsTag = 'src="../js/portal/events/detail/fragments.js"';
 const dataTag = 'src="../js/portal/events/detail/data.js"';
 const sectionsTag = 'src="../js/portal/events/detail/sections.js"';
+const postRenderTag = 'src="../js/portal/events/detail/post-render.js"';
 const detailTag = 'src="../js/portal/events/detail.js"';
 
 html.includes(sectionsTag)
@@ -144,17 +145,22 @@ html.includes(sectionsTag)
 const fragmentsIdx = html.indexOf(fragmentsTag);
 const dataIdx = html.indexOf(dataTag);
 const sectionsIdx = html.indexOf(sectionsTag);
+const postRenderIdx = html.indexOf(postRenderTag);
 const detailIdx = html.indexOf(detailTag);
 
-fragmentsIdx >= 0 && dataIdx >= 0 && sectionsIdx >= 0 && detailIdx >= 0
-    && fragmentsIdx < dataIdx && dataIdx < sectionsIdx && sectionsIdx < detailIdx
-    ? pass('load order: fragments.js → data.js → sections.js → detail.js')
-    : fail('fragments → data → sections → detail load order incorrect');
+html.includes(postRenderTag)
+    ? pass('detail/post-render.js script tag in events.html')
+    : fail('detail/post-render.js script tag missing from events.html');
 
-dataIdx >= 0 && sectionsIdx >= 0 && detailIdx >= 0
-    && dataIdx < sectionsIdx && sectionsIdx < detailIdx
-    ? pass('load order: data.js → sections.js → detail.js')
-    : fail('data → sections → detail load order incorrect');
+fragmentsIdx >= 0 && dataIdx >= 0 && sectionsIdx >= 0 && postRenderIdx >= 0 && detailIdx >= 0
+    && fragmentsIdx < dataIdx && dataIdx < sectionsIdx && sectionsIdx < postRenderIdx && postRenderIdx < detailIdx
+    ? pass('load order: fragments.js → data.js → sections.js → post-render.js → detail.js')
+    : fail('fragments → data → sections → post-render → detail load order incorrect');
+
+dataIdx >= 0 && sectionsIdx >= 0 && postRenderIdx >= 0 && detailIdx >= 0
+    && dataIdx < sectionsIdx && sectionsIdx < postRenderIdx && postRenderIdx < detailIdx
+    ? pass('load order: data.js → sections.js → post-render.js → detail.js')
+    : fail('data → sections → post-render → detail load order incorrect');
 
 console.log('\n── Phase 5H — detail.js orchestrator ─────────────────────────────────────');
 
@@ -265,6 +271,14 @@ detail.includes('window.evtOpenDetail            = evtOpenDetail')
 detail.includes('detail.sections = window.PortalEvents.detail.sections')
     ? pass('detail.sections bridge present')
     : fail('detail.sections bridge missing');
+
+detail.includes('window.evtRunDetailPostRenderBasics({ eventId })')
+    ? pass('evtOpenDetail delegates post-render basics (Phase 5H.6.1)')
+    : fail('detail.js must call window.evtRunDetailPostRenderBasics');
+
+detail.includes('detail.postRender = window.PortalEvents.detail.postRender')
+    ? pass('detail.postRender bridge present (Phase 5H.6.1)')
+    : fail('detail.postRender bridge missing');
 
 console.log('\n── Phase 5H — inline handler names preserved ─────────────────────────────');
 
