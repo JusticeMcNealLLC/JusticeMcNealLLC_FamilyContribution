@@ -25,7 +25,7 @@
 // Fragment helpers — Phase 5F-prep: js/portal/events/detail/fragments.js
 // Detail data context — Phase 5H.1: js/portal/events/detail/data.js
 // Detail section HTML — Phase 5H.2–5H.5: js/portal/events/detail/sections.js
-// Detail post-render — Phase 5H.6.1–5H.6.2: js/portal/events/detail/post-render.js
+// Detail post-render — Phase 5H.6.1–5H.6.3: js/portal/events/detail/post-render.js
 
 const _edMetaRow = window.evtEdMetaRow;
 const _edPill = window.evtEdPill;
@@ -481,24 +481,10 @@ async function evtOpenDetail(eventId) {
     evtInitHeroCollapse();
     window.evtRunDetailPostRenderBasics({ eventId });
 
-    // QR canvas + inline map after DOM render
+    // QR canvas + inline maps after DOM render
     setTimeout(() => {
         window.evtRenderDetailQrCanvases({ event, eventId, rsvp, memberGoing });
-        // venueQR canvas moved into Manage Event sheet
-        if (showLocation && event.location_lat && event.location_lng && typeof L !== 'undefined') {
-            const _initMap = (id) => {
-                const mapEl = document.getElementById(id);
-                if (!mapEl) return;
-                const dMap = L.map(id, { zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false, tap: true }).setView([event.location_lat, event.location_lng], 15);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(dMap);
-                L.marker([event.location_lat, event.location_lng]).addTo(dMap);
-                setTimeout(() => dMap.invalidateSize(), 100);
-                // Leaflet's own click event fires only on a clean tap (not after a drag)
-                dMap.on('click', () => window.evtOpenFullscreenMap(event.location_lat, event.location_lng, evtEscapeHtml(event.location_text || '')));
-            };
-            _initMap('detailEventMap');
-            _initMap('detailEventMapMobile');
-        }
+        window.evtInitDetailInlineMaps({ event, showLocation });
     }, 100);
 }
 
@@ -575,6 +561,7 @@ if (window.PortalEvents.detail.postRender) {
 detail.loadContext = window.evtLoadDetailContext;
 detail.runPostRenderBasics = window.evtRunDetailPostRenderBasics;
 detail.renderQrCanvases = window.evtRenderDetailQrCanvases;
+detail.initInlineMaps = window.evtInitDetailInlineMaps;
 
 // Pre-register known sub-modules (M3 management sheet will register itself here)
 detail.register('rsvp',        { handle: () => window.evtHandleRsvp });

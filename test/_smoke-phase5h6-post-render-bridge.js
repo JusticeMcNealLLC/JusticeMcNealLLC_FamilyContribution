@@ -97,9 +97,25 @@ postRender.includes('myTicketQR')
     ? pass('post-render.js targets #myTicketQR canvas')
     : fail('post-render.js must paint #myTicketQR');
 
-!postRender.includes('L.map')
-    ? pass('post-render.js does not reference Leaflet L.map (5H.6.1 scope)')
-    : fail('post-render.js must not move Leaflet in 5H.6.1');
+postRender.includes('function evtInitDetailInlineMaps')
+    ? pass('evtInitDetailInlineMaps defined in detail/post-render.js')
+    : fail('evtInitDetailInlineMaps missing from detail/post-render.js');
+
+postRender.includes('window.evtInitDetailInlineMaps = evtInitDetailInlineMaps')
+    ? pass('window.evtInitDetailInlineMaps assigned')
+    : fail('window.evtInitDetailInlineMaps not assigned');
+
+postRender.includes('initInlineMaps: evtInitDetailInlineMaps')
+    ? pass('PortalEvents.detail.postRender.initInlineMaps present')
+    : fail('PortalEvents.detail.postRender.initInlineMaps missing');
+
+postRender.includes("initMap('detailEventMap')") && postRender.includes("initMap('detailEventMapMobile')")
+    ? pass('post-render.js inits desktop + mobile inline maps')
+    : fail('post-render.js must init detailEventMap and detailEventMapMobile');
+
+postRender.includes('L.map') && postRender.includes('evtOpenFullscreenMap')
+    ? pass('post-render.js owns inline Leaflet + fullscreen click (Phase 5H.6.3)')
+    : fail('post-render.js must contain inline Leaflet init');
 
 !postRender.includes('evtInitBottomNav')
     ? pass('post-render.js does not reference evtInitBottomNav (5H.6.1 scope)')
@@ -150,13 +166,25 @@ detail.includes('detail.renderQrCanvases = window.evtRenderDetailQrCanvases')
     ? pass('detail.renderQrCanvases bridge present')
     : fail('detail.renderQrCanvases bridge missing');
 
+detail.includes('detail.initInlineMaps = window.evtInitDetailInlineMaps')
+    ? pass('detail.initInlineMaps bridge present')
+    : fail('detail.initInlineMaps bridge missing');
+
 detail.includes('window.evtRenderDetailQrCanvases({ event, eventId, rsvp, memberGoing })')
     ? pass('evtOpenDetail delegates QR canvas paint')
     : fail('detail.js must call window.evtRenderDetailQrCanvases');
 
+detail.includes('window.evtInitDetailInlineMaps({ event, showLocation })')
+    ? pass('evtOpenDetail delegates inline map init')
+    : fail('detail.js must call window.evtInitDetailInlineMaps');
+
 !detail.includes('QRCode.toCanvas')
     ? pass('QRCode.toCanvas moved out of detail.js')
     : fail('QRCode.toCanvas should not remain in detail.js');
+
+!detail.includes("_initMap('detailEventMap')") && !detail.match(/L\.map\s*\(/)
+    ? pass('inline Leaflet moved out of detail.js')
+    : fail('inline Leaflet should not remain in detail.js');
 
 !detail.includes('evtLoadComments(eventId)')
     ? pass('evtLoadComments call moved out of detail.js')
@@ -165,10 +193,6 @@ detail.includes('window.evtRenderDetailQrCanvases({ event, eventId, rsvp, member
 !detail.includes('edAvatarStackMobile-${eventId}')
     ? pass('avatar paint logic moved out of detail.js')
     : fail('avatar paint should not remain inline in detail.js');
-
-detail.includes('_initMap(\'detailEventMap\')')
-    ? pass('detail.js still owns inline Leaflet init')
-    : fail('detail.js must still contain inline map init');
 
 detail.includes('__evtTeamToolsCtx')
     ? pass('detail.js still owns Team Tools context assignment')

@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════
-   Portal Events — Detail post-render hooks (Phase 5H.6.1–5H.6.2)
+   Portal Events — Detail post-render hooks (Phase 5H.6.1–5H.6.3)
    Classic IIFE; loads after detail/sections.js, before detail.js.
-   Avatar paint, comments load, host dropdown listener, ticket QR canvas paint.
+   Avatar paint, comments, host dropdown, ticket QR canvas, inline Leaflet maps.
    ════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -85,11 +85,48 @@
         );
     }
 
+    function evtInitDetailInlineMaps(ctx) {
+        if (!ctx || !ctx.event) return;
+        const { event, showLocation } = ctx;
+        if (!showLocation || !event.location_lat || !event.location_lng) return;
+        if (typeof L === 'undefined') return;
+
+        const lat = event.location_lat;
+        const lng = event.location_lng;
+        const locationText = event.location_text || '';
+        const escapeHtml = typeof window.evtEscapeHtml === 'function' ? window.evtEscapeHtml : (s) => String(s);
+
+        function initMap(id) {
+            const mapEl = document.getElementById(id);
+            if (!mapEl) return;
+            const dMap = L.map(id, {
+                zoomControl: false,
+                attributionControl: false,
+                dragging: true,
+                scrollWheelZoom: false,
+                tap: true,
+            }).setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(dMap);
+            L.marker([lat, lng]).addTo(dMap);
+            setTimeout(() => dMap.invalidateSize(), 100);
+            dMap.on('click', () => {
+                if (typeof window.evtOpenFullscreenMap === 'function') {
+                    window.evtOpenFullscreenMap(lat, lng, escapeHtml(locationText));
+                }
+            });
+        }
+
+        initMap('detailEventMap');
+        initMap('detailEventMapMobile');
+    }
+
     window.PortalEvents.detail.postRender = {
         runBasics: evtRunDetailPostRenderBasics,
         renderQrCanvases: evtRenderDetailQrCanvases,
+        initInlineMaps: evtInitDetailInlineMaps,
     };
 
     window.evtRunDetailPostRenderBasics = evtRunDetailPostRenderBasics;
     window.evtRenderDetailQrCanvases = evtRenderDetailQrCanvases;
+    window.evtInitDetailInlineMaps = evtInitDetailInlineMaps;
 })();

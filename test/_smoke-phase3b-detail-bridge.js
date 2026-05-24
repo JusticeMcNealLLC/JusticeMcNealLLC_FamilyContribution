@@ -80,9 +80,25 @@ detail.includes('detail.register(')
     ? pass('QRCode.toCanvas moved out of detail.js (Phase 5H.6.2)')
     : fail('QRCode.toCanvas should not remain in detail.js');
 
-detail.includes("_initMap('detailEventMap')")
-    ? pass('detail.js still owns inline Leaflet post-render (5H.6.2 scope)')
-    : fail('detail.js must still contain inline map init');
+!detail.includes("_initMap('detailEventMap')") && !detail.includes('L.map(id,')
+    ? pass('inline Leaflet init moved out of detail.js (Phase 5H.6.3)')
+    : fail('inline Leaflet should not remain in detail.js');
+
+detailPostRender.includes('function evtInitDetailInlineMaps')
+    ? pass('evtInitDetailInlineMaps defined in detail/post-render.js (Phase 5H.6.3)')
+    : fail('evtInitDetailInlineMaps missing from detail/post-render.js');
+
+detailPostRender.includes("initMap('detailEventMap')")
+    ? pass('detail/post-render.js initializes detailEventMap (Phase 5H.6.3)')
+    : fail('detail/post-render.js must init detailEventMap');
+
+detail.includes('window.evtInitDetailInlineMaps({ event, showLocation })')
+    ? pass('detail.js delegates inline map init to post-render.js (Phase 5H.6.3)')
+    : fail('detail.js must call window.evtInitDetailInlineMaps');
+
+detail.includes('detail.initInlineMaps = window.evtInitDetailInlineMaps')
+    ? pass('detail.initInlineMaps bridge present (Phase 5H.6.3)')
+    : fail('detail.initInlineMaps bridge missing');
 
 detail.includes('__evtTeamToolsCtx') && detail.includes('evtInitBottomNav')
     ? pass('detail.js still owns Team Tools context + bottom nav init')

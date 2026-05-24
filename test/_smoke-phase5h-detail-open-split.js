@@ -288,6 +288,14 @@ detail.includes('window.evtRenderDetailQrCanvases({ event, eventId, rsvp, member
     ? pass('QRCode.toCanvas moved out of detail.js (Phase 5H.6.2)')
     : fail('QRCode.toCanvas should not remain in detail.js');
 
+detail.includes('window.evtInitDetailInlineMaps({ event, showLocation })')
+    ? pass('evtOpenDetail delegates inline map init (Phase 5H.6.3)')
+    : fail('detail.js must call window.evtInitDetailInlineMaps');
+
+!detail.includes("_initMap('detailEventMap')")
+    ? pass('inline Leaflet moved out of detail.js (Phase 5H.6.3)')
+    : fail('inline Leaflet should not remain in detail.js');
+
 console.log('\n── Phase 5H — inline handler names preserved ─────────────────────────────');
 
 const CRITICAL_HANDLERS = [
