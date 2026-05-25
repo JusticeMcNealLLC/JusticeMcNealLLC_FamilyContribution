@@ -173,14 +173,17 @@ if (!chainMatch) {
     const listIdx = chainPaths.indexOf('list.js');
     const listFiltersIdx = chainPaths.indexOf('list/filters.js');
     const listCalendarIdx = chainPaths.indexOf('list/calendar.js');
-    chainPaths.length === 43
-        ? pass('classic-chain-loader injects 43 middle scripts')
-        : fail('loader chain must have 43 entries', `found ${chainPaths.length}`);
+    const listHeroRailsIdx = chainPaths.indexOf('list/hero-rails.js');
+    const listBucketsIdx = chainPaths.indexOf('list/buckets.js');
+    chainPaths.length === 45
+        ? pass('classic-chain-loader injects 45 middle scripts')
+        : fail('loader chain must have 45 entries', `found ${chainPaths.length}`);
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
         && listFiltersIdx > listHeaderIdx && listCalendarIdx > listFiltersIdx
-        && listIdx > listCalendarIdx
-        ? pass('loader order: raffle-model → list/search → … → filters → calendar → list.js')
+        && listHeroRailsIdx > listCalendarIdx && listBucketsIdx > listHeroRailsIdx
+        && listIdx > listBucketsIdx
+        ? pass('loader order: raffle-model → list/search → … → hero-rails → buckets → list.js')
         : fail('loader list module order');
     createGeoIdx >= 0 && legacyCostsIdx > createGeoIdx
         && legacyLocationIdx > legacyCostsIdx && legacyPreviewIdx > legacyLocationIdx

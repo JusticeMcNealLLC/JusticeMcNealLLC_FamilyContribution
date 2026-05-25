@@ -104,21 +104,24 @@ if (!chainMatch) {
     fail('loader must define chain array');
 } else {
     const chainEntries = [...chainMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
-    chainEntries.length === 43
+    chainEntries.length === 45
         ? pass(`loader chain has ${chainEntries.length} middle scripts (production order)`)
-        : fail('loader chain must have 43 entries', `found ${chainEntries.length}`);
+        : fail('loader chain must have 45 entries', `found ${chainEntries.length}`);
     const raffleModelIdx = chainEntries.indexOf('raffle-model.js');
     const listSearchIdx = chainEntries.indexOf('list/search.js');
     const listRightRailIdx = chainEntries.indexOf('list/right-rail.js');
     const listHeaderIdx = chainEntries.indexOf('list/header.js');
     const listFiltersIdx = chainEntries.indexOf('list/filters.js');
     const listCalendarIdx = chainEntries.indexOf('list/calendar.js');
+    const listHeroRailsIdx = chainEntries.indexOf('list/hero-rails.js');
+    const listBucketsIdx = chainEntries.indexOf('list/buckets.js');
     const listIdx = chainEntries.indexOf('list.js');
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
         && listFiltersIdx > listHeaderIdx && listCalendarIdx > listFiltersIdx
-        && listIdx > listCalendarIdx
-        ? pass('loader order: raffle-model → list/search → … → filters → calendar → list.js')
+        && listHeroRailsIdx > listCalendarIdx && listBucketsIdx > listHeroRailsIdx
+        && listIdx > listBucketsIdx
+        ? pass('loader order: raffle-model → list/search → … → hero-rails → buckets → list.js')
         : fail('loader list module order');
     const geoIdx = chainEntries.indexOf('create/geocode.js');
     const legacyCostsIdx = chainEntries.indexOf('create/legacy-costs.js');

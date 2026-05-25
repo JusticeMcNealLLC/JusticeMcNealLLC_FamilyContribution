@@ -49,6 +49,8 @@ const listRightRailJs = read('js/portal/events/list/right-rail.js');
 const listHeaderJs = read('js/portal/events/list/header.js');
 const listFiltersJs = read('js/portal/events/list/filters.js');
 const listCalendarJs = read('js/portal/events/list/calendar.js');
+const listHeroRailsJs = read('js/portal/events/list/hero-rails.js');
+const listBucketsJs = read('js/portal/events/list/buckets.js');
 const classicChain3a = parseClassicChain(root);
 
 // Must be an IIFE (classic-script pattern)
@@ -66,9 +68,9 @@ list.includes("'use strict';")
     : pass('No native export statement (stays classic-script safe)');
 
 // File must be substantial (>2000 lines worth of content)
-list.length > 55000
+list.length > 40000
     ? pass(`File size reasonable (${list.length.toLocaleString()} chars — no accidental truncation)`)
-    : fail('list.js appears truncated (< 55k chars)', `actual: ${list.length}`);
+    : fail('list.js appears truncated (< 40k chars)', `actual: ${list.length}`);
 
 // ─── Public globals assigned in source ───────────────────
 console.log('\n── list.js — public globals (window.evt*) ─────────────────────────────────');
@@ -117,14 +119,9 @@ const INTERNAL_FNS = [
     'function setupSearch',
     'function initFilterChips',
     'function renderSkeletons',
-    'function _renderHero',
-    'function _pickHero',
-    'function _renderGoingRail',
-    'function _renderTopPicks',
     'function _renderMiniCalendar',
     'function _renderMyRsvps',
     'function _renderStatsCard',
-    'function _renderBucket',
     'function _initStickyHeader',
     'function _initMobileFab',
     'function _initPullToRefresh',
@@ -151,6 +148,11 @@ const movedFromList = [
     ['function renderCalendar() {', 'renderCalendar body'],
     ['function groupEventsByDay(', 'groupEventsByDay body'],
     ['function initDateMenu(', 'initDateMenu body'],
+    ['evt-hero-cluster-stack', 'hero attendee cluster HTML'],
+    ['evt-bucket-seeall text-xs font-semibold', 'bucket see-all link markup'],
+    ['function renderBucket(label, events', 'renderBucket body'],
+    ['function renderGoingRail(', 'going rail body'],
+    ['function renderLiveBanner(', 'live banner body'],
 ];
 movedFromList.forEach(([pattern, label]) => {
     !list.includes(pattern)
@@ -158,10 +160,10 @@ movedFromList.forEach(([pattern, label]) => {
         : fail(`${label} still in list.js body`);
 });
 
-// ─── List modules (Phase 5M.2A / 5M.2B) ──────────────────
-console.log('\n── js/portal/events/list/*.js — list modules (5M.2A / 5M.2B) ───────────');
+// ─── List modules (Phase 5M.2A / 5M.2B / 5M.2C) ──────────
+console.log('\n── js/portal/events/list/*.js — list modules (5M.2A–5M.2C) ─────────────');
 
-['list/search.js', 'list/right-rail.js', 'list/header.js', 'list/filters.js', 'list/calendar.js'].forEach(rel => {
+['list/search.js', 'list/right-rail.js', 'list/header.js', 'list/filters.js', 'list/calendar.js', 'list/hero-rails.js', 'list/buckets.js'].forEach(rel => {
     classicChain3a && classicChain3a.includes(rel)
         ? pass(`${rel} present in classic-chain-loader.js chain`)
         : fail(`${rel} missing from classic-chain-loader.js chain`);
@@ -171,7 +173,9 @@ chainOrderOk(classicChain3a, 'raffle-model.js', 'list/search.js', 'list/right-ra
     && chainOrderOk(classicChain3a, 'list/right-rail.js', 'list/header.js')
     && chainOrderOk(classicChain3a, 'list/header.js', 'list/filters.js')
     && chainOrderOk(classicChain3a, 'list/filters.js', 'list/calendar.js')
-    && chainOrderOk(classicChain3a, 'list/calendar.js', 'list.js')
+    && chainOrderOk(classicChain3a, 'list/calendar.js', 'list/hero-rails.js')
+    && chainOrderOk(classicChain3a, 'list/hero-rails.js', 'list/buckets.js')
+    && chainOrderOk(classicChain3a, 'list/buckets.js', 'list.js')
     ? pass('loader order: raffle-model → list/* → list.js')
     : fail('loader list module order');
 
@@ -220,6 +224,22 @@ list.includes('PortalEventsListFilters.initFilterChips')
     && list.includes('PortalEventsListCalendar.renderCalendar')
     ? pass('list.js delegates filters and calendar to list modules')
     : fail('list.js missing filter/calendar delegates');
+
+listHeroRailsJs.includes('window.PortalEventsListHeroRails')
+    && listHeroRailsJs.includes('function renderHero')
+    && listHeroRailsJs.includes('function attendeeCluster')
+    ? pass('hero-rails.js owns hero, rails, and attendee cluster')
+    : fail('hero-rails.js missing hero/rail functions');
+
+listBucketsJs.includes('window.PortalEventsListBuckets')
+    && listBucketsJs.includes('function renderBucket')
+    ? pass('buckets.js owns bucket renderer')
+    : fail('buckets.js missing renderBucket');
+
+list.includes('PortalEventsListHeroRails.renderHero')
+    && list.includes('PortalEventsListBuckets.renderBucket')
+    ? pass('list.js delegates hero-rails and buckets to list modules')
+    : fail('list.js missing hero-rails/buckets delegates');
 
 list.includes('function loadEvents')
     && list.includes('function renderEvents')
