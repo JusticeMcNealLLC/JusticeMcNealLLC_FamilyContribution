@@ -51,7 +51,7 @@ const mapOverlayJs = read('js/portal/events/detail/map-overlay.js');
 const fragmentsJs = read('js/portal/events/detail/fragments.js');
 const presentationJs = read('js/portal/events/detail/presentation.js');
 const raffleRenderJs = read('js/portal/events/detail/raffle-render.js');
-const teamToolsJs = read('js/portal/events/team/tools.js');
+const teamToolsJs = read('js/portal/events/team/sheet.js') + read('js/portal/events/team/tools-list.js') + read('js/portal/events/team/cta-bar.js');
 const teamChatJs = read('js/portal/events/team/chat.js');
 const windowExportsJs = read('js/portal/events/compat/window-exports.js');
 const inlineHandlersJs = read('js/portal/events/compat/inline-handlers.js');
@@ -212,9 +212,9 @@ detail.includes('detail.register')
 console.log('\n── Phase 5J.1 — team exports ─────────────────────────────────────────────');
 
 [
-    [teamToolsJs, 'window.evtOpenTeamToolsPanel = openTeamToolsPanel', 'team/tools evtOpenTeamToolsPanel'],
-    [teamToolsJs, 'window.evtInitBottomNav = initBottomNav', 'team/tools evtInitBottomNav'],
-    [teamToolsJs, 'PortalEvents.team.tools', 'team/tools PortalEvents.team.tools'],
+    [teamToolsJs, 'globalThis.evtOpenTeamToolsPanel', 'team/sheet evtOpenTeamToolsPanel'],
+    [teamToolsJs, 'globalThis.evtInitBottomNav', 'team/cta-bar evtInitBottomNav'],
+    [teamToolsJs, 'PortalEvents.team.open', 'team/sheet PortalEvents.team.open'],
     [teamChatJs, 'window.evtOpenTeamChat = open', 'team/chat evtOpenTeamChat'],
     [teamChatJs, 'window.evtSendTeamChatMessage = send', 'team/chat evtSendTeamChatMessage'],
     [teamChatJs, 'PortalEvents.team.chat', 'team/chat PortalEvents.team.chat'],

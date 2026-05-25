@@ -298,7 +298,7 @@
           const number = Number(value);
           return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : null;
         }
-        const api17 = {
+        const api18 = {
           VERSION,
           DEFAULT_EMOJI,
           normalizeConfig,
@@ -311,10 +311,10 @@
           getDrawQueue,
           validateConfig
         };
-        root2.EventsRaffleModel = api17;
-        if (typeof module !== "undefined" && module.exports) module.exports = api17;
+        root2.EventsRaffleModel = api18;
+        if (typeof module !== "undefined" && module.exports) module.exports = api18;
         if (typeof root2.PortalEvents === "undefined") root2.PortalEvents = {};
-        root2.PortalEvents.raffleModel = api17;
+        root2.PortalEvents.raffleModel = api18;
       })(typeof globalThis !== "undefined" ? globalThis : window);
     }
   });
@@ -523,7 +523,7 @@
         lb.setAttribute("role", "dialog");
         lb.setAttribute("aria-label", "Image preview");
         lb.innerHTML = '<button class="evt-lightbox-close" aria-label="Close preview"><svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button><img src="" alt="Event banner full size">';
-        const close3 = () => {
+        const close4 = () => {
           lb.classList.remove("active");
           document.body.style.overflow = "";
           setTimeout(() => {
@@ -531,7 +531,7 @@
           }, 250);
         };
         lb.addEventListener("click", (e) => {
-          if (e.target === lb || e.target.closest(".evt-lightbox-close")) close3();
+          if (e.target === lb || e.target.closest(".evt-lightbox-close")) close4();
         });
         document.body.appendChild(lb);
       }
@@ -2009,7 +2009,7 @@
     const btn = document.getElementById("evtDateMenuBtn");
     const menu = document.getElementById("evtDateMenu");
     if (!btn || !menu) return;
-    const close3 = () => {
+    const close4 = () => {
       menu.classList.add("hidden");
       btn.setAttribute("aria-expanded", "false");
     };
@@ -2020,10 +2020,10 @@
       btn.setAttribute("aria-expanded", String(willOpen));
     });
     document.addEventListener("click", (e) => {
-      if (!menu.contains(e.target) && e.target !== btn) close3();
+      if (!menu.contains(e.target) && e.target !== btn) close4();
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") close3();
+      if (e.key === "Escape") close4();
     });
     menu.querySelectorAll(".evt-date-opt").forEach((opt) => {
       opt.addEventListener("click", () => {
@@ -2032,7 +2032,7 @@
         const labelEl = btn.querySelector("[data-date-label]");
         if (labelEl) labelEl.textContent = _activeDate === "any" ? "Date" : opt.textContent.trim();
         menu.querySelectorAll(".evt-date-opt").forEach((o) => o.classList.toggle("evt-date-opt--active", o === opt));
-        close3();
+        close4();
         api3().renderEvents?.();
       });
     });
@@ -3965,55 +3965,6 @@
     "max-lg:bottom-[calc(56px+env(safe-area-inset-bottom))]",
     "max-lg:backdrop-blur-sm"
   ].join(" ");
-  var TW_CTA_BAR_EXPANDED = "evt-cta-bar-expanded max-lg:top-[max(6px,env(safe-area-inset-top))] max-lg:bottom-[calc(56px+env(safe-area-inset-bottom))] max-lg:justify-end max-lg:gap-2.5 max-lg:overflow-hidden max-lg:overscroll-none max-lg:bg-white/95 max-lg:backdrop-blur-xl max-lg:shadow-[0_-6px_28px_rgba(15,23,42,0.1)] max-lg:border-t max-lg:border-black/5";
-  var TW_CTA_BAR_CHAT_MOBILE = [
-    "evt-cta-bar-chat",
-    "max-lg:!top-0 max-lg:inset-x-0 max-lg:rounded-none",
-    "max-lg:!p-0 max-lg:gap-0",
-    "max-lg:border-0 max-lg:shadow-none max-lg:backdrop-blur-none max-lg:bg-white",
-    "max-lg:pt-[env(safe-area-inset-top,0px)]"
-  ].join(" ");
-  var TW_DESKTOP_OVERLAY = [
-    "evt-team-tools-overlay",
-    "lg:fixed lg:inset-0 lg:z-[60] lg:flex lg:items-center lg:justify-center",
-    "lg:bg-slate-900/45 lg:p-6"
-  ].join(" ");
-  var TW_PANEL_BASE = "evt-cta-panel relative flex w-full flex-col min-h-0 overflow-hidden max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none max-lg:rounded-none lg:rounded-2xl lg:border lg:border-gray-200 lg:bg-white lg:shadow-lg";
-  var TW_PANEL_TOOLS = "max-lg:p-0 max-lg:max-h-none lg:p-5 lg:max-h-[80vh] lg:w-full lg:max-w-md lg:overflow-auto lg:shadow-2xl";
-  var TW_PANEL_CHAT = "p-0 max-lg:border-0 max-lg:shadow-none lg:min-h-[28rem] lg:max-w-lg lg:overflow-hidden lg:rounded-2xl lg:shadow-2xl";
-  var TW_PANEL_EXPANDED = "flex-1 max-h-none min-h-0 max-lg:overflow-hidden max-lg:overscroll-none";
-  var TW_CLOSE_BTN = "evt-cta-panel-close absolute top-0 right-0 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-lg font-bold leading-none text-gray-700 hover:bg-gray-50 max-lg:border-0 max-lg:bg-gray-100 lg:top-2.5 lg:right-2.5";
-  var TW_PANEL_HEAD = "evt-cta-panel-head mb-2 pr-9 max-lg:mb-2.5 max-lg:px-3 max-lg:pr-8";
-  var TW_PANEL_HEAD_TITLE = "block text-[15px] font-semibold leading-tight text-gray-900";
-  var TW_PANEL_HEAD_SUB = "mt-0.5 block text-xs leading-snug text-gray-500";
-  var TW_TOOL_BTN = "evt-team-tool-btn flex w-full flex-col items-start gap-0.5 rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-left text-sm font-semibold text-gray-900 transition hover:bg-gray-50 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55";
-  var TW_TOOL_MAIN = "evt-team-tool-main leading-tight";
-  var TW_TOOL_SUB = "evt-team-tool-sub text-xs font-medium leading-snug text-gray-500";
-  var TW_CHAT_ROOT = "flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white max-lg:rounded-none lg:rounded-2xl";
-  var TW_CHAT_NAV = "grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-gray-200/80 bg-gray-50/95 px-3 py-2.5 backdrop-blur-xl max-lg:rounded-none max-lg:border-x-0 max-lg:border-t-0";
-  var TW_CHAT_BACK = "justify-self-start border-0 bg-transparent py-1 text-[17px] font-normal text-[#007AFF] cursor-pointer";
-  var TW_CHAT_NAV_CENTER = "min-w-0 text-center";
-  var TW_CHAT_NAV_TITLE = "block truncate text-base font-semibold text-gray-900";
-  var TW_CHAT_NAV_SUB = "mt-0.5 block truncate text-[11px] text-gray-500";
-  var TW_CHAT_THREAD = "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain bg-white px-3.5 py-3";
-  var TW_CHAT_EMPTY = "m-auto px-4 py-6 text-center text-[15px] leading-snug text-gray-400";
-  var TW_CHAT_ALERT = "mx-4 my-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3.5 text-center text-sm leading-snug text-amber-900";
-  var TW_CHAT_ROW_SENT = "mb-0.5 flex max-w-[78%] flex-col items-end self-end";
-  var TW_CHAT_ROW_RECV = "mb-1 flex max-w-[88%] items-end gap-1.5 self-start";
-  var TW_CHAT_RECV_COL = "flex min-w-0 flex-1 flex-col items-start";
-  var TW_CHAT_AVATAR = "evt-chat-avatar flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
-  var TW_CHAT_AVATAR_HIDDEN = "invisible pointer-events-none";
-  var TW_CHAT_SENDER = "mb-0.5 px-3 text-[11px] font-semibold leading-tight text-gray-400";
-  var TW_CHAT_BUBBLE = "break-words whitespace-pre-wrap px-3 py-2 text-base leading-snug rounded-[18px]";
-  var TW_CHAT_BUBBLE_SENT = "rounded-br-md bg-[#007AFF] text-white";
-  var TW_CHAT_BUBBLE_RECV = "rounded-bl-md bg-[#E9E9EB] text-gray-900";
-  var TW_CHAT_TIME = "mt-0.5 px-1 text-[11px] leading-tight text-gray-400";
-  var TW_CHAT_COMPOSER = "flex shrink-0 items-end gap-2 border-t border-gray-200/80 bg-gray-50/95 px-2.5 py-2 backdrop-blur-xl pb-[max(8px,env(safe-area-inset-bottom))] max-lg:rounded-none max-lg:border-x-0";
-  var TW_CHAT_INPUT_WRAP = "flex min-h-9 flex-1 items-end rounded-full border border-gray-300/80 bg-white px-3 py-1.5";
-  var TW_CHAT_TEXTAREA = "max-h-[100px] min-h-[22px] w-full resize-none border-0 bg-transparent text-base leading-snug outline-none placeholder:text-gray-400 disabled:opacity-55";
-  var TW_CHAT_SEND = "flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-0 bg-[#007AFF] p-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:stroke-[2.5] [&_svg]:fill-none [&_svg]:stroke-current";
-  var OVERLAY_DESKTOP_CLASSES = TW_DESKTOP_OVERLAY.split(/\s+/).filter(Boolean);
-  var TW_FLOATING_SHELL = "evt-cta-floating-shell hidden lg:flex lg:flex-col lg:gap-4";
   var TW_CTA_ACTIONS = "evt-cta-actions max-lg:flex max-lg:shrink-0 max-lg:items-center max-lg:justify-center max-lg:gap-2.5 max-lg:px-4 max-lg:py-3 max-lg:pb-[max(12px,env(safe-area-inset-bottom))] hidden";
   var TW_CTA_RSVP = "bg-indigo-600 text-white";
   var TW_CTA_RSVP_DONE = "bg-green-600 text-white";
@@ -4023,75 +3974,328 @@
   var TW_CTA_RAFFLE_OUTLINE = "bg-white text-amber-600 !border-2 !border-amber-300";
   var TW_CTA_RAFFLE_DONE = "bg-green-600 text-white";
   var TW_CTA_DISABLED = "bg-gray-200 text-gray-400";
-  var TW_CTA_RAFFLE_LOCKED = "bg-gray-100 text-gray-400 border border-gray-200 shadow-none cursor-not-allowed";
+  var TW_CTA_RAFFLE_LOCKED = "evt-cta-raffle-locked bg-gray-100 text-gray-400 border border-gray-200 shadow-none cursor-not-allowed";
   var TW_CTA_FOOTNOTE = "evt-cta-footnote m-0 px-4 pb-0.5 text-center text-[11px] font-semibold leading-snug text-gray-500";
-  var TW_TOOL_LIST = "flex flex-col gap-2 max-lg:min-h-0 max-lg:flex-1 max-lg:overflow-y-auto max-lg:overscroll-y-contain max-lg:px-3 max-lg:pb-1";
-  var TW_RAFFLE_BUY = "evt-raffle-buy flex w-full items-center justify-center gap-2 rounded-xl border-0 bg-gradient-to-br from-amber-500 to-amber-600 px-4 py-4 text-base font-bold text-white shadow-md shadow-amber-500/30 transition hover:opacity-90";
-  var TW_TICKET_CARD = "evt-cta-ticket-card text-center [&_canvas]:mx-auto [&_canvas]:mb-2 [&_canvas]:block [&_canvas]:rounded-xl [&_p]:m-0 [&_p]:text-xs [&_p]:text-gray-500";
-  function twPanelClasses(mode, { expanded = false } = {}) {
-    const parts = [TW_PANEL_BASE, mode === "chat" ? TW_PANEL_CHAT : TW_PANEL_TOOLS];
-    if (mode === "chat") parts.push("evt-team-chat-panel");
-    else if (mode === "tools") parts.push("evt-team-tools-panel");
-    if (expanded) parts.push(TW_PANEL_EXPANDED);
-    return parts.join(" ");
+
+  // js/portal/events/team/shell.js
+  var ET_TABS = [
+    { key: "tools", label: "Tools" },
+    { key: "chat", label: "Chat" }
+  ];
+  function api7() {
+    return window.EventsTeamShellApi || {};
   }
-  function twAdd(el, ...classStrings) {
+  function getState() {
+    return api7().getState?.() || {};
+  }
+  function ensureMounted() {
+    if (document.getElementById("etSheetRoot")) return;
+    const root2 = document.createElement("div");
+    root2.id = "etSheetRoot";
+    root2.innerHTML = `
+        <div id="etSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
+        <div id="etSheet" class="et-sheet-hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
+            <div id="etSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
+                <header id="etSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Event Team</p>
+                        <h2 id="etSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">\u2026</h2>
+                        <p id="etSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
+                    </div>
+                    <button id="etSheetClose" class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" aria-label="Close">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </header>
+                <nav id="etSheetTabs" class="flex gap-1 px-3 sm:px-4 border-b border-gray-100 overflow-x-auto flex-shrink-0" style="scrollbar-width:none;-ms-overflow-style:none"></nav>
+                <div id="etSheetContent" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"></div>
+            </div>
+        </div>
+        <style>
+            .et-sheet-hidden { display:none !important; }
+            #etSheetTabs::-webkit-scrollbar { display: none; }
+            #etSheetContent.et-sheet-content-chat { overflow:hidden; display:flex; flex-direction:column; min-height:0; padding-bottom:0; }
+            .et-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; background:none; border-top:none; border-left:none; border-right:none; }
+            .et-tab:hover { color:#374151; }
+            .et-tab.active { color:#4f46e5; border-bottom-color:#4f46e5; }
+            .em-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; }
+            .em-op-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+            .em-op-card { min-height:120px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:box-shadow .15s,border-color .15s; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; background:#fff; text-align:left; width:100%; }
+            .em-op-card:hover:not(:disabled) { border-color:rgba(79,70,229,.25); box-shadow:0 4px 14px rgba(15,23,42,.06); }
+            .em-op-card:disabled { opacity:.55; cursor:not-allowed; }
+            .em-op-title { font-size:15px; font-weight:800; color:#111827; margin:0; line-height:1.15; }
+            .em-op-copy { font-size:12px; line-height:1.45; color:#6b7280; margin:0; }
+            .em-section-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
+            .em-section-title { margin:0; color:#111827; font-size:14px; font-weight:850; }
+            .em-section-sub { margin:3px 0 0; color:#94a3b8; font-size:12px; line-height:1.4; }
+            .em-btn-primary { background:#4f46e5; color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; width:100%; }
+            .em-btn-primary:hover { background:#4338ca; }
+            .em-btn-ghost { background:#f3f4f6; color:#374151; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
+            .em-btn-ghost:hover { background:#e5e7eb; }
+            .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
+            .et-tools-back { margin-bottom:12px; }
+            @media(max-width:639px){ #etSheetPanel { max-height: 92vh; } .em-op-grid { grid-template-columns:1fr; } }
+        </style>
+    `;
+    document.body.appendChild(root2);
+    document.getElementById("etSheetClose").addEventListener("click", () => api7().onClose?.());
+    document.getElementById("etSheetBackdrop").addEventListener("click", () => api7().onClose?.());
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && document.getElementById("etSheet")?.classList.contains("et-open")) api7().onClose?.();
+    });
+  }
+  function renderHeader() {
+    const e = getState().event;
+    if (!e) return;
+    document.getElementById("etSheetTitle").textContent = e.title;
+    const dateStr = new Date(e.start_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+    const typeLabel = { llc: "LLC", member: "Member", competition: "Competition" }[e.event_type] || e.event_type;
+    document.getElementById("etSheetSub").textContent = `${typeLabel} \xB7 ${dateStr} \xB7 Team coordination`;
+  }
+  function renderTabs() {
+    const STATE4 = getState();
+    const bar = document.getElementById("etSheetTabs");
+    const showTabs = STATE4.toolsView === "list";
+    bar.style.display = showTabs ? "" : "none";
+    if (!showTabs) return;
+    bar.innerHTML = ET_TABS.map(
+      (t) => `<button type="button" class="et-tab${t.key === STATE4.activeTab ? " active" : ""}" data-tab="${t.key}">${t.label}</button>`
+    ).join("");
+    bar.querySelectorAll(".et-tab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const st = getState();
+        st.activeTab = btn.dataset.tab;
+        renderTabs();
+        api7().renderTab?.(st.activeTab);
+        btn.scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" });
+      });
+    });
+  }
+  function renderContent(html5) {
+    document.getElementById("etSheetContent").innerHTML = html5;
+  }
+  function setContentMode(mode) {
+    const el = document.getElementById("etSheetContent");
     if (!el) return;
-    for (const s of classStrings) {
-      for (const c of String(s).split(/\s+/)) {
-        if (c) el.classList.add(c);
+    el.classList.toggle("et-sheet-content-chat", mode === "chat");
+  }
+  function setLoadingChrome() {
+    document.getElementById("etSheetTitle").textContent = "Loading\u2026";
+    document.getElementById("etSheetSub").textContent = "";
+    renderTabs();
+    setContentMode("default");
+    renderContent('<div class="em-placeholder"><div style="font-size:13px">Loading\u2026</div></div>');
+  }
+  function openPanel() {
+    const sheet = document.getElementById("etSheet");
+    const panel = document.getElementById("etSheetPanel");
+    const backdrop = document.getElementById("etSheetBackdrop");
+    sheet.classList.remove("et-sheet-hidden");
+    sheet.classList.add("et-open");
+    backdrop.classList.remove("opacity-0", "pointer-events-none");
+    backdrop.classList.add("opacity-100");
+    requestAnimationFrame(() => {
+      panel.classList.remove("pointer-events-none", "translate-y-full", "sm:translate-y-4", "sm:opacity-0");
+      panel.classList.add("pointer-events-auto", "translate-y-0", "sm:opacity-100");
+    });
+    document.body.style.overflow = "hidden";
+  }
+  function closePanel() {
+    const sheet = document.getElementById("etSheet");
+    const panel = document.getElementById("etSheetPanel");
+    const backdrop = document.getElementById("etSheetBackdrop");
+    if (!sheet || !sheet.classList.contains("et-open")) return;
+    panel.classList.add("pointer-events-none", "translate-y-full", "sm:translate-y-4", "sm:opacity-0");
+    panel.classList.remove("pointer-events-auto", "translate-y-0", "sm:opacity-100");
+    backdrop.classList.add("opacity-0", "pointer-events-none");
+    backdrop.classList.remove("opacity-100");
+    document.body.style.overflow = "";
+    setTimeout(() => {
+      sheet.classList.remove("et-open");
+      sheet.classList.add("et-sheet-hidden");
+    }, 250);
+  }
+  var teamShellApi = {
+    ensureMounted,
+    renderHeader,
+    renderTabs,
+    renderContent,
+    setContentMode,
+    setLoadingChrome,
+    openPanel,
+    closePanel,
+    getTabs: () => ET_TABS
+  };
+  globalThis.EventsTeamShell = teamShellApi;
+
+  // js/portal/events/team/panels.js
+  function memberGoing(rsvp) {
+    return typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+  }
+  function backBtnHtml(variant) {
+    if (variant !== "sheet") return "";
+    return `<button type="button" class="em-btn-ghost et-tools-back" onclick="window.EventsTeam.backToToolsList()">\u2039 Back to Tools</button>`;
+  }
+  function ticketHtml(event, rsvp, opts = {}) {
+    const { variant = "sheet", canvasId = "evtTeamTicketQR" } = opts;
+    const going = memberGoing(rsvp);
+    const hasQr = going && rsvp?.qr_token && event.checkin_mode === "attendee_ticket";
+    const title = evtEscapeHtml(event.title || "Event");
+    const qrBlock = hasQr ? `<canvas id="${canvasId}"></canvas><p class="text-xs text-gray-500 mt-2">Show this QR code at check-in</p>` : `<div class="ed-notice"><span class="ed-notice-emoji">\u2705</span><div><p class="ed-notice-title">You are on the RSVP list</p><p class="ed-notice-sub">No QR ticket is required for this event.</p></div></div>`;
+    return `
+        ${backBtnHtml(variant)}
+        <div class="em-section-head">
+            <div>
+                <p class="em-section-title">You're going</p>
+                <p class="em-section-sub">${title}</p>
+            </div>
+        </div>
+        <div class="em-card text-center [&_canvas]:mx-auto [&_canvas]:block [&_canvas]:rounded-xl">${qrBlock}</div>`;
+  }
+  function raffleHtml(event, eventId2, rsvp, opts = {}) {
+    const { variant = "sheet" } = opts;
+    const back = backBtnHtml(variant);
+    const going = memberGoing(rsvp);
+    const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && event.rsvp_enabled !== false;
+    if (raffleBundled) {
+      return `
+            ${back}
+            <div class="em-section-head">
+                <div>
+                    <p class="em-section-title">Raffle included</p>
+                    <p class="em-section-sub">Raffle entry is included when you complete your paid RSVP for this event.</p>
+                </div>
+            </div>`;
+    }
+    if (!going) {
+      return `
+            ${back}
+            <div class="em-section-head">
+                <div>
+                    <p class="em-section-title">RSVP first</p>
+                    <p class="em-section-sub">Once you are going, this same member RSVP will be used for the raffle entry.</p>
+                </div>
+            </div>
+            <button type="button" class="em-btn-primary" onclick="globalThis.evtCtaRaffleIntent='${eventId2}';evtHandleRsvp('${eventId2}','going')">RSVP to Enter Raffle</button>`;
+    }
+    const cost = event.raffle_entry_cost_cents || 0;
+    const sub = cost > 0 ? "Confirm to start checkout. Raffle tickets are non-refundable." : "One tap and you are in the draw.";
+    const action = cost > 0 ? `evtHandleRaffleEntry('${eventId2}')` : `evtHandleFreeRaffleEntry('${eventId2}')`;
+    const label = cost > 0 ? `Buy Raffle Entry \u2014 ${formatCurrency(cost)}` : "Enter Raffle \u2014 Free";
+    return `
+        ${back}
+        <div class="em-section-head">
+            <div>
+                <p class="em-section-title">Enter the raffle</p>
+                <p class="em-section-sub">${sub}</p>
+            </div>
+        </div>
+        <button type="button" class="em-btn-primary" onclick="${action}">${label}</button>`;
+  }
+  async function wireTicketQr(event, rsvp, opts = {}) {
+    const { canvasId = "evtTeamTicketQR" } = opts;
+    const going = memberGoing(rsvp);
+    const hasQr = going && rsvp?.qr_token && event.checkin_mode === "attendee_ticket";
+    if (!hasQr) return;
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const qrUrl = `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`;
+    try {
+      const QRCode = typeof globalThis.evtEnsureQRCode === "function" ? await window.evtEnsureQRCode() : window.QRCode;
+      if (QRCode && canvas.isConnected) {
+        QRCode.toCanvas(canvas, qrUrl, { width: 172, margin: 2 });
       }
+    } catch (err) {
+      console.warn("Team ticket QR failed:", err);
     }
   }
-  function twRemove(el, ...classStrings) {
-    if (!el) return;
-    for (const s of classStrings) {
-      for (const c of String(s).split(/\s+/)) {
-        if (c) el.classList.remove(c);
+  var teamPanelsApi = { ticketHtml, raffleHtml, wireTicketQr };
+  globalThis.EventsTeamPanels = teamPanelsApi;
+
+  // js/portal/events/team/tools-list.js
+  function canUseEventScanner(event, canManageEvent) {
+    const checkinEnabled = event.checkin_enabled !== false;
+    return checkinEnabled && canManageEvent && event.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(event.status);
+  }
+  function toolsOpCard(title, copy, onClick, disabled) {
+    const copyHtml = copy ? `<p class="em-op-copy">${copy}</p>` : "";
+    if (disabled) {
+      return `<button type="button" class="em-op-card" disabled aria-disabled="true"><p class="em-op-title">${title}</p>${copyHtml}</button>`;
+    }
+    return `<button type="button" class="em-op-card" onclick="${onClick}"><p class="em-op-title">${title}</p>${copyHtml}</button>`;
+  }
+  function toolsHtml(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, opts) {
+    const { canManageEvent } = opts;
+    const rsvpEnabled = event.rsvp_enabled !== false;
+    const raffleEnabled = !!event.raffle_enabled;
+    const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
+    const hasGoingRsvp = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+    const cards = [];
+    cards.push(toolsOpCard("Team Chat", "Private team coordination", `window.EventsTeam.open('${eventId2}',{tab:'chat'})`, false));
+    if (rsvpEnabled) {
+      if (!canRsvp) {
+        cards.push(toolsOpCard("RSVP as Myself", "RSVP is closed for this event", "", true));
+      } else if (eventIsFull && !hasGoingRsvp) {
+        cards.push(toolsOpCard("RSVP as Myself", "Event is full", "", true));
+      } else if (hasGoingRsvp) {
+        cards.push(toolsOpCard("RSVP as Myself", "You're RSVP'd \u2014 tap to update", `window.EventsTeam.close();evtHandleRsvp('${eventId2}','going')`, false));
+      } else if (event.pricing_mode === "paid") {
+        cards.push(toolsOpCard("RSVP as Myself", `Paid RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}`, `window.EventsTeam.close();evtHandleRsvp('${eventId2}','going')`, false));
+      } else {
+        cards.push(toolsOpCard("RSVP as Myself", "Count yourself as going", `window.EventsTeam.close();evtHandleRsvp('${eventId2}','going')`, false));
       }
     }
+    if (raffleEnabled) {
+      const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
+      if (raffleBundled) {
+        cards.push(toolsOpCard("Enter Raffle", rsvp?.paid ? "Included with your paid RSVP" : "Included with paid RSVP", "", true));
+      } else if (myRaffleEntry) {
+        cards.push(toolsOpCard("Enter Raffle", "Already entered", "", true));
+      } else if (entriesClosed) {
+        cards.push(toolsOpCard("Enter Raffle", "Entries are closed", "", true));
+      } else if (!hasGoingRsvp) {
+        cards.push(toolsOpCard("Enter Raffle", "RSVP first to enter the raffle", "", true));
+      } else {
+        const costLabel = event.raffle_entry_cost_cents > 0 ? formatCurrency(event.raffle_entry_cost_cents) : "Free entry";
+        cards.push(toolsOpCard("Enter Raffle", costLabel, `window.EventsTeam.openToolsView('raffle')`, false));
+      }
+    }
+    if (hasGoingRsvp) {
+      cards.push(toolsOpCard("View Ticket", "Your RSVP confirmation", `window.EventsTeam.openToolsView('ticket')`, false));
+    }
+    if (canUseEventScanner(event, canManageEvent)) {
+      cards.push(toolsOpCard("Scanner", "Scan attendee QR codes", `window.EventsTeam.close();evtOpenScanner('${eventId2}')`, false));
+    }
+    if (canManageEvent) {
+      const manageClick = `window.EventsTeam.close();(window.EventsManage?window.EventsManage.open('${eventId2}',{source:'portal'}):(window.location='../admin/events.html?id=${eventId2}'))`;
+      cards.push(toolsOpCard("Manage Event", "Hosts, RSVP, raffle, settings", manageClick, false));
+    }
+    return `<div class="em-op-grid">${cards.join("")}</div>`;
   }
-  var _ctaSheetScrollY = 0;
-  function lockCtaSheetScroll() {
-    if (window.matchMedia("(min-width: 1024px)").matches) return;
-    if (document.body.dataset.evtCtaSheetLocked === "1") return;
-    _ctaSheetScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-    document.body.dataset.evtCtaSheetLocked = "1";
-    document.documentElement.classList.add("evt-cta-sheet-open");
-    document.body.classList.add("evt-cta-sheet-open");
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${_ctaSheetScrollY}px`;
-    document.body.style.left = "0";
-    document.body.style.right = "0";
-    document.body.style.width = "100%";
-  }
-  function unlockCtaSheetScroll() {
-    if (document.body.dataset.evtCtaSheetLocked !== "1") return;
-    delete document.body.dataset.evtCtaSheetLocked;
-    document.documentElement.classList.remove("evt-cta-sheet-open");
-    document.body.classList.remove("evt-cta-sheet-open");
-    const y = _ctaSheetScrollY;
-    document.body.style.position = "";
-    document.body.style.top = "";
-    document.body.style.left = "";
-    document.body.style.right = "";
-    document.body.style.width = "";
-    window.scrollTo(0, y);
-  }
-  function expandCtaSheet(bar, { chat = false } = {}) {
-    if (!bar) return;
-    twAdd(bar, TW_CTA_BAR_EXPANDED);
-    if (chat) twAdd(bar, TW_CTA_BAR_CHAT_MOBILE);
-    lockCtaSheetScroll();
-  }
-  function collapseCtaSheet(bar) {
-    if (bar) twRemove(bar, TW_CTA_BAR_EXPANDED, TW_CTA_BAR_CHAT_MOBILE);
-    unlockCtaSheetScroll();
-  }
+  var teamToolsListApi = { toolsHtml };
+  globalThis.EventsTeamToolsList = teamToolsListApi;
 
   // js/portal/events/team/chat.js
   var EVT_TEAM_CHAT_MAX_LEN = 4e3;
   var EVT_TEAM_CHAT_TIME_GAP_MS = 60 * 60 * 1e3;
+  var CHAT_ROOT = "flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white";
+  var CHAT_THREAD = "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain bg-white px-3.5 py-3";
+  var CHAT_EMPTY = "m-auto px-4 py-6 text-center text-[15px] leading-snug text-gray-400";
+  var CHAT_ALERT = "mx-4 my-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3.5 text-center text-sm leading-snug text-amber-900";
+  var CHAT_ROW_SENT = "mb-0.5 flex max-w-[78%] flex-col items-end self-end";
+  var CHAT_ROW_RECV = "mb-1 flex max-w-[88%] items-end gap-1.5 self-start";
+  var CHAT_RECV_COL = "flex min-w-0 flex-1 flex-col items-start";
+  var CHAT_AVATAR = "evt-chat-avatar flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+  var CHAT_AVATAR_HIDDEN = "invisible pointer-events-none";
+  var CHAT_SENDER = "mb-0.5 px-3 text-[11px] font-semibold leading-tight text-gray-400";
+  var CHAT_BUBBLE = "break-words whitespace-pre-wrap px-3 py-2 text-base leading-snug rounded-[18px]";
+  var CHAT_BUBBLE_SENT = "rounded-br-md bg-[#007AFF] text-white";
+  var CHAT_BUBBLE_RECV = "rounded-bl-md bg-[#E9E9EB] text-gray-900";
+  var CHAT_TIME = "mt-0.5 px-1 text-[11px] leading-tight text-gray-400";
+  var CHAT_COMPOSER = "flex shrink-0 items-end gap-2 border-t border-gray-200/80 bg-gray-50/95 px-2.5 py-2 backdrop-blur-xl pb-[max(8px,env(safe-area-inset-bottom))]";
+  var CHAT_INPUT_WRAP = "flex min-h-9 flex-1 items-end rounded-full border border-gray-300/80 bg-white px-3 py-1.5";
+  var CHAT_TEXTAREA = "max-h-[100px] min-h-[22px] w-full resize-none border-0 bg-transparent text-base leading-snug outline-none placeholder:text-gray-400 disabled:opacity-55";
+  var CHAT_SEND = "flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-0 bg-[#007AFF] p-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:stroke-[2.5] [&_svg]:fill-none [&_svg]:stroke-current";
+  var IM_SEND_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>';
   function canCreateTeamChat(event) {
     if (!event || !globalThis.evtCurrentUser?.id) return false;
     if (event.created_by === globalThis.evtCurrentUser.id) return true;
@@ -4122,8 +4326,8 @@
     const initials = evtEscapeHtml(profileInitials(profile));
     const url = profile?.profile_picture_url;
     const inner = url ? `<img src="${evtEscapeHtml(url)}" alt="" loading="lazy">` : `<span class="text-[11px] font-bold leading-none text-indigo-600">${initials}</span>`;
-    const spacerCls = spacer ? ` ${TW_CHAT_AVATAR_HIDDEN}` : "";
-    return `<div class="${TW_CHAT_AVATAR}${spacerCls}" aria-hidden="${spacer ? "true" : "false"}" title="${name}">${inner}</div>`;
+    const spacerCls = spacer ? ` ${CHAT_AVATAR_HIDDEN}` : "";
+    return `<div class="${CHAT_AVATAR}${spacerCls}" aria-hidden="${spacer ? "true" : "false"}" title="${name}">${inner}</div>`;
   }
   function formatBubbleTime(iso) {
     if (!iso) return "";
@@ -4183,7 +4387,7 @@
   }
   function messagesHtml(state) {
     if (!state?.messages?.length) {
-      return `<p class="${TW_CHAT_EMPTY}">No messages yet.<br>Send the first message to the team.</p>`;
+      return `<p class="${CHAT_EMPTY}">No messages yet.<br>Send the first message to the team.</p>`;
     }
     const myId = globalThis.evtCurrentUser?.id;
     let prevSenderId = null;
@@ -4193,24 +4397,19 @@
       const name = evtEscapeHtml(displayName(profile));
       const prevMsg = i > 0 ? state.messages[i - 1] : null;
       const showTime = shouldShowMessageTime(prevMsg?.created_at, m.created_at);
-      const timeHtml = showTime ? `<time class="${TW_CHAT_TIME}">${evtEscapeHtml(formatBubbleTime(m.created_at))}</time>` : "";
+      const timeHtml = showTime ? `<time class="${CHAT_TIME}">${evtEscapeHtml(formatBubbleTime(m.created_at))}</time>` : "";
       const body = evtEscapeHtml(m.body || "");
       if (isMine) {
         prevSenderId = m.sender_id;
-        const bubbleCls2 = `${TW_CHAT_BUBBLE} ${TW_CHAT_BUBBLE_SENT}`;
-        return `<div class="${TW_CHAT_ROW_SENT}" data-msg-id="${m.id}">
-        <div class="${bubbleCls2}">${body}</div>
-        ${timeHtml}
-    </div>`;
+        return `<div class="${CHAT_ROW_SENT}" data-msg-id="${m.id}"><div class="${CHAT_BUBBLE} ${CHAT_BUBBLE_SENT}">${body}</div>${timeHtml}</div>`;
       }
       const showAvatar = m.sender_id !== prevSenderId;
       prevSenderId = m.sender_id;
-      const bubbleCls = `${TW_CHAT_BUBBLE} ${TW_CHAT_BUBBLE_RECV}`;
-      return `<div class="${TW_CHAT_ROW_RECV}" data-msg-id="${m.id}">
+      return `<div class="${CHAT_ROW_RECV}" data-msg-id="${m.id}">
         ${avatarHtml(profile, { spacer: !showAvatar })}
-        <div class="${TW_CHAT_RECV_COL}">
-            ${showAvatar ? `<span class="${TW_CHAT_SENDER}">${name}</span>` : ""}
-            <div class="${bubbleCls}">${body}</div>
+        <div class="${CHAT_RECV_COL}">
+            ${showAvatar ? `<span class="${CHAT_SENDER}">${name}</span>` : ""}
+            <div class="${CHAT_BUBBLE} ${CHAT_BUBBLE_RECV}">${body}</div>
             ${timeHtml}
         </div>
     </div>`;
@@ -4281,81 +4480,43 @@
       filter: `event_id=eq.${eventId2}`
     }, (payload) => handleRealtime({ eventType: "UPDATE", new: payload.new })).subscribe();
   }
-  var IM_SEND_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>';
-  function renderPanel(eventId2, event, opts) {
+  function renderChatBody(eventId2, opts) {
     const { loading, unavailable, notStarted, canCompose } = opts;
-    const eventTitle = evtEscapeHtml(event?.title || "Event");
-    const backBtn = `<button type="button" class="${TW_CHAT_BACK}" ${evtDataAction("evtOpenTeamToolsPanel", eventId2)} aria-label="Back to Event Tools">\u2039 Tools</button>`;
-    const nav = `
-    <header class="${TW_CHAT_NAV}">
-        ${backBtn}
-        <div class="${TW_CHAT_NAV_CENTER}">
-            <strong class="${TW_CHAT_NAV_TITLE}">Team Chat</strong>
-            <span class="${TW_CHAT_NAV_SUB}">${eventTitle}</span>
-        </div>
-        <div aria-hidden="true"></div>
-    </header>`;
-    let body = "";
-    if (loading) {
-      body = `<p class="${TW_CHAT_EMPTY}">Loading\u2026</p>`;
-    } else if (unavailable) {
-      body = `<p class="${TW_CHAT_ALERT}">${evtEscapeHtml(unavailable)}</p>`;
-    } else if (notStarted) {
-      body = `<p class="${TW_CHAT_ALERT}">Team chat has not been started yet. Ask the event creator or a coordinator to open Team Chat first.</p>`;
-    } else {
-      const state = window.__evtTeamChatState;
-      body = `
-        <div id="evtTeamChatMessages" class="${TW_CHAT_THREAD}" role="log" aria-live="polite">${messagesHtml(state)}</div>
-        <div id="evtTeamChatStatus" class="${TW_CHAT_EMPTY} px-2 pb-1" aria-live="polite"></div>
+    if (loading) return `<p class="${CHAT_EMPTY}">Loading\u2026</p>`;
+    if (unavailable) return `<p class="${CHAT_ALERT}">${evtEscapeHtml(unavailable)}</p>`;
+    if (notStarted) {
+      return `<p class="${CHAT_ALERT}">Team chat has not been started yet. Ask the event creator or a coordinator to open Team Chat first.</p>`;
+    }
+    const state = window.__evtTeamChatState;
+    return `
+        <div id="evtTeamChatMessages" class="${CHAT_THREAD}" role="log" aria-live="polite">${messagesHtml(state)}</div>
+        <div id="evtTeamChatStatus" class="${CHAT_EMPTY} px-2 pb-1" aria-live="polite"></div>
         ${canCompose ? `
-        <div class="${TW_CHAT_COMPOSER}">
-            <div class="${TW_CHAT_INPUT_WRAP}">
-                <textarea id="evtTeamChatInput" class="${TW_CHAT_TEXTAREA}" maxlength="${EVT_TEAM_CHAT_MAX_LEN}" rows="1" placeholder="Message" aria-label="Team chat message"></textarea>
+        <div class="${CHAT_COMPOSER}">
+            <div class="${CHAT_INPUT_WRAP}">
+                <textarea id="evtTeamChatInput" class="${CHAT_TEXTAREA}" maxlength="${EVT_TEAM_CHAT_MAX_LEN}" rows="1" placeholder="Message" aria-label="Team chat message"></textarea>
             </div>
-            <button type="button" id="evtTeamChatSendBtn" class="${TW_CHAT_SEND}" ${evtDataAction("evtSendTeamChatMessage", eventId2)} aria-label="Send message">${IM_SEND_SVG}</button>
+            <button type="button" id="evtTeamChatSendBtn" class="${CHAT_SEND}" ${evtDataAction("evtSendTeamChatMessage", eventId2)} aria-label="Send message">${IM_SEND_SVG}</button>
         </div>` : ""}`;
-    }
-    return `<div class="${TW_CHAT_ROOT}">${nav}${body}</div>`;
   }
-  function configureChatPanel(panel, visible) {
-    panel.className = twPanelClasses("chat", { expanded: true });
-    panel.classList.toggle("hidden", !visible);
-  }
-  async function open(eventId2) {
+  async function initTab(eventId2, event) {
     cleanup();
-    const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
-    if (!event) return;
-    let bar = document.getElementById("evtCtaBar");
-    if (!bar && typeof globalThis.evtEnsureCtaBarShell === "function") {
-      bar = window.evtEnsureCtaBarShell();
-    }
-    if (!bar) return;
-    if (typeof globalThis.evtApplyDesktopTeamToolsOverlay === "function") {
-      window.evtApplyDesktopTeamToolsOverlay(bar);
-    }
-    const panel = document.getElementById("evtCtaPanel");
-    if (!panel) return;
-    const closeBtn = `<button type="button" class="${TW_CLOSE_BTN} max-lg:hidden" ${evtDataAction("evtCloseCtaPanel")} aria-label="Close">\xD7</button>`;
-    expandCtaSheet(bar, { chat: true });
-    configureChatPanel(panel, true);
-    panel.innerHTML = `${closeBtn}${renderPanel(eventId2, event, { loading: true })}`;
+    const Shell3 = window.EventsTeamShell;
+    if (!Shell3) return;
+    Shell3.renderContent(`<div class="${CHAT_ROOT}">${renderChatBody(eventId2, { loading: true })}</div>`);
     const ensure = await ensureChat(event, eventId2);
     if (ensure.error) {
-      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, event, {
-        unavailable: friendlyError(ensure.error)
-      })}`;
+      Shell3.renderContent(`<div class="${CHAT_ROOT}">${renderChatBody(eventId2, { unavailable: friendlyError(ensure.error) })}</div>`);
       return;
     }
     if (ensure.notStarted || !ensure.chat) {
-      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, event, { notStarted: true })}`;
+      Shell3.renderContent(`<div class="${CHAT_ROOT}">${renderChatBody(eventId2, { notStarted: true })}</div>`);
       return;
     }
     const chatId = ensure.chat.id;
     const loaded = await loadMessages(chatId, eventId2);
     if (loaded.error) {
-      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, event, {
-        unavailable: friendlyError(loaded.error)
-      })}`;
+      Shell3.renderContent(`<div class="${CHAT_ROOT}">${renderChatBody(eventId2, { unavailable: friendlyError(loaded.error) })}</div>`);
       return;
     }
     window.__evtTeamChatState = {
@@ -4365,7 +4526,7 @@
       profilesById: loaded.profilesById,
       channel: null
     };
-    panel.innerHTML = `${closeBtn}${renderPanel(eventId2, event, { canCompose: true })}`;
+    Shell3.renderContent(`<div class="${CHAT_ROOT}">${renderChatBody(eventId2, { canCompose: true })}</div>`);
     refreshMessageList();
     subscribe(chatId, eventId2);
     const input = document.getElementById("evtTeamChatInput");
@@ -4377,6 +4538,9 @@
         }
       });
     }
+  }
+  async function open(eventId2) {
+    return window.EventsTeam?.open?.(eventId2, { tab: "chat" });
   }
   async function send(eventId2) {
     const state = window.__evtTeamChatState;
@@ -4425,6 +4589,7 @@
   }
   var teamChatApi = {
     open,
+    initTab,
     send,
     cleanup,
     ensureChat,
@@ -4439,217 +4604,88 @@
   PortalEvents2.team = PortalEvents2.team || {};
   PortalEvents2.team.chat = teamChatApi;
 
-  // js/portal/events/team/tools.js
+  // js/portal/events/team/cta-bar.js
   var EVT_CTA_ICONS = {
     check: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
     ticket: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>',
     lock: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
     manage: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>'
   };
-  function injectTeamToolsStyles() {
+  var TW_CTA_PANEL = "evt-cta-panel relative flex w-full flex-col min-h-0 flex-1 overflow-y-auto px-4 py-3 max-lg:border-0 max-lg:bg-transparent";
+  var TW_CTA_PANEL_EXPANDED = "evt-cta-bar-expanded max-lg:top-[max(6px,env(safe-area-inset-top))] max-lg:bottom-[calc(56px+env(safe-area-inset-bottom))] max-lg:justify-end max-lg:gap-2.5 max-lg:overflow-hidden max-lg:overscroll-none max-lg:bg-white/95 max-lg:backdrop-blur-xl max-lg:shadow-[0_-6px_28px_rgba(15,23,42,0.1)] max-lg:border-t max-lg:border-black/5";
+  var TW_CTA_CLOSE = "absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border-0 bg-gray-100 text-lg font-bold leading-none text-gray-700";
+  var _ctaSheetScrollY = 0;
+  function lockCtaScroll() {
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+    if (document.body.dataset.evtCtaSheetLocked === "1") return;
+    _ctaSheetScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.dataset.evtCtaSheetLocked = "1";
+    document.documentElement.classList.add("evt-cta-sheet-open");
+    document.body.classList.add("evt-cta-sheet-open");
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${_ctaSheetScrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+  }
+  function unlockCtaScroll() {
+    if (document.body.dataset.evtCtaSheetLocked !== "1") return;
+    delete document.body.dataset.evtCtaSheetLocked;
+    document.documentElement.classList.remove("evt-cta-sheet-open");
+    document.body.classList.remove("evt-cta-sheet-open");
+    const y = _ctaSheetScrollY;
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+    window.scrollTo(0, y);
+  }
+  function expandCtaBar(bar) {
+    if (!bar) return;
+    bar.classList.add(...TW_CTA_PANEL_EXPANDED.split(/\s+/).filter(Boolean));
+    lockCtaScroll();
+  }
+  function collapseCtaBar(bar) {
+    if (bar) bar.classList.remove(...TW_CTA_PANEL_EXPANDED.split(/\s+/).filter(Boolean));
+    unlockCtaScroll();
   }
   function raffleLockedCtaBtnHtml() {
     return `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_RAFFLE_LOCKED}" disabled aria-disabled="true">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
   }
-  function canUseEventScanner(event, canManageEvent) {
-    const checkinEnabled = event.checkin_enabled !== false;
-    return checkinEnabled && canManageEvent && event.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(event.status);
-  }
-  function teamToolsRow(label, sub, onClick, disabled) {
-    const subHtml = sub ? `<span class="${TW_TOOL_SUB}">${sub}</span>` : "";
-    if (disabled) {
-      return `<button type="button" class="${TW_TOOL_BTN}" disabled aria-disabled="true"><span class="${TW_TOOL_MAIN}">${label}</span>${subHtml}</button>`;
-    }
-    return `<button type="button" class="${TW_TOOL_BTN}" onclick="${onClick}"><span class="${TW_TOOL_MAIN}">${label}</span>${subHtml}</button>`;
-  }
-  function buildTeamToolsPanelHtml(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, opts) {
-    const { canManageEvent } = opts;
-    const rsvpEnabled = event.rsvp_enabled !== false;
-    const raffleEnabled = !!event.raffle_enabled;
-    const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
-    const hasGoingRsvp = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
-    const rows = [];
-    rows.push(teamToolsRow("Team Chat", "Private team coordination", `evtCloseCtaPanel();evtOpenTeamChat('${eventId2}')`, false));
-    if (rsvpEnabled) {
-      if (!canRsvp) {
-        rows.push(teamToolsRow("RSVP as Myself", "RSVP is closed for this event", "", true));
-      } else if (eventIsFull && !hasGoingRsvp) {
-        rows.push(teamToolsRow("RSVP as Myself", "Event is full", "", true));
-      } else if (hasGoingRsvp) {
-        rows.push(teamToolsRow("RSVP as Myself", "You're RSVP'd \u2014 tap to update", `evtCloseCtaPanel();evtHandleRsvp('${eventId2}','going')`, false));
-      } else if (event.pricing_mode === "paid") {
-        rows.push(teamToolsRow("RSVP as Myself", `Paid RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}`, `evtCloseCtaPanel();evtHandleRsvp('${eventId2}','going')`, false));
-      } else {
-        rows.push(teamToolsRow("RSVP as Myself", "Count yourself as going", `evtCloseCtaPanel();evtHandleRsvp('${eventId2}','going')`, false));
-      }
-    }
-    if (raffleEnabled) {
-      const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
-      if (raffleBundled) {
-        rows.push(teamToolsRow("Enter Raffle", rsvp?.paid ? "Included with your paid RSVP" : "Included with paid RSVP", "", true));
-      } else if (myRaffleEntry) {
-        rows.push(teamToolsRow("Enter Raffle", "Already entered", "", true));
-      } else if (entriesClosed) {
-        rows.push(teamToolsRow("Enter Raffle", "Entries are closed", "", true));
-      } else if (!hasGoingRsvp) {
-        rows.push(teamToolsRow("Enter Raffle", "RSVP first to enter the raffle", "", true));
-      } else {
-        rows.push(teamToolsRow("Enter Raffle", event.raffle_entry_cost_cents > 0 ? formatCurrency(event.raffle_entry_cost_cents) : "Free entry", `evtOpenCtaPanel('raffle','${eventId2}')`, false));
-      }
-    }
-    if (hasGoingRsvp) {
-      rows.push(teamToolsRow("View Ticket", "Your RSVP confirmation", `evtOpenCtaPanel('ticket','${eventId2}')`, false));
-    }
-    if (canUseEventScanner(event, canManageEvent)) {
-      rows.push(teamToolsRow("Scanner", "Scan attendee QR codes", `evtCloseCtaPanel();evtOpenScanner('${eventId2}')`, false));
-    }
-    if (canManageEvent) {
-      const manageClick = `evtCloseCtaPanel();(window.EventsManage?window.EventsManage.open('${eventId2}',{source:'portal'}):(window.location='../admin/events.html?id=${eventId2}'))`;
-      rows.push(teamToolsRow("Manage Event", "Hosts, RSVP, raffle, settings", manageClick, false));
-    }
-    return `<div class="${TW_TOOL_LIST}">${rows.join("")}</div>`;
-  }
-  function ensureCtaBarShell() {
-    let bar = document.getElementById("evtCtaBar");
-    if (!bar) {
-      bar = document.createElement("div");
-      bar.id = "evtCtaBar";
-      bar.className = window.matchMedia("(min-width: 1024px)").matches ? `${TW_FLOATING_SHELL} ${TW_DESKTOP_OVERLAY}` : TW_CTA_BAR;
-      bar.dataset.evtFloatingShell = "1";
-      bar.innerHTML = `<div id="evtCtaPanel" class="${TW_PANEL_BASE} ${TW_PANEL_TOOLS} hidden"></div><div class="${TW_CTA_ACTIONS} lg:hidden" hidden aria-hidden="true"></div>`;
-      document.body.appendChild(bar);
-      document.body.classList.add("evt-cta-active");
-    }
-    return bar;
-  }
-  function applyDesktopTeamToolsOverlay(bar) {
-    if (!bar || !window.matchMedia("(min-width: 1024px)").matches) return;
-    twAdd(bar, TW_FLOATING_SHELL, TW_DESKTOP_OVERLAY);
-    const actions = bar.querySelector(".evt-cta-actions");
-    if (actions) actions.classList.add("lg:hidden");
-    if (!bar.dataset.evtOverlayCloseBound) {
-      bar.dataset.evtOverlayCloseBound = "1";
-      bar.addEventListener("click", (e) => {
-        if (e.target === bar) closeCtaPanel();
-      });
-    }
-  }
-  function setPanelLayout(panel, mode, { expanded = false, visible = true } = {}) {
-    panel.className = twPanelClasses(mode, { expanded });
-    panel.classList.toggle("hidden", !visible);
-  }
   function closeCtaPanel() {
-    if (typeof globalThis.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
     const panel = document.getElementById("evtCtaPanel");
     const bar = document.getElementById("evtCtaBar");
     if (panel) {
       panel.classList.add("hidden");
       panel.innerHTML = "";
     }
-    if (bar) {
-      collapseCtaSheet(bar);
-      twRemove(bar, TW_FLOATING_SHELL, TW_DESKTOP_OVERLAY);
-      if (bar.dataset.evtFloatingShell === "1") {
-        delete bar.dataset.evtFloatingShell;
-        cleanupBottomNav();
-        return;
-      }
-    }
-  }
-  function panelHead(title, sub) {
-    return `<div class="${TW_PANEL_HEAD}"><strong class="${TW_PANEL_HEAD_TITLE}">${title}</strong><span class="${TW_PANEL_HEAD_SUB}">${sub}</span></div>`;
+    if (bar) collapseCtaBar(bar);
   }
   function openCtaPanel(kind, eventId2) {
     const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
     if (!event) return;
-    const bar = ensureCtaBarShell();
+    const bar = document.getElementById("evtCtaBar");
     const panel = document.getElementById("evtCtaPanel");
-    if (!panel) return;
-    if (bar.dataset.evtFloatingShell === "1") applyDesktopTeamToolsOverlay(bar);
+    if (!bar || !panel) return;
     const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
-    const closeBtn = `<button type="button" class="${TW_CLOSE_BTN}" ${evtDataAction("evtCloseCtaPanel")} aria-label="Close">\xD7</button>`;
-    expandCtaSheet(bar);
-    setPanelLayout(panel, "tools", { expanded: true, visible: true });
-    const memberGoing = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
-    if (kind === "ticket") {
-      const hasQr = memberGoing && rsvp?.qr_token && event.checkin_mode === "attendee_ticket";
-      panel.innerHTML = `
-        ${closeBtn}
-        ${panelHead("You're going", evtEscapeHtml(event.title || "Event"))}
-        <div class="${TW_TICKET_CARD}">
-            ${hasQr ? '<canvas id="evtCtaTicketQR"></canvas><p>Show this QR code at check-in</p>' : '<div class="ed-notice"><span class="ed-notice-emoji">\u2705</span><div><p class="ed-notice-title">You are on the RSVP list</p><p class="ed-notice-sub">No QR ticket is required for this event.</p></div></div>'}
-        </div>`;
-      if (hasQr) {
-        const canvas = document.getElementById("evtCtaTicketQR");
-        const qrUrl = `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`;
-        (async () => {
-          try {
-            const QRCode = typeof globalThis.evtEnsureQRCode === "function" ? await window.evtEnsureQRCode() : window.QRCode;
-            if (QRCode && canvas?.isConnected) {
-              QRCode.toCanvas(canvas, qrUrl, { width: 172, margin: 2 });
-            }
-          } catch (err) {
-            console.warn("CTA ticket QR failed:", err);
-          }
-        })();
-      }
+    const Panels2 = window.EventsTeamPanels || {};
+    const closeBtn = `<button type="button" class="${TW_CTA_CLOSE}" ${evtDataAction("evtCloseCtaPanel")} aria-label="Close">\xD7</button>`;
+    expandCtaBar(bar);
+    panel.className = TW_CTA_PANEL;
+    panel.classList.remove("hidden");
+    if (kind === "ticket" && Panels2.ticketHtml) {
+      panel.innerHTML = `${closeBtn}${Panels2.ticketHtml(event, rsvp, { variant: "cta", canvasId: "evtCtaTicketQR" })}`;
+      Panels2.wireTicketQr?.(event, rsvp, { canvasId: "evtCtaTicketQR" });
       return;
     }
-    const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && event.rsvp_enabled !== false;
-    if (raffleBundled) {
-      panel.innerHTML = `
-        ${closeBtn}
-        ${panelHead("Raffle included", "Raffle entry is included when you complete your paid RSVP for this event.")}`;
-      return;
-    }
-    if (!memberGoing) {
-      panel.innerHTML = `
-        ${closeBtn}
-        ${panelHead("RSVP first", "Once you are going, this same member RSVP will be used for the raffle entry.")}
-        <button type="button" onclick="globalThis.evtCtaRaffleIntent ='${eventId2}';evtHandleRsvp('${eventId2}','going')" class="${TW_RAFFLE_BUY}">RSVP to Enter Raffle</button>`;
-      return;
-    }
-    const cost = event.raffle_entry_cost_cents || 0;
-    panel.innerHTML = `
-    ${closeBtn}
-    ${panelHead("Enter the raffle", cost > 0 ? "Confirm to start checkout. Raffle tickets are non-refundable." : "One tap and you are in the draw.")}
-    <button type="button" onclick="${cost > 0 ? `evtHandleRaffleEntry('${eventId2}')` : `evtHandleFreeRaffleEntry('${eventId2}')`}" class="${TW_RAFFLE_BUY}">${cost > 0 ? `Buy Raffle Entry \u2014 ${formatCurrency(cost)}` : "Enter Raffle \u2014 Free"}</button>`;
-  }
-  function openTeamToolsPanel(eventId2) {
-    if (typeof globalThis.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
-    const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
-    if (!event) return;
-    const ctx = window.__evtTeamToolsCtx || {};
-    const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
-    const myRaffleEntry = ctx.eventId === eventId2 ? ctx.myRaffleEntry : null;
-    const entriesClosed = ctx.eventId === eventId2 ? !!ctx.entriesClosed : false;
-    const eventIsFull = ctx.eventId === eventId2 ? !!ctx.eventIsFull : false;
-    const canManageEvent = ctx.eventId === eventId2 ? !!ctx.canManageEvent : false;
-    let bar = document.getElementById("evtCtaBar");
-    if (!bar) bar = ensureCtaBarShell();
-    applyDesktopTeamToolsOverlay(bar);
-    const panel = document.getElementById("evtCtaPanel");
-    if (!panel) return;
-    const closeBtn = `<button type="button" class="${TW_CLOSE_BTN}" ${evtDataAction("evtCloseCtaPanel")} aria-label="Close">\xD7</button>`;
-    const actionsHtml = buildTeamToolsPanelHtml(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, { canManageEvent });
-    expandCtaSheet(bar);
-    setPanelLayout(panel, "tools", { expanded: true, visible: true });
-    panel.innerHTML = `
-    ${closeBtn}
-    ${panelHead("Event Tools", "Team coordination and your personal RSVP, raffle, and ticket.")}
-    ${actionsHtml}`;
-    if (!window.__evtTeamToolsEscBound) {
-      window.__evtTeamToolsEscBound = true;
-      document.addEventListener("keydown", (e) => {
-        if (e.key !== "Escape") return;
-        const p = document.getElementById("evtCtaPanel");
-        if (p && !p.classList.contains("hidden")) closeCtaPanel();
-      });
+    if (kind === "raffle" && Panels2.raffleHtml) {
+      panel.innerHTML = `${closeBtn}${Panels2.raffleHtml(event, eventId2, rsvp, { variant: "cta" })}`;
     }
   }
   function cleanupBottomNav() {
-    if (typeof globalThis.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
-    unlockCtaSheetScroll();
+    closeCtaPanel();
+    unlockCtaScroll();
     const el = document.getElementById("evtCtaBar");
     if (el) el.remove();
     const hint = document.querySelector(".bottom-tab-bar .swipe-hint");
@@ -4669,7 +4705,7 @@
     let primaryBtn = "";
     let secondaryBtn = "";
     let ctaFootnote = "";
-    const teamBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_TEAM}" ${evtDataAction("evtOpenTeamToolsPanel", eventId2)} aria-label="Open event team tools">Team</button>`;
+    const teamBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_TEAM}" onclick="window.EventsTeam.open('${eventId2}',{tab:'tools'})" aria-label="Open event team tools">Team</button>`;
     if (isHost) {
       primaryBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_MANAGE}" onclick="window.EventsManage ? window.EventsManage.open('${eventId2}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId2}')">${EVT_CTA_ICONS.manage} Manage Event</button>`;
       if (teamHubAccess) secondaryBtn = teamBtn;
@@ -4710,11 +4746,8 @@
           } else {
             raffleSlot = `<button class="${TW_CTA_BTN} ${activeCls}" ${evtDataAction("evtOpenCtaPanel", "raffle", eventId2)}>${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
           }
-          if (hasPrimary) {
-            secondaryBtn = raffleSlot;
-          } else {
-            primaryBtn = raffleSlot;
-          }
+          if (hasPrimary) secondaryBtn = raffleSlot;
+          else primaryBtn = raffleSlot;
         }
       }
     }
@@ -4722,35 +4755,157 @@
     const bar = document.createElement("div");
     bar.id = "evtCtaBar";
     bar.className = TW_CTA_BAR + (ctaFootnote ? " evt-cta-bar-has-footnote" : "");
-    bar.innerHTML = `<div id="evtCtaPanel" class="${TW_PANEL_BASE} ${TW_PANEL_TOOLS} hidden"></div><div class="${TW_CTA_ACTIONS}">${primaryBtn + secondaryBtn}</div>${ctaFootnote}`;
+    bar.innerHTML = `<div id="evtCtaPanel" class="${TW_CTA_PANEL} hidden"></div><div class="${TW_CTA_ACTIONS}">${primaryBtn + secondaryBtn}</div>${ctaFootnote}`;
     document.body.appendChild(bar);
     document.body.classList.add("evt-cta-active");
     const hint = document.querySelector(".bottom-tab-bar .swipe-hint");
     if (hint) hint.style.display = "none";
+    if (!window.__evtCtaPanelEscBound) {
+      window.__evtCtaPanelEscBound = true;
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        const p = document.getElementById("evtCtaPanel");
+        if (p && !p.classList.contains("hidden")) closeCtaPanel();
+      });
+    }
   }
-  var teamToolsApi = {
-    injectStyles: injectTeamToolsStyles,
-    ensureCtaBarShell,
-    applyDesktopTeamToolsOverlay,
-    buildPanelHtml: buildTeamToolsPanelHtml,
-    open: openTeamToolsPanel,
-    closePanel: closeCtaPanel,
-    openCtaPanel,
-    initBottomNav,
-    cleanupBottomNav,
-    raffleLockedCtaBtnHtml
-  };
-  globalThis.evtInjectTeamToolsStyles = injectTeamToolsStyles;
-  globalThis.evtEnsureCtaBarShell = ensureCtaBarShell;
-  globalThis.evtApplyDesktopTeamToolsOverlay = applyDesktopTeamToolsOverlay;
-  globalThis.evtOpenTeamToolsPanel = openTeamToolsPanel;
-  globalThis.evtCloseCtaPanel = closeCtaPanel;
-  globalThis.evtOpenCtaPanel = openCtaPanel;
   globalThis.evtInitBottomNav = initBottomNav;
   globalThis.evtCleanupBottomNav = cleanupBottomNav;
+  globalThis.evtOpenCtaPanel = openCtaPanel;
+  globalThis.raffleLockedCtaBtnHtml = raffleLockedCtaBtnHtml;
+
+  // js/portal/events/team/sheet.js
+  var STATE = {
+    eventId: null,
+    event: null,
+    activeTab: "tools",
+    toolsView: "list",
+    ctx: {}
+  };
+  var Shell = window.EventsTeamShell;
+  var ToolsList = window.EventsTeamToolsList;
+  var Panels = window.EventsTeamPanels;
+  function ctxForEvent(eventId2) {
+    const ctx = window.__evtTeamToolsCtx || {};
+    if (ctx.eventId !== eventId2) return {};
+    return ctx;
+  }
+  function renderToolsTab() {
+    const { event, eventId: eventId2, ctx, toolsView } = STATE;
+    if (!event || !eventId2) return;
+    const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
+    Shell.setContentMode("default");
+    if (toolsView === "ticket") {
+      Shell.renderContent(Panels.ticketHtml(event, rsvp, { variant: "sheet" }));
+      Panels.wireTicketQr(event, rsvp);
+      return;
+    }
+    if (toolsView === "raffle") {
+      Shell.renderContent(Panels.raffleHtml(event, eventId2, rsvp, { variant: "sheet" }));
+      return;
+    }
+    Shell.renderContent(ToolsList.toolsHtml(
+      event,
+      eventId2,
+      rsvp,
+      ctx.myRaffleEntry ?? null,
+      !!ctx.entriesClosed,
+      !!ctx.eventIsFull,
+      { canManageEvent: !!ctx.canManageEvent }
+    ));
+  }
+  function renderTab(tab) {
+    const prevTab = STATE.activeTab;
+    STATE.activeTab = tab;
+    if (tab === "chat") {
+      Shell.setContentMode("chat");
+      const chat = globalThis.PortalEvents?.team?.chat;
+      if (chat?.initTab) chat.initTab(STATE.eventId, STATE.event);
+      return;
+    }
+    if (tab === "tools" && prevTab === "chat") STATE.toolsView = "list";
+    Shell.renderTabs();
+    renderToolsTab();
+  }
+  function open2(eventId2, opts = {}) {
+    if (!eventId2) return;
+    const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
+    if (!event) return;
+    Shell.ensureMounted();
+    STATE.eventId = eventId2;
+    STATE.event = event;
+    STATE.ctx = ctxForEvent(eventId2);
+    STATE.activeTab = Shell.getTabs().some((t) => t.key === opts.tab) ? opts.tab : "tools";
+    STATE.toolsView = opts.toolsView || "list";
+    Shell.setLoadingChrome();
+    Shell.openPanel();
+    Shell.renderHeader();
+    Shell.renderTabs();
+    renderTab(STATE.activeTab);
+  }
+  function collapseCtaOverlay() {
+    const panel = document.getElementById("evtCtaPanel");
+    const bar = document.getElementById("evtCtaBar");
+    if (panel) {
+      panel.classList.add("hidden");
+      panel.innerHTML = "";
+    }
+    if (bar) {
+      bar.classList.remove("evt-cta-bar-expanded");
+      if (document.body.dataset.evtCtaSheetLocked === "1") {
+        document.documentElement.classList.remove("evt-cta-sheet-open");
+        document.body.classList.remove("evt-cta-sheet-open");
+        const y = parseInt(document.body.style.top || "0", 10) * -1 || 0;
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        document.body.style.width = "";
+        delete document.body.dataset.evtCtaSheetLocked;
+        window.scrollTo(0, y);
+      }
+    }
+  }
+  function close() {
+    if (typeof globalThis.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
+    Shell.closePanel();
+    STATE.eventId = null;
+    STATE.event = null;
+    STATE.toolsView = "list";
+    STATE.activeTab = "tools";
+    STATE.ctx = {};
+  }
+  function closeLegacyCtaPanel() {
+    collapseCtaOverlay();
+    if (document.getElementById("etSheet")?.classList.contains("et-open")) close();
+  }
+  function openToolsView(view) {
+    if (!["ticket", "raffle"].includes(view)) return;
+    STATE.toolsView = view;
+    Shell.renderTabs();
+    renderToolsTab();
+  }
+  function backToToolsList() {
+    STATE.toolsView = "list";
+    Shell.renderTabs();
+    renderToolsTab();
+  }
+  globalThis.EventsTeamShellApi = {
+    getState: () => STATE,
+    onClose: closeLegacyCtaPanel,
+    renderTab
+  };
+  var eventsTeamApi = { open: open2, close, openToolsView, backToToolsList };
+  globalThis.EventsTeam = eventsTeamApi;
+  globalThis.evtOpenTeamToolsPanel = (eventId2) => open2(eventId2, { tab: "tools", toolsView: "list" });
+  globalThis.evtCloseCtaPanel = closeLegacyCtaPanel;
+  globalThis.evtOpenTeamChat = (eventId2) => open2(eventId2, { tab: "chat" });
   var PortalEvents3 = globalThis.PortalEvents = globalThis.PortalEvents || {};
   PortalEvents3.team = PortalEvents3.team || {};
-  PortalEvents3.team.tools = teamToolsApi;
+  PortalEvents3.team.open = eventsTeamApi.open;
+  PortalEvents3.team.close = eventsTeamApi.close;
+  PortalEvents3.team.openToolsView = eventsTeamApi.openToolsView;
+  PortalEvents3.team.backToToolsList = eventsTeamApi.backToToolsList;
 
   // js/portal/events/detail/presentation.js
   function evtMiniMarkdown(text) {
@@ -5107,8 +5262,8 @@
     const cpInitials = creatorProfile ? ((creatorProfile.first_name || "?")[0] + (creatorProfile.last_name || "")[0]).toUpperCase() : "";
     const cpBadge = creatorProfile ? evtBadgeChip(creatorProfile.displayed_badge) : "";
     const cpTitle = creatorProfile ? creatorProfile.title || "Member" : "";
-    const memberGoing = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
-    const hasRsvp = rsvp && (memberGoing || rsvp.status === "maybe");
+    const memberGoing2 = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+    const hasRsvp = rsvp && (memberGoing2 || rsvp.status === "maybe");
     const documentsHtml = await evtBuildDocumentsHtml(event, isHost, hasRsvp);
     const mapHtml = evtBuildMapHtml(event, hasRsvp, isHost);
     const competitionHtml = isComp ? await evtBuildCompetitionHtml(event, isHost) : "";
@@ -5156,7 +5311,7 @@
       cpInitials,
       cpBadge,
       cpTitle,
-      memberGoing,
+      memberGoing: memberGoing2,
       hasRsvp,
       documentsHtml,
       mapHtml,
@@ -5276,7 +5431,7 @@
       myRaffleEntry,
       raffleEntryCount,
       raffleWinners,
-      memberGoing,
+      memberGoing: memberGoing2,
       isHost,
       canAccessTeamHub,
       rsvpEnabled,
@@ -5290,7 +5445,7 @@
     const prizeCount = window.evtDetailRaffleWinnerCount(raffleConfig2, event);
     const prizesHtml = window.evtDetailRafflePrizesHtml(event);
     let entryStatusHtml = "";
-    const hasRaffleRsvp = memberGoing;
+    const hasRaffleRsvp = memberGoing2;
     const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
     if (myRaffleEntry) {
       entryStatusHtml = `<div class="ed-raffle-entry-chip">\u{1F39F}\uFE0F Entered</div>`;
@@ -5772,8 +5927,8 @@
   }
   async function evtRenderDetailQrCanvases(ctx) {
     if (!ctx || !ctx.event) return;
-    const { event, rsvp, memberGoing } = ctx;
-    if (!memberGoing || event.checkin_mode !== "attendee_ticket") return;
+    const { event, rsvp, memberGoing: memberGoing2 } = ctx;
+    if (!memberGoing2 || event.checkin_mode !== "attendee_ticket") return;
     if (!rsvp || !rsvp.qr_token) return;
     const canvas = document.getElementById("myTicketQR");
     if (!canvas) return;
@@ -5927,7 +6082,7 @@
       costBreakdownHtml,
       locationReqHtml,
       graceHtml,
-      raffleHtml: raffleHtml2,
+      raffleHtml: raffleHtml3,
       mapHtml,
       competitionHtml,
       scrapbookHtml,
@@ -6080,7 +6235,7 @@
 
         <!-- Dynamic sections (notices, QR, cost, raffle\u2026) -->
         <!-- scannerBtn + venueQrHtml moved into Manage Event sheet -->
-        ${[waitlistHtml, thresholdHtml, costBreakdownHtml, locationReqHtml, graceHtml, raffleHtml2, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map((s) => _edCard(s, "event-detail-card")).join("")}
+        ${[waitlistHtml, thresholdHtml, costBreakdownHtml, locationReqHtml, graceHtml, raffleHtml3, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map((s) => _edCard(s, "event-detail-card")).join("")}
 
         <!-- Stats & Breakdown moved into Manage Event sheet (EventsManage) -->
 
@@ -6230,7 +6385,7 @@
       cpInitials,
       cpBadge,
       cpTitle,
-      memberGoing,
+      memberGoing: memberGoing2,
       hasRsvp,
       documentsHtml,
       mapHtml,
@@ -6254,7 +6409,7 @@
     let qrHtml = "";
     let myCheckin = null;
     const checkinEnabled = event.checkin_enabled !== false;
-    if (checkinEnabled && memberGoing && event.checkin_mode === "attendee_ticket") {
+    if (checkinEnabled && memberGoing2 && event.checkin_mode === "attendee_ticket") {
       const { data: ci } = await supabaseClient.from("event_checkins").select("checked_in_at").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
       myCheckin = ci;
       const checkedInTime = myCheckin ? new Date(myCheckin.checked_in_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : null;
@@ -6279,7 +6434,7 @@
     const waitlistHtml = window.evtBuildDetailWaitlistHtml(ctx);
     const graceHtml = window.evtBuildDetailGraceNoticeHtml(ctx);
     const rsvpButtons = window.evtBuildDetailRsvpSectionHtml(ctx);
-    const raffleHtml2 = window.evtBuildDetailRaffleSectionHtml(ctx);
+    const raffleHtml3 = window.evtBuildDetailRaffleSectionHtml(ctx);
     const attendeePreviewHtml = window.evtBuildDetailAttendeePreviewHtml(ctx);
     const shareCardHtml = window.evtBuildDetailShareCardHtml(ctx);
     const organizerHtml = window.evtBuildDetailOrganizerHtml(ctx);
@@ -6330,7 +6485,7 @@
       costBreakdownHtml,
       locationReqHtml,
       graceHtml,
-      raffleHtml: raffleHtml2,
+      raffleHtml: raffleHtml3,
       mapHtml,
       competitionHtml,
       scrapbookHtml,
@@ -6361,7 +6516,7 @@
     evtInitHeroCollapse();
     window.evtRunDetailPostRenderBasics({ eventId: eventId2 });
     setTimeout(() => {
-      window.evtRenderDetailQrCanvases({ event, eventId: eventId2, rsvp, memberGoing });
+      window.evtRenderDetailQrCanvases({ event, eventId: eventId2, rsvp, memberGoing: memberGoing2 });
       window.evtInitDetailInlineMaps({ event, showLocation });
     }, 100);
   }
@@ -9022,7 +9177,7 @@ Type the event title to confirm:`);
     return window.EventsCreateSteps.esc(s);
   }
   function _setImageFile(imageFile, fileKey, previewKey) {
-    const STATE3 = window.EventsCreateSteps.getState();
+    const STATE4 = window.EventsCreateSteps.getState();
     if (!imageFile) return;
     if (!imageFile.type.match(/^image\/(png|jpeg|webp)$/)) {
       alert("Please choose a PNG, JPG, or WebP image.");
@@ -9032,16 +9187,16 @@ Type the event title to confirm:`);
       alert("File must be under 5 MB.");
       return;
     }
-    STATE3[fileKey] = imageFile;
+    STATE4[fileKey] = imageFile;
     const reader = new FileReader();
     reader.onload = () => {
-      STATE3[previewKey] = reader.result;
+      STATE4[previewKey] = reader.result;
       window.EventsCreateSteps.render();
     };
     reader.readAsDataURL(imageFile);
   }
   function _wireImageUpload(dropId, fileId, clearId, fileKey, previewKey) {
-    const STATE3 = window.EventsCreateSteps.getState();
+    const STATE4 = window.EventsCreateSteps.getState();
     const drop = document.getElementById(dropId);
     const file = document.getElementById(fileId);
     if (drop && window.matchMedia("(hover:hover) and (pointer:fine)").matches) {
@@ -9067,16 +9222,16 @@ Type the event title to confirm:`);
     });
     file?.addEventListener("change", () => _setImageFile(file.files[0], fileKey, previewKey));
     document.getElementById(clearId)?.addEventListener("click", () => {
-      STATE3[fileKey] = null;
-      STATE3[previewKey] = null;
+      STATE4[fileKey] = null;
+      STATE4[previewKey] = null;
       if (file) file.value = "";
       window.EventsCreateSteps.render();
     });
   }
   function html() {
-    const STATE3 = window.EventsCreateSteps.getState();
+    const STATE4 = window.EventsCreateSteps.getState();
     const CATEGORIES2 = window.EventsCreateSteps.CATEGORIES;
-    const f = STATE3.form;
+    const f = STATE4.form;
     const types = [
       { key: "member", emoji: "\u{1F465}", label: "Member event", sub: "Anyone can RSVP", enabled: true },
       { key: "llc", emoji: "\u{1F3E2}", label: "LLC event", sub: "Use legacy editor for now", enabled: false },
@@ -9119,7 +9274,7 @@ Type the event title to confirm:`);
         <div class="ec-row">
             <label class="ec-label">Banner image (optional)</label>
             <input id="ecBannerFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
-            ${STATE3.bannerPreviewUrl ? `<div><img src="${STATE3.bannerPreviewUrl}" class="ec-banner-preview" alt=""><button type="button" id="ecBannerClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>` : `<div id="ecBannerDrop" class="ec-banner-drop">
+            ${STATE4.bannerPreviewUrl ? `<div><img src="${STATE4.bannerPreviewUrl}" class="ec-banner-preview" alt=""><button type="button" id="ecBannerClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>` : `<div id="ecBannerDrop" class="ec-banner-drop">
                         <div style="font-size:28px">\u{1F5BC}\uFE0F</div>
                         <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drag &amp; drop or click to upload</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
                         <div class="text-xs text-gray-400">PNG / JPG / WebP \xB7 max 5 MB</div>
@@ -9130,7 +9285,7 @@ Type the event title to confirm:`);
         <div class="ec-row">
             <label class="ec-label">Embed image (optional)</label>
             <input id="ecEmbedImageFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
-            ${STATE3.embedImagePreviewUrl ? `<div><img src="${STATE3.embedImagePreviewUrl}" class="ec-embed-preview" alt=""><button type="button" id="ecEmbedImageClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>` : `<div id="ecEmbedImageDrop" class="ec-banner-drop">
+            ${STATE4.embedImagePreviewUrl ? `<div><img src="${STATE4.embedImagePreviewUrl}" class="ec-embed-preview" alt=""><button type="button" id="ecEmbedImageClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>` : `<div id="ecEmbedImageDrop" class="ec-banner-drop">
                         <div style="font-size:28px">\u25A3</div>
                         <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drag &amp; drop or click to upload</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
                         <div class="text-xs text-gray-400">Portrait works best \xB7 PNG / JPG / WebP \xB7 max 5 MB</div>
@@ -9140,22 +9295,22 @@ Type the event title to confirm:`);
     `;
   }
   function wire() {
-    const STATE3 = window.EventsCreateSteps.getState();
+    const STATE4 = window.EventsCreateSteps.getState();
     document.querySelectorAll("[data-type]").forEach((el) => {
       el.addEventListener("click", () => {
         if (el.dataset.disabled) return;
-        STATE3.form.event_type = el.dataset.type;
+        STATE4.form.event_type = el.dataset.type;
         window.EventsCreateSteps.render();
       });
     });
     document.querySelectorAll("[data-cat]").forEach((el) => {
       el.addEventListener("click", () => {
-        STATE3.form.category = el.dataset.cat;
+        STATE4.form.category = el.dataset.cat;
         window.EventsCreateSteps.render();
       });
     });
-    document.getElementById("ecTitle")?.addEventListener("input", (e) => STATE3.form.title = e.target.value);
-    document.getElementById("ecDesc")?.addEventListener("input", (e) => STATE3.form.description = e.target.value);
+    document.getElementById("ecTitle")?.addEventListener("input", (e) => STATE4.form.title = e.target.value);
+    document.getElementById("ecDesc")?.addEventListener("input", (e) => STATE4.form.description = e.target.value);
     _wireImageUpload("ecBannerDrop", "ecBannerFile", "ecBannerClear", "bannerFile", "bannerPreviewUrl");
     _wireImageUpload("ecEmbedImageDrop", "ecEmbedImageFile", "ecEmbedImageClear", "embedImageFile", "embedImagePreviewUrl");
   }
@@ -9169,9 +9324,9 @@ Type the event title to confirm:`);
     return window.EventsCreateSteps.esc(s);
   }
   function html2() {
-    const STATE3 = window.EventsCreateSteps.getState();
+    const STATE4 = window.EventsCreateSteps.getState();
     const TIMEZONES2 = window.EventsCreateSteps.TIMEZONES;
-    const f = STATE3.form;
+    const f = STATE4.form;
     return `
         <div class="ec-grid-2">
             <div class="ec-row">
@@ -9200,7 +9355,7 @@ Type the event title to confirm:`);
         <div class="ec-row">
             <label class="ec-label">Address</label>
             <input id="ecLoc" class="ec-input" type="text" placeholder="123 Main St, City, ST" value="${_esc2(f.location_text)}">
-            <div id="ecLocStatus" class="ec-loc-status" style="color:#9ca3af">${STATE3.geocode ? `\u{1F4CD} ${_esc2(STATE3.geocode.display || "Located")}` : "Type an address to geocode (optional)."}</div>
+            <div id="ecLocStatus" class="ec-loc-status" style="color:#9ca3af">${STATE4.geocode ? `\u{1F4CD} ${_esc2(STATE4.geocode.display || "Located")}` : "Type an address to geocode (optional)."}</div>
         </div>
 
         <div class="ec-grid-2">
@@ -9216,18 +9371,18 @@ Type the event title to confirm:`);
     `;
   }
   function wire2() {
-    const STATE3 = window.EventsCreateSteps.getState();
+    const STATE4 = window.EventsCreateSteps.getState();
     const get = (id) => document.getElementById(id);
-    get("ecStart")?.addEventListener("input", (e) => STATE3.form.start_date = e.target.value);
-    get("ecEnd")?.addEventListener("input", (e) => STATE3.form.end_date = e.target.value);
-    get("ecTz")?.addEventListener("change", (e) => STATE3.form.timezone = e.target.value);
-    get("ecLocNick")?.addEventListener("input", (e) => STATE3.form.location_nickname = e.target.value);
-    get("ecMax")?.addEventListener("input", (e) => STATE3.form.max_participants = e.target.value);
-    get("ecDeadline")?.addEventListener("input", (e) => STATE3.form.rsvp_deadline = e.target.value);
+    get("ecStart")?.addEventListener("input", (e) => STATE4.form.start_date = e.target.value);
+    get("ecEnd")?.addEventListener("input", (e) => STATE4.form.end_date = e.target.value);
+    get("ecTz")?.addEventListener("change", (e) => STATE4.form.timezone = e.target.value);
+    get("ecLocNick")?.addEventListener("input", (e) => STATE4.form.location_nickname = e.target.value);
+    get("ecMax")?.addEventListener("input", (e) => STATE4.form.max_participants = e.target.value);
+    get("ecDeadline")?.addEventListener("input", (e) => STATE4.form.rsvp_deadline = e.target.value);
     const loc = get("ecLoc");
     loc?.addEventListener("input", (e) => {
-      STATE3.form.location_text = e.target.value;
-      STATE3.geocode = null;
+      STATE4.form.location_text = e.target.value;
+      STATE4.geocode = null;
       clearTimeout(_locDebounce);
       const status = get("ecLocStatus");
       if (status) {
@@ -9238,9 +9393,9 @@ Type the event title to confirm:`);
     });
   }
   async function _doGeocode() {
-    const STATE3 = window.EventsCreateSteps.getState();
+    const STATE4 = window.EventsCreateSteps.getState();
     const status = document.getElementById("ecLocStatus");
-    const addr = (STATE3.form.location_text || "").trim();
+    const addr = (STATE4.form.location_text || "").trim();
     if (!addr || addr.length < 6) {
       if (status) {
         status.textContent = "Type an address to geocode (optional).";
@@ -9252,9 +9407,9 @@ Type the event title to confirm:`);
       if (typeof globalThis.evtGeocodeAddress === "function") {
         const r = await window.evtGeocodeAddress(addr);
         if (r && r.lat && r.lng) {
-          STATE3.geocode = { lat: r.lat, lng: r.lng, display: r.display || addr };
+          STATE4.geocode = { lat: r.lat, lng: r.lng, display: r.display || addr };
           if (status) {
-            status.textContent = `\u{1F4CD} ${STATE3.geocode.display}`;
+            status.textContent = `\u{1F4CD} ${STATE4.geocode.display}`;
             status.style.color = "#059669";
           }
           return;
@@ -9280,8 +9435,8 @@ Type the event title to confirm:`);
     return window.EventsCreateSteps.esc(s);
   }
   function html3() {
-    const STATE3 = window.EventsCreateSteps.getState();
-    const f = STATE3.form;
+    const STATE4 = window.EventsCreateSteps.getState();
+    const f = STATE4.form;
     const modes = [
       { key: "free", label: "Free", sub: "No payment required" },
       { key: "paid", label: "Paid RSVP", sub: "Stripe checkout on RSVP" },
@@ -9339,25 +9494,25 @@ Type the event title to confirm:`);
     `;
   }
   function wire3() {
-    const STATE3 = window.EventsCreateSteps.getState();
+    const STATE4 = window.EventsCreateSteps.getState();
     const render = window.EventsCreateSteps.render;
     const ensureRaffleConfig2 = window.EventsCreateSteps.ensureRaffleConfig;
     const wireRaffleBuilder = window.EventsCreateSteps.wireRaffleBuilder;
     document.querySelectorAll('input[name="ecMode"]').forEach((el) => {
       el.addEventListener("change", () => {
-        STATE3.form.pricing_mode = el.value;
+        STATE4.form.pricing_mode = el.value;
         render();
       });
     });
-    document.getElementById("ecCost")?.addEventListener("input", (e) => STATE3.form.rsvp_cost_dollars = e.target.value);
+    document.getElementById("ecCost")?.addEventListener("input", (e) => STATE4.form.rsvp_cost_dollars = e.target.value);
     document.getElementById("ecRaffleEnabled")?.addEventListener("change", (e) => {
-      STATE3.form.raffle_enabled = e.target.checked;
-      if (STATE3.form.raffle_enabled) ensureRaffleConfig2();
+      STATE4.form.raffle_enabled = e.target.checked;
+      if (STATE4.form.raffle_enabled) ensureRaffleConfig2();
       render();
     });
-    document.getElementById("ecRafflePrice")?.addEventListener("input", (e) => STATE3.form.raffle_entry_cost_dollars = e.target.value);
+    document.getElementById("ecRafflePrice")?.addEventListener("input", (e) => STATE4.form.raffle_entry_cost_dollars = e.target.value);
     if (typeof wireRaffleBuilder === "function") wireRaffleBuilder();
-    document.getElementById("ecMemberOnly")?.addEventListener("change", (e) => STATE3.form.member_only = e.target.checked);
+    document.getElementById("ecMemberOnly")?.addEventListener("change", (e) => STATE4.form.member_only = e.target.checked);
   }
   var createStepPricingApi = { html: html3, wire: wire3 };
   globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
@@ -9368,9 +9523,9 @@ Type the event title to confirm:`);
     return window.EventsCreateSteps.esc(s);
   }
   function html4() {
-    const STATE3 = window.EventsCreateSteps.getState();
+    const STATE4 = window.EventsCreateSteps.getState();
     const CATEGORIES2 = window.EventsCreateSteps.CATEGORIES;
-    const f = STATE3.form;
+    const f = STATE4.form;
     const cat = CATEGORIES2.find((c) => c.key === f.category)?.label || f.category;
     const start = f.start_date ? new Date(f.start_date).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "\u2014";
     const pricingLabel = { free: "Free", paid: `Paid \xB7 $${f.rsvp_cost_dollars || "0.00"}`, free_paid_raffle: "Free + paid raffle" }[f.pricing_mode];
@@ -9378,7 +9533,7 @@ Type the event title to confirm:`);
     return `
         <div id="ecError"></div>
 
-        ${STATE3.bannerPreviewUrl ? `<img src="${STATE3.bannerPreviewUrl}" class="ec-banner-preview mb-3" alt="">` : ""}
+        ${STATE4.bannerPreviewUrl ? `<img src="${STATE4.bannerPreviewUrl}" class="ec-banner-preview mb-3" alt="">` : ""}
 
         <div class="ec-review-card">
             <h3 class="font-bold text-gray-800 text-sm mb-2">${_esc4(f.title || "Untitled event")}</h3>
@@ -9392,7 +9547,7 @@ Type the event title to confirm:`);
             <div class="ec-review-row"><span>Starts</span><span>${start}</span></div>
             <div class="ec-review-row"><span>Timezone</span><span>${f.timezone}</span></div>
             ${f.location_nickname ? `<div class="ec-review-row"><span>Location</span><span>${_esc4(f.location_nickname)}</span></div>` : ""}
-            ${f.location_text ? `<div class="ec-review-row"><span>Address</span><span style="max-width:60%">${_esc4(f.location_text)}${STATE3.geocode ? " \u{1F4CD}" : ""}</span></div>` : ""}
+            ${f.location_text ? `<div class="ec-review-row"><span>Address</span><span style="max-width:60%">${_esc4(f.location_text)}${STATE4.geocode ? " \u{1F4CD}" : ""}</span></div>` : ""}
             ${f.max_participants ? `<div class="ec-review-row"><span>Max attendees</span><span>${f.max_participants}</span></div>` : ""}
         </div>
 
@@ -9431,16 +9586,16 @@ Type the event title to confirm:`);
     return window.EventsRaffleModel;
   }
   function ensureRaffleConfig() {
-    const STATE3 = _state();
+    const STATE4 = _state();
     const model = raffleModel();
-    if (!STATE3.form.raffle_config) STATE3.form.raffle_config = model.createDefaultConfig();
-    STATE3.form.raffle_config = model.normalizeConfig(STATE3.form.raffle_config);
-    return STATE3.form.raffle_config;
+    if (!STATE4.form.raffle_config) STATE4.form.raffle_config = model.createDefaultConfig();
+    STATE4.form.raffle_config = model.normalizeConfig(STATE4.form.raffle_config);
+    return STATE4.form.raffle_config;
   }
   function normalizeRaffleConfig() {
-    const STATE3 = _state();
-    STATE3.form.raffle_config = raffleModel().normalizeConfig(STATE3.form.raffle_config);
-    return STATE3.form.raffle_config;
+    const STATE4 = _state();
+    STATE4.form.raffle_config = raffleModel().normalizeConfig(STATE4.form.raffle_config);
+    return STATE4.form.raffle_config;
   }
   function _drawModeOptions(selected) {
     const options = [
@@ -9451,7 +9606,7 @@ Type the event title to confirm:`);
     return options.map(([value, label]) => `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`).join("");
   }
   function builderHtml() {
-    const STATE3 = _state();
+    const STATE4 = _state();
     const model = raffleModel();
     const config = ensureRaffleConfig();
     const categories = model.getOrderedCategories(config);
@@ -9461,7 +9616,7 @@ Type the event title to confirm:`);
     return `
         <div class="ec-row">
             <label class="ec-label">Raffle entry price (USD)</label>
-            <input id="ecRafflePrice" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc5(STATE3.form.raffle_entry_cost_dollars)}">
+            <input id="ecRafflePrice" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc5(STATE4.form.raffle_entry_cost_dollars)}">
             <p class="ec-help">Use 0.00 for a free raffle. Prize images come later; emoji fallbacks are available now.</p>
         </div>
 
@@ -9509,8 +9664,8 @@ Type the event title to confirm:`);
                 <button type="button" class="ec-mini-btn" data-ec-raffle-add-item>Add item</button>
             </div>
             ${items.length ? items.map((item, index) => {
-      const preview = STATE3.prizeImagePreviews[item.id] || item.image_url || null;
-      const fileName = STATE3.prizeImageFiles[item.id]?.name || null;
+      const preview = STATE4.prizeImagePreviews[item.id] || item.image_url || null;
+      const fileName = STATE4.prizeImageFiles[item.id]?.name || null;
       return `
                 <div class="ec-raffle-item-wrap" data-ec-item-row="${index}">
                     <div class="ec-raffle-item-grid">
@@ -9561,7 +9716,7 @@ Type the event title to confirm:`);
     `;
   }
   function _setPrizeImage(itemId, file) {
-    const STATE3 = _state();
+    const STATE4 = _state();
     if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
       alert("Please use a PNG, JPG, or WebP image.");
       return;
@@ -9570,10 +9725,10 @@ Type the event title to confirm:`);
       alert("Image must be under 5 MB.");
       return;
     }
-    STATE3.prizeImageFiles[itemId] = file;
+    STATE4.prizeImageFiles[itemId] = file;
     const reader = new FileReader();
     reader.onload = () => {
-      STATE3.prizeImagePreviews[itemId] = reader.result;
+      STATE4.prizeImagePreviews[itemId] = reader.result;
       _render();
     };
     reader.readAsDataURL(file);
@@ -9646,8 +9801,8 @@ Type the event title to confirm:`);
     _render();
   }
   function wire5() {
-    const STATE3 = _state();
-    if (!STATE3.form.raffle_enabled) return;
+    const STATE4 = _state();
+    if (!STATE4.form.raffle_enabled) return;
     document.querySelectorAll("[data-ec-category-field]").forEach((input) => {
       input.addEventListener("input", () => _updateCategory(input.dataset.ecCategoryId, input.dataset.ecCategoryField, input.value));
       input.addEventListener("change", () => _updateCategory(input.dataset.ecCategoryId, input.dataset.ecCategoryField, input.value, true));
@@ -9713,8 +9868,8 @@ Type the event title to confirm:`);
     document.querySelectorAll("[data-ec-prize-clear]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const itemId = btn.dataset.ecPrizeClear;
-        delete STATE3.prizeImageFiles[itemId];
-        delete STATE3.prizeImagePreviews[itemId];
+        delete STATE4.prizeImageFiles[itemId];
+        delete STATE4.prizeImagePreviews[itemId];
         const config = ensureRaffleConfig();
         const item = config.items.find((i) => i.id === itemId);
         if (item) item.image_url = null;
@@ -9752,15 +9907,15 @@ Type the event title to confirm:`);
   async function submit(status) {
     if (_submitting) return;
     const steps = _steps2();
-    const STATE3 = steps.getState();
+    const STATE4 = steps.getState();
     const validateStep = steps.validateStep;
     const esc9 = steps.esc;
-    const close3 = steps.close;
+    const close4 = steps.close;
     if (typeof validateStep === "function") {
       const err = validateStep();
       if (err && status === "open") return alert(err);
     }
-    const f = STATE3.form;
+    const f = STATE4.form;
     if (!f.title.trim()) return alert("Title is required to save.");
     if (status === "open" && !f.start_date) return alert("Start date is required to publish.");
     const errBox = document.getElementById("ecError");
@@ -9779,25 +9934,25 @@ Type the event title to confirm:`);
       if (!userId) throw new Error("Not signed in.");
       const slug = typeof globalThis.evtGenerateSlug === "function" ? window.evtGenerateSlug(f.title.trim()) : f.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60) + "-" + Date.now().toString(36);
       let bannerUrl = null;
-      if (STATE3.bannerFile) {
-        const ext = STATE3.bannerFile.name.split(".").pop();
+      if (STATE4.bannerFile) {
+        const ext = STATE4.bannerFile.name.split(".").pop();
         const path = `${slug}-${Date.now()}.${ext}`;
-        const up = await supabaseClient.storage.from("event-banners").upload(path, STATE3.bannerFile, { contentType: STATE3.bannerFile.type });
+        const up = await supabaseClient.storage.from("event-banners").upload(path, STATE4.bannerFile, { contentType: STATE4.bannerFile.type });
         if (up.error) throw new Error("Banner upload failed: " + up.error.message);
         bannerUrl = supabaseClient.storage.from("event-banners").getPublicUrl(path).data.publicUrl;
       }
       let embedImageUrl = null;
-      if (STATE3.embedImageFile) {
-        const ext = STATE3.embedImageFile.name.split(".").pop();
+      if (STATE4.embedImageFile) {
+        const ext = STATE4.embedImageFile.name.split(".").pop();
         const path = `embeds/${slug}-${Date.now()}.${ext}`;
-        const up = await supabaseClient.storage.from("event-banners").upload(path, STATE3.embedImageFile, { contentType: STATE3.embedImageFile.type });
+        const up = await supabaseClient.storage.from("event-banners").upload(path, STATE4.embedImageFile, { contentType: STATE4.embedImageFile.type });
         if (up.error) throw new Error("Embed image upload failed: " + up.error.message);
         embedImageUrl = supabaseClient.storage.from("event-banners").getPublicUrl(path).data.publicUrl;
       }
       const rb = _raffleApi();
       const raffleConfig2 = f.raffle_enabled ? rb.raffleModel().normalizeConfig(rb.ensureRaffleConfig()) : null;
       if (raffleConfig2) {
-        const prizeUploads = Object.entries(STATE3.prizeImageFiles);
+        const prizeUploads = Object.entries(STATE4.prizeImageFiles);
         for (const [itemId, imgFile] of prizeUploads) {
           const item = raffleConfig2.items.find((i) => i.id === itemId);
           if (!item) continue;
@@ -9828,8 +9983,8 @@ Type the event title to confirm:`);
         timezone: f.timezone,
         location_text: f.location_text.trim() || null,
         location_nickname: f.location_nickname.trim() || null,
-        location_lat: STATE3.geocode?.lat || null,
-        location_lng: STATE3.geocode?.lng || null,
+        location_lat: STATE4.geocode?.lat || null,
+        location_lng: STATE4.geocode?.lng || null,
         max_participants: f.max_participants ? Number(f.max_participants) : null,
         rsvp_deadline: deadline,
         member_only: !!f.member_only,
@@ -9843,7 +9998,7 @@ Type the event title to confirm:`);
       };
       const { data, error } = await supabaseClient.from("events").insert(record).select().single();
       if (error) throw error;
-      if (typeof close3 === "function") close3();
+      if (typeof close4 === "function") close4();
       document.dispatchEvent(new CustomEvent("events:created", { detail: { event: data, status } }));
       if (status === "open" && data.slug && typeof globalThis.evtNavigateToEvent === "function") {
         window.evtNavigateToEvent(data.slug);
@@ -9883,7 +10038,7 @@ Type the event title to confirm:`);
     { key: "pricing", label: "Pricing" },
     { key: "review", label: "Review" }
   ];
-  var STATE = {
+  var STATE2 = {
     step: 0,
     bannerFile: null,
     bannerPreviewUrl: null,
@@ -10027,17 +10182,17 @@ Type the event title to confirm:`);
     document.getElementById("ecNextBtn").addEventListener("click", _next);
     document.getElementById("ecDraftBtn").addEventListener("click", () => _submit("draft"));
   }
-  function open2() {
+  function open3() {
     _ensureMounted();
-    STATE.step = 0;
-    STATE.bannerFile = null;
-    STATE.bannerPreviewUrl = null;
-    STATE.embedImageFile = null;
-    STATE.embedImagePreviewUrl = null;
-    STATE.geocode = null;
-    STATE.prizeImageFiles = {};
-    STATE.prizeImagePreviews = {};
-    Object.assign(STATE.form, {
+    STATE2.step = 0;
+    STATE2.bannerFile = null;
+    STATE2.bannerPreviewUrl = null;
+    STATE2.embedImageFile = null;
+    STATE2.embedImagePreviewUrl = null;
+    STATE2.geocode = null;
+    STATE2.prizeImageFiles = {};
+    STATE2.prizeImagePreviews = {};
+    Object.assign(STATE2.form, {
       event_type: "member",
       title: "",
       category: "other",
@@ -10069,7 +10224,7 @@ Type the event title to confirm:`);
     });
     document.body.style.overflow = "hidden";
   }
-  function close() {
+  function close2() {
     const sheet = document.getElementById("ecSheet");
     if (!sheet || !sheet.classList.contains("ec-open")) return;
     const panel = document.getElementById("ecSheetPanel");
@@ -10082,20 +10237,20 @@ Type the event title to confirm:`);
     setTimeout(() => sheet.classList.remove("ec-open"), 250);
   }
   function _confirmClose() {
-    if (STATE.form.title || STATE.bannerFile || STATE.embedImageFile) {
+    if (STATE2.form.title || STATE2.bannerFile || STATE2.embedImageFile) {
       if (!confirm("Discard this event? Your draft will not be saved.")) return;
     }
-    close();
+    close2();
   }
   function _render2() {
     const dots = document.getElementById("ecSheetSteps");
     dots.innerHTML = STEPS.map(
-      (s, i) => `<div class="ec-step-dot ${i === STATE.step ? "active" : i < STATE.step ? "done" : ""}" title="${s.label}"></div>`
+      (s, i) => `<div class="ec-step-dot ${i === STATE2.step ? "active" : i < STATE2.step ? "done" : ""}" title="${s.label}"></div>`
     ).join("");
-    document.getElementById("ecSheetSub").textContent = `Step ${STATE.step + 1} of ${STEPS.length} \xB7 ${STEPS[STATE.step].label}`;
-    document.getElementById("ecBackBtn").style.visibility = STATE.step === 0 ? "hidden" : "visible";
-    document.getElementById("ecNextBtn").textContent = STATE.step === STEPS.length - 1 ? "Publish" : "Next";
-    const key = STEPS[STATE.step].key;
+    document.getElementById("ecSheetSub").textContent = `Step ${STATE2.step + 1} of ${STEPS.length} \xB7 ${STEPS[STATE2.step].label}`;
+    document.getElementById("ecBackBtn").style.visibility = STATE2.step === 0 ? "hidden" : "visible";
+    document.getElementById("ecNextBtn").textContent = STATE2.step === STEPS.length - 1 ? "Publish" : "Next";
+    const key = STEPS[STATE2.step].key;
     const c = document.getElementById("ecSheetContent");
     const steps = window.EventsCreateSteps || {};
     if (key === "basics" && steps.basics) {
@@ -10119,8 +10274,8 @@ Type the event title to confirm:`);
     return window.EventsCreateRaffleBuilder;
   }
   function _validateStep() {
-    const f = STATE.form;
-    const key = STEPS[STATE.step].key;
+    const f = STATE2.form;
+    const key = STEPS[STATE2.step].key;
     if (key === "basics") {
       if (!f.title.trim()) return "Title is required.";
       if (f.title.trim().length < 3) return "Title must be at least 3 characters.";
@@ -10143,15 +10298,15 @@ Type the event title to confirm:`);
     return null;
   }
   function _back() {
-    if (STATE.step === 0) return;
-    STATE.step--;
+    if (STATE2.step === 0) return;
+    STATE2.step--;
     _render2();
   }
   function _next() {
     const err = _validateStep();
     if (err) return alert(err);
-    if (STATE.step < STEPS.length - 1) {
-      STATE.step++;
+    if (STATE2.step < STEPS.length - 1) {
+      STATE2.step++;
       _render2();
     } else {
       _submit("open");
@@ -10167,10 +10322,10 @@ Type the event title to confirm:`);
   }
   function _bindCreateStepsApi() {
     window.EventsCreateSteps = window.EventsCreateSteps || {};
-    window.EventsCreateSteps.getState = () => STATE;
+    window.EventsCreateSteps.getState = () => STATE2;
     window.EventsCreateSteps.render = _render2;
     window.EventsCreateSteps.validateStep = _validateStep;
-    window.EventsCreateSteps.close = close;
+    window.EventsCreateSteps.close = close2;
     window.EventsCreateSteps.esc = _esc6;
     window.EventsCreateSteps.CATEGORIES = CATEGORIES;
     window.EventsCreateSteps.TIMEZONES = TIMEZONES;
@@ -10181,7 +10336,7 @@ Type the event title to confirm:`);
     window.EventsCreateSteps.wireRaffleBuilder = rb.wire;
   }
   _bindCreateStepsApi();
-  var eventsCreateApi = { open: open2, close, isFlagOn };
+  var eventsCreateApi = { open: open3, close: close2, isFlagOn };
   globalThis.EventsCreate = eventsCreateApi;
   var PortalEvents13 = globalThis.PortalEvents = globalThis.PortalEvents || {};
   PortalEvents13.create = PortalEvents13.create || {};
@@ -10549,13 +10704,13 @@ Type the event title to confirm:`);
     { key: "comp", label: "Comp" },
     { key: "danger", label: "Danger Zone" }
   ];
-  function api7() {
+  function api8() {
     return window.EventsManageShellApi || {};
   }
-  function getState() {
-    return api7().getState?.() || {};
+  function getState2() {
+    return api8().getState?.() || {};
   }
-  function ensureMounted() {
+  function ensureMounted2() {
     if (document.getElementById("emSheetRoot")) return;
     const root2 = document.createElement("div");
     root2.id = "emSheetRoot";
@@ -10659,46 +10814,46 @@ Type the event title to confirm:`);
         </style>
     `;
     document.body.appendChild(root2);
-    document.getElementById("emSheetClose").addEventListener("click", () => api7().onClose?.());
-    document.getElementById("emSheetBackdrop").addEventListener("click", () => api7().onClose?.());
+    document.getElementById("emSheetClose").addEventListener("click", () => api8().onClose?.());
+    document.getElementById("emSheetBackdrop").addEventListener("click", () => api8().onClose?.());
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && document.getElementById("emSheet")?.classList.contains("em-open")) api7().onClose?.();
+      if (e.key === "Escape" && document.getElementById("emSheet")?.classList.contains("em-open")) api8().onClose?.();
     });
   }
-  function renderHeader() {
-    const e = getState().event;
+  function renderHeader2() {
+    const e = getState2().event;
     if (!e) return;
     document.getElementById("emSheetTitle").textContent = e.title;
     const dateStr = new Date(e.start_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
     const typeLabel = { llc: "LLC", member: "Member", competition: "Competition" }[e.event_type] || e.event_type;
     document.getElementById("emSheetSub").textContent = `${typeLabel} \xB7 ${dateStr} \xB7 ${(e.status || "").toUpperCase()}`;
   }
-  function renderTabs() {
-    const STATE3 = getState();
+  function renderTabs2() {
+    const STATE4 = getState2();
     const bar = document.getElementById("emSheetTabs");
     bar.innerHTML = M3A_TABS.map(
-      (t) => `<button class="em-tab${t.placeholder ? " placeholder" : ""}${t.key === STATE3.activeTab ? " active" : ""}" data-tab="${t.key}">${t.label}${t.placeholder ? ' <span style="font-size:9px;opacity:.7">soon</span>' : ""}</button>`
+      (t) => `<button class="em-tab${t.placeholder ? " placeholder" : ""}${t.key === STATE4.activeTab ? " active" : ""}" data-tab="${t.key}">${t.label}${t.placeholder ? ' <span style="font-size:9px;opacity:.7">soon</span>' : ""}</button>`
     ).join("");
     bar.querySelectorAll(".em-tab").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const st = getState();
+        const st = getState2();
         st.activeTab = btn.dataset.tab;
-        renderTabs();
-        api7().renderTab?.(st.activeTab);
+        renderTabs2();
+        api8().renderTab?.(st.activeTab);
         btn.scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" });
       });
     });
   }
-  function renderContent(html5) {
+  function renderContent2(html5) {
     document.getElementById("emSheetContent").innerHTML = html5;
   }
-  function setLoadingChrome() {
+  function setLoadingChrome2() {
     document.getElementById("emSheetTitle").textContent = "Loading event\u2026";
     document.getElementById("emSheetSub").textContent = "";
-    renderTabs();
-    renderContent('<div class="em-placeholder"><div style="font-size:13px">Loading\u2026</div></div>');
+    renderTabs2();
+    renderContent2('<div class="em-placeholder"><div style="font-size:13px">Loading\u2026</div></div>');
   }
-  function openPanel() {
+  function openPanel2() {
     const sheet = document.getElementById("emSheet");
     const panel = document.getElementById("emSheetPanel");
     const backdrop = document.getElementById("emSheetBackdrop");
@@ -10712,7 +10867,7 @@ Type the event title to confirm:`);
     });
     document.body.style.overflow = "hidden";
   }
-  function closePanel() {
+  function closePanel2() {
     const sheet = document.getElementById("emSheet");
     const panel = document.getElementById("emSheetPanel");
     const backdrop = document.getElementById("emSheetBackdrop");
@@ -10728,24 +10883,24 @@ Type the event title to confirm:`);
     }, 250);
   }
   var manageShellApi = {
-    ensureMounted,
-    renderHeader,
-    renderTabs,
-    renderContent,
-    setLoadingChrome,
-    openPanel,
-    closePanel,
+    ensureMounted: ensureMounted2,
+    renderHeader: renderHeader2,
+    renderTabs: renderTabs2,
+    renderContent: renderContent2,
+    setLoadingChrome: setLoadingChrome2,
+    openPanel: openPanel2,
+    closePanel: closePanel2,
     getTabs: () => M3A_TABS
   };
   globalThis.EventsManageShell = manageShellApi;
 
   // js/portal/events/manage/overview.js
   var PUBLIC_SITE_URL = "https://justicemcneal.com";
-  function api8() {
+  function api9() {
     return window.EventsManageOverviewApi || {};
   }
-  function getState2() {
-    return api8().getState?.() || {};
+  function getState3() {
+    return api9().getState?.() || {};
   }
   function esc(s) {
     const el = document.createElement("span");
@@ -10792,13 +10947,13 @@ Type the event title to confirm:`);
     }
   }
   function overviewHtml() {
-    const STATE3 = getState2();
-    const e = STATE3.event;
-    const guestGoing = STATE3.guestRsvps.filter((r) => r.status === "going").length;
-    const going = STATE3.rsvps.filter((r) => r.status === "going").length + guestGoing;
-    const maybe = STATE3.rsvps.filter((r) => r.status === "maybe").length;
-    const paid = STATE3.rsvps.filter((r) => r.paid).length + STATE3.guestRsvps.filter((r) => r.paid).length;
-    const checked = STATE3.checkins.length;
+    const STATE4 = getState3();
+    const e = STATE4.event;
+    const guestGoing = STATE4.guestRsvps.filter((r) => r.status === "going").length;
+    const going = STATE4.rsvps.filter((r) => r.status === "going").length + guestGoing;
+    const maybe = STATE4.rsvps.filter((r) => r.status === "maybe").length;
+    const paid = STATE4.rsvps.filter((r) => r.paid).length + STATE4.guestRsvps.filter((r) => r.paid).length;
+    const checked = STATE4.checkins.length;
     const revenue = paid * (e.rsvp_cost_cents || 0);
     const startLocal = new Date(e.start_date).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
     const isLlc = e.event_type === "llc";
@@ -10894,11 +11049,11 @@ Type the event title to confirm:`);
                     <p class="text-xs text-gray-500 mt-0.5">Show this event in the hero banner on the portal events page.</p>
                 </div>
                 <button id="emFeaturedToggle"
-                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${STATE3.event.is_featured ? "bg-brand-600" : "bg-gray-200"}"
-                    role="switch" aria-checked="${STATE3.event.is_featured ? "true" : "false"}"
+                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${STATE4.event.is_featured ? "bg-brand-600" : "bg-gray-200"}"
+                    role="switch" aria-checked="${STATE4.event.is_featured ? "true" : "false"}"
                     onclick="window._emToggleFeatured()"
                 >
-                    <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${STATE3.event.is_featured ? "translate-x-5" : "translate-x-0"}"></span>
+                    <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${STATE4.event.is_featured ? "translate-x-5" : "translate-x-0"}"></span>
                 </button>
             </div>
         </div>` : ""}
@@ -10908,7 +11063,7 @@ Type the event title to confirm:`);
             <div class="flex flex-wrap gap-2">
                 ${portalLink}
                 ${e.slug ? `<button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>` : ""}
-                ${e.checkin_enabled !== false && e.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(e.status) ? `<button class="em-btn-ghost" onclick="window.EventsManage.close();setTimeout(()=>window.evtOpenScanner&&window.evtOpenScanner('${STATE3.eventId}'),150)"><svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>Scan Attendees</button>` : ""}
+                ${e.checkin_enabled !== false && e.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(e.status) ? `<button class="em-btn-ghost" onclick="window.EventsManage.close();setTimeout(()=>window.evtOpenScanner&&window.evtOpenScanner('${STATE4.eventId}'),150)"><svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>Scan Attendees</button>` : ""}
             </div>
             <p class="text-xs text-gray-400 mt-3">Tap any tab above for Money, Docs, Raffle, or Comp details.</p>
         </div>
@@ -10932,8 +11087,8 @@ Type the event title to confirm:`);
     `;
   }
   function wireOverview() {
-    const STATE3 = getState2();
-    const e = STATE3.event;
+    const STATE4 = getState3();
+    const e = STATE4.event;
     if (!e) return;
     const inviteUrl = publicEventUrl(e);
     renderOverviewQrs(inviteUrl, e);
@@ -10954,9 +11109,9 @@ Type the event title to confirm:`);
     });
     document.getElementById("emSheetContent").querySelectorAll("[data-overview-tab]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        STATE3.activeTab = btn.dataset.overviewTab;
-        api8().renderTabs?.();
-        api8().renderTab?.(STATE3.activeTab);
+        STATE4.activeTab = btn.dataset.overviewTab;
+        api9().renderTabs?.();
+        api9().renderTab?.(STATE4.activeTab);
       });
     });
     const copyForm = document.getElementById("emCopyForm");
@@ -10968,8 +11123,8 @@ Type the event title to confirm:`);
       saveEventCopy(copyForm);
     });
     document.getElementById("emCopyCancel")?.addEventListener("click", () => {
-      if (copyTitle) copyTitle.value = STATE3.event?.title || "";
-      if (copyDescription) copyDescription.value = STATE3.event?.description || "";
+      if (copyTitle) copyTitle.value = STATE4.event?.title || "";
+      if (copyDescription) copyDescription.value = STATE4.event?.description || "";
       if (copyStatus) {
         copyStatus.className = "text-xs text-gray-400";
         copyStatus.textContent = "Changes discarded";
@@ -10978,8 +11133,8 @@ Type the event title to confirm:`);
         }, 1800);
       }
     });
-    if (STATE3.editCopyOnOpen) {
-      STATE3.editCopyOnOpen = false;
+    if (STATE4.editCopyOnOpen) {
+      STATE4.editCopyOnOpen = false;
       setTimeout(() => {
         document.getElementById("emCopyEditorCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
         copyTitle?.focus();
@@ -10988,8 +11143,8 @@ Type the event title to confirm:`);
     }
   }
   async function saveEventCopy(form) {
-    const STATE3 = getState2();
-    const e = STATE3.event;
+    const STATE4 = getState3();
+    const e = STATE4.event;
     if (!e || !form) return;
     const titleInput = document.getElementById("emCopyTitle");
     const descriptionInput = document.getElementById("emCopyDescription");
@@ -11012,10 +11167,10 @@ Type the event title to confirm:`);
     try {
       const { data, error } = await supabaseClient.from("events").update({ title, description: description || null }).eq("id", e.id).select("title, description").single();
       if (error) throw error;
-      STATE3.event.title = data?.title || title;
-      STATE3.event.description = data?.description || null;
-      api8().renderHeader?.();
-      api8().renderTab?.("overview");
+      STATE4.event.title = data?.title || title;
+      STATE4.event.description = data?.description || null;
+      api9().renderHeader?.();
+      api9().renderTab?.("overview");
       setTimeout(() => {
         const refreshedStatus = document.getElementById("emCopyStatus");
         if (refreshedStatus) {
@@ -11026,7 +11181,7 @@ Type the event title to confirm:`);
           }, 2500);
         }
       }, 0);
-      api8().notifyParent?.("updated", e.id);
+      api9().notifyParent?.("updated", e.id);
     } catch (err) {
       setStatus("Update failed: " + (err.message || "unknown error"), true);
     } finally {
@@ -11054,20 +11209,20 @@ Type the event title to confirm:`);
     }
   }
   async function toggleFeatured() {
-    const STATE3 = getState2();
+    const STATE4 = getState3();
     const btn = document.getElementById("emFeaturedToggle");
     if (!btn) return;
-    const newVal = !STATE3.event.is_featured;
+    const newVal = !STATE4.event.is_featured;
     btn.disabled = true;
-    const { error } = await supabaseClient.from("events").update({ is_featured: newVal }).eq("id", STATE3.event.id);
+    const { error } = await supabaseClient.from("events").update({ is_featured: newVal }).eq("id", STATE4.event.id);
     if (error) {
       alert("Failed to update: " + error.message);
       btn.disabled = false;
       return;
     }
-    STATE3.event.is_featured = newVal;
-    api8().renderTab?.("overview");
-    document.dispatchEvent(new CustomEvent("events:manage:updated", { detail: { eventId: STATE3.event.id } }));
+    STATE4.event.is_featured = newVal;
+    api9().renderTab?.("overview");
+    document.dispatchEvent(new CustomEvent("events:manage:updated", { detail: { eventId: STATE4.event.id } }));
   }
   var manageOverviewApi = {
     overviewHtml,
@@ -11081,7 +11236,7 @@ Type the event title to confirm:`);
   globalThis.EventsManageOverview = manageOverviewApi;
 
   // js/portal/events/manage/images.js
-  function api9() {
+  function api10() {
     return window.EventsManageImagesApi || {};
   }
   function esc2(s) {
@@ -11091,7 +11246,7 @@ Type the event title to confirm:`);
   }
   var imgFiles = { banner: null, embed: null };
   function imgDropZone(id, label, hint, currentUrl) {
-    const STATE3 = api9().getState?.() || {};
+    const STATE4 = api10().getState?.() || {};
     const hasImg = !!currentUrl;
     return `
         <div id="${id}Zone" class="em-img-zone${hasImg ? " em-img-zone--has" : ""}" data-zone="${id}">
@@ -11111,8 +11266,8 @@ Type the event title to confirm:`);
     `;
   }
   function imagesHtml() {
-    const STATE3 = api9().getState?.() || {};
-    const e = STATE3.event;
+    const STATE4 = api10().getState?.() || {};
+    const e = STATE4.event;
     return `
         <style>
             .em-img-zone { border:2px dashed #e5e7eb; border-radius:14px; padding:24px 16px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; display:flex; flex-direction:column; align-items:center; gap:4px; }
@@ -11153,8 +11308,8 @@ Type the event title to confirm:`);
     `;
   }
   function wireImages() {
-    const STATE3 = api9().getState?.() || {};
-    const e = STATE3.event;
+    const STATE4 = api10().getState?.() || {};
+    const e = STATE4.event;
     imgFiles.banner = null;
     imgFiles.embed = null;
     ["banner", "embed"].forEach((key) => {
@@ -11239,15 +11394,15 @@ Type the event title to confirm:`);
         ]);
         const { error } = await supabaseClient.from("events").update({ banner_url: bannerUrl, embed_image_url: embedUrl }).eq("id", e.id);
         if (error) throw error;
-        STATE3.event.banner_url = bannerUrl;
-        STATE3.event.embed_image_url = embedUrl;
+        STATE4.event.banner_url = bannerUrl;
+        STATE4.event.embed_image_url = embedUrl;
         imgFiles.banner = null;
         imgFiles.embed = null;
         status.textContent = "Saved \u2713";
         setTimeout(() => {
           status.textContent = "";
         }, 2500);
-        api9().notifyParent?.("updated", e.id);
+        api10().notifyParent?.("updated", e.id);
       } catch (err) {
         status.textContent = "Error: " + (err.message || "save failed");
       } finally {
@@ -11262,7 +11417,7 @@ Type the event title to confirm:`);
   globalThis.EventsManageImages = manageImagesApi;
 
   // js/portal/events/manage/docs.js
-  function api10() {
+  function api11() {
     return window.EventsManageDocsApi || {};
   }
   function esc3(s) {
@@ -11271,13 +11426,13 @@ Type the event title to confirm:`);
     return el.innerHTML;
   }
   async function loadDocs() {
-    const STATE3 = api10().getState?.() || {};
-    const { data, error } = await supabaseClient.from("event_documents").select("id, doc_type, label, file_name, file_size_bytes, file_path, distributed, target_user_id, created_at, profiles:target_user_id(first_name, last_name, profile_picture_url)").eq("event_id", STATE3.eventId).order("created_at", { ascending: true });
+    const STATE4 = api11().getState?.() || {};
+    const { data, error } = await supabaseClient.from("event_documents").select("id, doc_type, label, file_name, file_size_bytes, file_path, distributed, target_user_id, created_at, profiles:target_user_id(first_name, last_name, profile_picture_url)").eq("event_id", STATE4.eventId).order("created_at", { ascending: true });
     if (error) throw error;
     return { docs: data || [] };
   }
   function docTypeIcon(type) {
-    const STATE3 = api10().getState?.() || {};
+    const STATE4 = api11().getState?.() || {};
     return {
       plane_ticket: "\u2708\uFE0F",
       group_ticket: "\u{1F3AB}",
@@ -11287,18 +11442,18 @@ Type the event title to confirm:`);
     }[type] || "\u{1F4C4}";
   }
   function formatBytes(bytes) {
-    const STATE3 = api10().getState?.() || {};
+    const STATE4 = api11().getState?.() || {};
     if (!bytes) return "\u2014";
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / 1024 / 1024).toFixed(1) + " MB";
   }
   function docsHtml() {
-    const STATE3 = api10().getState?.() || {};
-    const docs = STATE3.tabData.docs.docs;
+    const STATE4 = api11().getState?.() || {};
+    const docs = STATE4.tabData.docs.docs;
     const groupDocs = docs.filter((d) => !d.target_user_id);
     const memberDocs = docs.filter((d) => d.target_user_id);
-    const goingMembers = STATE3.rsvps.filter((r) => r.status === "going").map((r) => {
+    const goingMembers = STATE4.rsvps.filter((r) => r.status === "going").map((r) => {
       const profile = r.profiles || {};
       return {
         id: r.user_id,
@@ -11343,7 +11498,7 @@ Type the event title to confirm:`);
       }).join("");
     }
     const memberOptions = goingMembers.map((m) => `<option value="${esc3(m.id)}">${esc3(m.name)}</option>`).join("");
-    const typeOptions = (api10().getDocTypes?.() || []).map((t) => `<option value="${esc3(t.value)}">${esc3(t.label)}</option>`).join("");
+    const typeOptions = (api11().getDocTypes?.() || []).map((t) => `<option value="${esc3(t.value)}">${esc3(t.label)}</option>`).join("");
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Document handoff</p>
@@ -11401,7 +11556,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireDocs() {
-    const STATE3 = api10().getState?.() || {};
+    const STATE4 = api11().getState?.() || {};
     const targetMode = document.getElementById("emDocTargetMode");
     const memberWrap = document.getElementById("emDocMemberWrap");
     const type = document.getElementById("emDocType");
@@ -11417,7 +11572,7 @@ Type the event title to confirm:`);
         const id = btn.dataset.id;
         if (action === "delete") {
           if (!confirm("Delete this document? This cannot be undone.")) return;
-          const doc = STATE3.tabData.docs.docs.find((d) => d.id === id);
+          const doc = STATE4.tabData.docs.docs.find((d) => d.id === id);
           if (doc?.file_path) await supabaseClient.storage.from("event-documents").remove([doc.file_path]);
           const { error } = await supabaseClient.from("event_documents").delete().eq("id", id);
           if (error) return alert("Delete failed: " + error.message);
@@ -11425,14 +11580,14 @@ Type the event title to confirm:`);
           const { error } = await supabaseClient.from("event_documents").update({ distributed: action === "distribute" }).eq("id", id);
           if (error) return alert("Update failed: " + error.message);
         }
-        STATE3.tabData.docs = null;
-        api10().renderTab?.("docs");
-        api10().notifyParent?.("updated", STATE3.eventId);
+        STATE4.tabData.docs = null;
+        api11().renderTab?.("docs");
+        api11().notifyParent?.("updated", STATE4.eventId);
       });
     });
   }
   async function uploadDocFromManage() {
-    const STATE3 = api10().getState?.() || {};
+    const STATE4 = api11().getState?.() || {};
     const btn = document.getElementById("emDocUploadBtn");
     const mode = document.getElementById("emDocTargetMode")?.value || "group";
     const targetUserId = mode === "member" ? document.getElementById("emDocMember")?.value || "" : "";
@@ -11446,11 +11601,11 @@ Type the event title to confirm:`);
     btn.textContent = "Uploading...";
     try {
       const ext = (file.name.split(".").pop() || "bin").toLowerCase();
-      const storagePath = `${STATE3.eventId}/${targetUserId || "group"}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+      const storagePath = `${STATE4.eventId}/${targetUserId || "group"}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
       const { error: uploadErr } = await supabaseClient.storage.from("event-documents").upload(storagePath, file, { contentType: file.type || "application/octet-stream" });
       if (uploadErr) throw uploadErr;
       const { error: dbErr } = await supabaseClient.from("event_documents").insert({
-        event_id: STATE3.eventId,
+        event_id: STATE4.eventId,
         uploaded_by: globalThis.evtCurrentUser.id,
         target_user_id: targetUserId || null,
         doc_type: docType,
@@ -11461,9 +11616,9 @@ Type the event title to confirm:`);
         mime_type: file.type
       });
       if (dbErr) throw dbErr;
-      STATE3.tabData.docs = null;
-      api10().renderTab?.("docs");
-      api10().notifyParent?.("updated", STATE3.eventId);
+      STATE4.tabData.docs = null;
+      api11().renderTab?.("docs");
+      api11().notifyParent?.("updated", STATE4.eventId);
     } catch (err) {
       alert("Upload failed: " + (err.message || err));
     } finally {
@@ -11480,7 +11635,7 @@ Type the event title to confirm:`);
   globalThis.EventsManageDocs = manageDocsApi;
 
   // js/portal/events/manage/rsvps.js
-  function api11() {
+  function api12() {
     return window.EventsManageRsvpsApi || {};
   }
   function esc4(s) {
@@ -11489,16 +11644,16 @@ Type the event title to confirm:`);
     return el.innerHTML;
   }
   function rsvpsHtml() {
-    const STATE3 = api11().getState?.() || {};
-    const e = STATE3.event;
-    const going = STATE3.rsvps.filter((r) => r.status === "going");
-    const maybe = STATE3.rsvps.filter((r) => r.status === "maybe");
-    const not = STATE3.rsvps.filter((r) => r.status === "not_going");
-    const guestGoing = STATE3.guestRsvps.filter((r) => r.status === "going");
-    const checkedSet = new Set(STATE3.checkins.map((c) => c.user_id));
-    const guestCheckedSet = new Set(STATE3.checkins.map((c) => c.guest_token).filter(Boolean));
+    const STATE4 = api12().getState?.() || {};
+    const e = STATE4.event;
+    const going = STATE4.rsvps.filter((r) => r.status === "going");
+    const maybe = STATE4.rsvps.filter((r) => r.status === "maybe");
+    const not = STATE4.rsvps.filter((r) => r.status === "not_going");
+    const guestGoing = STATE4.guestRsvps.filter((r) => r.status === "going");
+    const checkedSet = new Set(STATE4.checkins.map((c) => c.user_id));
+    const guestCheckedSet = new Set(STATE4.checkins.map((c) => c.guest_token).filter(Boolean));
     const totalGoing = going.length + guestGoing.length;
-    const checkedTotal = STATE3.checkins.length;
+    const checkedTotal = STATE4.checkins.length;
     const capacity = e.max_participants || 0;
     const capacityLeft = capacity ? Math.max(0, capacity - totalGoing) : null;
     const minNeeded = Number(e.min_participants || 0);
@@ -11557,9 +11712,9 @@ Type the event title to confirm:`);
     `;
   }
   function wireRsvps() {
-    const STATE3 = api11().getState?.() || {};
+    const STATE4 = api12().getState?.() || {};
     document.getElementById("emSheetContent")?.querySelectorAll("[data-remove-rsvp]").forEach((btn) => {
-      btn.addEventListener("click", () => api11().removeParticipationPerson?.(btn));
+      btn.addEventListener("click", () => api12().removeParticipationPerson?.(btn));
     });
   }
   var manageRsvpsApi = {
@@ -11569,7 +11724,7 @@ Type the event title to confirm:`);
   globalThis.EventsManageRsvps = manageRsvpsApi;
 
   // js/portal/events/manage/money.js
-  function api12() {
+  function api13() {
     return window.EventsManageMoneyApi || {};
   }
   function esc5(s) {
@@ -11581,8 +11736,8 @@ Type the event title to confirm:`);
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
   }
   async function loadMoney() {
-    const STATE3 = api12().getState?.() || {};
-    const eventId2 = STATE3.eventId;
+    const STATE4 = api13().getState?.() || {};
+    const eventId2 = STATE4.eventId;
     const [rsvpsRes, guestRes, raffleRes, poolRes] = await Promise.all([
       supabaseClient.from("event_rsvps").select("id, user_id, status, amount_paid_cents, paid, refunded, refund_amount_cents, stripe_payment_intent_id, profiles!event_rsvps_user_id_fkey(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
       supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, status, paid, amount_paid_cents, stripe_payment_intent_id").eq("event_id", eventId2),
@@ -11597,13 +11752,13 @@ Type the event title to confirm:`);
     };
   }
   function moneyHtml() {
-    const STATE3 = api12().getState?.() || {};
-    const d = STATE3.tabData.money;
-    const isPaidEvent = STATE3.event?.pricing_mode === "paid" || Number(STATE3.event?.rsvp_cost_cents || 0) > 0;
+    const STATE4 = api13().getState?.() || {};
+    const d = STATE4.tabData.money;
+    const isPaidEvent = STATE4.event?.pricing_mode === "paid" || Number(STATE4.event?.rsvp_cost_cents || 0) > 0;
     const paidRsvps = d.rsvps.filter((r) => r.paid);
     const paidGuests = d.guests.filter((g2) => g2.paid);
     const refundedRsvps = d.rsvps.filter((r) => r.refunded);
-    const unpaidGoing = isPaidEvent ? STATE3.rsvps.filter((r) => r.status === "going" && !r.paid).length + STATE3.guestRsvps.filter((g2) => g2.status === "going" && !g2.paid).length : 0;
+    const unpaidGoing = isPaidEvent ? STATE4.rsvps.filter((r) => r.status === "going" && !r.paid).length + STATE4.guestRsvps.filter((g2) => g2.status === "going" && !g2.paid).length : 0;
     const rsvpRevenue = paidRsvps.reduce((s, r) => s + (r.amount_paid_cents || 0), 0);
     const guestRevenue = paidGuests.reduce((s, g2) => s + (g2.amount_paid_cents || 0), 0);
     const raffleRevenue = d.raffle.filter((e) => e.paid).reduce((s, e) => s + (e.amount_paid_cents || 0), 0);
@@ -11676,7 +11831,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireMoney() {
-    const STATE3 = api12().getState?.() || {};
+    const STATE4 = api13().getState?.() || {};
   }
   var manageMoneyApi = {
     loadMoney,
@@ -11686,7 +11841,7 @@ Type the event title to confirm:`);
   globalThis.EventsManageMoney = manageMoneyApi;
 
   // js/portal/events/manage/competition.js
-  function api13() {
+  function api14() {
     return window.EventsManageCompetitionApi || {};
   }
   function esc6(s) {
@@ -11698,8 +11853,8 @@ Type the event title to confirm:`);
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
   }
   async function loadComp() {
-    const STATE3 = api13().getState?.() || {};
-    const eventId2 = STATE3.eventId;
+    const STATE4 = api14().getState?.() || {};
+    const eventId2 = STATE4.eventId;
     const [phasesRes, entriesRes, votesRes, winnersRes, contribRes] = await Promise.all([
       supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true }),
       supabaseClient.from("competition_entries").select("id, user_id, title, moderated, vote_count, profiles:user_id(first_name, last_name)").eq("event_id", eventId2),
@@ -11716,12 +11871,12 @@ Type the event title to confirm:`);
     };
   }
   function compHtml() {
-    const STATE3 = api13().getState?.() || {};
-    const e = STATE3.event;
+    const STATE4 = api14().getState?.() || {};
+    const e = STATE4.event;
     if (e.event_type !== "competition") {
-      return api13().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
+      return api14().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
     }
-    const d = STATE3.tabData.comp;
+    const d = STATE4.tabData.comp;
     const fmt = window.formatCurrency || money3;
     const cfg = e.competition_config || {};
     const liveEntries = d.entries.filter((x) => !x.moderated);
@@ -11806,7 +11961,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireComp() {
-    const STATE3 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
   }
   var manageCompetitionApi = {
     loadComp,
@@ -11816,12 +11971,12 @@ Type the event title to confirm:`);
   globalThis.EventsManageCompetition = manageCompetitionApi;
 
   // js/portal/events/manage/participation.js
-  function api14() {
+  function api15() {
     return window.EventsManageParticipationApi || {};
   }
   async function getParticipationResetCounts() {
-    const STATE3 = api14().getState?.() || {};
-    const eventId2 = STATE3.eventId;
+    const STATE4 = api15().getState?.() || {};
+    const eventId2 = STATE4.eventId;
     const tables = [
       ["member RSVPs", "event_rsvps"],
       ["guest RSVPs", "event_guest_rsvps"],
@@ -11837,8 +11992,8 @@ Type the event title to confirm:`);
     return results;
   }
   async function resetParticipation() {
-    const STATE3 = api14().getState?.() || {};
-    const e = STATE3.event;
+    const STATE4 = api15().getState?.() || {};
+    const e = STATE4.event;
     if (!e) return;
     let counts = [];
     try {
@@ -11847,7 +12002,7 @@ Type the event title to confirm:`);
       alert("Could not load participation counts: " + (err.message || "unknown error"));
       return;
     }
-    const paidTickets = STATE3.rsvps.filter((r) => r.paid).length + STATE3.guestRsvps.filter((r) => r.paid).length;
+    const paidTickets = STATE4.rsvps.filter((r) => r.paid).length + STATE4.guestRsvps.filter((r) => r.paid).length;
     const summary = counts.map((item) => `${item.count} ${item.label}`).join("\n");
     const typed = prompt(
       `Reset participation for "${e.title}"?
@@ -11868,14 +12023,14 @@ Type RESET to continue.`
         action: "reset_participation",
         event_id: e.id
       });
-      await api14().refreshEventManager?.("danger");
+      await api15().refreshEventManager?.("danger");
       alert("Participation reset complete. The event is still intact.");
     } catch (err) {
       alert("Reset failed: " + (err.message || "unknown error"));
     }
   }
   async function removeParticipationPerson(btn) {
-    const STATE3 = api14().getState?.() || {};
+    const STATE4 = api15().getState?.() || {};
     const kind = btn.dataset.removeRsvp;
     const name = btn.dataset.name || (kind === "guest" ? "this guest" : "this member");
     const isPaid = btn.dataset.paid === "1";
@@ -11890,7 +12045,7 @@ Type RESET to continue.`
         if (!guestToken || !rsvpId) throw new Error("Missing guest RSVP details.");
         await callEdgeFunction("manage-event-participation", {
           action: "remove_rsvp",
-          event_id: STATE3.eventId,
+          event_id: STATE4.eventId,
           kind: "guest",
           guest_token: guestToken,
           rsvp_id: rsvpId
@@ -11900,15 +12055,15 @@ Type RESET to continue.`
         if (!userId) throw new Error("Missing member RSVP details.");
         await callEdgeFunction("manage-event-participation", {
           action: "remove_rsvp",
-          event_id: STATE3.eventId,
+          event_id: STATE4.eventId,
           kind: "member",
           user_id: userId
         });
       }
-      await api14().refreshEventManager?.("rsvps");
+      await api15().refreshEventManager?.("rsvps");
     } catch (err) {
       alert("Remove failed: " + (err.message || "unknown error"));
-      api14().renderTab?.("rsvps");
+      api15().renderTab?.("rsvps");
     }
   }
   var manageParticipationApi = {
@@ -11919,7 +12074,7 @@ Type RESET to continue.`
   globalThis.EventsManageParticipation = manageParticipationApi;
 
   // js/portal/events/manage/raffle.js
-  function api15() {
+  function api16() {
     return window.EventsManageRaffleApi || {};
   }
   function esc7(s) {
@@ -11936,8 +12091,8 @@ Type RESET to continue.`
     return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
   }
   async function loadRaffle() {
-    const STATE3 = api15().getState?.() || {};
-    const eventId2 = STATE3.eventId;
+    const STATE4 = api16().getState?.() || {};
+    const eventId2 = STATE4.eventId;
     const [entriesRes, winnersRes, guestsRes] = await Promise.all([
       supabaseClient.from("event_raffle_entries").select("id, user_id, guest_token, paid, amount_paid_cents, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
       supabaseClient.from("event_raffle_winners").select("*, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).order("place", { ascending: true }),
@@ -11953,13 +12108,13 @@ Type RESET to continue.`
     const s = ["th", "st", "nd", "rd"], v = n % 100;
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
-  function raffleHtml() {
-    const STATE3 = api15().getState?.() || {};
-    const e = STATE3.event;
+  function raffleHtml2() {
+    const STATE4 = api16().getState?.() || {};
+    const e = STATE4.event;
     if (!e.raffle_enabled) {
-      return api15().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
+      return api16().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
     }
-    const d = STATE3.tabData.raffle;
+    const d = STATE4.tabData.raffle;
     const fmt = window.formatCurrency || money4;
     const guestByToken = new Map((d.guests || []).map((g2) => [g2.guest_token, g2]));
     const eligibleEntries = d.entries.filter((en) => en.paid || !e.raffle_entry_cost_cents);
@@ -12095,10 +12250,10 @@ Type RESET to continue.`
     `;
   }
   function wireRaffle() {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const drawBtn = document.getElementById("emRaffleDrawBtn");
     if (drawBtn) {
-      drawBtn.onclick = () => window.evtOpenRaffleDraw?.(STATE3.eventId, STATE3.event);
+      drawBtn.onclick = () => window.evtOpenRaffleDraw?.(STATE4.eventId, STATE4.event);
     }
     document.getElementById("emSheetContent")?.querySelectorAll("[data-raffle-assign-choice]").forEach((btn) => {
       btn.onclick = () => assignWinnerChoice(btn.dataset.winnerId);
@@ -12129,7 +12284,7 @@ Type RESET to continue.`
     wireRafflePrizeImages();
   }
   function rafflePrizeSetupHtml(config, winners = []) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const model = window.EventsRaffleModel;
     if (!model) {
       return `<div class="em-card mt-3"><div class="em-section-head"><div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Raffle editor unavailable because the raffle model helper did not load.</p></div></div></div>`;
@@ -12244,12 +12399,12 @@ Type RESET to continue.`
     `;
   }
   function collectRafflePrizeConfigFromDom() {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const model = window.EventsRaffleModel;
     if (!model) throw new Error("Raffle model helper is not loaded.");
     const categoryRows = Array.from(document.querySelectorAll("[data-em-raffle-category-row]"));
     const itemRows = Array.from(document.querySelectorAll("[data-em-raffle-item-row]"));
-    if (!categoryRows.length && !itemRows.length) return model.normalizeConfig(STATE3.event?.raffle_prizes || []);
+    if (!categoryRows.length && !itemRows.length) return model.normalizeConfig(STATE4.event?.raffle_prizes || []);
     const categories = categoryRows.map((row, index) => {
       const field = (name) => row.querySelector(`[data-em-raffle-category-field="${name}"]`)?.value;
       return model.createCategory({
@@ -12278,7 +12433,7 @@ Type RESET to continue.`
     return model.normalizeConfig({ version: 2, categories, items });
   }
   function wireRafflePrizeImages() {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     document.querySelectorAll("[data-em-prize-drop]").forEach((zone) => {
       const itemId = zone.dataset.emPrizeDrop;
       const fileInput = document.querySelector(`[data-em-prize-file="${CSS.escape(itemId)}"]`);
@@ -12307,7 +12462,7 @@ Type RESET to continue.`
     });
   }
   function setRafflePrizeImage(itemId, file) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
       alert("Please use a PNG, JPG, or WebP image.");
       return;
@@ -12330,7 +12485,7 @@ Type RESET to continue.`
     reader.readAsDataURL(file);
   }
   function clearRafflePrizeImage(itemId) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     if (!itemId) return;
     delete prizeImageFiles[itemId];
     delete prizeImagePreviews[itemId];
@@ -12346,10 +12501,10 @@ Type RESET to continue.`
     if (status) status.textContent = "Image removed. Save prize setup to keep this change.";
   }
   async function uploadPendingRafflePrizeImages(config) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const uploads = Object.entries(prizeImageFiles);
     if (!uploads.length) return config;
-    const slug = safeFilename2(STATE3.event?.slug || STATE3.event?.title || STATE3.eventId || "event");
+    const slug = safeFilename2(STATE4.event?.slug || STATE4.event?.title || STATE4.eventId || "event");
     for (const [itemId, file] of uploads) {
       const item = (config.items || []).find((entry) => entry.id === itemId);
       if (!item) continue;
@@ -12363,7 +12518,7 @@ Type RESET to continue.`
     return config;
   }
   async function saveRafflePrizeSetup(action = {}) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const model = window.EventsRaffleModel;
     const status = document.getElementById("emRafflePrizeStatus");
     const saveBtn = document.getElementById("emRafflePrizeSave");
@@ -12393,7 +12548,7 @@ Type RESET to continue.`
         });
       }
       if (action.removeItemId) {
-        const alreadyDrawn = (STATE3.tabData.raffle?.winners || []).some((winner) => winner.prize_id === action.removeItemId);
+        const alreadyDrawn = (STATE4.tabData.raffle?.winners || []).some((winner) => winner.prize_id === action.removeItemId);
         if (alreadyDrawn) throw new Error("This prize is already assigned to a winner and cannot be removed from setup.");
         config.items = config.items.filter((item) => item.id !== action.removeItemId);
         delete prizeImageFiles[action.removeItemId];
@@ -12404,11 +12559,11 @@ Type RESET to continue.`
       config = await uploadPendingRafflePrizeImages(config);
       const winnerCount = model.getTotalWinnerCount(config);
       if (status) status.textContent = "Saving prize setup...";
-      const { error } = await supabaseClient.from("events").update({ raffle_prizes: config, raffle_winner_count: winnerCount }).eq("id", STATE3.eventId);
+      const { error } = await supabaseClient.from("events").update({ raffle_prizes: config, raffle_winner_count: winnerCount }).eq("id", STATE4.eventId);
       if (error) throw error;
-      STATE3.event.raffle_prizes = config;
-      STATE3.event.raffle_winner_count = winnerCount;
-      await api15().refreshEventManager?.("raffle");
+      STATE4.event.raffle_prizes = config;
+      STATE4.event.raffle_winner_count = winnerCount;
+      await api16().refreshEventManager?.("raffle");
     } catch (err) {
       if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
       else alert("Prize setup save failed: " + (err.message || "unknown error"));
@@ -12419,18 +12574,18 @@ Type RESET to continue.`
     }
   }
   function categoryPrizeQuantity(config, categoryId) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     return (config.items || []).filter((item) => item.category_id === categoryId).reduce((sum, item) => sum + Math.max(1, Number(item.quantity || 1)), 0);
   }
   function capRaffleWinnerCounts(config) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     (config.categories || []).forEach((category) => {
       const quantity = categoryPrizeQuantity(config, category.id);
       category.winner_count = Math.min(Number(category.winner_count || 0), quantity);
     });
   }
   async function saveRaffleEntryPrice() {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const input = document.getElementById("emRaffleEntryPrice");
     const btn = document.getElementById("emRafflePriceSave");
     const status = document.getElementById("emRafflePriceStatus");
@@ -12452,10 +12607,10 @@ Type RESET to continue.`
     }
     if (status) status.textContent = "Saving raffle price...";
     try {
-      const { error } = await supabaseClient.from("events").update({ raffle_entry_cost_cents: cents }).eq("id", STATE3.eventId);
+      const { error } = await supabaseClient.from("events").update({ raffle_entry_cost_cents: cents }).eq("id", STATE4.eventId);
       if (error) throw error;
-      STATE3.event.raffle_entry_cost_cents = cents;
-      await api15().refreshEventManager?.("raffle");
+      STATE4.event.raffle_entry_cost_cents = cents;
+      await api16().refreshEventManager?.("raffle");
     } catch (err) {
       if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
       if (btn) {
@@ -12465,7 +12620,7 @@ Type RESET to continue.`
     }
   }
   async function removeRaffleEntry(btn) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const name = btn.dataset.name || "this entry";
     const isPaid = btn.dataset.paid === "1";
     const warning = isPaid ? "\n\nThis was marked paid. Removing the record does not refund Stripe payments." : "";
@@ -12475,20 +12630,20 @@ Type RESET to continue.`
     try {
       await callEdgeFunction("manage-event-participation", {
         action: "remove_raffle_entry",
-        event_id: STATE3.eventId,
+        event_id: STATE4.eventId,
         entry_id: btn.dataset.removeRaffleEntry
       });
-      STATE3.tabData.raffle = null;
-      await api15().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
-      api15().notifyParent?.("updated", STATE3.eventId);
+      STATE4.tabData.raffle = null;
+      await api16().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+      api16().notifyParent?.("updated", STATE4.eventId);
     } catch (err) {
       alert("Raffle entry remove failed: " + (err.message || "unknown error"));
-      STATE3.tabData.raffle = null;
-      await api15().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
+      STATE4.tabData.raffle = null;
+      await api16().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
     }
   }
   function winnerChoiceHtml(winner, config, winners) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     if (winner.selection_status !== "pending_choice") return "";
     const items = availableChoiceItems(config, winners, winner);
     if (!items.length) {
@@ -12505,7 +12660,7 @@ Type RESET to continue.`
     `;
   }
   function availableChoiceItems(config, winners, currentWinner) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const items = raffleItems(config, currentWinner.category_id);
     const used = /* @__PURE__ */ new Map();
     (winners || []).forEach((winner) => {
@@ -12516,13 +12671,13 @@ Type RESET to continue.`
     return items.filter((item) => (used.get(item.id) || 0) < item.quantity);
   }
   async function assignWinnerChoice(winnerId) {
-    const STATE3 = api15().getState?.() || {};
-    const winner = (STATE3.tabData.raffle?.winners || []).find((row) => row.id === winnerId);
+    const STATE4 = api16().getState?.() || {};
+    const winner = (STATE4.tabData.raffle?.winners || []).find((row) => row.id === winnerId);
     if (!winner) return;
     const select = document.getElementById(`emWinnerChoice_${winnerId}`);
     const itemId = select?.value;
     if (!itemId) return alert("Choose a prize item first.");
-    const config = raffleConfig(STATE3.event);
+    const config = raffleConfig(STATE4.event);
     const item = raffleItems(config, winner.category_id).find((row) => row.id === itemId);
     if (!item) return alert("Prize item is no longer available. Refresh and try again.");
     const { error } = await supabaseClient.from("event_raffle_winners").update({
@@ -12531,45 +12686,45 @@ Type RESET to continue.`
       prize_image_url: item.image_url || null,
       prize_emoji: item.emoji || window.EventsRaffleModel?.DEFAULT_EMOJI || "\u{1F381}",
       selection_status: "assigned"
-    }).eq("id", winnerId).eq("event_id", STATE3.eventId).eq("selection_status", "pending_choice");
+    }).eq("id", winnerId).eq("event_id", STATE4.eventId).eq("selection_status", "pending_choice");
     if (error) return alert("Prize assignment failed: " + error.message);
-    STATE3.tabData.raffle = null;
-    await api15().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
-    document.dispatchEvent(new CustomEvent("events:raffle:drawn", { detail: { eventId: STATE3.eventId } }));
+    STATE4.tabData.raffle = null;
+    await api16().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+    document.dispatchEvent(new CustomEvent("events:raffle:drawn", { detail: { eventId: STATE4.eventId } }));
   }
   function raffleConfig(event) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
     return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
   }
   function raffleCategories(config) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getOrderedCategories(config);
   }
   function raffleItems(config, categoryId) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
   }
   function raffleTotalWinners(config) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     if (!window.EventsRaffleModel) return 0;
     return window.EventsRaffleModel.getTotalWinnerCount(config);
   }
   function raffleDrawQueue(config, winners) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getDrawQueue(config, winners || []);
   }
   function drawModeLabel(drawMode) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     if (drawMode === "random_item") return "Random prize assigned";
     if (drawMode === "winner_choice") return "Winner chooses later";
     return "Specific prize";
   }
   function prizeSlotLabel(slot) {
-    const STATE3 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     if (!slot) return "";
     if (slot.prize_name) return slot.prize_name;
     if (slot.draw_mode === "winner_choice") return `${slot.category_label || "Prize tier"} choice`;
@@ -12580,15 +12735,15 @@ Type RESET to continue.`
     Object.keys(prizeImagePreviews).forEach((key) => delete prizeImagePreviews[key]);
   }
   function refreshRaffle(eventId2) {
-    const STATE3 = api15().getState?.() || {};
-    if (eventId2 && eventId2 !== STATE3.eventId) return;
-    STATE3.tabData.raffle = null;
-    if (STATE3.activeTab === "raffle") api15().renderTab?.("raffle");
+    const STATE4 = api16().getState?.() || {};
+    if (eventId2 && eventId2 !== STATE4.eventId) return;
+    STATE4.tabData.raffle = null;
+    if (STATE4.activeTab === "raffle") api16().renderTab?.("raffle");
   }
   document.addEventListener("events:raffle:drawn", (evt) => refreshRaffle(evt.detail?.eventId));
   var manageRaffleApi = {
     loadRaffle,
-    raffleHtml,
+    raffleHtml: raffleHtml2,
     wireRaffle,
     clearPrizeImageState,
     refreshRaffle
@@ -12596,7 +12751,7 @@ Type RESET to continue.`
   globalThis.EventsManageRaffle = manageRaffleApi;
 
   // js/portal/events/manage/danger.js
-  function api16() {
+  function api17() {
     return window.EventsManageDangerApi || {};
   }
   function esc8(s) {
@@ -12605,13 +12760,13 @@ Type RESET to continue.`
     return el.innerHTML;
   }
   function dangerHtml() {
-    const STATE3 = api16().getState?.() || {};
-    const e = STATE3.event;
+    const STATE4 = api17().getState?.() || {};
+    const e = STATE4.event;
     const isCancelled = e.status === "cancelled";
     const isCompleted = e.status === "completed";
-    const totalRsvps = STATE3.rsvps.length + STATE3.guestRsvps.length;
-    const paidTickets = STATE3.rsvps.filter((r) => r.paid).length + STATE3.guestRsvps.filter((r) => r.paid).length;
-    const checkins = STATE3.checkins.length;
+    const totalRsvps = STATE4.rsvps.length + STATE4.guestRsvps.length;
+    const paidTickets = STATE4.rsvps.filter((r) => r.paid).length + STATE4.guestRsvps.filter((r) => r.paid).length;
+    const checkins = STATE4.checkins.length;
     const statusLabel = (e.status || "draft").toUpperCase();
     return `
         <div class="em-card em-command-card mb-4" style="background:linear-gradient(135deg,#7f1d1d,#111827)">
@@ -12658,14 +12813,14 @@ Type RESET to continue.`
     `;
   }
   function wireDanger() {
-    const STATE3 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     document.getElementById("emSheetContent").querySelectorAll("[data-action]").forEach((btn) => {
       btn.addEventListener("click", () => runDangerAction(btn.dataset.action));
     });
   }
   async function runDangerAction(action) {
-    const STATE3 = api16().getState?.() || {};
-    const e = STATE3.event;
+    const STATE4 = api17().getState?.() || {};
+    const e = STATE4.event;
     if (!e) return;
     if (action === "delete") {
       const typed = prompt(`Type the event title to permanently delete:
@@ -12679,8 +12834,8 @@ Type RESET to continue.`
         const { error } = await supabaseClient.from("events").delete().eq("id", e.id);
         if (error) throw error;
         alert("Event deleted.");
-        api16().close?.();
-        api16().notifyParent?.("deleted", e.id);
+        api17().close?.();
+        api17().notifyParent?.("deleted", e.id);
       } catch (err) {
         alert("Delete failed: " + (err.message || "unknown error"));
       }
@@ -12691,17 +12846,17 @@ Type RESET to continue.`
       try {
         const { error } = await supabaseClient.from("events").update({ status: "cancelled" }).eq("id", e.id);
         if (error) throw error;
-        STATE3.event.status = "cancelled";
-        api16().renderHeader?.();
-        api16().renderTab?.("danger");
-        api16().notifyParent?.("updated", e.id);
+        STATE4.event.status = "cancelled";
+        api17().renderHeader?.();
+        api17().renderTab?.("danger");
+        api17().notifyParent?.("updated", e.id);
       } catch (err) {
         alert("Cancel failed: " + (err.message || "unknown error"));
       }
       return;
     }
     if (action === "reset-participation") {
-      await api16().resetParticipation?.();
+      await api17().resetParticipation?.();
       return;
     }
     if (action === "complete") {
@@ -12709,10 +12864,10 @@ Type RESET to continue.`
       try {
         const { error } = await supabaseClient.from("events").update({ status: "completed" }).eq("id", e.id);
         if (error) throw error;
-        STATE3.event.status = "completed";
-        api16().renderHeader?.();
-        api16().renderTab?.("danger");
-        api16().notifyParent?.("updated", e.id);
+        STATE4.event.status = "completed";
+        api17().renderHeader?.();
+        api17().renderTab?.("danger");
+        api17().notifyParent?.("updated", e.id);
       } catch (err) {
         alert("Complete failed: " + (err.message || "unknown error"));
       }
@@ -12778,7 +12933,7 @@ Type RESET to continue.`
   exp("evtNavigateToList", typeof g("evtNavigateToList") === "function" ? g("evtNavigateToList") : void 0);
 
   // js/portal/events/manage/sheet.js
-  var STATE2 = {
+  var STATE3 = {
     eventId: null,
     event: null,
     rsvps: [],
@@ -12795,7 +12950,7 @@ Type RESET to continue.`
     const types = window.EventsConstants && window.EventsConstants.EVENT_DOC_TYPES;
     return types && types.length ? types : [];
   }
-  var Shell = window.EventsManageShell;
+  var Shell2 = window.EventsManageShell;
   var Overview = window.EventsManageOverview;
   var Images = window.EventsManageImages;
   var Rsvps = window.EventsManageRsvps;
@@ -12806,41 +12961,41 @@ Type RESET to continue.`
   var Comp = window.EventsManageCompetition;
   var Participation = window.EventsManageParticipation;
   function _renderHeader() {
-    return Shell.renderHeader();
+    return Shell2.renderHeader();
   }
   function _renderTabs() {
-    return Shell.renderTabs();
+    return Shell2.renderTabs();
   }
   function _renderContent(html5) {
-    return Shell.renderContent(html5);
+    return Shell2.renderContent(html5);
   }
   async function _loadEventData(eventId2) {
     const { data: event } = await supabaseClient.from("events").select("*").eq("id", eventId2).single();
-    STATE2.event = event;
+    STATE3.event = event;
     const { data: rsvps } = await supabaseClient.from("event_rsvps").select("id, user_id, status, paid, qr_token, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)").eq("event_id", eventId2);
-    STATE2.rsvps = rsvps || [];
+    STATE3.rsvps = rsvps || [];
     const { data: guestRsvps } = await supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at").eq("event_id", eventId2);
-    STATE2.guestRsvps = guestRsvps || [];
+    STATE3.guestRsvps = guestRsvps || [];
     const { data: checkins } = await supabaseClient.from("event_checkins").select("user_id, guest_token, checked_in_at").eq("event_id", eventId2);
-    STATE2.checkins = checkins || [];
+    STATE3.checkins = checkins || [];
   }
-  async function open3(eventId2, opts = {}) {
+  async function open4(eventId2, opts = {}) {
     if (!eventId2) return;
-    Shell.ensureMounted();
-    STATE2.eventId = eventId2;
-    STATE2.source = opts.source || "admin";
-    STATE2.activeTab = Shell.getTabs().some((t) => t.key === opts.tab) ? opts.tab : "overview";
-    STATE2.editCopyOnOpen = !!opts.editCopy;
-    STATE2.tabData = {};
+    Shell2.ensureMounted();
+    STATE3.eventId = eventId2;
+    STATE3.source = opts.source || "admin";
+    STATE3.activeTab = Shell2.getTabs().some((t) => t.key === opts.tab) ? opts.tab : "overview";
+    STATE3.editCopyOnOpen = !!opts.editCopy;
+    STATE3.tabData = {};
     Raffle?.clearPrizeImageState?.();
-    Shell.setLoadingChrome();
-    Shell.openPanel();
+    Shell2.setLoadingChrome();
+    Shell2.openPanel();
     await _loadEventData(eventId2);
-    Shell.renderHeader();
-    _renderTab(STATE2.activeTab);
+    Shell2.renderHeader();
+    _renderTab(STATE3.activeTab);
   }
-  function close2() {
-    Shell.closePanel();
+  function close3() {
+    Shell2.closePanel();
   }
   function _renderTab(tab) {
     if (tab === "overview") {
@@ -12867,7 +13022,7 @@ Type RESET to continue.`
     if (tab === "docs") return _renderTabAsync("docs", Docs.loadDocs, Docs.docsHtml, Docs.wireDocs);
     if (tab === "raffle") return _renderTabAsync("raffle", Raffle.loadRaffle, Raffle.raffleHtml, Raffle.wireRaffle);
     if (tab === "comp") {
-      if (STATE2.event?.event_type !== "competition") {
+      if (STATE3.event?.event_type !== "competition") {
         _renderContent(Comp.compHtml());
         Comp.wireComp();
         return;
@@ -12876,27 +13031,27 @@ Type RESET to continue.`
     }
   }
   async function _renderTabAsync(key, loader, render, wire6) {
-    if (!STATE2.tabData[key]) {
+    if (!STATE3.tabData[key]) {
       _renderContent(`<div class="em-placeholder"><div style="font-size:13px">Loading\u2026</div></div>`);
       try {
-        STATE2.tabData[key] = await loader();
+        STATE3.tabData[key] = await loader();
       } catch (err) {
         _renderContent(`<div class="em-placeholder"><p class="text-sm text-red-600">Failed to load: ${_esc7(err.message || err)}</p></div>`);
         return;
       }
     }
-    if (STATE2.activeTab !== key) return;
+    if (STATE3.activeTab !== key) return;
     _renderContent(render());
     if (wire6) wire6();
   }
   async function _refreshEventManager(tab) {
-    await _loadEventData(STATE2.eventId);
-    STATE2.tabData = {};
-    if (tab) STATE2.activeTab = tab;
+    await _loadEventData(STATE3.eventId);
+    STATE3.tabData = {};
+    if (tab) STATE3.activeTab = tab;
     _renderHeader();
     _renderTabs();
-    _renderTab(STATE2.activeTab);
-    _notifyParent("updated", STATE2.eventId);
+    _renderTab(STATE3.activeTab);
+    _notifyParent("updated", STATE3.eventId);
   }
   function _notifyParent(type, eventId2) {
     document.dispatchEvent(new CustomEvent("events:manage:" + type, { detail: { eventId: eventId2 } }));
@@ -12919,20 +13074,20 @@ Type RESET to continue.`
     return Raffle.refreshRaffle(eventId2);
   }
   globalThis.EventsManageParticipationApi = {
-    getState: () => STATE2,
+    getState: () => STATE3,
     refreshEventManager: _refreshEventManager,
     renderTab: _renderTab
   };
   globalThis.EventsManageDangerApi = {
-    getState: () => STATE2,
+    getState: () => STATE3,
     notifyParent: _notifyParent,
-    close: close2,
-    renderHeader: () => Shell.renderHeader(),
+    close: close3,
+    renderHeader: () => Shell2.renderHeader(),
     renderTab: _renderTab,
     resetParticipation: () => Participation.resetParticipation()
   };
   globalThis.EventsManageRaffleApi = {
-    getState: () => STATE2,
+    getState: () => STATE3,
     emptyHtml: _emptyHtml,
     notifyParent: _notifyParent,
     refreshEventManager: _refreshEventManager,
@@ -12940,39 +13095,39 @@ Type RESET to continue.`
     renderTabAsync: _renderTabAsync
   };
   globalThis.EventsManageRsvpsApi = {
-    getState: () => STATE2,
+    getState: () => STATE3,
     removeParticipationPerson: (btn) => Participation.removeParticipationPerson(btn)
   };
   globalThis.EventsManageImagesApi = {
-    getState: () => STATE2,
+    getState: () => STATE3,
     notifyParent: _notifyParent
   };
   globalThis.EventsManageMoneyApi = {
-    getState: () => STATE2
+    getState: () => STATE3
   };
   globalThis.EventsManageDocsApi = {
-    getState: () => STATE2,
+    getState: () => STATE3,
     getDocTypes,
     renderTab: _renderTab,
     notifyParent: _notifyParent
   };
   globalThis.EventsManageCompetitionApi = {
-    getState: () => STATE2,
+    getState: () => STATE3,
     emptyHtml: _emptyHtml
   };
   globalThis.EventsManageShellApi = {
-    getState: () => STATE2,
-    onClose: close2,
+    getState: () => STATE3,
+    onClose: close3,
     renderTab: _renderTab
   };
   globalThis.EventsManageOverviewApi = {
-    getState: () => STATE2,
-    renderHeader: () => Shell.renderHeader(),
-    renderTabs: () => Shell.renderTabs(),
+    getState: () => STATE3,
+    renderHeader: () => Shell2.renderHeader(),
+    renderTabs: () => Shell2.renderTabs(),
     renderTab: _renderTab,
     notifyParent: _notifyParent
   };
-  var eventsManageApi = { open: open3, close: close2, refreshRaffle: refreshRaffle2 };
+  var eventsManageApi = { open: open4, close: close3, refreshRaffle: refreshRaffle2 };
   globalThis.EventsManage = eventsManageApi;
   var PortalEvents14 = globalThis.PortalEvents = globalThis.PortalEvents || {};
   PortalEvents14.manage = PortalEvents14.manage || {};
@@ -12980,7 +13135,7 @@ Type RESET to continue.`
   PortalEvents14.manage.close = eventsManageApi.close;
   PortalEvents14.manage.refreshRaffle = eventsManageApi.refreshRaffle;
   if (PortalEvents14.detail && typeof PortalEvents14.detail.register === "function") {
-    PortalEvents14.detail.register("manage", { open: open3, close: close2 });
+    PortalEvents14.detail.register("manage", { open: open4, close: close3 });
   }
 
   // js/portal/events/init.js

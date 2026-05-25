@@ -1,43 +1,32 @@
-/* ════════════════════════════════════════════════════════════
-   Portal Events — Team Chat (Phase 5B)
-   Tailwind-first iMessage-style UI via ui-tw.js.
-   ════════════════════════════════════════════════════════════ */
+/* Portal Events — Team Chat (sheet tab) */
 
 'use strict';
 
 import { evtDataAction } from '../core/actions.js';
-import {
-    TW_CLOSE_BTN,
-    TW_CHAT_ROOT,
-    TW_CHAT_NAV,
-    TW_CHAT_BACK,
-    TW_CHAT_NAV_CENTER,
-    TW_CHAT_NAV_TITLE,
-    TW_CHAT_NAV_SUB,
-    TW_CHAT_THREAD,
-    TW_CHAT_EMPTY,
-    TW_CHAT_ALERT,
-    TW_CHAT_ROW_SENT,
-    TW_CHAT_ROW_RECV,
-    TW_CHAT_RECV_COL,
-    TW_CHAT_AVATAR,
-    TW_CHAT_AVATAR_HIDDEN,
-    TW_CHAT_SENDER,
-    TW_CHAT_BUBBLE,
-    TW_CHAT_BUBBLE_SENT,
-    TW_CHAT_BUBBLE_RECV,
-    TW_CHAT_TIME,
-    TW_CHAT_COMPOSER,
-    TW_CHAT_INPUT_WRAP,
-    TW_CHAT_TEXTAREA,
-    TW_CHAT_SEND,
-    twPanelClasses,
-    expandCtaSheet,
-} from './ui-tw.js';
-
 
 const EVT_TEAM_CHAT_MAX_LEN = 4000;
 const EVT_TEAM_CHAT_TIME_GAP_MS = 60 * 60 * 1000;
+
+const CHAT_ROOT = 'flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white';
+const CHAT_THREAD = 'flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain bg-white px-3.5 py-3';
+const CHAT_EMPTY = 'm-auto px-4 py-6 text-center text-[15px] leading-snug text-gray-400';
+const CHAT_ALERT = 'mx-4 my-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3.5 text-center text-sm leading-snug text-amber-900';
+const CHAT_ROW_SENT = 'mb-0.5 flex max-w-[78%] flex-col items-end self-end';
+const CHAT_ROW_RECV = 'mb-1 flex max-w-[88%] items-end gap-1.5 self-start';
+const CHAT_RECV_COL = 'flex min-w-0 flex-1 flex-col items-start';
+const CHAT_AVATAR = 'evt-chat-avatar flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 [&_img]:h-full [&_img]:w-full [&_img]:object-cover';
+const CHAT_AVATAR_HIDDEN = 'invisible pointer-events-none';
+const CHAT_SENDER = 'mb-0.5 px-3 text-[11px] font-semibold leading-tight text-gray-400';
+const CHAT_BUBBLE = 'break-words whitespace-pre-wrap px-3 py-2 text-base leading-snug rounded-[18px]';
+const CHAT_BUBBLE_SENT = 'rounded-br-md bg-[#007AFF] text-white';
+const CHAT_BUBBLE_RECV = 'rounded-bl-md bg-[#E9E9EB] text-gray-900';
+const CHAT_TIME = 'mt-0.5 px-1 text-[11px] leading-tight text-gray-400';
+const CHAT_COMPOSER = 'flex shrink-0 items-end gap-2 border-t border-gray-200/80 bg-gray-50/95 px-2.5 py-2 backdrop-blur-xl pb-[max(8px,env(safe-area-inset-bottom))]';
+const CHAT_INPUT_WRAP = 'flex min-h-9 flex-1 items-end rounded-full border border-gray-300/80 bg-white px-3 py-1.5';
+const CHAT_TEXTAREA = 'max-h-[100px] min-h-[22px] w-full resize-none border-0 bg-transparent text-base leading-snug outline-none placeholder:text-gray-400 disabled:opacity-55';
+const CHAT_SEND = 'flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-0 bg-[#007AFF] p-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:stroke-[2.5] [&_svg]:fill-none [&_svg]:stroke-current';
+
+const IM_SEND_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>';
 
 function canCreateTeamChat(event) {
     if (!event || !globalThis.evtCurrentUser?.id) return false;
@@ -75,8 +64,8 @@ function avatarHtml(profile, { spacer = false } = {}) {
     const inner = url
         ? `<img src="${evtEscapeHtml(url)}" alt="" loading="lazy">`
         : `<span class="text-[11px] font-bold leading-none text-indigo-600">${initials}</span>`;
-    const spacerCls = spacer ? ` ${TW_CHAT_AVATAR_HIDDEN}` : '';
-    return `<div class="${TW_CHAT_AVATAR}${spacerCls}" aria-hidden="${spacer ? 'true' : 'false'}" title="${name}">${inner}</div>`;
+    const spacerCls = spacer ? ` ${CHAT_AVATAR_HIDDEN}` : '';
+    return `<div class="${CHAT_AVATAR}${spacerCls}" aria-hidden="${spacer ? 'true' : 'false'}" title="${name}">${inner}</div>`;
 }
 
 function formatBubbleTime(iso) {
@@ -88,7 +77,6 @@ function formatBubbleTime(iso) {
     }
 }
 
-/** Show under-bubble time only when ≥1 hour since the previous message. */
 function shouldShowMessageTime(prevCreatedAt, createdAt) {
     if (!prevCreatedAt || !createdAt) return true;
     const gap = new Date(createdAt).getTime() - new Date(prevCreatedAt).getTime();
@@ -166,7 +154,7 @@ async function loadMessages(chatId, eventId) {
 
 function messagesHtml(state) {
     if (!state?.messages?.length) {
-        return `<p class="${TW_CHAT_EMPTY}">No messages yet.<br>Send the first message to the team.</p>`;
+        return `<p class="${CHAT_EMPTY}">No messages yet.<br>Send the first message to the team.</p>`;
     }
     const myId = globalThis.evtCurrentUser?.id;
     let prevSenderId = null;
@@ -177,25 +165,20 @@ function messagesHtml(state) {
         const prevMsg = i > 0 ? state.messages[i - 1] : null;
         const showTime = shouldShowMessageTime(prevMsg?.created_at, m.created_at);
         const timeHtml = showTime
-            ? `<time class="${TW_CHAT_TIME}">${evtEscapeHtml(formatBubbleTime(m.created_at))}</time>`
+            ? `<time class="${CHAT_TIME}">${evtEscapeHtml(formatBubbleTime(m.created_at))}</time>`
             : '';
         const body = evtEscapeHtml(m.body || '');
         if (isMine) {
             prevSenderId = m.sender_id;
-            const bubbleCls = `${TW_CHAT_BUBBLE} ${TW_CHAT_BUBBLE_SENT}`;
-            return `<div class="${TW_CHAT_ROW_SENT}" data-msg-id="${m.id}">
-        <div class="${bubbleCls}">${body}</div>
-        ${timeHtml}
-    </div>`;
+            return `<div class="${CHAT_ROW_SENT}" data-msg-id="${m.id}"><div class="${CHAT_BUBBLE} ${CHAT_BUBBLE_SENT}">${body}</div>${timeHtml}</div>`;
         }
         const showAvatar = m.sender_id !== prevSenderId;
         prevSenderId = m.sender_id;
-        const bubbleCls = `${TW_CHAT_BUBBLE} ${TW_CHAT_BUBBLE_RECV}`;
-        return `<div class="${TW_CHAT_ROW_RECV}" data-msg-id="${m.id}">
+        return `<div class="${CHAT_ROW_RECV}" data-msg-id="${m.id}">
         ${avatarHtml(profile, { spacer: !showAvatar })}
-        <div class="${TW_CHAT_RECV_COL}">
-            ${showAvatar ? `<span class="${TW_CHAT_SENDER}">${name}</span>` : ''}
-            <div class="${bubbleCls}">${body}</div>
+        <div class="${CHAT_RECV_COL}">
+            ${showAvatar ? `<span class="${CHAT_SENDER}">${name}</span>` : ''}
+            <div class="${CHAT_BUBBLE} ${CHAT_BUBBLE_RECV}">${body}</div>
             ${timeHtml}
         </div>
     </div>`;
@@ -278,92 +261,47 @@ function subscribe(chatId, eventId) {
         .subscribe();
 }
 
-const IM_SEND_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>';
-
-function renderPanel(eventId, event, opts) {
+function renderChatBody(eventId, opts) {
     const { loading, unavailable, notStarted, canCompose } = opts;
-    const eventTitle = evtEscapeHtml(event?.title || 'Event');
-    const backBtn = `<button type="button" class="${TW_CHAT_BACK}" ${evtDataAction('evtOpenTeamToolsPanel', eventId)} aria-label="Back to Event Tools">‹ Tools</button>`;
-    const nav = `
-    <header class="${TW_CHAT_NAV}">
-        ${backBtn}
-        <div class="${TW_CHAT_NAV_CENTER}">
-            <strong class="${TW_CHAT_NAV_TITLE}">Team Chat</strong>
-            <span class="${TW_CHAT_NAV_SUB}">${eventTitle}</span>
-        </div>
-        <div aria-hidden="true"></div>
-    </header>`;
-
-    let body = '';
-
-    if (loading) {
-        body = `<p class="${TW_CHAT_EMPTY}">Loading…</p>`;
-    } else if (unavailable) {
-        body = `<p class="${TW_CHAT_ALERT}">${evtEscapeHtml(unavailable)}</p>`;
-    } else if (notStarted) {
-        body = `<p class="${TW_CHAT_ALERT}">Team chat has not been started yet. Ask the event creator or a coordinator to open Team Chat first.</p>`;
-    } else {
-        const state = window.__evtTeamChatState;
-        body = `
-        <div id="evtTeamChatMessages" class="${TW_CHAT_THREAD}" role="log" aria-live="polite">${messagesHtml(state)}</div>
-        <div id="evtTeamChatStatus" class="${TW_CHAT_EMPTY} px-2 pb-1" aria-live="polite"></div>
+    if (loading) return `<p class="${CHAT_EMPTY}">Loading…</p>`;
+    if (unavailable) return `<p class="${CHAT_ALERT}">${evtEscapeHtml(unavailable)}</p>`;
+    if (notStarted) {
+        return `<p class="${CHAT_ALERT}">Team chat has not been started yet. Ask the event creator or a coordinator to open Team Chat first.</p>`;
+    }
+    const state = window.__evtTeamChatState;
+    return `
+        <div id="evtTeamChatMessages" class="${CHAT_THREAD}" role="log" aria-live="polite">${messagesHtml(state)}</div>
+        <div id="evtTeamChatStatus" class="${CHAT_EMPTY} px-2 pb-1" aria-live="polite"></div>
         ${canCompose ? `
-        <div class="${TW_CHAT_COMPOSER}">
-            <div class="${TW_CHAT_INPUT_WRAP}">
-                <textarea id="evtTeamChatInput" class="${TW_CHAT_TEXTAREA}" maxlength="${EVT_TEAM_CHAT_MAX_LEN}" rows="1" placeholder="Message" aria-label="Team chat message"></textarea>
+        <div class="${CHAT_COMPOSER}">
+            <div class="${CHAT_INPUT_WRAP}">
+                <textarea id="evtTeamChatInput" class="${CHAT_TEXTAREA}" maxlength="${EVT_TEAM_CHAT_MAX_LEN}" rows="1" placeholder="Message" aria-label="Team chat message"></textarea>
             </div>
-            <button type="button" id="evtTeamChatSendBtn" class="${TW_CHAT_SEND}" ${evtDataAction('evtSendTeamChatMessage', eventId)} aria-label="Send message">${IM_SEND_SVG}</button>
+            <button type="button" id="evtTeamChatSendBtn" class="${CHAT_SEND}" ${evtDataAction('evtSendTeamChatMessage', eventId)} aria-label="Send message">${IM_SEND_SVG}</button>
         </div>` : ''}`;
-    }
-
-    return `<div class="${TW_CHAT_ROOT}">${nav}${body}</div>`;
 }
 
-function configureChatPanel(panel, visible) {
-    panel.className = twPanelClasses('chat', { expanded: true });
-    panel.classList.toggle('hidden', !visible);
-}
-
-async function open(eventId) {
+async function initTab(eventId, event) {
     cleanup();
+    const Shell = window.EventsTeamShell;
+    if (!Shell) return;
 
-    const event = (window.evtAllEvents || globalThis.evtAllEvents).find(e => e.id === eventId);
-    if (!event) return;
-
-    let bar = document.getElementById('evtCtaBar');
-    if (!bar && typeof globalThis.evtEnsureCtaBarShell === 'function') {
-        bar = window.evtEnsureCtaBarShell();
-    }
-    if (!bar) return;
-    if (typeof globalThis.evtApplyDesktopTeamToolsOverlay === 'function') {
-        window.evtApplyDesktopTeamToolsOverlay(bar);
-    }
-    const panel = document.getElementById('evtCtaPanel');
-    if (!panel) return;
-
-    const closeBtn = `<button type="button" class="${TW_CLOSE_BTN} max-lg:hidden" ${evtDataAction('evtCloseCtaPanel')} aria-label="Close">×</button>`;
-    expandCtaSheet(bar, { chat: true });
-    configureChatPanel(panel, true);
-    panel.innerHTML = `${closeBtn}${renderPanel(eventId, event, { loading: true })}`;
+    Shell.renderContent(`<div class="${CHAT_ROOT}">${renderChatBody(eventId, { loading: true })}</div>`);
 
     const ensure = await ensureChat(event, eventId);
     if (ensure.error) {
-        panel.innerHTML = `${closeBtn}${renderPanel(eventId, event, {
-            unavailable: friendlyError(ensure.error),
-        })}`;
+        Shell.renderContent(`<div class="${CHAT_ROOT}">${renderChatBody(eventId, { unavailable: friendlyError(ensure.error) })}</div>`);
         return;
     }
     if (ensure.notStarted || !ensure.chat) {
-        panel.innerHTML = `${closeBtn}${renderPanel(eventId, event, { notStarted: true })}`;
+        Shell.renderContent(`<div class="${CHAT_ROOT}">${renderChatBody(eventId, { notStarted: true })}</div>`);
         return;
     }
 
     const chatId = ensure.chat.id;
     const loaded = await loadMessages(chatId, eventId);
     if (loaded.error) {
-        panel.innerHTML = `${closeBtn}${renderPanel(eventId, event, {
-            unavailable: friendlyError(loaded.error),
-        })}`;
+        Shell.renderContent(`<div class="${CHAT_ROOT}">${renderChatBody(eventId, { unavailable: friendlyError(loaded.error) })}</div>`);
         return;
     }
 
@@ -375,7 +313,7 @@ async function open(eventId) {
         channel: null,
     };
 
-    panel.innerHTML = `${closeBtn}${renderPanel(eventId, event, { canCompose: true })}`;
+    Shell.renderContent(`<div class="${CHAT_ROOT}">${renderChatBody(eventId, { canCompose: true })}</div>`);
     refreshMessageList();
     subscribe(chatId, eventId);
 
@@ -388,6 +326,10 @@ async function open(eventId) {
             }
         });
     }
+}
+
+async function open(eventId) {
+    return window.EventsTeam?.open?.(eventId, { tab: 'chat' });
 }
 
 async function send(eventId) {
@@ -450,6 +392,7 @@ async function send(eventId) {
 
 export const teamChatApi = {
     open,
+    initTab,
     send,
     cleanup,
     ensureChat,

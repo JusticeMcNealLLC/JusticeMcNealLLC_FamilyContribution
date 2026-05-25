@@ -1,5 +1,5 @@
 /**
- * Static smoke: Phase 5B Event Team Chat UI (team/chat.js + detail bridge).
+ * Static smoke: Phase 5B Event Team Chat UI (team/chat.js + sheet.js).
  * Run: node test/_smoke-event-team-chat-ui.js
  */
 const fs = require('fs');
@@ -14,7 +14,9 @@ const {
     portalEventsHtmlScripts,
 } = require('./_portal-events-classic-chain.js');
 const chat = fs.readFileSync(path.join(root, 'js/portal/events/team/chat.js'), 'utf8');
-const tools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
+const sheet = fs.readFileSync(path.join(root, 'js/portal/events/team/sheet.js'), 'utf8');
+const shell = fs.readFileSync(path.join(root, 'js/portal/events/team/shell.js'), 'utf8');
+const toolsList = fs.readFileSync(path.join(root, 'js/portal/events/team/tools-list.js'), 'utf8');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
 const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
 const uiTw = fs.readFileSync(path.join(root, 'js/portal/events/team/ui-tw.js'), 'utf8');
@@ -32,12 +34,18 @@ assert(/async function send/.test(chat), 'send message logic required');
 assert(/\.is\('deleted_at', null\)/.test(chat), 'must filter deleted_at on load');
 assert(/function subscribe/.test(chat), 'realtime subscribe required');
 assert(/function cleanup/.test(chat), 'realtime cleanup required');
+assert(/async function initTab/.test(chat), 'initTab for sheet tab required');
 assert(/async function open/.test(chat), 'open entry required');
 assert(/globalThis\.evtOpenTeamChat\s*=\s*open/.test(chat), 'evtOpenTeamChat exported on globalThis');
 assert(/globalThis\.evtSendTeamChatMessage\s*=\s*send/.test(chat), 'evtSendTeamChatMessage exported on globalThis');
 assert(/globalThis\.evtCleanupTeamChat\s*=\s*cleanup/.test(chat), 'evtCleanupTeamChat exported on globalThis');
 assert(/export const teamChatApi/.test(chat) && /PortalEvents\.team\.chat\s*=\s*teamChatApi/.test(chat),
     'PortalEvents.team.chat namespace via teamChatApi');
+assert(/EventsTeamShell\.renderContent|Shell\.renderContent/.test(chat), 'chat renders via EventsTeamShell.renderContent');
+
+assert(/globalThis\.EventsTeam\s*=/.test(sheet), 'sheet.js exports EventsTeam');
+assert(/etSheetRoot/.test(shell), 'team shell mounts etSheetRoot');
+assert(/EventsTeam\.open/.test(toolsList), 'tools-list opens chat via EventsTeam');
 
 assert(/evtOpenTeamChat/.test(detail) && !/Team Chat', 'Coming soon'/.test(detail),
     'Team Chat must not be Coming soon placeholder only');
@@ -45,7 +53,7 @@ assert(/not been started yet/i.test(chat), 'host-only not-started message');
 assert(/detail\.openTeamChat\s*=\s*globalThis\.evtOpenTeamChat/.test(detail)
     || /detail\.openTeamChat\s*=\s*window\.evtOpenTeamChat/.test(detail),
     'detail.js must bridge openTeamChat to team/chat.js');
-assert(/evtOpenTeamChat\('/.test(tools), 'team/tools.js Team Tools row still calls evtOpenTeamChat');
+assert(/EventsTeam\.open/.test(toolsList), 'tools-list Team Chat uses EventsTeam.open');
 
 assert(!/event_volunteers/.test(chat), 'no volunteers table yet');
 assert(!/event_tasks/.test(chat), 'no tasks table yet');
@@ -62,12 +70,10 @@ if (fs.existsSync(migrationDir)) {
 const classicChain = parseClassicChain(root);
 assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/team/chat.js'),
     'production must load team/chat.js (HTML or classic-chain-loader)');
-assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/team/tools.js'),
-    'production must load team/tools.js (HTML or classic-chain-loader)');
 assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/detail.js'),
     'production must load detail.js (HTML or classic-chain-loader)');
-assert(chainOrderOk(classicChain, 'team/chat.js', 'team/tools.js', 'detail.js'),
-    'team/chat.js → team/tools.js → detail.js');
+assert(chainOrderOk(classicChain, 'team/chat.js', 'detail.js'),
+    'team/chat.js → detail.js');
 assert(!/<script[^>]+src="[^"]*team\/chat\.js"[^>]*type="module"/.test(portalHtml),
     'team/chat.js must not use type=module in HTML');
 
@@ -85,8 +91,8 @@ assert(/!border-2/.test(tailwindCss) && /border-indigo-200/.test(tailwindCss),
 assert(/tailwind\.portal\.css\?v=\d+/.test(portalHtml),
     'portal/events.html should cache-bust tailwind.portal.css');
 
-pass('Team Chat UI wired in team/chat.js');
-pass('ensure / load / send / deleted_at filter / realtime');
+pass('Team Chat UI wired in team/chat.js + sheet.js');
+pass('ensure / load / send / deleted_at filter / realtime / initTab');
 pass('detail.js bridges openTeamChat; HTML load order correct');
 pass('no migration changes; no volunteers/tasks');
 

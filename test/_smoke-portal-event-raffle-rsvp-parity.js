@@ -13,7 +13,11 @@ const detailData = fs.readFileSync(path.join(root, 'js/portal/events/detail/data
 const detailSections = fs.readFileSync(path.join(root, 'js/portal/events/detail/sections.js'), 'utf8');
 const detailRender = detail + '\n' + detailSections;
 const raffleRender = fs.readFileSync(path.join(root, 'js/portal/events/detail/raffle-render.js'), 'utf8');
-const teamTools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
+const teamTools = [
+    'js/portal/events/team/tools-list.js',
+    'js/portal/events/team/cta-bar.js',
+    'js/portal/events/team/ui-tw.js',
+].map((rel) => fs.readFileSync(path.join(root, rel), 'utf8')).join('\n');
 const rsvp = fs.readFileSync(path.join(root, 'js/portal/events/engagement/rsvp.js'), 'utf8');
 const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
 const publicBody = fs.readFileSync(path.join(root, 'js/events/body.js'), 'utf8');
@@ -40,7 +44,7 @@ assert(/select\('user_id, status, paid/.test(detail) || /select\('user_id, statu
     'attendee query includes paid for going counts');
 
 // Locked Enter Raffle + footnote (parity with public pubRaffleLockedCtaBtnHtml)
-assert(/raffleLockedCtaBtnHtml/.test(teamTools), 'portal locked raffle CTA helper (team/tools.js)');
+assert(/raffleLockedCtaBtnHtml/.test(teamTools), 'portal locked raffle CTA helper (team/cta-bar.js)');
 assert(/evt-cta-raffle-locked/.test(teamTools), 'disabled Enter Raffle CTA class');
 assert(/evt-cta-footnote/.test(teamTools) && /RSVP first to enter the raffle/.test(teamTools), 'CTA footnote for RSVP-first');
 assert(/evtRaffleLockedDesktopHtml/.test(raffleRender), 'desktop locked raffle block in raffle-render.js');
@@ -55,7 +59,7 @@ assert(/evtOpenTeamToolsPanel/.test(detailRender), 'detail render still opens Te
 assert(/RSVP as Myself/.test(teamTools), 'Team Tools RSVP as Myself');
 assert(/Enter Raffle/.test(teamTools), 'Team Tools Enter Raffle');
 assert(/evtHandleRsvp/.test(teamTools), 'Team Tools links to evtHandleRsvp');
-assert(/evtOpenCtaPanel\('raffle'/.test(teamTools), 'Team Tools opens raffle CTA panel');
+assert(/openToolsView\('raffle'\)/.test(teamTools), 'Team Tools opens raffle sub-view');
 
 // Hosts not manage-only
 assert(/evt-cta-manage/.test(teamTools) && /evt-cta-team/.test(teamTools), 'mobile Manage + Team for hosts');

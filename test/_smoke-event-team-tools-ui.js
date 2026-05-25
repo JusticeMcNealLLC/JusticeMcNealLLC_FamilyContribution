@@ -1,5 +1,5 @@
 /**
- * Static smoke: Phase 5C Event Team / Tools (team/tools.js + detail bridge).
+ * Static smoke: Phase 5C Event Team / Tools (team sheet + tools-list + cta-bar).
  * Run: node test/_smoke-event-team-tools-ui.js
  */
 const fs = require('fs');
@@ -9,7 +9,9 @@ const assert = require('assert');
 const root = path.resolve(__dirname, '..');
 const { parseClassicChain, isProductionLoaded, chainOrderOk } = require('./_portal-events-classic-chain.js');
 const uiTw = fs.readFileSync(path.join(root, 'js/portal/events/team/ui-tw.js'), 'utf8');
-const tools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
+const sheet = fs.readFileSync(path.join(root, 'js/portal/events/team/sheet.js'), 'utf8');
+const toolsList = fs.readFileSync(path.join(root, 'js/portal/events/team/tools-list.js'), 'utf8');
+const ctaBar = fs.readFileSync(path.join(root, 'js/portal/events/team/cta-bar.js'), 'utf8');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
 const detailData = fs.readFileSync(path.join(root, 'js/portal/events/detail/data.js'), 'utf8');
 const detailSections = fs.readFileSync(path.join(root, 'js/portal/events/detail/sections.js'), 'utf8');
@@ -20,21 +22,18 @@ function pass(msg) { console.log(`  ✓ ${msg}`); }
 
 console.log('event team tools UI smoke\n');
 
-assert(/globalThis\.evtOpenTeamToolsPanel\s*=\s*openTeamToolsPanel/.test(tools), 'evtOpenTeamToolsPanel on globalThis');
-assert(/evt-cta-floating-shell|evt-team-tools-overlay/.test(uiTw + tools), 'desktop team overlay classes');
-assert(/globalThis\.evtApplyDesktopTeamToolsOverlay/.test(tools), 'evtApplyDesktopTeamToolsOverlay on globalThis');
-assert(/globalThis\.evtInjectTeamToolsStyles/.test(tools), 'evtInjectTeamToolsStyles on globalThis');
-assert(/globalThis\.evtEnsureCtaBarShell/.test(tools), 'evtEnsureCtaBarShell on globalThis');
-assert(/evt-cta-team|Open event team tools/.test(tools), 'Team button with accessible label');
-assert(/Team Chat/.test(tools) && /evtOpenTeamChat/.test(tools), 'Team Chat opens real chat UI');
-assert(/RSVP as Myself/.test(tools), 'RSVP as Myself in team tools');
-assert(/Enter Raffle/.test(tools), 'Enter Raffle in team tools');
-assert(!/RSVP for Raffle/.test(tools), 'no legacy RSVP for Raffle sticky CTA');
-assert(/View Ticket/.test(tools), 'View Ticket in team tools');
-assert(/Manage Event/.test(tools), 'Manage Event remains available');
-assert(/export const teamToolsApi/.test(tools) && /PortalEvents\.team\.tools\s*=\s*teamToolsApi/.test(tools),
-    'PortalEvents.team.tools namespace via teamToolsApi');
-assert(/function initBottomNav/.test(tools) && /globalThis\.evtInitBottomNav/.test(tools), 'bottom nav in tools.js');
+assert(/globalThis\.evtOpenTeamToolsPanel/.test(sheet), 'evtOpenTeamToolsPanel on globalThis via sheet.js');
+assert(/globalThis\.EventsTeam\s*=/.test(sheet), 'EventsTeam orchestrator in sheet.js');
+assert(/evt-cta-team|Open event team tools/.test(ctaBar), 'Team button with accessible label');
+assert(/Team Chat/.test(toolsList) && /EventsTeam\.open/.test(toolsList), 'Team Chat opens via EventsTeam sheet');
+assert(/RSVP as Myself/.test(toolsList), 'RSVP as Myself in team tools');
+assert(/Enter Raffle/.test(toolsList), 'Enter Raffle in team tools');
+assert(!/RSVP for Raffle/.test(toolsList), 'no legacy RSVP for Raffle sticky CTA');
+assert(/View Ticket/.test(toolsList), 'View Ticket in team tools');
+assert(/Manage Event/.test(toolsList), 'Manage Event remains available');
+assert(/em-op-grid/.test(toolsList) && /em-op-card/.test(toolsList), 'manage-style op cards');
+assert(/export const teamToolsListApi/.test(toolsList), 'teamToolsListApi export');
+assert(/function initBottomNav/.test(ctaBar) && /globalThis\.evtInitBottomNav/.test(ctaBar), 'bottom nav in cta-bar.js');
 
 assert(/canManageEvent/.test(detail), 'canManageEvent in detail render path');
 assert(/canAccessTeamHub/.test(detail), 'canAccessTeamHub for team tools access');
@@ -61,12 +60,10 @@ if (fs.existsSync(migrationDir)) {
 }
 
 const classicChain = parseClassicChain(root);
-assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/team/tools.js'),
-    'production must load team/tools.js (HTML or classic-chain-loader)');
 assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/detail/presentation.js'),
     'production must load detail/presentation.js (HTML or classic-chain-loader)');
-assert(chainOrderOk(classicChain, 'team/chat.js', 'team/tools.js', 'detail/presentation.js', 'detail.js'),
-    'chat → tools → presentation → detail load order');
+assert(chainOrderOk(classicChain, 'team/chat.js', 'detail/presentation.js', 'detail.js'),
+    'chat → presentation → detail load order');
 assert(!/evtOpenTeamToolsPanel/.test(portalHtml), 'portal/events.html must not inline team tools handlers');
 
 assert(/canManageEvents\(\)/.test(detailSections),
@@ -77,9 +74,9 @@ assert(!/evtCurrentUserRole === 'admin'/.test(detail), 'no legacy admin role che
 assert(!/detail\.register\('teamChat'/.test(detail), 'no teamChat module registration');
 assert(!/PortalEvents\.loadModule/.test(detail), 'no dynamic module loader in detail');
 
-pass('Team/Tools implementation in team/tools.js');
+pass('Team/Tools split across sheet.js, tools-list.js, cta-bar.js');
 pass('detail.js bridges Team Tools + bottom nav');
-pass('HTML load order: chat → tools → presentation → detail');
+pass('HTML load order: chat → presentation → detail');
 pass('Host permission model preserved in detail render (data.js + sections.js)');
 
 console.log('\nevent team tools UI smoke: all pass');
