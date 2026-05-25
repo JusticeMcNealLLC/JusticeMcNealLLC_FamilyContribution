@@ -10,11 +10,18 @@
 - Named `export { … }` on engagement modules; `window.*` bridges kept for HTML `onclick` and legacy callers.
 - CI: `.github/workflows/events-bundle.yml` runs `verify:events-main`, `build:events`, bundle smokes.
 
+## Done in Phase 7.1 (in progress)
+
+| File | Change |
+|------|--------|
+| `core/vendor-loader.js` | IIFE removed; `export` `ensureQRCode` / `ensureJsQR` / `ensureLeaflet`; `window.evtEnsure*` preserved |
+
 ## Remaining (incremental PRs)
 
 | Area | Files | Approach |
 |------|-------|----------|
-| Shared state | `core/state.js` | `export let` + import in `init.js`; migrate bare `evtCurrentUser` references file-by-file |
+| Shared state | `core/state.js` | `export let` + `globalThis` getters **or** migrate all bare refs to `import` (touches 20+ files) |
+| `core/utils.js` | 1 | `export` helpers; keep `window.*` until callers import |
 | IIFE modules | ~40 under list/detail/create/manage | Remove IIFE wrapper; `export` handlers; import in orchestrators |
 | `compat/global-reexports.js` | 1 | Shrink as modules import each other directly |
 | Shared components | `js/components/events/*` | Optional `export` for `EventsConstants`, etc. |

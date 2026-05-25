@@ -32,3 +32,4 @@ jobs:
       - run: npm run build:events
       - run: node test/_smoke-events-bundle.js
       - run: node test/_smoke-phase5l-readiness.js
+      - run: node test/_smoke-phase7-esm-progress.js

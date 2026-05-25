@@ -29,7 +29,7 @@
   // js/portal/events/core/raffle-model.js
   var require_raffle_model = __commonJS({
     "js/portal/events/core/raffle-model.js"(exports, module) {
-      (function(root) {
+      (function(root2) {
         "use strict";
         const VERSION = 2;
         const DEFAULT_EMOJI = "\u{1F381}";
@@ -311,10 +311,10 @@
           getDrawQueue,
           validateConfig
         };
-        root.EventsRaffleModel = api;
+        root2.EventsRaffleModel = api;
         if (typeof module !== "undefined" && module.exports) module.exports = api;
-        if (typeof root.PortalEvents === "undefined") root.PortalEvents = {};
-        root.PortalEvents.raffleModel = api;
+        if (typeof root2.PortalEvents === "undefined") root2.PortalEvents = {};
+        root2.PortalEvents.raffleModel = api;
       })(typeof globalThis !== "undefined" ? globalThis : window);
     }
   });
@@ -1010,62 +1010,60 @@
   window.evtDownloadIcs = evtDownloadIcs;
 
   // js/portal/events/core/vendor-loader.js
-  (function(root) {
-    "use strict";
-    const SRC = {
-      qrcode: "https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js",
-      jsqr: "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js",
-      leafletJs: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
-      leafletCss: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    };
-    const scriptPromises = {};
-    function loadScript(src, isReady) {
-      if (isReady()) return Promise.resolve(isReady());
-      if (!scriptPromises[src]) {
-        scriptPromises[src] = new Promise((resolve, reject) => {
-          const existing = document.querySelector(`script[src="${src}"]`);
-          const script = existing || document.createElement("script");
-          script.src = src;
-          script.async = true;
-          script.onload = () => isReady() ? resolve(isReady()) : reject(new Error(`Vendor did not initialize: ${src}`));
-          script.onerror = () => reject(new Error(`Vendor failed to load: ${src}`));
-          if (!existing) document.head.appendChild(script);
-        });
-      }
-      return scriptPromises[src];
+  var SRC = {
+    qrcode: "https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js",
+    jsqr: "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js",
+    leafletJs: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+    leafletCss: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  };
+  var scriptPromises = {};
+  function loadScript(src, isReady) {
+    if (isReady()) return Promise.resolve(isReady());
+    if (!scriptPromises[src]) {
+      scriptPromises[src] = new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        const script = existing || document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.onload = () => isReady() ? resolve(isReady()) : reject(new Error(`Vendor did not initialize: ${src}`));
+        script.onerror = () => reject(new Error(`Vendor failed to load: ${src}`));
+        if (!existing) document.head.appendChild(script);
+      });
     }
-    let leafletCssPromise = null;
-    function loadLeafletCss() {
-      if (document.querySelector(`link[href="${SRC.leafletCss}"]`)) return Promise.resolve();
-      if (!leafletCssPromise) {
-        leafletCssPromise = new Promise((resolve, reject) => {
-          const link = document.createElement("link");
-          link.rel = "stylesheet";
-          link.href = SRC.leafletCss;
-          link.crossOrigin = "";
-          link.onload = () => resolve();
-          link.onerror = () => reject(new Error("Leaflet CSS failed to load"));
-          document.head.appendChild(link);
-        });
-      }
-      return leafletCssPromise;
+    return scriptPromises[src];
+  }
+  var leafletCssPromise = null;
+  function loadLeafletCss() {
+    if (document.querySelector(`link[href="${SRC.leafletCss}"]`)) return Promise.resolve();
+    if (!leafletCssPromise) {
+      leafletCssPromise = new Promise((resolve, reject) => {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = SRC.leafletCss;
+        link.crossOrigin = "";
+        link.onload = () => resolve();
+        link.onerror = () => reject(new Error("Leaflet CSS failed to load"));
+        document.head.appendChild(link);
+      });
     }
-    async function ensureQRCode() {
-      return loadScript(SRC.qrcode, () => root.QRCode);
-    }
-    async function ensureJsQR() {
-      return loadScript(SRC.jsqr, () => root.jsQR);
-    }
-    async function ensureLeaflet() {
-      await loadLeafletCss();
-      return loadScript(SRC.leafletJs, () => root.L);
-    }
-    root.PortalEvents = root.PortalEvents || {};
-    root.PortalEvents.vendors = { ensureQRCode, ensureJsQR, ensureLeaflet };
-    root.evtEnsureQRCode = ensureQRCode;
-    root.evtEnsureJsQR = ensureJsQR;
-    root.evtEnsureLeaflet = ensureLeaflet;
-  })(typeof window !== "undefined" ? window : globalThis);
+    return leafletCssPromise;
+  }
+  async function ensureQRCode() {
+    return loadScript(SRC.qrcode, () => globalThis.QRCode);
+  }
+  async function ensureJsQR() {
+    return loadScript(SRC.jsqr, () => globalThis.jsQR);
+  }
+  async function ensureLeaflet() {
+    await loadLeafletCss();
+    return loadScript(SRC.leafletJs, () => globalThis.L);
+  }
+  var root = typeof window !== "undefined" ? window : globalThis;
+  root.PortalEvents = root.PortalEvents || {};
+  root.PortalEvents.vendors = { ensureQRCode, ensureJsQR, ensureLeaflet };
+  root.evtEnsureQRCode = ensureQRCode;
+  root.evtEnsureJsQR = ensureJsQR;
+  root.evtEnsureLeaflet = ensureLeaflet;
 
   // js/portal/events/main.js
   var import_raffle_model = __toESM(require_raffle_model());
@@ -8466,9 +8464,9 @@
     ];
     function _ensureMounted() {
       if (document.getElementById("ecSheetRoot")) return;
-      const root = document.createElement("div");
-      root.id = "ecSheetRoot";
-      root.innerHTML = `
+      const root2 = document.createElement("div");
+      root2.id = "ecSheetRoot";
+      root2.innerHTML = `
             <div id="ecSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
             <div id="ecSheet" class="fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
                 <div id="ecSheetPanel" class="bg-white w-full sm:max-w-2xl sm:max-h-[92vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-auto translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:92vh">
@@ -8549,7 +8547,7 @@
                 @media(max-width:639px){ #ecSheetPanel { max-height: 94vh; } }
             </style>
         `;
-      document.body.appendChild(root);
+      document.body.appendChild(root2);
       document.getElementById("ecSheetClose").addEventListener("click", _confirmClose);
       document.getElementById("ecSheetBackdrop").addEventListener("click", _confirmClose);
       document.getElementById("ecBackBtn").addEventListener("click", _back);
@@ -8739,9 +8737,9 @@
     }
     function ensureMounted() {
       if (document.getElementById("emSheetRoot")) return;
-      const root = document.createElement("div");
-      root.id = "emSheetRoot";
-      root.innerHTML = `
+      const root2 = document.createElement("div");
+      root2.id = "emSheetRoot";
+      root2.innerHTML = `
             <div id="emSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
             <div id="emSheet" class="em-sheet-hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
                 <div id="emSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
@@ -8840,7 +8838,7 @@
                 @media(min-width:640px) and (max-width:900px){ .em-op-grid { grid-template-columns:1fr 1fr; } .em-money-layout { grid-template-columns:1fr; } }
             </style>
         `;
-      document.body.appendChild(root);
+      document.body.appendChild(root2);
       document.getElementById("emSheetClose").addEventListener("click", () => api().onClose?.());
       document.getElementById("emSheetBackdrop").addEventListener("click", () => api().onClose?.());
       document.addEventListener("keydown", (e) => {
