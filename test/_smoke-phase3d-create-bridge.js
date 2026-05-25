@@ -32,6 +32,7 @@ const {
     isProductionLoaded,
     chainOrderOk,
     portalEventsHtmlScripts,
+    productionEventsBootLast,
 } = require('./_portal-events-classic-chain.js');
 
 let passed = 0;
@@ -314,9 +315,8 @@ check('No portal/events/* scripts use type="module" yet (correct)',
     !events.match(/<script[^>]+js\/portal\/events\/[^>]+type="module"/));
 
 const portalScripts3d = portalEventsHtmlScripts(events);
-check('init.js remains last among portal Events HTML script tags',
-    portalScripts3d.length > 0
-    && portalScripts3d[portalScripts3d.length - 1] === '../js/portal/events/init.js');
+check('events boot script is last before sw-register (bundle or init.js)',
+    productionEventsBootLast(portalScripts3d));
 
 // ── Create step modules (Phase 5M.1.2) ────────────────────────────────────
 console.log('\n── js/portal/events/create/step-*.js — sheet step modules (5M.1.2) ───────');

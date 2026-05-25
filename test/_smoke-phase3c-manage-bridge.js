@@ -27,6 +27,7 @@ const {
     parseClassicChain,
     isProductionLoaded,
     portalEventsHtmlScripts,
+    productionEventsBootLast,
 } = require('./_portal-events-classic-chain.js');
 
 const MANAGE_SHEET_CHAIN = 'manage/sheet.js?v=113';
@@ -381,9 +382,9 @@ html.includes('classic-chain-loader.js')
     : pass('No portal/events/* scripts use type="module" yet (correct)');
 
 const portalScripts3c = portalEventsHtmlScripts(html);
-portalScripts3c.length && portalScripts3c[portalScripts3c.length - 1] === '../js/portal/events/init.js'
-    ? pass('init.js remains last among portal Events HTML script tags')
-    : fail('init.js must be the last portal/events script before sw-register');
+productionEventsBootLast(portalScripts3c)
+    ? pass('events boot script is last before sw-register (bundle or init.js)')
+    : fail('events.bundle.js or init.js must be the last portal/events script before sw-register');
 
 // ─── No new manage/ subfile created without being loaded ─
 console.log('\n── File split safety — no orphaned new manage/ files ─────────────────────');

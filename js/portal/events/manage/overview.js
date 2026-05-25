@@ -3,8 +3,6 @@
     'use strict';
 
     const PUBLIC_SITE_URL = 'https://justicemcneal.com';
-    const QR_CODE_SRC = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';
-    let qrCodeLoadPromise = null;
 
     function api() {
         return window.EventsManageOverviewApi || {};
@@ -306,19 +304,8 @@
     }
 
     async function ensureQrCode() {
-        if (globalThis.QRCode) return globalThis.QRCode;
-        if (!qrCodeLoadPromise) {
-            qrCodeLoadPromise = new Promise((resolve, reject) => {
-                const existing = document.querySelector(`script[src="${QR_CODE_SRC}"]`);
-                const script = existing || document.createElement('script');
-                script.src = QR_CODE_SRC;
-                script.async = true;
-                script.onload = () => globalThis.QRCode ? resolve(globalThis.QRCode) : reject(new Error('QR library did not initialize'));
-                script.onerror = () => reject(new Error('QR library failed to load'));
-                if (!existing) document.head.appendChild(script);
-            });
-        }
-        return qrCodeLoadPromise;
+        if (typeof window.evtEnsureQRCode === 'function') return window.evtEnsureQRCode();
+        return globalThis.QRCode;
     }
 
     async function renderOverviewQrs(inviteUrl, e) {

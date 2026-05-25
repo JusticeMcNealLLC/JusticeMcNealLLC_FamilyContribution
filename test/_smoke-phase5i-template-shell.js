@@ -10,7 +10,7 @@
 const fs   = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
-const { parseClassicChain, isProductionLoaded, chainOrderOk } = require('./_portal-events-classic-chain.js');
+const { parseClassicChain, isProductionLoaded, chainOrderOk, productionEventsBootLast } = require('./_portal-events-classic-chain.js');
 
 let passed = 0;
 let failed = 0;
@@ -154,9 +154,9 @@ const portalScripts = [...moduleSection.matchAll(/<script[^>]+src="([^"]+)"[^>]*
     .map((m) => m[1])
     .filter((s) => s.includes('portal/events'));
 
-portalScripts.length && portalScripts[portalScripts.length - 1] === '../js/portal/events/init.js'
-    ? pass('init.js remains last among portal Events scripts')
-    : fail('init.js must be the last portal/events script before sw-register');
+productionEventsBootLast(portalScripts)
+    ? pass('events boot script is last before sw-register (bundle or init.js)')
+    : fail('events.bundle.js or init.js must be the last portal/events script before sw-register');
 
 console.log('\n═══════════════════════════════════════════════════════════');
 if (failed === 0) {

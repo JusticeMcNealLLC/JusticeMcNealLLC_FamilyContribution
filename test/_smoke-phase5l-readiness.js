@@ -63,8 +63,11 @@ function walkPortalEvents(dir) {
 }
 walkPortalEvents(path.join(root, 'js/portal/events'));
 
-const EXPECTED_PORTAL_SCRIPT_COUNT = 3;
-const PRODUCTION_CHAIN_LOADER = '../js/portal/events/classic-chain-loader.js';
+const EXPECTED_PORTAL_SCRIPT_COUNT = 1;
+const PRODUCTION_BUNDLE = '../js/portal/events/events.bundle.js';
+const bundleJs = fs.existsSync(path.join(root, 'js/portal/events/events.bundle.js'))
+    ? read('js/portal/events/events.bundle.js')
+    : '';
 
 const DETAIL_PIPELINE_TAGS = [
     '../js/portal/events/team/chat.js',
@@ -102,13 +105,21 @@ portalScripts.length === EXPECTED_PORTAL_SCRIPT_COUNT
     ? fail('portal Events scripts must not use type="module" yet (5L not started)')
     : pass('no type="module" on portal Events script tags');
 
-portalScripts[portalScripts.length - 1] === '../js/portal/events/init.js'
-    ? pass('init.js is last among portal Events scripts')
-    : fail('init.js must be last', `last: ${portalScripts[portalScripts.length - 1]}`);
+portalScripts[0].includes('events.bundle.js')
+    ? pass('production loads events.bundle.js (single entry)')
+    : fail('portal/events.html must load events.bundle.js', portalScripts[0]);
 
-portalScripts[0] === '../js/portal/events/index.js'
-    ? pass('index.js is first among portal Events scripts')
-    : fail('index.js must be first', `first: ${portalScripts[0]}`);
+!portalScripts.some((s) => s.includes('classic-chain-loader.js'))
+    ? pass('production HTML does not load classic-chain-loader.js')
+    : fail('use bundle in HTML; loader is build manifest only');
+
+!portalScripts.some((s) => /\/index\.js/.test(s) || /\/init\.js/.test(s))
+    ? pass('production HTML does not load separate index/init tags')
+    : fail('index/init are inside the bundle');
+
+!html.includes('../js/components/events/constants.js')
+    ? pass('shared components/events/* folded into bundle (not duplicated in HTML)')
+    : fail('constants.js should not be a separate HTML tag when using bundle');
 
 !/\binitEventsPage\s*\(/.test(indexJs.replace(/\/\/[^\n]*/g, ''))
     ? pass('index.js does not call initEventsPage()')
@@ -118,18 +129,26 @@ indexJs.includes('window.PortalEvents = window.PortalEvents || {}')
     ? pass('index.js remains namespace shell only')
     : fail('index.js must seed PortalEvents');
 
-portalScripts[1] === PRODUCTION_CHAIN_LOADER
-    ? pass('production uses classic-chain-loader.js as middle tag')
-    : fail('middle tag must be classic-chain-loader.js', portalScripts[1]);
+bundleJs.includes('window.PortalEvents.initEventsPage = initEventsPage')
+    ? pass('bundle ends with init.js (PortalEvents.initEventsPage)')
+    : fail('rebuild bundle: npm run build:events');
+
+bundleJs.includes("exp('evtHandleRsvp'")
+    ? pass('bundle includes compat global re-exports')
+    : fail('bundle missing global-reexports segment');
+
+bundleJs.length > 100000
+    ? pass('events.bundle.js materialized on disk')
+    : fail('run: npm run build:events');
 
 !portalScripts.some((s) => s.includes('rehearsal/'))
     ? pass('production HTML does not load rehearsal/ loader path')
-    : fail('production must use js/portal/events/classic-chain-loader.js not rehearsal/');
+    : fail('production must not use rehearsal/ loader');
 
 /<script[^>]+src="\.\.\/js\/portal\/events\/[^"]+\.js"[^>]*type="module"/.test(html)
-    ? fail('no module-only single-entry loader without classic chain')
-    : portalScripts.length === 3 && portalScripts[0].includes('index.js')
-    ? pass('production consolidated to 3-tag classic chain (not module-only)')
+    ? fail('no type="module" on portal Events scripts')
+    : portalScripts.length === 1
+    ? pass('production single-tag bundle load model (5L.4)')
     : fail('unexpected production load model');
 
 COMPAT_SCRIPTS.forEach((rel) => {
@@ -187,9 +206,9 @@ if (!chainMatch) {
     const managePartIdx = chainPaths.indexOf('manage/participation.js');
     const manageRaffleIdx = chainPaths.indexOf('manage/raffle.js');
     const manageDangerIdx = chainPaths.indexOf('manage/danger.js');
-    chainPaths.length === 54
-        ? pass('classic-chain-loader injects 54 middle scripts')
-        : fail('loader chain must have 54 entries', `found ${chainPaths.length}`);
+    chainPaths.length === 55
+        ? pass('classic-chain-loader injects 55 middle scripts')
+        : fail('loader chain must have 55 entries', `found ${chainPaths.length}`);
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
         && listFiltersIdx > listHeaderIdx && listCalendarIdx > listFiltersIdx

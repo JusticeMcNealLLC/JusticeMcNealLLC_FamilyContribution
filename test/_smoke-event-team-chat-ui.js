@@ -68,8 +68,9 @@ assert(!/<script[^>]+src="[^"]*team\/chat\.js"[^>]*type="module"/.test(portalHtm
     'team/chat.js must not use type=module in HTML');
 
 const portalScripts = portalEventsHtmlScripts(portalHtml);
-assert(portalScripts[portalScripts.length - 1] === '../js/portal/events/init.js',
-    'init.js must remain last among portal Events scripts');
+const lastBoot = portalScripts[portalScripts.length - 1] || '';
+assert(lastBoot.includes('events.bundle.js') || lastBoot.includes('init.js'),
+    'events.bundle.js or init.js must be last among portal Events scripts');
 assert(portalScripts.includes('../js/portal/events/classic-chain-loader.js'),
     'classic-chain-loader must load middle scripts before init.js');
 

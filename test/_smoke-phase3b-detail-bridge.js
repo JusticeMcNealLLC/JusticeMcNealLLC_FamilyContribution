@@ -23,6 +23,7 @@ const {
     isProductionLoaded,
     chainOrderOk,
     portalEventsHtmlScripts,
+    productionEventsBootLast,
 } = require('./_portal-events-classic-chain.js');
 
 let passed = 0;
@@ -872,9 +873,9 @@ chainOrderOk(
     : fail('script order must be … → sections → post-render → template → detail');
 
 const portalScripts = portalEventsHtmlScripts(html);
-portalScripts.length && portalScripts[portalScripts.length - 1] === '../js/portal/events/init.js'
-    ? pass('init.js remains last among portal Events scripts')
-    : fail('init.js must be the last portal/events script before sw-register');
+productionEventsBootLast(portalScripts)
+    ? pass('events boot script is last before sw-register (bundle or init.js)')
+    : fail('events.bundle.js or init.js must be the last portal/events script before sw-register');
 
 const detailDir = path.join(root, 'js', 'portal', 'events', 'detail');
 if (fs.existsSync(detailDir)) {

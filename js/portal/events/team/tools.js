@@ -219,9 +219,21 @@
             <div class="evt-cta-ticket-card">
                 ${hasQr ? '<canvas id="evtCtaTicketQR"></canvas><p>Show this QR code at check-in</p>' : '<div class="ed-notice"><span class="ed-notice-emoji">✅</span><div><p class="ed-notice-title">You are on the RSVP list</p><p class="ed-notice-sub">No QR ticket is required for this event.</p></div></div>'}
             </div>`;
-            if (hasQr && typeof QRCode !== 'undefined') {
+            if (hasQr) {
                 const canvas = document.getElementById('evtCtaTicketQR');
-                QRCode.toCanvas(canvas, `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`, { width: 172, margin: 2 });
+                const qrUrl = `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`;
+                (async () => {
+                    try {
+                        const QRCode = typeof window.evtEnsureQRCode === 'function'
+                            ? await window.evtEnsureQRCode()
+                            : window.QRCode;
+                        if (QRCode && canvas?.isConnected) {
+                            QRCode.toCanvas(canvas, qrUrl, { width: 172, margin: 2 });
+                        }
+                    } catch (err) {
+                        console.warn('CTA ticket QR failed:', err);
+                    }
+                })();
             }
             return;
         }

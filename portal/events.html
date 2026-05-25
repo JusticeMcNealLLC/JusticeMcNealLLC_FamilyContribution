@@ -9,8 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/shared.css">
-    <!-- Leaflet.js for Live Event Map -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#4f46e5">
     <meta name="mobile-web-app-capable" content="yes">
@@ -851,12 +849,6 @@
         </div>
     </div>
 
-    <!-- QR Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <!-- Leaflet.js for Live Map -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
     <script src="../js/components/pageShell/icons.js"></script>
@@ -869,15 +861,8 @@
     <script src="../js/components/notifications.js"></script>
     <script src="../js/push.js"></script>
     <script src="../js/auth/shared.js"></script>
-    <!-- Shared event modules (M0 — load first) -->
-    <script src="../js/components/events/constants.js"></script>
-    <script src="../js/components/events/helpers.js"></script>
-    <script src="../js/components/events/pills.js"></script>
-    <script src="../js/components/events/card.js"></script>
-    <!-- Events modules — Phase 5L.3: index → classic-chain-loader (27) → init -->
-    <script src="../js/portal/events/index.js"></script>
-    <script src="../js/portal/events/classic-chain-loader.js"></script>
-    <script src="../js/portal/events/init.js"></script>
+    <!-- Events modules — Phase 5L.4: single production bundle (rebuild: npm run build:events) -->
+    <script src="../js/portal/events/events.bundle.js?v=115"></script>
     <script src="../js/sw-register.js"></script>
 </body>
 </html>

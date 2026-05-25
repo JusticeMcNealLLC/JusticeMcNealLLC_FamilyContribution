@@ -27,6 +27,15 @@ function evtParseQrData(raw) {
 }
 
 async function evtOpenScanner(eventId) {
+    try {
+        if (typeof window.evtEnsureJsQR === 'function') await window.evtEnsureJsQR();
+    } catch (err) {
+        console.error('jsQR load error:', err);
+        const result = document.getElementById('scanResult');
+        if (result) result.innerHTML = '<span class="text-red-500">Scanner library failed to load. Please refresh.</span>';
+        return;
+    }
+
     evtToggleModal('scannerModal', true);
     const video = document.getElementById('scannerVideo');
     const canvas = document.getElementById('scannerCanvas');

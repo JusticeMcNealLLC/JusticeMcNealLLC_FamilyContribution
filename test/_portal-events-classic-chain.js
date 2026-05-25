@@ -31,11 +31,18 @@ function portalEventsHtmlScripts(html) {
         .filter((s) => s.includes('portal/events'));
 }
 
-/** Script is loaded in production via explicit HTML tag or classic-chain-loader chain. */
-function isProductionLoaded(html, chain, portalSrc) {
+/** Script is loaded in production via HTML tag, bundle, or classic-chain-loader chain. */
+function isProductionLoaded(html, chain, portalSrc, rootDir) {
     if (html.includes(`src="${portalSrc}"`)) return true;
+    const key = portalSrc.replace(EVENTS_BASE, '').replace(/^js\/portal\/events\//, '');
+    if (html.includes('events.bundle.js') && rootDir) {
+        const bundlePath = path.join(rootDir, 'js/portal/events/events.bundle.js');
+        if (fs.existsSync(bundlePath)) {
+            const marker = `/* ===== js/portal/events/${key} ===== */`;
+            if (fs.readFileSync(bundlePath, 'utf8').includes(marker)) return true;
+        }
+    }
     if (!chain) return false;
-    const key = portalSrc.replace(EVENTS_BASE, '');
     return chain.includes(key);
 }
 
@@ -48,6 +55,13 @@ function chainOrderOk(chain, ...relUnderEventsList) {
     return true;
 }
 
+/** Last portal/events script before sw-register (bundle includes init at tail). */
+function productionEventsBootLast(portalScripts) {
+    if (!portalScripts.length) return false;
+    const last = portalScripts[portalScripts.length - 1];
+    return last.includes('events.bundle.js') || /\/init\.js/.test(last);
+}
+
 module.exports = {
     LOADER_REL,
     EVENTS_BASE,
@@ -56,4 +70,5 @@ module.exports = {
     portalEventsHtmlScripts,
     isProductionLoaded,
     chainOrderOk,
+    productionEventsBootLast,
 };

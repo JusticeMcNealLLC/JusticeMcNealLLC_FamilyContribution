@@ -1,0 +1,8 @@
+{
+  "name": "justicemcnealllc-portal",
+  "private": true,
+  "scripts": {
+    "build:events": "node scripts/build-events-bundle.js",
+    "build:tailwind": "npx tailwindcss -i css/tailwind.source.css -o css/tailwind.portal.css --minify"
+  }
+}

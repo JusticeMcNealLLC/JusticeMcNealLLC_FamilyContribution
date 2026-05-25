@@ -11,9 +11,17 @@
     let _fullscreenMap = null;
     let _fullscreenMapCoords = null;
 
-    function evtOpenFullscreenMap(lat, lng, label) {
+    async function evtOpenFullscreenMap(lat, lng, label) {
         const overlay = document.getElementById('fullscreenMapOverlay');
-        if (!overlay || typeof L === 'undefined') return;
+        if (!overlay) return;
+
+        try {
+            if (typeof window.evtEnsureLeaflet === 'function') await window.evtEnsureLeaflet();
+        } catch (err) {
+            console.error('Leaflet load error:', err);
+            return;
+        }
+        if (typeof L === 'undefined') return;
 
         overlay.classList.remove('hidden');
         document.body.style.overflow = 'hidden';

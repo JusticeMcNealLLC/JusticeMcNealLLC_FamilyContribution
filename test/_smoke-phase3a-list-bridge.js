@@ -23,6 +23,7 @@ const {
     isProductionLoaded,
     portalEventsHtmlScripts,
     chainOrderOk,
+    productionEventsBootLast,
 } = require('./_portal-events-classic-chain.js');
 
 let passed = 0;
@@ -300,13 +301,13 @@ classicChain3a && classicChain3a.includes('list/shell.js')
     ? pass('list/shell.js present in classic-chain-loader.js chain')
     : fail('list/shell.js missing from classic-chain-loader.js chain');
 
-isProductionLoaded(html, classicChain3a, '../js/portal/events/list/shell.js')
-    ? pass('list/shell.js still loaded in production (HTML or classic-chain-loader)')
+isProductionLoaded(html, classicChain3a, '../js/portal/events/list/shell.js', root)
+    ? pass('list/shell.js still loaded in production (bundle or chain manifest)')
     : fail('list/shell.js not in production load model');
 
-html.includes('classic-chain-loader.js')
-    ? pass('portal/events.html uses classic-chain-loader.js (3-tag production model)')
-    : fail('classic-chain-loader.js not referenced in portal/events.html');
+html.includes('events.bundle.js')
+    ? pass('portal/events.html uses events.bundle.js (5L.4 single entry)')
+    : fail('events.bundle.js not referenced in portal/events.html');
 
 /src="\.\.\/js\/portal\/events\/list\.js"[^>]*type="module"/.test(html)
     ? fail('list.js loaded with type="module" — premature, Phase 5 only')
@@ -318,9 +319,9 @@ html.includes('classic-chain-loader.js')
     : pass('No portal/events/* scripts use type="module" yet (correct)');
 
 const portalScripts3a = portalEventsHtmlScripts(html);
-portalScripts3a.length && portalScripts3a[portalScripts3a.length - 1] === '../js/portal/events/init.js'
-    ? pass('init.js remains last among portal Events HTML script tags')
-    : fail('init.js must be the last portal/events script before sw-register');
+productionEventsBootLast(portalScripts3a)
+    ? pass('events boot script is last before sw-register (bundle or init.js)')
+    : fail('events.bundle.js or init.js must be the last portal/events script before sw-register');
 
 // ─── No split file created without being loaded ──────────
 console.log('\n── File split safety — no orphaned new files ──────────────────────────────');

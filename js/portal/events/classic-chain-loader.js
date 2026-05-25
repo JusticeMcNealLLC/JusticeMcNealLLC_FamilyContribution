@@ -1,13 +1,14 @@
 /**
- * Portal Events — classic script chain loader (Phase 5L.3 Option C).
- * Loaded from portal/events.html between index.js and init.js.
- * Injects 54 middle modules (core, list, detail, create, manage, compat re-exports).
+ * Portal Events — dev chain manifest (Phase 5L.3 Option C).
+ * Production uses events.bundle.js (npm run build:events); this file is the source of truth for module order.
+ * Chain: 55 middle modules (core incl. vendor-loader, list, detail, create, manage, compat) + index + init via build script.
  */
 (function () {
     var base = '../js/portal/events/';
     var chain = [
         'core/state.js',
         'core/utils.js',
+        'core/vendor-loader.js',
         'core/raffle-model.js',
         'list/search.js',
         'list/right-rail.js',

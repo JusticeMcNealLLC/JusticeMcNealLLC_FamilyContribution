@@ -69,27 +69,41 @@
         _paintAttendeeAvatars(eventId);
     }
 
-    function evtRenderDetailQrCanvases(ctx) {
+    async function evtRenderDetailQrCanvases(ctx) {
         if (!ctx || !ctx.event) return;
         const { event, rsvp, memberGoing } = ctx;
         if (!memberGoing || event.checkin_mode !== 'attendee_ticket') return;
         if (!rsvp || !rsvp.qr_token) return;
-        if (typeof QRCode === 'undefined') return;
 
         const canvas = document.getElementById('myTicketQR');
         if (!canvas) return;
 
-        QRCode.toCanvas(
-            canvas,
-            `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`,
-            { width: 180, margin: 2 }
-        );
+        try {
+            const QRCode = typeof window.evtEnsureQRCode === 'function'
+                ? await window.evtEnsureQRCode()
+                : window.QRCode;
+            if (!QRCode) return;
+            QRCode.toCanvas(
+                canvas,
+                `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`,
+                { width: 180, margin: 2 }
+            );
+        } catch (err) {
+            console.warn('Ticket QR render failed:', err);
+        }
     }
 
-    function evtInitDetailInlineMaps(ctx) {
+    async function evtInitDetailInlineMaps(ctx) {
         if (!ctx || !ctx.event) return;
         const { event, showLocation } = ctx;
         if (!showLocation || !event.location_lat || !event.location_lng) return;
+
+        try {
+            if (typeof window.evtEnsureLeaflet === 'function') await window.evtEnsureLeaflet();
+        } catch (err) {
+            console.warn('Inline map library failed:', err);
+            return;
+        }
         if (typeof L === 'undefined') return;
 
         const lat = event.location_lat;

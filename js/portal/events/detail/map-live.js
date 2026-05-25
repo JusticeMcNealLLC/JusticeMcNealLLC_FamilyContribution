@@ -75,7 +75,14 @@ async function evtInitMap(eventId) {
     // Clear placeholder
     container.innerHTML = '<div id="eventMap" class="w-full h-full"></div>';
 
-    // Check if Leaflet is loaded
+    try {
+        if (typeof window.evtEnsureLeaflet === 'function') await window.evtEnsureLeaflet();
+    } catch (err) {
+        console.error('Leaflet load error:', err);
+        container.innerHTML = '<div class="flex items-center justify-center h-full text-sm text-red-500">Map library failed to load. Please refresh.</div>';
+        return;
+    }
+
     if (typeof L === 'undefined') {
         container.innerHTML = '<div class="flex items-center justify-center h-full text-sm text-red-500">Map library failed to load. Please refresh.</div>';
         return;

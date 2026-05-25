@@ -2,7 +2,7 @@
 // Phase 5L.3 Option B — rehearsal harness static smoke
 //
 // Validates portal/events.rehearsal.html consolidation experiment
-// production portal/events.html uses 3-tag Option C model after 5L.3.
+// production portal/events.html uses single events.bundle.js (5L.4).
 //
 // Run: node test/_smoke-phase5l3-rehearsal.js
 // ═══════════════════════════════════════════════════════════
@@ -41,10 +41,10 @@ function portalEventsScriptsFromHtml(html) {
 
 const PROD_HTML = 'portal/events.html';
 const REH_HTML = 'portal/events.rehearsal.html';
-const PROD_COUNT = 3;
-const REH_COUNT = 3;
+const PROD_COUNT = 1;
+const REH_COUNT = 1;
+const BUNDLE_TAG = '../js/portal/events/events.bundle.js';
 const LOADER = 'js/portal/events/classic-chain-loader.js';
-const PROD_LOADER_TAG = '../js/portal/events/classic-chain-loader.js';
 
 const prodHtml = read(PROD_HTML);
 const rehHtml = read(REH_HTML);
@@ -75,17 +75,9 @@ rehScripts.length === REH_COUNT
     ? pass(`rehearsal loads ${REH_COUNT} portal Events script tags (consolidation experiment)`)
     : fail(`rehearsal expected ${REH_COUNT} portal Events tags`, `found ${rehScripts.length}`);
 
-rehScripts[0] === '../js/portal/events/index.js'
-    ? pass('rehearsal: index.js first')
-    : fail('rehearsal index.js must be first', rehScripts[0]);
-
-rehScripts[rehScripts.length - 1] === '../js/portal/events/init.js'
-    ? pass('rehearsal: init.js last')
-    : fail('rehearsal init.js must be last', rehScripts[rehScripts.length - 1]);
-
-prodScripts[1] === PROD_LOADER_TAG && rehScripts[1] === PROD_LOADER_TAG
-    ? pass('production and rehearsal share classic-chain-loader.js middle tag')
-    : fail('middle tag must be classic-chain-loader.js', `prod=${prodScripts[1]} reh=${rehScripts[1]}`);
+prodScripts[0].includes('events.bundle.js') && rehScripts[0].includes('events.bundle.js')
+    ? pass('production and rehearsal both load events.bundle.js')
+    : fail('prod/rehearsal must use events.bundle.js', `prod=${prodScripts[0]} reh=${rehScripts[0]}`);
 
 !rehHtml.includes('compat/window-exports') && !rehHtml.includes('compat/inline-handlers')
     ? pass('rehearsal: compat scripts not in HTML')
@@ -117,9 +109,9 @@ if (!chainMatch) {
     const manageRaffleIdx = chainEntries.indexOf('manage/raffle.js');
     const manageDangerIdx = chainEntries.indexOf('manage/danger.js');
     const globalReexportsIdx = chainEntries.indexOf('compat/global-reexports.js');
-    chainEntries.length === 54
+    chainEntries.length === 55
         ? pass(`loader chain has ${chainEntries.length} middle scripts (production order)`)
-        : fail('loader chain must have 54 entries', `found ${chainEntries.length}`);
+        : fail('loader chain must have 55 entries', `found ${chainEntries.length}`);
     const raffleModelIdx = chainEntries.indexOf('core/raffle-model.js');
     const listSearchIdx = chainEntries.indexOf('list/search.js');
     const listRightRailIdx = chainEntries.indexOf('list/right-rail.js');
@@ -182,8 +174,8 @@ rehOnly
 console.log('\n── Phase 5L.3 — production unchanged guard ───────────────────────────────');
 
 const prodSnapshot = portalEventsScriptsFromHtml(prodHtml);
-prodSnapshot[0] === '../js/portal/events/index.js' && prodSnapshot[prodSnapshot.length - 1] === '../js/portal/events/init.js'
-    ? pass('production: index.js first, init.js last preserved')
+prodSnapshot.length === 1 && prodSnapshot[0].includes('events.bundle.js')
+    ? pass('production: single bundle tag preserved')
     : fail('production load order contract broken');
 
 console.log(failed

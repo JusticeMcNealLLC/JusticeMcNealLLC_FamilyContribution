@@ -7,6 +7,7 @@
     var chain = [
         'core/state.js',
         'core/utils.js',
+        'core/vendor-loader.js',
         'core/raffle-model.js',
         'list/search.js',
         'list/right-rail.js',

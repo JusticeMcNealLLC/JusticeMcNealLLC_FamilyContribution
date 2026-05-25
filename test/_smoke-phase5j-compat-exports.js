@@ -110,9 +110,17 @@ const portalScripts = [...moduleSection.matchAll(/<script[^>]+src="([^"]+)"[^>]*
     .map((m) => m[1])
     .filter((s) => s.includes('portal/events'));
 
-portalScripts.length && portalScripts[portalScripts.length - 1] === '../js/portal/events/init.js'
-    ? pass('init.js remains last among portal Events scripts')
-    : fail('init.js must be the last portal/events script before sw-register');
+portalScripts.length === 1 && portalScripts[0].includes('events.bundle.js')
+    ? pass('production loads single events.bundle.js before sw-register')
+    : fail('portal/events.html must load events.bundle.js only', portalScripts.join(', '));
+
+const bundleJs = fileExists('js/portal/events/events.bundle.js')
+    ? read('js/portal/events/events.bundle.js')
+    : '';
+bundleJs.includes('document.addEventListener(\'DOMContentLoaded\', initEventsPage)')
+    || bundleJs.includes('document.addEventListener("DOMContentLoaded", initEventsPage)')
+    ? pass('bundle registers DOMContentLoaded → initEventsPage')
+    : fail('bundle must include init.js tail; run npm run build:events');
 
 console.log('\n── Phase 5J.1 — compat files present but dormant ─────────────────────────');
 

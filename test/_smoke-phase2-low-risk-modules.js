@@ -106,9 +106,9 @@ console.log('\n── portal/events.html invariants ─────────�
 
 const html = read('portal/events.html');
 
-html.includes('src="../js/components/events/constants.js"') && !html.includes('src="../js/components/events/constants.js" type="module"')
-    ? pass('components/events/constants.js loaded before portal chain')
-    : fail('shared constants.js not loaded as classic script in events.html');
+html.includes('events.bundle.js') || (html.includes('src="../js/components/events/constants.js"') && !html.includes('src="../js/components/events/constants.js" type="module"'))
+    ? pass('EventsConstants available via bundle or classic script tag')
+    : fail('constants.js must be in HTML or events.bundle.js');
 
 html.includes('href="../css/tailwind.portal.css"') && !html.includes('cdn.tailwindcss.com')
     ? pass('portal/events.html uses built Tailwind CSS (no CDN)')
