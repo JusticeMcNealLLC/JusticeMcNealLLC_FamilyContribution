@@ -184,9 +184,12 @@ if (!chainMatch) {
     const manageRsvpsIdx = chainPaths.indexOf('manage/rsvps.js');
     const manageMoneyIdx = chainPaths.indexOf('manage/money.js');
     const manageCompIdx = chainPaths.indexOf('manage/competition.js');
-    chainPaths.length === 52
-        ? pass('classic-chain-loader injects 52 middle scripts')
-        : fail('loader chain must have 52 entries', `found ${chainPaths.length}`);
+    const managePartIdx = chainPaths.indexOf('manage/participation.js');
+    const manageRaffleIdx = chainPaths.indexOf('manage/raffle.js');
+    const manageDangerIdx = chainPaths.indexOf('manage/danger.js');
+    chainPaths.length === 55
+        ? pass('classic-chain-loader injects 55 middle scripts')
+        : fail('loader chain must have 55 entries', `found ${chainPaths.length}`);
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
         && listFiltersIdx > listHeaderIdx && listCalendarIdx > listFiltersIdx
@@ -198,8 +201,10 @@ if (!chainMatch) {
         && manageOverviewIdx > manageShellIdx
         && manageImagesIdx > manageOverviewIdx && manageDocsIdx > manageImagesIdx
         && manageRsvpsIdx > manageDocsIdx && manageMoneyIdx > manageRsvpsIdx
-        && manageCompIdx > manageMoneyIdx && manageSheetIdx > manageCompIdx
-        ? pass('loader order: scrapbook → manage/shell → overview → images → docs → rsvps → money → competition → sheet')
+        && manageCompIdx > manageMoneyIdx
+        && managePartIdx > manageCompIdx && manageRaffleIdx > managePartIdx
+        && manageDangerIdx > manageRaffleIdx && manageSheetIdx > manageDangerIdx
+        ? pass('loader order: … → competition → participation → raffle → danger → sheet')
         : fail('loader manage module order');
     createGeoIdx >= 0 && legacyCostsIdx > createGeoIdx
         && legacyLocationIdx > legacyCostsIdx && legacyPreviewIdx > legacyLocationIdx

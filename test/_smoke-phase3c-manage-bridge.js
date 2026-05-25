@@ -58,6 +58,9 @@ const docs = read('js/portal/events/manage/docs.js');
 const rsvps = read('js/portal/events/manage/rsvps.js');
 const money = read('js/portal/events/manage/money.js');
 const competition = read('js/portal/events/manage/competition.js');
+const participation = read('js/portal/events/manage/participation.js');
+const manageRaffle = read('js/portal/events/manage/raffle.js');
+const danger = read('js/portal/events/manage/danger.js');
 
 sheet.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
@@ -71,9 +74,9 @@ sheet.includes("'use strict';")
     ? fail('Native export statement found — breaks classic script loading')
     : pass('No native export statement (stays classic-script safe)');
 
-sheet.length > 60000
-    ? pass(`File size reasonable (${sheet.length.toLocaleString()} chars — no accidental truncation)`)
-    : fail('sheet.js appears truncated (< 60k chars)', `actual: ${sheet.length}`);
+sheet.length > 8000
+    ? pass(`File size reasonable (${sheet.length.toLocaleString()} chars — orchestrator after modularization)`)
+    : fail('sheet.js appears truncated (< 8k chars)', `actual: ${sheet.length}`);
 
 // ─── window.EventsManage (original public surface) ───────
 console.log('\n── manage/sheet.js — window.EventsManage (original global preserved) ───────');
@@ -136,8 +139,8 @@ console.log('\n── manage/sheet.js — custom event dispatches ────�
     : fail("'events:manage:updated' literal dispatch missing");
 
 // events:manage:deleted dispatched via _notifyParent helper (dynamic concatenation)
-sheet.includes("_notifyParent('deleted'")
-    ? pass("_notifyParent('deleted', …) call present — dispatches events:manage:deleted")
+(sheet.includes("_notifyParent('deleted'") || danger.includes("notifyParent?.('deleted'"))
+    ? pass("_notifyParent('deleted', …) dispatch present (sheet or danger module)")
     : fail("_notifyParent('deleted', …) call missing — events:manage:deleted would never fire");
 
 // events:manage:* are emitted via _notifyParent helper
@@ -145,9 +148,9 @@ sheet.includes("'events:manage:' + type")
     ? pass("_notifyParent helper using 'events:manage:' + type pattern present")
     : fail("_notifyParent helper pattern missing");
 
-// events:raffle:drawn dispatched directly
-sheet.includes("'events:raffle:drawn'")
-    ? pass("'events:raffle:drawn' custom event dispatch present")
+// events:raffle:drawn dispatched from raffle module
+(manageRaffle.includes("'events:raffle:drawn'") || sheet.includes("'events:raffle:drawn'"))
+    ? pass("'events:raffle:drawn' custom event dispatch present (raffle module or sheet)")
     : fail("'events:raffle:drawn' custom event dispatch missing");
 
 // ─── Core internal functions ──────────────────────────────
@@ -160,13 +163,10 @@ const CORE_FNS = [
     'function _renderTab(',
     'async function _renderTabAsync(',
     'function _overviewHtml(',
-    'function _dangerHtml(',
     'function _wireOverview(',
-    'function _wireDanger(',
-    'async function _loadRaffle(',
-    'function _raffleHtml(',
-    'function _wireRaffle(',
     'function refreshRaffle(',
+    'async function _refreshEventManager(',
+    'function _notifyParent(',
 ];
 
 CORE_FNS.forEach(fn => {
@@ -237,13 +237,65 @@ console.log('\n── manage tab modules (Phase 5M.3B) ────────�
         : fail(`sheet.js must delegate to ${delegate}`);
 });
 
-sheet.includes('function _loadRaffle(')
-    ? pass('sheet.js still owns _loadRaffle (5M.3C deferred)')
-    : fail('sheet.js must keep raffle tab until 5M.3C');
+console.log('\n── manage tab modules (Phase 5M.3C) ───────────────────────────────────────');
 
-sheet.includes('function _dangerHtml(')
-    ? pass('sheet.js still owns _dangerHtml (5M.3C deferred)')
-    : fail('sheet.js must keep danger tab until 5M.3C');
+[
+    [participation, 'Participation', 'window.EventsManageParticipation =', ['async function getParticipationResetCounts(', 'async function resetParticipation(', 'async function removeParticipationPerson('], 'Participation.removeParticipationPerson'],
+    [manageRaffle, 'Raffle', 'window.EventsManageRaffle =', ['async function loadRaffle(', 'function raffleHtml(', 'function wireRaffle(', 'function refreshRaffle('], 'Raffle.loadRaffle'],
+    [danger, 'Danger', 'window.EventsManageDanger =', ['function dangerHtml(', 'function wireDanger(', 'async function runDangerAction('], 'Danger.dangerHtml'],
+].forEach(([src, label, nsAssign, fns, delegate]) => {
+    src.includes(nsAssign)
+        ? pass(`${label}: namespace assigned`)
+        : fail(`${label}: namespace missing`);
+    fns.forEach(fn => {
+        src.includes(fn)
+            ? pass(`${label}: owns ${fn.trim()}`)
+            : fail(`${label}: missing ${fn.trim()}`);
+    });
+    sheet.includes(delegate)
+        ? pass(`sheet.js delegates to ${delegate}`)
+        : fail(`sheet.js must delegate to ${delegate}`);
+});
+
+participation.includes("action: 'reset_participation'")
+    ? pass("reset_participation edge payload preserved in participation.js")
+    : fail("reset_participation payload missing");
+
+participation.includes("action: 'remove_rsvp'")
+    ? pass("remove_rsvp edge payload preserved in participation.js")
+    : fail("remove_rsvp payload missing");
+
+danger.includes('data-action="delete"')
+    ? pass('danger.js retains delete confirmation control')
+    : fail('delete action missing from danger.js');
+
+participation.includes('Type RESET')
+    ? pass('reset participation Type RESET confirmation preserved in participation.js')
+    : fail('Type RESET confirmation missing');
+
+sheet.includes('function refreshRaffle(')
+    ? pass('sheet.js still exposes refreshRaffle orchestrator')
+    : fail('refreshRaffle missing from sheet.js');
+
+!sheet.includes('function _loadRaffle(')
+    ? pass('sheet.js no longer owns _loadRaffle (extracted to raffle.js)')
+    : fail('sheet.js should not retain _loadRaffle after 5M.3C');
+
+!sheet.includes('function _dangerHtml(')
+    ? pass('sheet.js no longer owns _dangerHtml (extracted to danger.js)')
+    : fail('sheet.js should not retain _dangerHtml after 5M.3C');
+
+sheet.includes('EventsManageParticipationApi')
+    ? pass('EventsManageParticipationApi bridge bound in sheet.js')
+    : fail('EventsManageParticipationApi bridge missing');
+
+sheet.includes('EventsManageDangerApi')
+    ? pass('EventsManageDangerApi bridge bound in sheet.js')
+    : fail('EventsManageDangerApi bridge missing');
+
+sheet.includes('EventsManageRaffleApi')
+    ? pass('EventsManageRaffleApi bridge bound in sheet.js')
+    : fail('EventsManageRaffleApi bridge missing');
 
 sheet.includes('EventsManageRsvpsApi')
     ? pass('EventsManageRsvpsApi bridge bound in sheet.js')
@@ -280,12 +332,16 @@ classicChain3c && classicChain3c.includes(MANAGE_SHEET_CHAIN)
     const iRsvps = classicChain3c.indexOf('manage/rsvps.js');
     const iMoney = classicChain3c.indexOf('manage/money.js');
     const iComp = classicChain3c.indexOf('manage/competition.js');
+    const iPart = classicChain3c.indexOf('manage/participation.js');
+    const iRaffle = classicChain3c.indexOf('manage/raffle.js');
+    const iDanger = classicChain3c.indexOf('manage/danger.js');
     const iSheet = classicChain3c.indexOf(MANAGE_SHEET_CHAIN);
     const ok = iScrap >= 0 && iShell > iScrap && iOverview > iShell
         && iImages > iOverview && iDocs > iImages && iRsvps > iDocs
-        && iMoney > iRsvps && iComp > iMoney && iSheet > iComp;
+        && iMoney > iRsvps && iComp > iMoney
+        && iPart > iComp && iRaffle > iPart && iDanger > iRaffle && iSheet > iDanger;
     ok
-        ? pass('loader order: scrapbook → shell → overview → images → docs → rsvps → money → competition → sheet')
+        ? pass('loader order: … → competition → participation → raffle → danger → sheet')
         : fail('manage module loader order incorrect');
 })();
 
