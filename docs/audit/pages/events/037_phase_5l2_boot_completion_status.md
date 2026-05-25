@@ -1,6 +1,7 @@
 # Events Refactor — Phase 5L.2 Boot / Duplicate-Init Hardening Completion Status
 
 **Document:** `037_phase_5l2_boot_completion_status.md`  
+**Path:** `docs/audit/pages/events/037_phase_5l2_boot_completion_status.md`  
 **Date:** 2026-05-23  
 **Status:** **Complete** — Phase 5L.2 implemented, static smokes green, live-verified on production  
 **Phase 5L.1 doc (do not modify):** `036_phase_5l1_readiness_completion_status.md` — already committed in **`dc5d203`** (`docs/audit/pages/events/`)  
@@ -191,9 +192,9 @@ node test/_smoke-portal-event-raffle-rsvp-parity.js
 Run from repo root. Stage **only** this document.
 
 ```bash
-git status --short docs/audit/events/037_phase_5l2_boot_completion_status.md
-git diff -- docs/audit/events/037_phase_5l2_boot_completion_status.md
-git add docs/audit/events/037_phase_5l2_boot_completion_status.md
+git status --short docs/audit/pages/events/037_phase_5l2_boot_completion_status.md
+git diff -- docs/audit/pages/events/037_phase_5l2_boot_completion_status.md
+git add docs/audit/pages/events/037_phase_5l2_boot_completion_status.md
 git diff --staged --name-only
 git commit -m "Add Phase 5L.2 boot completion status"
 git push
@@ -202,7 +203,7 @@ git push
 Confirm staged files list contains **only**:
 
 ```text
-docs/audit/events/037_phase_5l2_boot_completion_status.md
+docs/audit/pages/events/037_phase_5l2_boot_completion_status.md
 ```
 
 ---
