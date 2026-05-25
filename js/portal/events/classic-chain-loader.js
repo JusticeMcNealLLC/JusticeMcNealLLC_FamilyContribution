@@ -1,7 +1,7 @@
 /**
  * Portal Events — classic script chain loader (Phase 5L.3 Option C).
  * Loaded from portal/events.html between index.js and init.js.
- * Injects the middle 27 modules in the same order as the former 29-tag HTML block.
+ * Injects the middle 28 modules in the same order as the former 29-tag HTML block (+ create/geocode.js).
  */
 (function () {
     var base = '../js/portal/events/';
@@ -24,6 +24,7 @@
         'detail.js',
         'comments.js',
         'rsvp.js',
+        'create/geocode.js',
         'create.js',
         'create/sheet.js',
         'documents.js',

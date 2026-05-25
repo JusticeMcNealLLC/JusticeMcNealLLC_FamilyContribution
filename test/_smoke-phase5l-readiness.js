@@ -153,9 +153,15 @@ if (!chainMatch) {
     const postRenderIdx = chainPaths.indexOf('detail/post-render.js');
     const templateIdx = chainPaths.indexOf('detail/template.js');
     const detailIdx = chainPaths.indexOf('detail.js');
-    chainPaths.length === 27
-        ? pass('classic-chain-loader injects 27 middle scripts')
-        : fail('loader chain must have 27 entries', `found ${chainPaths.length}`);
+    const createGeoIdx = chainPaths.indexOf('create/geocode.js');
+    const createIdx = chainPaths.indexOf('create.js');
+    const createSheetIdx = chainPaths.indexOf('create/sheet.js');
+    chainPaths.length === 28
+        ? pass('classic-chain-loader injects 28 middle scripts')
+        : fail('loader chain must have 28 entries', `found ${chainPaths.length}`);
+    createGeoIdx >= 0 && createIdx > createGeoIdx && createSheetIdx > createIdx
+        ? pass('loader order: create/geocode.js → create.js → create/sheet.js')
+        : fail('loader create geocode → create → sheet order');
     teamChatIdx >= 0 && presentationIdx > teamChatIdx
         ? pass('loader order: team before detail/presentation')
         : fail('loader team → detail pipeline order');

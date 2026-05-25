@@ -50,6 +50,7 @@ function check(label, ok, detail) {
 
 const sheet  = read('js/portal/events/create/sheet.js');
 const createJs = read('js/portal/events/create.js');
+const geocodeJs = read('js/portal/events/create/geocode.js');
 const events = read('portal/events.html');
 const classicChain3d = parseClassicChain(ROOT);
 
@@ -172,8 +173,36 @@ check("window.evtGeocodeAddress optional call present",
 check("events:created dispatch uses { event: data, status } detail",
     sheet.includes('{ event: data, status }'));
 
+// ── create/geocode.js (Phase 5M.1.1) ──────────────────────────────────────
+console.log('\n── js/portal/events/create/geocode.js — geocode module (5M.1.1) ─────────');
+
+check('create/geocode.js IIFE wrapper present',
+    geocodeJs.includes('(function ()'));
+
+check("create/geocode.js 'use strict' present",
+    geocodeJs.includes("'use strict'"));
+
+check('create/geocode.js has no native export (classic-script safe)',
+    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(geocodeJs)));
+
+check('create/geocode.js present in classic-chain-loader.js chain',
+    classicChain3d && classicChain3d.includes('create/geocode.js'));
+
+check('create/geocode.js loaded in production (HTML or classic-chain-loader)',
+    isProductionLoaded(events, classicChain3d, '../js/portal/events/create/geocode.js'));
+
+check('create/geocode.js defines evtGeocodeAddress',
+    geocodeJs.includes('async function evtGeocodeAddress')
+    || geocodeJs.includes('function evtGeocodeAddress'));
+
+check('create/geocode.js assigns window.evtGeocodeAddress',
+    geocodeJs.includes('window.evtGeocodeAddress = evtGeocodeAddress'));
+
+check('create/geocode.js assigns window.evtExpandAddress',
+    geocodeJs.includes('window.evtExpandAddress = evtExpandAddress'));
+
 // ── create.js orchestrator (production chain) ─────────────────────────────
-console.log('\n── js/portal/events/create.js — production chain + geocode bridge ───────');
+console.log('\n── js/portal/events/create.js — production chain + legacy create ──────────');
 
 check('create.js present in classic-chain-loader.js chain',
     classicChain3d && classicChain3d.includes('create.js'));
@@ -181,8 +210,15 @@ check('create.js present in classic-chain-loader.js chain',
 check('create.js loaded in production (HTML or classic-chain-loader)',
     isProductionLoaded(events, classicChain3d, '../js/portal/events/create.js'));
 
-check('create.js defines evtGeocodeAddress (shared with create sheet)',
-    createJs.includes('function evtGeocodeAddress') || createJs.includes('async function evtGeocodeAddress'));
+check('load order: create/geocode.js → create.js → create/sheet.js in classic chain',
+    chainOrderOk(classicChain3d, 'create/geocode.js', 'create.js', 'create/sheet.js'));
+
+check('create.js does not define evtGeocodeAddress (moved to create/geocode.js)',
+    !createJs.includes('async function evtGeocodeAddress')
+    && !createJs.match(/function evtGeocodeAddress\s*\(/));
+
+check('create.js uses window.evtGeocodeAddress for legacy location flow',
+    createJs.includes('window.evtGeocodeAddress'));
 
 check('create.js defines evtHandleCreate (legacy modal path)',
     createJs.includes('function evtHandleCreate') || createJs.includes('async function evtHandleCreate'));
@@ -202,9 +238,6 @@ check('create/sheet.js loaded in production (HTML or classic-chain-loader)',
 check('portal/events.html uses classic-chain-loader.js (3-tag production model)',
     events.includes('classic-chain-loader.js'));
 
-check('load order: create.js before create/sheet.js in classic chain',
-    chainOrderOk(classicChain3d, 'create.js', 'create/sheet.js'));
-
 check('create/sheet.js does NOT have type="module" in events.html',
     !events.match(/create\/sheet\.js[^"]*"[^>]*type="module"/));
 
@@ -219,24 +252,20 @@ check('init.js remains last among portal Events HTML script tags',
 // ── File split safety ─────────────────────────────────────────────────────
 console.log('\n── File split safety — no orphaned new create/ sub-files loaded ───────────');
 
-// The only file that should exist under create/ is sheet.js
+// Expected under create/: geocode.js (5M.1.1) + sheet.js
 const createDir = path.join(ROOT, 'js/portal/events/create');
-const createFiles = fs.readdirSync(createDir).filter(f => f !== 'sheet.js');
+const EXPECTED_CREATE_FILES = ['geocode.js', 'sheet.js'];
+const createFiles = fs.readdirSync(createDir).filter(f => f.endsWith('.js'));
 
-check('No unexpected files added under js/portal/events/create/ (only sheet.js exists)',
-    createFiles.length === 0,
-    createFiles.length > 0 ? `unexpected: ${createFiles.join(', ')}` : undefined);
+check('create/ contains geocode.js and sheet.js only',
+    createFiles.length === EXPECTED_CREATE_FILES.length
+    && EXPECTED_CREATE_FILES.every(f => createFiles.includes(f)),
+    `found: ${createFiles.join(', ')}`);
 
-check('create/sheet.js in production load (not orphaned)',
-    isProductionLoaded(events, classicChain3d, '../js/portal/events/create/sheet.js'));
-
-if (createFiles.length > 0) {
-    createFiles.forEach(f => {
-        const chainKey = 'create/' + f;
-        check(`create/${f} in production load (not orphaned)`,
-            isProductionLoaded(events, classicChain3d, '../js/portal/events/' + chainKey));
-    });
-}
+EXPECTED_CREATE_FILES.forEach(f => {
+    check(`create/${f} in production load (not orphaned)`,
+        isProductionLoaded(events, classicChain3d, '../js/portal/events/create/' + f));
+});
 
 // ── Phase 1 bridge regression ──────────────────────────────────────────────
 console.log('\n── Phase 1 bridge (init.js) — regression check ───────────────────────────');
