@@ -55,6 +55,7 @@ const stepBasicsJs = read('js/portal/events/create/step-basics.js');
 const stepWhenJs = read('js/portal/events/create/step-when.js');
 const stepPricingJs = read('js/portal/events/create/step-pricing.js');
 const stepReviewJs = read('js/portal/events/create/step-review.js');
+const raffleBuilderJs = read('js/portal/events/create/raffle-builder.js');
 const events = read('portal/events.html');
 const classicChain3d = parseClassicChain(ROOT);
 
@@ -71,7 +72,7 @@ check('No native export statement (stays classic-script safe)',
     !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(sheet)));
 
 check('File size reasonable (no accidental truncation)',
-    sheet.length > 35000,
+    sheet.length > 20000,
     `${sheet.length} chars`);
 console.log(`  ℹ File length: ${sheet.length} chars`);
 
@@ -142,11 +143,7 @@ const coreFns = [
     ['function _submit(',        '_submit (async Supabase insert)'],
     ['function _esc(',           '_esc (HTML escape helper)'],
     ['function _bindCreateStepsApi(', '_bindCreateStepsApi'],
-    ['function _raffleModel(',   '_raffleModel'],
-    ['function _ensureRaffleConfig(', '_ensureRaffleConfig'],
-    ['function _raffleBuilderHtml(', '_raffleBuilderHtml'],
-    ['function _wireRaffleBuilder(', '_wireRaffleBuilder'],
-    ['function _raffleReviewHtml(', '_raffleReviewHtml'],
+    ['function _raffleApi(', '_raffleApi (orchestrator bridge to raffle module)'],
 ];
 coreFns.forEach(([pattern, label]) => {
     check(`${label} present in sheet.js`, sheet.includes(pattern));
@@ -162,6 +159,11 @@ const movedFromSheet = [
     ['function _wirePricing(', '_wirePricing'],
     ['function _doGeocode(', '_doGeocode'],
     ['function _wireImageUpload(', '_wireImageUpload'],
+    ['function _raffleBuilderHtml(', '_raffleBuilderHtml'],
+    ['function _wireRaffleBuilder(', '_wireRaffleBuilder'],
+    ['function _raffleReviewHtml(', '_raffleReviewHtml'],
+    ['function _ensureRaffleConfig(', '_ensureRaffleConfig'],
+    ['function _raffleModel(', '_raffleModel'],
 ];
 movedFromSheet.forEach(([pattern, label]) => {
     check(`${label} removed from sheet.js (moved to step modules)`, !sheet.includes(pattern));
@@ -173,8 +175,11 @@ console.log('\n── create/sheet.js — external dependencies ─────�
 check("supabaseClient used in _submit (bare identifier)",
     sheet.includes('supabaseClient.from('));
 
-check("window.EventsRaffleModel accessed lazily via _raffleModel()",
-    sheet.includes('window.EventsRaffleModel'));
+check('raffle-builder.js uses window.EventsRaffleModel',
+    raffleBuilderJs.includes('window.EventsRaffleModel'));
+
+check('sheet.js delegates raffle validation/submit to EventsCreateRaffleBuilder',
+    sheet.includes('EventsCreateRaffleBuilder') || sheet.includes('_raffleApi()'));
 
 check("window.evtCurrentUser used for creator ID",
     sheet.includes('window.evtCurrentUser'));
@@ -222,7 +227,15 @@ check('create.js present in classic-chain-loader.js chain',
 check('create.js loaded in production (HTML or classic-chain-loader)',
     isProductionLoaded(events, classicChain3d, '../js/portal/events/create.js'));
 
-check('load order: create/geocode → create → step modules → create/sheet in classic chain',
+check('load order: step-review → raffle-builder → create/sheet in classic chain',
+    chainOrderOk(
+        classicChain3d,
+        'create/step-review.js',
+        'create/raffle-builder.js',
+        'create/sheet.js'
+    ));
+
+check('load order: create/geocode → create → step modules → raffle-builder → sheet',
     chainOrderOk(
         classicChain3d,
         'create/geocode.js',
@@ -231,6 +244,7 @@ check('load order: create/geocode → create → step modules → create/sheet i
         'create/step-when.js',
         'create/step-pricing.js',
         'create/step-review.js',
+        'create/raffle-builder.js',
         'create/sheet.js'
     ));
 
@@ -303,6 +317,39 @@ check('step-review.js delegates raffle review HTML to EventsCreateSteps',
 check('sheet.js dispatches steps via EventsCreateSteps namespace',
     sheet.includes('EventsCreateSteps') && sheet.includes('steps.basics.html()'));
 
+// ── Create raffle builder (Phase 5M.1.3) ──────────────────────────────────
+console.log('\n── js/portal/events/create/raffle-builder.js — raffle builder (5M.1.3) ──');
+
+check('create/raffle-builder.js IIFE wrapper present',
+    raffleBuilderJs.includes('(function ()'));
+
+check("create/raffle-builder.js 'use strict' present",
+    raffleBuilderJs.includes("'use strict'"));
+
+check('create/raffle-builder.js has no native export (classic-script safe)',
+    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(raffleBuilderJs)));
+
+check('create/raffle-builder.js present in classic-chain-loader.js chain',
+    classicChain3d && classicChain3d.includes('create/raffle-builder.js'));
+
+check('create/raffle-builder.js loaded in production (HTML or classic-chain-loader)',
+    isProductionLoaded(events, classicChain3d, '../js/portal/events/create/raffle-builder.js'));
+
+check('create/raffle-builder.js assigns window.EventsCreateRaffleBuilder',
+    raffleBuilderJs.includes('window.EventsCreateRaffleBuilder'));
+
+check('raffle-builder.js defines builderHtml',
+    raffleBuilderJs.includes('builderHtml') && raffleBuilderJs.includes('data-ec-raffle-add-category'));
+
+check('raffle-builder.js defines wire and reviewHtml',
+    raffleBuilderJs.includes('wire') && raffleBuilderJs.includes('reviewHtml'));
+
+check('raffle-builder.js defines ensureRaffleConfig',
+    raffleBuilderJs.includes('ensureRaffleConfig'));
+
+check('sheet.js wires EventsCreateSteps raffle hooks from EventsCreateRaffleBuilder',
+    sheet.includes('rb.builderHtml') && sheet.includes('rb.reviewHtml') && sheet.includes('rb.wire'));
+
 // ── File split safety ─────────────────────────────────────────────────────
 console.log('\n── File split safety — create/ sub-files in production chain ─────────────');
 
@@ -313,6 +360,7 @@ const EXPECTED_CREATE_FILES = [
     'step-when.js',
     'step-pricing.js',
     'step-review.js',
+    'raffle-builder.js',
     'sheet.js',
 ];
 const createFiles = fs.readdirSync(createDir).filter(f => f.endsWith('.js'));

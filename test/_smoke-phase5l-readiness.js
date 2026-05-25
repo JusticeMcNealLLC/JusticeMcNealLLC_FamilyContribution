@@ -159,16 +159,17 @@ if (!chainMatch) {
     const stepWhenIdx = chainPaths.indexOf('create/step-when.js');
     const stepPricingIdx = chainPaths.indexOf('create/step-pricing.js');
     const stepReviewIdx = chainPaths.indexOf('create/step-review.js');
+    const raffleBuilderIdx = chainPaths.indexOf('create/raffle-builder.js');
     const createSheetIdx = chainPaths.indexOf('create/sheet.js');
-    chainPaths.length === 32
-        ? pass('classic-chain-loader injects 32 middle scripts')
-        : fail('loader chain must have 32 entries', `found ${chainPaths.length}`);
+    chainPaths.length === 33
+        ? pass('classic-chain-loader injects 33 middle scripts')
+        : fail('loader chain must have 33 entries', `found ${chainPaths.length}`);
     createGeoIdx >= 0 && createIdx > createGeoIdx
         && stepBasicsIdx > createIdx && stepWhenIdx > stepBasicsIdx
         && stepPricingIdx > stepWhenIdx && stepReviewIdx > stepPricingIdx
-        && createSheetIdx > stepReviewIdx
-        ? pass('loader order: create/geocode → create → step modules → create/sheet')
-        : fail('loader create geocode → create → steps → sheet order');
+        && raffleBuilderIdx > stepReviewIdx && createSheetIdx > raffleBuilderIdx
+        ? pass('loader order: create/geocode → create → steps → raffle-builder → sheet')
+        : fail('loader create geocode → create → steps → raffle-builder → sheet order');
     teamChatIdx >= 0 && presentationIdx > teamChatIdx
         ? pass('loader order: team before detail/presentation')
         : fail('loader team → detail pipeline order');

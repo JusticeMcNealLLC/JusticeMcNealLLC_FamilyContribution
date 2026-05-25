@@ -104,22 +104,23 @@ if (!chainMatch) {
     fail('loader must define chain array');
 } else {
     const chainEntries = [...chainMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
-    chainEntries.length === 32
+    chainEntries.length === 33
         ? pass(`loader chain has ${chainEntries.length} middle scripts (production order)`)
-        : fail('loader chain must have 32 entries', `found ${chainEntries.length}`);
+        : fail('loader chain must have 33 entries', `found ${chainEntries.length}`);
     const geoIdx = chainEntries.indexOf('create/geocode.js');
     const createIdx = chainEntries.indexOf('create.js');
     const stepBasicsIdx = chainEntries.indexOf('create/step-basics.js');
     const stepWhenIdx = chainEntries.indexOf('create/step-when.js');
     const stepPricingIdx = chainEntries.indexOf('create/step-pricing.js');
     const stepReviewIdx = chainEntries.indexOf('create/step-review.js');
+    const raffleBuilderIdx = chainEntries.indexOf('create/raffle-builder.js');
     const sheetIdx = chainEntries.indexOf('create/sheet.js');
     geoIdx >= 0 && createIdx > geoIdx
         && stepBasicsIdx > createIdx && stepWhenIdx > stepBasicsIdx
         && stepPricingIdx > stepWhenIdx && stepReviewIdx > stepPricingIdx
-        && sheetIdx > stepReviewIdx
-        ? pass('loader order: create/geocode → create → step modules → create/sheet')
-        : fail('loader create geocode → create → steps → sheet order');
+        && raffleBuilderIdx > stepReviewIdx && sheetIdx > raffleBuilderIdx
+        ? pass('loader order: create/geocode → create → steps → raffle-builder → sheet')
+        : fail('loader create geocode → create → steps → raffle-builder → sheet order');
 }
 
 loaderJs.includes('document.write') && !loaderJs.includes('type="module"')
