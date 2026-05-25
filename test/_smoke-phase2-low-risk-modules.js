@@ -118,10 +118,10 @@ html.includes('href="../css/tailwind.portal.css"') && !html.includes('cdn.tailwi
     ? pass('portal events/constants.js not duplicated in events.html')
     : fail('portal events/constants.js should not be in events.html');
 
-const loader = read('js/portal/events/classic-chain-loader.js');
-loader.includes("'core/raffle-model.js'")
-    ? pass('core/raffle-model.js in classic-chain-loader chain')
-    : fail('core/raffle-model.js missing from classic-chain-loader');
+const mainJs = read('js/portal/events/main.js');
+mainJs.includes("'./core/raffle-model.js'") || mainJs.includes('"./core/raffle-model.js"')
+    ? pass('core/raffle-model.js in main.js import list')
+    : fail('core/raffle-model.js missing from main.js');
 
 sharedConstants.includes('EVENT_DOC_TYPES')
     ? pass('EVENT_DOC_TYPES present in EventsConstants')

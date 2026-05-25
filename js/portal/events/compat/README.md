@@ -11,8 +11,8 @@ Production boot: `events.bundle.js` (esbuild IIFE from `main.js`).
 
 | Command | Purpose |
 |---------|---------|
-| `npm run build:events` | Sync `main.js` from chain + bundle to `events.bundle.js` |
+| `npm run build:events` | Verify `main.js` + bundle to `events.bundle.js` |
 | `npm run dev:events` | Watch mode — rebuild bundle on save |
-| `npm run sync:events-main` | Regenerate `main.js` imports from `classic-chain-loader.js` |
+| `npm run verify:events-main` | Validate `main.js` import list |
 
-Optional dev: `classic-chain-loader.js` in HTML, or `<script type="module" src="main.js">` (many requests).
+Optional dev: `portal/events.dev.html` loads `main.js` as `type="module"` (many requests).

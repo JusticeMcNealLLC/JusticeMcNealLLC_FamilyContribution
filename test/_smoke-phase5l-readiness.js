@@ -164,14 +164,13 @@ COMPAT_SCRIPTS.forEach((rel) => {
         : fail(`portal/events.html must not load ${rel}`);
 });
 
-console.log('\n── Phase 5L.3 — classic-chain-loader middle order ────────────────────────');
+console.log('\n── Phase 6 — main.js middle import order ─────────────────────────────────');
 
-const loaderJs = read('js/portal/events/classic-chain-loader.js');
-const chainMatch = loaderJs.match(/var chain = \[([\s\S]*?)\];/);
-if (!chainMatch) {
-    fail('classic-chain-loader.js must define chain array');
+const mainJsOrder = read('js/portal/events/main.js');
+const chainPaths = [...mainJsOrder.matchAll(/import\s+['"]\.\/([^'"]+)['"]/g)].map((m) => m[1]).filter((p) => p !== 'index.js' && p !== 'init.js');
+if (!chainPaths.length) {
+    fail('main.js must define portal/events import order');
 } else {
-    const chainPaths = [...chainMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
     const detailSlice = DETAIL_PIPELINE_TAGS.map((t) => t.replace('../js/portal/events/', ''));
     const teamChatIdx = chainPaths.indexOf('team/chat.js');
     const presentationIdx = chainPaths.indexOf('detail/presentation.js');
@@ -203,7 +202,7 @@ if (!chainMatch) {
     const scrapbookIdx = chainPaths.indexOf('detail/scrapbook.js');
     const manageShellIdx = chainPaths.indexOf('manage/shell.js');
     const manageOverviewIdx = chainPaths.indexOf('manage/overview.js');
-    const manageSheetIdx = chainPaths.indexOf('manage/sheet.js?v=113');
+    const manageSheetIdx = chainPaths.indexOf('manage/sheet.js');
     const manageImagesIdx = chainPaths.indexOf('manage/images.js');
     const manageDocsIdx = chainPaths.indexOf('manage/docs.js');
     const manageRsvpsIdx = chainPaths.indexOf('manage/rsvps.js');
@@ -213,7 +212,7 @@ if (!chainMatch) {
     const manageRaffleIdx = chainPaths.indexOf('manage/raffle.js');
     const manageDangerIdx = chainPaths.indexOf('manage/danger.js');
     chainPaths.length === 55
-        ? pass('classic-chain-loader injects 55 middle scripts')
+        ? pass('main.js lists 55 middle module imports')
         : fail('loader chain must have 55 entries', `found ${chainPaths.length}`);
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx

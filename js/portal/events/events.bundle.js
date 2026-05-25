@@ -6838,7 +6838,7 @@
   window.PortalEvents.competition.finalize = evtFinalizeCompetition2;
   window.PortalEvents.competition.recalcTiers = evtRecalcCompTiers2;
 
-  // js/portal/events/rsvp.js
+  // js/portal/events/engagement/rsvp.js
   function evtIsGoingRsvp(rsvp) {
     return !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
   }

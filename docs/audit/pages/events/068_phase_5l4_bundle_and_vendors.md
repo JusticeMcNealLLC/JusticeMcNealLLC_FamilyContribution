@@ -29,11 +29,11 @@ npm run dev:events     # watch
 
 ## Manual QA
 
-- [ ] List / detail / create / manage (no console errors)
-- [ ] Open scanner (jsQR loads on first use)
-- [ ] Open live map + fullscreen map (Leaflet loads on first use)
-- [ ] Manage overview QR codes render
-- [ ] Hard refresh after deploy (`?v=115` cache bust)
+- [x] List / detail / create / manage (no console errors) — owner sign-off 2026-05-25
+- [x] Open scanner (jsQR loads on first use)
+- [x] Open live map + fullscreen map (Leaflet loads on first use)
+- [x] Manage overview QR codes render
+- [x] Hard refresh after deploy (`?v=116` cache bust on `events.bundle.js`)
 
 ## Smokes
 

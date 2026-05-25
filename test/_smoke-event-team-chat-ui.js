@@ -71,8 +71,8 @@ const portalScripts = portalEventsHtmlScripts(portalHtml);
 const lastBoot = portalScripts[portalScripts.length - 1] || '';
 assert(lastBoot.includes('events.bundle.js') || lastBoot.includes('init.js'),
     'events.bundle.js or init.js must be last among portal Events scripts');
-assert(portalScripts.includes('../js/portal/events/classic-chain-loader.js'),
-    'classic-chain-loader must load middle scripts before init.js');
+assert(portalScripts.some((s) => s.includes('events.bundle.js')),
+    'production must load events.bundle.js (middle modules inside bundle)');
 
 pass('Team Chat UI wired in team/chat.js');
 pass('ensure / load / send / deleted_at filter / realtime');

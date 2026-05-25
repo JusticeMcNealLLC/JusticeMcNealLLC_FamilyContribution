@@ -597,3 +597,23 @@ async function evtDuplicateEvent(eventId) {
         alert('Failed to duplicate event: ' + (err.message || 'Unknown error'));
     }
 }
+
+// ESM surface (Phase 7); window.* kept for onclick / classic callers until full import migration.
+export {
+    evtIsGoingRsvp,
+    evtIsRaffleEntriesOpen,
+    evtIsRaffleBundledWithPaidRsvp,
+    evtCanEnterMemberRaffle,
+    evtHandleRsvp,
+    evtHandleRaffleEntry,
+    evtHandleFreeRaffleEntry,
+    evtUpdateStatus,
+    evtJoinWaitlist,
+    evtLeaveWaitlist,
+    evtClaimWaitlistSpot,
+    evtCancelEvent,
+    evtRescheduleEvent,
+    evtRequestGraceRefund,
+    evtDeleteEvent,
+    evtDuplicateEvent,
+};

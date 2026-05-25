@@ -47,9 +47,9 @@ const shell = fs.readFileSync(path.join(manageDir, 'shell.js'), 'utf8');
 check('shell.js defines getState()', shell.includes('function getState()'));
 check('shell.js uses api().renderTab', shell.includes('api().renderTab'));
 
-const loader = fs.readFileSync(path.join(ROOT, 'js/portal/events/classic-chain-loader.js'), 'utf8');
-check('chain includes compat/global-reexports.js', loader.includes("'compat/global-reexports.js'"));
-check('manage sheet cache bust v=113', loader.includes("'manage/sheet.js?v=113'"));
+const loader = fs.readFileSync(path.join(ROOT, 'js/portal/events/main.js'), 'utf8');
+check('main.js includes compat/global-reexports.js', loader.includes('./compat/global-reexports.js'));
+check('main.js includes manage/sheet.js', loader.includes('./manage/sheet.js'));
 
 const constants = fs.readFileSync(path.join(ROOT, 'js/components/events/constants.js'), 'utf8');
 check('EventsConstants.EVENT_DOC_TYPES defined', constants.includes('EVENT_DOC_TYPES'));

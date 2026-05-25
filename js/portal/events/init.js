@@ -264,6 +264,6 @@ function evtSetupListeners() {
 
 // ── Bridge exposure ──────────────────────────────────────
 // Classic evt* onclick globals are assigned in compat/global-reexports.js
-// (loaded at end of classic-chain-loader, before manage/sheet.js).
+// (loaded before manage/sheet.js in main.js import order).
 window.PortalEvents = window.PortalEvents || {};
 window.PortalEvents.initEventsPage = initEventsPage;

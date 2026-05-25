@@ -14,7 +14,7 @@ const detailSections = fs.readFileSync(path.join(root, 'js/portal/events/detail/
 const detailRender = detail + '\n' + detailSections;
 const raffleRender = fs.readFileSync(path.join(root, 'js/portal/events/detail/raffle-render.js'), 'utf8');
 const teamTools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
-const rsvp = fs.readFileSync(path.join(root, 'js/portal/events/rsvp.js'), 'utf8');
+const rsvp = fs.readFileSync(path.join(root, 'js/portal/events/engagement/rsvp.js'), 'utf8');
 const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
 const publicBody = fs.readFileSync(path.join(root, 'js/events/body.js'), 'utf8');
 

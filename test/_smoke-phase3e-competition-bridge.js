@@ -29,7 +29,7 @@ function check(label, ok, detail) {
 
 const competition = read('js/portal/events/detail/competition.js');
 const events = read('portal/events.html');
-const loader = read('js/portal/events/classic-chain-loader.js');
+const loader = read('js/portal/events/main.js');
 
 console.log('\n── js/portal/events/detail/competition.js — file structure ──────────────');
 check('detail/competition.js exists', exists('js/portal/events/detail/competition.js'));
@@ -112,8 +112,8 @@ const tablePatterns = [
 ];
 tablePatterns.forEach(([pattern, label]) => check(label, competition.includes(pattern)));
 
-console.log('\n── production load (classic-chain-loader) ───────────────────────────────');
-check('detail/competition.js in classic-chain-loader chain', loader.includes("'detail/competition.js'"));
+console.log('\n── production load (main.js manifest) ─────────────────────────────────');
+check('detail/competition.js in main.js imports', loader.includes('./detail/competition.js'));
 check('No portal/events/* scripts use type="module" yet (correct)', !events.match(/<script[^>]+js\/portal\/events\/[^>]+type="module"/));
 
 console.log('\n── File split safety — no orphaned new competition/ subfiles ─────────────');

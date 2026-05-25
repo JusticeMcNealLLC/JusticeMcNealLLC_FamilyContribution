@@ -12,7 +12,7 @@ const portalFiles = {
     init: 'js/portal/events/init.js',
     list: 'js/portal/events/list/shell.js',
     detail: 'js/portal/events/detail.js',
-    rsvp: 'js/portal/events/rsvp.js',
+    rsvp: 'js/portal/events/engagement/rsvp.js',
     scrapbook: 'js/portal/events/detail/scrapbook.js',
     manageSheet: 'js/portal/events/manage/sheet.js',
 };

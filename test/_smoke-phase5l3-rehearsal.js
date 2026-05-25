@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { eventsHtmlBlockStart } = require('./_portal-events-classic-chain.js');
 const root = path.resolve(__dirname, '..');
 
 let passed = 0;
@@ -32,7 +33,9 @@ function read(relPath) {
 }
 
 function portalEventsScriptsFromHtml(html) {
-    const portalBlock = html.slice(html.indexOf('<!-- Events modules'));
+    const start = eventsHtmlBlockStart(html);
+    if (start < 0) return [];
+    const portalBlock = html.slice(start);
     const moduleSection = portalBlock.slice(0, portalBlock.indexOf('sw-register'));
     return [...moduleSection.matchAll(/<script[^>]+src="([^"]+)"[^>]*>/g)]
         .map((m) => m[1])
@@ -44,11 +47,11 @@ const REH_HTML = 'portal/events.rehearsal.html';
 const PROD_COUNT = 1;
 const REH_COUNT = 1;
 const BUNDLE_TAG = '../js/portal/events/events.bundle.js';
-const LOADER = 'js/portal/events/classic-chain-loader.js';
+const MAIN = 'js/portal/events/main.js';
 
 const prodHtml = read(PROD_HTML);
 const rehHtml = read(REH_HTML);
-const loaderJs = read(LOADER);
+const mainJs = read(MAIN);
 
 const prodScripts = portalEventsScriptsFromHtml(prodHtml);
 const rehScripts = portalEventsScriptsFromHtml(rehHtml);
@@ -87,19 +90,18 @@ prodScripts[0].includes('events.bundle.js') && rehScripts[0].includes('events.bu
     ? pass('production: no compat or rehearsal loader in portal/events.html')
     : fail('production HTML must not reference compat or rehearsal loader');
 
-fs.existsSync(path.join(root, LOADER))
-    ? pass('classic-chain-loader.js exists')
-    : fail('loader file missing');
+fs.existsSync(path.join(root, MAIN))
+    ? pass('main.js manifest exists')
+    : fail('main.js missing');
 
-const chainMatch = loaderJs.match(/var chain = \[([\s\S]*?)\];/);
-if (!chainMatch) {
-    fail('loader must define chain array');
+const chainEntries = [...mainJs.matchAll(/import\s+['"]\.\/([^'"]+)['"]/g)].map((m) => m[1]).filter((p) => p !== 'index.js' && p !== 'init.js');
+if (!chainEntries.length) {
+    fail('main.js must list portal/events imports');
 } else {
-    const chainEntries = [...chainMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
     const scrapbookIdx = chainEntries.indexOf('detail/scrapbook.js');
     const manageShellIdx = chainEntries.indexOf('manage/shell.js');
     const manageOverviewIdx = chainEntries.indexOf('manage/overview.js');
-    const manageSheetIdx = chainEntries.indexOf('manage/sheet.js?v=113');
+    const manageSheetIdx = chainEntries.indexOf('manage/sheet.js');
     const manageImagesIdx = chainEntries.indexOf('manage/images.js');
     const manageDocsIdx = chainEntries.indexOf('manage/docs.js');
     const manageRsvpsIdx = chainEntries.indexOf('manage/rsvps.js');
@@ -110,8 +112,8 @@ if (!chainMatch) {
     const manageDangerIdx = chainEntries.indexOf('manage/danger.js');
     const globalReexportsIdx = chainEntries.indexOf('compat/global-reexports.js');
     chainEntries.length === 55
-        ? pass(`loader chain has ${chainEntries.length} middle scripts (production order)`)
-        : fail('loader chain must have 55 entries', `found ${chainEntries.length}`);
+        ? pass(`main.js lists ${chainEntries.length} middle imports (production order)`)
+        : fail('main.js must have 55 middle imports', `found ${chainEntries.length}`);
     const raffleModelIdx = chainEntries.indexOf('core/raffle-model.js');
     const listSearchIdx = chainEntries.indexOf('list/search.js');
     const listRightRailIdx = chainEntries.indexOf('list/right-rail.js');
@@ -161,9 +163,12 @@ if (!chainMatch) {
         : fail('loader geocode → legacy → steps → raffle-builder → submit → sheet order');
 }
 
-loaderJs.includes('document.write') && !loaderJs.includes('type="module"')
-    ? pass('loader uses classic synchronous document.write (no module)')
-    : fail('loader must use classic sync injection');
+!fs.existsSync(path.join(root, 'js/portal/events/classic-chain-loader.js'))
+    ? pass('classic-chain-loader removed (main.js is manifest)')
+    : fail('remove classic-chain-loader.js; use main.js only');
+mainJs.includes("import './init.js'")
+    ? pass('main.js is ESM entry with init last')
+    : fail('main.js must import init.js');
 
 const prodDiff = fs.readFileSync(path.join(root, PROD_HTML), 'utf8');
 const rehOnly = rehHtml.includes('events.rehearsal') || rehHtml.includes('REHEARSAL');

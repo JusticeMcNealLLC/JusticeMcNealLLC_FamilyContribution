@@ -10,7 +10,7 @@
 
 
 
-   Loaded BEFORE core/state.js (via classic-chain-loader) so
+   Loaded before core/state.js (via main.js / bundle) so
 
    subsequent modules can attach. Requires
 
@@ -22,7 +22,7 @@
 
    for backward compat with not-yet-refactored modules
 
-   (rsvp.js, detail/comments.js, detail/map-live.js, detail/competition.js, etc.).
+   (engagement/rsvp.js, detail/comments.js, detail/map-live.js, etc.).
 
    ════════════════════════════════════════════════════════════ */
 

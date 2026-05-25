@@ -305,8 +305,8 @@ check('create/sheet.js present in classic-chain-loader.js chain',
 check('create/sheet.js loaded in production (HTML or classic-chain-loader)',
     isProductionLoaded(events, classicChain3d, '../js/portal/events/create/sheet.js'));
 
-check('portal/events.html uses classic-chain-loader.js (3-tag production model)',
-    events.includes('classic-chain-loader.js'));
+check('portal/events.html uses events.bundle.js (Phase 6 production model)',
+    events.includes('events.bundle.js'));
 
 check('create/sheet.js does NOT have type="module" in events.html',
     !events.match(/create\/sheet\.js[^"]*"[^>]*type="module"/));

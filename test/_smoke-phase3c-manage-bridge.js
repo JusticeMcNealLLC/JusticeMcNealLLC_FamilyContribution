@@ -30,7 +30,7 @@ const {
     productionEventsBootLast,
 } = require('./_portal-events-classic-chain.js');
 
-const MANAGE_SHEET_CHAIN = 'manage/sheet.js?v=113';
+const MANAGE_SHEET_CHAIN = 'manage/sheet.js';
 const MANAGE_SHEET_SRC = '../js/portal/events/' + MANAGE_SHEET_CHAIN;
 
 let passed = 0;
@@ -369,9 +369,9 @@ isProductionLoaded(html, classicChain3c, MANAGE_SHEET_SRC)
     ? pass('manage/sheet.js still loaded in production (HTML or classic-chain-loader)')
     : fail('manage/sheet.js not in production load model');
 
-html.includes('classic-chain-loader.js')
-    ? pass('portal/events.html uses classic-chain-loader.js (3-tag production model)')
-    : fail('classic-chain-loader.js not referenced in portal/events.html');
+html.includes('events.bundle.js')
+    ? pass('portal/events.html uses events.bundle.js (Phase 6 production model)')
+    : fail('events.bundle.js not referenced in portal/events.html');
 
 /src="\.\.\/js\/portal\/events\/manage\/sheet\.js[^"]*"[^>]*type="module"/.test(html)
     ? fail('manage/sheet.js loaded with type="module" — premature, Phase 5 only')

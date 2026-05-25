@@ -3,18 +3,25 @@
 const fs = require('fs');
 const path = require('path');
 
-const LOADER_REL = 'js/portal/events/classic-chain-loader.js';
+/** Production load order lives in main.js (Phase 6+). */
+const MAIN_REL = 'js/portal/events/main.js';
 const EVENTS_BASE = '../js/portal/events/';
 
 function readFile(root, relPath) {
     return fs.readFileSync(path.join(root, relPath), 'utf8');
 }
 
+/** Middle portal/events modules from main.js (excludes index.js shell and init.js boot). */
+function parseMainMiddleChain(root) {
+    const mainJs = readFile(root, MAIN_REL);
+    return [...mainJs.matchAll(/import\s+['"]\.\/([^'"]+)['"]/g)]
+        .map((m) => m[1])
+        .filter((p) => p !== 'index.js' && p !== 'init.js');
+}
+
+/** @deprecated Use parseMainMiddleChain — kept for existing smokes. */
 function parseClassicChain(root) {
-    const loaderJs = readFile(root, LOADER_REL);
-    const chainMatch = loaderJs.match(/var chain = \[([\s\S]*?)\];/);
-    if (!chainMatch) return null;
-    return [...chainMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
+    return parseMainMiddleChain(root);
 }
 
 /** Relative path under portal/events (e.g. detail.js or detail/data.js). */
@@ -47,7 +54,7 @@ function portalEventsHtmlScripts(html) {
         .filter((s) => s.includes('portal/events'));
 }
 
-/** Script is loaded in production via HTML tag, bundle, or classic-chain-loader chain. */
+/** Script is loaded in production via HTML tag, bundle, or main.js import list. */
 function isProductionLoaded(html, chain, portalSrc, rootDir) {
     if (html.includes(`src="${portalSrc}"`)) return true;
     const key = portalSrc.replace(EVENTS_BASE, '').replace(/^js\/portal\/events\//, '');
@@ -59,8 +66,9 @@ function isProductionLoaded(html, chain, portalSrc, rootDir) {
             if (bundle.includes(marker)) return true;
             const posixKey = key.replace(/\\/g, '/');
             if (bundle.includes(`portal/events/${posixKey}`)) return true;
-            if (posixKey === 'list/shell.js' && (bundle.includes('window.evtLoadEvents = loadEvents') || bundle.includes('PortalEvents.list'))) return true;
-            if (posixKey === 'init.js' && bundle.includes('Portal Events — Init')) return true;
+            if (posixKey === 'list/shell.js' && bundle.includes('window.evtLoadEvents = loadEvents')) return true;
+            if (posixKey === 'engagement/rsvp.js' && / exp\(['"]evtHandleRsvp['"]/.test(bundle)) return true;
+            if (posixKey === 'init.js' && bundle.includes('PortalEvents.initEventsPage = initEventsPage')) return true;
             if (posixKey === 'core/vendor-loader.js' && bundle.includes('evtEnsureLeaflet')) return true;
         }
     }
@@ -85,8 +93,10 @@ function productionEventsBootLast(portalScripts) {
 }
 
 module.exports = {
-    LOADER_REL,
+    MAIN_REL,
+    LOADER_REL: MAIN_REL,
     EVENTS_BASE,
+    parseMainMiddleChain,
     parseClassicChain,
     chainIndex,
     eventsHtmlBlockStart,

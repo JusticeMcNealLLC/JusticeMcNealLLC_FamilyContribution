@@ -430,3 +430,22 @@ function evtCelebrate() {
 function evtCloseRaffleDraw() {
     evtToggleModal('raffleDrawModal', false);
 }
+
+export {
+    evtOpenRaffleDraw,
+    evtRenderDrawUI,
+    evtGetRaffleConfig,
+    evtGetRaffleDrawQueue,
+    evtResolvePrizeSlot,
+    evtAssignRandomPrizeSlot,
+    evtPrizeSlotLabel,
+    evtLegacyPrizeLabel,
+    evtDrawModeLabel,
+    evtInsertRaffleWinner,
+    evtLoadRaffleWinnersForDraw,
+    evtDrawWinner,
+    evtCryptoRandomInt,
+    evtOrdinalSuffix,
+    evtCelebrate,
+    evtCloseRaffleDraw,
+};

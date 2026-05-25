@@ -1,0 +1,34 @@
+name: Events bundle
+
+on:
+  push:
+    paths:
+      - 'js/portal/events/**'
+      - 'js/components/events/**'
+      - 'scripts/build-events-bundle.js'
+      - 'scripts/verify-events-main.js'
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    paths:
+      - 'js/portal/events/**'
+      - 'js/components/events/**'
+      - 'scripts/build-events-bundle.js'
+      - 'scripts/verify-events-main.js'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run verify:events-main
+      - run: npm run build:events
+      - run: node test/_smoke-events-bundle.js
+      - run: node test/_smoke-phase5l-readiness.js

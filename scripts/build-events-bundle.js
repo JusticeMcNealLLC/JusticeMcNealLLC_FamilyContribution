@@ -2,7 +2,7 @@
 'use strict';
 /**
  * Build portal/events/events.bundle.js from main.js (esbuild IIFE bundle).
- * Syncs main.js from classic-chain-loader.js first to keep one manifest.
+ * Validates main.js manifest, then bundles with esbuild.
  *
  * Run: npm run build:events
  * Watch: npm run dev:events
@@ -16,12 +16,12 @@ const mainPath = path.join(root, 'js/portal/events/main.js');
 const outPath = path.join(root, 'js/portal/events/events.bundle.js');
 const watch = process.argv.includes('--watch');
 
-function syncMain() {
-    require('./sync-events-main.js');
+function verifyMain() {
+    require('./verify-events-main.js');
 }
 
 async function build() {
-    syncMain();
+    verifyMain();
     const opts = {
         entryPoints: [mainPath],
         bundle: true,

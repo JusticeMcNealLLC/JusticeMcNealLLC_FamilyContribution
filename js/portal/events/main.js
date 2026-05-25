@@ -3,7 +3,7 @@
  * Production: npm run build:events → events.bundle.js (esbuild IIFE).
  * Local dev (optional): <script type="module" src=".../main.js"> — many requests.
  *
- * Import order is synced from classic-chain-loader.js via: npm run sync:events-main
+ * Edit import order here directly. Validate: npm run verify:events-main
  */
 
 import '../../components/events/constants.js'; // EventsConstants (shared)
@@ -40,7 +40,7 @@ import './detail/map-live.js';
 import './detail/competition.js';
 import './detail/scrapbook.js';
 import './detail/scanner.js';
-import './rsvp.js';
+import './engagement/rsvp.js';
 import './create/geocode.js';
 import './create/legacy-costs.js';
 import './create/legacy-location.js';
@@ -53,7 +53,7 @@ import './create/step-review.js';
 import './create/raffle-builder.js';
 import './create/submit.js';
 import './create/sheet.js';
-import './raffle.js';
+import './engagement/raffle.js';
 import './manage/shell.js';
 import './manage/overview.js';
 import './manage/images.js';

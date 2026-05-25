@@ -27,7 +27,7 @@ const manageRsvps = read('js/portal/events/manage/rsvps.js');
 const manageMoney = read('js/portal/events/manage/money.js');
 const manageDanger = read('js/portal/events/manage/danger.js');
 const manageComp = read('js/portal/events/manage/competition.js');
-const portalRaffle = read('js/portal/events/raffle.js');
+const portalRaffle = read('js/portal/events/engagement/raffle.js');
 const winnerMigration = read('supabase/migrations/086_event_raffle_winner_metadata.sql');
 const winnerChoiceMigration = read('supabase/migrations/087_event_raffle_winner_choice_update.sql');
 
@@ -70,10 +70,10 @@ const invalid = model.validateConfig({
 });
 assert.equal(invalid.valid, false, 'validation should catch too many random winners for item quantity');
 
-const loader = read('js/portal/events/classic-chain-loader.js');
-assert(loader.includes("'core/raffle-model.js'"), 'classic-chain-loader should include core/raffle-model.js');
-const chainMatch = loader.match(/var chain = \[([\s\S]*?)\];/);
-assert(chainMatch, 'classic-chain-loader must define chain array');
+const mainJs = read('js/portal/events/main.js');
+assert(mainJs.includes('./core/raffle-model.js'), 'main.js should import core/raffle-model.js');
+const chainMatch = mainJs.match(/import\s+['"]\.\/core\/raffle-model\.js['"]/);
+assert(chainMatch, 'main.js must import core/raffle-model.js');
 const chain = [...chainMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
 const modelIdx = chain.indexOf('core/raffle-model.js');
 const listIdx = chain.indexOf('list/shell.js');
