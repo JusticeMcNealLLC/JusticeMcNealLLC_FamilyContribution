@@ -47,6 +47,8 @@ const list = read('js/portal/events/list.js');
 const listSearchJs = read('js/portal/events/list/search.js');
 const listRightRailJs = read('js/portal/events/list/right-rail.js');
 const listHeaderJs = read('js/portal/events/list/header.js');
+const listFiltersJs = read('js/portal/events/list/filters.js');
+const listCalendarJs = read('js/portal/events/list/calendar.js');
 const classicChain3a = parseClassicChain(root);
 
 // Must be an IIFE (classic-script pattern)
@@ -64,9 +66,9 @@ list.includes("'use strict';")
     : pass('No native export statement (stays classic-script safe)');
 
 // File must be substantial (>2000 lines worth of content)
-list.length > 70000
+list.length > 55000
     ? pass(`File size reasonable (${list.length.toLocaleString()} chars — no accidental truncation)`)
-    : fail('list.js appears truncated (< 70k chars)', `actual: ${list.length}`);
+    : fail('list.js appears truncated (< 55k chars)', `actual: ${list.length}`);
 
 // ─── Public globals assigned in source ───────────────────
 console.log('\n── list.js — public globals (window.evt*) ─────────────────────────────────');
@@ -117,19 +119,12 @@ const INTERNAL_FNS = [
     'function renderSkeletons',
     'function _renderHero',
     'function _pickHero',
-    'function _renderCalendar',
     'function _renderGoingRail',
     'function _renderTopPicks',
     'function _renderMiniCalendar',
     'function _renderMyRsvps',
     'function _renderStatsCard',
     'function _renderBucket',
-    'function _matchesType',
-    'function _matchesCategory',
-    'function _matchesLifecycle',
-    'function _matchesDate',
-    'function _persistState',
-    'function _restoreState',
     'function _initStickyHeader',
     'function _initMobileFab',
     'function _initPullToRefresh',
@@ -150,7 +145,12 @@ const movedFromList = [
     ['function wireSuggestClicks(', 'suggest clicks'],
     ['function renderHeaderGreeting(', 'header greeting'],
     ['function wireHeaderBellBadge(', 'header bell badge'],
-    ['function _toIsoDate(', 'mini cal iso helper'],
+    ['function _toIsoDate(', 'mini cal iso helper in list'],
+    ['#evtLifecycleSeg .evt-seg__btn', 'lifecycle filter chip wiring'],
+    ['function matchesType(ev) {', 'matchesType body'],
+    ['function renderCalendar() {', 'renderCalendar body'],
+    ['function groupEventsByDay(', 'groupEventsByDay body'],
+    ['function initDateMenu(', 'initDateMenu body'],
 ];
 movedFromList.forEach(([pattern, label]) => {
     !list.includes(pattern)
@@ -158,10 +158,10 @@ movedFromList.forEach(([pattern, label]) => {
         : fail(`${label} still in list.js body`);
 });
 
-// ─── List modules (Phase 5M.2A) ───────────────────────────
-console.log('\n── js/portal/events/list/*.js — search + right rail (5M.2A) ─────────────');
+// ─── List modules (Phase 5M.2A / 5M.2B) ──────────────────
+console.log('\n── js/portal/events/list/*.js — list modules (5M.2A / 5M.2B) ───────────');
 
-['list/search.js', 'list/right-rail.js', 'list/header.js'].forEach(rel => {
+['list/search.js', 'list/right-rail.js', 'list/header.js', 'list/filters.js', 'list/calendar.js'].forEach(rel => {
     classicChain3a && classicChain3a.includes(rel)
         ? pass(`${rel} present in classic-chain-loader.js chain`)
         : fail(`${rel} missing from classic-chain-loader.js chain`);
@@ -169,8 +169,10 @@ console.log('\n── js/portal/events/list/*.js — search + right rail (5M.2A)
 
 chainOrderOk(classicChain3a, 'raffle-model.js', 'list/search.js', 'list/right-rail.js')
     && chainOrderOk(classicChain3a, 'list/right-rail.js', 'list/header.js')
-    && chainOrderOk(classicChain3a, 'list/header.js', 'list.js')
-    ? pass('loader order: raffle-model → list/search → right-rail → header → list.js')
+    && chainOrderOk(classicChain3a, 'list/header.js', 'list/filters.js')
+    && chainOrderOk(classicChain3a, 'list/filters.js', 'list/calendar.js')
+    && chainOrderOk(classicChain3a, 'list/calendar.js', 'list.js')
+    ? pass('loader order: raffle-model → list/* → list.js')
     : fail('loader list module order');
 
 listSearchJs.includes('window.PortalEventsListSearch')
@@ -201,6 +203,23 @@ listHeaderJs.includes('window.PortalEventsListHeader')
 list.includes('PortalEventsListSearch.setupSearch')
     ? pass('list.js delegates setupSearch to PortalEventsListSearch')
     : fail('list.js missing setupSearch delegate');
+
+listFiltersJs.includes('window.PortalEventsListFilters')
+    && listFiltersJs.includes('function initFilterChips')
+    && listFiltersJs.includes('function matchesType')
+    ? pass('filters.js owns filter chips and match predicates')
+    : fail('filters.js missing filter functions');
+
+listCalendarJs.includes('window.PortalEventsListCalendar')
+    && listCalendarJs.includes('function renderCalendar')
+    && listCalendarJs.includes('function openDayModal')
+    ? pass('calendar.js owns full calendar and day modal')
+    : fail('calendar.js missing calendar functions');
+
+list.includes('PortalEventsListFilters.initFilterChips')
+    && list.includes('PortalEventsListCalendar.renderCalendar')
+    ? pass('list.js delegates filters and calendar to list modules')
+    : fail('list.js missing filter/calendar delegates');
 
 list.includes('function loadEvents')
     && list.includes('function renderEvents')

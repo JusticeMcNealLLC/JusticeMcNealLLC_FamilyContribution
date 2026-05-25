@@ -104,18 +104,21 @@ if (!chainMatch) {
     fail('loader must define chain array');
 } else {
     const chainEntries = [...chainMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
-    chainEntries.length === 41
+    chainEntries.length === 43
         ? pass(`loader chain has ${chainEntries.length} middle scripts (production order)`)
-        : fail('loader chain must have 41 entries', `found ${chainEntries.length}`);
+        : fail('loader chain must have 43 entries', `found ${chainEntries.length}`);
     const raffleModelIdx = chainEntries.indexOf('raffle-model.js');
     const listSearchIdx = chainEntries.indexOf('list/search.js');
     const listRightRailIdx = chainEntries.indexOf('list/right-rail.js');
     const listHeaderIdx = chainEntries.indexOf('list/header.js');
+    const listFiltersIdx = chainEntries.indexOf('list/filters.js');
+    const listCalendarIdx = chainEntries.indexOf('list/calendar.js');
     const listIdx = chainEntries.indexOf('list.js');
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
-        && listIdx > listHeaderIdx
-        ? pass('loader order: raffle-model → list/search → right-rail → header → list.js')
+        && listFiltersIdx > listHeaderIdx && listCalendarIdx > listFiltersIdx
+        && listIdx > listCalendarIdx
+        ? pass('loader order: raffle-model → list/search → … → filters → calendar → list.js')
         : fail('loader list module order');
     const geoIdx = chainEntries.indexOf('create/geocode.js');
     const legacyCostsIdx = chainEntries.indexOf('create/legacy-costs.js');

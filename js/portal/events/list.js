@@ -28,8 +28,6 @@
 
     // ─── Local UI state ───────────────────────────────────
     let _searchQuery    = '';
-    let _activeType     = 'all';
-    let _activeCategory = '';   // C2 — tap-category-emoji-to-filter
     let _activeView     = 'list'; // D1 — 'list' | 'calendar'
     let _calMonth       = null;   // D1 — Date at first of viewed month
     let _searchDebounce = null;
@@ -39,35 +37,21 @@
     let _activeDay = '';          // F10 — ISO yyyy-mm-dd filter from mini calendar click
     const E_BUCKET_TRUNCATE = 6;  // E11 — show "See all" link when bucket > N (vlift only)
 
-    // C3 — sessionStorage persistence key (events_003 §3.11 / §8.5)
     const STATE_KEY = 'evt_list_state_v1';
-    function _persistState() {
-        try {
-            sessionStorage.setItem(STATE_KEY, JSON.stringify({
-                q:   _searchQuery,
-                t:   _activeType,
-                c:   _activeCategory,
-                v:   _activeView,
-                tab: window.evtActiveTab || 'upcoming',
-            }));
-        } catch (_) { /* quota / private mode — silent */ }
-    }
-    function _restoreState() {
+    function _restoreListSessionState() {
         try {
             const raw = sessionStorage.getItem(STATE_KEY);
             if (!raw) return;
             const s = JSON.parse(raw) || {};
             if (typeof s.q === 'string') _searchQuery = s.q;
-            if (typeof s.t === 'string') _activeType = s.t;
-            if (typeof s.c === 'string') _activeCategory = s.c;
             if (typeof s.v === 'string' && (s.v === 'list' || s.v === 'calendar')) _activeView = s.v;
-            if (typeof s.tab === 'string' && ['upcoming','past','going','saved'].includes(s.tab)) {
-                window.evtActiveTab = s.tab;
-            }
         } catch (_) { /* corrupt payload — ignore */ }
     }
-    // Restore immediately at IIFE load so downstream init reads correct values
-    _restoreState();
+    _restoreListSessionState();
+
+    function _persistState() {
+        return window.PortalEventsListFilters.persistState();
+    }
 
     // =========================================================
     // D3 — Search (list/search.js — PortalEventsListSearch)
@@ -76,199 +60,10 @@
         return window.PortalEventsListSearch.setupSearch();
     }
 
-    // D1 — Calendar / agenda view toggle (events_004 §D1)
+    // D1 — Full calendar (list/calendar.js) + view toggle chrome
     // =========================================================
-    const MONTH_NAMES = ['January','February','March','April','May','June',
-                         'July','August','September','October','November','December'];
-    const DAY_SHORT   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
-    function _localDateKey(d) {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return y + '-' + m + '-' + day;
-    }
-
-    function _groupEventsByDay(events) {
-        const map = {};
-        events.forEach(ev => {
-            if (!ev || !ev.start_date || ev.status === 'cancelled') return;
-            if (!_notHidden(ev)) return;
-            if (!_matchesType(ev)) return;
-            if (!_matchesCategory(ev)) return;
-            const k = _localDateKey(new Date(ev.start_date));
-            (map[k] = map[k] || []).push(ev);
-        });
-        // Sort each day's events by start time
-        Object.keys(map).forEach(k => {
-            map[k].sort((a,b) => new Date(a.start_date) - new Date(b.start_date));
-        });
-        return map;
-    }
-
     function _renderCalendar() {
-        const mount = document.getElementById('evtCalendarMount');
-        if (!mount) return;
-
-        const esc = H.escapeHtml || (s => String(s == null ? '' : s));
-        if (!_calMonth) {
-            const now = new Date();
-            _calMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        }
-        const year  = _calMonth.getFullYear();
-        const month = _calMonth.getMonth();
-        const first = new Date(year, month, 1);
-        const last  = new Date(year, month + 1, 0);
-        const leadBlank = first.getDay();           // 0..6 (Sun..Sat)
-        const daysInMonth = last.getDate();
-        const todayKey = _localDateKey(new Date());
-
-        const all = window.evtAllEvents || [];
-        const byDay = _groupEventsByDay(all);
-
-        const parts = [];
-        // Header: prev / title / next / today
-        parts.push(
-            '<div class="evt-cal-header flex items-center justify-between mb-3">' +
-                '<div class="flex items-center gap-1">' +
-                    '<button type="button" class="evt-cal-nav" data-cal-nav="prev" aria-label="Previous month">' +
-                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>' +
-                    '</button>' +
-                    '<button type="button" class="evt-cal-nav" data-cal-nav="next" aria-label="Next month">' +
-                        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>' +
-                    '</button>' +
-                '</div>' +
-                '<h3 class="evt-cal-title text-base font-semibold text-gray-900">' + MONTH_NAMES[month] + ' ' + year + '</h3>' +
-                '<button type="button" class="evt-cal-today text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-1 rounded-md hover:bg-brand-50" data-cal-nav="today">Today</button>' +
-            '</div>'
-        );
-
-        // Weekday labels
-        parts.push('<div class="evt-cal-weekdays grid grid-cols-7 gap-1 mb-1">');
-        DAY_SHORT.forEach(d => {
-            parts.push('<div class="text-center text-[11px] font-semibold tracking-wide text-gray-500 py-1">' + d + '</div>');
-        });
-        parts.push('</div>');
-
-        // Grid
-        parts.push('<div class="evt-cal-grid grid grid-cols-7 gap-1">');
-        for (let i = 0; i < leadBlank; i++) {
-            parts.push('<div class="evt-cal-cell evt-cal-cell--blank" aria-hidden="true"></div>');
-        }
-        for (let d = 1; d <= daysInMonth; d++) {
-            const dateObj = new Date(year, month, d);
-            const key = _localDateKey(dateObj);
-            const dayEvents = byDay[key] || [];
-            const count = dayEvents.length;
-            const isToday = (key === todayKey);
-            const hasEv = count > 0;
-
-            let dots = '';
-            if (hasEv) {
-                const shown = dayEvents.slice(0, 3);
-                dots = '<div class="evt-cal-dots">' +
-                    shown.map(ev => {
-                        const grad = (C.CATEGORY_GRADIENT && C.CATEGORY_GRADIENT[ev.category]) || C.DEFAULT_GRADIENT || 'linear-gradient(135deg,#6366f1,#8b5cf6)';
-                        // Extract first color for solid dot
-                        const m = /#([0-9a-f]{3,6})/i.exec(grad);
-                        const color = m ? ('#' + m[1]) : '#6366f1';
-                        return '<span class="evt-cal-dot" style="background:' + color + '"></span>';
-                    }).join('') +
-                    (count > 3 ? '<span class="evt-cal-dot-more">+' + (count - 3) + '</span>' : '') +
-                '</div>';
-            }
-
-            const clsCell = 'evt-cal-cell' +
-                (hasEv ? ' evt-cal-cell--has' : '') +
-                (isToday ? ' evt-cal-cell--today' : '');
-
-            parts.push(
-                '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' +
-                    (hasEv ? 'aria-label="' + count + ' event' + (count > 1 ? 's' : '') + ' on ' + esc(dateObj.toDateString()) + '"' : 'aria-label="' + esc(dateObj.toDateString()) + '"') +
-                    (hasEv ? '' : ' aria-disabled="false"') +
-                '>' +
-                    '<span class="evt-cal-daynum">' + d + '</span>' +
-                    dots +
-                '</button>'
-            );
-        }
-        parts.push('</div>');
-
-        mount.innerHTML = parts.join('');
-        _wireCalendarClicks();
-    }
-
-    function _wireCalendarClicks() {
-        const mount = document.getElementById('evtCalendarMount');
-        if (!mount || mount.dataset.calWired === '1') return;
-        mount.dataset.calWired = '1';
-        mount.addEventListener('click', (e) => {
-            const nav = e.target.closest('[data-cal-nav]');
-            if (nav) {
-                e.preventDefault();
-                const dir = nav.getAttribute('data-cal-nav');
-                if (dir === 'today') {
-                    const now = new Date();
-                    _calMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                } else if (_calMonth) {
-                    const delta = (dir === 'prev') ? -1 : 1;
-                    _calMonth = new Date(_calMonth.getFullYear(), _calMonth.getMonth() + delta, 1);
-                }
-                _renderCalendar();
-                return;
-            }
-            const dayBtn = e.target.closest('[data-cal-day]');
-            if (dayBtn) {
-                e.preventDefault();
-                _openDayModal(dayBtn.getAttribute('data-cal-day'));
-            }
-        });
-    }
-
-    function _openDayModal(dateKey) {
-        const modal = document.getElementById('evtDayModal');
-        const title = document.getElementById('evtDayModalTitle');
-        const body  = document.getElementById('evtDayModalBody');
-        if (!modal || !title || !body) return;
-
-        const all = window.evtAllEvents || [];
-        const attendees = window.evtAttendees || {};
-        const counts = window.evtAttendeeCounts || {};
-        const byDay = _groupEventsByDay(all);
-        const items = byDay[dateKey] || [];
-
-        const [y, m, d] = dateKey.split('-').map(Number);
-        const dateObj = new Date(y, m - 1, d);
-        title.textContent = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-
-        if (!items.length) {
-            body.innerHTML = '<div class="text-center text-sm text-gray-500 py-6">No events on this day.</div>';
-        } else {
-            // Reuse existing _miniCard for consistent rendering
-            body.innerHTML = '<div class="flex flex-col gap-2">' +
-                items.map(ev => _miniCard(ev, attendees[ev.id] || [], counts[ev.id])
-                    .replace('snap-start shrink-0 w-[76%] sm:w-64', 'w-full')
-                ).join('') +
-            '</div>';
-        }
-
-        modal.classList.remove('hidden');
-        document.body.classList.add('overflow-hidden');
-        if (!modal.dataset.wired) {
-            modal.dataset.wired = '1';
-            modal.addEventListener('click', (e) => {
-                if (e.target.closest('[data-day-close]')) { _closeDayModal(); }
-            });
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !modal.classList.contains('hidden')) _closeDayModal();
-            });
-        }
-    }
-    function _closeDayModal() {
-        const modal = document.getElementById('evtDayModal');
-        if (!modal) return;
-        modal.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
+        return window.PortalEventsListCalendar.renderCalendar();
     }
 
     function _initViewToggle() {
@@ -755,57 +550,8 @@
         setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
     }
 
-    // E3 — Sync chip rail active state to the given type.
-    function _syncTypeChips(type) {
-        const t = type || 'all';
-        document.querySelectorAll('#evtTypeChips .evt-type-chip').forEach(c => {
-            const on = (c.dataset.type || 'all') === t;
-            c.classList.toggle('evt-type-chip--active', on);
-            c.setAttribute('aria-selected', on ? 'true' : 'false');
-        });
-    }
-
-    // C3 — Sync restored state into the UI chrome (input, segmented control,
-    // type menu button, search-expand panel). Called after DOM is ready.
     function _applyRestoredUi() {
-        // Lifecycle segmented control
-        const tab = window.evtActiveTab || 'upcoming';
-        document.querySelectorAll('#evtLifecycleSeg .evt-seg__btn').forEach(b => {
-            const on = b.dataset.filter === tab;
-            b.classList.toggle('evt-seg__btn--active', on);
-            b.setAttribute('aria-selected', on ? 'true' : 'false');
-        });
-        // Type menu
-        const menuBtn = document.getElementById('evtTypeMenuBtn');
-        if (menuBtn) {
-            menuBtn.dataset.type = _activeType;
-            const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + _activeType + '"]');
-            if (opt) {
-                const label = opt.textContent.replace(/\s+events?$/i, '').trim();
-                const labelEl = menuBtn.querySelector('[data-type-label]');
-                if (labelEl) labelEl.textContent = label;
-                document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
-                    o.classList.toggle('evt-type-opt--active', o === opt)
-                );
-            }
-            const sel = document.getElementById('typeFilter');
-            if (sel) sel.value = _activeType;
-        }
-        // E3 — sync chip rail to restored type
-        _syncTypeChips(_activeType);
-        // Search input (only expand if there's a restored query)
-        if (_searchQuery) {
-            const input  = document.getElementById('evtSearchInput');
-            const clear  = document.getElementById('evtSearchClear');
-            const expand = document.getElementById('evtSearchExpand');
-            const toggle = document.getElementById('evtSearchToggle');
-            if (input) input.value = _searchQuery;
-            if (clear) clear.classList.remove('hidden');
-            if (expand) expand.classList.remove('hidden');
-            if (toggle) toggle.setAttribute('aria-expanded', 'true');
-        }
-        // D1 — View toggle chrome
-        _applyViewChrome();
+        return window.PortalEventsListFilters.applyRestoredUi();
     }
 
     // =========================================================
@@ -1282,7 +1028,7 @@
                     e.preventDefault();
                     e.stopPropagation();
                     const cat = catBtn.getAttribute('data-evt-cat');
-                    _activeCategory = (_activeCategory === cat) ? '' : cat;
+                    window.PortalEventsListFilters.toggleActiveCategory(cat);
                     _persistState();
                     renderEvents();
                     return;
@@ -1310,37 +1056,8 @@
         });
     }
 
-    // =========================================================
-    // C2 — Active-filter pill strip (shows when _activeCategory set)
-    // =========================================================
     function _renderActiveFilterPill() {
-        let host = document.getElementById('evtActiveFilters');
-        if (!host) {
-            // Create pill host right after the filter strip on first use
-            const strip = document.getElementById('evtFilterStrip');
-            if (!strip || !strip.parentNode) return;
-            host = document.createElement('div');
-            host.id = 'evtActiveFilters';
-            host.className = 'evt-active-filters mt-2 flex flex-wrap gap-2';
-            strip.parentNode.insertBefore(host, strip.nextSibling);
-        }
-        if (!_activeCategory) { host.innerHTML = ''; return; }
-        const esc = H.escapeHtml || (s => String(s == null ? '' : s));
-        const emoji = (C.CATEGORY_EMOJI && C.CATEGORY_EMOJI[_activeCategory]) || '📅';
-        const label = (C.CATEGORY_TAG && C.CATEGORY_TAG[_activeCategory]?.label) || _activeCategory;
-        host.innerHTML =
-            '<button type="button" data-clear-cat ' +
-            'class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100">' +
-                '<span aria-hidden="true">' + emoji + '</span>' +
-                '<span>' + esc(label) + '</span>' +
-                '<span aria-hidden="true" class="text-brand-500">×</span>' +
-                '<span class="sr-only">Clear ' + esc(label) + ' filter</span>' +
-            '</button>';
-        host.querySelector('[data-clear-cat]')?.addEventListener('click', () => {
-            _activeCategory = '';
-            _persistState();
-            renderEvents();
-        });
+        return window.PortalEventsListFilters.renderActiveFilterPill();
     }
 
     // =========================================================
@@ -1547,8 +1264,8 @@
             seeAll.dataset.wired = '1';
             seeAll.addEventListener('click', e => {
                 e.preventDefault();
-                _activeType = 'llc';
-                _syncTypeChips('llc');
+                window.PortalEventsListFilters.setActiveType('llc');
+                window.PortalEventsListFilters.syncTypeChips('llc');
                 const menuBtn = document.getElementById('evtTypeMenuBtn');
                 if (menuBtn) {
                     menuBtn.dataset.type = 'llc';
@@ -1566,45 +1283,17 @@
         }
     }
 
-    // =========================================================
-    // Filter helpers
-    // =========================================================
     function _matchesType(ev) {
-        if (_activeType === 'all') return true;
-        return ev.event_type === _activeType;
+        return window.PortalEventsListFilters.matchesType(ev);
     }
-
     function _matchesCategory(ev) {
-        if (!_activeCategory) return true;
-        return ev.category === _activeCategory;
+        return window.PortalEventsListFilters.matchesCategory(ev);
     }
-
     function _matchesLifecycle(ev) {
-        const tab = window.evtActiveTab || 'upcoming';
-        const now = new Date();
-        const start = new Date(ev.start_date);
-        const rsvps = window.evtAllRsvps || {};
-        if (tab === 'upcoming') {
-            if (ev.status === 'completed') return false;
-            return start >= now ||
-                ev.status === 'active' ||
-                ev.status === 'open' ||
-                ev.status === 'confirmed' ||
-                ev.status === 'draft';
-        }
-        if (tab === 'past') {
-            return ev.status === 'completed' || start < now;
-        }
-        if (tab === 'going') {
-            const r = rsvps[ev.id];
-            return r && r.status === 'going';
-        }
-        if (tab === 'saved') {
-            // F3 — Saved maps to rsvp.status='maybe' (same as E12 heart)
-            const r = rsvps[ev.id];
-            return r && r.status === 'maybe';
-        }
-        return true;
+        return window.PortalEventsListFilters.matchesLifecycle(ev);
+    }
+    function _matchesDate(ev) {
+        return window.PortalEventsListFilters.matchesDate(ev);
     }
 
     // =========================================================
@@ -1819,21 +1508,7 @@
                 const clear = document.getElementById('evtSearchClear');
                 if (input) input.value = '';
                 clear?.classList.add('hidden');
-                _searchQuery = '';
-                _activeType = 'all';
-                _activeCategory = '';
-                const menuBtn = document.getElementById('evtTypeMenuBtn');
-                if (menuBtn) {
-                    menuBtn.dataset.type = 'all';
-                    const labelEl = menuBtn.querySelector('[data-type-label]');
-                    if (labelEl) labelEl.textContent = 'All';
-                }
-                document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
-                    o.classList.toggle('evt-type-opt--active', o.dataset.type === 'all')
-                );
-                _syncTypeChips('all');
-                _persistState();
-                renderEvents();
+                window.PortalEventsListFilters.clearFiltersForEmptySearch();
             };
         } else if (tab === 'past') {
             title = 'No past events yet';
@@ -1871,16 +1546,8 @@
         _upgradeEmptyIllo();
     }
 
-    // Switch the lifecycle segmented control programmatically
     function _switchLifecycleTab(tab) {
-        window.evtActiveTab = tab;
-        _persistState();
-        document.querySelectorAll('#evtLifecycleSeg .evt-seg__btn').forEach(b => {
-            const on = b.dataset.filter === tab;
-            b.classList.toggle('evt-seg__btn--active', on);
-            b.setAttribute('aria-selected', on ? 'true' : 'false');
-        });
-        renderEvents();
+        return window.PortalEventsListFilters.switchLifecycleTab(tab);
     }
 
     // Lazy Lottie upgrade for the empty-state illustration.
@@ -1922,180 +1589,10 @@
         document.head.appendChild(s);
     }
 
-    // =========================================================
-    // Filter strip — segmented control + type menu
-    // =========================================================
     function initFilterChips() {
-        // Lifecycle segmented control
-        const segBtns = Array.from(document.querySelectorAll('#evtLifecycleSeg .evt-seg__btn'));
-        segBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                segBtns.forEach(b => {
-                    b.classList.remove('evt-seg__btn--active');
-                    b.setAttribute('aria-selected', 'false');
-                });
-                btn.classList.add('evt-seg__btn--active');
-                btn.setAttribute('aria-selected', 'true');
-                window.evtActiveTab = btn.dataset.filter;
-                _expandedBucket = null; // E11 — reset bucket expansion on tab change
-                _persistState();
-                renderEvents();
-            });
-        });
-
-        // Type menu — popover open/close + selection
-        const menuBtn = document.getElementById('evtTypeMenuBtn');
-        const menu    = document.getElementById('evtTypeMenu');
-        if (menuBtn && menu) {
-            const closeMenu = () => {
-                menu.classList.add('hidden');
-                menuBtn.setAttribute('aria-expanded', 'false');
-            };
-            menuBtn.addEventListener('click', e => {
-                e.stopPropagation();
-                const willOpen = menu.classList.contains('hidden');
-                menu.classList.toggle('hidden', !willOpen);
-                menuBtn.setAttribute('aria-expanded', String(willOpen));
-            });
-            document.addEventListener('click', e => {
-                if (!menu.contains(e.target) && e.target !== menuBtn) closeMenu();
-            });
-            document.addEventListener('keydown', e => {
-                if (e.key === 'Escape') closeMenu();
-            });
-            menu.querySelectorAll('.evt-type-opt').forEach(opt => {
-                opt.addEventListener('click', () => {
-                    _activeType = opt.dataset.type || 'all';
-                    menuBtn.dataset.type = _activeType;
-                    const label = opt.textContent.replace(/\s+events?$/i, '').trim();
-                    const labelEl = menuBtn.querySelector('[data-type-label]');
-                    if (labelEl) labelEl.textContent = label;
-                    menu.querySelectorAll('.evt-type-opt').forEach(o =>
-                        o.classList.toggle('evt-type-opt--active', o === opt)
-                    );
-                    // Mirror to hidden compat <select>
-                    const sel = document.getElementById('typeFilter');
-                    if (sel) sel.value = _activeType;
-                    _syncTypeChips(_activeType);
-                    closeMenu();
-                    _persistState();
-                    renderEvents();
-                });
-            });
-        }
-
-        // E3 — Inline category chip rail (vlift). Mirrors selection to legacy
-        // type-menu state so opt-out (?vlift=0) keeps the dropdown in sync.
-        const chipRail = document.getElementById('evtTypeChips');
-        if (chipRail) {
-            chipRail.querySelectorAll('.evt-type-chip').forEach(chip => {
-                chip.addEventListener('click', () => {
-                    const t = chip.dataset.type || 'all';
-                    if (t === _activeType) return;
-                    _activeType = t;
-                    _syncTypeChips(t);
-                    // Mirror to legacy type menu button + hidden select
-                    const menuBtn = document.getElementById('evtTypeMenuBtn');
-                    if (menuBtn) {
-                        menuBtn.dataset.type = t;
-                        const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + t + '"]');
-                        if (opt) {
-                            const label = opt.textContent.replace(/\s+events?$/i, '').trim();
-                            const labelEl = menuBtn.querySelector('[data-type-label]');
-                            if (labelEl) labelEl.textContent = label;
-                            document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
-                                o.classList.toggle('evt-type-opt--active', o === opt)
-                            );
-                        }
-                    }
-                    const sel = document.getElementById('typeFilter');
-                    if (sel) sel.value = t;
-                    _persistState();
-                    renderEvents();
-                });
-            });
-        }
-
-        // Empty-state Create button → trigger same modal as header button
-        const emptyCreate = document.getElementById('emptyCreateBtn');
-        emptyCreate?.addEventListener('click', () => {
-            document.getElementById('createEventBtn')?.click();
-        });
-
-        // F4 — Date filter dropdown (vlift only)
-        _initDateMenu();
+        return window.PortalEventsListFilters.initFilterChips();
     }
 
-    // F4 — Date filter state + menu wiring
-    let _activeDate = 'any'; // 'any' | 'today' | 'week' | 'weekend' | 'month'
-    function _initDateMenu() {
-        const btn = document.getElementById('evtDateMenuBtn');
-        const menu = document.getElementById('evtDateMenu');
-        if (!btn || !menu) return;
-        const close = () => {
-            menu.classList.add('hidden');
-            btn.setAttribute('aria-expanded', 'false');
-        };
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            const willOpen = menu.classList.contains('hidden');
-            menu.classList.toggle('hidden', !willOpen);
-            btn.setAttribute('aria-expanded', String(willOpen));
-        });
-        document.addEventListener('click', e => {
-            if (!menu.contains(e.target) && e.target !== btn) close();
-        });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-        menu.querySelectorAll('.evt-date-opt').forEach(opt => {
-            opt.addEventListener('click', () => {
-                _activeDate = opt.dataset.date || 'any';
-                btn.dataset.date = _activeDate;
-                const labelEl = btn.querySelector('[data-date-label]');
-                if (labelEl) labelEl.textContent = _activeDate === 'any' ? 'Date' : opt.textContent.trim();
-                menu.querySelectorAll('.evt-date-opt').forEach(o =>
-                    o.classList.toggle('evt-date-opt--active', o === opt));
-                close();
-                renderEvents();
-            });
-        });
-    }
-
-    function _matchesDate(ev) {
-        // F10 — explicit day filter from mini calendar (highest priority)
-        if (_activeDay) {
-            const d = new Date(ev.start_date);
-            const iso = d.getFullYear() + '-' +
-                String(d.getMonth() + 1).padStart(2, '0') + '-' +
-                String(d.getDate()).padStart(2, '0');
-            if (iso !== _activeDay) return false;
-        }
-        if (_activeDate === 'any') return true;
-        const d = new Date(ev.start_date);
-        const now = new Date();
-        const y = now.getFullYear(), m = now.getMonth(), dy = now.getDate();
-        if (_activeDate === 'today') {
-            return d.getFullYear() === y && d.getMonth() === m && d.getDate() === dy;
-        }
-        if (_activeDate === 'week') {
-            const day = now.getDay(); // 0=Sun
-            const start = new Date(y, m, dy - day);
-            const end = new Date(y, m, dy + (6 - day), 23, 59, 59);
-            return d >= start && d <= end;
-        }
-        if (_activeDate === 'weekend') {
-            const day = now.getDay();
-            const satOffset = (6 - day + 7) % 7;
-            const sat = new Date(y, m, dy + satOffset);
-            const sun = new Date(y, m, dy + satOffset + 1, 23, 59, 59);
-            return d >= sat && d <= sun;
-        }
-        if (_activeDate === 'month') {
-            return d.getFullYear() === y && d.getMonth() === m;
-        }
-        return true;
-    }
-
-    // =========================================================
     // =========================================================
     // Search setup — delegated to list/search.js
     // =========================================================
@@ -2274,12 +1771,30 @@
         window.PortalEventsListSearchApi = {
             getSearchQuery: () => _searchQuery,
             setSearchQuery: (q) => { _searchQuery = q; },
-            getActiveCategory: () => _activeCategory,
-            setActiveCategory: (c) => { _activeCategory = c; },
+            getActiveCategory: () => window.PortalEventsListFilters.getActiveCategory(),
+            setActiveCategory: (c) => window.PortalEventsListFilters.setActiveCategory(c),
             persistState: _persistState,
             renderEvents: renderEvents,
             getSearchDebounce: () => _searchDebounce,
             setSearchDebounce: (id) => { _searchDebounce = id; },
+        };
+        window.PortalEventsListFiltersApi = {
+            getSearchQuery: () => _searchQuery,
+            setSearchQuery: (q) => { _searchQuery = q; },
+            getActiveView: () => _activeView,
+            setActiveView: (v) => { _activeView = v; },
+            getActiveDay: () => _activeDay,
+            setActiveDay: (d) => { _activeDay = d; },
+            getExpandedBucket: () => _expandedBucket,
+            setExpandedBucket: (b) => { _expandedBucket = b; },
+            applyViewChrome: _applyViewChrome,
+            renderEvents: renderEvents,
+        };
+        window.PortalEventsListCalendarApi = {
+            getCalMonth: () => _calMonth,
+            setCalMonth: (d) => { _calMonth = d; },
+            notHidden: _notHidden,
+            miniCard: _miniCard,
         };
         window.PortalEventsListRightRailApi = {
             getMiniCalMonth: () => _miniCalMonth,
