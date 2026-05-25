@@ -57,6 +57,10 @@ const stepPricingJs = read('js/portal/events/create/step-pricing.js');
 const stepReviewJs = read('js/portal/events/create/step-review.js');
 const raffleBuilderJs = read('js/portal/events/create/raffle-builder.js');
 const submitJs = read('js/portal/events/create/submit.js');
+const legacyCostsJs = read('js/portal/events/create/legacy-costs.js');
+const legacyLocationJs = read('js/portal/events/create/legacy-location.js');
+const legacyPreviewJs = read('js/portal/events/create/legacy-preview.js');
+const legacySubmitJs = read('js/portal/events/create/legacy-submit.js');
 const events = read('portal/events.html');
 const classicChain3d = parseClassicChain(ROOT);
 
@@ -227,14 +231,37 @@ check('create/geocode.js assigns window.evtGeocodeAddress',
 check('create/geocode.js assigns window.evtExpandAddress',
     geocodeJs.includes('window.evtExpandAddress = evtExpandAddress'));
 
-// ── create.js orchestrator (production chain) ─────────────────────────────
-console.log('\n── js/portal/events/create.js — production chain + legacy create ──────────');
+// ── create.js facade + legacy modules (5M.1.5) ─────────────────────────────
+console.log('\n── js/portal/events/create.js — legacy facade + production chain ───────────');
 
 check('create.js present in classic-chain-loader.js chain',
     classicChain3d && classicChain3d.includes('create.js'));
 
 check('create.js loaded in production (HTML or classic-chain-loader)',
     isProductionLoaded(events, classicChain3d, '../js/portal/events/create.js'));
+
+check('create.js is thin facade (no evtHandleCreate body)',
+    !createJs.includes('async function evtHandleCreate')
+    && createJs.includes('legacy-submit.js'));
+
+check('create.js does not define evtGeocodeAddress (geocode module)',
+    !createJs.includes('async function evtGeocodeAddress')
+    && !createJs.match(/function evtGeocodeAddress\s*\(/));
+
+check('create.js has no native export (classic-script safe)',
+    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(createJs)));
+
+check('load order: geocode → legacy modules → create.js → step-basics',
+    chainOrderOk(
+        classicChain3d,
+        'create/geocode.js',
+        'create/legacy-costs.js',
+        'create/legacy-location.js',
+        'create/legacy-preview.js',
+        'create/legacy-submit.js',
+        'create.js',
+        'create/step-basics.js'
+    ));
 
 check('load order: raffle-builder → submit → create/sheet in classic chain',
     chainOrderOk(
@@ -244,32 +271,34 @@ check('load order: raffle-builder → submit → create/sheet in classic chain',
         'create/sheet.js'
     ));
 
-check('load order: create/geocode → create → step modules → raffle-builder → submit → sheet',
-    chainOrderOk(
-        classicChain3d,
-        'create/geocode.js',
-        'create.js',
-        'create/step-basics.js',
-        'create/step-when.js',
-        'create/step-pricing.js',
-        'create/step-review.js',
-        'create/raffle-builder.js',
-        'create/submit.js',
-        'create/sheet.js'
-    ));
+check('legacy-submit.js defines evtHandleCreate',
+    legacySubmitJs.includes('async function evtHandleCreate')
+    && legacySubmitJs.includes('window.evtHandleCreate'));
 
-check('create.js does not define evtGeocodeAddress (moved to create/geocode.js)',
-    !createJs.includes('async function evtGeocodeAddress')
-    && !createJs.match(/function evtGeocodeAddress\s*\(/));
+check('legacy-costs.js assigns LLC cost globals',
+    legacyCostsJs.includes('window.evtToggleLlcFields')
+    && legacyCostsJs.includes('window.evtAddCostItem')
+    && legacyCostsJs.includes('window.evtRemoveCostItem'));
 
-check('create.js uses window.evtGeocodeAddress for legacy location flow',
-    createJs.includes('window.evtGeocodeAddress'));
+check('legacy-location.js assigns location globals and uses evtGeocodeAddress',
+    legacyLocationJs.includes('window.evtValidateLocation')
+    && legacyLocationJs.includes('window.evtInitLocationValidation')
+    && legacyLocationJs.includes('window.evtGeocodeAddress'));
 
-check('create.js defines evtHandleCreate (legacy modal path)',
-    createJs.includes('function evtHandleCreate') || createJs.includes('async function evtHandleCreate'));
+check('legacy-preview.js assigns preview globals',
+    legacyPreviewJs.includes('window.evtHandlePreview')
+    && legacyPreviewJs.includes('window.evtClosePreview'));
 
-check('create.js has no native export (classic-script safe)',
-    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(createJs)));
+check('legacy-submit uses window.evtGeocodeAddress and evtLoadEvents',
+    legacySubmitJs.includes('window.evtGeocodeAddress')
+    && legacySubmitJs.includes('evtLoadEvents')
+    && legacySubmitJs.includes('evtNavigateToEvent'));
+
+check('legacy modules in classic-chain-loader.js chain',
+    classicChain3d.includes('create/legacy-costs.js')
+    && classicChain3d.includes('create/legacy-location.js')
+    && classicChain3d.includes('create/legacy-preview.js')
+    && classicChain3d.includes('create/legacy-submit.js'));
 
 // ── portal/events.html invariants ─────────────────────────────────────────
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
@@ -396,6 +425,10 @@ console.log('\n── File split safety — create/ sub-files in production chai
 const createDir = path.join(ROOT, 'js/portal/events/create');
 const EXPECTED_CREATE_FILES = [
     'geocode.js',
+    'legacy-costs.js',
+    'legacy-location.js',
+    'legacy-preview.js',
+    'legacy-submit.js',
     'step-basics.js',
     'step-when.js',
     'step-pricing.js',

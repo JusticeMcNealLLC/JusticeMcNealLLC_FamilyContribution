@@ -1,7 +1,7 @@
 /**
  * Portal Events — classic script chain loader (Phase 5L.3 Option C).
  * Loaded from portal/events.html between index.js and init.js.
- * Injects the middle 34 modules in the same order as the former 29-tag HTML block (+ create/geocode.js, create step modules, raffle-builder, submit).
+ * Injects the middle 38 modules in the same order as the former 29-tag HTML block (+ create/geocode.js, legacy create modules, create step modules, raffle-builder, submit).
  */
 (function () {
     var base = '../js/portal/events/';
@@ -25,6 +25,10 @@
         'comments.js',
         'rsvp.js',
         'create/geocode.js',
+        'create/legacy-costs.js',
+        'create/legacy-location.js',
+        'create/legacy-preview.js',
+        'create/legacy-submit.js',
         'create.js',
         'create/step-basics.js',
         'create/step-when.js',
