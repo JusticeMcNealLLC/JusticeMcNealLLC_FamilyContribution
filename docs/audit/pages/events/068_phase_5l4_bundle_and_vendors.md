@@ -7,18 +7,17 @@
 
 | Before | After |
 |--------|--------|
-| 4× `components/events/*` + `index` + `classic-chain-loader` (54× `document.write`) + `init` | 1× `events.bundle.js?v=115` |
+| 4× `components/events/*` + `index` + `classic-chain-loader` (54× `document.write`) + `init` | 1× `events.bundle.js` (see Phase 6) |
 | 3× CDN scripts (qrcode, jsQR, Leaflet) always on HTML | Lazy load via `core/vendor-loader.js` |
 
 ## Build
 
-```bash
-npm run build:events
-```
+Superseded by **Phase 6** (`069_phase_6_main_esbuild_entry.md`): `main.js` + esbuild IIFE (~599 KB).
 
-- **Input manifest:** `js/portal/events/classic-chain-loader.js` (`chain` array)
-- **Output:** `js/portal/events/events.bundle.js` (~794 KB concatenated classic scripts)
-- **Order:** shared `components/events/*` → `index.js` → chain → `init.js` (last)
+```bash
+npm run build:events   # sync main.js + esbuild bundle
+npm run dev:events     # watch
+```
 
 ## Lazy vendors
 

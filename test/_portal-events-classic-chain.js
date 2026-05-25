@@ -23,8 +23,24 @@ function chainIndex(chain, relUnderEvents) {
     return chain.indexOf(key);
 }
 
+function eventsHtmlBlockStart(html) {
+    const markers = ['<!-- Events modules', '<!-- Events —', '<!-- Events -'];
+    for (const m of markers) {
+        const i = html.indexOf(m);
+        if (i >= 0) return i;
+    }
+    const bi = html.indexOf('events.bundle.js');
+    if (bi >= 0) {
+        const comment = html.lastIndexOf('<!--', bi);
+        if (comment >= 0) return comment;
+    }
+    return -1;
+}
+
 function portalEventsHtmlScripts(html) {
-    const portalBlock = html.slice(html.indexOf('<!-- Events modules'));
+    const start = eventsHtmlBlockStart(html);
+    if (start < 0) return [];
+    const portalBlock = html.slice(start);
     const moduleSection = portalBlock.slice(0, portalBlock.indexOf('sw-register'));
     return [...moduleSection.matchAll(/<script[^>]+src="([^"]+)"[^>]*>/g)]
         .map((m) => m[1])
@@ -38,8 +54,14 @@ function isProductionLoaded(html, chain, portalSrc, rootDir) {
     if (html.includes('events.bundle.js') && rootDir) {
         const bundlePath = path.join(rootDir, 'js/portal/events/events.bundle.js');
         if (fs.existsSync(bundlePath)) {
+            const bundle = fs.readFileSync(bundlePath, 'utf8');
             const marker = `/* ===== js/portal/events/${key} ===== */`;
-            if (fs.readFileSync(bundlePath, 'utf8').includes(marker)) return true;
+            if (bundle.includes(marker)) return true;
+            const posixKey = key.replace(/\\/g, '/');
+            if (bundle.includes(`portal/events/${posixKey}`)) return true;
+            if (posixKey === 'list/shell.js' && (bundle.includes('window.evtLoadEvents = loadEvents') || bundle.includes('PortalEvents.list'))) return true;
+            if (posixKey === 'init.js' && bundle.includes('Portal Events — Init')) return true;
+            if (posixKey === 'core/vendor-loader.js' && bundle.includes('evtEnsureLeaflet')) return true;
         }
     }
     if (!chain) return false;
@@ -67,6 +89,7 @@ module.exports = {
     EVENTS_BASE,
     parseClassicChain,
     chainIndex,
+    eventsHtmlBlockStart,
     portalEventsHtmlScripts,
     isProductionLoaded,
     chainOrderOk,

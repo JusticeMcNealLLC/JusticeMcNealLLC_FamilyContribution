@@ -58,9 +58,9 @@
 
     //   PortalEvents.manage ← manage/   (M3)
 
-    // Future (Phase 5): call window.PortalEvents.initEventsPage() here
+   // Boot lives in init.js (imported last from main.js).
 
-    //   once the HTML is switched to a single module entry.
+   //   Production HTML loads events.bundle.js built from main.js (Phase 6).
 
 })();
 

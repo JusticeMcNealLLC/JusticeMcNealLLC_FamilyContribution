@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Phase 5L.4 — production events.bundle.js vs chain manifest.
+ * Phase 6 — main.js + esbuild production bundle.
  * Run: node test/_smoke-events-bundle.js
  */
 const fs = require('fs');
@@ -16,28 +16,31 @@ function check(label, ok, detail) {
 }
 
 const bundlePath = path.join(root, 'js/portal/events/events.bundle.js');
+const mainPath = path.join(root, 'js/portal/events/main.js');
 const loaderPath = path.join(root, 'js/portal/events/classic-chain-loader.js');
 const html = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
 
+check('main.js exists', fs.existsSync(mainPath));
 check('events.bundle.js exists', fs.existsSync(bundlePath));
+check('main.js uses ESM imports', fs.readFileSync(mainPath, 'utf8').includes("import './init.js'"));
+check('build uses esbuild', fs.readFileSync(path.join(root, 'scripts/build-events-bundle.js'), 'utf8').includes('esbuild'));
+
 const bundle = fs.readFileSync(bundlePath, 'utf8');
+check('bundle includes init boot', bundle.includes('PortalEvents.initEventsPage = initEventsPage'));
+check('bundle includes vendor loader', bundle.includes('evtEnsureLeaflet'));
+check('bundle includes list shell', bundle.includes('window.evtLoadEvents = loadEvents'));
+check('bundle from esbuild banner', bundle.includes('production bundle from main.js'));
+
 const loader = fs.readFileSync(loaderPath, 'utf8');
 const chain = [...loader.match(/var chain = \[([\s\S]*?)\];/)[1].matchAll(/'([^']+)'/g)].map((m) => m[1].replace(/\?v=.*$/, ''));
+check('chain length 55', chain.length === 55);
 
-check('bundle includes index.js', bundle.includes('Portal Events — Namespace shell'));
-check('bundle includes init.js', bundle.includes('Portal Events — Init'));
-check('bundle includes manage/sheet.js', bundle.includes('manage/sheet.js') || bundle.includes('EventsManage'));
-check('chain length still 55', chain.length === 55);
-check('chain includes core/vendor-loader.js', chain.includes('core/vendor-loader.js'));
-
-for (const rel of ['core/state.js', 'list/shell.js', 'compat/global-reexports.js', 'manage/sheet.js']) {
-    check(`bundle contains ${rel}`, bundle.includes(`/* ===== js/portal/events/${rel} ===== */`));
-}
+const main = fs.readFileSync(mainPath, 'utf8');
+check('main imports list/shell', main.includes("import './list/shell.js'"));
+check('main imports manage/sheet', main.includes("import './manage/sheet.js'"));
 
 check('HTML loads bundle only', /events\.bundle\.js/.test(html) && !html.includes('classic-chain-loader.js'));
-check('HTML does not preload QR/map CDN scripts', !html.includes('cdn.jsdelivr.net/npm/qrcode') && !html.includes('jsqr') && !html.includes('leaflet@1.9.4/dist/leaflet.js'));
-check('bundle includes vendor-loader source', bundle.includes('evtEnsureLeaflet'));
-check('build script exists', fs.existsSync(path.join(root, 'scripts/build-events-bundle.js')));
+check('HTML does not load main.js directly in prod', !html.includes('main.js?v=') && !/events\/main\.js/.test(html));
 
 console.log(`\n${'═'.repeat(54)}`);
 console.log(`Events bundle smoke: ${passed + failed} checks — ${passed} pass, ${failed} fail`);

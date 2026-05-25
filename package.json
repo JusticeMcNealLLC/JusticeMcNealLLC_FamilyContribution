@@ -2,7 +2,12 @@
   "name": "justicemcnealllc-portal",
   "private": true,
   "scripts": {
+    "sync:events-main": "node scripts/sync-events-main.js",
     "build:events": "node scripts/build-events-bundle.js",
+    "dev:events": "node scripts/build-events-bundle.js --watch",
     "build:tailwind": "npx tailwindcss -i css/tailwind.source.css -o css/tailwind.portal.css --minify"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
   }
 }

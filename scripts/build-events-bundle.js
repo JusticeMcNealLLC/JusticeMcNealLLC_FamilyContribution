@@ -1,61 +1,55 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Build portal/events/events.bundle.js — single classic script (Phase 5L.4 / option 7).
- * Order: shared components/events → index → classic-chain-loader manifest → init (last).
+ * Build portal/events/events.bundle.js from main.js (esbuild IIFE bundle).
+ * Syncs main.js from classic-chain-loader.js first to keep one manifest.
  *
- * Run: node scripts/build-events-bundle.js
+ * Run: npm run build:events
+ * Watch: npm run dev:events
  */
-const fs = require('fs');
+const esbuild = require('esbuild');
 const path = require('path');
+const fs = require('fs');
 
 const root = path.join(__dirname, '..');
-const eventsDir = path.join(root, 'js/portal/events');
-const loaderPath = path.join(eventsDir, 'classic-chain-loader.js');
-const outPath = path.join(eventsDir, 'events.bundle.js');
+const mainPath = path.join(root, 'js/portal/events/main.js');
+const outPath = path.join(root, 'js/portal/events/events.bundle.js');
+const watch = process.argv.includes('--watch');
 
-const SHARED = [
-    'js/components/events/constants.js',
-    'js/components/events/helpers.js',
-    'js/components/events/pills.js',
-    'js/components/events/card.js',
-];
-
-function parseChain() {
-    const src = fs.readFileSync(loaderPath, 'utf8');
-    const m = src.match(/var chain = \[([\s\S]*?)\];/);
-    if (!m) throw new Error('classic-chain-loader.js: chain array not found');
-    return [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1].replace(/\?v=.*$/, ''));
+function syncMain() {
+    require('./sync-events-main.js');
 }
 
-function readPart(rel) {
-    const abs = path.join(root, rel.replace(/\//g, path.sep));
-    if (!fs.existsSync(abs)) throw new Error(`missing: ${rel}`);
-    return fs.readFileSync(abs, 'utf8');
+async function build() {
+    syncMain();
+    const opts = {
+        entryPoints: [mainPath],
+        bundle: true,
+        outfile: outPath,
+        format: 'iife',
+        target: ['es2020'],
+        sourcemap: true,
+        logLevel: 'info',
+        banner: {
+            js: '/* Portal Events — production bundle from main.js (esbuild); do not edit */',
+        },
+        footer: {
+            js: '/* end portal events bundle */',
+        },
+    };
+    if (watch) {
+        const ctx = await esbuild.context(opts);
+        await ctx.watch();
+        console.log('Watching js/portal/events/**/*.js → events.bundle.js');
+        return;
+    }
+    const result = await esbuild.build(opts);
+    const kb = (fs.statSync(outPath).size / 1024).toFixed(1);
+    console.log(`Wrote ${path.relative(root, outPath)} (${kb} KB)`);
+    if (result.errors.length) process.exit(1);
 }
 
-const chain = parseChain();
-const banner = [
-    '/* Portal Events — production bundle (generated; do not edit by hand) */',
-    `/* Built: ${new Date().toISOString()} */`,
-    `/* Modules: ${SHARED.length} shared + index + ${chain.length} chain + init */`,
-    '',
-].join('\n');
-
-const chunks = [banner];
-
-function append(rel) {
-    chunks.push(`\n;/* ===== ${rel} ===== */\n`);
-    chunks.push(readPart(rel));
-}
-
-for (const rel of SHARED) append(rel);
-append('js/portal/events/index.js');
-for (const rel of chain) append(path.posix.join('js/portal/events', rel));
-append('js/portal/events/init.js');
-
-const body = chunks.join('');
-fs.writeFileSync(outPath, body, 'utf8');
-
-const kb = (Buffer.byteLength(body, 'utf8') / 1024).toFixed(1);
-console.log(`Wrote ${path.relative(root, outPath)} (${kb} KB, ${SHARED.length + 1 + chain.length + 1} files)`);
+build().catch((err) => {
+    console.error(err);
+    process.exit(1);
+});

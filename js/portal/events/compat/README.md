@@ -7,6 +7,12 @@
 | `window-exports.js` | Dormant — Phase 5L.4 `installWindowExports` API (not in production chain) |
 | `external-globals.js` | Dormant — test / future module entry helpers |
 
-Production boot: `events.bundle.js` (built from manifest below). Dev/unbundled: `document.write` via `classic-chain-loader.js`.
+Production boot: `events.bundle.js` (esbuild IIFE from `main.js`).
 
-Rebuild: `npm run build:events` (reads this loader’s `chain` array + `index.js` + `init.js` + `js/components/events/*`).
+| Command | Purpose |
+|---------|---------|
+| `npm run build:events` | Sync `main.js` from chain + bundle to `events.bundle.js` |
+| `npm run dev:events` | Watch mode — rebuild bundle on save |
+| `npm run sync:events-main` | Regenerate `main.js` imports from `classic-chain-loader.js` |
+
+Optional dev: `classic-chain-loader.js` in HTML, or `<script type="module" src="main.js">` (many requests).

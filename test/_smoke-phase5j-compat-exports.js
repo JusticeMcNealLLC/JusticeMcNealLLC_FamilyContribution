@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { portalEventsHtmlScripts } = require('./_portal-events-classic-chain.js');
 const root = path.resolve(__dirname, '..');
 
 let passed = 0;
@@ -104,11 +105,7 @@ compatScripts.forEach((rel) => {
     ? fail('portal Events scripts must not use type="module" yet')
     : pass('no type="module" on portal Events scripts');
 
-const portalBlock = html.slice(html.indexOf('<!-- Events modules'));
-const moduleSection = portalBlock.slice(0, portalBlock.indexOf('sw-register'));
-const portalScripts = [...moduleSection.matchAll(/<script[^>]+src="([^"]+)"[^>]*>/g)]
-    .map((m) => m[1])
-    .filter((s) => s.includes('portal/events'));
+const portalScripts = portalEventsHtmlScripts(html);
 
 portalScripts.length === 1 && portalScripts[0].includes('events.bundle.js')
     ? pass('production loads single events.bundle.js before sw-register')

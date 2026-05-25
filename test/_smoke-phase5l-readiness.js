@@ -43,7 +43,9 @@ const indexJs = read('js/portal/events/index.js');
 const initJs = read('js/portal/events/init.js');
 const smoke5j = read('test/_smoke-phase5j-compat-exports.js');
 
-const portalBlock = html.slice(html.indexOf('<!-- Events modules'));
+const { eventsHtmlBlockStart } = require('./_portal-events-classic-chain.js');
+const eventsStart = eventsHtmlBlockStart(html);
+const portalBlock = eventsStart >= 0 ? html.slice(eventsStart) : html;
 const moduleSection = portalBlock.slice(0, portalBlock.indexOf('sw-register'));
 const portalScripts = [...moduleSection.matchAll(/<script[^>]+src="([^"]+)"[^>]*>/g)]
     .map((m) => m[1])
@@ -129,11 +131,15 @@ indexJs.includes('window.PortalEvents = window.PortalEvents || {}')
     ? pass('index.js remains namespace shell only')
     : fail('index.js must seed PortalEvents');
 
+fs.existsSync(path.join(root, 'js/portal/events/main.js'))
+    ? pass('main.js ESM entry exists')
+    : fail('main.js missing — run npm run sync:events-main');
+
 bundleJs.includes('window.PortalEvents.initEventsPage = initEventsPage')
-    ? pass('bundle ends with init.js (PortalEvents.initEventsPage)')
+    ? pass('bundle includes init boot (PortalEvents.initEventsPage)')
     : fail('rebuild bundle: npm run build:events');
 
-bundleJs.includes("exp('evtHandleRsvp'")
+/ exp\(['"]evtHandleRsvp['"]/.test(bundleJs)
     ? pass('bundle includes compat global re-exports')
     : fail('bundle missing global-reexports segment');
 

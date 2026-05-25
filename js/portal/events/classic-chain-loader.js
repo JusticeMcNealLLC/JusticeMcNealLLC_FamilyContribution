@@ -1,6 +1,7 @@
 /**
  * Portal Events — dev chain manifest (Phase 5L.3 Option C).
- * Production uses events.bundle.js (npm run build:events); this file is the source of truth for module order.
+ * Dev-only unbundled loader (optional). Production: main.js → esbuild → events.bundle.js.
+ * Import order is mirrored in main.js (npm run sync:events-main).
  * Chain: 55 middle modules (core incl. vendor-loader, list, detail, create, manage, compat) + index + init via build script.
  */
 (function () {
