@@ -195,14 +195,14 @@
     }
 
     function openCtaPanel(kind, eventId) {
-        const event = (window.evtAllEvents || evtAllEvents).find(e => e.id === eventId);
+        const event = (window.evtAllEvents || globalThis.evtAllEvents).find(e => e.id === eventId);
         if (!event) return;
         const bar = ensureCtaBarShell();
         const panel = document.getElementById('evtCtaPanel');
         if (!panel) return;
         if (bar.dataset.evtFloatingShell === '1') bar.classList.add('evt-team-tools-overlay');
 
-        const rsvp = (window.evtAllRsvps || evtAllRsvps)[eventId];
+        const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId];
         const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">×</button>';
         bar.classList.add('evt-cta-bar-expanded');
         panel.classList.remove('hidden');
@@ -266,11 +266,11 @@
     function openTeamToolsPanel(eventId) {
         injectTeamToolsStyles();
         if (typeof window.evtCleanupTeamChat === 'function') window.evtCleanupTeamChat();
-        const event = (window.evtAllEvents || evtAllEvents).find(e => e.id === eventId);
+        const event = (window.evtAllEvents || globalThis.evtAllEvents).find(e => e.id === eventId);
         if (!event) return;
 
         const ctx = window.__evtTeamToolsCtx || {};
-        const rsvp = (window.evtAllRsvps || evtAllRsvps)[eventId];
+        const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId];
         const myRaffleEntry = ctx.eventId === eventId ? ctx.myRaffleEntry : null;
         const entriesClosed = ctx.eventId === eventId ? !!ctx.entriesClosed : false;
         const eventIsFull = ctx.eventId === eventId ? !!ctx.eventIsFull : false;

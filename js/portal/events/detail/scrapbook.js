@@ -26,7 +26,7 @@ async function evtBuildScrapbookHtml(event, hasRsvp) {
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
                 ${photoList.map(p => {
                     const name = p.profiles ? `${p.profiles.first_name || ''} ${p.profiles.last_name || ''}`.trim() : 'Member';
-                    const canDelete = p.user_id === evtCurrentUser.id || (typeof canManageEvents === 'function' && canManageEvents());
+                    const canDelete = p.user_id === globalThis.evtCurrentUser.id || (typeof canManageEvents === 'function' && canManageEvents());
                     return `
                         <div class="relative group rounded-xl overflow-hidden bg-gray-100 aspect-square">
                             <img src="${p.file_url}" alt="${evtEscapeHtml(p.caption || '')}" class="w-full h-full object-cover cursor-pointer" onclick="evtViewPhoto('${p.file_url}', '${evtEscapeHtml(p.caption || '')}', '${evtEscapeHtml(name)}')">
@@ -104,7 +104,7 @@ async function evtHandlePhotoSelect(eventId) {
 
         try {
             const ext = file.name.split('.').pop();
-            const filePath = `${evtCurrentUser.id}/${eventId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+            const filePath = `${globalThis.evtCurrentUser.id}/${eventId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
             const { error: uploadErr } = await supabaseClient.storage
                 .from('event-photos')
@@ -125,7 +125,7 @@ async function evtHandlePhotoSelect(eventId) {
                 .from('event_photos')
                 .insert({
                     event_id: eventId,
-                    user_id: evtCurrentUser.id,
+                    user_id: globalThis.evtCurrentUser.id,
                     file_url: urlData.publicUrl,
                     caption: caption || null,
                 });
@@ -144,7 +144,7 @@ async function evtHandlePhotoSelect(eventId) {
     if (uploaded > 0) {
         alert(`✅ ${uploaded} photo${uploaded > 1 ? 's' : ''} uploaded!`);
         // Refresh the detail modal to show new photos
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     }
 }
 
@@ -174,7 +174,7 @@ async function evtDeletePhoto(eventId, photoId, fileUrl) {
         }
 
         // Refresh detail
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Delete photo error:', err);
         alert('Failed to delete photo.');

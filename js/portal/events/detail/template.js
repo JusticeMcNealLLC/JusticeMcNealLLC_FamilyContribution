@@ -57,7 +57,7 @@
         <!-- ─── Detail Page Header ─── -->
         <div class="ed-page-header">
             <div class="ed-page-header-inner">
-                <button onclick="evtNavigateToList()" class="ed-page-header-back" aria-label="Back to events">
+                <button onclick="globalThis.evtNavigateToList()" class="ed-page-header-back" aria-label="Back to events">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     <span class="ed-page-header-back-label">Back to Events</span>
                 </button>
@@ -82,7 +82,7 @@
                     <div class="ed-hero-nav">
                         ${heroStatusBadgeHtml}
                         <div class="ed-hero-pill-row">
-                            <button onclick="event.stopPropagation();evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
+                            <button onclick="event.stopPropagation();globalThis.evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                             </button>
                         </div>

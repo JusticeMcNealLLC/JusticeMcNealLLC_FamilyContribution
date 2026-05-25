@@ -6,7 +6,7 @@
 
 /* ── Open the Raffle Draw Modal ───────────────────────── */
 async function evtOpenRaffleDraw(eventId, eventOverride) {
-    const eventList = typeof evtAllEvents !== 'undefined' ? evtAllEvents : [];
+    const eventList = typeof globalThis.evtAllEvents !== 'undefined' ? globalThis.evtAllEvents : [];
     const event = eventOverride || eventList.find(e => e.id === eventId);
     if (!event || !event.raffle_enabled) return;
     window.__evtRaffleEventCache = window.__evtRaffleEventCache || {};
@@ -17,7 +17,7 @@ async function evtOpenRaffleDraw(eventId, eventOverride) {
     if (!modal || !content) return;
 
     content.innerHTML = `<div class="text-center py-8"><div class="animate-spin w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full mx-auto"></div><p class="text-sm text-gray-500 mt-3">Loading raffle pool…</p></div>`;
-    evtToggleModal('raffleDrawModal', true);
+    globalThis.evtToggleModal('raffleDrawModal', true);
 
     try {
         // Load all paid/valid raffle entries with profile info
@@ -83,7 +83,7 @@ function evtRenderDrawUI(eventId, eligible, raffleConfig, drawQueue, alreadyDraw
                 <p class="text-sm text-gray-500 mt-1">The raffle is complete.</p>
             </div>
             ${winnersHtml}
-            <button onclick="evtToggleModal('raffleDrawModal',false)" class="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition">Close</button>`;
+            <button onclick="globalThis.evtToggleModal('raffleDrawModal',false)" class="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition">Close</button>`;
     }
 
     const nextPlace = alreadyDrawnCount + 1;
@@ -121,7 +121,7 @@ function evtRenderDrawUI(eventId, eligible, raffleConfig, drawQueue, alreadyDraw
             <p class="text-sm text-red-600 font-semibold">No eligible entries remaining</p>
         </div>`}
 
-        <button onclick="evtToggleModal('raffleDrawModal',false)" class="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition">Close</button>`;
+        <button onclick="globalThis.evtToggleModal('raffleDrawModal',false)" class="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition">Close</button>`;
 }
 
 function evtGetRaffleConfig(event) {
@@ -268,7 +268,7 @@ async function evtDrawWinner(eventId, place) {
         // Simulate draw animation (1.5s)
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        const eventList = typeof evtAllEvents !== 'undefined' ? evtAllEvents : [];
+        const eventList = typeof globalThis.evtAllEvents !== 'undefined' ? globalThis.evtAllEvents : [];
         const event = window.__evtRaffleEventCache?.[eventId] || eventList.find(e => e.id === eventId);
         const slot = evtResolvePrizeSlot(event, existingWinners || [], place);
         const prizeDesc = evtPrizeSlotLabel(slot) || evtLegacyPrizeLabel(evtGetRaffleConfig(event), place) || null;
@@ -354,8 +354,8 @@ async function evtDrawWinner(eventId, place) {
                 btn.classList.replace('bg-violet-600', 'bg-emerald-600');
                 btn.classList.replace('hover:bg-violet-700', 'hover:bg-emerald-700');
                 btn.onclick = () => {
-                    evtToggleModal('raffleDrawModal', false);
-                    evtOpenDetail(eventId); // Refresh detail
+                    globalThis.evtToggleModal('raffleDrawModal', false);
+                    globalThis.evtOpenDetail(eventId); // Refresh detail
                 };
                 btn.disabled = false;
             }
@@ -428,7 +428,7 @@ function evtCelebrate() {
 
 /* ── Close Raffle Draw Modal ─────────────────────────── */
 function evtCloseRaffleDraw() {
-    evtToggleModal('raffleDrawModal', false);
+    globalThis.evtToggleModal('raffleDrawModal', false);
 }
 
 export {

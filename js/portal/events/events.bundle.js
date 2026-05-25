@@ -971,9 +971,187 @@
     };
   })();
 
+  // js/portal/events/core/state.js
+  var EventsState = {
+    evtCurrentUser: null,
+    evtCurrentUserRole: null,
+    evtActiveTab: "upcoming",
+    evtBannerFile: null,
+    evtEmbedImageFile: null,
+    evtAllEvents: [],
+    evtAllRsvps: {},
+    // event_id → rsvp record
+    evtScannerStream: null,
+    evtScannerAnimFrame: null
+  };
+  for (const key of Object.keys(EventsState)) {
+    Object.defineProperty(globalThis, key, {
+      get() {
+        return EventsState[key];
+      },
+      set(v) {
+        EventsState[key] = v;
+      },
+      enumerable: true,
+      configurable: true
+    });
+  }
+
   // js/portal/events/core/utils.js
+  var EVT_BADGE_EMOJI = { founding_member: "\u{1F3C5}", shutterbug: "\u{1F4F8}", streak_master: "\u{1F525}", streak_legend: "\u26A1", first_seed: "\u{1F331}", four_figures: "\u{1F4B5}", quest_champion: "\u{1F3AF}", fidelity_linked: "\u{1F3E6}", birthday_vip: "\u{1F382}" };
+  function evtBadgeChip2(badgeKey) {
+    if (!badgeKey) return "";
+    if (typeof buildNavBadgeOverlay === "function") return buildNavBadgeOverlay(badgeKey);
+    return `<div class="badge-chip-overlay">${EVT_BADGE_EMOJI[badgeKey] || "\u2753"}</div>`;
+  }
+  function evtToggleModal(id, show) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    if (show) {
+      modal.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    } else {
+      modal.classList.add("hidden");
+      document.body.style.overflow = "";
+    }
+  }
+  function evtGenerateSlug2(title) {
+    return title.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").substring(0, 60) + "-" + Date.now().toString(36);
+  }
+  function evtEscapeHtml2(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+  function evtHandleBannerSelect2() {
+    const file = document.getElementById("bannerFile").files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be under 5 MB.");
+      return;
+    }
+    globalThis.evtBannerFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      document.getElementById("bannerPreview").src = e.target.result;
+      document.getElementById("bannerPreviewWrap").classList.remove("hidden");
+      document.getElementById("bannerUploadHint").classList.add("hidden");
+    };
+    reader.readAsDataURL(file);
+  }
+  function evtHandleEmbedImageSelect2() {
+    const file = document.getElementById("embedImageFile").files[0];
+    if (!file) return;
+    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+      alert("Please choose a PNG, JPG, or WebP image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be under 5 MB.");
+      return;
+    }
+    globalThis.evtEmbedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      document.getElementById("embedImagePreview").src = e.target.result;
+      document.getElementById("embedImagePreviewWrap").classList.remove("hidden");
+      document.getElementById("embedImageUploadHint").classList.add("hidden");
+    };
+    reader.readAsDataURL(file);
+  }
+  function evtNavigateToEvent(slug) {
+    if (slug && typeof slug === "object") slug = slug.slug || slug.id || "";
+    if (!slug) return;
+    const url = new URL(window.location);
+    url.searchParams.set("event", slug);
+    history.pushState({ view: "detail", slug }, "", url);
+    globalThis.evtRouteByUrl();
+  }
+  function evtNavigateToList() {
+    const url = new URL(window.location);
+    url.searchParams.delete("event");
+    history.pushState({ view: "list" }, "", url);
+    globalThis.evtRouteByUrl();
+  }
+  function evtRouteByUrl() {
+    const slug = new URLSearchParams(window.location.search).get("event");
+    const listView = document.getElementById("eventsListView");
+    const detailView = document.getElementById("eventsDetailView");
+    if (!listView || !detailView) return;
+    if (slug) {
+      listView.classList.add("hidden");
+      detailView.classList.remove("hidden");
+      detailView.innerHTML = '<div class="flex items-center justify-center py-20"><div class="animate-spin rounded-full h-8 w-8 border-2 border-brand-600 border-t-transparent"></div></div>';
+      globalThis.evtLoadDetailBySlug(slug);
+    } else {
+      detailView.classList.add("hidden");
+      detailView.innerHTML = "";
+      listView.classList.remove("hidden");
+      document.title = "Events | Justice McNeal LLC";
+      if (typeof evtCleanupMap === "function") evtCleanupMap();
+      if (typeof evtCleanupBottomNav === "function") evtCleanupBottomNav();
+    }
+  }
+  async function evtLoadDetailBySlug(slug) {
+    let event = globalThis.evtAllEvents.find((e) => e.slug === slug);
+    if (event) {
+      globalThis.evtOpenDetail(event.id);
+      return;
+    }
+    const { data, error } = await supabaseClient.from("events").select("*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)").eq("slug", slug).maybeSingle();
+    if (error || !data) {
+      const detailView = document.getElementById("eventsDetailView");
+      if (detailView) {
+        detailView.innerHTML = `
+                <div class="max-w-md mx-auto text-center py-20 px-4">
+                    <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-900 mb-1">Event not found</h2>
+                    <p class="text-sm text-gray-500 mb-6">This event may have been removed or the link is incorrect.</p>
+                    <button onclick="globalThis.evtNavigateToList()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        Back to Events
+                    </button>
+                </div>`;
+      }
+      document.title = "Event Not Found | Justice McNeal LLC";
+      return;
+    }
+    if (!globalThis.evtAllEvents.find((e) => e.id === data.id)) {
+      globalThis.evtAllEvents.push(data);
+    }
+    globalThis.evtOpenDetail(data.id);
+  }
+  function evtCopyShareUrl(slug) {
+    let url;
+    if (slug) {
+      url = `https://justicemcneal.com/events/?e=${slug}`;
+      if (typeof globalThis.evtCurrentUser !== "undefined" && globalThis.evtCurrentUser?.id) {
+        url += `&ref=${globalThis.evtCurrentUser.id.slice(0, 8)}`;
+      }
+    } else {
+      url = document.getElementById("shareUrl")?.value;
+    }
+    if (!url) return;
+    if (navigator.share) {
+      navigator.share({ title: "Check out this event", url }).catch(() => {
+      });
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        const toast = document.createElement("div");
+        toast.textContent = "Link copied!";
+        toast.className = "fixed top-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-lg z-[999] transition-opacity duration-300";
+        document.body.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          setTimeout(() => toast.remove(), 300);
+        }, 1500);
+      });
+    }
+  }
   function evtDownloadIcs(eventId2) {
-    const e = (evtAllEvents || []).find((ev) => ev.id === eventId2);
+    const e = (globalThis.evtAllEvents || []).find((ev) => ev.id === eventId2);
     if (!e) return;
     const start = new Date(e.start_date);
     const end = e.end_date ? new Date(e.end_date) : new Date(start.getTime() + 72e5);
@@ -1007,7 +1185,23 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
-  window.evtDownloadIcs = evtDownloadIcs;
+  var _utilsGlobal = {
+    evtBadgeChip: evtBadgeChip2,
+    evtToggleModal,
+    evtGenerateSlug: evtGenerateSlug2,
+    evtEscapeHtml: evtEscapeHtml2,
+    evtHandleBannerSelect: evtHandleBannerSelect2,
+    evtHandleEmbedImageSelect: evtHandleEmbedImageSelect2,
+    evtNavigateToEvent,
+    evtNavigateToList,
+    evtRouteByUrl,
+    evtLoadDetailBySlug,
+    evtCopyShareUrl,
+    evtDownloadIcs
+  };
+  for (const [name, fn] of Object.entries(_utilsGlobal)) {
+    globalThis[name] = fn;
+  }
 
   // js/portal/events/core/vendor-loader.js
   var SRC = {
@@ -3020,16 +3214,16 @@
         const { data: events, error } = await supabaseClient.from("events").select("*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)").in("status", ["open", "confirmed", "active", "completed"]).order("start_date", { ascending: true });
         if (error) throw error;
         window.evtAllEvents = events || [];
-        if (typeof canManageEvents === "function" && canManageEvents() && evtCurrentUser) {
-          const { data: drafts } = await supabaseClient.from("events").select("*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)").eq("status", "draft").eq("created_by", evtCurrentUser.id).order("created_at", { ascending: false });
+        if (typeof canManageEvents === "function" && canManageEvents() && globalThis.evtCurrentUser) {
+          const { data: drafts } = await supabaseClient.from("events").select("*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)").eq("status", "draft").eq("created_by", globalThis.evtCurrentUser.id).order("created_at", { ascending: false });
           if (drafts && drafts.length) {
             window.evtAllEvents = [...drafts, ...window.evtAllEvents];
           }
         }
         const ids = window.evtAllEvents.map((e) => e.id);
         window.evtAllRsvps = {};
-        if (evtCurrentUser && ids.length) {
-          const { data: rsvps } = await supabaseClient.from("event_rsvps").select("*").eq("user_id", evtCurrentUser.id).in("event_id", ids);
+        if (globalThis.evtCurrentUser && ids.length) {
+          const { data: rsvps } = await supabaseClient.from("event_rsvps").select("*").eq("user_id", globalThis.evtCurrentUser.id).in("event_id", ids);
           (rsvps || []).forEach((r) => {
             window.evtAllRsvps[r.event_id] = r;
           });
@@ -3782,8 +3976,8 @@
       document.head.appendChild(style);
     }
     function canCreateTeamChat(event) {
-      if (!event || !evtCurrentUser?.id) return false;
-      if (event.created_by === evtCurrentUser.id) return true;
+      if (!event || !globalThis.evtCurrentUser?.id) return false;
+      if (event.created_by === globalThis.evtCurrentUser.id) return true;
       return typeof canManageEvents === "function" && canManageEvents();
     }
     function friendlyError(err) {
@@ -3828,7 +4022,7 @@
       const { data: created, error: insErr } = await supabaseClient.from("event_chats").insert({
         event_id: eventId2,
         chat_type: "team",
-        created_by: evtCurrentUser.id
+        created_by: globalThis.evtCurrentUser.id
       }).select("id, event_id, chat_type, created_at").single();
       if (insErr?.code === "23505") {
         const { data: again, error: againErr } = await supabaseClient.from("event_chats").select("id, event_id, chat_type, created_at").eq("event_id", eventId2).eq("chat_type", "team").maybeSingle();
@@ -3972,7 +4166,7 @@
       if (typeof window.evtInjectTeamToolsStyles === "function") window.evtInjectTeamToolsStyles();
       injectTeamChatStyles();
       cleanup();
-      const event = (window.evtAllEvents || evtAllEvents).find((e) => e.id === eventId2);
+      const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
       if (!event) return;
       let bar = document.getElementById("evtCtaBar");
       if (!bar && typeof window.evtEnsureCtaBarShell === "function") {
@@ -4049,7 +4243,7 @@
       const { data, error } = await supabaseClient.from("event_chat_messages").insert({
         chat_id: state.chatId,
         event_id: eventId2,
-        sender_id: evtCurrentUser.id,
+        sender_id: globalThis.evtCurrentUser.id,
         body
       }).select("id, chat_id, event_id, sender_id, body, created_at, updated_at, deleted_at").single();
       if (sendBtn) sendBtn.disabled = false;
@@ -4061,11 +4255,11 @@
       if (statusEl) statusEl.textContent = "";
       if (data && !data.deleted_at && !state.messages.some((m) => m.id === data.id)) {
         state.messages.push(data);
-        if (!state.profilesById[evtCurrentUser.id] && evtCurrentUser) {
-          state.profilesById[evtCurrentUser.id] = {
-            id: evtCurrentUser.id,
-            first_name: evtCurrentUser.first_name,
-            last_name: evtCurrentUser.last_name
+        if (!state.profilesById[globalThis.evtCurrentUser.id] && globalThis.evtCurrentUser) {
+          state.profilesById[globalThis.evtCurrentUser.id] = {
+            id: globalThis.evtCurrentUser.id,
+            first_name: globalThis.evtCurrentUser.first_name,
+            last_name: globalThis.evtCurrentUser.last_name
           };
         }
         state.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -4256,13 +4450,13 @@
       }
     }
     function openCtaPanel(kind, eventId2) {
-      const event = (window.evtAllEvents || evtAllEvents).find((e) => e.id === eventId2);
+      const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
       if (!event) return;
       const bar = ensureCtaBarShell();
       const panel = document.getElementById("evtCtaPanel");
       if (!panel) return;
       if (bar.dataset.evtFloatingShell === "1") bar.classList.add("evt-team-tools-overlay");
-      const rsvp = (window.evtAllRsvps || evtAllRsvps)[eventId2];
+      const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
       const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">\xD7</button>';
       bar.classList.add("evt-cta-bar-expanded");
       panel.classList.remove("hidden");
@@ -4314,10 +4508,10 @@
     function openTeamToolsPanel(eventId2) {
       injectTeamToolsStyles();
       if (typeof window.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
-      const event = (window.evtAllEvents || evtAllEvents).find((e) => e.id === eventId2);
+      const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
       if (!event) return;
       const ctx = window.__evtTeamToolsCtx || {};
-      const rsvp = (window.evtAllRsvps || evtAllRsvps)[eventId2];
+      const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
       const myRaffleEntry = ctx.eventId === eventId2 ? ctx.myRaffleEntry : null;
       const entriesClosed = ctx.eventId === eventId2 ? !!ctx.entriesClosed : false;
       const eventIsFull = ctx.eventId === eventId2 ? !!ctx.eventIsFull : false;
@@ -4741,8 +4935,8 @@
     window.PortalEvents = window.PortalEvents || {};
     window.PortalEvents.detail = window.PortalEvents.detail || {};
     async function evtLoadDetailContext(eventId2) {
-      const events = window.evtAllEvents || evtAllEvents;
-      const rsvpMap = window.evtAllRsvps || evtAllRsvps;
+      const events = window.evtAllEvents || globalThis.evtAllEvents;
+      const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps;
       const event = events.find((e) => e.id === eventId2);
       if (!event) return null;
       const rsvp = rsvpMap[eventId2];
@@ -4774,7 +4968,7 @@
       if (isLlc) {
         const { data: wl } = await supabaseClient.from("event_waitlist").select("*, profiles:user_id(first_name, last_name)").eq("event_id", eventId2).order("position", { ascending: true });
         waitlist = wl || [];
-        myWaitlistEntry = waitlist.find((w) => w.user_id === evtCurrentUser.id);
+        myWaitlistEntry = waitlist.find((w) => w.user_id === globalThis.evtCurrentUser.id);
       }
       let raffleEntryCount = 0;
       let myRaffleEntry = null;
@@ -4782,13 +4976,13 @@
       if (event.raffle_enabled) {
         const { count: rCount } = await supabaseClient.from("event_raffle_entries").select("id", { count: "exact", head: true }).eq("event_id", eventId2);
         raffleEntryCount = rCount || 0;
-        const { data: myEntry } = await supabaseClient.from("event_raffle_entries").select("*").eq("event_id", eventId2).eq("user_id", evtCurrentUser.id).maybeSingle();
+        const { data: myEntry } = await supabaseClient.from("event_raffle_entries").select("*").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
         myRaffleEntry = myEntry;
         const { data: winners } = await supabaseClient.from("event_raffle_winners").select("*, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).order("place", { ascending: true });
         raffleWinners = winners || [];
       }
-      const isCreator = event.created_by === evtCurrentUser.id;
-      const { data: hostRecord } = await supabaseClient.from("event_hosts").select("id").eq("event_id", eventId2).eq("user_id", evtCurrentUser.id).maybeSingle();
+      const isCreator = event.created_by === globalThis.evtCurrentUser.id;
+      const { data: hostRecord } = await supabaseClient.from("event_hosts").select("id").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
       const canManageEvent = isCreator || !!hostRecord || typeof canManageEvents === "function" && canManageEvents();
       const canAccessTeamHub = canManageEvent || typeof canAccessAdminDashboard === "function" && canAccessAdminDashboard();
       const isHost = canManageEvent;
@@ -5087,7 +5281,7 @@
                         </div>
                     </div>`;
       } else if (isWaiting) {
-        const pos = activeWaitlist.findIndex((w) => w.user_id === evtCurrentUser.id) + 1;
+        const pos = activeWaitlist.findIndex((w) => w.user_id === globalThis.evtCurrentUser.id) + 1;
         waitlistAction = `
                     <div class="ed-notice" style="justify-content:space-between">
                         <div><p class="ed-notice-title">You're #${pos} on the waitlist</p><p class="ed-notice-sub">We'll notify you if a spot opens</p></div>
@@ -5302,14 +5496,14 @@
     }
     function evtBuildDetailRelatedEventsHtml(ctx) {
       const { eventId: eventId2 } = ctx;
-      if (typeof evtAllEvents === "undefined" || evtAllEvents.length <= 1) return "";
-      const upcoming = evtAllEvents.filter((e) => e.id !== eventId2 && e.status !== "cancelled").slice(0, 4);
+      if (typeof globalThis.evtAllEvents === "undefined" || globalThis.evtAllEvents.length <= 1) return "";
+      const upcoming = globalThis.evtAllEvents.filter((e) => e.id !== eventId2 && e.status !== "cancelled").slice(0, 4);
       if (!upcoming.length) return "";
       const cards = upcoming.map((e) => {
         const d = new Date(e.start_date);
         const dateLabel = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
         const imgHtml = e.banner_url ? `<img src="${e.banner_url}" alt="" loading="lazy">` : `<div style="height:120px;background:linear-gradient(135deg,#6366f1,#8b5cf6)"></div>`;
-        const onclickHandler = e.slug ? `evtNavigateToEvent('${e.slug}')` : `evtOpenDetail('${e.id}')`;
+        const onclickHandler = e.slug ? `globalThis.evtNavigateToEvent('${e.slug}')` : `globalThis.evtOpenDetail('${e.id}')`;
         return `<div class="evt-related-card" onclick="${onclickHandler}">${imgHtml}<div class="evt-related-card-body"><p class="evt-related-card-title">${evtEscapeHtml(e.title)}</p><p class="evt-related-card-meta">${dateLabel}${e.location_nickname ? " \xB7 " + evtEscapeHtml(e.location_nickname) : ""}</p></div></div>`;
       }).join("");
       return `${_edSectionHead("More Events")}<div class="evt-related-scroll">${cards}</div>`;
@@ -5344,15 +5538,15 @@
     function evtBuildDetailPageHeaderActionsHtml(ctx) {
       const { eventId: eventId2, event } = ctx;
       return `
-                    <button onclick="evtCopyShareUrl('${event.slug}')" class="ed-page-header-btn" aria-label="Share event">
+                    <button onclick="globalThis.evtCopyShareUrl('${event.slug}')" class="ed-page-header-btn" aria-label="Share event">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                         <span class="ed-page-header-btn-label">Share</span>
                     </button>
-                    <button onclick="event.stopPropagation();evtDownloadIcs('${eventId2}')" class="ed-page-header-btn ed-page-header-btn-cal" aria-label="Add to calendar">
+                    <button onclick="event.stopPropagation();globalThis.evtDownloadIcs('${eventId2}')" class="ed-page-header-btn ed-page-header-btn-cal" aria-label="Add to calendar">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         <span class="ed-page-header-btn-label">Add to Calendar</span>
                     </button>
-                    <button onclick="event.stopPropagation();evtDownloadIcs('${eventId2}')" class="ed-page-header-btn ed-page-header-btn-bookmark" aria-label="Save event">
+                    <button onclick="event.stopPropagation();globalThis.evtDownloadIcs('${eventId2}')" class="ed-page-header-btn ed-page-header-btn-bookmark" aria-label="Save event">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
                     </button>`;
     }
@@ -5609,7 +5803,7 @@
     function evtBuildDetailTemplate(templateCtx) {
       const _edCard = window.evtEdCard;
       const _edSectionHead = window.evtEdSectionHead;
-      const evtEscapeHtml2 = window.evtEscapeHtml;
+      const evtEscapeHtml3 = window.evtEscapeHtml;
       const {
         event,
         eventId: eventId2,
@@ -5654,7 +5848,7 @@
         <!-- \u2500\u2500\u2500 Detail Page Header \u2500\u2500\u2500 -->
         <div class="ed-page-header">
             <div class="ed-page-header-inner">
-                <button onclick="evtNavigateToList()" class="ed-page-header-back" aria-label="Back to events">
+                <button onclick="globalThis.evtNavigateToList()" class="ed-page-header-back" aria-label="Back to events">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     <span class="ed-page-header-back-label">Back to Events</span>
                 </button>
@@ -5679,14 +5873,14 @@
                     <div class="ed-hero-nav">
                         ${heroStatusBadgeHtml}
                         <div class="ed-hero-pill-row">
-                            <button onclick="event.stopPropagation();evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
+                            <button onclick="event.stopPropagation();globalThis.evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                             </button>
                         </div>
                     </div>
                     <div class="ed-hero-bottom-content">
-                        <h1 class="ed-hero-title">${evtEscapeHtml2(event.title)}</h1>
-                        <p class="ed-hero-subtitle">${cpName ? `Hosted by ${evtEscapeHtml2(cpName)}` : evtEscapeHtml2(tc.label)}${event.category ? ` &bull; ${evtEscapeHtml2((event.category || "").replace(/_/g, " "))}` : ""}</p>
+                        <h1 class="ed-hero-title">${evtEscapeHtml3(event.title)}</h1>
+                        <p class="ed-hero-subtitle">${cpName ? `Hosted by ${evtEscapeHtml3(cpName)}` : evtEscapeHtml3(tc.label)}${event.category ? ` &bull; ${evtEscapeHtml3((event.category || "").replace(/_/g, " "))}` : ""}</p>
                         <div class="ed-hero-info-bar">
                             <div class="ed-hero-info-item">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -5705,8 +5899,8 @@
                             ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-hero-info-item">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                 <div>
-                                    <span class="ed-hero-info-main">${evtEscapeHtml2(event.location_nickname || event.location_text || "")}</span>
-                                    <span class="ed-hero-info-sub">${evtEscapeHtml2(event.location_text && event.location_nickname ? event.location_text : "")}</span>
+                                    <span class="ed-hero-info-main">${evtEscapeHtml3(event.location_nickname || event.location_text || "")}</span>
+                                    <span class="ed-hero-info-sub">${evtEscapeHtml3(event.location_text && event.location_nickname ? event.location_text : "")}</span>
                                 </div>
                             </div>` : ""}
                         </div>
@@ -5728,8 +5922,8 @@
                         </div>` : ""}
                         ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-qi-col${event.location_lat && event.location_lng ? " ed-qi-col-loc" : ""}"${event.location_lat && event.location_lng ? ` onclick="evtOpenFullscreenMap(${event.location_lat},${event.location_lng})"` : ""}>
                             <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span class="ed-qi-main">${evtEscapeHtml2(event.location_nickname || event.location_text || "")}</span>
-                            <span class="ed-qi-sub">${event.location_nickname && event.location_text ? evtEscapeHtml2(event.location_text) : "Location"}</span>
+                            <span class="ed-qi-main">${evtEscapeHtml3(event.location_nickname || event.location_text || "")}</span>
+                            <span class="ed-qi-sub">${event.location_nickname && event.location_text ? evtEscapeHtml3(event.location_text) : "Location"}</span>
                         </div>` : ""}
                     </div>
                     <!-- Mobile Map Card (S5 \u2014 hidden on desktop) -->
@@ -5739,8 +5933,8 @@
                         <div class="ed-map-overlay ed-mobile-map-overlay">
                             <span class="ed-map-overlay-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
                             <div class="ed-map-overlay-body">
-                                <p class="ed-map-overlay-name">${evtEscapeHtml2(event.location_nickname || event.location_text || "Venue")}</p>
-                                ${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${evtEscapeHtml2(event.location_text)}</p>` : ""}
+                                <p class="ed-map-overlay-name">${evtEscapeHtml3(event.location_nickname || event.location_text || "Venue")}</p>
+                                ${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${evtEscapeHtml3(event.location_text)}</p>` : ""}
                                 <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? "https://maps.apple.com/?daddr=" : "https://www.google.com/maps/dir/?api=1&destination="}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-map-overlay-link">View on Maps \u2197</a>
                             </div>
                         </div>
@@ -5775,8 +5969,8 @@
                                     <div class="ed-map-overlay">
                                         <span class="ed-map-overlay-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
                                         <div class="ed-map-overlay-body">
-                                            <p class="ed-map-overlay-name">${evtEscapeHtml2(event.location_nickname || event.location_text || "Venue")}</p>
-                                            ${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${evtEscapeHtml2(event.location_text)}</p>` : ""}
+                                            <p class="ed-map-overlay-name">${evtEscapeHtml3(event.location_nickname || event.location_text || "Venue")}</p>
+                                            ${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${evtEscapeHtml3(event.location_text)}</p>` : ""}
                                             <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? "https://maps.apple.com/?daddr=" : "https://www.google.com/maps/dir/?api=1&destination="}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-map-overlay-link">View on Maps \u2197</a>
                                         </div>
                                     </div>
@@ -5786,7 +5980,7 @@
                     </div>
 
             <!-- Gated Notes Card -->
-            ${showNotes && event.gated_notes ? `<div class="ed-card event-detail-card">${_edSectionHead("Attendee Details")}<p class="ed-body-text whitespace-pre-line">${evtEscapeHtml2(event.gated_notes)}</p></div>` : ""}
+            ${showNotes && event.gated_notes ? `<div class="ed-card event-detail-card">${_edSectionHead("Attendee Details")}<p class="ed-body-text whitespace-pre-line">${evtEscapeHtml3(event.gated_notes)}</p></div>` : ""}
 
             <!-- Attendees Card moved into about grid right column -->
 
@@ -5814,7 +6008,7 @@
 
             <!-- Host Controls inline card removed \u2014 opens via Manage Event sheet -->
 
-            ${event.cancellation_note ? _edCard(`<div class="ed-cancel-banner"><p class="ed-cancel-title">Cancellation Note</p><p class="ed-cancel-text">${evtEscapeHtml2(event.cancellation_note)}</p></div>`, "event-detail-card") : ""}
+            ${event.cancellation_note ? _edCard(`<div class="ed-cancel-banner"><p class="ed-cancel-title">Cancellation Note</p><p class="ed-cancel-text">${evtEscapeHtml3(event.cancellation_note)}</p></div>`, "event-detail-card") : ""}
 
                     <div style="height:80px" class="lg:hidden"></div>
                     <div style="height:32px" class="hidden lg:block"></div>
@@ -5828,9 +6022,9 @@
                         <div class="ed-summary-header-row">
                             ${event.banner_url ? `<img src="${event.banner_url}" class="ed-summary-thumb" alt="" loading="eager" decoding="async">` : `<div class="ed-summary-thumb ed-summary-thumb-placeholder"></div>`}
                             <div class="ed-summary-header-text">
-                                <p class="ed-summary-title">${evtEscapeHtml2(event.title)}</p>
-                                <p class="ed-summary-sub">${cpName ? `Hosted by ${evtEscapeHtml2(cpName)}` : evtEscapeHtml2(tc.label)}</p>
-                                ${event.category ? `<p class="ed-summary-cat">${evtEscapeHtml2((event.category || "").replace(/_/g, " "))}</p>` : ""}
+                                <p class="ed-summary-title">${evtEscapeHtml3(event.title)}</p>
+                                <p class="ed-summary-sub">${cpName ? `Hosted by ${evtEscapeHtml3(cpName)}` : evtEscapeHtml3(tc.label)}</p>
+                                ${event.category ? `<p class="ed-summary-cat">${evtEscapeHtml3((event.category || "").replace(/_/g, " "))}</p>` : ""}
                             </div>
                         </div>
                         <hr class="ed-divider" style="margin:14px 0">
@@ -5852,8 +6046,8 @@
                             ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-summary-row">
                                 <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg></div>
                                 <div>
-                                    <span class="ed-summary-main">${evtEscapeHtml2(event.location_nickname || event.location_text || "")}</span>
-                                    ${event.location_text && event.location_nickname ? `<span class="ed-summary-sub2">${evtEscapeHtml2(event.location_text)}</span>` : ""}
+                                    <span class="ed-summary-main">${evtEscapeHtml3(event.location_nickname || event.location_text || "")}</span>
+                                    ${event.location_text && event.location_nickname ? `<span class="ed-summary-sub2">${evtEscapeHtml3(event.location_text)}</span>` : ""}
                                     ${event.location_text ? `<a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? "https://maps.apple.com/?daddr=" : "https://www.google.com/maps/dir/?api=1&destination="}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-maps-link">View on Maps \u2197</a>` : ""}
                                 </div>
                             </div>` : ""}
@@ -5908,7 +6102,7 @@
     detail.get = function(name) {
       return detail._registry[name];
     };
-    async function evtOpenDetail2(eventId2) {
+    async function evtOpenDetail(eventId2) {
       const ctx = await window.evtLoadDetailContext(eventId2);
       if (!ctx) return;
       const {
@@ -5967,7 +6161,7 @@
       let myCheckin = null;
       const checkinEnabled = event.checkin_enabled !== false;
       if (checkinEnabled && memberGoing && event.checkin_mode === "attendee_ticket") {
-        const { data: ci } = await supabaseClient.from("event_checkins").select("checked_in_at").eq("event_id", eventId2).eq("user_id", evtCurrentUser.id).maybeSingle();
+        const { data: ci } = await supabaseClient.from("event_checkins").select("checked_in_at").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
         myCheckin = ci;
         const checkedInTime = myCheckin ? new Date(myCheckin.checked_in_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : null;
         const checkedInDate = myCheckin ? new Date(myCheckin.checked_in_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null;
@@ -6081,10 +6275,10 @@
     }
     function evtCleanupHeroCollapse() {
     }
-    window.evtOpenDetail = evtOpenDetail2;
+    window.evtOpenDetail = globalThis.evtOpenDetail;
     window.evtInitHeroCollapse = evtInitHeroCollapse;
     window.evtCleanupHeroCollapse = evtCleanupHeroCollapse;
-    detail.open = evtOpenDetail2;
+    detail.open = globalThis.evtOpenDetail;
     detail.openLightbox = window.evtOpenLightbox;
     detail.openFullscreenMap = window.evtOpenFullscreenMap;
     detail.closeFullscreenMap = window.evtCloseFullscreenMap;
@@ -6207,8 +6401,8 @@
   async function evtPostComment(eventId2) {
     const input = document.getElementById("portalCommentInput");
     const body = (input?.value || "").trim();
-    if (!body || !eventId2 || !evtCurrentUser) return;
-    const { error } = await supabaseClient.from("event_comments").insert({ event_id: eventId2, user_id: evtCurrentUser.id, body });
+    if (!body || !eventId2 || !globalThis.evtCurrentUser) return;
+    const { error } = await supabaseClient.from("event_comments").insert({ event_id: eventId2, user_id: globalThis.evtCurrentUser.id, body });
     if (error) {
       console.error("Comment error:", error);
       return;
@@ -6231,8 +6425,8 @@
     const eventId2 = event.id;
     const { data: phases } = await supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true });
     const { data: entries } = await supabaseClient.from("competition_entries").select("*, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).eq("moderated", false).order("submitted_at", { ascending: true });
-    const myEntry = (entries || []).find((e) => e.user_id === evtCurrentUser.id);
-    const { data: myVote } = await supabaseClient.from("competition_votes").select("entry_id").eq("event_id", eventId2).eq("voter_id", evtCurrentUser.id).maybeSingle();
+    const myEntry = (entries || []).find((e) => e.user_id === globalThis.evtCurrentUser.id);
+    const { data: myVote } = await supabaseClient.from("competition_votes").select("entry_id").eq("event_id", eventId2).eq("voter_id", globalThis.evtCurrentUser.id).maybeSingle();
     const { data: winners } = await supabaseClient.from("competition_winners").select("*, profiles:user_id(first_name, last_name, profile_picture_url), competition_entries!competition_winners_entry_id_fkey(title)").eq("event_id", eventId2).order("place", { ascending: true });
     const { count: contributionCount } = await supabaseClient.from("prize_pool_contributions").select("id", { count: "exact", head: true }).eq("event_id", eventId2);
     const { count: totalEntryCount } = await supabaseClient.from("competition_entries").select("id", { count: "exact", head: true }).eq("event_id", eventId2);
@@ -6366,7 +6560,7 @@
           contentPreview = `<a href="${entry.external_url}" target="_blank" class="mt-2 block text-xs text-blue-600 hover:underline truncate">\u{1F517} ${evtEscapeHtml(entry.external_url)}</a>`;
         }
         let voteBtn = "";
-        if (displayPhaseNum === 3 && !myVote && entry.user_id !== evtCurrentUser.id) {
+        if (displayPhaseNum === 3 && !myVote && entry.user_id !== globalThis.evtCurrentUser.id) {
           voteBtn = `<button onclick="evtCastVote('${eventId2}','${entry.id}')" class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Vote</button>`;
         } else if (isVoted) {
           voteBtn = `<div class="mt-2 text-center text-xs font-bold text-blue-600">\u2713 Your Vote</div>`;
@@ -6553,9 +6747,9 @@
             </button>
         </div>`;
   }
-  async function evtJoinCompetition2(eventId2) {
+  async function evtJoinCompetition(eventId2) {
     try {
-      const event = evtAllEvents.find((e) => e.id === eventId2);
+      const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
       const config = event?.competition_config || {};
       const entryFee = config.entry_fee_cents || 0;
       if (entryFee > 0) {
@@ -6569,7 +6763,7 @@
       }
       const { error } = await supabaseClient.from("competition_entries").insert({
         event_id: eventId2,
-        user_id: evtCurrentUser.id,
+        user_id: globalThis.evtCurrentUser.id,
         title: "Registered",
         entry_type: "text"
       });
@@ -6581,13 +6775,13 @@
         throw error;
       }
       alert("You are registered! Submit your entry when Phase 2 opens.");
-      evtOpenDetail(eventId2);
+      globalThis.evtOpenDetail(eventId2);
     } catch (err) {
       console.error("Join competition error:", err);
       alert(`Failed to join: ${err.message}`);
     }
   }
-  async function evtSubmitEntry2(eventId2) {
+  async function evtSubmitEntry(eventId2) {
     try {
       const title = document.getElementById("compEntryTitle")?.value?.trim();
       if (!title) {
@@ -6613,7 +6807,7 @@
           return;
         }
         const ext = file.name.split(".").pop();
-        const path = `${evtCurrentUser.id}/${eventId2}-${Date.now()}.${ext}`;
+        const path = `${globalThis.evtCurrentUser.id}/${eventId2}-${Date.now()}.${ext}`;
         const { error: upErr } = await supabaseClient.storage.from("competition-entries").upload(path, file, { contentType: file.type });
         if (upErr) throw upErr;
         const { data: { publicUrl } } = supabaseClient.storage.from("competition-entries").getPublicUrl(path);
@@ -6636,21 +6830,21 @@
         external_url: externalUrl,
         entry_type: entryType,
         submitted_at: (/* @__PURE__ */ new Date()).toISOString()
-      }).eq("event_id", eventId2).eq("user_id", evtCurrentUser.id);
+      }).eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id);
       if (error) throw error;
       alert("Entry submitted successfully! \u{1F389}");
-      evtOpenDetail(eventId2);
+      globalThis.evtOpenDetail(eventId2);
     } catch (err) {
       console.error("Submit entry error:", err);
       alert(`Failed to submit: ${err.message}`);
     }
   }
-  async function evtCastVote2(eventId2, entryId) {
+  async function evtCastVote(eventId2, entryId) {
     if (!confirm("Cast your vote? This cannot be changed.")) return;
     try {
       const { error } = await supabaseClient.from("competition_votes").insert({
         event_id: eventId2,
-        voter_id: evtCurrentUser.id,
+        voter_id: globalThis.evtCurrentUser.id,
         entry_id: entryId
       });
       if (error) {
@@ -6665,30 +6859,30 @@
         throw error;
       }
       alert("Vote cast! \u{1F5F3}\uFE0F");
-      evtOpenDetail(eventId2);
+      globalThis.evtOpenDetail(eventId2);
     } catch (err) {
       console.error("Vote error:", err);
       alert(`Failed to vote: ${err.message}`);
     }
   }
-  async function evtModerateEntry2(eventId2, entryId) {
+  async function evtModerateEntry(eventId2, entryId) {
     const reason = prompt("Reason for removing this entry:");
     if (reason === null) return;
     try {
       const { error } = await supabaseClient.from("competition_entries").update({
         moderated: true,
-        moderated_by: evtCurrentUser.id,
+        moderated_by: globalThis.evtCurrentUser.id,
         moderation_reason: reason || "Removed by host"
       }).eq("id", entryId);
       if (error) throw error;
       alert("Entry removed.");
-      evtOpenDetail(eventId2);
+      globalThis.evtOpenDetail(eventId2);
     } catch (err) {
       console.error("Moderate entry error:", err);
       alert(`Failed to remove: ${err.message}`);
     }
   }
-  async function evtContributeToPrizePool2(eventId2) {
+  async function evtContributeToPrizePool(eventId2) {
     const dollars = prompt("How much would you like to contribute? ($)");
     if (!dollars) return;
     const cents = Math.round(parseFloat(dollars) * 100);
@@ -6709,17 +6903,17 @@
       alert(`Failed: ${err.message}`);
     }
   }
-  async function evtStartPhase2(eventId2, phaseNum) {
+  async function evtStartPhase(eventId2, phaseNum) {
     try {
       const { error } = await supabaseClient.from("competition_phases").update({ status: "active" }).eq("event_id", eventId2).eq("phase_num", phaseNum);
       if (error) throw error;
-      evtOpenDetail(eventId2);
+      globalThis.evtOpenDetail(eventId2);
     } catch (err) {
       console.error("Start phase error:", err);
       alert(`Failed: ${err.message}`);
     }
   }
-  async function evtAdvancePhase2(eventId2, currentPhaseNum) {
+  async function evtAdvancePhase(eventId2, currentPhaseNum) {
     if (!confirm(`Complete Phase ${currentPhaseNum} and advance to next?`)) return;
     try {
       const { error: e1 } = await supabaseClient.from("competition_phases").update({ status: "completed" }).eq("event_id", eventId2).eq("phase_num", currentPhaseNum);
@@ -6729,15 +6923,15 @@
         const { error: e2 } = await supabaseClient.from("competition_phases").update({ status: "active" }).eq("event_id", eventId2).eq("phase_num", nextNum);
         if (e2) throw e2;
       }
-      evtOpenDetail(eventId2);
+      globalThis.evtOpenDetail(eventId2);
     } catch (err) {
       console.error("Advance phase error:", err);
       alert(`Failed: ${err.message}`);
     }
   }
-  async function evtExtendPhase2(eventId2, phaseNum) {
+  async function evtExtendPhase(eventId2, phaseNum) {
     try {
-      const event = evtAllEvents.find((e) => e.id === eventId2);
+      const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
       const config = event?.competition_config || {};
       const extensionDays = config.extension_days || 3;
       const { data: phase } = await supabaseClient.from("competition_phases").select("ends_at").eq("event_id", eventId2).eq("phase_num", phaseNum).single();
@@ -6751,16 +6945,16 @@
       }).eq("event_id", eventId2).eq("phase_num", phaseNum);
       if (error) throw error;
       alert(`Phase extended by ${extensionDays} days.`);
-      evtOpenDetail(eventId2);
+      globalThis.evtOpenDetail(eventId2);
     } catch (err) {
       console.error("Extend phase error:", err);
       alert(`Failed: ${err.message}`);
     }
   }
-  async function evtFinalizeCompetition2(eventId2) {
+  async function evtFinalizeCompetition(eventId2) {
     if (!confirm("Finalize results and announce winners? This cannot be undone.")) return;
     try {
-      const event = evtAllEvents.find((e) => e.id === eventId2);
+      const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
       const config = event?.competition_config || {};
       const tiers = event?.winner_tier_config || [{ place: 1, pct: 100 }];
       const totalPool = event?.total_prize_pool_cents || 0;
@@ -6802,8 +6996,8 @@
       await supabaseClient.from("competition_phases").update({ status: "completed" }).eq("event_id", eventId2).eq("phase_num", 4);
       await supabaseClient.from("events").update({ status: "completed" }).eq("id", eventId2);
       alert("Competition finalized! Winners announced! \u{1F3C6}\u{1F389}");
-      await evtLoadEvents();
-      evtOpenDetail(eventId2);
+      await globalThis.evtLoadEvents();
+      globalThis.evtOpenDetail(eventId2);
     } catch (err) {
       console.error("Finalize competition error:", err);
       alert(`Failed: ${err.message}`);
@@ -6825,15 +7019,15 @@
   window.PortalEvents.competition = window.PortalEvents.competition || {};
   window.PortalEvents.competition.buildHtml = evtBuildCompetitionHtml2;
   window.PortalEvents.competition.buildSubmitFormHtml = evtBuildSubmitFormHtml;
-  window.PortalEvents.competition.join = evtJoinCompetition2;
-  window.PortalEvents.competition.submitEntry = evtSubmitEntry2;
-  window.PortalEvents.competition.castVote = evtCastVote2;
-  window.PortalEvents.competition.moderateEntry = evtModerateEntry2;
-  window.PortalEvents.competition.contributeToPrizePool = evtContributeToPrizePool2;
-  window.PortalEvents.competition.startPhase = evtStartPhase2;
-  window.PortalEvents.competition.advancePhase = evtAdvancePhase2;
-  window.PortalEvents.competition.extendPhase = evtExtendPhase2;
-  window.PortalEvents.competition.finalize = evtFinalizeCompetition2;
+  window.PortalEvents.competition.join = evtJoinCompetition;
+  window.PortalEvents.competition.submitEntry = evtSubmitEntry;
+  window.PortalEvents.competition.castVote = evtCastVote;
+  window.PortalEvents.competition.moderateEntry = evtModerateEntry;
+  window.PortalEvents.competition.contributeToPrizePool = evtContributeToPrizePool;
+  window.PortalEvents.competition.startPhase = evtStartPhase;
+  window.PortalEvents.competition.advancePhase = evtAdvancePhase;
+  window.PortalEvents.competition.extendPhase = evtExtendPhase;
+  window.PortalEvents.competition.finalize = evtFinalizeCompetition;
   window.PortalEvents.competition.recalcTiers = evtRecalcCompTiers2;
 
   // js/portal/events/engagement/rsvp.js
@@ -7073,7 +7267,7 @@
       window.evtCostItems.push({ id, name: "", category: "other", total_cost_cents: 0, included_in_buyin: true, avg_per_person_cents: 0, notes: "" });
       evtRenderCostItems();
     }
-    function evtRemoveCostItem2(itemId) {
+    function evtRemoveCostItem(itemId) {
       window.evtCostItems = window.evtCostItems.filter((i) => i.id !== itemId);
       evtRenderCostItems();
       evtRecalcCostSummary2();
@@ -7125,7 +7319,7 @@
                    class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-brand-500 focus:border-transparent">
         </div>`).join("");
     }
-    function evtUpdateCostItem2(itemId, field, value) {
+    function evtUpdateCostItem(itemId, field, value) {
       const item = window.evtCostItems.find((i) => i.id === itemId);
       if (item) {
         item[field] = value;
@@ -7170,9 +7364,9 @@
     }
     window.evtToggleLlcFields = evtToggleLlcFields2;
     window.evtAddCostItem = evtAddCostItem2;
-    window.evtRemoveCostItem = evtRemoveCostItem2;
+    window.evtRemoveCostItem = evtRemoveCostItem;
     window.evtRenderCostItems = evtRenderCostItems;
-    window.evtUpdateCostItem = evtUpdateCostItem2;
+    window.evtUpdateCostItem = evtUpdateCostItem;
     window.evtRecalcCostSummary = evtRecalcCostSummary2;
   })();
 
@@ -7263,7 +7457,7 @@
       const location2 = document.getElementById("eventLocation").value.trim();
       const dateStr = start ? new Date(start).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }) : "TBD";
       const timeStr = start ? new Date(start).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "TBD";
-      const bannerBg = evtBannerFile ? `background-image:url('${URL.createObjectURL(evtBannerFile)}');background-size:cover;background-position:center;` : `background:linear-gradient(135deg,#6366f1,#8b5cf6);`;
+      const bannerBg = globalThis.evtBannerFile ? `background-image:url('${URL.createObjectURL(globalThis.evtBannerFile)}');background-size:cover;background-position:center;` : `background:linear-gradient(135deg,#6366f1,#8b5cf6);`;
       const gateTime = document.getElementById("gateTime").checked;
       const gateLocation = document.getElementById("gateLocation").checked;
       document.getElementById("eventsDetailView").innerHTML = `
@@ -7295,7 +7489,7 @@
             </div>
         </div>
     `;
-      evtToggleModal("createModal", false);
+      globalThis.evtToggleModal("createModal", false);
       document.getElementById("eventsListView")?.classList.add("hidden");
       document.getElementById("eventsDetailView")?.classList.remove("hidden");
     }
@@ -7303,7 +7497,7 @@
       document.getElementById("eventsDetailView").innerHTML = "";
       document.getElementById("eventsDetailView")?.classList.add("hidden");
       document.getElementById("eventsListView")?.classList.remove("hidden");
-      evtToggleModal("createModal", true);
+      globalThis.evtToggleModal("createModal", true);
     }
     window.evtHandlePreview = evtHandlePreview2;
     window.evtClosePreview = evtClosePreview;
@@ -7326,19 +7520,19 @@
         const checkinEnabled = document.getElementById("checkinEnabled").checked;
         const rsvpEnabled = document.getElementById("rsvpEnabled").checked;
         let bannerUrl = null;
-        if (evtBannerFile) {
-          const ext = evtBannerFile.name.split(".").pop();
+        if (globalThis.evtBannerFile) {
+          const ext = globalThis.evtBannerFile.name.split(".").pop();
           const path = `${slug}-${Date.now()}.${ext}`;
-          const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, evtBannerFile, { contentType: evtBannerFile.type });
+          const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, globalThis.evtBannerFile, { contentType: globalThis.evtBannerFile.type });
           if (upErr) throw upErr;
           const { data: { publicUrl } } = supabaseClient.storage.from("event-banners").getPublicUrl(path);
           bannerUrl = publicUrl;
         }
         let embedImageUrl = null;
-        if (evtEmbedImageFile) {
-          const ext = evtEmbedImageFile.name.split(".").pop();
+        if (globalThis.evtEmbedImageFile) {
+          const ext = globalThis.evtEmbedImageFile.name.split(".").pop();
           const path = `embeds/${slug}-${Date.now()}.${ext}`;
-          const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, evtEmbedImageFile, { contentType: evtEmbedImageFile.type });
+          const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, globalThis.evtEmbedImageFile, { contentType: globalThis.evtEmbedImageFile.type });
           if (upErr) throw upErr;
           const { data: { publicUrl } } = supabaseClient.storage.from("event-banners").getPublicUrl(path);
           embedImageUrl = publicUrl;
@@ -7370,7 +7564,7 @@
           rsvpCostCents = pricingMode === "paid" ? rsvpCostDollars * 100 : 0;
         }
         const record = {
-          created_by: evtCurrentUser.id,
+          created_by: globalThis.evtCurrentUser.id,
           event_type: eventType,
           title,
           slug,
@@ -7502,8 +7696,8 @@
           if (phaseErr) console.error("Competition phases insert error:", phaseErr);
         }
         document.getElementById("createEventForm").reset();
-        evtBannerFile = null;
-        evtEmbedImageFile = null;
+        globalThis.evtBannerFile = null;
+        globalThis.evtEmbedImageFile = null;
         window.evtCostItems = [];
         window._evtLocGeoCache = null;
         window.evtSetLocationIcon("hide");
@@ -7516,9 +7710,9 @@
         document.getElementById("compFieldsSection")?.classList.add("hidden");
         document.getElementById("costItemsList") && (document.getElementById("costItemsList").innerHTML = "");
         document.getElementById("costSummary")?.classList.add("hidden");
-        evtToggleModal("createModal", false);
-        await evtLoadEvents();
-        evtNavigateToEvent(data.slug);
+        globalThis.evtToggleModal("createModal", false);
+        await globalThis.evtLoadEvents();
+        globalThis.evtNavigateToEvent(data.slug);
       } catch (err) {
         console.error("Create event error:", err);
         alert(`Failed to create event: ${err.message}`);
@@ -9639,7 +9833,7 @@
         if (uploadErr) throw uploadErr;
         const { error: dbErr } = await supabaseClient.from("event_documents").insert({
           event_id: STATE.eventId,
-          uploaded_by: evtCurrentUser.id,
+          uploaded_by: globalThis.evtCurrentUser.id,
           target_user_id: targetUserId || null,
           doc_type: docType,
           label,
@@ -10958,50 +11152,53 @@ Type RESET to continue.`
     function exp(name, fn) {
       if (typeof fn !== "undefined") window[name] = fn;
     }
-    exp("evtHandleRsvp", typeof evtHandleRsvp !== "undefined" ? evtHandleRsvp : void 0);
-    exp("evtHandleRaffleEntry", typeof evtHandleRaffleEntry !== "undefined" ? evtHandleRaffleEntry : void 0);
-    exp("evtOpenScanner", typeof evtOpenScanner !== "undefined" ? evtOpenScanner : void 0);
-    exp("evtOpenRaffleDraw", typeof evtOpenRaffleDraw !== "undefined" ? evtOpenRaffleDraw : void 0);
-    exp("evtDrawWinner", typeof evtDrawWinner !== "undefined" ? evtDrawWinner : void 0);
-    exp("evtToggleModal", typeof evtToggleModal !== "undefined" ? evtToggleModal : void 0);
-    exp("evtUpdateStatus", typeof evtUpdateStatus !== "undefined" ? evtUpdateStatus : void 0);
-    exp("evtCopyShareUrl", typeof evtCopyShareUrl !== "undefined" ? evtCopyShareUrl : void 0);
-    exp("evtCloseScanner", typeof evtCloseScanner !== "undefined" ? evtCloseScanner : void 0);
-    exp("evtCloseRaffleDraw", typeof evtCloseRaffleDraw !== "undefined" ? evtCloseRaffleDraw : void 0);
-    exp("evtAddCostItem", typeof evtAddCostItem !== "undefined" ? evtAddCostItem : void 0);
-    exp("evtRemoveCostItem", typeof evtRemoveCostItem !== "undefined" ? evtRemoveCostItem : void 0);
-    exp("evtUpdateCostItem", typeof evtUpdateCostItem !== "undefined" ? evtUpdateCostItem : void 0);
-    exp("evtJoinWaitlist", typeof evtJoinWaitlist !== "undefined" ? evtJoinWaitlist : void 0);
-    exp("evtLeaveWaitlist", typeof evtLeaveWaitlist !== "undefined" ? evtLeaveWaitlist : void 0);
-    exp("evtDuplicateEvent", typeof evtDuplicateEvent !== "undefined" ? evtDuplicateEvent : void 0);
-    exp("evtCancelEvent", typeof evtCancelEvent !== "undefined" ? evtCancelEvent : void 0);
-    exp("evtRescheduleEvent", typeof evtRescheduleEvent !== "undefined" ? evtRescheduleEvent : void 0);
-    exp("evtDeleteEvent", typeof evtDeleteEvent !== "undefined" ? evtDeleteEvent : void 0);
-    exp("evtClaimWaitlistSpot", typeof evtClaimWaitlistSpot !== "undefined" ? evtClaimWaitlistSpot : void 0);
-    exp("evtShowUploadForm", typeof evtShowUploadForm !== "undefined" ? evtShowUploadForm : void 0);
-    exp("evtUploadDocument", typeof evtUploadDocument !== "undefined" ? evtUploadDocument : void 0);
-    exp("evtDownloadDocument", typeof evtDownloadDocument !== "undefined" ? evtDownloadDocument : void 0);
-    exp("evtMarkDistributed", typeof evtMarkDistributed !== "undefined" ? evtMarkDistributed : void 0);
-    exp("evtDeleteDocument", typeof evtDeleteDocument !== "undefined" ? evtDeleteDocument : void 0);
-    exp("evtOpenDocumentsPanel", typeof evtOpenDocumentsPanel !== "undefined" ? evtOpenDocumentsPanel : void 0);
-    exp("evtCloseDocumentsPanel", typeof evtCloseDocumentsPanel !== "undefined" ? evtCloseDocumentsPanel : void 0);
-    exp("evtInitMap", typeof evtInitMap !== "undefined" ? evtInitMap : void 0);
-    exp("evtToggleLocationSharing", typeof evtToggleLocationSharing !== "undefined" ? evtToggleLocationSharing : void 0);
-    exp("evtJoinCompetition", typeof evtJoinCompetition !== "undefined" ? evtJoinCompetition : void 0);
-    exp("evtSubmitEntry", typeof evtSubmitEntry !== "undefined" ? evtSubmitEntry : void 0);
-    exp("evtCastVote", typeof evtCastVote !== "undefined" ? evtCastVote : void 0);
-    exp("evtModerateEntry", typeof evtModerateEntry !== "undefined" ? evtModerateEntry : void 0);
-    exp("evtContributeToPrizePool", typeof evtContributeToPrizePool !== "undefined" ? evtContributeToPrizePool : void 0);
-    exp("evtStartPhase", typeof evtStartPhase !== "undefined" ? evtStartPhase : void 0);
-    exp("evtAdvancePhase", typeof evtAdvancePhase !== "undefined" ? evtAdvancePhase : void 0);
-    exp("evtExtendPhase", typeof evtExtendPhase !== "undefined" ? evtExtendPhase : void 0);
-    exp("evtFinalizeCompetition", typeof evtFinalizeCompetition !== "undefined" ? evtFinalizeCompetition : void 0);
-    exp("evtRecalcCompTiers", typeof evtRecalcCompTiers !== "undefined" ? evtRecalcCompTiers : void 0);
-    exp("evtUploadPhoto", typeof evtHandlePhotoSelect !== "undefined" ? evtHandlePhotoSelect : void 0);
-    exp("evtDeletePhoto", typeof evtDeletePhoto !== "undefined" ? evtDeletePhoto : void 0);
-    exp("evtViewPhoto", typeof evtViewPhoto !== "undefined" ? evtViewPhoto : void 0);
-    exp("evtNavigateToEvent", typeof evtNavigateToEvent !== "undefined" ? evtNavigateToEvent : void 0);
-    exp("evtNavigateToList", typeof evtNavigateToList !== "undefined" ? evtNavigateToList : void 0);
+    function g(name) {
+      return globalThis[name];
+    }
+    exp("evtHandleRsvp", typeof g("evtHandleRsvp") === "function" ? g("evtHandleRsvp") : void 0);
+    exp("evtHandleRaffleEntry", typeof g("evtHandleRaffleEntry") === "function" ? g("evtHandleRaffleEntry") : void 0);
+    exp("evtOpenScanner", typeof g("evtOpenScanner") === "function" ? g("evtOpenScanner") : void 0);
+    exp("evtOpenRaffleDraw", typeof g("evtOpenRaffleDraw") === "function" ? g("evtOpenRaffleDraw") : void 0);
+    exp("evtDrawWinner", typeof g("evtDrawWinner") === "function" ? g("evtDrawWinner") : void 0);
+    exp("evtToggleModal", typeof g("evtToggleModal") === "function" ? g("evtToggleModal") : void 0);
+    exp("evtUpdateStatus", typeof g("evtUpdateStatus") === "function" ? g("evtUpdateStatus") : void 0);
+    exp("evtCopyShareUrl", typeof g("evtCopyShareUrl") === "function" ? g("evtCopyShareUrl") : void 0);
+    exp("evtCloseScanner", typeof g("evtCloseScanner") === "function" ? g("evtCloseScanner") : void 0);
+    exp("evtCloseRaffleDraw", typeof g("evtCloseRaffleDraw") === "function" ? g("evtCloseRaffleDraw") : void 0);
+    exp("evtAddCostItem", typeof g("evtAddCostItem") === "function" ? g("evtAddCostItem") : void 0);
+    exp("evtRemoveCostItem", typeof g("evtRemoveCostItem") === "function" ? g("evtRemoveCostItem") : void 0);
+    exp("evtUpdateCostItem", typeof g("evtUpdateCostItem") === "function" ? g("evtUpdateCostItem") : void 0);
+    exp("evtJoinWaitlist", typeof g("evtJoinWaitlist") === "function" ? g("evtJoinWaitlist") : void 0);
+    exp("evtLeaveWaitlist", typeof g("evtLeaveWaitlist") === "function" ? g("evtLeaveWaitlist") : void 0);
+    exp("evtDuplicateEvent", typeof g("evtDuplicateEvent") === "function" ? g("evtDuplicateEvent") : void 0);
+    exp("evtCancelEvent", typeof g("evtCancelEvent") === "function" ? g("evtCancelEvent") : void 0);
+    exp("evtRescheduleEvent", typeof g("evtRescheduleEvent") === "function" ? g("evtRescheduleEvent") : void 0);
+    exp("evtDeleteEvent", typeof g("evtDeleteEvent") === "function" ? g("evtDeleteEvent") : void 0);
+    exp("evtClaimWaitlistSpot", typeof g("evtClaimWaitlistSpot") === "function" ? g("evtClaimWaitlistSpot") : void 0);
+    exp("evtShowUploadForm", typeof g("evtShowUploadForm") === "function" ? g("evtShowUploadForm") : void 0);
+    exp("evtUploadDocument", typeof g("evtUploadDocument") === "function" ? g("evtUploadDocument") : void 0);
+    exp("evtDownloadDocument", typeof g("evtDownloadDocument") === "function" ? g("evtDownloadDocument") : void 0);
+    exp("evtMarkDistributed", typeof g("evtMarkDistributed") === "function" ? g("evtMarkDistributed") : void 0);
+    exp("evtDeleteDocument", typeof g("evtDeleteDocument") === "function" ? g("evtDeleteDocument") : void 0);
+    exp("evtOpenDocumentsPanel", typeof g("evtOpenDocumentsPanel") === "function" ? g("evtOpenDocumentsPanel") : void 0);
+    exp("evtCloseDocumentsPanel", typeof g("evtCloseDocumentsPanel") === "function" ? g("evtCloseDocumentsPanel") : void 0);
+    exp("evtInitMap", typeof g("evtInitMap") === "function" ? g("evtInitMap") : void 0);
+    exp("evtToggleLocationSharing", typeof g("evtToggleLocationSharing") === "function" ? g("evtToggleLocationSharing") : void 0);
+    exp("evtJoinCompetition", typeof g("evtJoinCompetition") === "function" ? g("evtJoinCompetition") : void 0);
+    exp("evtSubmitEntry", typeof g("evtSubmitEntry") === "function" ? g("evtSubmitEntry") : void 0);
+    exp("evtCastVote", typeof g("evtCastVote") === "function" ? g("evtCastVote") : void 0);
+    exp("evtModerateEntry", typeof g("evtModerateEntry") === "function" ? g("evtModerateEntry") : void 0);
+    exp("evtContributeToPrizePool", typeof g("evtContributeToPrizePool") === "function" ? g("evtContributeToPrizePool") : void 0);
+    exp("evtStartPhase", typeof g("evtStartPhase") === "function" ? g("evtStartPhase") : void 0);
+    exp("evtAdvancePhase", typeof g("evtAdvancePhase") === "function" ? g("evtAdvancePhase") : void 0);
+    exp("evtExtendPhase", typeof g("evtExtendPhase") === "function" ? g("evtExtendPhase") : void 0);
+    exp("evtFinalizeCompetition", typeof g("evtFinalizeCompetition") === "function" ? g("evtFinalizeCompetition") : void 0);
+    exp("evtRecalcCompTiers", typeof g("evtRecalcCompTiers") === "function" ? g("evtRecalcCompTiers") : void 0);
+    exp("evtUploadPhoto", typeof g("evtHandlePhotoSelect") === "function" ? g("evtHandlePhotoSelect") : void 0);
+    exp("evtDeletePhoto", typeof g("evtDeletePhoto") === "function" ? g("evtDeletePhoto") : void 0);
+    exp("evtViewPhoto", typeof g("evtViewPhoto") === "function" ? g("evtViewPhoto") : void 0);
+    exp("evtNavigateToEvent", typeof g("evtNavigateToEvent") === "function" ? g("evtNavigateToEvent") : void 0);
+    exp("evtNavigateToList", typeof g("evtNavigateToList") === "function" ? g("evtNavigateToList") : void 0);
   })();
 
   // js/portal/events/manage/sheet.js
@@ -11230,15 +11427,14 @@ Type RESET to continue.`
   // js/portal/events/init.js
   var _eventsPageInitialized = false;
   var _eventsPopstateListenerBound = false;
-  var _eventsListenersBound = false;
   async function initEventsPage() {
     if (_eventsPageInitialized) return;
     _eventsPageInitialized = true;
     window._eventsPageInitialized = true;
-    evtCurrentUser = await checkAuth();
-    if (!evtCurrentUser) return;
-    const { data: profile } = await supabaseClient.from("profiles").select("role, first_name, last_name, profile_picture_url").eq("id", evtCurrentUser.id).maybeSingle();
-    evtCurrentUserRole = profile?.role;
+    globalThis.evtCurrentUser = await checkAuth();
+    if (!globalThis.evtCurrentUser) return;
+    const { data: profile } = await supabaseClient.from("profiles").select("role, first_name, last_name, profile_picture_url").eq("id", globalThis.evtCurrentUser.id).maybeSingle();
+    globalThis.evtCurrentUserRole = profile?.role;
     window.evtCurrentUserName = profile?.first_name || "";
     window.evtCurrentUserPic = profile?.profile_picture_url || null;
     window.evtCurrentUserInitials = ((profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "")).toUpperCase() || "?";
@@ -11256,164 +11452,15 @@ Type RESET to continue.`
         }
       }
     }
-    evtSetupListeners();
-    await evtLoadEvents();
-    evtRouteByUrl();
+    globalThis.evtSetupListeners();
+    await globalThis.evtLoadEvents();
+    globalThis.evtRouteByUrl();
     if (!_eventsPopstateListenerBound) {
       _eventsPopstateListenerBound = true;
-      window.addEventListener("popstate", () => evtRouteByUrl());
+      window.addEventListener("popstate", () => globalThis.evtRouteByUrl());
     }
   }
   document.addEventListener("DOMContentLoaded", initEventsPage);
-  function evtUpdateRaffleCostHint() {
-    const costGroup = document.getElementById("raffleEntryCostGroup");
-    const hint = document.getElementById("raffleCostHint");
-    const mode = document.getElementById("pricingMode")?.value || "free";
-    const raffleOn = document.getElementById("raffleEnabled")?.checked;
-    if (!costGroup) return;
-    if (mode === "paid") {
-      costGroup.classList.add("hidden");
-      if (hint) hint.textContent = "Raffle entry is included free with paid RSVP.";
-    } else {
-      costGroup.classList.remove("hidden");
-      if (hint) hint.textContent = "This is the price for a standalone raffle ticket.";
-    }
-  }
-  function evtSetupListeners() {
-    if (_eventsListenersBound) return;
-    _eventsListenersBound = true;
-    evtInitFilterChips();
-    evtSetupSearch();
-    document.getElementById("typeFilter").addEventListener("change", evtRenderEvents);
-    function _openCreate() {
-      if (window.EventsCreate && window.EventsCreate.open) {
-        window.EventsCreate.open();
-      } else {
-        evtToggleModal("createModal", true);
-      }
-    }
-    document.getElementById("createEventBtn")?.addEventListener("click", _openCreate);
-    document.getElementById("emptyCreateBtn")?.addEventListener("click", _openCreate);
-    document.getElementById("closeCreateModal")?.addEventListener("click", () => evtToggleModal("createModal", false));
-    document.getElementById("createModalOverlay")?.addEventListener("click", () => evtToggleModal("createModal", false));
-    document.addEventListener("events:created", () => {
-      if (typeof evtLoadEvents === "function") evtLoadEvents();
-    });
-    document.getElementById("closeScannerModal")?.addEventListener("click", evtCloseScanner);
-    document.getElementById("scannerModalOverlay")?.addEventListener("click", evtCloseScanner);
-    const dropzone = document.getElementById("bannerDropzone");
-    const fileInput = document.getElementById("bannerFile");
-    dropzone?.addEventListener("click", () => fileInput?.click());
-    fileInput?.addEventListener("change", evtHandleBannerSelect);
-    dropzone?.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropzone.classList.add("border-brand-400");
-    });
-    dropzone?.addEventListener("dragleave", () => dropzone.classList.remove("border-brand-400"));
-    dropzone?.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropzone.classList.remove("border-brand-400");
-      if (e.dataTransfer.files[0]) {
-        fileInput.files = e.dataTransfer.files;
-        evtHandleBannerSelect();
-      }
-    });
-    const embedDropzone = document.getElementById("embedImageDropzone");
-    const embedFileInput = document.getElementById("embedImageFile");
-    embedDropzone?.addEventListener("click", () => embedFileInput?.click());
-    embedFileInput?.addEventListener("change", evtHandleEmbedImageSelect);
-    embedDropzone?.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      embedDropzone.classList.add("border-brand-400");
-    });
-    embedDropzone?.addEventListener("dragleave", () => embedDropzone.classList.remove("border-brand-400"));
-    embedDropzone?.addEventListener("drop", (e) => {
-      e.preventDefault();
-      embedDropzone.classList.remove("border-brand-400");
-      if (e.dataTransfer.files[0]) {
-        embedFileInput.files = e.dataTransfer.files;
-        evtHandleEmbedImageSelect();
-      }
-    });
-    document.getElementById("createEventForm")?.addEventListener("submit", evtHandleCreate);
-    evtInitLocationValidation();
-    document.getElementById("previewEventBtn")?.addEventListener("click", evtHandlePreview);
-    const pricingModeEl = document.getElementById("pricingMode");
-    pricingModeEl?.addEventListener("change", () => {
-      const mode = pricingModeEl.value;
-      const rsvpCostGroup = document.getElementById("rsvpCostGroup");
-      if (rsvpCostGroup) rsvpCostGroup.classList.toggle("hidden", mode !== "paid");
-      evtUpdateRaffleCostHint();
-    });
-    const raffleToggle = document.getElementById("raffleEnabled");
-    raffleToggle?.addEventListener("change", () => {
-      const config = document.getElementById("raffleConfig");
-      if (config) config.classList.toggle("hidden", !raffleToggle.checked);
-      evtUpdateRaffleCostHint();
-    });
-    const winnerCountEl = document.getElementById("raffleWinnerCount");
-    winnerCountEl?.addEventListener("change", () => {
-      const count = parseInt(winnerCountEl.value) || 1;
-      const container = document.getElementById("rafflePrizesList");
-      if (!container) return;
-      let html = "";
-      for (let i = 1; i <= count; i++) {
-        html += `<div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-gray-500 w-6">#${i}</span>
-                <input type="text" name="rafflePrize" data-raffle-prize placeholder="Prize for ${i}${evtOrdinalSuffix ? evtOrdinalSuffix(i) : "th"} place" class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500">
-            </div>`;
-      }
-      container.innerHTML = html;
-    });
-    document.getElementById("closeRaffleDrawModal")?.addEventListener("click", () => evtToggleModal("raffleDrawModal", false));
-    document.getElementById("raffleDrawOverlay")?.addEventListener("click", () => evtToggleModal("raffleDrawModal", false));
-    document.getElementById("eventType")?.addEventListener("change", evtToggleLlcFields);
-    document.getElementById("compTier1Pct")?.addEventListener("input", evtRecalcCompTiers);
-    document.getElementById("compTier2Pct")?.addEventListener("input", evtRecalcCompTiers);
-    document.getElementById("compTier3Pct")?.addEventListener("input", evtRecalcCompTiers);
-    document.getElementById("addCostItemBtn")?.addEventListener("click", evtAddCostItem);
-    document.getElementById("eventMax")?.addEventListener("change", evtRecalcCostSummary);
-    document.getElementById("eventMax")?.addEventListener("input", evtRecalcCostSummary);
-    document.getElementById("eventMinParticipants")?.addEventListener("change", evtRecalcCostSummary);
-    document.getElementById("eventMinParticipants")?.addEventListener("input", evtRecalcCostSummary);
-    document.getElementById("eventLlcCut")?.addEventListener("change", evtRecalcCostSummary);
-    document.getElementById("eventLlcCut")?.addEventListener("input", evtRecalcCostSummary);
-    const llcOverride = document.getElementById("llcRsvpOverride");
-    llcOverride?.addEventListener("input", () => {
-      llcOverride.dataset.userEdited = "true";
-    });
-    llcOverride?.addEventListener("change", () => {
-      llcOverride.dataset.userEdited = "true";
-    });
-    const transportEl = document.getElementById("eventTransportation");
-    transportEl?.addEventListener("change", () => {
-      const group = document.getElementById("transportEstimateGroup");
-      if (group) group.classList.toggle("hidden", transportEl.value !== "self_arranged");
-    });
-    const transportToggle = document.getElementById("transportationEnabled");
-    transportToggle?.addEventListener("change", () => {
-      const section = document.getElementById("transportationSection");
-      if (section) section.classList.toggle("hidden", !transportToggle.checked);
-    });
-    const rsvpToggle = document.getElementById("rsvpEnabled");
-    rsvpToggle?.addEventListener("change", () => {
-      const settings = document.getElementById("rsvpSettingsGroup");
-      if (settings) settings.classList.toggle("hidden", !rsvpToggle.checked);
-      if (!rsvpToggle.checked) {
-        ["gateTime", "gateLocation", "gateNotes"].forEach((id) => {
-          const el = document.getElementById(id);
-          if (el) el.checked = false;
-        });
-        const notes = document.getElementById("eventGatedNotes");
-        if (notes) notes.value = "";
-      }
-    });
-    const checkinToggle = document.getElementById("checkinEnabled");
-    checkinToggle?.addEventListener("change", () => {
-      const section = document.getElementById("checkinModeSection");
-      if (section) section.classList.toggle("hidden", !checkinToggle.checked);
-    });
-  }
   window.PortalEvents = window.PortalEvents || {};
   window.PortalEvents.initEventsPage = initEventsPage;
 })();

@@ -10,8 +10,8 @@
         const dateStr = start ? new Date(start).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : 'TBD';
         const timeStr = start ? new Date(start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'TBD';
 
-        const bannerBg = evtBannerFile
-            ? `background-image:url('${URL.createObjectURL(evtBannerFile)}');background-size:cover;background-position:center;`
+        const bannerBg = globalThis.evtBannerFile
+            ? `background-image:url('${URL.createObjectURL(globalThis.evtBannerFile)}');background-size:cover;background-position:center;`
             : `background:linear-gradient(135deg,#6366f1,#8b5cf6);`;
 
         const gateTime = document.getElementById('gateTime').checked;
@@ -46,7 +46,7 @@
             </div>
         </div>
     `;
-        evtToggleModal('createModal', false);
+        globalThis.evtToggleModal('createModal', false);
         document.getElementById('eventsListView')?.classList.add('hidden');
         document.getElementById('eventsDetailView')?.classList.remove('hidden');
     }
@@ -55,7 +55,7 @@
         document.getElementById('eventsDetailView').innerHTML = '';
         document.getElementById('eventsDetailView')?.classList.add('hidden');
         document.getElementById('eventsListView')?.classList.remove('hidden');
-        evtToggleModal('createModal', true);
+        globalThis.evtToggleModal('createModal', true);
     }
 
     window.evtHandlePreview = evtHandlePreview;

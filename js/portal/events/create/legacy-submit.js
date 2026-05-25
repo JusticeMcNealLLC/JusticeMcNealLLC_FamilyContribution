@@ -19,12 +19,12 @@
             const rsvpEnabled = document.getElementById('rsvpEnabled').checked;
 
             let bannerUrl = null;
-            if (evtBannerFile) {
-                const ext = evtBannerFile.name.split('.').pop();
+            if (globalThis.evtBannerFile) {
+                const ext = globalThis.evtBannerFile.name.split('.').pop();
                 const path = `${slug}-${Date.now()}.${ext}`;
                 const { error: upErr } = await supabaseClient.storage
                     .from('event-banners')
-                    .upload(path, evtBannerFile, { contentType: evtBannerFile.type });
+                    .upload(path, globalThis.evtBannerFile, { contentType: globalThis.evtBannerFile.type });
                 if (upErr) throw upErr;
                 const { data: { publicUrl } } = supabaseClient.storage
                     .from('event-banners')
@@ -33,12 +33,12 @@
             }
 
             let embedImageUrl = null;
-            if (evtEmbedImageFile) {
-                const ext = evtEmbedImageFile.name.split('.').pop();
+            if (globalThis.evtEmbedImageFile) {
+                const ext = globalThis.evtEmbedImageFile.name.split('.').pop();
                 const path = `embeds/${slug}-${Date.now()}.${ext}`;
                 const { error: upErr } = await supabaseClient.storage
                     .from('event-banners')
-                    .upload(path, evtEmbedImageFile, { contentType: evtEmbedImageFile.type });
+                    .upload(path, globalThis.evtEmbedImageFile, { contentType: globalThis.evtEmbedImageFile.type });
                 if (upErr) throw upErr;
                 const { data: { publicUrl } } = supabaseClient.storage
                     .from('event-banners')
@@ -76,7 +76,7 @@
             }
 
             const record = {
-                created_by: evtCurrentUser.id,
+                created_by: globalThis.evtCurrentUser.id,
                 event_type: eventType,
                 title,
                 slug,
@@ -229,8 +229,8 @@
             }
 
             document.getElementById('createEventForm').reset();
-            evtBannerFile = null;
-            evtEmbedImageFile = null;
+            globalThis.evtBannerFile = null;
+            globalThis.evtEmbedImageFile = null;
             window.evtCostItems = [];
             window._evtLocGeoCache = null;
             window.evtSetLocationIcon('hide');
@@ -243,10 +243,10 @@
             document.getElementById('compFieldsSection')?.classList.add('hidden');
             document.getElementById('costItemsList') && (document.getElementById('costItemsList').innerHTML = '');
             document.getElementById('costSummary')?.classList.add('hidden');
-            evtToggleModal('createModal', false);
+            globalThis.evtToggleModal('createModal', false);
 
-            await evtLoadEvents();
-            evtNavigateToEvent(data.slug);
+            await globalThis.evtLoadEvents();
+            globalThis.evtNavigateToEvent(data.slug);
         } catch (err) {
             console.error('Create event error:', err);
             alert(`Failed to create event: ${err.message}`);

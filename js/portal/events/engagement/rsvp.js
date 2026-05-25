@@ -36,7 +36,7 @@ window.evtCanEnterMemberRaffle = evtCanEnterMemberRaffle;
 async function evtHandleRsvp(eventId, status) {
     try {
         // Look up event to check pricing mode
-        const event = (window.evtAllEvents || evtAllEvents).find(e => e.id === eventId);
+        const event = (window.evtAllEvents || globalThis.evtAllEvents).find(e => e.id === eventId);
         if (!event) return;
 
         // ── Time-based guard (defense-in-depth) ─────────────
@@ -50,7 +50,7 @@ async function evtHandleRsvp(eventId, status) {
         }
 
         const isPaid = event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0;
-        const rsvpMap = window.evtAllRsvps || evtAllRsvps;
+        const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps;
         const existing = rsvpMap[eventId];
 
         // ── Paid RSVP path ──────────────────────────────────
@@ -97,7 +97,7 @@ async function evtHandleRsvp(eventId, status) {
                     .delete()
                     .eq('id', existing.id);
                 if (error) throw error;
-                delete evtAllRsvps[eventId];
+                delete globalThis.evtAllRsvps[eventId];
                 if (window.evtAllRsvps) delete window.evtAllRsvps[eventId];
             } else {
                 // Update status
@@ -106,7 +106,7 @@ async function evtHandleRsvp(eventId, status) {
                     .update({ status })
                     .eq('id', existing.id);
                 if (error) throw error;
-                if (evtAllRsvps[eventId]) evtAllRsvps[eventId].status = status;
+                if (globalThis.evtAllRsvps[eventId]) globalThis.evtAllRsvps[eventId].status = status;
                 if (window.evtAllRsvps?.[eventId]) window.evtAllRsvps[eventId].status = status;
             }
         } else {
@@ -114,18 +114,18 @@ async function evtHandleRsvp(eventId, status) {
             // so upsert protects the unique (event_id, user_id) row.
             const { data, error } = await supabaseClient
                 .from('event_rsvps')
-                .upsert({ event_id: eventId, user_id: evtCurrentUser.id, status }, { onConflict: 'event_id,user_id' })
+                .upsert({ event_id: eventId, user_id: globalThis.evtCurrentUser.id, status }, { onConflict: 'event_id,user_id' })
                 .select()
                 .single();
             if (error) throw error;
-            evtAllRsvps[eventId] = data;
+            globalThis.evtAllRsvps[eventId] = data;
             window.evtAllRsvps = window.evtAllRsvps || {};
             window.evtAllRsvps[eventId] = data;
         }
 
         // Refresh detail and card list
         evtRenderEvents();
-        await evtOpenDetail(eventId);
+        await globalThis.evtOpenDetail(eventId);
         if (status === 'going' && window.evtCtaRaffleIntent === eventId) {
             window.evtCtaRaffleIntent = null;
             evtOpenCtaPanel('raffle', eventId);
@@ -140,7 +140,7 @@ async function evtHandleRsvp(eventId, status) {
 
 async function evtHandleRaffleEntry(eventId) {
     try {
-        const event = evtAllEvents.find(e => e.id === eventId);
+        const event = globalThis.evtAllEvents.find(e => e.id === eventId);
         if (!event || !event.raffle_enabled) return;
 
         // ── Time-based guard (defense-in-depth) ─────────────
@@ -158,7 +158,7 @@ async function evtHandleRaffleEntry(eventId) {
             return;
         }
 
-        const rsvp = (window.evtAllRsvps || evtAllRsvps)[eventId];
+        const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId];
         if (evtIsRaffleBundledWithPaidRsvp(event)) {
             alert('Raffle entry is included with your paid RSVP for this event.');
             return;
@@ -192,7 +192,7 @@ async function evtHandleRaffleEntry(eventId) {
 
 async function evtHandleFreeRaffleEntry(eventId) {
     try {
-        const event = evtAllEvents.find(e => e.id === eventId);
+        const event = globalThis.evtAllEvents.find(e => e.id === eventId);
         if (!event || !event.raffle_enabled) return;
 
         const now = new Date();
@@ -207,7 +207,7 @@ async function evtHandleFreeRaffleEntry(eventId) {
         const { data: session } = await supabaseClient.auth.getSession();
         if (!session?.session?.user) { alert('Please sign in to enter.'); return; }
 
-        const rsvp = (window.evtAllRsvps || evtAllRsvps)[eventId];
+        const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId];
         if (evtIsRaffleBundledWithPaidRsvp(event)) {
             alert('Raffle entry is included with your paid RSVP for this event.');
             return;
@@ -224,7 +224,7 @@ async function evtHandleFreeRaffleEntry(eventId) {
         if (error) throw error;
 
         alert('You\'re entered into the raffle! Good luck! 🎟️');
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Free raffle entry error:', err);
         alert(err.message || 'Failed to enter raffle. Please try again.');
@@ -244,8 +244,8 @@ async function evtUpdateStatus(eventId, newStatus) {
             .eq('id', eventId);
         if (error) throw error;
 
-        await evtLoadEvents();
-        evtNavigateToList();
+        await globalThis.evtLoadEvents();
+        globalThis.evtNavigateToList();
     } catch (err) {
         console.error('Status update error:', err);
         alert('Failed to update event status.');
@@ -275,14 +275,14 @@ async function evtJoinWaitlist(eventId) {
             .from('event_waitlist')
             .insert({
                 event_id: eventId,
-                user_id: evtCurrentUser.id,
+                user_id: globalThis.evtCurrentUser.id,
                 position: nextPos,
                 status: 'waiting',
             });
         if (error) throw error;
 
         alert(`You're #${nextPos} on the waitlist! We'll notify you if a spot opens.`);
-        await evtOpenDetail(eventId);
+        await globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Join waitlist error:', err);
         alert(err.message?.includes('duplicate') ? 'You are already on the waitlist.' : 'Failed to join waitlist.');
@@ -298,10 +298,10 @@ async function evtLeaveWaitlist(eventId) {
             .from('event_waitlist')
             .delete()
             .eq('event_id', eventId)
-            .eq('user_id', evtCurrentUser.id);
+            .eq('user_id', globalThis.evtCurrentUser.id);
         if (error) throw error;
 
-        await evtOpenDetail(eventId);
+        await globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Leave waitlist error:', err);
         alert('Failed to leave waitlist.');
@@ -312,7 +312,7 @@ async function evtLeaveWaitlist(eventId) {
 
 async function evtClaimWaitlistSpot(eventId) {
     try {
-        const event = evtAllEvents.find(e => e.id === eventId);
+        const event = globalThis.evtAllEvents.find(e => e.id === eventId);
         if (!event) return;
 
         const confirmPay = confirm(
@@ -329,7 +329,7 @@ async function evtClaimWaitlistSpot(eventId) {
             .from('event_waitlist')
             .update({ status: 'claimed' })
             .eq('event_id', eventId)
-            .eq('user_id', evtCurrentUser.id);
+            .eq('user_id', globalThis.evtCurrentUser.id);
 
         // Redirect to Stripe checkout
         const { url } = await callEdgeFunction('create-event-checkout', {
@@ -350,7 +350,7 @@ async function evtClaimWaitlistSpot(eventId) {
 // ─── Cancel Event (with refund processing) ──────────────
 
 async function evtCancelEvent(eventId) {
-    const event = evtAllEvents.find(e => e.id === eventId);
+    const event = globalThis.evtAllEvents.find(e => e.id === eventId);
     if (!event) return;
 
     const isLlc = event.event_type === 'llc';
@@ -389,8 +389,8 @@ async function evtCancelEvent(eventId) {
         });
 
         alert(result.message || 'Event cancelled successfully.');
-        await evtLoadEvents();
-        evtNavigateToList();
+        await globalThis.evtLoadEvents();
+        globalThis.evtNavigateToList();
     } catch (err) {
         console.error('Cancel event error:', err);
         alert('Failed to cancel event: ' + (err.message || 'Unknown error'));
@@ -400,7 +400,7 @@ async function evtCancelEvent(eventId) {
 // ─── Reschedule Event (with 72h grace window) ───────────
 
 async function evtRescheduleEvent(eventId) {
-    const event = evtAllEvents.find(e => e.id === eventId);
+    const event = globalThis.evtAllEvents.find(e => e.id === eventId);
     if (!event) return;
 
     const newDate = prompt('Enter new start date & time (YYYY-MM-DD HH:MM):', '');
@@ -442,8 +442,8 @@ async function evtRescheduleEvent(eventId) {
             .eq('paid', true);
 
         alert('Event rescheduled! Attendees have been notified and have 72 hours to request a refund.');
-        await evtLoadEvents();
-        await evtOpenDetail(eventId);
+        await globalThis.evtLoadEvents();
+        await globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Reschedule error:', err);
         alert('Failed to reschedule event.');
@@ -459,13 +459,13 @@ async function evtRequestGraceRefund(eventId) {
         const result = await callEdgeFunction('process-event-cancellation', {
             event_id: eventId,
             reason: 'reschedule_grace',
-            user_id: evtCurrentUser.id,
+            user_id: globalThis.evtCurrentUser.id,
             single_user_refund: true,
         });
 
         alert(result.message || 'Refund processed. You will receive it within 5-10 business days.');
-        await evtLoadEvents();
-        await evtOpenDetail(eventId);
+        await globalThis.evtLoadEvents();
+        await globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Grace refund error:', err);
         alert('Failed to process refund: ' + (err.message || 'Unknown error'));
@@ -475,7 +475,7 @@ async function evtRequestGraceRefund(eventId) {
 // ─── Duplicate Event ────────────────────────────────────
 
 async function evtDeleteEvent(eventId) {
-    const event = evtAllEvents.find(e => e.id === eventId);
+    const event = globalThis.evtAllEvents.find(e => e.id === eventId);
     if (!event) return;
 
     // Only allow admins to delete
@@ -500,8 +500,8 @@ async function evtDeleteEvent(eventId) {
         if (error) throw error;
 
         alert('Event deleted successfully.');
-        evtNavigateToList();
-        await evtLoadEvents();
+        globalThis.evtNavigateToList();
+        await globalThis.evtLoadEvents();
     } catch (err) {
         console.error('Delete event error:', err);
         alert('Failed to delete event: ' + (err.message || 'Unknown error'));
@@ -509,7 +509,7 @@ async function evtDeleteEvent(eventId) {
 }
 
 async function evtDuplicateEvent(eventId) {
-    const event = evtAllEvents.find(e => e.id === eventId);
+    const event = globalThis.evtAllEvents.find(e => e.id === eventId);
     if (!event) return;
 
     if (!confirm('Create a duplicate of this event? It will open in draft mode for editing.')) return;
@@ -538,7 +538,7 @@ async function evtDuplicateEvent(eventId) {
             raffle_prizes: event.raffle_prizes,
             raffle_entry_cost_cents: event.raffle_entry_cost_cents,
             checkin_mode: event.checkin_mode,
-            created_by: evtCurrentUser.id,
+            created_by: globalThis.evtCurrentUser.id,
             status: 'draft',
             // LLC fields
             llc_cut_pct: event.llc_cut_pct,
@@ -585,12 +585,12 @@ async function evtDuplicateEvent(eventId) {
         }
 
         alert('Event duplicated! Opening the copy in draft mode.');
-        await evtLoadEvents();
-        const dupEvent = evtAllEvents.find(e => e.id === newEvent.id);
+        await globalThis.evtLoadEvents();
+        const dupEvent = globalThis.evtAllEvents.find(e => e.id === newEvent.id);
         if (dupEvent && dupEvent.slug) {
-            evtNavigateToEvent(dupEvent.slug);
+            globalThis.evtNavigateToEvent(dupEvent.slug);
         } else {
-            await evtOpenDetail(newEvent.id);
+            await globalThis.evtOpenDetail(newEvent.id);
         }
     } catch (err) {
         console.error('Duplicate event error:', err);

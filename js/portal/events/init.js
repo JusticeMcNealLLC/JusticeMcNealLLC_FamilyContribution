@@ -15,16 +15,16 @@ async function initEventsPage() {
     _eventsPageInitialized = true;
     window._eventsPageInitialized = true;
 
-    evtCurrentUser = await checkAuth();
-    if (!evtCurrentUser) return;
+    globalThis.evtCurrentUser = await checkAuth();
+    if (!globalThis.evtCurrentUser) return;
 
     // Get role for backward compat, show "Create" button based on permission
     const { data: profile } = await supabaseClient
         .from('profiles')
         .select('role, first_name, last_name, profile_picture_url')
-        .eq('id', evtCurrentUser.id)
+        .eq('id', globalThis.evtCurrentUser.id)
         .maybeSingle();
-    evtCurrentUserRole = profile?.role;
+    globalThis.evtCurrentUserRole = profile?.role;
     // Expose first name for personalized greeting (events_003 §8.1 / B5)
     window.evtCurrentUserName = profile?.first_name || '';
     window.evtCurrentUserPic = profile?.profile_picture_url || null;
@@ -44,16 +44,16 @@ async function initEventsPage() {
         }
     }
 
-    evtSetupListeners();
-    await evtLoadEvents();
+    globalThis.evtSetupListeners();
+    await globalThis.evtLoadEvents();
 
     // ── URL Routing: check for ?event={slug} on initial load ──
-    evtRouteByUrl();
+    globalThis.evtRouteByUrl();
 
     // ── Browser back/forward support (bind once) ──
     if (!_eventsPopstateListenerBound) {
         _eventsPopstateListenerBound = true;
-        window.addEventListener('popstate', () => evtRouteByUrl());
+        window.addEventListener('popstate', () => globalThis.evtRouteByUrl());
     }
 }
 
@@ -103,17 +103,17 @@ function evtSetupListeners() {
         if (window.EventsCreate && window.EventsCreate.open) {
             window.EventsCreate.open();
         } else {
-            evtToggleModal('createModal', true);
+            globalThis.evtToggleModal('createModal', true);
         }
     }
     document.getElementById('createEventBtn')?.addEventListener('click', _openCreate);
     document.getElementById('emptyCreateBtn')?.addEventListener('click', _openCreate);
-    document.getElementById('closeCreateModal')?.addEventListener('click', () => evtToggleModal('createModal', false));
-    document.getElementById('createModalOverlay')?.addEventListener('click', () => evtToggleModal('createModal', false));
+    document.getElementById('closeCreateModal')?.addEventListener('click', () => globalThis.evtToggleModal('createModal', false));
+    document.getElementById('createModalOverlay')?.addEventListener('click', () => globalThis.evtToggleModal('createModal', false));
 
     // New-create-flow reload events
     document.addEventListener('events:created', () => {
-        if (typeof evtLoadEvents === 'function') evtLoadEvents();
+        if (typeof globalThis.evtLoadEvents === 'function') globalThis.evtLoadEvents();
     });
 
     // Scanner modal
@@ -199,8 +199,8 @@ function evtSetupListeners() {
     });
 
     // ── Raffle Draw Modal Close ──────────────────────────
-    document.getElementById('closeRaffleDrawModal')?.addEventListener('click', () => evtToggleModal('raffleDrawModal', false));
-    document.getElementById('raffleDrawOverlay')?.addEventListener('click', () => evtToggleModal('raffleDrawModal', false));
+    document.getElementById('closeRaffleDrawModal')?.addEventListener('click', () => globalThis.evtToggleModal('raffleDrawModal', false));
+    document.getElementById('raffleDrawOverlay')?.addEventListener('click', () => globalThis.evtToggleModal('raffleDrawModal', false));
 
     // ── LLC Event Type Toggle ────────────────────────────
     document.getElementById('eventType')?.addEventListener('change', evtToggleLlcFields);

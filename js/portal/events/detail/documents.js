@@ -25,7 +25,7 @@ async function evtBuildDocumentsHtml(event, isHost, hasRsvp) {
 
     const allDocs = docs || [];
     const groupDocs = allDocs.filter(d => !d.target_user_id);
-    const myDocs = allDocs.filter(d => d.target_user_id === evtCurrentUser.id);
+    const myDocs = allDocs.filter(d => d.target_user_id === globalThis.evtCurrentUser.id);
 
     if (isHost) return '';
 
@@ -164,7 +164,7 @@ async function evtUploadDocument() {
             .from('event_documents')
             .insert({
                 event_id: eventId,
-                uploaded_by: evtCurrentUser.id,
+                uploaded_by: globalThis.evtCurrentUser.id,
                 target_user_id: targetUserId,
                 doc_type: docType,
                 label,
@@ -182,7 +182,7 @@ async function evtUploadDocument() {
         fileInput.value = '';
 
         // Re-open detail to refresh
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Document upload error:', err);
         alert(`Upload failed: ${err.message}`);
@@ -226,7 +226,7 @@ async function evtMarkDistributed(docId, eventId) {
             .update({ distributed: true })
             .eq('id', docId);
         if (error) throw error;
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Mark distributed error:', err);
         alert(`Failed: ${err.message}`);
@@ -255,7 +255,7 @@ async function evtDeleteDocument(docId, eventId) {
             .eq('id', docId);
         if (error) throw error;
 
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Delete document error:', err);
         alert(`Delete failed: ${err.message}`);

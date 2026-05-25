@@ -23,11 +23,14 @@ function read(rel) {
 check('engagement/rsvp.js exports', /\bexport\s*\{/.test(read('js/portal/events/engagement/rsvp.js')));
 check('engagement/raffle.js exports', /\bexport\s*\{/.test(read('js/portal/events/engagement/raffle.js')));
 check('core/vendor-loader.js exports', read('js/portal/events/core/vendor-loader.js').includes('export async function ensureLeaflet'));
+check('core/state.js exports EventsState', read('js/portal/events/core/state.js').includes('export const EventsState'));
+check('core/utils.js exports', read('js/portal/events/core/utils.js').includes('export {'));
+const bundle = read('js/portal/events/events.bundle.js');
+check('bundle uses EventsState', bundle.includes('EventsState'));
 check('classic-chain-loader removed', !fs.existsSync(path.join(eventsDir, 'classic-chain-loader.js')));
 check('verify-events-main script', fs.existsSync(path.join(root, 'scripts/verify-events-main.js')));
 check('CI workflow present', fs.existsSync(path.join(root, '.github/workflows/events-bundle.yml')));
 
-const bundle = read('js/portal/events/events.bundle.js');
 check('bundle includes evtEnsureLeaflet', bundle.includes('evtEnsureLeaflet'));
 
 console.log(`\n${'═'.repeat(54)}`);

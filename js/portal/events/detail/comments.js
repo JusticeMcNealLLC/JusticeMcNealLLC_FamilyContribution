@@ -74,11 +74,11 @@ async function evtLoadComments(eventId) {
 async function evtPostComment(eventId) {
     const input = document.getElementById('portalCommentInput');
     const body  = (input?.value || '').trim();
-    if (!body || !eventId || !evtCurrentUser) return;
+    if (!body || !eventId || !globalThis.evtCurrentUser) return;
 
     const { error } = await supabaseClient
         .from('event_comments')
-        .insert({ event_id: eventId, user_id: evtCurrentUser.id, body });
+        .insert({ event_id: eventId, user_id: globalThis.evtCurrentUser.id, body });
 
     if (error) {
         console.error('Comment error:', error);

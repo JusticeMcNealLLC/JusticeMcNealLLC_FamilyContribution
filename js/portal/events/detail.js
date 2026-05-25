@@ -31,7 +31,7 @@
 // Raffle render helpers — Phase 5D.2: js/portal/events/detail/raffle-render.js
 
 // ═══════════════════════════════════════════════════════════
-// Main render — evtOpenDetail
+// Main render — globalThis.evtOpenDetail
 // ═══════════════════════════════════════════════════════════
 
 async function evtOpenDetail(eventId) {
@@ -110,7 +110,7 @@ async function evtOpenDetail(eventId) {
             .from('event_checkins')
             .select('checked_in_at')
             .eq('event_id', eventId)
-            .eq('user_id', evtCurrentUser.id)
+            .eq('user_id', globalThis.evtCurrentUser.id)
             .maybeSingle();
         myCheckin = ci;
         const checkedInTime = myCheckin ? new Date(myCheckin.checked_in_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : null;
@@ -256,10 +256,10 @@ function evtCleanupHeroCollapse() { /* no-op since M2 */ }
 // ═══════════════════════════════════════════════════════════
 // Public surface — preserve legacy evt* globals + register PortalEvents.detail namespace
 // ═══════════════════════════════════════════════════════════
-window.evtOpenDetail            = evtOpenDetail;
+window.evtOpenDetail            = globalThis.evtOpenDetail;
 window.evtInitHeroCollapse      = evtInitHeroCollapse;
 window.evtCleanupHeroCollapse   = evtCleanupHeroCollapse;
-detail.open                = evtOpenDetail;
+detail.open                = globalThis.evtOpenDetail;
 detail.openLightbox        = window.evtOpenLightbox;
 detail.openFullscreenMap   = window.evtOpenFullscreenMap;
 detail.closeFullscreenMap  = window.evtCloseFullscreenMap;

@@ -28,14 +28,14 @@ async function evtBuildCompetitionHtml(event, isHost) {
         .order('submitted_at', { ascending: true });
 
     // Load user's entry
-    const myEntry = (entries || []).find(e => e.user_id === evtCurrentUser.id);
+    const myEntry = (entries || []).find(e => e.user_id === globalThis.evtCurrentUser.id);
 
     // Load my vote
     const { data: myVote } = await supabaseClient
         .from('competition_votes')
         .select('entry_id')
         .eq('event_id', eventId)
-        .eq('voter_id', evtCurrentUser.id)
+        .eq('voter_id', globalThis.evtCurrentUser.id)
         .maybeSingle();
 
     // Load winners
@@ -221,7 +221,7 @@ async function evtBuildCompetitionHtml(event, isHost) {
 
             // Vote button (Phase 3 only)
             let voteBtn = '';
-            if (displayPhaseNum === 3 && !myVote && entry.user_id !== evtCurrentUser.id) {
+            if (displayPhaseNum === 3 && !myVote && entry.user_id !== globalThis.evtCurrentUser.id) {
                 voteBtn = `<button onclick="evtCastVote('${eventId}','${entry.id}')" class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Vote</button>`;
             } else if (isVoted) {
                 voteBtn = `<div class="mt-2 text-center text-xs font-bold text-blue-600">✓ Your Vote</div>`;
@@ -441,7 +441,7 @@ function evtBuildSubmitFormHtml(eventId, config) {
 
 async function evtJoinCompetition(eventId) {
     try {
-        const event = evtAllEvents.find(e => e.id === eventId);
+        const event = globalThis.evtAllEvents.find(e => e.id === eventId);
         const config = event?.competition_config || {};
         const entryFee = config.entry_fee_cents || 0;
 
@@ -461,7 +461,7 @@ async function evtJoinCompetition(eventId) {
             .from('competition_entries')
             .insert({
                 event_id: eventId,
-                user_id: evtCurrentUser.id,
+                user_id: globalThis.evtCurrentUser.id,
                 title: 'Registered',
                 entry_type: 'text',
             });
@@ -475,7 +475,7 @@ async function evtJoinCompetition(eventId) {
         }
 
         alert('You are registered! Submit your entry when Phase 2 opens.');
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Join competition error:', err);
         alert(`Failed to join: ${err.message}`);
@@ -513,7 +513,7 @@ async function evtSubmitEntry(eventId) {
 
             // Upload to competition-entries bucket
             const ext = file.name.split('.').pop();
-            const path = `${evtCurrentUser.id}/${eventId}-${Date.now()}.${ext}`;
+            const path = `${globalThis.evtCurrentUser.id}/${eventId}-${Date.now()}.${ext}`;
             const { error: upErr } = await supabaseClient.storage
                 .from('competition-entries')
                 .upload(path, file, { contentType: file.type });
@@ -548,12 +548,12 @@ async function evtSubmitEntry(eventId) {
                 submitted_at: new Date().toISOString(),
             })
             .eq('event_id', eventId)
-            .eq('user_id', evtCurrentUser.id);
+            .eq('user_id', globalThis.evtCurrentUser.id);
 
         if (error) throw error;
 
         alert('Entry submitted successfully! 🎉');
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Submit entry error:', err);
         alert(`Failed to submit: ${err.message}`);
@@ -570,7 +570,7 @@ async function evtCastVote(eventId, entryId) {
             .from('competition_votes')
             .insert({
                 event_id: eventId,
-                voter_id: evtCurrentUser.id,
+                voter_id: globalThis.evtCurrentUser.id,
                 entry_id: entryId,
             });
 
@@ -587,7 +587,7 @@ async function evtCastVote(eventId, entryId) {
         }
 
         alert('Vote cast! 🗳️');
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Vote error:', err);
         alert(`Failed to vote: ${err.message}`);
@@ -605,7 +605,7 @@ async function evtModerateEntry(eventId, entryId) {
             .from('competition_entries')
             .update({
                 moderated: true,
-                moderated_by: evtCurrentUser.id,
+                moderated_by: globalThis.evtCurrentUser.id,
                 moderation_reason: reason || 'Removed by host',
             })
             .eq('id', entryId);
@@ -613,7 +613,7 @@ async function evtModerateEntry(eventId, entryId) {
         if (error) throw error;
 
         alert('Entry removed.');
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Moderate entry error:', err);
         alert(`Failed to remove: ${err.message}`);
@@ -653,7 +653,7 @@ async function evtStartPhase(eventId, phaseNum) {
             .eq('phase_num', phaseNum);
 
         if (error) throw error;
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Start phase error:', err);
         alert(`Failed: ${err.message}`);
@@ -683,7 +683,7 @@ async function evtAdvancePhase(eventId, currentPhaseNum) {
             if (e2) throw e2;
         }
 
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Advance phase error:', err);
         alert(`Failed: ${err.message}`);
@@ -692,7 +692,7 @@ async function evtAdvancePhase(eventId, currentPhaseNum) {
 
 async function evtExtendPhase(eventId, phaseNum) {
     try {
-        const event = evtAllEvents.find(e => e.id === eventId);
+        const event = globalThis.evtAllEvents.find(e => e.id === eventId);
         const config = event?.competition_config || {};
         const extensionDays = config.extension_days || 3;
 
@@ -722,7 +722,7 @@ async function evtExtendPhase(eventId, phaseNum) {
         if (error) throw error;
 
         alert(`Phase extended by ${extensionDays} days.`);
-        evtOpenDetail(eventId);
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Extend phase error:', err);
         alert(`Failed: ${err.message}`);
@@ -735,7 +735,7 @@ async function evtFinalizeCompetition(eventId) {
     if (!confirm('Finalize results and announce winners? This cannot be undone.')) return;
 
     try {
-        const event = evtAllEvents.find(e => e.id === eventId);
+        const event = globalThis.evtAllEvents.find(e => e.id === eventId);
         const config = event?.competition_config || {};
         const tiers = event?.winner_tier_config || [{ place: 1, pct: 100 }];
         const totalPool = event?.total_prize_pool_cents || 0;
@@ -811,8 +811,8 @@ async function evtFinalizeCompetition(eventId) {
             .eq('id', eventId);
 
         alert('Competition finalized! Winners announced! 🏆🎉');
-        await evtLoadEvents();
-        evtOpenDetail(eventId);
+        await globalThis.evtLoadEvents();
+        globalThis.evtOpenDetail(eventId);
     } catch (err) {
         console.error('Finalize competition error:', err);
         alert(`Failed: ${err.message}`);

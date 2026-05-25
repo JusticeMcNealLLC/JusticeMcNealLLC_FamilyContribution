@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════
    Portal Events — Detail data context loader (Phase 5H.1)
    Classic IIFE; loads after detail/fragments.js, before detail.js.
-   Fetches Supabase data and derived flags for evtOpenDetail().
+   Fetches Supabase data and derived flags for globalThis.evtOpenDetail().
    ════════════════════════════════════════════════════════════ */
 (function () {
     'use strict';
@@ -10,8 +10,8 @@
     window.PortalEvents.detail = window.PortalEvents.detail || {};
 
     async function evtLoadDetailContext(eventId) {
-        const events = window.evtAllEvents || evtAllEvents;
-        const rsvpMap = window.evtAllRsvps || evtAllRsvps;
+        const events = window.evtAllEvents || globalThis.evtAllEvents;
+        const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps;
         const event = events.find(e => e.id === eventId);
         if (!event) return null;
 
@@ -65,7 +65,7 @@
                 .eq('event_id', eventId)
                 .order('position', { ascending: true });
             waitlist = wl || [];
-            myWaitlistEntry = waitlist.find(w => w.user_id === evtCurrentUser.id);
+            myWaitlistEntry = waitlist.find(w => w.user_id === globalThis.evtCurrentUser.id);
         }
 
         let raffleEntryCount = 0;
@@ -81,7 +81,7 @@
                 .from('event_raffle_entries')
                 .select('*')
                 .eq('event_id', eventId)
-                .eq('user_id', evtCurrentUser.id)
+                .eq('user_id', globalThis.evtCurrentUser.id)
                 .maybeSingle();
             myRaffleEntry = myEntry;
             const { data: winners } = await supabaseClient
@@ -92,12 +92,12 @@
             raffleWinners = winners || [];
         }
 
-        const isCreator = event.created_by === evtCurrentUser.id;
+        const isCreator = event.created_by === globalThis.evtCurrentUser.id;
         const { data: hostRecord } = await supabaseClient
             .from('event_hosts')
             .select('id')
             .eq('event_id', eventId)
-            .eq('user_id', evtCurrentUser.id)
+            .eq('user_id', globalThis.evtCurrentUser.id)
             .maybeSingle();
         const canManageEvent = isCreator || !!hostRecord || (typeof canManageEvents === 'function' && canManageEvents());
         const canAccessTeamHub = canManageEvent || (typeof canAccessAdminDashboard === 'function' && canAccessAdminDashboard());

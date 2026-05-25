@@ -12,7 +12,7 @@ function evtParseQrData(raw) {
         const slug = url.searchParams.get('e');
         if (ticket && slug) {
             // Resolve event_id from slug using the loaded events list
-            const evt = evtAllEvents.find(ev => ev.slug === slug);
+            const evt = globalThis.evtAllEvents.find(ev => ev.slug === slug);
             if (evt) return { e: evt.id, t: ticket };
             // If event not in cache, return slug so caller can handle
             return { slug, t: ticket };
@@ -36,21 +36,21 @@ async function evtOpenScanner(eventId) {
         return;
     }
 
-    evtToggleModal('scannerModal', true);
+    globalThis.evtToggleModal('scannerModal', true);
     const video = document.getElementById('scannerVideo');
     const canvas = document.getElementById('scannerCanvas');
     const result = document.getElementById('scanResult');
     result.innerHTML = '<span class="text-gray-400">Point camera at attendee\'s QR code…</span>';
 
     try {
-        evtScannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        video.srcObject = evtScannerStream;
+        globalThis.evtScannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        video.srcObject = globalThis.evtScannerStream;
         video.play();
 
         const ctx = canvas.getContext('2d');
 
         function tick() {
-            if (!evtScannerStream) return;
+            if (!globalThis.evtScannerStream) return;
             if (video.readyState === video.HAVE_ENOUGH_DATA) {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
@@ -68,10 +68,10 @@ async function evtOpenScanner(eventId) {
                     }
                 }
             }
-            evtScannerAnimFrame = requestAnimationFrame(tick);
+            globalThis.evtScannerAnimFrame = requestAnimationFrame(tick);
         }
 
-        evtScannerAnimFrame = requestAnimationFrame(tick);
+        globalThis.evtScannerAnimFrame = requestAnimationFrame(tick);
     } catch (err) {
         console.error('Camera error:', err);
         result.innerHTML = '<span class="text-red-500">Camera access denied or unavailable.</span>';
@@ -82,20 +82,20 @@ async function evtOpenScanner(eventId) {
 
 async function evtProcessCheckin(eventId, qrToken, resultEl) {
     // Pause scanning
-    if (evtScannerAnimFrame) cancelAnimationFrame(evtScannerAnimFrame);
+    if (globalThis.evtScannerAnimFrame) cancelAnimationFrame(globalThis.evtScannerAnimFrame);
 
     resultEl.innerHTML = '<span class="text-gray-500">Checking in…</span>';
 
     try {
         // Check if event requires location sharing
-        const event = evtAllEvents.find(e => e.id === eventId);
+        const event = globalThis.evtAllEvents.find(e => e.id === eventId);
         if (event?.location_required) {
             // Verify the member has location sharing active
             const { data: locRecord } = await supabaseClient
                 .from('event_locations')
                 .select('sharing_active')
                 .eq('event_id', eventId)
-                .eq('user_id', evtCurrentUser.id)
+                .eq('user_id', globalThis.evtCurrentUser.id)
                 .maybeSingle();
 
             // For the HOST scanning tickets: we check the ATTENDEE's location status
@@ -133,7 +133,7 @@ async function evtProcessCheckin(eventId, qrToken, resultEl) {
                 .insert({
                     event_id: eventId,
                     user_id: rsvp.user_id,
-                    checked_in_by: evtCurrentUser.id,
+                    checked_in_by: globalThis.evtCurrentUser.id,
                     checkin_mode: 'attendee_ticket'
                 });
 
@@ -182,7 +182,7 @@ async function evtProcessCheckin(eventId, qrToken, resultEl) {
             .insert({
                 event_id: eventId,
                 guest_token: guestRsvp.guest_token,
-                checked_in_by: evtCurrentUser.id,
+                checked_in_by: globalThis.evtCurrentUser.id,
                 checkin_mode: 'attendee_ticket'
             });
 
@@ -202,7 +202,7 @@ async function evtProcessCheckin(eventId, qrToken, resultEl) {
 
 function evtResumeScanner(delay) {
     setTimeout(() => {
-        if (evtScannerStream) {
+        if (globalThis.evtScannerStream) {
             const video = document.getElementById('scannerVideo');
             const canvas = document.getElementById('scannerCanvas');
             const ctx = canvas.getContext('2d');
@@ -210,7 +210,7 @@ function evtResumeScanner(delay) {
             result.innerHTML = '<span class="text-gray-400">Point camera at next QR code…</span>';
 
             function tick() {
-                if (!evtScannerStream) return;
+                if (!globalThis.evtScannerStream) return;
                 if (video.readyState === video.HAVE_ENOUGH_DATA) {
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
@@ -227,9 +227,9 @@ function evtResumeScanner(delay) {
                         }
                     }
                 }
-                evtScannerAnimFrame = requestAnimationFrame(tick);
+                globalThis.evtScannerAnimFrame = requestAnimationFrame(tick);
             }
-            evtScannerAnimFrame = requestAnimationFrame(tick);
+            globalThis.evtScannerAnimFrame = requestAnimationFrame(tick);
         }
     }, delay);
 }
@@ -237,13 +237,13 @@ function evtResumeScanner(delay) {
 // ─── Close Scanner ──────────────────────────────────────
 
 function evtCloseScanner() {
-    if (evtScannerStream) {
-        evtScannerStream.getTracks().forEach(t => t.stop());
-        evtScannerStream = null;
+    if (globalThis.evtScannerStream) {
+        globalThis.evtScannerStream.getTracks().forEach(t => t.stop());
+        globalThis.evtScannerStream = null;
     }
-    if (evtScannerAnimFrame) {
-        cancelAnimationFrame(evtScannerAnimFrame);
-        evtScannerAnimFrame = null;
+    if (globalThis.evtScannerAnimFrame) {
+        cancelAnimationFrame(globalThis.evtScannerAnimFrame);
+        globalThis.evtScannerAnimFrame = null;
     }
-    evtToggleModal('scannerModal', false);
+    globalThis.evtToggleModal('scannerModal', false);
 }

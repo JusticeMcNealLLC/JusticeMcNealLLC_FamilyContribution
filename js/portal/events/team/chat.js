@@ -53,8 +53,8 @@
     }
 
     function canCreateTeamChat(event) {
-        if (!event || !evtCurrentUser?.id) return false;
-        if (event.created_by === evtCurrentUser.id) return true;
+        if (!event || !globalThis.evtCurrentUser?.id) return false;
+        if (event.created_by === globalThis.evtCurrentUser.id) return true;
         return typeof canManageEvents === 'function' && canManageEvents();
     }
 
@@ -110,7 +110,7 @@
             .insert({
                 event_id: eventId,
                 chat_type: 'team',
-                created_by: evtCurrentUser.id,
+                created_by: globalThis.evtCurrentUser.id,
             })
             .select('id, event_id, chat_type, created_at')
             .single();
@@ -289,7 +289,7 @@
         injectTeamChatStyles();
         cleanup();
 
-        const event = (window.evtAllEvents || evtAllEvents).find(e => e.id === eventId);
+        const event = (window.evtAllEvents || globalThis.evtAllEvents).find(e => e.id === eventId);
         if (!event) return;
 
         let bar = document.getElementById('evtCtaBar');
@@ -380,7 +380,7 @@
             .insert({
                 chat_id: state.chatId,
                 event_id: eventId,
-                sender_id: evtCurrentUser.id,
+                sender_id: globalThis.evtCurrentUser.id,
                 body,
             })
             .select('id, chat_id, event_id, sender_id, body, created_at, updated_at, deleted_at')
@@ -398,11 +398,11 @@
 
         if (data && !data.deleted_at && !state.messages.some(m => m.id === data.id)) {
             state.messages.push(data);
-            if (!state.profilesById[evtCurrentUser.id] && evtCurrentUser) {
-                state.profilesById[evtCurrentUser.id] = {
-                    id: evtCurrentUser.id,
-                    first_name: evtCurrentUser.first_name,
-                    last_name: evtCurrentUser.last_name,
+            if (!state.profilesById[globalThis.evtCurrentUser.id] && globalThis.evtCurrentUser) {
+                state.profilesById[globalThis.evtCurrentUser.id] = {
+                    id: globalThis.evtCurrentUser.id,
+                    first_name: globalThis.evtCurrentUser.first_name,
+                    last_name: globalThis.evtCurrentUser.last_name,
                 };
             }
             state.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));

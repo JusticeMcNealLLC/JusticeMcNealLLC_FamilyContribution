@@ -1,14 +1,26 @@
 // ═══════════════════════════════════════════════════════════
 // Portal Events — Shared State
-// All mutable state referenced across event modules lives here.
+// Mutable state for all event modules (Phase 7.2: EventsState + globalThis bridge).
 // ═══════════════════════════════════════════════════════════
 
-let evtCurrentUser = null;
-let evtCurrentUserRole = null;
-let evtActiveTab = 'upcoming';
-let evtBannerFile = null;
-let evtEmbedImageFile = null;
-let evtAllEvents = [];
-let evtAllRsvps = {};      // event_id → rsvp record
-let evtScannerStream = null;
-let evtScannerAnimFrame = null;
+export const EventsState = {
+    evtCurrentUser: null,
+    evtCurrentUserRole: null,
+    evtActiveTab: 'upcoming',
+    evtBannerFile: null,
+    evtEmbedImageFile: null,
+    evtAllEvents: [],
+    evtAllRsvps: {},      // event_id → rsvp record
+    evtScannerStream: null,
+    evtScannerAnimFrame: null,
+};
+
+/** Legacy/global access until all callers use import { EventsState }. */
+for (const key of Object.keys(EventsState)) {
+    Object.defineProperty(globalThis, key, {
+        get() { return EventsState[key]; },
+        set(v) { EventsState[key] = v; },
+        enumerable: true,
+        configurable: true,
+    });
+}

@@ -46,7 +46,7 @@ function evtHandleBannerSelect() {
         alert('File size must be under 5 MB.');
         return;
     }
-    evtBannerFile = file;
+    globalThis.evtBannerFile = file;
     const reader = new FileReader();
     reader.onload = e => {
         document.getElementById('bannerPreview').src = e.target.result;
@@ -67,7 +67,7 @@ function evtHandleEmbedImageSelect() {
         alert('File size must be under 5 MB.');
         return;
     }
-    evtEmbedImageFile = file;
+    globalThis.evtEmbedImageFile = file;
     const reader = new FileReader();
     reader.onload = e => {
         document.getElementById('embedImagePreview').src = e.target.result;
@@ -85,14 +85,14 @@ function evtNavigateToEvent(slug) {
     const url = new URL(window.location);
     url.searchParams.set('event', slug);
     history.pushState({ view: 'detail', slug }, '', url);
-    evtRouteByUrl();
+    globalThis.evtRouteByUrl();
 }
 
 function evtNavigateToList() {
     const url = new URL(window.location);
     url.searchParams.delete('event');
     history.pushState({ view: 'list' }, '', url);
-    evtRouteByUrl();
+    globalThis.evtRouteByUrl();
 }
 
 function evtRouteByUrl() {
@@ -106,7 +106,7 @@ function evtRouteByUrl() {
         listView.classList.add('hidden');
         detailView.classList.remove('hidden');
         detailView.innerHTML = '<div class="flex items-center justify-center py-20"><div class="animate-spin rounded-full h-8 w-8 border-2 border-brand-600 border-t-transparent"></div></div>';
-        evtLoadDetailBySlug(slug);
+        globalThis.evtLoadDetailBySlug(slug);
     } else {
         // Show list, hide detail
         detailView.classList.add('hidden');
@@ -121,9 +121,9 @@ function evtRouteByUrl() {
 
 async function evtLoadDetailBySlug(slug) {
     // Find event in cache first, otherwise query by slug
-    let event = evtAllEvents.find(e => e.slug === slug);
+    let event = globalThis.evtAllEvents.find(e => e.slug === slug);
     if (event) {
-        evtOpenDetail(event.id);
+        globalThis.evtOpenDetail(event.id);
         return;
     }
     // Not in cache — fetch full event data
@@ -142,7 +142,7 @@ async function evtLoadDetailBySlug(slug) {
                     </div>
                     <h2 class="text-lg font-bold text-gray-900 mb-1">Event not found</h2>
                     <p class="text-sm text-gray-500 mb-6">This event may have been removed or the link is incorrect.</p>
-                    <button onclick="evtNavigateToList()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <button onclick="globalThis.evtNavigateToList()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                         Back to Events
                     </button>
@@ -151,19 +151,19 @@ async function evtLoadDetailBySlug(slug) {
         document.title = 'Event Not Found | Justice McNeal LLC';
         return;
     }
-    // Merge into cache so evtOpenDetail can find it
-    if (!evtAllEvents.find(e => e.id === data.id)) {
-        evtAllEvents.push(data);
+    // Merge into cache so globalThis.evtOpenDetail can find it
+    if (!globalThis.evtAllEvents.find(e => e.id === data.id)) {
+        globalThis.evtAllEvents.push(data);
     }
-    evtOpenDetail(data.id);
+    globalThis.evtOpenDetail(data.id);
 }
 
 function evtCopyShareUrl(slug) {
     let url;
     if (slug) {
         url = `https://justicemcneal.com/events/?e=${slug}`;
-        if (typeof evtCurrentUser !== 'undefined' && evtCurrentUser?.id) {
-            url += `&ref=${evtCurrentUser.id.slice(0, 8)}`;
+        if (typeof globalThis.evtCurrentUser !== 'undefined' && globalThis.evtCurrentUser?.id) {
+            url += `&ref=${globalThis.evtCurrentUser.id.slice(0, 8)}`;
         }
     } else {
         url = document.getElementById('shareUrl')?.value;
@@ -188,7 +188,7 @@ function evtCopyShareUrl(slug) {
 // Download ICS
 // ═══════════════════════════════════════════════════════════
 function evtDownloadIcs(eventId) {
-    const e = (evtAllEvents || []).find(ev => ev.id === eventId);
+    const e = (globalThis.evtAllEvents || []).find(ev => ev.id === eventId);
     if (!e) return;
     const start = new Date(e.start_date);
     const end   = e.end_date ? new Date(e.end_date) : new Date(start.getTime() + 7200000);
@@ -225,4 +225,35 @@ function evtDownloadIcs(eventId) {
     URL.revokeObjectURL(url);
 }
 
-window.evtDownloadIcs = evtDownloadIcs;
+export {
+    evtBadgeChip,
+    evtToggleModal,
+    evtGenerateSlug,
+    evtEscapeHtml,
+    evtHandleBannerSelect,
+    evtHandleEmbedImageSelect,
+    evtNavigateToEvent,
+    evtNavigateToList,
+    evtRouteByUrl,
+    evtLoadDetailBySlug,
+    evtCopyShareUrl,
+    evtDownloadIcs,
+};
+
+const _utilsGlobal = {
+    evtBadgeChip,
+    evtToggleModal,
+    evtGenerateSlug,
+    evtEscapeHtml,
+    evtHandleBannerSelect,
+    evtHandleEmbedImageSelect,
+    evtNavigateToEvent,
+    evtNavigateToList,
+    evtRouteByUrl,
+    evtLoadDetailBySlug,
+    evtCopyShareUrl,
+    evtDownloadIcs,
+};
+for (const [name, fn] of Object.entries(_utilsGlobal)) {
+    globalThis[name] = fn;
+}

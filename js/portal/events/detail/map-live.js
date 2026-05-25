@@ -89,7 +89,7 @@ async function evtInitMap(eventId) {
     }
 
     // Initialize map (default center: US center)
-    const event = evtAllEvents.find(e => e.id === eventId);
+    const event = globalThis.evtAllEvents.find(e => e.id === eventId);
     const defaultCenter = [39.8283, -98.5795];
     const defaultZoom = 4;
 
@@ -141,7 +141,7 @@ function evtAddMapMarker(loc) {
         ? `${loc.profiles.first_name || ''} ${loc.profiles.last_name || ''}`.trim()
         : 'Member';
 
-    const isMe = loc.user_id === evtCurrentUser?.id;
+    const isMe = loc.user_id === globalThis.evtCurrentUser?.id;
     const initial = (name[0] || '?').toUpperCase();
 
     // Create custom icon
@@ -230,7 +230,7 @@ async function evtToggleLocationSharing(eventId) {
                 .from('event_locations')
                 .upsert({
                     event_id: eventId,
-                    user_id: evtCurrentUser.id,
+                    user_id: globalThis.evtCurrentUser.id,
                     latitude: lat,
                     longitude: lng,
                     sharing_active: true,
@@ -278,7 +278,7 @@ async function evtToggleLocationSharing(eventId) {
             .from('event_locations')
             .update({ sharing_active: false, updated_at: new Date().toISOString() })
             .eq('event_id', eventId)
-            .eq('user_id', evtCurrentUser.id);
+            .eq('user_id', globalThis.evtCurrentUser.id);
 
         statusEl.textContent = 'Not sharing';
         statusEl.classList.remove('text-emerald-600');
@@ -298,7 +298,7 @@ async function evtUpdateMyLocation(eventId, pos) {
         .from('event_locations')
         .upsert({
             event_id: eventId,
-            user_id: evtCurrentUser.id,
+            user_id: globalThis.evtCurrentUser.id,
             latitude: lat,
             longitude: lng,
             sharing_active: true,

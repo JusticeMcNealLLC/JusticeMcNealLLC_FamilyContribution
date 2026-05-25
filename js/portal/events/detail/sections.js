@@ -223,7 +223,7 @@
                         </div>
                     </div>`;
         } else if (isWaiting) {
-            const pos = activeWaitlist.findIndex(w => w.user_id === evtCurrentUser.id) + 1;
+            const pos = activeWaitlist.findIndex(w => w.user_id === globalThis.evtCurrentUser.id) + 1;
             waitlistAction = `
                     <div class="ed-notice" style="justify-content:space-between">
                         <div><p class="ed-notice-title">You're #${pos} on the waitlist</p><p class="ed-notice-sub">We'll notify you if a spot opens</p></div>
@@ -451,14 +451,14 @@
 
     function evtBuildDetailRelatedEventsHtml(ctx) {
         const { eventId } = ctx;
-        if (typeof evtAllEvents === 'undefined' || evtAllEvents.length <= 1) return '';
-        const upcoming = evtAllEvents.filter(e => e.id !== eventId && e.status !== 'cancelled').slice(0, 4);
+        if (typeof globalThis.evtAllEvents === 'undefined' || globalThis.evtAllEvents.length <= 1) return '';
+        const upcoming = globalThis.evtAllEvents.filter(e => e.id !== eventId && e.status !== 'cancelled').slice(0, 4);
         if (!upcoming.length) return '';
         const cards = upcoming.map(e => {
             const d = new Date(e.start_date);
             const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             const imgHtml = e.banner_url ? `<img src="${e.banner_url}" alt="" loading="lazy">` : `<div style="height:120px;background:linear-gradient(135deg,#6366f1,#8b5cf6)"></div>`;
-            const onclickHandler = e.slug ? `evtNavigateToEvent('${e.slug}')` : `evtOpenDetail('${e.id}')`;
+            const onclickHandler = e.slug ? `globalThis.evtNavigateToEvent('${e.slug}')` : `globalThis.evtOpenDetail('${e.id}')`;
             return `<div class="evt-related-card" onclick="${onclickHandler}">${imgHtml}<div class="evt-related-card-body"><p class="evt-related-card-title">${evtEscapeHtml(e.title)}</p><p class="evt-related-card-meta">${dateLabel}${e.location_nickname ? ' · ' + evtEscapeHtml(e.location_nickname) : ''}</p></div></div>`;
         }).join('');
         return `${_edSectionHead('More Events')}<div class="evt-related-scroll">${cards}</div>`;
@@ -499,15 +499,15 @@
     function evtBuildDetailPageHeaderActionsHtml(ctx) {
         const { eventId, event } = ctx;
         return `
-                    <button onclick="evtCopyShareUrl('${event.slug}')" class="ed-page-header-btn" aria-label="Share event">
+                    <button onclick="globalThis.evtCopyShareUrl('${event.slug}')" class="ed-page-header-btn" aria-label="Share event">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                         <span class="ed-page-header-btn-label">Share</span>
                     </button>
-                    <button onclick="event.stopPropagation();evtDownloadIcs('${eventId}')" class="ed-page-header-btn ed-page-header-btn-cal" aria-label="Add to calendar">
+                    <button onclick="event.stopPropagation();globalThis.evtDownloadIcs('${eventId}')" class="ed-page-header-btn ed-page-header-btn-cal" aria-label="Add to calendar">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         <span class="ed-page-header-btn-label">Add to Calendar</span>
                     </button>
-                    <button onclick="event.stopPropagation();evtDownloadIcs('${eventId}')" class="ed-page-header-btn ed-page-header-btn-bookmark" aria-label="Save event">
+                    <button onclick="event.stopPropagation();globalThis.evtDownloadIcs('${eventId}')" class="ed-page-header-btn ed-page-header-btn-bookmark" aria-label="Save event">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
                     </button>`;
     }

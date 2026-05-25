@@ -12,7 +12,7 @@
      deferred to Phase B)
 
    Surface namespace : window.PortalEvents.list
-   Globals preserved : evtLoadEvents, evtRenderEvents,
+   Globals preserved : globalThis.evtLoadEvents, evtRenderEvents,
                        evtRenderFeatured (no-op stub),
                        evtUpdateHeroStats (no-op stub),
                        evtSetupSearch, evtInitFilterChips,
@@ -547,12 +547,12 @@
             window.evtAllEvents = events || [];
 
             // Drafts (admin-created, only visible to creator)
-            if (typeof canManageEvents === 'function' && canManageEvents() && evtCurrentUser) {
+            if (typeof canManageEvents === 'function' && canManageEvents() && globalThis.evtCurrentUser) {
                 const { data: drafts } = await supabaseClient
                     .from('events')
                     .select('*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)')
                     .eq('status', 'draft')
-                    .eq('created_by', evtCurrentUser.id)
+                    .eq('created_by', globalThis.evtCurrentUser.id)
                     .order('created_at', { ascending: false });
                 if (drafts && drafts.length) {
                     window.evtAllEvents = [...drafts, ...window.evtAllEvents];
@@ -563,11 +563,11 @@
 
             // User's own RSVPs
             window.evtAllRsvps = {};
-            if (evtCurrentUser && ids.length) {
+            if (globalThis.evtCurrentUser && ids.length) {
                 const { data: rsvps } = await supabaseClient
                     .from('event_rsvps')
                     .select('*')
-                    .eq('user_id', evtCurrentUser.id)
+                    .eq('user_id', globalThis.evtCurrentUser.id)
                     .in('event_id', ids);
                 (rsvps || []).forEach(r => { window.evtAllRsvps[r.event_id] = r; });
             }
@@ -1141,7 +1141,7 @@
     // =========================================================
     // C1 — Pull-to-refresh (events_003 §6.5)
     //   Mobile-only. Pulls down from top of page when scrollY=0
-    //   trigger a reload via evtLoadEvents. Excluded when the
+    //   trigger a reload via globalThis.evtLoadEvents. Excluded when the
     //   touch originates inside the horizontal going rail (that
     //   rail has its own x-scroll and shouldn't cross-trigger).
     //   Respects prefers-reduced-motion (keyframe still runs but

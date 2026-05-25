@@ -226,7 +226,7 @@
                 .from('event_documents')
                 .insert({
                     event_id: STATE.eventId,
-                    uploaded_by: evtCurrentUser.id,
+                    uploaded_by: globalThis.evtCurrentUser.id,
                     target_user_id: targetUserId || null,
                     doc_type: docType,
                     label,
