@@ -2,7 +2,7 @@
 // Phase 5L.3 Option B — rehearsal harness static smoke
 //
 // Validates portal/events.rehearsal.html consolidation experiment
-// without weakening production portal/events.html (29 classic tags).
+// production portal/events.html uses 3-tag Option C model after 5L.3.
 //
 // Run: node test/_smoke-phase5l3-rehearsal.js
 // ═══════════════════════════════════════════════════════════
@@ -41,9 +41,10 @@ function portalEventsScriptsFromHtml(html) {
 
 const PROD_HTML = 'portal/events.html';
 const REH_HTML = 'portal/events.rehearsal.html';
-const PROD_COUNT = 29;
+const PROD_COUNT = 3;
 const REH_COUNT = 3;
-const LOADER = 'js/portal/events/rehearsal/classic-chain-loader.js';
+const LOADER = 'js/portal/events/classic-chain-loader.js';
+const PROD_LOADER_TAG = '../js/portal/events/classic-chain-loader.js';
 
 const prodHtml = read(PROD_HTML);
 const rehHtml = read(REH_HTML);
@@ -63,8 +64,8 @@ fs.existsSync(path.join(root, REH_HTML))
     : fail('rehearsal page must declare REHEARSAL / 5L.3');
 
 prodScripts.length === PROD_COUNT
-    ? pass(`production portal/events.html still has ${PROD_COUNT} portal Events scripts`)
-    : fail(`production script count must stay ${PROD_COUNT}`, `found ${prodScripts.length}`);
+    ? pass(`production portal/events.html has ${PROD_COUNT} portal Events scripts (Option C)`)
+    : fail(`production expected ${PROD_COUNT} portal Events tags`, `found ${prodScripts.length}`);
 
 !/<script[^>]+src="[^"]*portal\/events\/[^"]+\.js"[^>]*type="module"/.test(prodHtml)
     ? pass('production: no type="module" on portal Events scripts')
@@ -82,9 +83,9 @@ rehScripts[rehScripts.length - 1] === '../js/portal/events/init.js'
     ? pass('rehearsal: init.js last')
     : fail('rehearsal init.js must be last', rehScripts[rehScripts.length - 1]);
 
-rehScripts[1] === '../js/portal/events/rehearsal/classic-chain-loader.js'
-    ? pass('rehearsal: classic-chain-loader.js is middle tag')
-    : fail('rehearsal middle tag must be classic-chain-loader', rehScripts[1]);
+prodScripts[1] === PROD_LOADER_TAG && rehScripts[1] === PROD_LOADER_TAG
+    ? pass('production and rehearsal share classic-chain-loader.js middle tag')
+    : fail('middle tag must be classic-chain-loader.js', `prod=${prodScripts[1]} reh=${rehScripts[1]}`);
 
 !rehHtml.includes('compat/window-exports') && !rehHtml.includes('compat/inline-handlers')
     ? pass('rehearsal: compat scripts not in HTML')
@@ -98,22 +99,14 @@ fs.existsSync(path.join(root, LOADER))
     ? pass('classic-chain-loader.js exists')
     : fail('loader file missing');
 
-const middleProd = prodScripts.slice(1, -1);
 const chainMatch = loaderJs.match(/var chain = \[([\s\S]*?)\];/);
 if (!chainMatch) {
     fail('loader must define chain array');
 } else {
     const chainEntries = [...chainMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
-    const expectedPaths = middleProd.map((src) => {
-        const rel = src.replace('../js/portal/events/', '');
-        return rel;
-    });
-    const orderOk = chainEntries.length === expectedPaths.length
-        && chainEntries.every((e, i) => e === expectedPaths[i]);
-    orderOk
-        ? pass(`loader chain has ${chainEntries.length} scripts in production order`)
-        : fail('loader chain order must match production middle scripts',
-            `chain ${chainEntries.length} vs prod ${expectedPaths.length}`);
+    chainEntries.length === 27
+        ? pass(`loader chain has ${chainEntries.length} middle scripts (production order)`)
+        : fail('loader chain must have 27 entries', `found ${chainEntries.length}`);
 }
 
 loaderJs.includes('document.write') && !loaderJs.includes('type="module"')

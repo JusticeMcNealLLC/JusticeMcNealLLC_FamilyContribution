@@ -7,6 +7,7 @@ const path = require('path');
 const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
+const { parseClassicChain, isProductionLoaded, chainOrderOk } = require('./_portal-events-classic-chain.js');
 const tools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
 const detailData = fs.readFileSync(path.join(root, 'js/portal/events/detail/data.js'), 'utf8');
@@ -53,17 +54,12 @@ if (fs.existsSync(migrationDir)) {
     }
 }
 
-const chatTag = 'src="../js/portal/events/team/chat.js"';
-const toolsTag = 'src="../js/portal/events/team/tools.js"';
-const presentationTag = 'src="../js/portal/events/detail/presentation.js"';
-const detailTag = 'src="../js/portal/events/detail.js"';
-const chatIdx = portalHtml.indexOf(chatTag);
-const toolsIdx = portalHtml.indexOf(toolsTag);
-const presentationIdx = portalHtml.indexOf(presentationTag);
-const detailIdx = portalHtml.indexOf(detailTag);
-assert(toolsIdx >= 0, 'portal/events.html must load team/tools.js');
-assert(presentationIdx >= 0, 'portal/events.html must load detail/presentation.js');
-assert(chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < detailIdx,
+const classicChain = parseClassicChain(root);
+assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/team/tools.js'),
+    'production must load team/tools.js (HTML or classic-chain-loader)');
+assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/detail/presentation.js'),
+    'production must load detail/presentation.js (HTML or classic-chain-loader)');
+assert(chainOrderOk(classicChain, 'team/chat.js', 'team/tools.js', 'detail/presentation.js', 'detail.js'),
     'chat → tools → presentation → detail load order');
 assert(!/evtOpenTeamToolsPanel/.test(portalHtml), 'portal/events.html must not inline team tools handlers');
 

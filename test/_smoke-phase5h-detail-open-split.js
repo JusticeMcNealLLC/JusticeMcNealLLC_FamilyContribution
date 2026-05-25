@@ -15,6 +15,12 @@
 const fs   = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
+const {
+    parseClassicChain,
+    isProductionLoaded,
+    chainOrderOk,
+    portalEventsHtmlScripts,
+} = require('./_portal-events-classic-chain.js');
 
 let passed = 0;
 let failed = 0;
@@ -133,33 +139,26 @@ detailSections.includes('PortalEvents.detail.sections')
 
 console.log('\n── Phase 5H — portal/events.html load order ──────────────────────────────');
 
-const fragmentsTag = 'src="../js/portal/events/detail/fragments.js"';
-const dataTag = 'src="../js/portal/events/detail/data.js"';
-const sectionsTag = 'src="../js/portal/events/detail/sections.js"';
-const postRenderTag = 'src="../js/portal/events/detail/post-render.js"';
-const detailTag = 'src="../js/portal/events/detail.js"';
+const classicChain = parseClassicChain(root);
+const fragmentsSrc = '../js/portal/events/detail/fragments.js';
+const dataSrc = '../js/portal/events/detail/data.js';
+const sectionsSrc = '../js/portal/events/detail/sections.js';
+const postRenderSrc = '../js/portal/events/detail/post-render.js';
+const detailSrc = '../js/portal/events/detail.js';
 
-html.includes(sectionsTag)
-    ? pass('detail/sections.js script tag in events.html')
-    : fail('detail/sections.js script tag missing from events.html');
+isProductionLoaded(html, classicChain, sectionsSrc)
+    ? pass('detail/sections.js in production load (HTML or classic-chain-loader)')
+    : fail('detail/sections.js missing from production load');
 
-const fragmentsIdx = html.indexOf(fragmentsTag);
-const dataIdx = html.indexOf(dataTag);
-const sectionsIdx = html.indexOf(sectionsTag);
-const postRenderIdx = html.indexOf(postRenderTag);
-const detailIdx = html.indexOf(detailTag);
+isProductionLoaded(html, classicChain, postRenderSrc)
+    ? pass('detail/post-render.js in production load (HTML or classic-chain-loader)')
+    : fail('detail/post-render.js missing from production load');
 
-html.includes(postRenderTag)
-    ? pass('detail/post-render.js script tag in events.html')
-    : fail('detail/post-render.js script tag missing from events.html');
-
-fragmentsIdx >= 0 && dataIdx >= 0 && sectionsIdx >= 0 && postRenderIdx >= 0 && detailIdx >= 0
-    && fragmentsIdx < dataIdx && dataIdx < sectionsIdx && sectionsIdx < postRenderIdx && postRenderIdx < detailIdx
+chainOrderOk(classicChain, 'detail/fragments.js', 'detail/data.js', 'detail/sections.js', 'detail/post-render.js', 'detail.js')
     ? pass('load order: fragments.js → data.js → sections.js → post-render.js → detail.js')
     : fail('fragments → data → sections → post-render → detail load order incorrect');
 
-dataIdx >= 0 && sectionsIdx >= 0 && postRenderIdx >= 0 && detailIdx >= 0
-    && dataIdx < sectionsIdx && sectionsIdx < postRenderIdx && postRenderIdx < detailIdx
+chainOrderOk(classicChain, 'detail/data.js', 'detail/sections.js', 'detail/post-render.js', 'detail.js')
     ? pass('load order: data.js → sections.js → post-render.js → detail.js')
     : fail('data → sections → post-render → detail load order incorrect');
 

@@ -7,6 +7,7 @@ const path = require('path');
 const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
+const { parseClassicChain, isProductionLoaded, chainOrderOk } = require('./_portal-events-classic-chain.js');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
 const detailData = fs.readFileSync(path.join(root, 'js/portal/events/detail/data.js'), 'utf8');
 const detailSections = fs.readFileSync(path.join(root, 'js/portal/events/detail/sections.js'), 'utf8');
@@ -67,14 +68,14 @@ assert(!/pricing_mode === 'paid' \|\| !event\.raffle_entry_cost_cents/.test(rsvp
 // Scope guards
 assert(!/event_chats/.test(detail) && !/event_chats/.test(rsvp), 'no chat tables');
 assert(!/evtOpenTeamToolsPanel/.test(portalHtml), 'portal/events.html must not inline team tools handlers');
-assert(/detail\/presentation\.js/.test(portalHtml), 'portal/events.html loads detail/presentation.js');
-assert(/detail\/raffle-render\.js/.test(portalHtml), 'portal/events.html loads detail/raffle-render.js');
-assert(/detail\/sections\.js/.test(portalHtml), 'portal/events.html loads detail/sections.js');
-const presIdx = portalHtml.indexOf('detail/presentation.js');
-const raffleIdx = portalHtml.indexOf('detail/raffle-render.js');
-const sectionsIdx = portalHtml.indexOf('detail/sections.js');
-const detailIdx = portalHtml.indexOf('portal/events/detail.js');
-assert(presIdx >= 0 && raffleIdx > presIdx && sectionsIdx > raffleIdx && detailIdx > sectionsIdx,
+const classicChain = parseClassicChain(root);
+assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/detail/presentation.js'),
+    'production loads detail/presentation.js');
+assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/detail/raffle-render.js'),
+    'production loads detail/raffle-render.js');
+assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/detail/sections.js'),
+    'production loads detail/sections.js');
+assert(chainOrderOk(classicChain, 'detail/presentation.js', 'detail/raffle-render.js', 'detail/sections.js', 'detail.js'),
     'presentation → raffle-render → sections → detail load order');
 
 pass('portal RSVP/raffle parity helpers and detail wiring verified');

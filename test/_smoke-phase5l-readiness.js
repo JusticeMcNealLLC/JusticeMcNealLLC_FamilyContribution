@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-// Phase 5L.1 / 5L.2 static smoke — module-entry readiness + boot guard
+// Phase 5L.1 / 5L.2 / 5L.3 Option C static smoke — load model + boot guard
 //
 // Freezes classic-script load model before any Phase 5L implementation.
 // No runtime wiring; portal/events.html must stay classic-only.
@@ -63,7 +63,8 @@ function walkPortalEvents(dir) {
 }
 walkPortalEvents(path.join(root, 'js/portal/events'));
 
-const EXPECTED_PORTAL_SCRIPT_COUNT = 29;
+const EXPECTED_PORTAL_SCRIPT_COUNT = 3;
+const PRODUCTION_CHAIN_LOADER = '../js/portal/events/classic-chain-loader.js';
 
 const DETAIL_PIPELINE_TAGS = [
     '../js/portal/events/team/chat.js',
@@ -117,11 +118,19 @@ indexJs.includes('window.PortalEvents = window.PortalEvents || {}')
     ? pass('index.js remains namespace shell only')
     : fail('index.js must seed PortalEvents');
 
-const hasModuleEntryOnly = portalScripts.length === 1
-    || (portalScripts.length <= 3 && !portalScripts.some((s) => s.includes('detail.js')));
-hasModuleEntryOnly
-    ? fail('classic script chain must not be consolidated yet (5L.3+)')
-    : pass('classic script tags not consolidated to module-only loader');
+portalScripts[1] === PRODUCTION_CHAIN_LOADER
+    ? pass('production uses classic-chain-loader.js as middle tag')
+    : fail('middle tag must be classic-chain-loader.js', portalScripts[1]);
+
+!portalScripts.some((s) => s.includes('rehearsal/'))
+    ? pass('production HTML does not load rehearsal/ loader path')
+    : fail('production must use js/portal/events/classic-chain-loader.js not rehearsal/');
+
+/<script[^>]+src="\.\.\/js\/portal\/events\/[^"]+\.js"[^>]*type="module"/.test(html)
+    ? fail('no module-only single-entry loader without classic chain')
+    : portalScripts.length === 3 && portalScripts[0].includes('index.js')
+    ? pass('production consolidated to 3-tag classic chain (not module-only)')
+    : fail('unexpected production load model');
 
 COMPAT_SCRIPTS.forEach((rel) => {
     const htmlPath = rel.replace('js/portal/events/', '../js/portal/events/');
@@ -130,33 +139,33 @@ COMPAT_SCRIPTS.forEach((rel) => {
         : fail(`portal/events.html must not load ${rel}`);
 });
 
-console.log('\n── Phase 5L.1 — detail pipeline order ────────────────────────────────────');
+console.log('\n── Phase 5L.3 — classic-chain-loader middle order ────────────────────────');
 
-let detailOrderOk = true;
-let lastIdx = -1;
-DETAIL_PIPELINE_TAGS.forEach((tag) => {
-    const idx = html.indexOf(`src="${tag}"`);
-    if (idx < 0) {
-        fail(`detail pipeline script missing: ${tag}`);
-        detailOrderOk = false;
-        return;
-    }
-    if (idx <= lastIdx) {
-        fail(`detail pipeline order wrong at ${tag}`);
-        detailOrderOk = false;
-    }
-    lastIdx = idx;
-});
-if (detailOrderOk) {
-    pass('detail pipeline order: team → presentation → … → post-render → template → detail.js');
+const loaderJs = read('js/portal/events/classic-chain-loader.js');
+const chainMatch = loaderJs.match(/var chain = \[([\s\S]*?)\];/);
+if (!chainMatch) {
+    fail('classic-chain-loader.js must define chain array');
+} else {
+    const chainPaths = [...chainMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
+    const detailSlice = DETAIL_PIPELINE_TAGS.map((t) => t.replace('../js/portal/events/', ''));
+    const teamChatIdx = chainPaths.indexOf('team/chat.js');
+    const presentationIdx = chainPaths.indexOf('detail/presentation.js');
+    const postRenderIdx = chainPaths.indexOf('detail/post-render.js');
+    const templateIdx = chainPaths.indexOf('detail/template.js');
+    const detailIdx = chainPaths.indexOf('detail.js');
+    chainPaths.length === 27
+        ? pass('classic-chain-loader injects 27 middle scripts')
+        : fail('loader chain must have 27 entries', `found ${chainPaths.length}`);
+    teamChatIdx >= 0 && presentationIdx > teamChatIdx
+        ? pass('loader order: team before detail/presentation')
+        : fail('loader team → detail pipeline order');
+    detailSlice.every((rel) => chainPaths.includes(rel))
+        ? pass('loader chain includes full detail pipeline scripts')
+        : fail('loader missing detail pipeline script');
+    postRenderIdx >= 0 && templateIdx > postRenderIdx && detailIdx > templateIdx
+        ? pass('loader order: post-render → template → detail.js')
+        : fail('loader post-render → template → detail.js order');
 }
-
-const postRenderIdx = html.indexOf('detail/post-render.js');
-const templateIdx = html.indexOf('detail/template.js');
-const detailIdx = html.indexOf('src="../js/portal/events/detail.js"');
-postRenderIdx >= 0 && templateIdx > postRenderIdx && detailIdx > templateIdx
-    ? pass('post-render.js → template.js → detail.js sub-order')
-    : fail('post-render → template → detail.js order incorrect');
 
 console.log('\n── Phase 5L.2 — init.js boot guard (idempotent) ──────────────────────────');
 
@@ -231,7 +240,7 @@ MONOLITHS.forEach((rel) => {
         : fail(`monolith file missing: ${rel}`);
 });
 
-console.log('\n── Phase 5L.1 — no-go: Phase 5L implementation not started ─────────────────');
+console.log('\n── Phase 5L.1 — compat dormant (post–5L.3 Option C) ────────────────────────');
 
 const strayCompatCalls = portalEventsJsFiles.filter((rel) => {
     const body = read(rel);

@@ -10,6 +10,7 @@
 const fs   = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
+const { parseClassicChain, isProductionLoaded, chainOrderOk } = require('./_portal-events-classic-chain.js');
 
 let passed = 0;
 let failed = 0;
@@ -93,20 +94,13 @@ detail.includes('myTicketQR')
 
 console.log('\n── Phase 5I.1 — portal/events.html load order ──────────────────────────────');
 
-const postRenderTag = 'src="../js/portal/events/detail/post-render.js"';
-const templateTag = 'src="../js/portal/events/detail/template.js"';
-const detailTag = 'src="../js/portal/events/detail.js"';
+const classicChain = parseClassicChain(root);
 
-html.includes(templateTag)
-    ? pass('detail/template.js script tag in events.html')
-    : fail('detail/template.js script tag missing from events.html');
+isProductionLoaded(html, classicChain, '../js/portal/events/detail/template.js')
+    ? pass('detail/template.js in production load (HTML or classic-chain-loader)')
+    : fail('detail/template.js missing from production load');
 
-const postRenderIdx = html.indexOf(postRenderTag);
-const templateIdx = html.indexOf(templateTag);
-const detailIdx = html.indexOf(detailTag);
-
-postRenderIdx >= 0 && templateIdx >= 0 && detailIdx >= 0
-    && postRenderIdx < templateIdx && templateIdx < detailIdx
+chainOrderOk(classicChain, 'detail/post-render.js', 'detail/template.js', 'detail.js')
     ? pass('load order: post-render.js → template.js → detail.js')
     : fail('post-render → template → detail load order incorrect');
 

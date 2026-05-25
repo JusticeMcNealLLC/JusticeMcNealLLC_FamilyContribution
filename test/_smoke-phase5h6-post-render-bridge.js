@@ -14,6 +14,7 @@
 const fs   = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
+const { parseClassicChain, isProductionLoaded, chainOrderOk } = require('./_portal-events-classic-chain.js');
 
 let passed = 0;
 let failed = 0;
@@ -151,26 +152,17 @@ sections.includes('window._edAvatarData')
 
 console.log('\n── Phase 5H.6 — portal/events.html load order ──────────────────────────────');
 
-const sectionsTag = 'src="../js/portal/events/detail/sections.js"';
-const postRenderTag = 'src="../js/portal/events/detail/post-render.js"';
-const templateTag = 'src="../js/portal/events/detail/template.js"';
-const detailTag = 'src="../js/portal/events/detail.js"';
+const classicChain = parseClassicChain(root);
 
-html.includes(postRenderTag)
-    ? pass('detail/post-render.js script tag in events.html')
-    : fail('detail/post-render.js script tag missing from events.html');
+isProductionLoaded(html, classicChain, '../js/portal/events/detail/post-render.js')
+    ? pass('detail/post-render.js in production load (HTML or classic-chain-loader)')
+    : fail('detail/post-render.js missing from production load');
 
-html.includes(templateTag)
-    ? pass('detail/template.js script tag in events.html (Phase 5I.1)')
-    : fail('detail/template.js script tag missing from events.html');
+isProductionLoaded(html, classicChain, '../js/portal/events/detail/template.js')
+    ? pass('detail/template.js in production load (Phase 5I.1, HTML or classic-chain-loader)')
+    : fail('detail/template.js missing from production load');
 
-const sectionsIdx = html.indexOf(sectionsTag);
-const postRenderIdx = html.indexOf(postRenderTag);
-const templateIdx = html.indexOf(templateTag);
-const detailIdx = html.indexOf(detailTag);
-
-sectionsIdx >= 0 && postRenderIdx >= 0 && templateIdx >= 0 && detailIdx >= 0
-    && sectionsIdx < postRenderIdx && postRenderIdx < templateIdx && templateIdx < detailIdx
+chainOrderOk(classicChain, 'detail/sections.js', 'detail/post-render.js', 'detail/template.js', 'detail.js')
     ? pass('load order: sections.js → post-render.js → template.js → detail.js')
     : fail('sections → post-render → template → detail load order incorrect');
 

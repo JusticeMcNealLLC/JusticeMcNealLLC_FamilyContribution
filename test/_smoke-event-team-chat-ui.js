@@ -7,6 +7,12 @@ const path = require('path');
 const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
+const {
+    parseClassicChain,
+    isProductionLoaded,
+    chainOrderOk,
+    portalEventsHtmlScripts,
+} = require('./_portal-events-classic-chain.js');
 const chat = fs.readFileSync(path.join(root, 'js/portal/events/team/chat.js'), 'utf8');
 const tools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
@@ -49,22 +55,23 @@ if (fs.existsSync(migrationDir)) {
     }
 }
 
-const chatTag = 'src="../js/portal/events/team/chat.js"';
-const toolsTag = 'src="../js/portal/events/team/tools.js"';
-const detailTag = 'src="../js/portal/events/detail.js"';
-const chatIdx = portalHtml.indexOf(chatTag);
-const toolsIdx = portalHtml.indexOf(toolsTag);
-const detailIdx = portalHtml.indexOf(detailTag);
-assert(chatIdx >= 0, 'portal/events.html must load team/chat.js');
-assert(toolsIdx >= 0, 'portal/events.html must load team/tools.js');
-assert(detailIdx >= 0, 'portal/events.html must load detail.js');
-assert(chatIdx < toolsIdx && toolsIdx < detailIdx, 'team/chat.js → team/tools.js → detail.js');
-assert(!/type="module"/.test(portalHtml.match(/team\/chat\.js[^>]*/)?.[0] || ''),
-    'team/chat.js must not use type=module');
+const classicChain = parseClassicChain(root);
+assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/team/chat.js'),
+    'production must load team/chat.js (HTML or classic-chain-loader)');
+assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/team/tools.js'),
+    'production must load team/tools.js (HTML or classic-chain-loader)');
+assert(isProductionLoaded(portalHtml, classicChain, '../js/portal/events/detail.js'),
+    'production must load detail.js (HTML or classic-chain-loader)');
+assert(chainOrderOk(classicChain, 'team/chat.js', 'team/tools.js', 'detail.js'),
+    'team/chat.js → team/tools.js → detail.js');
+assert(!/<script[^>]+src="[^"]*team\/chat\.js"[^>]*type="module"/.test(portalHtml),
+    'team/chat.js must not use type=module in HTML');
 
-const initIdx = portalHtml.indexOf('src="../js/portal/events/init.js"');
-const toolsScriptIdx = portalHtml.lastIndexOf(toolsTag);
-assert(initIdx > toolsScriptIdx, 'init.js must remain after team/tools.js');
+const portalScripts = portalEventsHtmlScripts(portalHtml);
+assert(portalScripts[portalScripts.length - 1] === '../js/portal/events/init.js',
+    'init.js must remain last among portal Events scripts');
+assert(portalScripts.includes('../js/portal/events/classic-chain-loader.js'),
+    'classic-chain-loader must load middle scripts before init.js');
 
 pass('Team Chat UI wired in team/chat.js');
 pass('ensure / load / send / deleted_at filter / realtime');

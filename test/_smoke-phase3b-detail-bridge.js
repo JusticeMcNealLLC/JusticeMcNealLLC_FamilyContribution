@@ -18,6 +18,12 @@
 const fs   = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
+const {
+    parseClassicChain,
+    isProductionLoaded,
+    chainOrderOk,
+    portalEventsHtmlScripts,
+} = require('./_portal-events-classic-chain.js');
 
 let passed = 0;
 let failed = 0;
@@ -808,9 +814,10 @@ console.log('\n── portal/events.html invariants ─────────�
 
 const html = read('portal/events.html');
 
-html.includes('src="../js/portal/events/detail.js"')
-    ? pass('detail.js still loaded as classic script in events.html')
-    : fail('detail.js not loaded in events.html or script tag changed');
+const classicChain3b = parseClassicChain(root);
+isProductionLoaded(html, classicChain3b, '../js/portal/events/detail.js')
+    ? pass('detail.js still loaded in production (HTML or classic-chain-loader)')
+    : fail('detail.js not in production load model');
 
 /src="\.\.\/js\/portal\/events\/detail\.js"[^>]*type="module"/.test(html)
     ? fail('detail.js loaded with type="module" — premature, Phase 5 only')
@@ -823,79 +830,48 @@ html.includes('src="../js/portal/events/detail.js"')
 // ─── Phase 5B split files must be loaded in events.html ───
 console.log('\n── File split safety — team/ and detail/ scripts in events.html ─────────');
 
-const chatTag = 'src="../js/portal/events/team/chat.js"';
-const toolsTag = 'src="../js/portal/events/team/tools.js"';
-const presentationTag = 'src="../js/portal/events/detail/presentation.js"';
-const raffleRenderTag = 'src="../js/portal/events/detail/raffle-render.js"';
-const mapOverlayTag = 'src="../js/portal/events/detail/map-overlay.js"';
-const fragmentsTag = 'src="../js/portal/events/detail/fragments.js"';
-const dataTag = 'src="../js/portal/events/detail/data.js"';
-const sectionsTag = 'src="../js/portal/events/detail/sections.js"';
-const postRenderTag = 'src="../js/portal/events/detail/post-render.js"';
-const templateTag = 'src="../js/portal/events/detail/template.js"';
-const detailTag = 'src="../js/portal/events/detail.js"';
-const chatIdx = html.indexOf(chatTag);
-const toolsIdx = html.indexOf(toolsTag);
-const presentationIdx = html.indexOf(presentationTag);
-const raffleRenderIdx = html.indexOf(raffleRenderTag);
-const mapOverlayIdx = html.indexOf(mapOverlayTag);
-const fragmentsIdx = html.indexOf(fragmentsTag);
-const dataIdx = html.indexOf(dataTag);
-const sectionsIdx = html.indexOf(sectionsTag);
-const postRenderIdx = html.indexOf(postRenderTag);
-const templateIdx = html.indexOf(templateTag);
-const detailIdx = html.indexOf(detailTag);
-html.includes(chatTag)
-    ? pass('team/chat.js is referenced in events.html')
-    : fail('team/chat.js not in events.html — would never load');
-html.includes(toolsTag)
-    ? pass('team/tools.js is referenced in events.html')
-    : fail('team/tools.js not in events.html — would never load');
-html.includes(presentationTag)
-    ? pass('detail/presentation.js is referenced in events.html')
-    : fail('detail/presentation.js not in events.html — would never load');
-html.includes(raffleRenderTag)
-    ? pass('detail/raffle-render.js is referenced in events.html')
-    : fail('detail/raffle-render.js not in events.html — would never load');
-html.includes(mapOverlayTag)
-    ? pass('detail/map-overlay.js is referenced in events.html')
-    : fail('detail/map-overlay.js not in events.html — would never load');
-html.includes(fragmentsTag)
-    ? pass('detail/fragments.js is referenced in events.html')
-    : fail('detail/fragments.js not in events.html — would never load');
-html.includes(dataTag)
-    ? pass('detail/data.js is referenced in events.html')
-    : fail('detail/data.js not in events.html — would never load');
-html.includes(sectionsTag)
-    ? pass('detail/sections.js is referenced in events.html')
-    : fail('detail/sections.js not in events.html — would never load');
-html.includes(postRenderTag)
-    ? pass('detail/post-render.js is referenced in events.html')
-    : fail('detail/post-render.js not in events.html — would never load');
-html.includes(templateTag)
-    ? pass('detail/template.js is referenced in events.html')
-    : fail('detail/template.js not in events.html — would never load');
+const productionScripts = [
+    ['team/chat.js', '../js/portal/events/team/chat.js', 'team/chat.js'],
+    ['team/tools.js', '../js/portal/events/team/tools.js', 'team/tools.js'],
+    ['detail/presentation.js', '../js/portal/events/detail/presentation.js', 'detail/presentation.js'],
+    ['detail/raffle-render.js', '../js/portal/events/detail/raffle-render.js', 'detail/raffle-render.js'],
+    ['detail/map-overlay.js', '../js/portal/events/detail/map-overlay.js', 'detail/map-overlay.js'],
+    ['detail/fragments.js', '../js/portal/events/detail/fragments.js', 'detail/fragments.js'],
+    ['detail/data.js', '../js/portal/events/detail/data.js', 'detail/data.js'],
+    ['detail/sections.js', '../js/portal/events/detail/sections.js', 'detail/sections.js'],
+    ['detail/post-render.js', '../js/portal/events/detail/post-render.js', 'detail/post-render.js'],
+    ['detail/template.js', '../js/portal/events/detail/template.js', 'detail/template.js'],
+    ['detail.js', '../js/portal/events/detail.js', 'detail.js'],
+];
+productionScripts.forEach(([label, src, chainKey]) => {
+    isProductionLoaded(html, classicChain3b, src)
+        ? pass(`${label} in production load (HTML or classic-chain-loader)`)
+        : fail(`${label} not in production load — would never load`);
+});
 !html.includes('js/portal/events/detail/exports.js')
     ? pass('detail/exports.js not in events.html (Phase 5E.1 — no loader change)')
     : fail('detail/exports.js must not be added in 5E.1 — use nested aliases in detail.js only');
 !html.includes('js/portal/events/compat/window-exports.js')
     ? pass('compat/window-exports.js not in events.html (5E.1 — no compat wiring)')
     : fail('compat/window-exports.js must not be wired in 5E.1');
-chatIdx >= 0 && toolsIdx >= 0 && presentationIdx >= 0 && raffleRenderIdx >= 0
-    && mapOverlayIdx >= 0 && fragmentsIdx >= 0 && dataIdx >= 0 && sectionsIdx >= 0
-    && postRenderIdx >= 0 && templateIdx >= 0 && detailIdx >= 0
-    && chatIdx < toolsIdx && toolsIdx < presentationIdx && presentationIdx < raffleRenderIdx
-    && raffleRenderIdx < mapOverlayIdx && mapOverlayIdx < fragmentsIdx && fragmentsIdx < dataIdx
-    && dataIdx < sectionsIdx && sectionsIdx < postRenderIdx && postRenderIdx < templateIdx && templateIdx < detailIdx
+chainOrderOk(
+    classicChain3b,
+    'team/chat.js',
+    'team/tools.js',
+    'detail/presentation.js',
+    'detail/raffle-render.js',
+    'detail/map-overlay.js',
+    'detail/fragments.js',
+    'detail/data.js',
+    'detail/sections.js',
+    'detail/post-render.js',
+    'detail/template.js',
+    'detail.js'
+)
     ? pass('load order: chat → tools → … → sections → post-render → template → detail')
     : fail('script order must be … → sections → post-render → template → detail');
 
-const initTag = 'src="../js/portal/events/init.js"';
-const portalBlock = html.slice(html.indexOf('<!-- Events modules'));
-const moduleSection = portalBlock.slice(0, portalBlock.indexOf('sw-register'));
-const portalScripts = [...moduleSection.matchAll(/<script[^>]+src="([^"]+)"[^>]*>/g)]
-    .map((m) => m[1])
-    .filter((s) => s.includes('portal/events'));
+const portalScripts = portalEventsHtmlScripts(html);
 portalScripts.length && portalScripts[portalScripts.length - 1] === '../js/portal/events/init.js'
     ? pass('init.js remains last among portal Events scripts')
     : fail('init.js must be the last portal/events script before sw-register');
@@ -904,10 +880,11 @@ const detailDir = path.join(root, 'js', 'portal', 'events', 'detail');
 if (fs.existsSync(detailDir)) {
     const files = fs.readdirSync(detailDir).filter(f => f.endsWith('.js'));
     files.forEach(f => {
-        const scriptRef = 'js/portal/events/detail/' + f;
-        html.includes(scriptRef)
-            ? pass(`detail/${f} is referenced in events.html (not orphaned)`)
-            : fail(`detail/${f} exists but NOT in events.html — would never load`, `File: ${scriptRef}`);
+        const chainKey = 'detail/' + f;
+        const src = '../js/portal/events/' + chainKey;
+        isProductionLoaded(html, classicChain3b, src)
+            ? pass(`detail/${f} in production load (not orphaned)`)
+            : fail(`detail/${f} exists but NOT in production load`, `File: ${chainKey}`);
     });
     if (files.length === 0) {
         pass('js/portal/events/detail/ exists but has no .js files yet');
