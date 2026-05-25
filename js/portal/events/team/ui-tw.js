@@ -2,7 +2,7 @@
 
 /** Shared Tailwind class strings for team tools + chat (scanned by tailwind.config.js). */
 
-export const TW_CTA_BTN = 'evt-cta-btn flex flex-1 items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-[15px] font-bold tracking-wide border-0 cursor-pointer whitespace-nowrap transition active:scale-[0.97] disabled:cursor-not-allowed [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:shrink-0 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[2.5]';
+export const TW_CTA_BTN = 'evt-cta-btn flex flex-1 items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-[15px] font-bold tracking-wide cursor-pointer whitespace-nowrap transition active:scale-[0.97] disabled:cursor-not-allowed [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:shrink-0 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[2.5]';
 
 export const TW_CTA_BAR = [
     'evt-cta-bar',
@@ -81,9 +81,9 @@ export const TW_CTA_ACTIONS = 'evt-cta-actions max-lg:flex max-lg:shrink-0 max-l
 export const TW_CTA_RSVP = 'bg-indigo-600 text-white';
 export const TW_CTA_RSVP_DONE = 'bg-green-600 text-white';
 export const TW_CTA_MANAGE = 'bg-indigo-600 text-white';
-export const TW_CTA_TEAM = 'bg-white text-indigo-600 border-2 border-indigo-200';
+export const TW_CTA_TEAM = 'bg-white text-indigo-600 !border-2 !border-indigo-200';
 export const TW_CTA_RAFFLE = 'bg-gradient-to-br from-amber-500 to-amber-600 text-white';
-export const TW_CTA_RAFFLE_OUTLINE = 'bg-white text-amber-600 border-2 border-amber-300';
+export const TW_CTA_RAFFLE_OUTLINE = 'bg-white text-amber-600 !border-2 !border-amber-300';
 export const TW_CTA_RAFFLE_DONE = 'bg-green-600 text-white';
 export const TW_CTA_DISABLED = 'bg-gray-200 text-gray-400';
 export const TW_CTA_RAFFLE_LOCKED = 'bg-gray-100 text-gray-400 border border-gray-200 shadow-none cursor-not-allowed';

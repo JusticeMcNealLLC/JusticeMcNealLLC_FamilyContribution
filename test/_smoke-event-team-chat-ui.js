@@ -17,6 +17,8 @@ const chat = fs.readFileSync(path.join(root, 'js/portal/events/team/chat.js'), '
 const tools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
 const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const uiTw = fs.readFileSync(path.join(root, 'js/portal/events/team/ui-tw.js'), 'utf8');
+const tailwindCss = fs.readFileSync(path.join(root, 'css/tailwind.portal.css'), 'utf8');
 
 function pass(msg) { console.log(`  ✓ ${msg}`); }
 
@@ -75,6 +77,13 @@ assert(lastBoot.includes('events.bundle.js') || lastBoot.includes('init.js'),
     'events.bundle.js or init.js must be last among portal Events scripts');
 assert(portalScripts.some((s) => s.includes('events.bundle.js')),
     'production must load events.bundle.js (middle modules inside bundle)');
+
+assert(/!border-2 !border-indigo-200/.test(uiTw),
+    'Team CTA must use important border utilities (beats legacy .evt-cta-btn rules)');
+assert(/!border-2/.test(tailwindCss) && /border-indigo-200/.test(tailwindCss),
+    'tailwind.portal.css must include Team CTA border utilities (run npm run build:tailwind)');
+assert(/tailwind\.portal\.css\?v=\d+/.test(portalHtml),
+    'portal/events.html should cache-bust tailwind.portal.css');
 
 pass('Team Chat UI wired in team/chat.js');
 pass('ensure / load / send / deleted_at filter / realtime');

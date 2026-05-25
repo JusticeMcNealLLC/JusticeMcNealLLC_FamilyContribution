@@ -9,6 +9,8 @@ on:
       - 'scripts/verify-events-main.js'
       - 'package.json'
       - 'package-lock.json'
+      - 'tailwind.config.js'
+      - 'css/tailwind.source.css'
   pull_request:
     paths:
       - 'js/portal/events/**'
@@ -17,6 +19,8 @@ on:
       - 'scripts/verify-events-main.js'
       - 'package.json'
       - 'package-lock.json'
+      - 'tailwind.config.js'
+      - 'css/tailwind.source.css'
 
 jobs:
   build-and-smoke:
@@ -29,6 +33,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run verify:events-main
+      - run: npm run build:tailwind
       - run: npm run build:events
       - run: node test/_smoke-events-bundle.js
       - run: node test/_smoke-phase5l-readiness.js
