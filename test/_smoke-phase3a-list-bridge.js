@@ -22,6 +22,7 @@ const {
     parseClassicChain,
     isProductionLoaded,
     portalEventsHtmlScripts,
+    chainOrderOk,
 } = require('./_portal-events-classic-chain.js');
 
 let passed = 0;
@@ -43,6 +44,10 @@ function read(relPath) {
 console.log('\n── js/portal/events/list.js — file structure ─────────────────────────────');
 
 const list = read('js/portal/events/list.js');
+const listSearchJs = read('js/portal/events/list/search.js');
+const listRightRailJs = read('js/portal/events/list/right-rail.js');
+const listHeaderJs = read('js/portal/events/list/header.js');
+const classicChain3a = parseClassicChain(root);
 
 // Must be an IIFE (classic-script pattern)
 list.includes('(function ()')
@@ -59,9 +64,9 @@ list.includes("'use strict';")
     : pass('No native export statement (stays classic-script safe)');
 
 // File must be substantial (>2000 lines worth of content)
-list.length > 80000
+list.length > 70000
     ? pass(`File size reasonable (${list.length.toLocaleString()} chars — no accidental truncation)`)
-    : fail('list.js appears truncated (< 80k chars)', `actual: ${list.length}`);
+    : fail('list.js appears truncated (< 70k chars)', `actual: ${list.length}`);
 
 // ─── Public globals assigned in source ───────────────────
 console.log('\n── list.js — public globals (window.evt*) ─────────────────────────────────');
@@ -139,6 +144,69 @@ INTERNAL_FNS.forEach(fn => {
         : fail(`${fn} missing from source — required for runtime`);
 });
 
+const movedFromList = [
+    ['function _readHistory(', 'search history'],
+    ['function renderSearchSuggest(', 'search suggest'],
+    ['function wireSuggestClicks(', 'suggest clicks'],
+    ['function renderHeaderGreeting(', 'header greeting'],
+    ['function wireHeaderBellBadge(', 'header bell badge'],
+    ['function _toIsoDate(', 'mini cal iso helper'],
+];
+movedFromList.forEach(([pattern, label]) => {
+    !list.includes(pattern)
+        ? pass(`${label} removed from list.js (moved to list module)`)
+        : fail(`${label} still in list.js body`);
+});
+
+// ─── List modules (Phase 5M.2A) ───────────────────────────
+console.log('\n── js/portal/events/list/*.js — search + right rail (5M.2A) ─────────────');
+
+['list/search.js', 'list/right-rail.js', 'list/header.js'].forEach(rel => {
+    classicChain3a && classicChain3a.includes(rel)
+        ? pass(`${rel} present in classic-chain-loader.js chain`)
+        : fail(`${rel} missing from classic-chain-loader.js chain`);
+});
+
+chainOrderOk(classicChain3a, 'raffle-model.js', 'list/search.js', 'list/right-rail.js')
+    && chainOrderOk(classicChain3a, 'list/right-rail.js', 'list/header.js')
+    && chainOrderOk(classicChain3a, 'list/header.js', 'list.js')
+    ? pass('loader order: raffle-model → list/search → right-rail → header → list.js')
+    : fail('loader list module order');
+
+listSearchJs.includes('window.PortalEventsListSearch')
+    ? pass('search.js assigns PortalEventsListSearch')
+    : fail('PortalEventsListSearch namespace missing');
+
+listSearchJs.includes('function setupSearch')
+    && listSearchJs.includes('function renderSearchSuggest')
+    ? pass('search.js owns setupSearch and renderSearchSuggest')
+    : fail('search.js missing search functions');
+
+listRightRailJs.includes('window.PortalEventsListRightRail')
+    ? pass('right-rail.js assigns PortalEventsListRightRail')
+    : fail('PortalEventsListRightRail namespace missing');
+
+listRightRailJs.includes('function renderMiniCalendar')
+    && listRightRailJs.includes('function renderMyRsvps')
+    && listRightRailJs.includes('function renderStatsCard')
+    ? pass('right-rail.js owns mini calendar, RSVPs, stats card')
+    : fail('right-rail.js missing right-rail renderers');
+
+listHeaderJs.includes('window.PortalEventsListHeader')
+    && listHeaderJs.includes('function renderHeaderCount')
+    && listHeaderJs.includes('function initHeaderBell')
+    ? pass('header.js owns header count and bell helpers')
+    : fail('header.js missing header helpers');
+
+list.includes('PortalEventsListSearch.setupSearch')
+    ? pass('list.js delegates setupSearch to PortalEventsListSearch')
+    : fail('list.js missing setupSearch delegate');
+
+list.includes('function loadEvents')
+    && list.includes('function renderEvents')
+    ? pass('list.js still owns loadEvents and renderEvents orchestrator')
+    : fail('list.js missing core orchestrator functions');
+
 // ─── window.PortalEvents.list namespace ──────────────────
 console.log('\n── list.js — window.PortalEvents.list namespace ─────────────────────────────');
 
@@ -188,7 +256,6 @@ NAMESPACE_KEYS.forEach(key => {
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
 
 const html = read('portal/events.html');
-const classicChain3a = parseClassicChain(root);
 
 classicChain3a && classicChain3a.includes('list.js')
     ? pass('list.js present in classic-chain-loader.js chain')

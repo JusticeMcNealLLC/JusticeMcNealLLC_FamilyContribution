@@ -166,9 +166,19 @@ if (!chainMatch) {
     const raffleBuilderIdx = chainPaths.indexOf('create/raffle-builder.js');
     const submitIdx = chainPaths.indexOf('create/submit.js');
     const createSheetIdx = chainPaths.indexOf('create/sheet.js');
-    chainPaths.length === 38
-        ? pass('classic-chain-loader injects 38 middle scripts')
-        : fail('loader chain must have 38 entries', `found ${chainPaths.length}`);
+    const raffleModelIdx = chainPaths.indexOf('raffle-model.js');
+    const listSearchIdx = chainPaths.indexOf('list/search.js');
+    const listRightRailIdx = chainPaths.indexOf('list/right-rail.js');
+    const listHeaderIdx = chainPaths.indexOf('list/header.js');
+    const listIdx = chainPaths.indexOf('list.js');
+    chainPaths.length === 41
+        ? pass('classic-chain-loader injects 41 middle scripts')
+        : fail('loader chain must have 41 entries', `found ${chainPaths.length}`);
+    raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
+        && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
+        && listIdx > listHeaderIdx
+        ? pass('loader order: raffle-model → list/search → right-rail → header → list.js')
+        : fail('loader list module order');
     createGeoIdx >= 0 && legacyCostsIdx > createGeoIdx
         && legacyLocationIdx > legacyCostsIdx && legacyPreviewIdx > legacyLocationIdx
         && legacySubmitIdx > legacyPreviewIdx && createIdx > legacySubmitIdx

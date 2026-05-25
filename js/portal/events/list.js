@@ -70,155 +70,12 @@
     _restoreState();
 
     // =========================================================
-    // D3 — Search history & suggestions (events_004 §D3)
+    // D3 — Search (list/search.js — PortalEventsListSearch)
     // =========================================================
-    const SEARCH_HIST_KEY = 'evt_search_hist_v1';
-    const SEARCH_HIST_MAX = 8;
-    const SEARCH_HIST_SHOW = 5;
-    const QUICK_CATS = ['cookout', 'birthday', 'trip', 'party'];
-
-    function _readHistory() {
-        try {
-            const raw = sessionStorage.getItem(SEARCH_HIST_KEY);
-            if (!raw) return [];
-            const arr = JSON.parse(raw);
-            return Array.isArray(arr) ? arr.filter(x => typeof x === 'string') : [];
-        } catch (_) { return []; }
-    }
-    function _writeHistory(arr) {
-        try { sessionStorage.setItem(SEARCH_HIST_KEY, JSON.stringify(arr.slice(0, SEARCH_HIST_MAX))); }
-        catch (_) { /* quota / private */ }
-    }
-    function _pushHistory(q) {
-        const s = (q || '').trim();
-        if (s.length < 2) return;
-        const lc = s.toLowerCase();
-        const list = _readHistory().filter(x => x.toLowerCase() !== lc);
-        list.unshift(s);
-        _writeHistory(list);
-    }
-    function _removeHistory(q) {
-        const lc = (q || '').toLowerCase();
-        _writeHistory(_readHistory().filter(x => x.toLowerCase() !== lc));
-    }
-    function _clearHistory() { try { sessionStorage.removeItem(SEARCH_HIST_KEY); } catch (_) {} }
-
-    function _escapeAttr(s) { return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-
-    function _renderSearchSuggest() {
-        const expand = document.getElementById('evtSearchExpand');
-        const input  = document.getElementById('evtSearchInput');
-        if (!expand || !input) return;
-        if (expand.classList.contains('hidden')) { _hideSearchSuggest(); return; }
-        if ((input.value || '').trim() !== '') { _hideSearchSuggest(); return; }
-
-        let host = document.getElementById('evtSearchSuggest');
-        if (!host) {
-            host = document.createElement('div');
-            host.id = 'evtSearchSuggest';
-            host.className = 'evt-search-suggest absolute left-0 right-0 mt-2 top-full rounded-xl bg-white shadow-lg ring-1 ring-black/5 overflow-hidden z-40';
-            host.setAttribute('role', 'listbox');
-            expand.appendChild(host);
-        }
-
-        const hist = _readHistory().slice(0, SEARCH_HIST_SHOW);
-        const parts = [];
-
-        if (hist.length) {
-            parts.push('<div class="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-gray-500">Recent</div>');
-            parts.push('<ul>');
-            hist.forEach(q => {
-                const qa = _escapeAttr(q);
-                parts.push(
-                    '<li class="evt-suggest-row flex items-center gap-2 px-3 py-2 hover:bg-brand-50 cursor-pointer" data-suggest-q="' + qa + '" role="option">' +
-                        '<span class="text-gray-400" aria-hidden="true">🕐</span>' +
-                        '<span class="flex-1 min-w-0 truncate text-sm text-gray-800">' + qa + '</span>' +
-                        '<button type="button" class="evt-suggest-remove p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100" data-suggest-rm="' + qa + '" aria-label="Remove from history" title="Remove">' +
-                            '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>' +
-                        '</button>' +
-                    '</li>'
-                );
-            });
-            parts.push(
-                '<li class="evt-suggest-clear flex items-center gap-2 px-3 py-2 border-t border-gray-100 hover:bg-gray-50 cursor-pointer text-xs text-gray-500" data-suggest-clear="1" role="option">' +
-                    '<span aria-hidden="true">🗑</span><span>Clear search history</span>' +
-                '</li>'
-            );
-            parts.push('</ul>');
-        }
-
-        parts.push('<div class="px-3 ' + (hist.length ? 'pt-3' : 'pt-2') + ' pb-1 text-[11px] uppercase tracking-wide text-gray-500">Quick categories</div>');
-        parts.push('<div class="evt-suggest-chip-row flex flex-wrap gap-2 px-3 pb-3">');
-        QUICK_CATS.forEach(cat => {
-            const emoji = (C.CATEGORY_EMOJI && C.CATEGORY_EMOJI[cat]) || '📅';
-            const label = (C.CATEGORY_TAG && C.CATEGORY_TAG[cat]?.label) || cat;
-            parts.push(
-                '<button type="button" class="evt-suggest-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-brand-50 border border-gray-200 text-sm text-gray-700" data-suggest-cat="' + cat + '">' +
-                    '<span aria-hidden="true">' + emoji + '</span><span>' + label + '</span>' +
-                '</button>'
-            );
-        });
-        parts.push('</div>');
-
-        host.innerHTML = parts.join('');
-    }
-    function _hideSearchSuggest() {
-        const host = document.getElementById('evtSearchSuggest');
-        if (host) host.innerHTML = '';
-    }
-    function _wireSuggestClicks() {
-        const expand = document.getElementById('evtSearchExpand');
-        if (!expand || expand.dataset.suggestWired === '1') return;
-        expand.dataset.suggestWired = '1';
-        expand.addEventListener('click', (e) => {
-            const rm = e.target.closest('[data-suggest-rm]');
-            if (rm) {
-                e.preventDefault(); e.stopPropagation();
-                _removeHistory(rm.getAttribute('data-suggest-rm'));
-                _renderSearchSuggest();
-                return;
-            }
-            const clr = e.target.closest('[data-suggest-clear]');
-            if (clr) {
-                e.preventDefault(); e.stopPropagation();
-                _clearHistory();
-                _renderSearchSuggest();
-                return;
-            }
-            const row = e.target.closest('[data-suggest-q]');
-            if (row) {
-                e.preventDefault(); e.stopPropagation();
-                const q = row.getAttribute('data-suggest-q') || '';
-                const input = document.getElementById('evtSearchInput');
-                const clear = document.getElementById('evtSearchClear');
-                if (input) { input.value = q; clear?.classList.toggle('hidden', !q); }
-                _searchQuery = q;
-                _pushHistory(q);
-                _persistState();
-                _hideSearchSuggest();
-                renderEvents();
-                return;
-            }
-            const chip = e.target.closest('[data-suggest-cat]');
-            if (chip) {
-                e.preventDefault(); e.stopPropagation();
-                const cat = chip.getAttribute('data-suggest-cat') || '';
-                _activeCategory = (_activeCategory === cat) ? '' : cat;
-                _persistState();
-                _hideSearchSuggest();
-                renderEvents();
-            }
-        });
-        // Outside-click closes suggest but leaves pill open
-        document.addEventListener('click', (e) => {
-            const host = document.getElementById('evtSearchSuggest');
-            if (!host || !host.innerHTML) return;
-            if (expand.contains(e.target) || document.getElementById('evtSearchToggle')?.contains(e.target)) return;
-            _hideSearchSuggest();
-        });
+    function setupSearch() {
+        return window.PortalEventsListSearch.setupSearch();
     }
 
-    // =========================================================
     // D1 — Calendar / agenda view toggle (events_004 §D1)
     // =========================================================
     const MONTH_NAMES = ['January','February','March','April','May','June',
@@ -1050,139 +907,16 @@
     }
 
     // =========================================================
-    // Header count + personalized greeting (events_003 §8.1 / B5)
+    // =========================================================
+    // Header (list/header.js — PortalEventsListHeader)
     // =========================================================
     function _renderHeaderCount() {
-        const el = document.getElementById('evtHeaderCount');
-        if (!el) return;
-        const all = window.evtAllEvents || [];
-        const rsvps = window.evtAllRsvps || {};
-        const now = new Date();
-        const upcoming = all.filter(e =>
-            e.status !== 'cancelled' && e.status !== 'draft' &&
-            new Date(e.start_date) >= now
-        ).length;
-        const going = Object.values(rsvps).filter(r => r.status === 'going').length;
-        const parts = [];
-        if (going) parts.push(going + ' going');
-        parts.push(upcoming + ' upcoming');
-        el.textContent = parts.join(' · ');
-
-        _renderHeaderGreeting();
+        return window.PortalEventsListHeader.renderHeaderCount();
     }
-
-    function _renderHeaderGreeting() {
-        const title = document.getElementById('evtHeaderTitle');
-        if (!title) return;
-        const name = (window.evtCurrentUserName || '').trim();
-        // F1 — when vlift is on, F1 greeting supersedes B5 "Hey {name} 👋"
-        if (document.body.classList.contains('evt-vlift')) {
-            const old = document.getElementById('evtHeaderGreeting');
-            if (old) old.remove();
-            // Also refresh F1 greeting slot with the latest name
-            const slot = document.querySelector('#evtGreetingHello [data-greeting-name]');
-            if (slot && name) slot.textContent = name;
-            return;
-        }
-        let g = document.getElementById('evtHeaderGreeting');
-        if (!name) { if (g) g.remove(); return; }
-        if (!g) {
-            g = document.createElement('small');
-            g.id = 'evtHeaderGreeting';
-            g.className = 'evt-header-greeting block text-xs text-gray-400 mb-1';
-            title.parentNode.insertBefore(g, title);
-        }
-        const esc = (H.escapeHtml || (s => String(s == null ? '' : s)));
-        g.textContent = 'Hey ' + esc(name) + ' 👋';
-    }
-
-    // E7 — "Interested" / Going avatar cluster (vlift hero overlay).
-    // Uses up-to-5 profile records already cached in window.evtAttendees[id]
-    // (scoped query in §12.1 LOCKED — no new query). Returns '' if empty.
-    function _attendeeCluster(eventId) {
-        const list = (window.evtAttendees && window.evtAttendees[eventId]) || [];
-        if (!list.length) return '';
-        const esc = H.escapeHtml || (s => String(s == null ? '' : s));
-        const bubs = list.slice(0, 5).map((p, i) => {
-            const pic = p && p.profile_picture_url;
-            const first = (p && p.first_name) || '';
-            const initial = (first.trim().charAt(0) || '?').toUpperCase();
-            const ml = i === 0 ? '' : ' -ml-2';
-            const inner = pic
-                ? '<img src="' + esc(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />'
-                : '<span class="evt-hero-cluster-init">' + esc(initial) + '</span>';
-            return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc(first) + '">' + inner + '</span>';
-        }).join('');
-        // Use true total from evtAttendeeCounts; fall back to list length.
-        const trueCount = (window.evtAttendeeCounts && window.evtAttendeeCounts[eventId]) || list.length;
-        const labelN = String(trueCount);
-        return '<button type="button" data-evt-hero-going="' + esc(eventId) + '"' +
-            ' class="evt-hero-cluster" aria-label="See who is going">' +
-                '<span class="evt-hero-cluster-stack">' + bubs + '</span>' +
-                '<span class="evt-hero-cluster-label">' + labelN + ' going</span>' +
-            '</button>';
-    }
-
-    // E10 — In-header notification bell (vlift only). Mirrors unread state from
-    // the global #notifBadge and forwards clicks to the global #notifBtn.
-    let _evtBellObserver = null;
     function _initHeaderBell() {
-        if (!document.body.classList.contains('evt-vlift')) return;
-        const header = document.getElementById('evtPageHeader');
-        if (!header) return;
-        // Only render if the global notifications module is present
-        const globalBtn = document.getElementById('notifBtn');
-        if (!globalBtn) return;
-        if (document.getElementById('evtHeaderBell')) return; // idempotent
-
-        const wrap = header.querySelector('.flex.items-end.justify-between') || header.firstElementChild;
-        if (!wrap) return;
-
-        const bell = document.createElement('button');
-        bell.id = 'evtHeaderBell';
-        bell.type = 'button';
-        bell.setAttribute('aria-label', 'Notifications');
-        bell.className = 'evt-header-bell relative inline-flex items-center justify-center w-10 h-10 rounded-xl text-white/90 hover:text-white shrink-0';
-        bell.innerHTML =
-            '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">' +
-                '<path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.17V11a6 6 0 10-12 0v3.17a2 2 0 01-.6 1.43L4 17h5m6 0a3 3 0 11-6 0"/>' +
-            '</svg>' +
-            '<span id="evtHeaderBellDot" class="evt-header-bell-dot hidden" aria-hidden="true"></span>';
-
-        bell.addEventListener('click', e => {
-            e.preventDefault();
-            e.stopPropagation();
-            const target = document.getElementById('notifBtn');
-            if (target) target.click();
-        });
-
-        // Insert before the Create button (or as last child of wrap)
-        const createBtn = wrap.querySelector('#createEventBtn');
-        if (createBtn) wrap.insertBefore(bell, createBtn);
-        else wrap.appendChild(bell);
-
-        _wireHeaderBellBadge();
+        return window.PortalEventsListHeader.initHeaderBell();
     }
 
-    function _wireHeaderBellBadge() {
-        const badge = document.getElementById('notifBadge');
-        const dot = document.getElementById('evtHeaderBellDot');
-        if (!dot) return;
-        const sync = () => {
-            if (!badge) { dot.classList.add('hidden'); return; }
-            // Unread when the global badge is not display:none AND has non-zero text content
-            const txt = (badge.textContent || '').trim();
-            const visible = !!txt && getComputedStyle(badge).display !== 'none';
-            dot.classList.toggle('hidden', !visible);
-        };
-        sync();
-        if (!badge) return;
-        try { _evtBellObserver?.disconnect(); } catch (_) {}
-        _evtBellObserver = new MutationObserver(sync);
-        _evtBellObserver.observe(badge, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
-    }
-
-    // =========================================================
     // Hero selection — events_006: admin-controlled featured event.
     // Returns the single event with is_featured = true that is not
     // cancelled or draft. If none is featured, returns null and the
@@ -1503,235 +1237,17 @@
     }
 
     // =========================================================
-    // F10 — Mini calendar (right rail, vlift only)
     // =========================================================
-    function _toIsoDate(d) {
-        return d.getFullYear() + '-' +
-            String(d.getMonth() + 1).padStart(2, '0') + '-' +
-            String(d.getDate()).padStart(2, '0');
-    }
+    // F10–F12 — Right rail (list/right-rail.js — PortalEventsListRightRail)
+    // =========================================================
     function _renderMiniCalendar() {
-        const mount = document.getElementById('evtRailSlotCalendar');
-        if (!mount) return;
-        if (!document.body.classList.contains('evt-vlift')) { mount.innerHTML = ''; return; }
-
-        const today = new Date();
-        if (!_miniCalMonth) _miniCalMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        const monthStart = new Date(_miniCalMonth);
-        const year = monthStart.getFullYear();
-        const month = monthStart.getMonth();
-        const monthLabel = monthStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-        // Build a Set of ISO dates that have events (from current filtered set)
-        const evtDays = new Set();
-        (window.evtAllEvents || []).forEach(ev => {
-            if (!ev || !ev.start_date) return;
-            const d = new Date(ev.start_date);
-            if (d.getFullYear() === year && d.getMonth() === month) {
-                evtDays.add(_toIsoDate(d));
-            }
-        });
-
-        // Grid: 6 rows x 7 cols, starting at Sunday of week containing the 1st
-        const firstDow = monthStart.getDay(); // 0=Sun
-        const gridStart = new Date(year, month, 1 - firstDow);
-        const todayIso = _toIsoDate(today);
-
-        const dayHeaders = ['SUN','MON','TUE','WED','THU','FRI','SAT']
-            .map(d => '<div class="evt-mcal-dow">' + d + '</div>').join('');
-
-        let cells = '';
-        for (let i = 0; i < 42; i++) {
-            const d = new Date(gridStart);
-            d.setDate(gridStart.getDate() + i);
-            const iso = _toIsoDate(d);
-            const isOther = d.getMonth() !== month;
-            const isToday = iso === todayIso;
-            const hasEvt = evtDays.has(iso);
-            const isActive = iso === _activeDay;
-            const cls = ['evt-mcal-day'];
-            if (isOther) cls.push('evt-mcal-day--other');
-            if (isToday) cls.push('evt-mcal-day--today');
-            if (hasEvt) cls.push('evt-mcal-day--has');
-            if (isActive) cls.push('evt-mcal-day--active');
-            cells += '<button type="button" class="' + cls.join(' ') +
-                '" data-mcal-day="' + iso + '" aria-label="' +
-                d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) +
-                '">' + d.getDate() + '</button>';
-        }
-
-        mount.innerHTML =
-            '<div class="evt-mcal" role="group" aria-label="Mini calendar">' +
-                '<p class="evt-mcal-section-heading">Calendar</p>' +
-                '<div class="evt-mcal-head">' +
-                    '<button type="button" class="evt-mcal-nav" data-mcal-prev aria-label="Previous month">&lsaquo;</button>' +
-                    '<span class="evt-mcal-title">' + monthLabel + '</span>' +
-                    '<button type="button" class="evt-mcal-nav" data-mcal-next aria-label="Next month">&rsaquo;</button>' +
-                '</div>' +
-                '<div class="evt-mcal-dow-row">' + dayHeaders + '</div>' +
-                '<div class="evt-mcal-grid">' + cells + '</div>' +
-                (_activeDay
-                    ? '<button type="button" class="evt-mcal-clear" data-mcal-clear>Clear day filter</button>'
-                    : '') +
-            '</div>';
-
-        mount.querySelector('[data-mcal-prev]')?.addEventListener('click', () => {
-            _miniCalMonth = new Date(year, month - 1, 1);
-            _renderMiniCalendar();
-        });
-        mount.querySelector('[data-mcal-next]')?.addEventListener('click', () => {
-            _miniCalMonth = new Date(year, month + 1, 1);
-            _renderMiniCalendar();
-        });
-        mount.querySelector('[data-mcal-clear]')?.addEventListener('click', () => {
-            _activeDay = '';
-            renderEvents();
-        });
-        mount.querySelectorAll('[data-mcal-day]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const iso = btn.getAttribute('data-mcal-day');
-                _activeDay = (_activeDay === iso) ? '' : iso;
-                renderEvents();
-            });
-        });
-
-        // Reveal the right rail now that it has content
-        const rail = document.getElementById('evtRightRail');
-        if (rail) rail.classList.remove('hidden');
+        return window.PortalEventsListRightRail.renderMiniCalendar();
     }
-
-    // =========================================================
-    // F11 — "Your Upcoming RSVPs" rail card
-    // =========================================================
     function _renderMyRsvps() {
-        const mount = document.getElementById('evtRailSlotRsvps');
-        if (!mount) return;
-        if (!document.body.classList.contains('evt-vlift')) { mount.innerHTML = ''; return; }
-
-        const all   = window.evtAllEvents || [];
-        const rsvps = window.evtAllRsvps  || {};
-        const esc   = H.escapeHtml || (s => String(s == null ? '' : s));
-        const now   = Date.now();
-
-        const mine = all
-            .filter(ev => {
-                const r = rsvps[ev.id];
-                if (!r || r.status !== 'going') return false;
-                const t = new Date(ev.start_date).getTime();
-                return !isNaN(t) && t >= now;
-            })
-            .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-
-        if (!mine.length) { mount.innerHTML = ''; return; }
-
-        const total = mine.length;
-        const rows = mine.slice(0, 3).map(ev => {
-            const d = new Date(ev.start_date);
-            const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-            const hasBanner = !!ev.banner_url;
-            const thumbStyle = hasBanner
-                ? ('background: url(\'' + esc(ev.banner_url) + '\') center/cover;')
-                : 'background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);';
-            return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc(ev.id) + '">' +
-                '<span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span>' +
-                '<span class="evt-myrsvp-body">' +
-                    '<span class="evt-myrsvp-title">' + esc(ev.title || 'Untitled event') + '</span>' +
-                    '<span class="evt-myrsvp-meta">' + esc(dateStr) + ', ' + esc(timeStr) + '</span>' +
-                '</span>' +
-            '</button>';
-        }).join('');
-
-        mount.innerHTML =
-            '<div class="evt-myrsvps">' +
-                '<div class="evt-myrsvps-head">' +
-                    '<h3 class="evt-myrsvps-title">Your Upcoming RSVPs</h3>' +
-                    '<span class="evt-myrsvps-count">' + total + '</span>' +
-                '</div>' +
-                '<div class="evt-myrsvps-list">' + rows + '</div>' +
-                '<button type="button" class="evt-myrsvps-all" data-evt-myrsvps-all>View All My Events</button>' +
-            '</div>';
-
-        mount.querySelectorAll('[data-evt-myrsvp]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = btn.getAttribute('data-evt-myrsvp');
-                const ev = all.find(e => e.id === id);
-                if (!ev) return;
-                if (ev.slug && typeof window.evtNavigateToEvent === 'function') {
-                    window.evtNavigateToEvent(ev.slug);
-                } else if (typeof window.evtOpenDetail === 'function') {
-                    window.evtOpenDetail(ev.id);
-                }
-            });
-        });
-        mount.querySelector('[data-evt-myrsvps-all]')?.addEventListener('click', () => {
-            // Switch to "Going" tab
-            document.querySelector('[data-filter="going"]')?.click();
-        });
-
-        const rail = document.getElementById('evtRightRail');
-        if (rail) rail.classList.remove('hidden');
+        return window.PortalEventsListRightRail.renderMyRsvps();
     }
-
-    // =========================================================
-    // F12 — "Events Overview" stats rail card
-    // =========================================================
     function _renderStatsCard() {
-        const mount = document.getElementById('evtRailSlotStats');
-        if (!mount) return;
-        if (!document.body.classList.contains('evt-vlift')) { mount.innerHTML = ''; return; }
-
-        const all   = window.evtAllEvents || [];
-        const rsvps = window.evtAllRsvps  || {};
-
-        const now = new Date();
-        const y = now.getFullYear(), m = now.getMonth();
-
-        const thisMonth = all.filter(ev => {
-            const d = new Date(ev.start_date);
-            return d.getFullYear() === y && d.getMonth() === m;
-        }).length;
-
-        const going = Object.values(rsvps).filter(r => r && r.status === 'going').length;
-
-        // Communities = distinct event_type values across all events
-        const communities = new Set();
-        all.forEach(ev => { if (ev && ev.event_type) communities.add(ev.event_type); });
-
-        mount.innerHTML =
-            '<div class="evt-stats">' +
-                '<h3 class="evt-stats-title">Events Overview</h3>' +
-                '<div class="evt-stats-row">' +
-                    '<span class="evt-stats-icon evt-stats-icon--purple" aria-hidden="true">' +
-                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' +
-                    '</span>' +
-                    '<span class="evt-stats-body"><span class="evt-stats-label">This Month</span><span class="evt-stats-sub">Upcoming events</span></span>' +
-                    '<span class="evt-stats-value">' + thisMonth + '</span>' +
-                '</div>' +
-                '<div class="evt-stats-row">' +
-                    '<span class="evt-stats-icon evt-stats-icon--green" aria-hidden="true">' +
-                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-                    '</span>' +
-                    '<span class="evt-stats-body"><span class="evt-stats-label">You\u2019re Going</span><span class="evt-stats-sub">Events</span></span>' +
-                    '<span class="evt-stats-value">' + going + '</span>' +
-                '</div>' +
-                '<div class="evt-stats-row">' +
-                    '<span class="evt-stats-icon evt-stats-icon--blue" aria-hidden="true">' +
-                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' +
-                    '</span>' +
-                    '<span class="evt-stats-body"><span class="evt-stats-label">Communities</span><span class="evt-stats-sub">Active communities</span></span>' +
-                    '<span class="evt-stats-value">' + communities.size + '</span>' +
-                '</div>' +
-                '<button type="button" class="evt-stats-link" data-evt-stats-all>View Full Calendar</button>' +
-            '</div>';
-
-        mount.querySelector('[data-evt-stats-all]')?.addEventListener('click', () => {
-            const viewBtn = document.querySelector('[data-view="calendar"]');
-            if (viewBtn) viewBtn.click();
-        });
-
-        const rail = document.getElementById('evtRightRail');
-        if (rail) rail.classList.remove('hidden');
+        return window.PortalEventsListRightRail.renderStatsCard();
     }
 
     // Wire card click navigation (anchor hrefs are real but we hijack
@@ -2580,90 +2096,10 @@
     }
 
     // =========================================================
-    // Search (collapsed by default — toggle expands)
     // =========================================================
-    function setupSearch() {
-        const toggle = document.getElementById('evtSearchToggle');
-        const expand = document.getElementById('evtSearchExpand');
-        const input  = document.getElementById('evtSearchInput');
-        const clear  = document.getElementById('evtSearchClear');
-
-        if (toggle && expand && input) {
-            toggle.addEventListener('click', () => {
-                const willOpen = expand.classList.contains('hidden');
-                expand.classList.toggle('hidden', !willOpen);
-                toggle.setAttribute('aria-expanded', String(willOpen));
-                if (willOpen) {
-                    setTimeout(() => input.focus(), 50);
-                    _renderSearchSuggest();
-                } else if (input.value) {
-                    input.value = '';
-                    _searchQuery = '';
-                    clear?.classList.add('hidden');
-                    _persistState();
-                    renderEvents();
-                    _hideSearchSuggest();
-                } else {
-                    _hideSearchSuggest();
-                }
-            });
-        }
-
-        if (!input) return;
-        _wireSuggestClicks();
-
-        input.addEventListener('input', () => {
-            const q = input.value.trim();
-            clear?.classList.toggle('hidden', !q);
-            if (q === '') _renderSearchSuggest(); else _hideSearchSuggest();
-            clearTimeout(_searchDebounce);
-            _searchDebounce = setTimeout(() => {
-                _searchQuery = q;
-                if (q.length >= 2) _pushHistory(q);
-                _persistState();
-                renderEvents();
-            }, 120);
-        });
-
-        clear?.addEventListener('click', () => {
-            input.value = '';
-            clear.classList.add('hidden');
-            _searchQuery = '';
-            _persistState();
-            renderEvents();
-            input.focus();
-            _renderSearchSuggest();
-        });
-
-        input.addEventListener('keydown', e => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const q = input.value.trim();
-                if (q.length >= 2) {
-                    clearTimeout(_searchDebounce);
-                    _searchQuery = q;
-                    _pushHistory(q);
-                    _persistState();
-                    _hideSearchSuggest();
-                    renderEvents();
-                }
-                return;
-            }
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                if (input.value) {
-                    clear?.click();
-                } else if (expand) {
-                    expand.classList.add('hidden');
-                    toggle?.setAttribute('aria-expanded', 'false');
-                    toggle?.focus();
-                    _hideSearchSuggest();
-                }
-            }
-        });
-    }
-
+    // Search setup — delegated to list/search.js
     // =========================================================
+
     // Sticky condensing header (events_003 §6.2)
     // =========================================================
     function _initStickyHeader() {
@@ -2832,6 +2268,28 @@
             } catch (_) { done(); }
         });
     }
+
+
+    function _bindListModuleApis() {
+        window.PortalEventsListSearchApi = {
+            getSearchQuery: () => _searchQuery,
+            setSearchQuery: (q) => { _searchQuery = q; },
+            getActiveCategory: () => _activeCategory,
+            setActiveCategory: (c) => { _activeCategory = c; },
+            persistState: _persistState,
+            renderEvents: renderEvents,
+            getSearchDebounce: () => _searchDebounce,
+            setSearchDebounce: (id) => { _searchDebounce = id; },
+        };
+        window.PortalEventsListRightRailApi = {
+            getMiniCalMonth: () => _miniCalMonth,
+            setMiniCalMonth: (d) => { _miniCalMonth = d; },
+            getActiveDay: () => _activeDay,
+            setActiveDay: (d) => { _activeDay = d; },
+            renderEvents: renderEvents,
+        };
+    }
+    _bindListModuleApis();
 
     window.evtLoadEvents      = loadEvents;
     window.evtRenderEvents    = renderEvents;
