@@ -56,6 +56,7 @@ const stepWhenJs = read('js/portal/events/create/step-when.js');
 const stepPricingJs = read('js/portal/events/create/step-pricing.js');
 const stepReviewJs = read('js/portal/events/create/step-review.js');
 const raffleBuilderJs = read('js/portal/events/create/raffle-builder.js');
+const submitJs = read('js/portal/events/create/submit.js');
 const events = read('portal/events.html');
 const classicChain3d = parseClassicChain(ROOT);
 
@@ -72,7 +73,7 @@ check('No native export statement (stays classic-script safe)',
     !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(sheet)));
 
 check('File size reasonable (no accidental truncation)',
-    sheet.length > 20000,
+    sheet.length > 15000,
     `${sheet.length} chars`);
 console.log(`  ℹ File length: ${sheet.length} chars`);
 
@@ -120,14 +121,14 @@ check('Phase 3D bridge placed after window.EventsCreate assignment',
     sheet.indexOf('window.PortalEvents.create = window.PortalEvents.create || {}')
     > sheet.indexOf('window.EventsCreate = { open, close, isFlagOn }'));
 
-// ── Custom event dispatch ──────────────────────────────────────────────────
-console.log('\n── create/sheet.js — custom event dispatch ───────────────────────────────');
+// ── Custom event dispatch (submit module, 5M.1.4) ───────────────────────────
+console.log('\n── create/submit.js — custom event dispatch ───────────────────────────────');
 
-check("'events:created' custom event present",
-    sheet.includes("'events:created'"));
+check("'events:created' custom event present in submit.js",
+    submitJs.includes("'events:created'"));
 
-check("CustomEvent('events:created', ...) dispatch call present",
-    sheet.includes("new CustomEvent('events:created'"));
+check("CustomEvent('events:created', ...) dispatch call present in submit.js",
+    submitJs.includes("new CustomEvent('events:created'"));
 
 // ── Core internal functions ────────────────────────────────────────────────
 console.log('\n── create/sheet.js — core internal functions ─────────────────────────────');
@@ -140,10 +141,10 @@ const coreFns = [
     ['function _validateStep(',  '_validateStep'],
     ['function _back(',          '_back'],
     ['function _next(',          '_next'],
-    ['function _submit(',        '_submit (async Supabase insert)'],
     ['function _esc(',           '_esc (HTML escape helper)'],
     ['function _bindCreateStepsApi(', '_bindCreateStepsApi'],
     ['function _raffleApi(', '_raffleApi (orchestrator bridge to raffle module)'],
+    ['function _submit(', '_submit (delegates to EventsCreateSubmit)'],
 ];
 coreFns.forEach(([pattern, label]) => {
     check(`${label} present in sheet.js`, sheet.includes(pattern));
@@ -164,6 +165,8 @@ const movedFromSheet = [
     ['function _raffleReviewHtml(', '_raffleReviewHtml'],
     ['function _ensureRaffleConfig(', '_ensureRaffleConfig'],
     ['function _raffleModel(', '_raffleModel'],
+    ['async function _submit(', '_submit body'],
+    ['let _submitting', '_submitting guard'],
 ];
 movedFromSheet.forEach(([pattern, label]) => {
     check(`${label} removed from sheet.js (moved to step modules)`, !sheet.includes(pattern));
@@ -172,23 +175,29 @@ movedFromSheet.forEach(([pattern, label]) => {
 // ── External dependency references ─────────────────────────────────────────
 console.log('\n── create/sheet.js — external dependencies ───────────────────────────────');
 
-check("supabaseClient used in _submit (bare identifier)",
-    sheet.includes('supabaseClient.from('));
+check('submit.js uses supabaseClient for events insert',
+    submitJs.includes('supabaseClient.from('));
+
+check('submit.js dispatches events:created',
+    submitJs.includes("new CustomEvent('events:created'"));
 
 check('raffle-builder.js uses window.EventsRaffleModel',
     raffleBuilderJs.includes('window.EventsRaffleModel'));
 
-check('sheet.js delegates raffle validation/submit to EventsCreateRaffleBuilder',
-    sheet.includes('EventsCreateRaffleBuilder') || sheet.includes('_raffleApi()'));
+check('sheet.js delegates submit to EventsCreateSubmit',
+    sheet.includes('EventsCreateSubmit.submit'));
 
-check("window.evtCurrentUser used for creator ID",
-    sheet.includes('window.evtCurrentUser'));
+check('sheet.js delegates raffle validation to EventsCreateRaffleBuilder',
+    sheet.includes('_raffleApi()'));
+
+check("window.evtCurrentUser used for creator ID (submit.js)",
+    submitJs.includes('window.evtCurrentUser'));
 
 check('when step uses window.evtGeocodeAddress (step-when.js)',
     stepWhenJs.includes('window.evtGeocodeAddress'));
 
 check("events:created dispatch uses { event: data, status } detail",
-    sheet.includes('{ event: data, status }'));
+    submitJs.includes('{ event: data, status }'));
 
 // ── create/geocode.js (Phase 5M.1.1) ──────────────────────────────────────
 console.log('\n── js/portal/events/create/geocode.js — geocode module (5M.1.1) ─────────');
@@ -227,15 +236,15 @@ check('create.js present in classic-chain-loader.js chain',
 check('create.js loaded in production (HTML or classic-chain-loader)',
     isProductionLoaded(events, classicChain3d, '../js/portal/events/create.js'));
 
-check('load order: step-review → raffle-builder → create/sheet in classic chain',
+check('load order: raffle-builder → submit → create/sheet in classic chain',
     chainOrderOk(
         classicChain3d,
-        'create/step-review.js',
         'create/raffle-builder.js',
+        'create/submit.js',
         'create/sheet.js'
     ));
 
-check('load order: create/geocode → create → step modules → raffle-builder → sheet',
+check('load order: create/geocode → create → step modules → raffle-builder → submit → sheet',
     chainOrderOk(
         classicChain3d,
         'create/geocode.js',
@@ -245,6 +254,7 @@ check('load order: create/geocode → create → step modules → raffle-builder
         'create/step-pricing.js',
         'create/step-review.js',
         'create/raffle-builder.js',
+        'create/submit.js',
         'create/sheet.js'
     ));
 
@@ -350,6 +360,36 @@ check('raffle-builder.js defines ensureRaffleConfig',
 check('sheet.js wires EventsCreateSteps raffle hooks from EventsCreateRaffleBuilder',
     sheet.includes('rb.builderHtml') && sheet.includes('rb.reviewHtml') && sheet.includes('rb.wire'));
 
+check('sheet.js exposes validateStep and close on EventsCreateSteps for submit module',
+    sheet.includes('validateStep = _validateStep') && sheet.includes('close = close'));
+
+// ── Create submit module (Phase 5M.1.4) ───────────────────────────────────
+console.log('\n── js/portal/events/create/submit.js — submit/storage (5M.1.4) ─────────');
+
+check('create/submit.js IIFE wrapper present',
+    submitJs.includes('(function ()'));
+
+check("create/submit.js 'use strict' present",
+    submitJs.includes("'use strict'"));
+
+check('create/submit.js has no native export (classic-script safe)',
+    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(submitJs)));
+
+check('create/submit.js present in classic-chain-loader.js chain',
+    classicChain3d && classicChain3d.includes('create/submit.js'));
+
+check('create/submit.js loaded in production (HTML or classic-chain-loader)',
+    isProductionLoaded(events, classicChain3d, '../js/portal/events/create/submit.js'));
+
+check('create/submit.js assigns window.EventsCreateSubmit',
+    submitJs.includes('window.EventsCreateSubmit'));
+
+check('submit.js defines submit function',
+    submitJs.includes('async function submit') && submitJs.includes('event-banners'));
+
+check('submit.js uses EventsCreateSteps orchestrator hooks',
+    submitJs.includes('EventsCreateSteps') && submitJs.includes('validateStep'));
+
 // ── File split safety ─────────────────────────────────────────────────────
 console.log('\n── File split safety — create/ sub-files in production chain ─────────────');
 
@@ -361,6 +401,7 @@ const EXPECTED_CREATE_FILES = [
     'step-pricing.js',
     'step-review.js',
     'raffle-builder.js',
+    'submit.js',
     'sheet.js',
 ];
 const createFiles = fs.readdirSync(createDir).filter(f => f.endsWith('.js'));
