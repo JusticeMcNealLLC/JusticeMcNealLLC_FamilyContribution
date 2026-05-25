@@ -81,12 +81,12 @@ Production and local `portal/events.html` still use **classic scripts only**:
 
 | Check | Production (post–`b084f62`) |
 | --- | --- |
-| Portal Events script tags | **28** classic `../js/portal/events/*.js` (no `type="module"`) |
+| Portal Events script tags | **29** classic `../js/portal/events/*.js` (no `type="module"`) |
 | **`index.js` first** | Yes |
 | **`init.js` last** | Yes |
 | **Compat scripts** | Not loaded |
 
-**Note:** `_smoke-phase5l-readiness.js` still asserts **29** scripts (`EXPECTED_PORTAL_SCRIPT_COUNT`). HTML currently has **28** tags; smoke passes in-repo — consider a tiny follow-up to align count **29 → 28** (optional, not required for 5L.2 sign-off).
+**Note:** An earlier **28** figure came from a simpler whole-file regex over `portal/events.html`. The **scoped smoke parser** in `_smoke-phase5l-readiness.js` (Events module block through before `sw-register`) is the source of truth: local and production HTML both load **29** portal Events scripts. `EXPECTED_PORTAL_SCRIPT_COUNT` remains **29**; the smoke passes **33/33** checks (3 monolith notes).
 
 Live `init.js` on `https://justicemcneal.com` matches `b084f62` (Phase 5L.2 guard comments and flags present).
 
@@ -157,7 +157,7 @@ node test/_smoke-portal-event-raffle-rsvp-parity.js
 | Work item | Target | Notes |
 | --- | --- | --- |
 | **5L.3** | `portal/events.html` | Production script consolidation / optional module entry — **Critical**; full live QA + rollback plan |
-| **Smoke script count** | `test/_smoke-phase5l-readiness.js` | Optional: `EXPECTED_PORTAL_SCRIPT_COUNT` 29 → 28 |
+| **Smoke script count** | `test/_smoke-phase5l-readiness.js` | **No change needed** — `EXPECTED_PORTAL_SCRIPT_COUNT` = 29 matches HTML |
 | **5J.2 (optional)** | `detail/exports.js` | Bridge consolidation |
 | **`evtMessageHost` (optional)** | RSVP / messaging | Pre-existing gap |
 | **List / manage / create audits** | Separate tracks | Optional before 5L.3 |
@@ -171,7 +171,7 @@ node test/_smoke-portal-event-raffle-rsvp-parity.js
 3. **Choose next gate (explicit approval):**
    - **Pause** — list / manage / create monolith audits before 5L.3, or
    - **5L.3** — only after written go-ahead and rollback plan.
-4. Optional tiny PR: align smoke script count with HTML (28).
+4. No smoke script-count change required (29 is correct per scoped parser).
 
 ---
 
