@@ -18,21 +18,6 @@
 (function () {
     'use strict';
 
-    const M3A_TABS = [
-        { key: 'overview', label: 'Overview' },
-        { key: 'images',   label: 'Images'   },
-        { key: 'rsvps',    label: 'RSVPs'    },
-        { key: 'money',    label: 'Money'    },
-        { key: 'docs',     label: 'Docs'     },
-        { key: 'raffle',   label: 'Raffle'   },
-        { key: 'comp',     label: 'Comp'     },
-        { key: 'danger',   label: 'Danger Zone' },
-    ];
-
-    const PUBLIC_SITE_URL = 'https://justicemcneal.com';
-    const QR_CODE_SRC = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';
-    let qrCodeLoadPromise = null;
-
     const STATE = {
         eventId: null,
         event:   null,
@@ -56,170 +41,13 @@
         { value: 'other', label: 'Other', perMember: false },
     ];
 
-    // ─── DOM injection ──────────────────────────────────────────────
-    function _ensureMounted() {
-        if (document.getElementById('emSheetRoot')) return;
-        const root = document.createElement('div');
-        root.id = 'emSheetRoot';
-        root.innerHTML = `
-            <div id="emSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
-            <div id="emSheet" class="em-sheet-hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
-                <div id="emSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
-                    <header id="emSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Manage Event</p>
-                            <h2 id="emSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">…</h2>
-                            <p id="emSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
-                        </div>
-                        <button id="emSheetClose" class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" aria-label="Close">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                    </header>
-                    <nav id="emSheetTabs" class="flex gap-1 px-3 sm:px-4 border-b border-gray-100 overflow-x-auto flex-shrink-0" style="scrollbar-width:none;-ms-overflow-style:none"></nav>
-                    <div id="emSheetContent" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"></div>
-                </div>
-            </div>
-            <style>
-                .em-sheet-hidden { display:none !important; }
-                #emSheetTabs::-webkit-scrollbar { display: none; }
-                .em-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; }
-                .em-tab:hover { color:#374151; }
-                .em-tab.active { color:#4f46e5; border-bottom-color:#4f46e5; }
-                .em-tab.placeholder { color:#cbd5e1; }
-                .em-tab.placeholder.active { color:#9ca3af; border-bottom-color:#cbd5e1; }
-                .em-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; }
-                .em-op-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
-                .em-op-card { min-height:150px; display:flex; flex-direction:column; gap:12px; }
-                .em-op-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-                .em-op-kicker { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; margin:0 0 3px; }
-                .em-op-title { font-size:15px; font-weight:800; color:#111827; margin:0; line-height:1.15; }
-                .em-op-icon { width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#f3f4f6; flex-shrink:0; }
-                .em-op-copy { font-size:12px; line-height:1.45; color:#6b7280; margin:0; }
-                .em-op-meta { margin-top:auto; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
-                .em-op-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#f8fafc; color:#475569; font-size:11px; font-weight:700; }
-                .em-op-progress { height:7px; border-radius:999px; overflow:hidden; background:#eef2f7; margin-top:auto; }
-                .em-op-progress span { display:block; height:100%; width:0; border-radius:inherit; background:#4f46e5; }
-                .em-command-card { background:linear-gradient(135deg,#111827,#312e81); color:#fff; border:0; overflow:hidden; position:relative; }
-                .em-command-card:after { content:""; position:absolute; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,.08); right:-70px; top:-80px; }
-                .em-command-eyebrow { font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#c7d2fe; margin:0 0 6px; }
-                .em-command-title { font-size:20px; font-weight:850; margin:0; line-height:1.15; }
-                .em-command-copy { font-size:12px; line-height:1.5; color:#dbeafe; margin:8px 0 0; max-width:560px; }
-                .em-metric-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
-                .em-metric { background:#fff; border:1px solid rgba(15,23,42,.06); border-radius:16px; padding:13px; min-width:0; }
-                .em-metric span { display:block; font-size:10px; font-weight:800; letter-spacing:.08em; color:#94a3b8; text-transform:uppercase; }
-                .em-metric strong { display:block; margin-top:5px; font-size:22px; line-height:1; color:#0f172a; }
-                .em-metric small { display:block; margin-top:5px; color:#64748b; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-                .em-section-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
-                .em-section-title { margin:0; color:#111827; font-size:14px; font-weight:850; }
-                .em-section-sub { margin:3px 0 0; color:#94a3b8; font-size:12px; line-height:1.4; }
-                .em-attendee-card { display:flex; gap:12px; align-items:flex-start; padding:13px 0; border-top:1px solid #f1f5f9; }
-                .em-attendee-card:first-of-type { border-top:0; padding-top:0; }
-                .em-attendee-main { flex:1; min-width:0; }
-                .em-attendee-name { margin:0; font-size:14px; font-weight:800; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-                .em-attendee-sub { margin:2px 0 0; color:#64748b; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-                .em-money-layout { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr); gap:12px; align-items:start; }
-                .em-money-row { display:flex; justify-content:space-between; gap:14px; padding:11px 0; border-top:1px solid #f1f5f9; font-size:13px; }
-                .em-money-row:first-child { border-top:0; padding-top:0; }
-                .em-money-row span { color:#64748b; }
-                .em-money-row strong { color:#111827; }
-                .em-stat { display:flex; flex-direction:column; gap:4px; }
-                .em-stat-label { font-size:11px; text-transform:uppercase; letter-spacing:.04em; font-weight:600; color:#6b7280; }
-                .em-stat-num { font-size:24px; font-weight:800; color:#111827; }
-                .em-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f1f5f9; }
-                .em-row:last-child { border-bottom:none; }
-                .em-avatar { width:32px; height:32px; border-radius:50%; background:#e0e7ff; color:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; overflow:hidden; }
-                .em-avatar img { width:100%; height:100%; object-fit:cover; }
-                .em-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
-                .em-pill-going { background:#d1fae5; color:#065f46; }
-                .em-pill-maybe { background:#fce7f3; color:#9d174d; }
-                .em-pill-not { background:#fee2e2; color:#991b1b; }
-                .em-pill-paid { background:#fef3c7; color:#92400e; }
-                .em-pill-checked { background:#ede9fe; color:#5b21b6; }
-                .em-danger-card { background:#fef2f2; border:1px solid #fecaca; border-radius:14px; padding:14px; margin-bottom:10px; }
-                .em-danger-title { font-weight:700; color:#991b1b; font-size:14px; }
-                .em-danger-sub { font-size:12px; color:#7f1d1d; margin-top:2px; margin-bottom:10px; }
-                .em-btn-danger { background:#dc2626; color:#fff; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
-                .em-btn-danger:hover { background:#b91c1c; }
-                .em-btn-ghost { background:#f3f4f6; color:#374151; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
-                .em-btn-ghost:hover { background:#e5e7eb; }
-                .em-btn-primary { background:#4f46e5; color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; }
-                .em-btn-primary:hover { background:#4338ca; }
-                .em-btn-primary:disabled { opacity:.55; cursor:not-allowed; }
-                .em-input { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; }
-                .em-input:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
-                .em-textarea { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; resize:vertical; min-height:92px; }
-                .em-textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
-                .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
-                .em-placeholder svg { width:48px; height:48px; margin-bottom:12px; opacity:.4; }
-                @media(max-width:639px){
-                    #emSheetPanel { max-height: 92vh; }
-                    .em-op-grid { grid-template-columns:1fr; }
-                    .em-metric-grid { grid-template-columns:1fr 1fr; }
-                    .em-money-layout { grid-template-columns:1fr; }
-                }
-                @media(min-width:640px) and (max-width:900px){ .em-op-grid { grid-template-columns:1fr 1fr; } .em-money-layout { grid-template-columns:1fr; } }
-            </style>
-        `;
-        document.body.appendChild(root);
+    const Shell = window.EventsManageShell;
+    const Overview = window.EventsManageOverview;
 
-        document.getElementById('emSheetClose').addEventListener('click', close);
-        document.getElementById('emSheetBackdrop').addEventListener('click', close);
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && document.getElementById('emSheet')?.classList.contains('em-open')) close();
-        });
-    }
-
-    // ─── Open / Close ───────────────────────────────────────────────
-    async function open(eventId, opts = {}) {
-        if (!eventId) return;
-        _ensureMounted();
-        STATE.eventId = eventId;
-        STATE.source  = opts.source || 'admin';
-        STATE.activeTab = M3A_TABS.some(t => t.key === opts.tab) ? opts.tab : 'overview';
-        STATE.editCopyOnOpen = !!opts.editCopy;
-        STATE.tabData = {}; // clear cache between events
-        _clearRafflePrizeImageState();
-
-        // Show shell immediately with skeleton
-        document.getElementById('emSheetTitle').textContent = 'Loading event…';
-        document.getElementById('emSheetSub').textContent = '';
-        _renderTabs();
-        _renderContent('<div class="em-placeholder"><div style="font-size:13px">Loading…</div></div>');
-
-        const sheet = document.getElementById('emSheet');
-        const panel = document.getElementById('emSheetPanel');
-        const backdrop = document.getElementById('emSheetBackdrop');
-        sheet.classList.remove('em-sheet-hidden');
-        sheet.classList.add('em-open');
-        backdrop.classList.remove('opacity-0', 'pointer-events-none');
-        backdrop.classList.add('opacity-100');
-        requestAnimationFrame(() => {
-            panel.classList.remove('pointer-events-none', 'translate-y-full', 'sm:translate-y-4', 'sm:opacity-0');
-            panel.classList.add('pointer-events-auto', 'translate-y-0', 'sm:opacity-100');
-        });
-        document.body.style.overflow = 'hidden';
-
-        // Fetch data
-        await _loadEventData(eventId);
-        _renderHeader();
-        _renderTab(STATE.activeTab);
-    }
-
-    function close() {
-        const sheet = document.getElementById('emSheet');
-        const panel = document.getElementById('emSheetPanel');
-        const backdrop = document.getElementById('emSheetBackdrop');
-        if (!sheet || !sheet.classList.contains('em-open')) return;
-        panel.classList.add('pointer-events-none', 'translate-y-full', 'sm:translate-y-4', 'sm:opacity-0');
-        panel.classList.remove('pointer-events-auto', 'translate-y-0', 'sm:opacity-100');
-        backdrop.classList.add('opacity-0', 'pointer-events-none');
-        backdrop.classList.remove('opacity-100');
-        document.body.style.overflow = '';
-        setTimeout(() => {
-            sheet.classList.remove('em-open');
-            sheet.classList.add('em-sheet-hidden');
-        }, 250);
-    }
+    function _ensureMounted() { return Shell.ensureMounted(); }
+    function _renderHeader() { return Shell.renderHeader(); }
+    function _renderTabs() { return Shell.renderTabs(); }
+    function _renderContent(html) { return Shell.renderContent(html); }
 
     // ─── Data loading ───────────────────────────────────────────────
     async function _loadEventData(eventId) {
@@ -249,38 +77,31 @@
         STATE.checkins = checkins || [];
     }
 
-    // ─── Header ─────────────────────────────────────────────────────
-    function _renderHeader() {
-        const e = STATE.event;
-        if (!e) return;
-        document.getElementById('emSheetTitle').textContent = e.title;
-        const dateStr = new Date(e.start_date).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
-        const typeLabel = ({ llc:'LLC', member:'Member', competition:'Competition' })[e.event_type] || e.event_type;
-        document.getElementById('emSheetSub').textContent = `${typeLabel} · ${dateStr} · ${(e.status || '').toUpperCase()}`;
+    // ─── Open / Close ───────────────────────────────────────────────
+    async function open(eventId, opts = {}) {
+        if (!eventId) return;
+        Shell.ensureMounted();
+        STATE.eventId = eventId;
+        STATE.source  = opts.source || 'admin';
+        STATE.activeTab = Shell.getTabs().some(t => t.key === opts.tab) ? opts.tab : 'overview';
+        STATE.editCopyOnOpen = !!opts.editCopy;
+        STATE.tabData = {};
+        _clearRafflePrizeImageState();
+
+        Shell.setLoadingChrome();
+        Shell.openPanel();
+
+        await _loadEventData(eventId);
+        Shell.renderHeader();
+        _renderTab(STATE.activeTab);
     }
 
-    // ─── Tab bar ────────────────────────────────────────────────────
-    function _renderTabs() {
-        const bar = document.getElementById('emSheetTabs');
-        bar.innerHTML = M3A_TABS.map(t =>
-            `<button class="em-tab${t.placeholder ? ' placeholder' : ''}${t.key === STATE.activeTab ? ' active' : ''}" data-tab="${t.key}">${t.label}${t.placeholder ? ' <span style="font-size:9px;opacity:.7">soon</span>' : ''}</button>`
-        ).join('');
-        bar.querySelectorAll('.em-tab').forEach(btn => {
-            btn.addEventListener('click', () => {
-                STATE.activeTab = btn.dataset.tab;
-                _renderTabs();
-                _renderTab(STATE.activeTab);
-                btn.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
-            });
-        });
-    }
-
-    function _renderContent(html) {
-        document.getElementById('emSheetContent').innerHTML = html;
+    function close() {
+        Shell.closePanel();
     }
 
     function _renderTab(tab) {
-        if (tab === 'overview') { _renderContent(_overviewHtml()); _wireOverview(); return; }
+        if (tab === 'overview') { _renderContent(Overview.overviewHtml()); Overview.wireOverview(); return; }
         if (tab === 'images')   { _renderContent(_imagesHtml());   _wireImages();   return; }
         if (tab === 'rsvps')    { _renderContent(_rsvpsHtml()); _wireRsvps(); return; }
         if (tab === 'danger')   { _renderContent(_dangerHtml()); _wireDanger(); return; }
@@ -310,150 +131,8 @@
         if (wire) wire();
     }
 
-    // ─── Overview tab ───────────────────────────────────────────────
-    function _overviewHtml() {
-        const e = STATE.event;
-        const guestGoing = STATE.guestRsvps.filter(r => r.status === 'going').length;
-        const going = STATE.rsvps.filter(r => r.status === 'going').length + guestGoing;
-        const maybe = STATE.rsvps.filter(r => r.status === 'maybe').length;
-        const paid  = STATE.rsvps.filter(r => r.paid).length + STATE.guestRsvps.filter(r => r.paid).length;
-        const checked = STATE.checkins.length;
-        const revenue = paid * (e.rsvp_cost_cents || 0);
-        const startLocal = new Date(e.start_date).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
-        const isLlc = e.event_type === 'llc';
-        const minNeeded = Number(e.min_participants || 0);
-        const thresholdPct = minNeeded ? Math.min(100, Math.round((going / minNeeded) * 100)) : 0;
-        const thresholdMet = minNeeded ? going >= minNeeded : false;
-        const deadline = e.rsvp_deadline ? new Date(e.rsvp_deadline).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '';
-        const transportMode = e.transportation_mode;
-        const transportEstimate = e.transportation_estimate_cents ? _money(e.transportation_estimate_cents) : '';
-        const thresholdCopy = thresholdMet
-            ? `${going} confirmed RSVP${going === 1 ? '' : 's'}; minimum was ${minNeeded}${deadline ? ` by ${deadline}` : ''}. This event can stay confirmed.`
-            : `${going} of ${minNeeded} required RSVP${minNeeded === 1 ? '' : 's'}${deadline ? ` by ${deadline}` : ''}. ${Math.max(0, minNeeded - going)} more RSVP${minNeeded - going === 1 ? '' : 's'} needed.`;
-
-        const inviteUrl = _publicEventUrl(e);
-        const portalLink = `<a href="../portal/events.html?event=${encodeURIComponent(e.slug || '')}" class="em-btn-ghost" style="text-decoration:none;display:inline-block">Open in portal →</a>`;
-        const thresholdCard = isLlc && minNeeded ? `
-            <div class="em-card em-op-card">
-                <div class="em-op-head">
-                    <div><p class="em-op-kicker">Minimum</p><p class="em-op-title">${thresholdMet ? 'Threshold met' : 'Needs momentum'}</p></div>
-                    <span class="em-op-icon">${thresholdMet ? '✅' : '⚠️'}</span>
-                </div>
-                <p class="em-op-copy">${thresholdCopy}</p>
-                <div class="em-op-progress"><span style="width:${thresholdPct}%"></span></div>
-                <div class="em-op-meta"><span class="em-op-chip">${thresholdPct}% filled</span><button class="em-btn-ghost" data-overview-tab="rsvps">Review RSVPs</button></div>
-            </div>` : '';
-        const transportCard = isLlc && transportMode ? `
-            <div class="em-card em-op-card">
-                <div class="em-op-head">
-                    <div><p class="em-op-kicker">Transportation</p><p class="em-op-title">${transportMode === 'llc_provides' ? 'LLC provided' : 'Self-arranged'}</p></div>
-                    <span class="em-op-icon">${transportMode === 'llc_provides' ? '✈️' : '🧳'}</span>
-                </div>
-                <p class="em-op-copy">${transportMode === 'llc_provides' ? 'Upload tickets or travel documents in Docs when they are ready for members.' : `Members book travel themselves${transportEstimate ? `, estimated around ${transportEstimate}` : ''}.`}</p>
-                <div class="em-op-meta"><button class="em-btn-ghost" data-overview-tab="docs">Open Docs</button><span class="em-op-chip">${transportMode === 'llc_provides' ? 'Document handoff' : 'Member-owned'}</span></div>
-            </div>` : '';
-        const documentsCard = isLlc ? `
-            <div class="em-card em-op-card">
-                <div class="em-op-head">
-                    <div><p class="em-op-kicker">Documents</p><p class="em-op-title">Handoff hub</p></div>
-                    <span class="em-op-icon">📄</span>
-                </div>
-                <p class="em-op-copy">Upload group files or member-specific tickets here. Attendees only see a retrieval button on the event page.</p>
-                <div class="em-op-meta"><button class="em-btn-primary" data-overview-tab="docs">Manage Docs</button></div>
-            </div>` : '';
-        const operationsHtml = [thresholdCard, transportCard, documentsCard].filter(Boolean).join('');
-        const showFeaturedToggle = typeof canManageEventBanners === 'function' && canManageEventBanners();
-
-        return `
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                <div class="em-card em-stat"><span class="em-stat-label">Going</span><span class="em-stat-num">${going}${e.max_participants ? `<span style="font-size:14px;color:#9ca3af;font-weight:500">/${e.max_participants}</span>` : ''}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Interested</span><span class="em-stat-num" style="color:#db2777">${maybe}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Checked In</span><span class="em-stat-num" style="color:#7c3aed">${checked}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Revenue</span><span class="em-stat-num" style="color:#059669">${_money(revenue)}</span></div>
-            </div>
-
-            ${operationsHtml ? `<div class="em-op-grid">${operationsHtml}</div>` : ''}
-
-            <div class="em-card mb-3">
-                <h3 class="font-bold text-gray-800 text-sm mb-3">Details</h3>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between gap-3"><span class="text-gray-500">When</span><span class="text-gray-800 font-medium text-right">${startLocal}</span></div>
-                    ${e.location_nickname ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Where</span><span class="text-gray-800 font-medium text-right truncate">${_esc(e.location_nickname)}</span></div>` : ''}
-                    <div class="flex justify-between gap-3"><span class="text-gray-500">Status</span><span class="text-gray-800 font-medium uppercase tracking-wide text-xs">${e.status}</span></div>
-                    <div class="flex justify-between gap-3"><span class="text-gray-500">Pricing</span><span class="text-gray-800 font-medium">${e.pricing_mode === 'paid' ? `Paid · ${_money(e.rsvp_cost_cents)}` : 'Free'}</span></div>
-                    ${e.rsvp_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">RSVP deadline</span><span class="text-gray-800 font-medium">${new Date(e.rsvp_deadline).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span></div>` : ''}
-                </div>
-            </div>
-
-            <div class="em-card mb-3" id="emCopyEditorCard">
-                <div class="em-section-head" style="margin-bottom:12px">
-                    <div>
-                        <h3 class="em-section-title">Event copy</h3>
-                        <p class="em-section-sub">Edit the title and description shown across the portal and invite page.</p>
-                    </div>
-                </div>
-                <form id="emCopyForm" class="space-y-3">
-                    <div>
-                        <label for="emCopyTitle" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Title *</label>
-                        <input id="emCopyTitle" class="em-input" type="text" maxlength="120" required value="${_esc(e.title || '')}">
-                    </div>
-                    <div>
-                        <label for="emCopyDescription" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Description</label>
-                        <textarea id="emCopyDescription" class="em-textarea" rows="4" maxlength="2000">${_esc(e.description || '')}</textarea>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button type="submit" id="emCopySave" class="em-btn-primary">Save changes</button>
-                        <button type="button" id="emCopyCancel" class="em-btn-ghost">Cancel</button>
-                        <span id="emCopyStatus" class="text-xs text-gray-400"></span>
-                    </div>
-                </form>
-            </div>
-
-            ${showFeaturedToggle ? `
-            <div class="em-card mb-3">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="font-bold text-gray-800 text-sm">&#9733; Featured on portal</p>
-                        <p class="text-xs text-gray-500 mt-0.5">Show this event in the hero banner on the portal events page.</p>
-                    </div>
-                    <button id="emFeaturedToggle"
-                        class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${STATE.event.is_featured ? 'bg-brand-600' : 'bg-gray-200'}"
-                        role="switch" aria-checked="${STATE.event.is_featured ? 'true' : 'false'}"
-                        onclick="window._emToggleFeatured()"
-                    >
-                        <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${STATE.event.is_featured ? 'translate-x-5' : 'translate-x-0'}"></span>
-                    </button>
-                </div>
-            </div>` : ''}
-
-            <div class="em-card">
-                <h3 class="font-bold text-gray-800 text-sm mb-3">Quick actions</h3>
-                <div class="flex flex-wrap gap-2">
-                    ${portalLink}
-                    ${e.slug ? `<button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>` : ''}
-                    ${e.checkin_enabled !== false && e.checkin_mode === 'attendee_ticket' && ['open','confirmed','active'].includes(e.status) ? `<button class="em-btn-ghost" onclick="window.EventsManage.close();setTimeout(()=>window.evtOpenScanner&&window.evtOpenScanner('${STATE.eventId}'),150)"><svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>Scan Attendees</button>` : ''}
-                </div>
-                <p class="text-xs text-gray-400 mt-3">Tap any tab above for Money, Docs, Raffle, or Comp details.</p>
-            </div>
-            ${e.slug ? `
-            <div class="em-card mt-3">
-                <div class="em-section-head"><div><h3 class="em-section-title">Invitation QR</h3><p class="em-section-sub">Use this public event link on printed or digital invitations.</p></div></div>
-                <canvas id="emInviteQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
-                <p class="text-xs text-gray-400 text-center mt-2 break-all">${_esc(inviteUrl)}</p>
-                <div class="flex flex-wrap justify-center gap-2 mt-3">
-                    <button class="em-btn-primary" data-share-invite-url>Share invite</button>
-                    <button class="em-btn-primary" data-download-invite-qr>Download QR</button>
-                    <button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>
-                </div>
-            </div>` : ''}
-            ${e.checkin_enabled !== false && e.checkin_mode === 'venue_scan' && e.venue_qr_token ? `
-            <div class="em-card mt-3">
-                <h3 class="font-bold text-gray-800 text-sm mb-3">📍 Venue QR Code</h3>
-                <canvas id="emVenueQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
-                <p class="text-xs text-gray-400 text-center mt-2">Display this at the entrance for attendees to scan</p>
-            </div>` : ''}
-        `;
-    }
+    function _overviewHtml() { return Overview.overviewHtml(); }
+    function _wireOverview() { return Overview.wireOverview(); }
 
     // ─── RSVPs tab ──────────────────────────────────────────────────
     function _rsvpsHtml() {
@@ -590,146 +269,6 @@
             </div>
         `;
     }
-
-    function _wireOverview() {
-        const e = STATE.event;
-        if (!e) return;
-        const inviteUrl = _publicEventUrl(e);
-        _renderOverviewQrs(inviteUrl, e);
-        document.getElementById('emSheetContent').querySelectorAll('[data-copy-invite-url]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                navigator.clipboard.writeText(inviteUrl);
-                btn.textContent = 'Copied ✓';
-                setTimeout(() => { btn.textContent = 'Copy invite link'; }, 1500);
-            });
-        });
-        document.getElementById('emSheetContent').querySelectorAll('[data-share-invite-url]').forEach(btn => {
-            btn.addEventListener('click', () => _shareInviteUrl(inviteUrl, e, btn));
-        });
-        document.getElementById('emSheetContent').querySelectorAll('[data-download-invite-qr]').forEach(btn => {
-            btn.addEventListener('click', () => _downloadCanvasPng('emInviteQR', `${_safeFilename(e.slug || e.title || 'event')}-invite-qr.png`));
-        });
-        document.getElementById('emSheetContent').querySelectorAll('[data-overview-tab]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                STATE.activeTab = btn.dataset.overviewTab;
-                _renderTabs();
-                _renderTab(STATE.activeTab);
-            });
-        });
-        const copyForm = document.getElementById('emCopyForm');
-        const copyTitle = document.getElementById('emCopyTitle');
-        const copyDescription = document.getElementById('emCopyDescription');
-        const copyStatus = document.getElementById('emCopyStatus');
-        copyForm?.addEventListener('submit', (ev) => {
-            ev.preventDefault();
-            _saveEventCopy(copyForm);
-        });
-        document.getElementById('emCopyCancel')?.addEventListener('click', () => {
-            if (copyTitle) copyTitle.value = STATE.event?.title || '';
-            if (copyDescription) copyDescription.value = STATE.event?.description || '';
-            if (copyStatus) {
-                copyStatus.className = 'text-xs text-gray-400';
-                copyStatus.textContent = 'Changes discarded';
-                setTimeout(() => { copyStatus.textContent = ''; }, 1800);
-            }
-        });
-        if (STATE.editCopyOnOpen) {
-            STATE.editCopyOnOpen = false;
-            setTimeout(() => {
-                document.getElementById('emCopyEditorCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                copyTitle?.focus();
-                copyTitle?.select();
-            }, 100);
-        }
-    }
-
-    async function _saveEventCopy(form) {
-        const e = STATE.event;
-        if (!e || !form) return;
-        const titleInput = document.getElementById('emCopyTitle');
-        const descriptionInput = document.getElementById('emCopyDescription');
-        const saveBtn = document.getElementById('emCopySave');
-        const status = document.getElementById('emCopyStatus');
-        const title = (titleInput?.value || '').trim();
-        const description = (descriptionInput?.value || '').trim();
-
-        function setStatus(message, isError) {
-            if (!status) return;
-            status.className = isError ? 'text-xs text-red-600' : 'text-xs text-gray-400';
-            status.textContent = message;
-        }
-
-        if (!title) {
-            setStatus('Title is required.', true);
-            titleInput?.focus();
-            return;
-        }
-
-        if (saveBtn) saveBtn.disabled = true;
-        setStatus('Saving...', false);
-
-        try {
-            const { data, error } = await supabaseClient
-                .from('events')
-                .update({ title, description: description || null })
-                .eq('id', e.id)
-                .select('title, description')
-                .single();
-            if (error) throw error;
-
-            STATE.event.title = data?.title || title;
-            STATE.event.description = data?.description || null;
-            _renderHeader();
-            _renderTab('overview');
-            setTimeout(() => {
-                const refreshedStatus = document.getElementById('emCopyStatus');
-                if (refreshedStatus) {
-                    refreshedStatus.className = 'text-xs text-emerald-600';
-                    refreshedStatus.textContent = 'Saved changes.';
-                    setTimeout(() => { refreshedStatus.textContent = ''; }, 2500);
-                }
-            }, 0);
-            _notifyParent('updated', e.id);
-        } catch (err) {
-            setStatus('Update failed: ' + (err.message || 'unknown error'), true);
-        } finally {
-            if (saveBtn) saveBtn.disabled = false;
-        }
-    }
-
-    async function _ensureQrCode() {
-        if (globalThis.QRCode) return globalThis.QRCode;
-        if (!qrCodeLoadPromise) {
-            qrCodeLoadPromise = new Promise((resolve, reject) => {
-                const existing = document.querySelector(`script[src="${QR_CODE_SRC}"]`);
-                const script = existing || document.createElement('script');
-                script.src = QR_CODE_SRC;
-                script.async = true;
-                script.onload = () => globalThis.QRCode ? resolve(globalThis.QRCode) : reject(new Error('QR library did not initialize'));
-                script.onerror = () => reject(new Error('QR library failed to load'));
-                if (!existing) document.head.appendChild(script);
-            });
-        }
-        return qrCodeLoadPromise;
-    }
-
-    async function _renderOverviewQrs(inviteUrl, e) {
-        const inviteCanvas = document.getElementById('emInviteQR');
-        const venueCanvas = document.getElementById('emVenueQR');
-        if ((!inviteCanvas || !e.slug) && (!venueCanvas || !e.venue_qr_token)) return;
-        try {
-            const qr = await _ensureQrCode();
-            if (inviteCanvas?.isConnected && e.slug) {
-                qr.toCanvas(inviteCanvas, inviteUrl, { width: 220, margin: 2, color: { dark: '#111827', light: '#ffffff' } });
-            }
-            if (venueCanvas?.isConnected && e.venue_qr_token) {
-                qr.toCanvas(venueCanvas, `${window.location.origin}/events/?e=${encodeURIComponent(e.slug || '')}&checkin=1`, { width: 200, margin: 2 });
-            }
-        } catch (err) {
-            console.warn('[events/manage] QR code renderer unavailable', err);
-        }
-    }
-
     // ─── Images tab ─────────────────────────────────────────────────
     // Pending file selections (set by drop-zone wiring, cleared on save)
     const _imgFiles = { banner: null, embed: null };
@@ -2234,39 +1773,8 @@
     function _wireComp() { /* read-only in M3b */ }
 
     // ─── Helpers ────────────────────────────────────────────────────
-    function _publicEventUrl(event) {
-        return `${PUBLIC_SITE_URL}/events/?e=${encodeURIComponent(event?.slug || '')}`;
-    }
-
     function _safeFilename(value) {
         return String(value || 'event').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'event';
-    }
-
-    function _downloadCanvasPng(canvasId, filename) {
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) return;
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    }
-
-    async function _shareInviteUrl(url, event, btn) {
-        const title = event?.title ? `${event.title} | Justice McNeal LLC` : 'Justice McNeal LLC Event';
-        const text = event?.rsvp_enabled === false ? 'View event details.' : 'RSVP today.';
-        if (navigator.share) {
-            try {
-                await navigator.share({ title, text, url });
-                return;
-            } catch (_) {
-                // User cancelled or native share failed; copy fallback below.
-            }
-        }
-        await navigator.clipboard.writeText(url);
-        if (btn) {
-            btn.textContent = 'Link copied ✓';
-            setTimeout(() => { btn.textContent = 'Share invite'; }, 1500);
-        }
     }
 
     function _esc(s) {
@@ -2278,28 +1786,6 @@
         return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', minimumFractionDigits:0, maximumFractionDigits:2 }).format((cents || 0) / 100);
     }
 
-    // ─── Featured toggle (events.banners / events.manage_all) ─────
-    window._emToggleFeatured = async function () {
-        const btn = document.getElementById('emFeaturedToggle');
-        if (!btn) return;
-        const newVal = !(STATE.event.is_featured);
-        btn.disabled = true;
-        const { error } = await supabaseClient
-            .from('events')
-            .update({ is_featured: newVal })
-            .eq('id', STATE.event.id);
-        if (error) {
-            alert('Failed to update: ' + error.message);
-            btn.disabled = false;
-            return;
-        }
-        STATE.event.is_featured = newVal;
-        // Re-render overview tab to reflect new state
-        _renderTab('overview');
-        // Notify list view to refresh hero
-        document.dispatchEvent(new CustomEvent('events:manage:updated', { detail: { eventId: STATE.event.id } }));
-    };
-
     function refreshRaffle(eventId) {
         if (eventId && eventId !== STATE.eventId) return;
         STATE.tabData.raffle = null;
@@ -2307,6 +1793,21 @@
     }
 
     document.addEventListener('events:raffle:drawn', (evt) => refreshRaffle(evt.detail?.eventId));
+
+
+    window.EventsManageShellApi = {
+        getState: () => STATE,
+        onClose: close,
+        renderTab: _renderTab,
+    };
+
+    window.EventsManageOverviewApi = {
+        getState: () => STATE,
+        renderHeader: () => Shell.renderHeader(),
+        renderTabs: () => Shell.renderTabs(),
+        renderTab: _renderTab,
+        notifyParent: _notifyParent,
+    };
 
     // ─── Public surface ─────────────────────────────────────────────
     window.EventsManage = { open, close, refreshRaffle };

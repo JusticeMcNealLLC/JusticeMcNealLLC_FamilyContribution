@@ -175,9 +175,13 @@ if (!chainMatch) {
     const listCalendarIdx = chainPaths.indexOf('list/calendar.js');
     const listHeroRailsIdx = chainPaths.indexOf('list/hero-rails.js');
     const listBucketsIdx = chainPaths.indexOf('list/buckets.js');
-    chainPaths.length === 45
-        ? pass('classic-chain-loader injects 45 middle scripts')
-        : fail('loader chain must have 45 entries', `found ${chainPaths.length}`);
+    const scrapbookIdx = chainPaths.indexOf('scrapbook.js');
+    const manageShellIdx = chainPaths.indexOf('manage/shell.js');
+    const manageOverviewIdx = chainPaths.indexOf('manage/overview.js');
+    const manageSheetIdx = chainPaths.indexOf('manage/sheet.js?v=112');
+    chainPaths.length === 47
+        ? pass('classic-chain-loader injects 47 middle scripts')
+        : fail('loader chain must have 47 entries', `found ${chainPaths.length}`);
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
         && listFiltersIdx > listHeaderIdx && listCalendarIdx > listFiltersIdx
@@ -185,6 +189,10 @@ if (!chainMatch) {
         && listIdx > listBucketsIdx
         ? pass('loader order: raffle-model → list/search → … → hero-rails → buckets → list.js')
         : fail('loader list module order');
+    scrapbookIdx >= 0 && manageShellIdx > scrapbookIdx
+        && manageOverviewIdx > manageShellIdx && manageSheetIdx > manageOverviewIdx
+        ? pass('loader order: scrapbook → manage/shell → manage/overview → manage/sheet')
+        : fail('loader manage module order');
     createGeoIdx >= 0 && legacyCostsIdx > createGeoIdx
         && legacyLocationIdx > legacyCostsIdx && legacyPreviewIdx > legacyLocationIdx
         && legacySubmitIdx > legacyPreviewIdx && createIdx > legacySubmitIdx

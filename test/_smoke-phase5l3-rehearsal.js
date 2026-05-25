@@ -104,9 +104,13 @@ if (!chainMatch) {
     fail('loader must define chain array');
 } else {
     const chainEntries = [...chainMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
-    chainEntries.length === 45
+    const scrapbookIdx = chainEntries.indexOf('scrapbook.js');
+    const manageShellIdx = chainEntries.indexOf('manage/shell.js');
+    const manageOverviewIdx = chainEntries.indexOf('manage/overview.js');
+    const manageSheetIdx = chainEntries.indexOf('manage/sheet.js?v=112');
+    chainEntries.length === 47
         ? pass(`loader chain has ${chainEntries.length} middle scripts (production order)`)
-        : fail('loader chain must have 45 entries', `found ${chainEntries.length}`);
+        : fail('loader chain must have 47 entries', `found ${chainEntries.length}`);
     const raffleModelIdx = chainEntries.indexOf('raffle-model.js');
     const listSearchIdx = chainEntries.indexOf('list/search.js');
     const listRightRailIdx = chainEntries.indexOf('list/right-rail.js');
@@ -123,6 +127,10 @@ if (!chainMatch) {
         && listIdx > listBucketsIdx
         ? pass('loader order: raffle-model → list/search → … → hero-rails → buckets → list.js')
         : fail('loader list module order');
+    scrapbookIdx >= 0 && manageShellIdx > scrapbookIdx
+        && manageOverviewIdx > manageShellIdx && manageSheetIdx > manageOverviewIdx
+        ? pass('loader order: scrapbook → manage/shell → manage/overview → manage/sheet')
+        : fail('loader manage module order');
     const geoIdx = chainEntries.indexOf('create/geocode.js');
     const legacyCostsIdx = chainEntries.indexOf('create/legacy-costs.js');
     const legacyLocationIdx = chainEntries.indexOf('create/legacy-location.js');

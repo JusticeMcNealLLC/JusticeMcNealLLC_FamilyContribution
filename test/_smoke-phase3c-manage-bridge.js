@@ -51,6 +51,8 @@ function read(relPath) {
 console.log('\n── js/portal/events/manage/sheet.js — file structure ─────────────────────');
 
 const sheet = read('js/portal/events/manage/sheet.js');
+const shell = read('js/portal/events/manage/shell.js');
+const overview = read('js/portal/events/manage/overview.js');
 
 sheet.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
@@ -80,13 +82,13 @@ sheet.includes('window.EventsManage')
     : fail('window.EventsManage not referenced in source');
 
 // ─── window._emToggleFeatured (inline onclick compatibility) ─
-console.log('\n── manage/sheet.js — window._emToggleFeatured (inline onclick bridge) ─────');
+console.log('\n── manage/overview.js — window._emToggleFeatured (inline onclick bridge) ───');
 
-sheet.includes('window._emToggleFeatured = ')
-    ? pass('window._emToggleFeatured assigned (inline onclick compatibility preserved)')
-    : fail('window._emToggleFeatured assignment missing — featured toggle will break');
+overview.includes('window._emToggleFeatured = ')
+    ? pass('window._emToggleFeatured assigned in overview.js (inline onclick compatibility preserved)')
+    : fail('window._emToggleFeatured assignment missing in overview.js — featured toggle will break');
 
-sheet.includes('window._emToggleFeatured()')
+overview.includes('window._emToggleFeatured()')
     ? pass('window._emToggleFeatured() called from inline onclick in overviewHtml')
     : fail('window._emToggleFeatured() call missing from overviewHtml');
 
@@ -123,9 +125,9 @@ sheet.includes("detail.register('manage'")
 // ─── Custom events ────────────────────────────────────────
 console.log('\n── manage/sheet.js — custom event dispatches ─────────────────────────────');
 
-// events:manage:updated appears as literal string (also used in _emToggleFeatured)
-sheet.includes("'events:manage:updated'")
-    ? pass("'events:manage:updated' literal dispatch present")
+// events:manage:updated (overview featured toggle; sheet _notifyParent for other tabs)
+(sheet.includes("'events:manage:updated'") || overview.includes("'events:manage:updated'"))
+    ? pass("'events:manage:updated' literal dispatch present (sheet or overview)")
     : fail("'events:manage:updated' literal dispatch missing");
 
 // events:manage:deleted dispatched via _notifyParent helper (dynamic concatenation)
@@ -150,8 +152,6 @@ const CORE_FNS = [
     'async function open(',
     'function close(',
     'async function _loadEventData(',
-    'function _renderHeader(',
-    'function _renderTabs(',
     'function _renderTab(',
     'async function _renderTabAsync(',
     'function _overviewHtml(',
@@ -179,9 +179,49 @@ const CORE_FNS = [
 
 CORE_FNS.forEach(fn => {
     sheet.includes(fn)
-        ? pass(`${fn} present in source`)
-        : fail(`${fn} missing from source — runtime will break`);
+        ? pass(`${fn} present in sheet.js (orchestrator/tabs)`)
+        : fail(`${fn} missing from sheet.js — runtime will break`);
 });
+
+console.log('\n── manage/shell.js — shell module (Phase 5M.3A) ───────────────────────────');
+
+shell.includes('window.EventsManageShell =')
+    ? pass('window.EventsManageShell namespace assigned')
+    : fail('window.EventsManageShell namespace missing');
+
+['function ensureMounted(', 'function renderHeader(', 'function renderTabs(', 'function renderContent(', 'function setLoadingChrome(', 'function openPanel(', 'function closePanel('].forEach(fn => {
+    shell.includes(fn)
+        ? pass(`shell.js owns ${fn.trim()}`)
+        : fail(`shell.js missing ${fn.trim()}`);
+});
+
+sheet.includes('Shell.ensureMounted')
+    ? pass('sheet.js delegates to Shell.ensureMounted')
+    : fail('sheet.js must delegate mount to EventsManageShell');
+
+console.log('\n── manage/overview.js — overview module (Phase 5M.3A) ───────────────────────');
+
+overview.includes('window.EventsManageOverview =')
+    ? pass('window.EventsManageOverview namespace assigned')
+    : fail('window.EventsManageOverview namespace missing');
+
+['function overviewHtml(', 'function wireOverview(', 'function saveEventCopy(', 'function renderOverviewQrs(', 'function toggleFeatured('].forEach(fn => {
+    overview.includes(fn)
+        ? pass(`overview.js owns ${fn.trim()}`)
+        : fail(`overview.js missing ${fn.trim()}`);
+});
+
+sheet.includes('Overview.overviewHtml')
+    ? pass('sheet.js delegates overview tab to Overview module')
+    : fail('sheet.js must delegate overview to EventsManageOverview');
+
+sheet.includes('EventsManageShellApi')
+    ? pass('EventsManageShellApi bridge bound in sheet.js')
+    : fail('EventsManageShellApi bridge missing in sheet.js');
+
+sheet.includes('EventsManageOverviewApi')
+    ? pass('EventsManageOverviewApi bridge bound in sheet.js')
+    : fail('EventsManageOverviewApi bridge missing in sheet.js');
 
 // ─── portal/events.html invariants ───────────────────────
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
@@ -189,9 +229,27 @@ console.log('\n── portal/events.html invariants ─────────�
 const html = read('portal/events.html');
 const classicChain3c = parseClassicChain(root);
 
+classicChain3c && classicChain3c.includes('manage/shell.js')
+    ? pass('manage/shell.js present in classic-chain-loader.js chain')
+    : fail('manage/shell.js missing from classic-chain-loader.js chain');
+
+classicChain3c && classicChain3c.includes('manage/overview.js')
+    ? pass('manage/overview.js present in classic-chain-loader.js chain')
+    : fail('manage/overview.js missing from classic-chain-loader.js chain');
+
 classicChain3c && classicChain3c.includes(MANAGE_SHEET_CHAIN)
     ? pass('manage/sheet.js?v=112 present in classic-chain-loader.js chain')
     : fail('manage/sheet.js?v=112 missing from classic-chain-loader.js chain');
+
+(() => {
+    const iShell = classicChain3c.indexOf('manage/shell.js');
+    const iOverview = classicChain3c.indexOf('manage/overview.js');
+    const iSheet = classicChain3c.indexOf(MANAGE_SHEET_CHAIN);
+    const iScrap = classicChain3c.indexOf('scrapbook.js');
+    iScrap >= 0 && iShell > iScrap && iOverview > iShell && iSheet > iOverview
+        ? pass('loader order: scrapbook → manage/shell → manage/overview → manage/sheet')
+        : fail('manage module loader order incorrect');
+})();
 
 isProductionLoaded(html, classicChain3c, MANAGE_SHEET_SRC)
     ? pass('manage/sheet.js still loaded in production (HTML or classic-chain-loader)')
