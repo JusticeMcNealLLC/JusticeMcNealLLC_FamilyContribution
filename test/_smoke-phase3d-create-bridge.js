@@ -8,13 +8,14 @@
 //   4.  Custom event: events:created
 //   5.  Core internal functions still present
 //   6.  Dependencies expected (supabaseClient, evtCurrentUser, etc.)
-//   7.  portal/events.html invariants (no module mode)
-//   8.  File split safety (no orphaned new create/ files loaded)
-//   9.  Phase 1 bridge regression
-//  10.  Phase 2 bridges regression
-//  11.  Phase 3A list bridge regression
-//  12.  Phase 3B detail bridge regression
-//  13.  Phase 3C manage bridge regression
+//   7.  portal/events.html invariants (no module mode; loader-aware load model)
+//   8.  create.js + create/sheet.js in production load model
+//   9.  File split safety (no orphaned new create/ files loaded)
+//  10.  Phase 1 bridge regression
+//  11.  Phase 2 bridges regression
+//  12.  Phase 3A list bridge regression
+//  13.  Phase 3B detail bridge regression
+//  14.  Phase 3C manage bridge regression
 //
 // Run: node test/_smoke-phase3d-create-bridge.js
 // ══════════════════════════════════════════════════════════════════
@@ -25,6 +26,12 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+const {
+    parseClassicChain,
+    isProductionLoaded,
+    chainOrderOk,
+    portalEventsHtmlScripts,
+} = require('./_portal-events-classic-chain.js');
 
 let passed = 0;
 let failed = 0;
@@ -42,7 +49,9 @@ function check(label, ok, detail) {
 }
 
 const sheet  = read('js/portal/events/create/sheet.js');
+const createJs = read('js/portal/events/create.js');
 const events = read('portal/events.html');
+const classicChain3d = parseClassicChain(ROOT);
 
 // ── File structure ─────────────────────────────────────────────────────────
 console.log('\n── js/portal/events/create/sheet.js — file structure ─────────────────────');
@@ -163,17 +172,49 @@ check("window.evtGeocodeAddress optional call present",
 check("events:created dispatch uses { event: data, status } detail",
     sheet.includes('{ event: data, status }'));
 
+// ── create.js orchestrator (production chain) ─────────────────────────────
+console.log('\n── js/portal/events/create.js — production chain + geocode bridge ───────');
+
+check('create.js present in classic-chain-loader.js chain',
+    classicChain3d && classicChain3d.includes('create.js'));
+
+check('create.js loaded in production (HTML or classic-chain-loader)',
+    isProductionLoaded(events, classicChain3d, '../js/portal/events/create.js'));
+
+check('create.js defines evtGeocodeAddress (shared with create sheet)',
+    createJs.includes('function evtGeocodeAddress') || createJs.includes('async function evtGeocodeAddress'));
+
+check('create.js defines evtHandleCreate (legacy modal path)',
+    createJs.includes('function evtHandleCreate') || createJs.includes('async function evtHandleCreate'));
+
+check('create.js has no native export (classic-script safe)',
+    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(createJs)));
+
 // ── portal/events.html invariants ─────────────────────────────────────────
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
 
-check('create/sheet.js still loaded as classic script in events.html',
-    events.includes('create/sheet.js'));
+check('create/sheet.js present in classic-chain-loader.js chain',
+    classicChain3d && classicChain3d.includes('create/sheet.js'));
+
+check('create/sheet.js loaded in production (HTML or classic-chain-loader)',
+    isProductionLoaded(events, classicChain3d, '../js/portal/events/create/sheet.js'));
+
+check('portal/events.html uses classic-chain-loader.js (3-tag production model)',
+    events.includes('classic-chain-loader.js'));
+
+check('load order: create.js before create/sheet.js in classic chain',
+    chainOrderOk(classicChain3d, 'create.js', 'create/sheet.js'));
 
 check('create/sheet.js does NOT have type="module" in events.html',
     !events.match(/create\/sheet\.js[^"]*"[^>]*type="module"/));
 
 check('No portal/events/* scripts use type="module" yet (correct)',
     !events.match(/<script[^>]+js\/portal\/events\/[^>]+type="module"/));
+
+const portalScripts3d = portalEventsHtmlScripts(events);
+check('init.js remains last among portal Events HTML script tags',
+    portalScripts3d.length > 0
+    && portalScripts3d[portalScripts3d.length - 1] === '../js/portal/events/init.js');
 
 // ── File split safety ─────────────────────────────────────────────────────
 console.log('\n── File split safety — no orphaned new create/ sub-files loaded ───────────');
@@ -186,8 +227,16 @@ check('No unexpected files added under js/portal/events/create/ (only sheet.js e
     createFiles.length === 0,
     createFiles.length > 0 ? `unexpected: ${createFiles.join(', ')}` : undefined);
 
-check('create/sheet.js referenced in events.html (not orphaned)',
-    events.includes('create/sheet.js'));
+check('create/sheet.js in production load (not orphaned)',
+    isProductionLoaded(events, classicChain3d, '../js/portal/events/create/sheet.js'));
+
+if (createFiles.length > 0) {
+    createFiles.forEach(f => {
+        const chainKey = 'create/' + f;
+        check(`create/${f} in production load (not orphaned)`,
+            isProductionLoaded(events, classicChain3d, '../js/portal/events/' + chainKey));
+    });
+}
 
 // ── Phase 1 bridge regression ──────────────────────────────────────────────
 console.log('\n── Phase 1 bridge (init.js) — regression check ───────────────────────────');

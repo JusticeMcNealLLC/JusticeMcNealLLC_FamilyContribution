@@ -6,6 +6,7 @@
 //   • All public globals expected by init.js are assigned in source
 //   • window.PortalEvents.list namespace and its keys
 //   • portal/events.html not switched to module mode
+//   • list.js in production load model (HTML tag or classic-chain-loader)
 //   • No new runtime file created under list/ without being loaded
 //   • Phase 1 bridge still intact (init.js)
 //   • Phase 2 bridges still intact (constants.js, raffle-model.js)
@@ -17,6 +18,11 @@
 const fs   = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
+const {
+    parseClassicChain,
+    isProductionLoaded,
+    portalEventsHtmlScripts,
+} = require('./_portal-events-classic-chain.js');
 
 let passed = 0;
 let failed = 0;
@@ -182,19 +188,33 @@ NAMESPACE_KEYS.forEach(key => {
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
 
 const html = read('portal/events.html');
+const classicChain3a = parseClassicChain(root);
 
-html.includes('src="../js/portal/events/list.js"')
-    ? pass('list.js still loaded as classic script in events.html')
-    : fail('list.js not loaded in events.html or script tag changed');
+classicChain3a && classicChain3a.includes('list.js')
+    ? pass('list.js present in classic-chain-loader.js chain')
+    : fail('list.js missing from classic-chain-loader.js chain');
+
+isProductionLoaded(html, classicChain3a, '../js/portal/events/list.js')
+    ? pass('list.js still loaded in production (HTML or classic-chain-loader)')
+    : fail('list.js not in production load model');
+
+html.includes('classic-chain-loader.js')
+    ? pass('portal/events.html uses classic-chain-loader.js (3-tag production model)')
+    : fail('classic-chain-loader.js not referenced in portal/events.html');
 
 /src="\.\.\/js\/portal\/events\/list\.js"[^>]*type="module"/.test(html)
     ? fail('list.js loaded with type="module" — premature, Phase 5 only')
-    : pass('list.js does NOT have type="module" (Phase 5 deferred — correct)');
+    : pass('list.js does NOT have type="module" in HTML (Phase 5 deferred — correct)');
 
 // No portal/events/* scripts with type="module"
 /<script[^>]+type="module"[^>]+src="\.\.\/js\/portal\/events\//.test(html)
     ? fail('A portal/events/* script has type="module" — premature')
     : pass('No portal/events/* scripts use type="module" yet (correct)');
+
+const portalScripts3a = portalEventsHtmlScripts(html);
+portalScripts3a.length && portalScripts3a[portalScripts3a.length - 1] === '../js/portal/events/init.js'
+    ? pass('init.js remains last among portal Events HTML script tags')
+    : fail('init.js must be the last portal/events script before sw-register');
 
 // ─── No split file created without being loaded ──────────
 console.log('\n── File split safety — no orphaned new files ──────────────────────────────');
@@ -208,10 +228,11 @@ if (fs.existsSync(listDir)) {
         pass('js/portal/events/list/ directory exists but is empty (no orphaned files)');
     } else {
         files.forEach(f => {
-            const scriptRef = 'js/portal/events/list/' + f;
-            html.includes(scriptRef)
-                ? pass(`list/${f} is referenced in events.html (not orphaned)`)
-                : fail(`list/${f} exists but NOT in events.html — would never load`, `File: ${scriptRef}`);
+            const chainKey = 'list/' + f;
+            const src = '../js/portal/events/' + chainKey;
+            isProductionLoaded(html, classicChain3a, src)
+                ? pass(`list/${f} in production load (not orphaned)`)
+                : fail(`list/${f} exists but NOT in production load`, `File: ${chainKey}`);
         });
     }
 } else {

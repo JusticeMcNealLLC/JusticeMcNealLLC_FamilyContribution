@@ -9,8 +9,8 @@
 //   • detail.register('manage', …) call still present
 //   • Custom events (events:manage:updated, events:manage:deleted, events:raffle:drawn)
 //   • portal/events.html not switched to module mode
-//   • manage/sheet.js still loaded as classic script in events.html
-//   • No new manage/ subfile created without being loaded in events.html
+//   • manage/sheet.js in production load model (HTML or classic-chain-loader)
+//   • No new manage/ subfile created without being loaded in production
 //   • Phase 1 bridge still intact (init.js)
 //   • Phase 2 bridges still intact (constants.js, raffle-model.js)
 //   • Phase 3A list bridge still intact (list.js)
@@ -23,6 +23,14 @@
 const fs   = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
+const {
+    parseClassicChain,
+    isProductionLoaded,
+    portalEventsHtmlScripts,
+} = require('./_portal-events-classic-chain.js');
+
+const MANAGE_SHEET_CHAIN = 'manage/sheet.js?v=112';
+const MANAGE_SHEET_SRC = '../js/portal/events/' + MANAGE_SHEET_CHAIN;
 
 let passed = 0;
 let failed = 0;
@@ -179,18 +187,32 @@ CORE_FNS.forEach(fn => {
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
 
 const html = read('portal/events.html');
+const classicChain3c = parseClassicChain(root);
 
-html.includes('src="../js/portal/events/manage/sheet.js')
-    ? pass('manage/sheet.js still loaded as classic script in events.html')
-    : fail('manage/sheet.js not loaded in events.html or script tag changed');
+classicChain3c && classicChain3c.includes(MANAGE_SHEET_CHAIN)
+    ? pass('manage/sheet.js?v=112 present in classic-chain-loader.js chain')
+    : fail('manage/sheet.js?v=112 missing from classic-chain-loader.js chain');
+
+isProductionLoaded(html, classicChain3c, MANAGE_SHEET_SRC)
+    ? pass('manage/sheet.js still loaded in production (HTML or classic-chain-loader)')
+    : fail('manage/sheet.js not in production load model');
+
+html.includes('classic-chain-loader.js')
+    ? pass('portal/events.html uses classic-chain-loader.js (3-tag production model)')
+    : fail('classic-chain-loader.js not referenced in portal/events.html');
 
 /src="\.\.\/js\/portal\/events\/manage\/sheet\.js[^"]*"[^>]*type="module"/.test(html)
     ? fail('manage/sheet.js loaded with type="module" — premature, Phase 5 only')
-    : pass('manage/sheet.js does NOT have type="module" (Phase 5 deferred — correct)');
+    : pass('manage/sheet.js does NOT have type="module" in HTML (Phase 5 deferred — correct)');
 
 /<script[^>]+type="module"[^>]+src="\.\.\/js\/portal\/events\//.test(html)
     ? fail('A portal/events/* script has type="module" — premature')
     : pass('No portal/events/* scripts use type="module" yet (correct)');
+
+const portalScripts3c = portalEventsHtmlScripts(html);
+portalScripts3c.length && portalScripts3c[portalScripts3c.length - 1] === '../js/portal/events/init.js'
+    ? pass('init.js remains last among portal Events HTML script tags')
+    : fail('init.js must be the last portal/events script before sw-register');
 
 // ─── No new manage/ subfile created without being loaded ─
 console.log('\n── File split safety — no orphaned new manage/ files ─────────────────────');
@@ -202,10 +224,11 @@ if (fs.existsSync(manageDir)) {
         pass('js/portal/events/manage/ directory exists but is empty (no orphaned files)');
     } else {
         files.forEach(f => {
-            const scriptRef = 'js/portal/events/manage/' + f;
-            html.includes(scriptRef)
-                ? pass(`manage/${f} is referenced in events.html (not orphaned)`)
-                : fail(`manage/${f} exists but NOT in events.html — would never load`, `File: ${scriptRef}`);
+            const chainKey = f === 'sheet.js' ? MANAGE_SHEET_CHAIN : 'manage/' + f;
+            const src = '../js/portal/events/' + chainKey;
+            isProductionLoaded(html, classicChain3c, src)
+                ? pass(`manage/${f} in production load (not orphaned)`)
+                : fail(`manage/${f} exists but NOT in production load`, `File: ${chainKey}`);
         });
     }
 } else {
