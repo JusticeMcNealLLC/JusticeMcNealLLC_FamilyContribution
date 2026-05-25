@@ -298,7 +298,7 @@
           const number = Number(value);
           return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : null;
         }
-        const api = {
+        const api7 = {
           VERSION,
           DEFAULT_EMOJI,
           normalizeConfig,
@@ -311,10 +311,10 @@
           getDrawQueue,
           validateConfig
         };
-        root2.EventsRaffleModel = api;
-        if (typeof module !== "undefined" && module.exports) module.exports = api;
+        root2.EventsRaffleModel = api7;
+        if (typeof module !== "undefined" && module.exports) module.exports = api7;
         if (typeof root2.PortalEvents === "undefined") root2.PortalEvents = {};
-        root2.PortalEvents.raffleModel = api;
+        root2.PortalEvents.raffleModel = api7;
       })(typeof globalThis !== "undefined" ? globalThis : window);
     }
   });
@@ -690,9 +690,9 @@
   // js/components/events/pills.js
   (function() {
     "use strict";
-    const C = window.EventsConstants || {};
+    const C5 = window.EventsConstants || {};
     function statusPill(status) {
-      const cls = C.STATUS_COLORS && C.STATUS_COLORS[status] || "bg-gray-100 text-gray-600";
+      const cls = C5.STATUS_COLORS && C5.STATUS_COLORS[status] || "bg-gray-100 text-gray-600";
       const label = status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
       return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${cls}">${label}</span>`;
     }
@@ -744,14 +744,14 @@
     }
     function typePill(eventType, flavor = "portal") {
       if (flavor === "public") {
-        const tc2 = C.TYPE_COLORS_PUBLIC && C.TYPE_COLORS_PUBLIC[eventType] || C.TYPE_COLORS_PUBLIC?.llc || { bg: "#f7f7f7", color: "#222", label: "Event" };
+        const tc2 = C5.TYPE_COLORS_PUBLIC && C5.TYPE_COLORS_PUBLIC[eventType] || C5.TYPE_COLORS_PUBLIC?.llc || { bg: "#f7f7f7", color: "#222", label: "Event" };
         return `<span class="evt-tag" style="background:${tc2.bg};color:${tc2.color}">${tc2.label}</span>`;
       }
-      const tc = C.TYPE_COLORS_PORTAL && C.TYPE_COLORS_PORTAL[eventType] || C.TYPE_COLORS_PORTAL?.llc || { bg: "bg-gray-100", text: "text-gray-700", label: "Event" };
+      const tc = C5.TYPE_COLORS_PORTAL && C5.TYPE_COLORS_PORTAL[eventType] || C5.TYPE_COLORS_PORTAL?.llc || { bg: "bg-gray-100", text: "text-gray-700", label: "Event" };
       return `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ${tc.bg} ${tc.text} whitespace-nowrap">${tc.label}</span>`;
     }
     function categoryTag(category) {
-      const tag = C.CATEGORY_TAG && C.CATEGORY_TAG[category] || C.DEFAULT_TAG || { cls: "evt-tag--purple", label: "Event" };
+      const tag = C5.CATEGORY_TAG && C5.CATEGORY_TAG[category] || C5.DEFAULT_TAG || { cls: "evt-tag--purple", label: "Event" };
       return `<span class="evt-tag ${tag.cls}">${tag.label}</span>`;
     }
     function rsvpChip(rsvp) {
@@ -781,9 +781,9 @@
   // js/components/events/card.js
   (function() {
     "use strict";
-    const C = window.EventsConstants || {};
-    const H = window.EventsHelpers || {};
-    const P = window.EventsPills || {};
+    const C5 = window.EventsConstants || {};
+    const H5 = window.EventsHelpers || {};
+    const P2 = window.EventsPills || {};
     function _startDate(event) {
       const raw = event.start_date || event.start_at || event.starts_at;
       if (!raw) return null;
@@ -792,21 +792,21 @@
     }
     function _bannerBg(event) {
       if (event.banner_url) {
-        return `background:linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.45)),url('${H.escapeHtml(event.banner_url)}') center/cover`;
+        return `background:linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.45)),url('${H5.escapeHtml(event.banner_url)}') center/cover`;
       }
-      const grad = C.CATEGORY_GRADIENT && C.CATEGORY_GRADIENT[event.category] || C.DEFAULT_GRADIENT || "linear-gradient(135deg,#1f2937,#6b7280)";
+      const grad = C5.CATEGORY_GRADIENT && C5.CATEGORY_GRADIENT[event.category] || C5.DEFAULT_GRADIENT || "linear-gradient(135deg,#1f2937,#6b7280)";
       return `background:${grad}`;
     }
     function _emptyBannerEmoji(event) {
       if (event.banner_url) return "";
-      const emoji = C.CATEGORY_EMOJI && C.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
+      const emoji = C5.CATEGORY_EMOJI && C5.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
       return `<div class="absolute inset-0 flex items-center justify-center text-6xl opacity-40 pointer-events-none select-none">${emoji}</div>`;
     }
     function _categoryChip(event) {
       if (!event || !event.category) return "";
-      const emoji = C.CATEGORY_EMOJI && C.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
-      const label = C.CATEGORY_TAG && C.CATEGORY_TAG[event.category]?.label || event.category;
-      const esc = H.escapeHtml || ((s) => String(s == null ? "" : s));
+      const emoji = C5.CATEGORY_EMOJI && C5.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
+      const label = C5.CATEGORY_TAG && C5.CATEGORY_TAG[event.category]?.label || event.category;
+      const esc = H5.escapeHtml || ((s) => String(s == null ? "" : s));
       return `<button type="button" data-evt-cat="${esc(event.category)}"
             class="evt-cat-chip absolute top-2 left-2 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-base leading-none hover:scale-110 active:scale-95 transition-transform"
             aria-label="Filter by ${esc(label)}" title="Filter by ${esc(label)}">${emoji}</button>`;
@@ -828,21 +828,21 @@
     }
     function _relativeLabel(event) {
       const d = _startDate(event);
-      if (!d || !H.relativeDate) return "";
-      const lbl = H.relativeDate(d);
+      if (!d || !H5.relativeDate) return "";
+      const lbl = H5.relativeDate(d);
       if (!lbl) return "";
       return `<span class="text-[12px] font-semibold text-gray-500">${lbl}</span>`;
     }
     function _meta(event) {
       const parts = [];
-      const catLabel = C.CATEGORY_TAG && C.CATEGORY_TAG[event.category]?.label || null;
+      const catLabel = C5.CATEGORY_TAG && C5.CATEGORY_TAG[event.category]?.label || null;
       if (catLabel) parts.push(catLabel);
-      const tc = C.TYPE_COLORS_PORTAL && C.TYPE_COLORS_PORTAL[event.event_type];
+      const tc = C5.TYPE_COLORS_PORTAL && C5.TYPE_COLORS_PORTAL[event.event_type];
       if (tc?.label) parts.push(tc.label);
       const loc = event.location_nickname || event.location_text;
-      if (loc) parts.push(H.escapeHtml ? H.escapeHtml(loc) : loc);
+      if (loc) parts.push(H5.escapeHtml ? H5.escapeHtml(loc) : loc);
       const time = _startDate(event);
-      if (time && H.formatDate) parts.push(H.formatDate(time, "time"));
+      if (time && H5.formatDate) parts.push(H5.formatDate(time, "time"));
       if (!parts.length) return "";
       return `<p class="text-[13px] text-gray-500 truncate mt-1" data-evt-legacy-meta>${parts.join(" \xB7 ")}</p>`;
     }
@@ -852,9 +852,9 @@
       const visible = list.slice(0, 4);
       const overflow = Math.max(0, list.length - 4);
       const pieces = visible.map((a) => {
-        const name = H.escapeHtml ? H.escapeHtml(a.first_name || "") : a.first_name || "";
+        const name = H5.escapeHtml ? H5.escapeHtml(a.first_name || "") : a.first_name || "";
         if (a.profile_picture_url) {
-          const url = H.escapeHtml ? H.escapeHtml(a.profile_picture_url) : a.profile_picture_url;
+          const url = H5.escapeHtml ? H5.escapeHtml(a.profile_picture_url) : a.profile_picture_url;
           return `<img src="${url}" alt="${name}" loading="lazy" class="w-7 h-7 rounded-full ring-2 ring-white object-cover bg-gray-100">`;
         }
         const initial = (a.first_name || "?").trim().charAt(0).toUpperCase() || "?";
@@ -876,21 +876,21 @@
     function _adminFooter(event, adminMeta) {
       const rsvps = adminMeta?.rsvps ?? 0;
       const revenue = adminMeta?.revenue ?? 0;
-      const revStr = H.formatMoney ? H.formatMoney(revenue) : `$${(revenue / 100).toFixed(0)}`;
+      const revStr = H5.formatMoney ? H5.formatMoney(revenue) : `$${(revenue / 100).toFixed(0)}`;
       return `<div class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3 text-xs text-gray-500">
             <span class="font-semibold text-gray-700">${rsvps}</span> RSVPs
             <span class="text-gray-300">\xB7</span>
             <span class="font-semibold text-gray-700">${revStr}</span> revenue
-            <span class="ml-auto">${P.statusPill ? P.statusPill(event.status) : ""}</span>
+            <span class="ml-auto">${P2.statusPill ? P2.statusPill(event.status) : ""}</span>
         </div>`;
     }
     function render(event, opts = {}) {
       if (!event) return "";
       const variant = opts.variant || "portal";
       const href = opts.href || `?event=${encodeURIComponent(event.slug || "")}`;
-      const title = H.escapeHtml ? H.escapeHtml(event.title || "Untitled event") : event.title || "";
-      const stateP = P.statePill ? P.statePill(event) : "";
-      const countP = variant === "portal" && P.countdownChip ? P.countdownChip(event) : "";
+      const title = H5.escapeHtml ? H5.escapeHtml(event.title || "Untitled event") : event.title || "";
+      const stateP = P2.statePill ? P2.statePill(event) : "";
+      const countP = variant === "portal" && P2.countdownChip ? P2.countdownChip(event) : "";
       const ribbon = variant === "portal" ? _goingRibbon(opts.rsvp) : "";
       const stack = variant === "portal" ? _avatarStack(opts.attendees) : "";
       const _d = _startDate(event);
@@ -901,13 +901,13 @@
       const dateChipOverlay = _d ? `<div class="evt-card-date-chip" aria-hidden="true"><span class="evt-card-date-mon">${_mon}</span><span class="evt-card-date-day">${_day}</span><span class="evt-card-date-dow" data-f15-dow>${_dow}</span></div>` : "";
       const isGoing = !!(opts.rsvp && opts.rsvp.status === "going");
       const rsvpFooter = variant === "portal" ? `<button type="button" data-evt-card-rsvp="${event.id}" class="evt-card-rsvp${isGoing ? " evt-card-rsvp--on" : ""}" aria-pressed="${isGoing ? "true" : "false"}">${isGoing ? "\u2713 Going" : "Details"}</button>` : "";
-      const _tcLabel = C.TYPE_COLORS_PORTAL && C.TYPE_COLORS_PORTAL[event.event_type]?.label || "";
-      const _catLabel = C.CATEGORY_TAG && C.CATEGORY_TAG[event.category]?.label || "";
-      const f15TypeHost = _tcLabel || _catLabel ? `<p class="evt-card-f15-type" data-f15-type>${[_tcLabel, _catLabel].filter(Boolean).map((s) => H.escapeHtml ? H.escapeHtml(s) : s).join(" \xB7 ")}</p>` : "";
+      const _tcLabel = C5.TYPE_COLORS_PORTAL && C5.TYPE_COLORS_PORTAL[event.event_type]?.label || "";
+      const _catLabel = C5.CATEGORY_TAG && C5.CATEGORY_TAG[event.category]?.label || "";
+      const f15TypeHost = _tcLabel || _catLabel ? `<p class="evt-card-f15-type" data-f15-type>${[_tcLabel, _catLabel].filter(Boolean).map((s) => H5.escapeHtml ? H5.escapeHtml(s) : s).join(" \xB7 ")}</p>` : "";
       const _f15Loc = event.location_nickname || event.location_text || "";
-      const _f15Time = _d && H.formatDate ? H.formatDate(_d, "time") : "";
-      const f15LocRow = _f15Loc ? `<p class="evt-card-f15-row" data-f15-loc><svg class="evt-card-f15-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s7-7.58 7-13a7 7 0 10-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="truncate">${H.escapeHtml ? H.escapeHtml(_f15Loc) : _f15Loc}</span></p>` : "";
-      const f15TimeRow = _f15Time ? `<p class="evt-card-f15-row" data-f15-time><svg class="evt-card-f15-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg><span>${H.escapeHtml ? H.escapeHtml(_f15Time) : _f15Time}</span></p>` : "";
+      const _f15Time = _d && H5.formatDate ? H5.formatDate(_d, "time") : "";
+      const f15LocRow = _f15Loc ? `<p class="evt-card-f15-row" data-f15-loc><svg class="evt-card-f15-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s7-7.58 7-13a7 7 0 10-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="truncate">${H5.escapeHtml ? H5.escapeHtml(_f15Loc) : _f15Loc}</span></p>` : "";
+      const f15TimeRow = _f15Time ? `<p class="evt-card-f15-row" data-f15-time><svg class="evt-card-f15-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg><span>${H5.escapeHtml ? H5.escapeHtml(_f15Time) : _f15Time}</span></p>` : "";
       const f15Body = f15TypeHost || f15LocRow || f15TimeRow ? `<div class="evt-card-f15" data-f15>${f15TypeHost}${f15LocRow}${f15TimeRow}</div>` : "";
       const _goingCount = opts.goingCount != null ? opts.goingCount : Array.isArray(opts.attendees) ? opts.attendees.length : 0;
       const f15GoingLabel = _goingCount > 0 ? `<span class="evt-card-f15-going">${_goingCount} going</span>` : "";
@@ -963,11 +963,11 @@
   (function() {
     "use strict";
     window.PortalEvents = window.PortalEvents || {};
-    var C = window.EventsConstants || {};
+    var C5 = window.EventsConstants || {};
     window.PortalEvents.constants = {
-      CATEGORY_EMOJI: C.CATEGORY_EMOJI,
-      TYPE_COLORS: C.TYPE_COLORS_PORTAL,
-      STATUS_COLORS: C.STATUS_COLORS
+      CATEGORY_EMOJI: C5.CATEGORY_EMOJI,
+      TYPE_COLORS: C5.TYPE_COLORS_PORTAL,
+      STATUS_COLORS: C5.STATUS_COLORS
     };
   })();
 
@@ -1263,1480 +1263,1466 @@
   var import_raffle_model = __toESM(require_raffle_model());
 
   // js/portal/events/list/search.js
-  (function() {
-    "use strict";
-    const C = window.EventsConstants || {};
-    const SEARCH_HIST_KEY = "evt_search_hist_v1";
-    const SEARCH_HIST_MAX = 8;
-    const SEARCH_HIST_SHOW = 5;
-    const QUICK_CATS = ["cookout", "birthday", "trip", "party"];
-    function api() {
-      return window.PortalEventsListSearchApi || {};
+  var C = window.EventsConstants || {};
+  var SEARCH_HIST_KEY = "evt_search_hist_v1";
+  var SEARCH_HIST_MAX = 8;
+  var SEARCH_HIST_SHOW = 5;
+  var QUICK_CATS = ["cookout", "birthday", "trip", "party"];
+  function api() {
+    return window.PortalEventsListSearchApi || {};
+  }
+  function _readHistory() {
+    try {
+      const raw = sessionStorage.getItem(SEARCH_HIST_KEY);
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.filter((x) => typeof x === "string") : [];
+    } catch (_) {
+      return [];
     }
-    function _readHistory() {
-      try {
-        const raw = sessionStorage.getItem(SEARCH_HIST_KEY);
-        if (!raw) return [];
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.filter((x) => typeof x === "string") : [];
-      } catch (_) {
-        return [];
-      }
+  }
+  function _writeHistory(arr) {
+    try {
+      sessionStorage.setItem(SEARCH_HIST_KEY, JSON.stringify(arr.slice(0, SEARCH_HIST_MAX)));
+    } catch (_) {
     }
-    function _writeHistory(arr) {
-      try {
-        sessionStorage.setItem(SEARCH_HIST_KEY, JSON.stringify(arr.slice(0, SEARCH_HIST_MAX)));
-      } catch (_) {
-      }
+  }
+  function _pushHistory(q) {
+    const s = (q || "").trim();
+    if (s.length < 2) return;
+    const lc = s.toLowerCase();
+    const list = _readHistory().filter((x) => x.toLowerCase() !== lc);
+    list.unshift(s);
+    _writeHistory(list);
+  }
+  function _removeHistory(q) {
+    const lc = (q || "").toLowerCase();
+    _writeHistory(_readHistory().filter((x) => x.toLowerCase() !== lc));
+  }
+  function _clearHistory() {
+    try {
+      sessionStorage.removeItem(SEARCH_HIST_KEY);
+    } catch (_) {
     }
-    function _pushHistory(q) {
-      const s = (q || "").trim();
-      if (s.length < 2) return;
-      const lc = s.toLowerCase();
-      const list = _readHistory().filter((x) => x.toLowerCase() !== lc);
-      list.unshift(s);
-      _writeHistory(list);
+  }
+  function _escapeAttr(s) {
+    return String(s).replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function renderSearchSuggest() {
+    const expand = document.getElementById("evtSearchExpand");
+    const input = document.getElementById("evtSearchInput");
+    if (!expand || !input) return;
+    if (expand.classList.contains("hidden")) {
+      hideSearchSuggest();
+      return;
     }
-    function _removeHistory(q) {
-      const lc = (q || "").toLowerCase();
-      _writeHistory(_readHistory().filter((x) => x.toLowerCase() !== lc));
+    if ((input.value || "").trim() !== "") {
+      hideSearchSuggest();
+      return;
     }
-    function _clearHistory() {
-      try {
-        sessionStorage.removeItem(SEARCH_HIST_KEY);
-      } catch (_) {
-      }
+    let host = document.getElementById("evtSearchSuggest");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "evtSearchSuggest";
+      host.className = "evt-search-suggest absolute left-0 right-0 mt-2 top-full rounded-xl bg-white shadow-lg ring-1 ring-black/5 overflow-hidden z-40";
+      host.setAttribute("role", "listbox");
+      expand.appendChild(host);
     }
-    function _escapeAttr(s) {
-      return String(s).replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-    function renderSearchSuggest() {
-      const expand = document.getElementById("evtSearchExpand");
-      const input = document.getElementById("evtSearchInput");
-      if (!expand || !input) return;
-      if (expand.classList.contains("hidden")) {
-        hideSearchSuggest();
-        return;
-      }
-      if ((input.value || "").trim() !== "") {
-        hideSearchSuggest();
-        return;
-      }
-      let host = document.getElementById("evtSearchSuggest");
-      if (!host) {
-        host = document.createElement("div");
-        host.id = "evtSearchSuggest";
-        host.className = "evt-search-suggest absolute left-0 right-0 mt-2 top-full rounded-xl bg-white shadow-lg ring-1 ring-black/5 overflow-hidden z-40";
-        host.setAttribute("role", "listbox");
-        expand.appendChild(host);
-      }
-      const hist = _readHistory().slice(0, SEARCH_HIST_SHOW);
-      const parts = [];
-      if (hist.length) {
-        parts.push('<div class="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-gray-500">Recent</div>');
-        parts.push("<ul>");
-        hist.forEach((q) => {
-          const qa = _escapeAttr(q);
-          parts.push(
-            '<li class="evt-suggest-row flex items-center gap-2 px-3 py-2 hover:bg-brand-50 cursor-pointer" data-suggest-q="' + qa + '" role="option"><span class="text-gray-400" aria-hidden="true">\u{1F550}</span><span class="flex-1 min-w-0 truncate text-sm text-gray-800">' + qa + '</span><button type="button" class="evt-suggest-remove p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100" data-suggest-rm="' + qa + '" aria-label="Remove from history" title="Remove"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></li>'
-          );
-        });
+    const hist = _readHistory().slice(0, SEARCH_HIST_SHOW);
+    const parts = [];
+    if (hist.length) {
+      parts.push('<div class="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-gray-500">Recent</div>');
+      parts.push("<ul>");
+      hist.forEach((q) => {
+        const qa = _escapeAttr(q);
         parts.push(
-          '<li class="evt-suggest-clear flex items-center gap-2 px-3 py-2 border-t border-gray-100 hover:bg-gray-50 cursor-pointer text-xs text-gray-500" data-suggest-clear="1" role="option"><span aria-hidden="true">\u{1F5D1}</span><span>Clear search history</span></li>'
-        );
-        parts.push("</ul>");
-      }
-      parts.push('<div class="px-3 ' + (hist.length ? "pt-3" : "pt-2") + ' pb-1 text-[11px] uppercase tracking-wide text-gray-500">Quick categories</div>');
-      parts.push('<div class="evt-suggest-chip-row flex flex-wrap gap-2 px-3 pb-3">');
-      QUICK_CATS.forEach((cat) => {
-        const emoji = C.CATEGORY_EMOJI && C.CATEGORY_EMOJI[cat] || "\u{1F4C5}";
-        const label = C.CATEGORY_TAG && C.CATEGORY_TAG[cat]?.label || cat;
-        parts.push(
-          '<button type="button" class="evt-suggest-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-brand-50 border border-gray-200 text-sm text-gray-700" data-suggest-cat="' + cat + '"><span aria-hidden="true">' + emoji + "</span><span>" + label + "</span></button>"
+          '<li class="evt-suggest-row flex items-center gap-2 px-3 py-2 hover:bg-brand-50 cursor-pointer" data-suggest-q="' + qa + '" role="option"><span class="text-gray-400" aria-hidden="true">\u{1F550}</span><span class="flex-1 min-w-0 truncate text-sm text-gray-800">' + qa + '</span><button type="button" class="evt-suggest-remove p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100" data-suggest-rm="' + qa + '" aria-label="Remove from history" title="Remove"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></li>'
         );
       });
-      parts.push("</div>");
-      host.innerHTML = parts.join("");
+      parts.push(
+        '<li class="evt-suggest-clear flex items-center gap-2 px-3 py-2 border-t border-gray-100 hover:bg-gray-50 cursor-pointer text-xs text-gray-500" data-suggest-clear="1" role="option"><span aria-hidden="true">\u{1F5D1}</span><span>Clear search history</span></li>'
+      );
+      parts.push("</ul>");
     }
-    function hideSearchSuggest() {
+    parts.push('<div class="px-3 ' + (hist.length ? "pt-3" : "pt-2") + ' pb-1 text-[11px] uppercase tracking-wide text-gray-500">Quick categories</div>');
+    parts.push('<div class="evt-suggest-chip-row flex flex-wrap gap-2 px-3 pb-3">');
+    QUICK_CATS.forEach((cat) => {
+      const emoji = C.CATEGORY_EMOJI && C.CATEGORY_EMOJI[cat] || "\u{1F4C5}";
+      const label = C.CATEGORY_TAG && C.CATEGORY_TAG[cat]?.label || cat;
+      parts.push(
+        '<button type="button" class="evt-suggest-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-brand-50 border border-gray-200 text-sm text-gray-700" data-suggest-cat="' + cat + '"><span aria-hidden="true">' + emoji + "</span><span>" + label + "</span></button>"
+      );
+    });
+    parts.push("</div>");
+    host.innerHTML = parts.join("");
+  }
+  function hideSearchSuggest() {
+    const host = document.getElementById("evtSearchSuggest");
+    if (host) host.innerHTML = "";
+  }
+  function wireSuggestClicks() {
+    const expand = document.getElementById("evtSearchExpand");
+    if (!expand || expand.dataset.suggestWired === "1") return;
+    expand.dataset.suggestWired = "1";
+    expand.addEventListener("click", (e) => {
+      const rm = e.target.closest("[data-suggest-rm]");
+      if (rm) {
+        e.preventDefault();
+        e.stopPropagation();
+        _removeHistory(rm.getAttribute("data-suggest-rm"));
+        renderSearchSuggest();
+        return;
+      }
+      const clr = e.target.closest("[data-suggest-clear]");
+      if (clr) {
+        e.preventDefault();
+        e.stopPropagation();
+        _clearHistory();
+        renderSearchSuggest();
+        return;
+      }
+      const row = e.target.closest("[data-suggest-q]");
+      if (row) {
+        e.preventDefault();
+        e.stopPropagation();
+        const q = row.getAttribute("data-suggest-q") || "";
+        const input = document.getElementById("evtSearchInput");
+        const clear = document.getElementById("evtSearchClear");
+        if (input) {
+          input.value = q;
+          clear?.classList.toggle("hidden", !q);
+        }
+        api().setSearchQuery?.(q);
+        _pushHistory(q);
+        api().persistState?.();
+        hideSearchSuggest();
+        api().renderEvents?.();
+        return;
+      }
+      const chip = e.target.closest("[data-suggest-cat]");
+      if (chip) {
+        e.preventDefault();
+        e.stopPropagation();
+        const cat = chip.getAttribute("data-suggest-cat") || "";
+        const prev = api().getActiveCategory?.() || "";
+        api().setActiveCategory?.(prev === cat ? "" : cat);
+        api().persistState?.();
+        hideSearchSuggest();
+        api().renderEvents?.();
+      }
+    });
+    document.addEventListener("click", (e) => {
       const host = document.getElementById("evtSearchSuggest");
-      if (host) host.innerHTML = "";
+      if (!host || !host.innerHTML) return;
+      if (expand.contains(e.target) || document.getElementById("evtSearchToggle")?.contains(e.target)) return;
+      hideSearchSuggest();
+    });
+  }
+  function setupSearch() {
+    const toggle = document.getElementById("evtSearchToggle");
+    const expand = document.getElementById("evtSearchExpand");
+    const input = document.getElementById("evtSearchInput");
+    const clear = document.getElementById("evtSearchClear");
+    if (toggle && expand && input) {
+      toggle.addEventListener("click", () => {
+        const willOpen = expand.classList.contains("hidden");
+        expand.classList.toggle("hidden", !willOpen);
+        toggle.setAttribute("aria-expanded", String(willOpen));
+        if (willOpen) {
+          setTimeout(() => input.focus(), 50);
+          renderSearchSuggest();
+        } else if (input.value) {
+          input.value = "";
+          api().setSearchQuery?.("");
+          clear?.classList.add("hidden");
+          api().persistState?.();
+          api().renderEvents?.();
+          hideSearchSuggest();
+        } else {
+          hideSearchSuggest();
+        }
+      });
     }
-    function wireSuggestClicks() {
-      const expand = document.getElementById("evtSearchExpand");
-      if (!expand || expand.dataset.suggestWired === "1") return;
-      expand.dataset.suggestWired = "1";
-      expand.addEventListener("click", (e) => {
-        const rm = e.target.closest("[data-suggest-rm]");
-        if (rm) {
-          e.preventDefault();
-          e.stopPropagation();
-          _removeHistory(rm.getAttribute("data-suggest-rm"));
-          renderSearchSuggest();
-          return;
-        }
-        const clr = e.target.closest("[data-suggest-clear]");
-        if (clr) {
-          e.preventDefault();
-          e.stopPropagation();
-          _clearHistory();
-          renderSearchSuggest();
-          return;
-        }
-        const row = e.target.closest("[data-suggest-q]");
-        if (row) {
-          e.preventDefault();
-          e.stopPropagation();
-          const q = row.getAttribute("data-suggest-q") || "";
-          const input = document.getElementById("evtSearchInput");
-          const clear = document.getElementById("evtSearchClear");
-          if (input) {
-            input.value = q;
-            clear?.classList.toggle("hidden", !q);
-          }
+    if (!input) return;
+    wireSuggestClicks();
+    input.addEventListener("input", () => {
+      const q = input.value.trim();
+      clear?.classList.toggle("hidden", !q);
+      if (q === "") renderSearchSuggest();
+      else hideSearchSuggest();
+      const prev = api().getSearchDebounce?.();
+      if (prev) clearTimeout(prev);
+      const id = setTimeout(() => {
+        api().setSearchQuery?.(q);
+        if (q.length >= 2) _pushHistory(q);
+        api().persistState?.();
+        api().renderEvents?.();
+      }, 120);
+      api().setSearchDebounce?.(id);
+    });
+    clear?.addEventListener("click", () => {
+      input.value = "";
+      clear.classList.add("hidden");
+      api().setSearchQuery?.("");
+      api().persistState?.();
+      api().renderEvents?.();
+      input.focus();
+      renderSearchSuggest();
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const q = input.value.trim();
+        if (q.length >= 2) {
+          const prev = api().getSearchDebounce?.();
+          if (prev) clearTimeout(prev);
           api().setSearchQuery?.(q);
           _pushHistory(q);
           api().persistState?.();
           hideSearchSuggest();
           api().renderEvents?.();
-          return;
         }
-        const chip = e.target.closest("[data-suggest-cat]");
-        if (chip) {
-          e.preventDefault();
-          e.stopPropagation();
-          const cat = chip.getAttribute("data-suggest-cat") || "";
-          const prev = api().getActiveCategory?.() || "";
-          api().setActiveCategory?.(prev === cat ? "" : cat);
-          api().persistState?.();
-          hideSearchSuggest();
-          api().renderEvents?.();
-        }
-      });
-      document.addEventListener("click", (e) => {
-        const host = document.getElementById("evtSearchSuggest");
-        if (!host || !host.innerHTML) return;
-        if (expand.contains(e.target) || document.getElementById("evtSearchToggle")?.contains(e.target)) return;
-        hideSearchSuggest();
-      });
-    }
-    function setupSearch() {
-      const toggle = document.getElementById("evtSearchToggle");
-      const expand = document.getElementById("evtSearchExpand");
-      const input = document.getElementById("evtSearchInput");
-      const clear = document.getElementById("evtSearchClear");
-      if (toggle && expand && input) {
-        toggle.addEventListener("click", () => {
-          const willOpen = expand.classList.contains("hidden");
-          expand.classList.toggle("hidden", !willOpen);
-          toggle.setAttribute("aria-expanded", String(willOpen));
-          if (willOpen) {
-            setTimeout(() => input.focus(), 50);
-            renderSearchSuggest();
-          } else if (input.value) {
-            input.value = "";
-            api().setSearchQuery?.("");
-            clear?.classList.add("hidden");
-            api().persistState?.();
-            api().renderEvents?.();
-            hideSearchSuggest();
-          } else {
-            hideSearchSuggest();
-          }
-        });
+        return;
       }
-      if (!input) return;
-      wireSuggestClicks();
-      input.addEventListener("input", () => {
-        const q = input.value.trim();
-        clear?.classList.toggle("hidden", !q);
-        if (q === "") renderSearchSuggest();
-        else hideSearchSuggest();
-        const prev = api().getSearchDebounce?.();
-        if (prev) clearTimeout(prev);
-        const id = setTimeout(() => {
-          api().setSearchQuery?.(q);
-          if (q.length >= 2) _pushHistory(q);
-          api().persistState?.();
-          api().renderEvents?.();
-        }, 120);
-        api().setSearchDebounce?.(id);
-      });
-      clear?.addEventListener("click", () => {
-        input.value = "";
-        clear.classList.add("hidden");
-        api().setSearchQuery?.("");
-        api().persistState?.();
-        api().renderEvents?.();
-        input.focus();
-        renderSearchSuggest();
-      });
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          const q = input.value.trim();
-          if (q.length >= 2) {
-            const prev = api().getSearchDebounce?.();
-            if (prev) clearTimeout(prev);
-            api().setSearchQuery?.(q);
-            _pushHistory(q);
-            api().persistState?.();
-            hideSearchSuggest();
-            api().renderEvents?.();
-          }
-          return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (input.value) {
+          clear?.click();
+        } else if (expand) {
+          expand.classList.add("hidden");
+          toggle?.setAttribute("aria-expanded", "false");
+          toggle?.focus();
+          hideSearchSuggest();
         }
-        if (e.key === "Escape") {
-          e.preventDefault();
-          if (input.value) {
-            clear?.click();
-          } else if (expand) {
-            expand.classList.add("hidden");
-            toggle?.setAttribute("aria-expanded", "false");
-            toggle?.focus();
-            hideSearchSuggest();
-          }
-        }
-      });
-    }
-    window.PortalEventsListSearch = {
-      setupSearch,
-      renderSearchSuggest,
-      hideSearchSuggest,
-      wireSuggestClicks,
-      pushHistory: _pushHistory,
-      readHistory: _readHistory
-    };
-  })();
+      }
+    });
+  }
+  var PortalEventsListSearch = {
+    setupSearch,
+    renderSearchSuggest,
+    hideSearchSuggest,
+    wireSuggestClicks,
+    pushHistory: _pushHistory,
+    readHistory: _readHistory
+  };
+  globalThis.PortalEventsListSearch = PortalEventsListSearch;
 
   // js/portal/events/list/right-rail.js
-  (function() {
-    "use strict";
-    const H = window.EventsHelpers || {};
-    function api() {
-      return window.PortalEventsListRightRailApi || {};
+  var H = window.EventsHelpers || {};
+  function api2() {
+    return window.PortalEventsListRightRailApi || {};
+  }
+  function _toIsoDate(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function renderMiniCalendar() {
+    const mount = document.getElementById("evtRailSlotCalendar");
+    if (!mount) return;
+    if (!document.body.classList.contains("evt-vlift")) {
+      mount.innerHTML = "";
+      return;
     }
-    function _toIsoDate(d) {
-      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    const today = /* @__PURE__ */ new Date();
+    let miniCalMonth = api2().getMiniCalMonth?.();
+    if (!miniCalMonth) {
+      miniCalMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      api2().setMiniCalMonth?.(miniCalMonth);
     }
-    function renderMiniCalendar() {
-      const mount = document.getElementById("evtRailSlotCalendar");
-      if (!mount) return;
-      if (!document.body.classList.contains("evt-vlift")) {
-        mount.innerHTML = "";
-        return;
+    const monthStart = new Date(miniCalMonth);
+    const year = monthStart.getFullYear();
+    const month = monthStart.getMonth();
+    const monthLabel = monthStart.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    const evtDays = /* @__PURE__ */ new Set();
+    (window.evtAllEvents || []).forEach((ev) => {
+      if (!ev || !ev.start_date) return;
+      const d = new Date(ev.start_date);
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        evtDays.add(_toIsoDate(d));
       }
-      const today = /* @__PURE__ */ new Date();
-      let miniCalMonth = api().getMiniCalMonth?.();
-      if (!miniCalMonth) {
-        miniCalMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        api().setMiniCalMonth?.(miniCalMonth);
-      }
-      const monthStart = new Date(miniCalMonth);
-      const year = monthStart.getFullYear();
-      const month = monthStart.getMonth();
-      const monthLabel = monthStart.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-      const evtDays = /* @__PURE__ */ new Set();
-      (window.evtAllEvents || []).forEach((ev) => {
-        if (!ev || !ev.start_date) return;
-        const d = new Date(ev.start_date);
-        if (d.getFullYear() === year && d.getMonth() === month) {
-          evtDays.add(_toIsoDate(d));
+    });
+    const firstDow = monthStart.getDay();
+    const gridStart = new Date(year, month, 1 - firstDow);
+    const todayIso = _toIsoDate(today);
+    const activeDay = api2().getActiveDay?.() || "";
+    const dayHeaders = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => '<div class="evt-mcal-dow">' + d + "</div>").join("");
+    let cells = "";
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(gridStart);
+      d.setDate(gridStart.getDate() + i);
+      const iso = _toIsoDate(d);
+      const isOther = d.getMonth() !== month;
+      const isToday = iso === todayIso;
+      const hasEvt = evtDays.has(iso);
+      const isActive = iso === activeDay;
+      const cls = ["evt-mcal-day"];
+      if (isOther) cls.push("evt-mcal-day--other");
+      if (isToday) cls.push("evt-mcal-day--today");
+      if (hasEvt) cls.push("evt-mcal-day--has");
+      if (isActive) cls.push("evt-mcal-day--active");
+      cells += '<button type="button" class="' + cls.join(" ") + '" data-mcal-day="' + iso + '" aria-label="' + d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) + '">' + d.getDate() + "</button>";
+    }
+    mount.innerHTML = '<div class="evt-mcal" role="group" aria-label="Mini calendar"><p class="evt-mcal-section-heading">Calendar</p><div class="evt-mcal-head"><button type="button" class="evt-mcal-nav" data-mcal-prev aria-label="Previous month">&lsaquo;</button><span class="evt-mcal-title">' + monthLabel + '</span><button type="button" class="evt-mcal-nav" data-mcal-next aria-label="Next month">&rsaquo;</button></div><div class="evt-mcal-dow-row">' + dayHeaders + '</div><div class="evt-mcal-grid">' + cells + "</div>" + (activeDay ? '<button type="button" class="evt-mcal-clear" data-mcal-clear>Clear day filter</button>' : "") + "</div>";
+    mount.querySelector("[data-mcal-prev]")?.addEventListener("click", () => {
+      api2().setMiniCalMonth?.(new Date(year, month - 1, 1));
+      renderMiniCalendar();
+    });
+    mount.querySelector("[data-mcal-next]")?.addEventListener("click", () => {
+      api2().setMiniCalMonth?.(new Date(year, month + 1, 1));
+      renderMiniCalendar();
+    });
+    mount.querySelector("[data-mcal-clear]")?.addEventListener("click", () => {
+      api2().setActiveDay?.("");
+      api2().renderEvents?.();
+    });
+    mount.querySelectorAll("[data-mcal-day]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const iso = btn.getAttribute("data-mcal-day");
+        const cur = api2().getActiveDay?.() || "";
+        api2().setActiveDay?.(cur === iso ? "" : iso);
+        api2().renderEvents?.();
+      });
+    });
+    const rail = document.getElementById("evtRightRail");
+    if (rail) rail.classList.remove("hidden");
+  }
+  function renderMyRsvps() {
+    const mount = document.getElementById("evtRailSlotRsvps");
+    if (!mount) return;
+    if (!document.body.classList.contains("evt-vlift")) {
+      mount.innerHTML = "";
+      return;
+    }
+    const all = window.evtAllEvents || [];
+    const rsvps = window.evtAllRsvps || {};
+    const esc = H.escapeHtml || ((s) => String(s == null ? "" : s));
+    const now = Date.now();
+    const mine = all.filter((ev) => {
+      const r = rsvps[ev.id];
+      if (!r || r.status !== "going") return false;
+      const t = new Date(ev.start_date).getTime();
+      return !isNaN(t) && t >= now;
+    }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+    if (!mine.length) {
+      mount.innerHTML = "";
+      return;
+    }
+    const total = mine.length;
+    const rows = mine.slice(0, 3).map((ev) => {
+      const d = new Date(ev.start_date);
+      const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+      const hasBanner = !!ev.banner_url;
+      const thumbStyle = hasBanner ? "background: url('" + esc(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);";
+      return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc(dateStr) + ", " + esc(timeStr) + "</span></span></button>";
+    }).join("");
+    mount.innerHTML = '<div class="evt-myrsvps"><div class="evt-myrsvps-head"><h3 class="evt-myrsvps-title">Your Upcoming RSVPs</h3><span class="evt-myrsvps-count">' + total + '</span></div><div class="evt-myrsvps-list">' + rows + '</div><button type="button" class="evt-myrsvps-all" data-evt-myrsvps-all>View All My Events</button></div>';
+    mount.querySelectorAll("[data-evt-myrsvp]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-evt-myrsvp");
+        const ev = all.find((e) => e.id === id);
+        if (!ev) return;
+        if (ev.slug && typeof window.evtNavigateToEvent === "function") {
+          window.evtNavigateToEvent(ev.slug);
+        } else if (typeof window.evtOpenDetail === "function") {
+          window.evtOpenDetail(ev.id);
         }
       });
-      const firstDow = monthStart.getDay();
-      const gridStart = new Date(year, month, 1 - firstDow);
-      const todayIso = _toIsoDate(today);
-      const activeDay = api().getActiveDay?.() || "";
-      const dayHeaders = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => '<div class="evt-mcal-dow">' + d + "</div>").join("");
-      let cells = "";
-      for (let i = 0; i < 42; i++) {
-        const d = new Date(gridStart);
-        d.setDate(gridStart.getDate() + i);
-        const iso = _toIsoDate(d);
-        const isOther = d.getMonth() !== month;
-        const isToday = iso === todayIso;
-        const hasEvt = evtDays.has(iso);
-        const isActive = iso === activeDay;
-        const cls = ["evt-mcal-day"];
-        if (isOther) cls.push("evt-mcal-day--other");
-        if (isToday) cls.push("evt-mcal-day--today");
-        if (hasEvt) cls.push("evt-mcal-day--has");
-        if (isActive) cls.push("evt-mcal-day--active");
-        cells += '<button type="button" class="' + cls.join(" ") + '" data-mcal-day="' + iso + '" aria-label="' + d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) + '">' + d.getDate() + "</button>";
-      }
-      mount.innerHTML = '<div class="evt-mcal" role="group" aria-label="Mini calendar"><p class="evt-mcal-section-heading">Calendar</p><div class="evt-mcal-head"><button type="button" class="evt-mcal-nav" data-mcal-prev aria-label="Previous month">&lsaquo;</button><span class="evt-mcal-title">' + monthLabel + '</span><button type="button" class="evt-mcal-nav" data-mcal-next aria-label="Next month">&rsaquo;</button></div><div class="evt-mcal-dow-row">' + dayHeaders + '</div><div class="evt-mcal-grid">' + cells + "</div>" + (activeDay ? '<button type="button" class="evt-mcal-clear" data-mcal-clear>Clear day filter</button>' : "") + "</div>";
-      mount.querySelector("[data-mcal-prev]")?.addEventListener("click", () => {
-        api().setMiniCalMonth?.(new Date(year, month - 1, 1));
-        renderMiniCalendar();
-      });
-      mount.querySelector("[data-mcal-next]")?.addEventListener("click", () => {
-        api().setMiniCalMonth?.(new Date(year, month + 1, 1));
-        renderMiniCalendar();
-      });
-      mount.querySelector("[data-mcal-clear]")?.addEventListener("click", () => {
-        api().setActiveDay?.("");
-        api().renderEvents?.();
-      });
-      mount.querySelectorAll("[data-mcal-day]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const iso = btn.getAttribute("data-mcal-day");
-          const cur = api().getActiveDay?.() || "";
-          api().setActiveDay?.(cur === iso ? "" : iso);
-          api().renderEvents?.();
-        });
-      });
-      const rail = document.getElementById("evtRightRail");
-      if (rail) rail.classList.remove("hidden");
+    });
+    mount.querySelector("[data-evt-myrsvps-all]")?.addEventListener("click", () => {
+      document.querySelector('[data-filter="going"]')?.click();
+    });
+    const rail = document.getElementById("evtRightRail");
+    if (rail) rail.classList.remove("hidden");
+  }
+  function renderStatsCard() {
+    const mount = document.getElementById("evtRailSlotStats");
+    if (!mount) return;
+    if (!document.body.classList.contains("evt-vlift")) {
+      mount.innerHTML = "";
+      return;
     }
-    function renderMyRsvps() {
-      const mount = document.getElementById("evtRailSlotRsvps");
-      if (!mount) return;
-      if (!document.body.classList.contains("evt-vlift")) {
-        mount.innerHTML = "";
-        return;
-      }
-      const all = window.evtAllEvents || [];
-      const rsvps = window.evtAllRsvps || {};
-      const esc = H.escapeHtml || ((s) => String(s == null ? "" : s));
-      const now = Date.now();
-      const mine = all.filter((ev) => {
-        const r = rsvps[ev.id];
-        if (!r || r.status !== "going") return false;
-        const t = new Date(ev.start_date).getTime();
-        return !isNaN(t) && t >= now;
-      }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-      if (!mine.length) {
-        mount.innerHTML = "";
-        return;
-      }
-      const total = mine.length;
-      const rows = mine.slice(0, 3).map((ev) => {
-        const d = new Date(ev.start_date);
-        const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-        const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-        const hasBanner = !!ev.banner_url;
-        const thumbStyle = hasBanner ? "background: url('" + esc(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);";
-        return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc(dateStr) + ", " + esc(timeStr) + "</span></span></button>";
-      }).join("");
-      mount.innerHTML = '<div class="evt-myrsvps"><div class="evt-myrsvps-head"><h3 class="evt-myrsvps-title">Your Upcoming RSVPs</h3><span class="evt-myrsvps-count">' + total + '</span></div><div class="evt-myrsvps-list">' + rows + '</div><button type="button" class="evt-myrsvps-all" data-evt-myrsvps-all>View All My Events</button></div>';
-      mount.querySelectorAll("[data-evt-myrsvp]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-evt-myrsvp");
-          const ev = all.find((e) => e.id === id);
-          if (!ev) return;
-          if (ev.slug && typeof window.evtNavigateToEvent === "function") {
-            window.evtNavigateToEvent(ev.slug);
-          } else if (typeof window.evtOpenDetail === "function") {
-            window.evtOpenDetail(ev.id);
-          }
-        });
-      });
-      mount.querySelector("[data-evt-myrsvps-all]")?.addEventListener("click", () => {
-        document.querySelector('[data-filter="going"]')?.click();
-      });
-      const rail = document.getElementById("evtRightRail");
-      if (rail) rail.classList.remove("hidden");
-    }
-    function renderStatsCard() {
-      const mount = document.getElementById("evtRailSlotStats");
-      if (!mount) return;
-      if (!document.body.classList.contains("evt-vlift")) {
-        mount.innerHTML = "";
-        return;
-      }
-      const all = window.evtAllEvents || [];
-      const rsvps = window.evtAllRsvps || {};
-      const now = /* @__PURE__ */ new Date();
-      const y = now.getFullYear(), m = now.getMonth();
-      const thisMonth = all.filter((ev) => {
-        const d = new Date(ev.start_date);
-        return d.getFullYear() === y && d.getMonth() === m;
-      }).length;
-      const going = Object.values(rsvps).filter((r) => r && r.status === "going").length;
-      const communities = /* @__PURE__ */ new Set();
-      all.forEach((ev) => {
-        if (ev && ev.event_type) communities.add(ev.event_type);
-      });
-      mount.innerHTML = '<div class="evt-stats"><h3 class="evt-stats-title">Events Overview</h3><div class="evt-stats-row"><span class="evt-stats-icon evt-stats-icon--purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="evt-stats-body"><span class="evt-stats-label">This Month</span><span class="evt-stats-sub">Upcoming events</span></span><span class="evt-stats-value">' + thisMonth + '</span></div><div class="evt-stats-row"><span class="evt-stats-icon evt-stats-icon--green" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="evt-stats-body"><span class="evt-stats-label">You\u2019re Going</span><span class="evt-stats-sub">Events</span></span><span class="evt-stats-value">' + going + '</span></div><div class="evt-stats-row"><span class="evt-stats-icon evt-stats-icon--blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="evt-stats-body"><span class="evt-stats-label">Communities</span><span class="evt-stats-sub">Active communities</span></span><span class="evt-stats-value">' + communities.size + '</span></div><button type="button" class="evt-stats-link" data-evt-stats-all>View Full Calendar</button></div>';
-      mount.querySelector("[data-evt-stats-all]")?.addEventListener("click", () => {
-        const viewBtn = document.querySelector('[data-view="calendar"]');
-        if (viewBtn) viewBtn.click();
-      });
-      const rail = document.getElementById("evtRightRail");
-      if (rail) rail.classList.remove("hidden");
-    }
-    window.PortalEventsListRightRail = {
-      renderMiniCalendar,
-      renderMyRsvps,
-      renderStatsCard
-    };
-  })();
+    const all = window.evtAllEvents || [];
+    const rsvps = window.evtAllRsvps || {};
+    const now = /* @__PURE__ */ new Date();
+    const y = now.getFullYear(), m = now.getMonth();
+    const thisMonth = all.filter((ev) => {
+      const d = new Date(ev.start_date);
+      return d.getFullYear() === y && d.getMonth() === m;
+    }).length;
+    const going = Object.values(rsvps).filter((r) => r && r.status === "going").length;
+    const communities = /* @__PURE__ */ new Set();
+    all.forEach((ev) => {
+      if (ev && ev.event_type) communities.add(ev.event_type);
+    });
+    mount.innerHTML = '<div class="evt-stats"><h3 class="evt-stats-title">Events Overview</h3><div class="evt-stats-row"><span class="evt-stats-icon evt-stats-icon--purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="evt-stats-body"><span class="evt-stats-label">This Month</span><span class="evt-stats-sub">Upcoming events</span></span><span class="evt-stats-value">' + thisMonth + '</span></div><div class="evt-stats-row"><span class="evt-stats-icon evt-stats-icon--green" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="evt-stats-body"><span class="evt-stats-label">You\u2019re Going</span><span class="evt-stats-sub">Events</span></span><span class="evt-stats-value">' + going + '</span></div><div class="evt-stats-row"><span class="evt-stats-icon evt-stats-icon--blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="evt-stats-body"><span class="evt-stats-label">Communities</span><span class="evt-stats-sub">Active communities</span></span><span class="evt-stats-value">' + communities.size + '</span></div><button type="button" class="evt-stats-link" data-evt-stats-all>View Full Calendar</button></div>';
+    mount.querySelector("[data-evt-stats-all]")?.addEventListener("click", () => {
+      const viewBtn = document.querySelector('[data-view="calendar"]');
+      if (viewBtn) viewBtn.click();
+    });
+    const rail = document.getElementById("evtRightRail");
+    if (rail) rail.classList.remove("hidden");
+  }
+  var PortalEventsListRightRail = {
+    renderMiniCalendar,
+    renderMyRsvps,
+    renderStatsCard
+  };
+  globalThis.PortalEventsListRightRail = PortalEventsListRightRail;
 
   // js/portal/events/list/header.js
-  (function() {
-    "use strict";
-    const H = window.EventsHelpers || {};
-    let _evtBellObserver = null;
-    function renderHeaderGreeting() {
-      const title = document.getElementById("evtHeaderTitle");
-      if (!title) return;
-      const name = (window.evtCurrentUserName || "").trim();
-      if (document.body.classList.contains("evt-vlift")) {
-        const old = document.getElementById("evtHeaderGreeting");
-        if (old) old.remove();
-        const slot = document.querySelector("#evtGreetingHello [data-greeting-name]");
-        if (slot && name) slot.textContent = name;
+  var H2 = window.EventsHelpers || {};
+  var _evtBellObserver = null;
+  function renderHeaderGreeting() {
+    const title = document.getElementById("evtHeaderTitle");
+    if (!title) return;
+    const name = (window.evtCurrentUserName || "").trim();
+    if (document.body.classList.contains("evt-vlift")) {
+      const old = document.getElementById("evtHeaderGreeting");
+      if (old) old.remove();
+      const slot = document.querySelector("#evtGreetingHello [data-greeting-name]");
+      if (slot && name) slot.textContent = name;
+      return;
+    }
+    let g = document.getElementById("evtHeaderGreeting");
+    if (!name) {
+      if (g) g.remove();
+      return;
+    }
+    if (!g) {
+      g = document.createElement("small");
+      g.id = "evtHeaderGreeting";
+      g.className = "evt-header-greeting block text-xs text-gray-400 mb-1";
+      title.parentNode.insertBefore(g, title);
+    }
+    const esc = H2.escapeHtml || ((s) => String(s == null ? "" : s));
+    g.textContent = "Hey " + esc(name) + " \u{1F44B}";
+  }
+  function renderHeaderCount() {
+    const el = document.getElementById("evtHeaderCount");
+    if (!el) return;
+    const all = window.evtAllEvents || [];
+    const rsvps = window.evtAllRsvps || {};
+    const now = /* @__PURE__ */ new Date();
+    const upcoming = all.filter(
+      (e) => e.status !== "cancelled" && e.status !== "draft" && new Date(e.start_date) >= now
+    ).length;
+    const going = Object.values(rsvps).filter((r) => r.status === "going").length;
+    const parts = [];
+    if (going) parts.push(going + " going");
+    parts.push(upcoming + " upcoming");
+    el.textContent = parts.join(" \xB7 ");
+    renderHeaderGreeting();
+  }
+  function wireHeaderBellBadge() {
+    const badge = document.getElementById("notifBadge");
+    const dot = document.getElementById("evtHeaderBellDot");
+    if (!dot) return;
+    const sync = () => {
+      if (!badge) {
+        dot.classList.add("hidden");
         return;
       }
-      let g = document.getElementById("evtHeaderGreeting");
-      if (!name) {
-        if (g) g.remove();
-        return;
-      }
-      if (!g) {
-        g = document.createElement("small");
-        g.id = "evtHeaderGreeting";
-        g.className = "evt-header-greeting block text-xs text-gray-400 mb-1";
-        title.parentNode.insertBefore(g, title);
-      }
-      const esc = H.escapeHtml || ((s) => String(s == null ? "" : s));
-      g.textContent = "Hey " + esc(name) + " \u{1F44B}";
-    }
-    function renderHeaderCount() {
-      const el = document.getElementById("evtHeaderCount");
-      if (!el) return;
-      const all = window.evtAllEvents || [];
-      const rsvps = window.evtAllRsvps || {};
-      const now = /* @__PURE__ */ new Date();
-      const upcoming = all.filter(
-        (e) => e.status !== "cancelled" && e.status !== "draft" && new Date(e.start_date) >= now
-      ).length;
-      const going = Object.values(rsvps).filter((r) => r.status === "going").length;
-      const parts = [];
-      if (going) parts.push(going + " going");
-      parts.push(upcoming + " upcoming");
-      el.textContent = parts.join(" \xB7 ");
-      renderHeaderGreeting();
-    }
-    function wireHeaderBellBadge() {
-      const badge = document.getElementById("notifBadge");
-      const dot = document.getElementById("evtHeaderBellDot");
-      if (!dot) return;
-      const sync = () => {
-        if (!badge) {
-          dot.classList.add("hidden");
-          return;
-        }
-        const txt = (badge.textContent || "").trim();
-        const visible = !!txt && getComputedStyle(badge).display !== "none";
-        dot.classList.toggle("hidden", !visible);
-      };
-      sync();
-      if (!badge) return;
-      try {
-        _evtBellObserver?.disconnect();
-      } catch (_) {
-      }
-      _evtBellObserver = new MutationObserver(sync);
-      _evtBellObserver.observe(badge, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ["style", "class"] });
-    }
-    function initHeaderBell() {
-      if (!document.body.classList.contains("evt-vlift")) return;
-      const header = document.getElementById("evtPageHeader");
-      if (!header) return;
-      const globalBtn = document.getElementById("notifBtn");
-      if (!globalBtn) return;
-      if (document.getElementById("evtHeaderBell")) return;
-      const wrap = header.querySelector(".flex.items-end.justify-between") || header.firstElementChild;
-      if (!wrap) return;
-      const bell = document.createElement("button");
-      bell.id = "evtHeaderBell";
-      bell.type = "button";
-      bell.setAttribute("aria-label", "Notifications");
-      bell.className = "evt-header-bell relative inline-flex items-center justify-center w-10 h-10 rounded-xl text-white/90 hover:text-white shrink-0";
-      bell.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.17V11a6 6 0 10-12 0v3.17a2 2 0 01-.6 1.43L4 17h5m6 0a3 3 0 11-6 0"/></svg><span id="evtHeaderBellDot" class="evt-header-bell-dot hidden" aria-hidden="true"></span>';
-      bell.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const target = document.getElementById("notifBtn");
-        if (target) target.click();
-      });
-      const createBtn = wrap.querySelector("#createEventBtn");
-      if (createBtn) wrap.insertBefore(bell, createBtn);
-      else wrap.appendChild(bell);
-      wireHeaderBellBadge();
-    }
-    window.PortalEventsListHeader = {
-      renderHeaderCount,
-      renderHeaderGreeting,
-      initHeaderBell,
-      wireHeaderBellBadge
+      const txt = (badge.textContent || "").trim();
+      const visible = !!txt && getComputedStyle(badge).display !== "none";
+      dot.classList.toggle("hidden", !visible);
     };
-  })();
+    sync();
+    if (!badge) return;
+    try {
+      _evtBellObserver?.disconnect();
+    } catch (_) {
+    }
+    _evtBellObserver = new MutationObserver(sync);
+    _evtBellObserver.observe(badge, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ["style", "class"] });
+  }
+  function initHeaderBell() {
+    if (!document.body.classList.contains("evt-vlift")) return;
+    const header = document.getElementById("evtPageHeader");
+    if (!header) return;
+    const globalBtn = document.getElementById("notifBtn");
+    if (!globalBtn) return;
+    if (document.getElementById("evtHeaderBell")) return;
+    const wrap = header.querySelector(".flex.items-end.justify-between") || header.firstElementChild;
+    if (!wrap) return;
+    const bell = document.createElement("button");
+    bell.id = "evtHeaderBell";
+    bell.type = "button";
+    bell.setAttribute("aria-label", "Notifications");
+    bell.className = "evt-header-bell relative inline-flex items-center justify-center w-10 h-10 rounded-xl text-white/90 hover:text-white shrink-0";
+    bell.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.17V11a6 6 0 10-12 0v3.17a2 2 0 01-.6 1.43L4 17h5m6 0a3 3 0 11-6 0"/></svg><span id="evtHeaderBellDot" class="evt-header-bell-dot hidden" aria-hidden="true"></span>';
+    bell.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const target = document.getElementById("notifBtn");
+      if (target) target.click();
+    });
+    const createBtn = wrap.querySelector("#createEventBtn");
+    if (createBtn) wrap.insertBefore(bell, createBtn);
+    else wrap.appendChild(bell);
+    wireHeaderBellBadge();
+  }
+  var PortalEventsListHeader = {
+    renderHeaderCount,
+    renderHeaderGreeting,
+    initHeaderBell,
+    wireHeaderBellBadge
+  };
+  globalThis.PortalEventsListHeader = PortalEventsListHeader;
 
   // js/portal/events/list/filters.js
-  (function() {
-    "use strict";
-    const C = window.EventsConstants || {};
-    const STATE_KEY = "evt_list_state_v1";
-    let _activeType = "all";
-    let _activeCategory = "";
-    let _activeDate = "any";
-    function api() {
-      return window.PortalEventsListFiltersApi || {};
+  var C2 = window.EventsConstants || {};
+  var STATE_KEY = "evt_list_state_v1";
+  var _activeType = "all";
+  var _activeCategory = "";
+  var _activeDate = "any";
+  function api3() {
+    return window.PortalEventsListFiltersApi || {};
+  }
+  function persistState() {
+    try {
+      sessionStorage.setItem(STATE_KEY, JSON.stringify({
+        q: api3().getSearchQuery?.() ?? "",
+        t: _activeType,
+        c: _activeCategory,
+        v: api3().getActiveView?.() ?? "list",
+        tab: window.evtActiveTab || "upcoming"
+      }));
+    } catch (_) {
     }
-    function persistState() {
-      try {
-        sessionStorage.setItem(STATE_KEY, JSON.stringify({
-          q: api().getSearchQuery?.() ?? "",
-          t: _activeType,
-          c: _activeCategory,
-          v: api().getActiveView?.() ?? "list",
-          tab: window.evtActiveTab || "upcoming"
-        }));
-      } catch (_) {
+  }
+  function restoreState() {
+    try {
+      const raw = sessionStorage.getItem(STATE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw) || {};
+      if (typeof s.t === "string") _activeType = s.t;
+      if (typeof s.c === "string") _activeCategory = s.c;
+      if (typeof s.tab === "string" && ["upcoming", "past", "going", "saved"].includes(s.tab)) {
+        window.evtActiveTab = s.tab;
       }
+    } catch (_) {
     }
-    function restoreState() {
-      try {
-        const raw = sessionStorage.getItem(STATE_KEY);
-        if (!raw) return;
-        const s = JSON.parse(raw) || {};
-        if (typeof s.t === "string") _activeType = s.t;
-        if (typeof s.c === "string") _activeCategory = s.c;
-        if (typeof s.tab === "string" && ["upcoming", "past", "going", "saved"].includes(s.tab)) {
-          window.evtActiveTab = s.tab;
-        }
-      } catch (_) {
-      }
-    }
-    function syncTypeChips(type) {
-      const t = type || "all";
-      document.querySelectorAll("#evtTypeChips .evt-type-chip").forEach((c) => {
-        const on = (c.dataset.type || "all") === t;
-        c.classList.toggle("evt-type-chip--active", on);
-        c.setAttribute("aria-selected", on ? "true" : "false");
-      });
-    }
-    function applyRestoredUi() {
-      const tab = window.evtActiveTab || "upcoming";
-      document.querySelectorAll("#evtLifecycleSeg .evt-seg__btn").forEach((b) => {
-        const on = b.dataset.filter === tab;
-        b.classList.toggle("evt-seg__btn--active", on);
-        b.setAttribute("aria-selected", on ? "true" : "false");
-      });
-      const menuBtn = document.getElementById("evtTypeMenuBtn");
-      if (menuBtn) {
-        menuBtn.dataset.type = _activeType;
-        const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + _activeType + '"]');
-        if (opt) {
-          const label = opt.textContent.replace(/\s+events?$/i, "").trim();
-          const labelEl = menuBtn.querySelector("[data-type-label]");
-          if (labelEl) labelEl.textContent = label;
-          document.querySelectorAll("#evtTypeMenu .evt-type-opt").forEach(
-            (o) => o.classList.toggle("evt-type-opt--active", o === opt)
-          );
-        }
-        const sel = document.getElementById("typeFilter");
-        if (sel) sel.value = _activeType;
-      }
-      syncTypeChips(_activeType);
-      const q = api().getSearchQuery?.() ?? "";
-      if (q) {
-        const input = document.getElementById("evtSearchInput");
-        const clear = document.getElementById("evtSearchClear");
-        const expand = document.getElementById("evtSearchExpand");
-        const toggle = document.getElementById("evtSearchToggle");
-        if (input) input.value = q;
-        if (clear) clear.classList.remove("hidden");
-        if (expand) expand.classList.remove("hidden");
-        if (toggle) toggle.setAttribute("aria-expanded", "true");
-      }
-      api().applyViewChrome?.();
-    }
-    function matchesType(ev) {
-      if (_activeType === "all") return true;
-      return ev.event_type === _activeType;
-    }
-    function matchesCategory(ev) {
-      if (!_activeCategory) return true;
-      return ev.category === _activeCategory;
-    }
-    function matchesLifecycle(ev) {
-      const tab = window.evtActiveTab || "upcoming";
-      const now = /* @__PURE__ */ new Date();
-      const start = new Date(ev.start_date);
-      const rsvps = window.evtAllRsvps || {};
-      if (tab === "upcoming") {
-        if (ev.status === "completed") return false;
-        return start >= now || ev.status === "active" || ev.status === "open" || ev.status === "confirmed" || ev.status === "draft";
-      }
-      if (tab === "past") {
-        return ev.status === "completed" || start < now;
-      }
-      if (tab === "going") {
-        const r = rsvps[ev.id];
-        return r && r.status === "going";
-      }
-      if (tab === "saved") {
-        const r = rsvps[ev.id];
-        return r && r.status === "maybe";
-      }
-      return true;
-    }
-    function matchesDate(ev) {
-      const activeDay = api().getActiveDay?.() ?? "";
-      if (activeDay) {
-        const d2 = new Date(ev.start_date);
-        const iso = d2.getFullYear() + "-" + String(d2.getMonth() + 1).padStart(2, "0") + "-" + String(d2.getDate()).padStart(2, "0");
-        if (iso !== activeDay) return false;
-      }
-      if (_activeDate === "any") return true;
-      const d = new Date(ev.start_date);
-      const now = /* @__PURE__ */ new Date();
-      const y = now.getFullYear(), m = now.getMonth(), dy = now.getDate();
-      if (_activeDate === "today") {
-        return d.getFullYear() === y && d.getMonth() === m && d.getDate() === dy;
-      }
-      if (_activeDate === "week") {
-        const day = now.getDay();
-        const start = new Date(y, m, dy - day);
-        const end = new Date(y, m, dy + (6 - day), 23, 59, 59);
-        return d >= start && d <= end;
-      }
-      if (_activeDate === "weekend") {
-        const day = now.getDay();
-        const satOffset = (6 - day + 7) % 7;
-        const sat = new Date(y, m, dy + satOffset);
-        const sun = new Date(y, m, dy + satOffset + 1, 23, 59, 59);
-        return d >= sat && d <= sun;
-      }
-      if (_activeDate === "month") {
-        return d.getFullYear() === y && d.getMonth() === m;
-      }
-      return true;
-    }
-    function renderActiveFilterPill() {
-      let host = document.getElementById("evtActiveFilters");
-      if (!host) {
-        const strip = document.getElementById("evtFilterStrip");
-        if (!strip || !strip.parentNode) return;
-        host = document.createElement("div");
-        host.id = "evtActiveFilters";
-        host.className = "evt-active-filters mt-2 flex flex-wrap gap-2";
-        strip.parentNode.insertBefore(host, strip.nextSibling);
-      }
-      if (!_activeCategory) {
-        host.innerHTML = "";
-        return;
-      }
-      const esc = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
-      const emoji = C.CATEGORY_EMOJI && C.CATEGORY_EMOJI[_activeCategory] || "\u{1F4C5}";
-      const label = C.CATEGORY_TAG && C.CATEGORY_TAG[_activeCategory]?.label || _activeCategory;
-      host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc(label) + '</span><span aria-hidden="true" class="text-brand-500">\xD7</span><span class="sr-only">Clear ' + esc(label) + " filter</span></button>";
-      host.querySelector("[data-clear-cat]")?.addEventListener("click", () => {
-        _activeCategory = "";
-        persistState();
-        api().renderEvents?.();
-      });
-    }
-    function switchLifecycleTab(tab) {
-      window.evtActiveTab = tab;
-      persistState();
-      document.querySelectorAll("#evtLifecycleSeg .evt-seg__btn").forEach((b) => {
-        const on = b.dataset.filter === tab;
-        b.classList.toggle("evt-seg__btn--active", on);
-        b.setAttribute("aria-selected", on ? "true" : "false");
-      });
-      api().renderEvents?.();
-    }
-    function clearFiltersForEmptySearch() {
-      api().setSearchQuery?.("");
-      _activeType = "all";
-      _activeCategory = "";
-      const menuBtn = document.getElementById("evtTypeMenuBtn");
-      if (menuBtn) {
-        menuBtn.dataset.type = "all";
+  }
+  function syncTypeChips(type) {
+    const t = type || "all";
+    document.querySelectorAll("#evtTypeChips .evt-type-chip").forEach((c) => {
+      const on = (c.dataset.type || "all") === t;
+      c.classList.toggle("evt-type-chip--active", on);
+      c.setAttribute("aria-selected", on ? "true" : "false");
+    });
+  }
+  function applyRestoredUi() {
+    const tab = window.evtActiveTab || "upcoming";
+    document.querySelectorAll("#evtLifecycleSeg .evt-seg__btn").forEach((b) => {
+      const on = b.dataset.filter === tab;
+      b.classList.toggle("evt-seg__btn--active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    const menuBtn = document.getElementById("evtTypeMenuBtn");
+    if (menuBtn) {
+      menuBtn.dataset.type = _activeType;
+      const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + _activeType + '"]');
+      if (opt) {
+        const label = opt.textContent.replace(/\s+events?$/i, "").trim();
         const labelEl = menuBtn.querySelector("[data-type-label]");
-        if (labelEl) labelEl.textContent = "All";
+        if (labelEl) labelEl.textContent = label;
+        document.querySelectorAll("#evtTypeMenu .evt-type-opt").forEach(
+          (o) => o.classList.toggle("evt-type-opt--active", o === opt)
+        );
       }
-      document.querySelectorAll("#evtTypeMenu .evt-type-opt").forEach(
-        (o) => o.classList.toggle("evt-type-opt--active", o.dataset.type === "all")
-      );
-      syncTypeChips("all");
+      const sel = document.getElementById("typeFilter");
+      if (sel) sel.value = _activeType;
+    }
+    syncTypeChips(_activeType);
+    const q = api3().getSearchQuery?.() ?? "";
+    if (q) {
+      const input = document.getElementById("evtSearchInput");
+      const clear = document.getElementById("evtSearchClear");
+      const expand = document.getElementById("evtSearchExpand");
+      const toggle = document.getElementById("evtSearchToggle");
+      if (input) input.value = q;
+      if (clear) clear.classList.remove("hidden");
+      if (expand) expand.classList.remove("hidden");
+      if (toggle) toggle.setAttribute("aria-expanded", "true");
+    }
+    api3().applyViewChrome?.();
+  }
+  function matchesType(ev) {
+    if (_activeType === "all") return true;
+    return ev.event_type === _activeType;
+  }
+  function matchesCategory(ev) {
+    if (!_activeCategory) return true;
+    return ev.category === _activeCategory;
+  }
+  function matchesLifecycle(ev) {
+    const tab = window.evtActiveTab || "upcoming";
+    const now = /* @__PURE__ */ new Date();
+    const start = new Date(ev.start_date);
+    const rsvps = window.evtAllRsvps || {};
+    if (tab === "upcoming") {
+      if (ev.status === "completed") return false;
+      return start >= now || ev.status === "active" || ev.status === "open" || ev.status === "confirmed" || ev.status === "draft";
+    }
+    if (tab === "past") {
+      return ev.status === "completed" || start < now;
+    }
+    if (tab === "going") {
+      const r = rsvps[ev.id];
+      return r && r.status === "going";
+    }
+    if (tab === "saved") {
+      const r = rsvps[ev.id];
+      return r && r.status === "maybe";
+    }
+    return true;
+  }
+  function matchesDate(ev) {
+    const activeDay = api3().getActiveDay?.() ?? "";
+    if (activeDay) {
+      const d2 = new Date(ev.start_date);
+      const iso = d2.getFullYear() + "-" + String(d2.getMonth() + 1).padStart(2, "0") + "-" + String(d2.getDate()).padStart(2, "0");
+      if (iso !== activeDay) return false;
+    }
+    if (_activeDate === "any") return true;
+    const d = new Date(ev.start_date);
+    const now = /* @__PURE__ */ new Date();
+    const y = now.getFullYear(), m = now.getMonth(), dy = now.getDate();
+    if (_activeDate === "today") {
+      return d.getFullYear() === y && d.getMonth() === m && d.getDate() === dy;
+    }
+    if (_activeDate === "week") {
+      const day = now.getDay();
+      const start = new Date(y, m, dy - day);
+      const end = new Date(y, m, dy + (6 - day), 23, 59, 59);
+      return d >= start && d <= end;
+    }
+    if (_activeDate === "weekend") {
+      const day = now.getDay();
+      const satOffset = (6 - day + 7) % 7;
+      const sat = new Date(y, m, dy + satOffset);
+      const sun = new Date(y, m, dy + satOffset + 1, 23, 59, 59);
+      return d >= sat && d <= sun;
+    }
+    if (_activeDate === "month") {
+      return d.getFullYear() === y && d.getMonth() === m;
+    }
+    return true;
+  }
+  function renderActiveFilterPill() {
+    let host = document.getElementById("evtActiveFilters");
+    if (!host) {
+      const strip = document.getElementById("evtFilterStrip");
+      if (!strip || !strip.parentNode) return;
+      host = document.createElement("div");
+      host.id = "evtActiveFilters";
+      host.className = "evt-active-filters mt-2 flex flex-wrap gap-2";
+      strip.parentNode.insertBefore(host, strip.nextSibling);
+    }
+    if (!_activeCategory) {
+      host.innerHTML = "";
+      return;
+    }
+    const esc = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    const emoji = C2.CATEGORY_EMOJI && C2.CATEGORY_EMOJI[_activeCategory] || "\u{1F4C5}";
+    const label = C2.CATEGORY_TAG && C2.CATEGORY_TAG[_activeCategory]?.label || _activeCategory;
+    host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc(label) + '</span><span aria-hidden="true" class="text-brand-500">\xD7</span><span class="sr-only">Clear ' + esc(label) + " filter</span></button>";
+    host.querySelector("[data-clear-cat]")?.addEventListener("click", () => {
+      _activeCategory = "";
       persistState();
-      api().renderEvents?.();
+      api3().renderEvents?.();
+    });
+  }
+  function switchLifecycleTab(tab) {
+    window.evtActiveTab = tab;
+    persistState();
+    document.querySelectorAll("#evtLifecycleSeg .evt-seg__btn").forEach((b) => {
+      const on = b.dataset.filter === tab;
+      b.classList.toggle("evt-seg__btn--active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    api3().renderEvents?.();
+  }
+  function clearFiltersForEmptySearch() {
+    api3().setSearchQuery?.("");
+    _activeType = "all";
+    _activeCategory = "";
+    const menuBtn = document.getElementById("evtTypeMenuBtn");
+    if (menuBtn) {
+      menuBtn.dataset.type = "all";
+      const labelEl = menuBtn.querySelector("[data-type-label]");
+      if (labelEl) labelEl.textContent = "All";
     }
-    function setActiveType(type) {
-      _activeType = type || "all";
-    }
-    function setActiveCategory(cat) {
-      _activeCategory = cat || "";
-    }
-    function toggleActiveCategory(cat) {
-      _activeCategory = _activeCategory === cat ? "" : cat;
-    }
-    function initDateMenu() {
-      const btn = document.getElementById("evtDateMenuBtn");
-      const menu = document.getElementById("evtDateMenu");
-      if (!btn || !menu) return;
-      const close = () => {
+    document.querySelectorAll("#evtTypeMenu .evt-type-opt").forEach(
+      (o) => o.classList.toggle("evt-type-opt--active", o.dataset.type === "all")
+    );
+    syncTypeChips("all");
+    persistState();
+    api3().renderEvents?.();
+  }
+  function setActiveType(type) {
+    _activeType = type || "all";
+  }
+  function setActiveCategory(cat) {
+    _activeCategory = cat || "";
+  }
+  function toggleActiveCategory(cat) {
+    _activeCategory = _activeCategory === cat ? "" : cat;
+  }
+  function initDateMenu() {
+    const btn = document.getElementById("evtDateMenuBtn");
+    const menu = document.getElementById("evtDateMenu");
+    if (!btn || !menu) return;
+    const close = () => {
+      menu.classList.add("hidden");
+      btn.setAttribute("aria-expanded", "false");
+    };
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const willOpen = menu.classList.contains("hidden");
+      menu.classList.toggle("hidden", !willOpen);
+      btn.setAttribute("aria-expanded", String(willOpen));
+    });
+    document.addEventListener("click", (e) => {
+      if (!menu.contains(e.target) && e.target !== btn) close();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") close();
+    });
+    menu.querySelectorAll(".evt-date-opt").forEach((opt) => {
+      opt.addEventListener("click", () => {
+        _activeDate = opt.dataset.date || "any";
+        btn.dataset.date = _activeDate;
+        const labelEl = btn.querySelector("[data-date-label]");
+        if (labelEl) labelEl.textContent = _activeDate === "any" ? "Date" : opt.textContent.trim();
+        menu.querySelectorAll(".evt-date-opt").forEach((o) => o.classList.toggle("evt-date-opt--active", o === opt));
+        close();
+        api3().renderEvents?.();
+      });
+    });
+  }
+  function initFilterChips() {
+    const segBtns = Array.from(document.querySelectorAll("#evtLifecycleSeg .evt-seg__btn"));
+    segBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        segBtns.forEach((b) => {
+          b.classList.remove("evt-seg__btn--active");
+          b.setAttribute("aria-selected", "false");
+        });
+        btn.classList.add("evt-seg__btn--active");
+        btn.setAttribute("aria-selected", "true");
+        window.evtActiveTab = btn.dataset.filter;
+        api3().setExpandedBucket?.(null);
+        persistState();
+        api3().renderEvents?.();
+      });
+    });
+    const menuBtn = document.getElementById("evtTypeMenuBtn");
+    const menu = document.getElementById("evtTypeMenu");
+    if (menuBtn && menu) {
+      const closeMenu = () => {
         menu.classList.add("hidden");
-        btn.setAttribute("aria-expanded", "false");
+        menuBtn.setAttribute("aria-expanded", "false");
       };
-      btn.addEventListener("click", (e) => {
+      menuBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         const willOpen = menu.classList.contains("hidden");
         menu.classList.toggle("hidden", !willOpen);
-        btn.setAttribute("aria-expanded", String(willOpen));
+        menuBtn.setAttribute("aria-expanded", String(willOpen));
       });
       document.addEventListener("click", (e) => {
-        if (!menu.contains(e.target) && e.target !== btn) close();
+        if (!menu.contains(e.target) && e.target !== menuBtn) closeMenu();
       });
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") close();
+        if (e.key === "Escape") closeMenu();
       });
-      menu.querySelectorAll(".evt-date-opt").forEach((opt) => {
+      menu.querySelectorAll(".evt-type-opt").forEach((opt) => {
         opt.addEventListener("click", () => {
-          _activeDate = opt.dataset.date || "any";
-          btn.dataset.date = _activeDate;
-          const labelEl = btn.querySelector("[data-date-label]");
-          if (labelEl) labelEl.textContent = _activeDate === "any" ? "Date" : opt.textContent.trim();
-          menu.querySelectorAll(".evt-date-opt").forEach((o) => o.classList.toggle("evt-date-opt--active", o === opt));
-          close();
-          api().renderEvents?.();
-        });
-      });
-    }
-    function initFilterChips() {
-      const segBtns = Array.from(document.querySelectorAll("#evtLifecycleSeg .evt-seg__btn"));
-      segBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          segBtns.forEach((b) => {
-            b.classList.remove("evt-seg__btn--active");
-            b.setAttribute("aria-selected", "false");
-          });
-          btn.classList.add("evt-seg__btn--active");
-          btn.setAttribute("aria-selected", "true");
-          window.evtActiveTab = btn.dataset.filter;
-          api().setExpandedBucket?.(null);
+          _activeType = opt.dataset.type || "all";
+          menuBtn.dataset.type = _activeType;
+          const label = opt.textContent.replace(/\s+events?$/i, "").trim();
+          const labelEl = menuBtn.querySelector("[data-type-label]");
+          if (labelEl) labelEl.textContent = label;
+          menu.querySelectorAll(".evt-type-opt").forEach(
+            (o) => o.classList.toggle("evt-type-opt--active", o === opt)
+          );
+          const sel = document.getElementById("typeFilter");
+          if (sel) sel.value = _activeType;
+          syncTypeChips(_activeType);
+          closeMenu();
           persistState();
-          api().renderEvents?.();
+          api3().renderEvents?.();
         });
       });
-      const menuBtn = document.getElementById("evtTypeMenuBtn");
-      const menu = document.getElementById("evtTypeMenu");
-      if (menuBtn && menu) {
-        const closeMenu = () => {
-          menu.classList.add("hidden");
-          menuBtn.setAttribute("aria-expanded", "false");
-        };
-        menuBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const willOpen = menu.classList.contains("hidden");
-          menu.classList.toggle("hidden", !willOpen);
-          menuBtn.setAttribute("aria-expanded", String(willOpen));
-        });
-        document.addEventListener("click", (e) => {
-          if (!menu.contains(e.target) && e.target !== menuBtn) closeMenu();
-        });
-        document.addEventListener("keydown", (e) => {
-          if (e.key === "Escape") closeMenu();
-        });
-        menu.querySelectorAll(".evt-type-opt").forEach((opt) => {
-          opt.addEventListener("click", () => {
-            _activeType = opt.dataset.type || "all";
-            menuBtn.dataset.type = _activeType;
-            const label = opt.textContent.replace(/\s+events?$/i, "").trim();
-            const labelEl = menuBtn.querySelector("[data-type-label]");
-            if (labelEl) labelEl.textContent = label;
-            menu.querySelectorAll(".evt-type-opt").forEach(
-              (o) => o.classList.toggle("evt-type-opt--active", o === opt)
-            );
-            const sel = document.getElementById("typeFilter");
-            if (sel) sel.value = _activeType;
-            syncTypeChips(_activeType);
-            closeMenu();
-            persistState();
-            api().renderEvents?.();
-          });
-        });
-      }
-      const chipRail = document.getElementById("evtTypeChips");
-      if (chipRail) {
-        chipRail.querySelectorAll(".evt-type-chip").forEach((chip) => {
-          chip.addEventListener("click", () => {
-            const t = chip.dataset.type || "all";
-            if (t === _activeType) return;
-            _activeType = t;
-            syncTypeChips(t);
-            const mBtn = document.getElementById("evtTypeMenuBtn");
-            if (mBtn) {
-              mBtn.dataset.type = t;
-              const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + t + '"]');
-              if (opt) {
-                const label = opt.textContent.replace(/\s+events?$/i, "").trim();
-                const labelEl = mBtn.querySelector("[data-type-label]");
-                if (labelEl) labelEl.textContent = label;
-                document.querySelectorAll("#evtTypeMenu .evt-type-opt").forEach(
-                  (o) => o.classList.toggle("evt-type-opt--active", o === opt)
-                );
-              }
+    }
+    const chipRail = document.getElementById("evtTypeChips");
+    if (chipRail) {
+      chipRail.querySelectorAll(".evt-type-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const t = chip.dataset.type || "all";
+          if (t === _activeType) return;
+          _activeType = t;
+          syncTypeChips(t);
+          const mBtn = document.getElementById("evtTypeMenuBtn");
+          if (mBtn) {
+            mBtn.dataset.type = t;
+            const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + t + '"]');
+            if (opt) {
+              const label = opt.textContent.replace(/\s+events?$/i, "").trim();
+              const labelEl = mBtn.querySelector("[data-type-label]");
+              if (labelEl) labelEl.textContent = label;
+              document.querySelectorAll("#evtTypeMenu .evt-type-opt").forEach(
+                (o) => o.classList.toggle("evt-type-opt--active", o === opt)
+              );
             }
-            const sel = document.getElementById("typeFilter");
-            if (sel) sel.value = t;
-            persistState();
-            api().renderEvents?.();
-          });
-        });
-      }
-      document.getElementById("emptyCreateBtn")?.addEventListener("click", () => {
-        document.getElementById("createEventBtn")?.click();
-      });
-      initDateMenu();
-    }
-    restoreState();
-    window.PortalEventsListFilters = {
-      persistState,
-      restoreState,
-      applyRestoredUi,
-      syncTypeChips,
-      matchesType,
-      matchesCategory,
-      matchesLifecycle,
-      matchesDate,
-      renderActiveFilterPill,
-      switchLifecycleTab,
-      clearFiltersForEmptySearch,
-      initFilterChips,
-      initDateMenu,
-      getActiveType: () => _activeType,
-      setActiveType,
-      getActiveCategory: () => _activeCategory,
-      setActiveCategory,
-      toggleActiveCategory
-    };
-  })();
-
-  // js/portal/events/list/calendar.js
-  (function() {
-    "use strict";
-    const C = window.EventsConstants || {};
-    const MONTH_NAMES = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December"
-    ];
-    const DAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    function api() {
-      return window.PortalEventsListCalendarApi || {};
-    }
-    function localDateKey(d) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return y + "-" + m + "-" + day;
-    }
-    function groupEventsByDay(events) {
-      const F = window.PortalEventsListFilters;
-      const map = {};
-      events.forEach((ev) => {
-        if (!ev || !ev.start_date || ev.status === "cancelled") return;
-        if (api().notHidden && !api().notHidden(ev)) return;
-        if (F && !F.matchesType(ev)) return;
-        if (F && !F.matchesCategory(ev)) return;
-        const k = localDateKey(new Date(ev.start_date));
-        (map[k] = map[k] || []).push(ev);
-      });
-      Object.keys(map).forEach((k) => {
-        map[k].sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-      });
-      return map;
-    }
-    function closeDayModal() {
-      const modal = document.getElementById("evtDayModal");
-      if (!modal) return;
-      modal.classList.add("hidden");
-      document.body.classList.remove("overflow-hidden");
-    }
-    function openDayModal(dateKey) {
-      const modal = document.getElementById("evtDayModal");
-      const title = document.getElementById("evtDayModalTitle");
-      const body = document.getElementById("evtDayModalBody");
-      if (!modal || !title || !body) return;
-      const all = window.evtAllEvents || [];
-      const attendees = window.evtAttendees || {};
-      const counts = window.evtAttendeeCounts || {};
-      const byDay = groupEventsByDay(all);
-      const items = byDay[dateKey] || [];
-      const miniCard = api().miniCard;
-      const [y, m, d] = dateKey.split("-").map(Number);
-      const dateObj = new Date(y, m - 1, d);
-      title.textContent = dateObj.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-      if (!items.length) {
-        body.innerHTML = '<div class="text-center text-sm text-gray-500 py-6">No events on this day.</div>';
-      } else if (typeof miniCard === "function") {
-        body.innerHTML = '<div class="flex flex-col gap-2">' + items.map(
-          (ev) => miniCard(ev, attendees[ev.id] || [], counts[ev.id]).replace("snap-start shrink-0 w-[76%] sm:w-64", "w-full")
-        ).join("") + "</div>";
-      } else {
-        body.innerHTML = '<div class="text-center text-sm text-gray-500 py-6">No events on this day.</div>';
-      }
-      modal.classList.remove("hidden");
-      document.body.classList.add("overflow-hidden");
-      if (!modal.dataset.wired) {
-        modal.dataset.wired = "1";
-        modal.addEventListener("click", (e) => {
-          if (e.target.closest("[data-day-close]")) {
-            closeDayModal();
-          }
-        });
-        document.addEventListener("keydown", (e) => {
-          if (e.key === "Escape" && !modal.classList.contains("hidden")) closeDayModal();
-        });
-      }
-    }
-    function wireCalendarClicks() {
-      const mount = document.getElementById("evtCalendarMount");
-      if (!mount || mount.dataset.calWired === "1") return;
-      mount.dataset.calWired = "1";
-      mount.addEventListener("click", (e) => {
-        const nav = e.target.closest("[data-cal-nav]");
-        if (nav) {
-          e.preventDefault();
-          const dir = nav.getAttribute("data-cal-nav");
-          let calMonth = api().getCalMonth?.();
-          if (dir === "today") {
-            const now = /* @__PURE__ */ new Date();
-            calMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-          } else if (calMonth) {
-            const delta = dir === "prev" ? -1 : 1;
-            calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + delta, 1);
-          }
-          api().setCalMonth?.(calMonth);
-          renderCalendar();
-          return;
-        }
-        const dayBtn = e.target.closest("[data-cal-day]");
-        if (dayBtn) {
-          e.preventDefault();
-          openDayModal(dayBtn.getAttribute("data-cal-day"));
-        }
-      });
-    }
-    function renderCalendar() {
-      const mount = document.getElementById("evtCalendarMount");
-      if (!mount) return;
-      const esc = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
-      let calMonth = api().getCalMonth?.();
-      if (!calMonth) {
-        const now = /* @__PURE__ */ new Date();
-        calMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        api().setCalMonth?.(calMonth);
-      }
-      const year = calMonth.getFullYear();
-      const month = calMonth.getMonth();
-      const first = new Date(year, month, 1);
-      const last = new Date(year, month + 1, 0);
-      const leadBlank = first.getDay();
-      const daysInMonth = last.getDate();
-      const todayKey = localDateKey(/* @__PURE__ */ new Date());
-      const all = window.evtAllEvents || [];
-      const byDay = groupEventsByDay(all);
-      const parts = [];
-      parts.push(
-        '<div class="evt-cal-header flex items-center justify-between mb-3"><div class="flex items-center gap-1"><button type="button" class="evt-cal-nav" data-cal-nav="prev" aria-label="Previous month"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button><button type="button" class="evt-cal-nav" data-cal-nav="next" aria-label="Next month"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button></div><h3 class="evt-cal-title text-base font-semibold text-gray-900">' + MONTH_NAMES[month] + " " + year + '</h3><button type="button" class="evt-cal-today text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-1 rounded-md hover:bg-brand-50" data-cal-nav="today">Today</button></div>'
-      );
-      parts.push('<div class="evt-cal-weekdays grid grid-cols-7 gap-1 mb-1">');
-      DAY_SHORT.forEach((d) => {
-        parts.push('<div class="text-center text-[11px] font-semibold tracking-wide text-gray-500 py-1">' + d + "</div>");
-      });
-      parts.push("</div>");
-      parts.push('<div class="evt-cal-grid grid grid-cols-7 gap-1">');
-      for (let i = 0; i < leadBlank; i++) {
-        parts.push('<div class="evt-cal-cell evt-cal-cell--blank" aria-hidden="true"></div>');
-      }
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dateObj = new Date(year, month, d);
-        const key = localDateKey(dateObj);
-        const dayEvents = byDay[key] || [];
-        const count = dayEvents.length;
-        const isToday = key === todayKey;
-        const hasEv = count > 0;
-        let dots = "";
-        if (hasEv) {
-          const shown = dayEvents.slice(0, 3);
-          dots = '<div class="evt-cal-dots">' + shown.map((ev) => {
-            const grad = C.CATEGORY_GRADIENT && C.CATEGORY_GRADIENT[ev.category] || C.DEFAULT_GRADIENT || "linear-gradient(135deg,#6366f1,#8b5cf6)";
-            const m = /#([0-9a-f]{3,6})/i.exec(grad);
-            const color = m ? "#" + m[1] : "#6366f1";
-            return '<span class="evt-cal-dot" style="background:' + color + '"></span>';
-          }).join("") + (count > 3 ? '<span class="evt-cal-dot-more">+' + (count - 3) + "</span>" : "") + "</div>";
-        }
-        const clsCell = "evt-cal-cell" + (hasEv ? " evt-cal-cell--has" : "") + (isToday ? " evt-cal-cell--today" : "");
-        parts.push(
-          '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc(dateObj.toDateString()) + '"' : 'aria-label="' + esc(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
-        );
-      }
-      parts.push("</div>");
-      mount.innerHTML = parts.join("");
-      wireCalendarClicks();
-    }
-    window.PortalEventsListCalendar = {
-      renderCalendar,
-      wireCalendarClicks,
-      openDayModal,
-      closeDayModal,
-      groupEventsByDay,
-      localDateKey
-    };
-  })();
-
-  // js/portal/events/list/hero-rails.js
-  (function() {
-    "use strict";
-    const C = window.EventsConstants || {};
-    const H = window.EventsHelpers || {};
-    const P = window.EventsPills || {};
-    function api() {
-      return window.PortalEventsListHeroRailsApi || {};
-    }
-    function pickHero(events) {
-      return events.find(
-        (e) => e.is_featured === true && e.status !== "cancelled" && e.status !== "draft"
-      ) || null;
-    }
-    function heroBg(event, stripGradient) {
-      const url = event.banner_url;
-      if (url) {
-        const safe = String(url).replace(/'/g, "%27");
-        if (stripGradient) {
-          return "background: url('" + safe + "') center/cover;";
-        }
-        return "background: linear-gradient(0deg, rgba(0,0,0,.65), rgba(0,0,0,.05) 55%), url('" + safe + "') center/cover;";
-      }
-      const grad = C.CATEGORY_GRADIENT && (C.CATEGORY_GRADIENT[event.category] || C.CATEGORY_GRADIENT.default) || "linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)";
-      return "background: " + grad + ";";
-    }
-    function renderHero(event, rsvp) {
-      const heroEl = document.getElementById("evtHero");
-      if (!heroEl) return;
-      if (!event) {
-        heroEl.innerHTML = "";
-        return;
-      }
-      const esc = H.escapeHtml || ((s) => String(s == null ? "" : s));
-      const start = new Date(event.start_date);
-      const rel = H.relativeDate ? H.relativeDate(start) : "";
-      const time = H.formatDate ? H.formatDate(event.start_date, "time") : "";
-      const dateLine = [rel, time].filter(Boolean).join(" \xB7 ");
-      const loc = event.location_nickname || event.location_text || "";
-      const stateP = (P.statePill ? P.statePill(event) : "") || "";
-      const countP = (P.countdownChip ? P.countdownChip(event) : "") || "";
-      const goingRibbon = rsvp && rsvp.status === "going" ? '<div class="absolute top-3 left-3 z-10 inline-flex items-center gap-1 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md backdrop-blur-sm">\u2713 Going</div>' : "";
-      const isFav = !!(rsvp && rsvp.status === "maybe");
-      const heartCls = "evt-hero-heart" + (isFav ? " evt-hero-heart--on" : "");
-      const heartPath = isFav ? '<path d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z" fill="currentColor"/>' : '<path stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none" d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z"/>';
-      const heartBtn = '<button type="button" data-evt-hero-heart="' + esc(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
-      const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
-      const useVlift = document.body.classList.contains("evt-vlift");
-      if (useVlift) {
-        const dateLong = (() => {
-          try {
-            return start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-          } catch (_) {
-            return "";
-          }
-        })();
-        const timeShort = time || (() => {
-          try {
-            return start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-          } catch (_) {
-            return "";
-          }
-        })();
-        const calIcon = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 9h18M8 3v4M16 3v4"/></svg>';
-        const clkIcon = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg>';
-        const pinIcon = loc ? '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s7-7.58 7-13a7 7 0 10-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg>' : "";
-        const _titleCase = (s) => {
-          if (!s) return "";
-          const str = String(s);
-          if (str.toLowerCase() === "llc") return "LLC";
-          return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-        };
-        const hostTypeLabel = _titleCase(event.event_type || "");
-        const hostCatLabel = _titleCase(event.category || "");
-        const hostLine = [
-          hostTypeLabel ? "Hosted by " + hostTypeLabel : "",
-          hostCatLabel
-        ].filter(Boolean).join(" \xB7 ");
-        const fDay = (() => {
-          try {
-            return start.getDate();
-          } catch (_) {
-            return "";
-          }
-        })();
-        const fMon = (() => {
-          try {
-            return start.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
-          } catch (_) {
-            return "";
-          }
-        })();
-        const fDow = (() => {
-          try {
-            return start.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
-          } catch (_) {
-            return "";
-          }
-        })();
-        const descRaw = event.description ? String(event.description).trim() : "";
-        const descShort = descRaw.length > 180 ? descRaw.slice(0, 177) + "\u2026" : descRaw;
-        heroEl.innerHTML = '<div class="evt-hero-vlift relative"><a href="' + href + '" data-evt-hero="' + esc(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event, true) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + "</div>" + // F14 — FEATURED EVENT kicker (vlift only; only shown when admin-featured)
-        (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : "") + // Bottom-edge dark fade for legibility
-        '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div><div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' + (fMon ? '<span class="evt-hero-datechip__mon">' + esc(fMon) + "</span>" : "") + (fDay !== "" ? '<span class="evt-hero-datechip__day">' + esc(fDay) + "</span>" : "") + (fDow ? '<span class="evt-hero-datechip__dow">' + esc(fDow) + "</span>" : "") + '</div><div class="evt-hero-meta-body">' + // E7 — Avatar cluster
-        attendeeCluster(event.id) + '<h2 class="text-xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc(event.title || "Untitled event") + "</h2>" + // F14 — Host line
-        (hostLine ? '<p class="evt-hero-host" data-f14-host>' + esc(hostLine) + "</p>" : "") + // F20 — Time + location on the same line
-        (timeShort || loc ? '<div class="evt-hero-timeloc" data-f14-timeloc>' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc(loc) + "</span>" : "") + "</div>" : "") + '</div></div><div class="evt-hero-side" data-f14-side>' + (descShort ? '<p class="evt-hero-side__desc">' + esc(descShort) + "</p>" : "") + '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc(event.id) + '" role="button" aria-hidden="true">View Details</span></div></a><button type="button" data-evt-hero-cta="' + esc(event.id) + '" class="evt-hero-cta" aria-label="View details for ' + esc(event.title || "this event") + '">View Details</button></div>';
-        const ctaBtn = heroEl.querySelector("button[data-evt-hero-cta]");
-        if (ctaBtn) {
-          ctaBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (href && href !== "javascript:void(0)") {
-              window.location.href = href;
-            } else if (typeof window.evtNavigateToEvent === "function") {
-              window.evtNavigateToEvent(event);
-            } else if (typeof window.evtOpenDetail === "function") {
-              window.evtOpenDetail(event);
-            }
-          });
-        }
-        const cluster = heroEl.querySelector("button[data-evt-hero-going]");
-        if (cluster) {
-          cluster.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (typeof window.evtNavigateToEvent === "function") {
-              window.evtNavigateToEvent(event);
-            } else if (typeof window.evtOpenDetail === "function") {
-              window.evtOpenDetail(event);
-            } else if (event.slug) {
-              window.location.href = "?event=" + encodeURIComponent(event.slug);
-            }
-          });
-        }
-        const heart = heroEl.querySelector("button[data-evt-hero-heart]");
-        if (heart) {
-          heart.addEventListener("click", async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (typeof window.evtHandleRsvp !== "function") return;
-            try {
-              heart.disabled = true;
-              await window.evtHandleRsvp(event.id, "maybe");
-            } catch (err) {
-              console.error("Hero heart toggle failed", err);
-            } finally {
-              heart.disabled = false;
-            }
-          });
-        }
-      } else {
-        heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc(loc) + "</p>" : "") + "</div></a>";
-      }
-      const link = heroEl.querySelector("a[data-evt-hero]");
-      if (link) {
-        link.addEventListener("click", (e) => {
-          if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
-          e.preventDefault();
-          if (event.slug && typeof window.evtNavigateToEvent === "function") {
-            window.evtNavigateToEvent(event.slug);
-          } else if (typeof window.evtOpenDetail === "function") {
-            window.evtOpenDetail(event.id);
-          }
-        });
-      }
-    }
-    function attendeeCluster(eventId2) {
-      const list = window.evtAttendees && window.evtAttendees[eventId2] || [];
-      if (!list.length) return "";
-      const esc = H.escapeHtml || ((s) => String(s == null ? "" : s));
-      const bubs = list.slice(0, 5).map((p, i) => {
-        const pic = p && p.profile_picture_url;
-        const first = p && p.first_name || "";
-        const initial = (first.trim().charAt(0) || "?").toUpperCase();
-        const ml = i === 0 ? "" : " -ml-2";
-        const inner = pic ? '<img src="' + esc(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc(initial) + "</span>";
-        return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc(first) + '">' + inner + "</span>";
-      }).join("");
-      const trueCount = window.evtAttendeeCounts && window.evtAttendeeCounts[eventId2] || list.length;
-      const labelN = String(trueCount);
-      return '<button type="button" data-evt-hero-going="' + esc(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
-    }
-    function renderLiveBanner(events) {
-      const el = document.getElementById("evtLiveBanner");
-      if (!el) return;
-      const now = /* @__PURE__ */ new Date();
-      const live = (events || []).filter((e) => {
-        if (e.status === "cancelled" || e.status === "draft") return false;
-        const start = new Date(e.start_date);
-        if (isNaN(start) || start > now) return false;
-        const endRaw = e.end_date || e.end_at || e.ends_at;
-        const end = endRaw ? new Date(endRaw) : new Date(start.getTime() + 2 * 60 * 60 * 1e3);
-        return now <= end;
-      });
-      if (!live.length) {
-        el.classList.add("hidden");
-        el.innerHTML = "";
-        return;
-      }
-      const esc = H.escapeHtml || ((s) => String(s == null ? "" : s));
-      const first = live[0];
-      const label = live.length === 1 ? esc(first.title || "An event") + " is happening now" : live.length + " events happening now";
-      const href = live.length === 1 && first.slug ? "?event=" + encodeURIComponent(first.slug) : "javascript:void(0)";
-      el.classList.remove("hidden");
-      el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
-      const link = el.querySelector("a[data-evt-live]");
-      if (link && live.length === 1) {
-        link.addEventListener("click", (e) => {
-          if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
-          e.preventDefault();
-          if (first.slug && typeof window.evtNavigateToEvent === "function") {
-            window.evtNavigateToEvent(first.slug);
-          } else if (typeof window.evtOpenDetail === "function") {
-            window.evtOpenDetail(first.id);
-          }
-        });
-      }
-    }
-    function renderGoingRail(events, rsvps, attendees, heroId, eventsById) {
-      const rail = document.getElementById("evtGoingRail");
-      const scroll = document.getElementById("evtGoingRailScroll");
-      if (!rail || !scroll) return;
-      const now = /* @__PURE__ */ new Date();
-      const going = (events || []).filter((e) => {
-        if (e.id === heroId) return false;
-        if (e.status === "cancelled" || e.status === "draft") return false;
-        if (api().notHidden && !api().notHidden(e)) return false;
-        const r = rsvps[e.id];
-        if (!r || r.status !== "going") return false;
-        return new Date(e.start_date) >= now;
-      }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-      if (!going.length) {
-        rail.classList.add("hidden");
-        scroll.innerHTML = "";
-        return;
-      }
-      rail.classList.remove("hidden");
-      const counts = window.evtAttendeeCounts || {};
-      scroll.innerHTML = going.map((ev) => miniCard(ev, attendees[ev.id] || [], counts[ev.id])).join("");
-      scroll.querySelectorAll("a[data-evt-mini]").forEach((link) => {
-        const id = link.getAttribute("data-evt-mini");
-        const ev = eventsById[id];
-        if (!ev) return;
-        link.addEventListener("click", (e) => {
-          if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
-          e.preventDefault();
-          if (ev.slug && typeof window.evtNavigateToEvent === "function") {
-            window.evtNavigateToEvent(ev.slug);
-          } else if (typeof window.evtOpenDetail === "function") {
-            window.evtOpenDetail(ev.id);
-          }
-        });
-      });
-    }
-    function miniCard(event, attendees, goingCount) {
-      const esc = H.escapeHtml || ((s) => String(s == null ? "" : s));
-      const d = new Date(event.start_date);
-      const day = d.getDate();
-      const mon = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
-      const rel = H.relativeDate ? H.relativeDate(d) : "";
-      const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
-      const title = esc(event.title || "Untitled event");
-      const loc = event.location_nickname || event.location_text || "";
-      let bannerStyle;
-      if (event.banner_url) {
-        const safe = String(event.banner_url).replace(/'/g, "%27");
-        bannerStyle = "background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55)), url('" + safe + "') center/cover;";
-      } else {
-        const grad = C.CATEGORY_GRADIENT && (C.CATEGORY_GRADIENT[event.category] || C.DEFAULT_GRADIENT) || "linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)";
-        bannerStyle = "background: " + grad + ";";
-      }
-      const attCount = goingCount != null ? goingCount : (attendees || []).length;
-      const attLine = attCount ? '<span class="text-[11px] text-gray-500 truncate">' + attCount + " going</span>" : "";
-      const isPinnedLlc = event.is_pinned && event.event_type === "llc";
-      const pin = isPinnedLlc ? '<span class="evt-date-pin evt-date-pin--mini" aria-label="Pinned LLC event" title="Pinned">\u{1F4CC}</span>' : "";
-      return '<a href="' + href + '" data-evt-mini="' + esc(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc(rel) : "") + (loc && rel ? " \xB7 " : "") + esc(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
-    }
-    function renderTopPicks(events, attendees, heroId, eventsById) {
-      const rail = document.getElementById("evtTopPicks");
-      const scroll = document.getElementById("evtTopPicksScroll");
-      if (!rail || !scroll) return;
-      const useVlift = document.body.classList.contains("evt-vlift");
-      const tab = window.evtActiveTab || "upcoming";
-      const inSearch = !!(api().getSearchQuery?.() || "").trim();
-      if (!useVlift || tab !== "upcoming" || inSearch) {
-        rail.classList.add("hidden");
-        scroll.innerHTML = "";
-        return;
-      }
-      const now = /* @__PURE__ */ new Date();
-      const picks = (events || []).filter(
-        (e) => e.id !== heroId && e.is_pinned && e.event_type === "llc" && e.status !== "cancelled" && e.status !== "draft" && (api().notHidden ? api().notHidden(e) : true) && new Date(e.start_date) >= now
-      ).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-      if (picks.length < 2) {
-        rail.classList.add("hidden");
-        scroll.innerHTML = "";
-        return;
-      }
-      rail.classList.remove("hidden");
-      const counts = window.evtAttendeeCounts || {};
-      scroll.innerHTML = picks.map((ev) => miniCard(ev, attendees[ev.id] || [], counts[ev.id])).join("");
-      scroll.querySelectorAll("a[data-evt-mini]").forEach((link) => {
-        const id = link.getAttribute("data-evt-mini");
-        const ev = eventsById[id];
-        if (!ev) return;
-        link.addEventListener("click", (e) => {
-          if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
-          e.preventDefault();
-          if (ev.slug && typeof window.evtNavigateToEvent === "function") {
-            window.evtNavigateToEvent(ev.slug);
-          } else if (typeof window.evtOpenDetail === "function") {
-            window.evtOpenDetail(ev.id);
-          }
-        });
-      });
-      const seeAll = document.getElementById("evtTopPicksSeeAll");
-      if (seeAll && !seeAll.dataset.wired) {
-        seeAll.dataset.wired = "1";
-        seeAll.addEventListener("click", (e) => {
-          e.preventDefault();
-          window.PortalEventsListFilters.setActiveType("llc");
-          window.PortalEventsListFilters.syncTypeChips("llc");
-          const menuBtn = document.getElementById("evtTypeMenuBtn");
-          if (menuBtn) {
-            menuBtn.dataset.type = "llc";
-            const labelEl = menuBtn.querySelector("[data-type-label]");
-            if (labelEl) labelEl.textContent = "LLC";
-            document.querySelectorAll("#evtTypeMenu .evt-type-opt").forEach(
-              (o) => o.classList.toggle("evt-type-opt--active", o.dataset.type === "llc")
-            );
           }
           const sel = document.getElementById("typeFilter");
-          if (sel) sel.value = "llc";
-          api().persistState?.();
-          api().renderEvents?.();
+          if (sel) sel.value = t;
+          persistState();
+          api3().renderEvents?.();
+        });
+      });
+    }
+    document.getElementById("emptyCreateBtn")?.addEventListener("click", () => {
+      document.getElementById("createEventBtn")?.click();
+    });
+    initDateMenu();
+  }
+  restoreState();
+  var PortalEventsListFilters = {
+    persistState,
+    restoreState,
+    applyRestoredUi,
+    syncTypeChips,
+    matchesType,
+    matchesCategory,
+    matchesLifecycle,
+    matchesDate,
+    renderActiveFilterPill,
+    switchLifecycleTab,
+    clearFiltersForEmptySearch,
+    initFilterChips,
+    initDateMenu,
+    getActiveType: () => _activeType,
+    setActiveType,
+    getActiveCategory: () => _activeCategory,
+    setActiveCategory,
+    toggleActiveCategory
+  };
+  globalThis.PortalEventsListFilters = PortalEventsListFilters;
+
+  // js/portal/events/list/calendar.js
+  var C3 = window.EventsConstants || {};
+  var MONTH_NAMES = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ];
+  var DAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  function api4() {
+    return window.PortalEventsListCalendarApi || {};
+  }
+  function localDateKey(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+  function groupEventsByDay(events) {
+    const F = window.PortalEventsListFilters;
+    const map = {};
+    events.forEach((ev) => {
+      if (!ev || !ev.start_date || ev.status === "cancelled") return;
+      if (api4().notHidden && !api4().notHidden(ev)) return;
+      if (F && !F.matchesType(ev)) return;
+      if (F && !F.matchesCategory(ev)) return;
+      const k = localDateKey(new Date(ev.start_date));
+      (map[k] = map[k] || []).push(ev);
+    });
+    Object.keys(map).forEach((k) => {
+      map[k].sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+    });
+    return map;
+  }
+  function closeDayModal() {
+    const modal = document.getElementById("evtDayModal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    document.body.classList.remove("overflow-hidden");
+  }
+  function openDayModal(dateKey) {
+    const modal = document.getElementById("evtDayModal");
+    const title = document.getElementById("evtDayModalTitle");
+    const body = document.getElementById("evtDayModalBody");
+    if (!modal || !title || !body) return;
+    const all = window.evtAllEvents || [];
+    const attendees = window.evtAttendees || {};
+    const counts = window.evtAttendeeCounts || {};
+    const byDay = groupEventsByDay(all);
+    const items = byDay[dateKey] || [];
+    const miniCard2 = api4().miniCard;
+    const [y, m, d] = dateKey.split("-").map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    title.textContent = dateObj.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+    if (!items.length) {
+      body.innerHTML = '<div class="text-center text-sm text-gray-500 py-6">No events on this day.</div>';
+    } else if (typeof miniCard2 === "function") {
+      body.innerHTML = '<div class="flex flex-col gap-2">' + items.map(
+        (ev) => miniCard2(ev, attendees[ev.id] || [], counts[ev.id]).replace("snap-start shrink-0 w-[76%] sm:w-64", "w-full")
+      ).join("") + "</div>";
+    } else {
+      body.innerHTML = '<div class="text-center text-sm text-gray-500 py-6">No events on this day.</div>';
+    }
+    modal.classList.remove("hidden");
+    document.body.classList.add("overflow-hidden");
+    if (!modal.dataset.wired) {
+      modal.dataset.wired = "1";
+      modal.addEventListener("click", (e) => {
+        if (e.target.closest("[data-day-close]")) {
+          closeDayModal();
+        }
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !modal.classList.contains("hidden")) closeDayModal();
+      });
+    }
+  }
+  function wireCalendarClicks() {
+    const mount = document.getElementById("evtCalendarMount");
+    if (!mount || mount.dataset.calWired === "1") return;
+    mount.dataset.calWired = "1";
+    mount.addEventListener("click", (e) => {
+      const nav = e.target.closest("[data-cal-nav]");
+      if (nav) {
+        e.preventDefault();
+        const dir = nav.getAttribute("data-cal-nav");
+        let calMonth = api4().getCalMonth?.();
+        if (dir === "today") {
+          const now = /* @__PURE__ */ new Date();
+          calMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        } else if (calMonth) {
+          const delta = dir === "prev" ? -1 : 1;
+          calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + delta, 1);
+        }
+        api4().setCalMonth?.(calMonth);
+        renderCalendar();
+        return;
+      }
+      const dayBtn = e.target.closest("[data-cal-day]");
+      if (dayBtn) {
+        e.preventDefault();
+        openDayModal(dayBtn.getAttribute("data-cal-day"));
+      }
+    });
+  }
+  function renderCalendar() {
+    const mount = document.getElementById("evtCalendarMount");
+    if (!mount) return;
+    const esc = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    let calMonth = api4().getCalMonth?.();
+    if (!calMonth) {
+      const now = /* @__PURE__ */ new Date();
+      calMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      api4().setCalMonth?.(calMonth);
+    }
+    const year = calMonth.getFullYear();
+    const month = calMonth.getMonth();
+    const first = new Date(year, month, 1);
+    const last = new Date(year, month + 1, 0);
+    const leadBlank = first.getDay();
+    const daysInMonth = last.getDate();
+    const todayKey = localDateKey(/* @__PURE__ */ new Date());
+    const all = window.evtAllEvents || [];
+    const byDay = groupEventsByDay(all);
+    const parts = [];
+    parts.push(
+      '<div class="evt-cal-header flex items-center justify-between mb-3"><div class="flex items-center gap-1"><button type="button" class="evt-cal-nav" data-cal-nav="prev" aria-label="Previous month"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button><button type="button" class="evt-cal-nav" data-cal-nav="next" aria-label="Next month"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button></div><h3 class="evt-cal-title text-base font-semibold text-gray-900">' + MONTH_NAMES[month] + " " + year + '</h3><button type="button" class="evt-cal-today text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-1 rounded-md hover:bg-brand-50" data-cal-nav="today">Today</button></div>'
+    );
+    parts.push('<div class="evt-cal-weekdays grid grid-cols-7 gap-1 mb-1">');
+    DAY_SHORT.forEach((d) => {
+      parts.push('<div class="text-center text-[11px] font-semibold tracking-wide text-gray-500 py-1">' + d + "</div>");
+    });
+    parts.push("</div>");
+    parts.push('<div class="evt-cal-grid grid grid-cols-7 gap-1">');
+    for (let i = 0; i < leadBlank; i++) {
+      parts.push('<div class="evt-cal-cell evt-cal-cell--blank" aria-hidden="true"></div>');
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateObj = new Date(year, month, d);
+      const key = localDateKey(dateObj);
+      const dayEvents = byDay[key] || [];
+      const count = dayEvents.length;
+      const isToday = key === todayKey;
+      const hasEv = count > 0;
+      let dots = "";
+      if (hasEv) {
+        const shown = dayEvents.slice(0, 3);
+        dots = '<div class="evt-cal-dots">' + shown.map((ev) => {
+          const grad = C3.CATEGORY_GRADIENT && C3.CATEGORY_GRADIENT[ev.category] || C3.DEFAULT_GRADIENT || "linear-gradient(135deg,#6366f1,#8b5cf6)";
+          const m = /#([0-9a-f]{3,6})/i.exec(grad);
+          const color = m ? "#" + m[1] : "#6366f1";
+          return '<span class="evt-cal-dot" style="background:' + color + '"></span>';
+        }).join("") + (count > 3 ? '<span class="evt-cal-dot-more">+' + (count - 3) + "</span>" : "") + "</div>";
+      }
+      const clsCell = "evt-cal-cell" + (hasEv ? " evt-cal-cell--has" : "") + (isToday ? " evt-cal-cell--today" : "");
+      parts.push(
+        '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc(dateObj.toDateString()) + '"' : 'aria-label="' + esc(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
+      );
+    }
+    parts.push("</div>");
+    mount.innerHTML = parts.join("");
+    wireCalendarClicks();
+  }
+  var PortalEventsListCalendar = {
+    renderCalendar,
+    wireCalendarClicks,
+    openDayModal,
+    closeDayModal,
+    groupEventsByDay,
+    localDateKey
+  };
+  globalThis.PortalEventsListCalendar = PortalEventsListCalendar;
+
+  // js/portal/events/list/hero-rails.js
+  var C4 = window.EventsConstants || {};
+  var H3 = window.EventsHelpers || {};
+  var P = window.EventsPills || {};
+  function api5() {
+    return window.PortalEventsListHeroRailsApi || {};
+  }
+  function pickHero(events) {
+    return events.find(
+      (e) => e.is_featured === true && e.status !== "cancelled" && e.status !== "draft"
+    ) || null;
+  }
+  function heroBg(event, stripGradient) {
+    const url = event.banner_url;
+    if (url) {
+      const safe = String(url).replace(/'/g, "%27");
+      if (stripGradient) {
+        return "background: url('" + safe + "') center/cover;";
+      }
+      return "background: linear-gradient(0deg, rgba(0,0,0,.65), rgba(0,0,0,.05) 55%), url('" + safe + "') center/cover;";
+    }
+    const grad = C4.CATEGORY_GRADIENT && (C4.CATEGORY_GRADIENT[event.category] || C4.CATEGORY_GRADIENT.default) || "linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)";
+    return "background: " + grad + ";";
+  }
+  function renderHero(event, rsvp) {
+    const heroEl = document.getElementById("evtHero");
+    if (!heroEl) return;
+    if (!event) {
+      heroEl.innerHTML = "";
+      return;
+    }
+    const esc = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const start = new Date(event.start_date);
+    const rel = H3.relativeDate ? H3.relativeDate(start) : "";
+    const time = H3.formatDate ? H3.formatDate(event.start_date, "time") : "";
+    const dateLine = [rel, time].filter(Boolean).join(" \xB7 ");
+    const loc = event.location_nickname || event.location_text || "";
+    const stateP = (P.statePill ? P.statePill(event) : "") || "";
+    const countP = (P.countdownChip ? P.countdownChip(event) : "") || "";
+    const goingRibbon = rsvp && rsvp.status === "going" ? '<div class="absolute top-3 left-3 z-10 inline-flex items-center gap-1 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md backdrop-blur-sm">\u2713 Going</div>' : "";
+    const isFav = !!(rsvp && rsvp.status === "maybe");
+    const heartCls = "evt-hero-heart" + (isFav ? " evt-hero-heart--on" : "");
+    const heartPath = isFav ? '<path d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z" fill="currentColor"/>' : '<path stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none" d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z"/>';
+    const heartBtn = '<button type="button" data-evt-hero-heart="' + esc(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
+    const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
+    const useVlift = document.body.classList.contains("evt-vlift");
+    if (useVlift) {
+      const dateLong = (() => {
+        try {
+          return start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+        } catch (_) {
+          return "";
+        }
+      })();
+      const timeShort = time || (() => {
+        try {
+          return start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+        } catch (_) {
+          return "";
+        }
+      })();
+      const calIcon = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 9h18M8 3v4M16 3v4"/></svg>';
+      const clkIcon = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg>';
+      const pinIcon = loc ? '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s7-7.58 7-13a7 7 0 10-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg>' : "";
+      const _titleCase = (s) => {
+        if (!s) return "";
+        const str = String(s);
+        if (str.toLowerCase() === "llc") return "LLC";
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+      };
+      const hostTypeLabel = _titleCase(event.event_type || "");
+      const hostCatLabel = _titleCase(event.category || "");
+      const hostLine = [
+        hostTypeLabel ? "Hosted by " + hostTypeLabel : "",
+        hostCatLabel
+      ].filter(Boolean).join(" \xB7 ");
+      const fDay = (() => {
+        try {
+          return start.getDate();
+        } catch (_) {
+          return "";
+        }
+      })();
+      const fMon = (() => {
+        try {
+          return start.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+        } catch (_) {
+          return "";
+        }
+      })();
+      const fDow = (() => {
+        try {
+          return start.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+        } catch (_) {
+          return "";
+        }
+      })();
+      const descRaw = event.description ? String(event.description).trim() : "";
+      const descShort = descRaw.length > 180 ? descRaw.slice(0, 177) + "\u2026" : descRaw;
+      heroEl.innerHTML = '<div class="evt-hero-vlift relative"><a href="' + href + '" data-evt-hero="' + esc(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event, true) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + "</div>" + // F14 — FEATURED EVENT kicker (vlift only; only shown when admin-featured)
+      (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : "") + // Bottom-edge dark fade for legibility
+      '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div><div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' + (fMon ? '<span class="evt-hero-datechip__mon">' + esc(fMon) + "</span>" : "") + (fDay !== "" ? '<span class="evt-hero-datechip__day">' + esc(fDay) + "</span>" : "") + (fDow ? '<span class="evt-hero-datechip__dow">' + esc(fDow) + "</span>" : "") + '</div><div class="evt-hero-meta-body">' + // E7 — Avatar cluster
+      attendeeCluster(event.id) + '<h2 class="text-xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc(event.title || "Untitled event") + "</h2>" + // F14 — Host line
+      (hostLine ? '<p class="evt-hero-host" data-f14-host>' + esc(hostLine) + "</p>" : "") + // F20 — Time + location on the same line
+      (timeShort || loc ? '<div class="evt-hero-timeloc" data-f14-timeloc>' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc(loc) + "</span>" : "") + "</div>" : "") + '</div></div><div class="evt-hero-side" data-f14-side>' + (descShort ? '<p class="evt-hero-side__desc">' + esc(descShort) + "</p>" : "") + '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc(event.id) + '" role="button" aria-hidden="true">View Details</span></div></a><button type="button" data-evt-hero-cta="' + esc(event.id) + '" class="evt-hero-cta" aria-label="View details for ' + esc(event.title || "this event") + '">View Details</button></div>';
+      const ctaBtn = heroEl.querySelector("button[data-evt-hero-cta]");
+      if (ctaBtn) {
+        ctaBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (href && href !== "javascript:void(0)") {
+            window.location.href = href;
+          } else if (typeof window.evtNavigateToEvent === "function") {
+            window.evtNavigateToEvent(event);
+          } else if (typeof window.evtOpenDetail === "function") {
+            window.evtOpenDetail(event);
+          }
         });
       }
+      const cluster = heroEl.querySelector("button[data-evt-hero-going]");
+      if (cluster) {
+        cluster.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof window.evtNavigateToEvent === "function") {
+            window.evtNavigateToEvent(event);
+          } else if (typeof window.evtOpenDetail === "function") {
+            window.evtOpenDetail(event);
+          } else if (event.slug) {
+            window.location.href = "?event=" + encodeURIComponent(event.slug);
+          }
+        });
+      }
+      const heart = heroEl.querySelector("button[data-evt-hero-heart]");
+      if (heart) {
+        heart.addEventListener("click", async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof window.evtHandleRsvp !== "function") return;
+          try {
+            heart.disabled = true;
+            await window.evtHandleRsvp(event.id, "maybe");
+          } catch (err) {
+            console.error("Hero heart toggle failed", err);
+          } finally {
+            heart.disabled = false;
+          }
+        });
+      }
+    } else {
+      heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc(loc) + "</p>" : "") + "</div></a>";
     }
-    window.PortalEventsListHeroRails = {
-      pickHero,
-      heroBg,
-      attendeeCluster,
-      renderHero,
-      renderLiveBanner,
-      renderGoingRail,
-      miniCard,
-      renderTopPicks
-    };
-  })();
+    const link = heroEl.querySelector("a[data-evt-hero]");
+    if (link) {
+      link.addEventListener("click", (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+        e.preventDefault();
+        if (event.slug && typeof window.evtNavigateToEvent === "function") {
+          window.evtNavigateToEvent(event.slug);
+        } else if (typeof window.evtOpenDetail === "function") {
+          window.evtOpenDetail(event.id);
+        }
+      });
+    }
+  }
+  function attendeeCluster(eventId2) {
+    const list = window.evtAttendees && window.evtAttendees[eventId2] || [];
+    if (!list.length) return "";
+    const esc = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const bubs = list.slice(0, 5).map((p, i) => {
+      const pic = p && p.profile_picture_url;
+      const first = p && p.first_name || "";
+      const initial = (first.trim().charAt(0) || "?").toUpperCase();
+      const ml = i === 0 ? "" : " -ml-2";
+      const inner = pic ? '<img src="' + esc(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc(initial) + "</span>";
+      return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc(first) + '">' + inner + "</span>";
+    }).join("");
+    const trueCount = window.evtAttendeeCounts && window.evtAttendeeCounts[eventId2] || list.length;
+    const labelN = String(trueCount);
+    return '<button type="button" data-evt-hero-going="' + esc(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
+  }
+  function renderLiveBanner(events) {
+    const el = document.getElementById("evtLiveBanner");
+    if (!el) return;
+    const now = /* @__PURE__ */ new Date();
+    const live = (events || []).filter((e) => {
+      if (e.status === "cancelled" || e.status === "draft") return false;
+      const start = new Date(e.start_date);
+      if (isNaN(start) || start > now) return false;
+      const endRaw = e.end_date || e.end_at || e.ends_at;
+      const end = endRaw ? new Date(endRaw) : new Date(start.getTime() + 2 * 60 * 60 * 1e3);
+      return now <= end;
+    });
+    if (!live.length) {
+      el.classList.add("hidden");
+      el.innerHTML = "";
+      return;
+    }
+    const esc = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const first = live[0];
+    const label = live.length === 1 ? esc(first.title || "An event") + " is happening now" : live.length + " events happening now";
+    const href = live.length === 1 && first.slug ? "?event=" + encodeURIComponent(first.slug) : "javascript:void(0)";
+    el.classList.remove("hidden");
+    el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
+    const link = el.querySelector("a[data-evt-live]");
+    if (link && live.length === 1) {
+      link.addEventListener("click", (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+        e.preventDefault();
+        if (first.slug && typeof window.evtNavigateToEvent === "function") {
+          window.evtNavigateToEvent(first.slug);
+        } else if (typeof window.evtOpenDetail === "function") {
+          window.evtOpenDetail(first.id);
+        }
+      });
+    }
+  }
+  function renderGoingRail(events, rsvps, attendees, heroId, eventsById) {
+    const rail = document.getElementById("evtGoingRail");
+    const scroll = document.getElementById("evtGoingRailScroll");
+    if (!rail || !scroll) return;
+    const now = /* @__PURE__ */ new Date();
+    const going = (events || []).filter((e) => {
+      if (e.id === heroId) return false;
+      if (e.status === "cancelled" || e.status === "draft") return false;
+      if (api5().notHidden && !api5().notHidden(e)) return false;
+      const r = rsvps[e.id];
+      if (!r || r.status !== "going") return false;
+      return new Date(e.start_date) >= now;
+    }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+    if (!going.length) {
+      rail.classList.add("hidden");
+      scroll.innerHTML = "";
+      return;
+    }
+    rail.classList.remove("hidden");
+    const counts = window.evtAttendeeCounts || {};
+    scroll.innerHTML = going.map((ev) => miniCard(ev, attendees[ev.id] || [], counts[ev.id])).join("");
+    scroll.querySelectorAll("a[data-evt-mini]").forEach((link) => {
+      const id = link.getAttribute("data-evt-mini");
+      const ev = eventsById[id];
+      if (!ev) return;
+      link.addEventListener("click", (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+        e.preventDefault();
+        if (ev.slug && typeof window.evtNavigateToEvent === "function") {
+          window.evtNavigateToEvent(ev.slug);
+        } else if (typeof window.evtOpenDetail === "function") {
+          window.evtOpenDetail(ev.id);
+        }
+      });
+    });
+  }
+  function miniCard(event, attendees, goingCount) {
+    const esc = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const d = new Date(event.start_date);
+    const day = d.getDate();
+    const mon = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+    const rel = H3.relativeDate ? H3.relativeDate(d) : "";
+    const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
+    const title = esc(event.title || "Untitled event");
+    const loc = event.location_nickname || event.location_text || "";
+    let bannerStyle;
+    if (event.banner_url) {
+      const safe = String(event.banner_url).replace(/'/g, "%27");
+      bannerStyle = "background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55)), url('" + safe + "') center/cover;";
+    } else {
+      const grad = C4.CATEGORY_GRADIENT && (C4.CATEGORY_GRADIENT[event.category] || C4.DEFAULT_GRADIENT) || "linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)";
+      bannerStyle = "background: " + grad + ";";
+    }
+    const attCount = goingCount != null ? goingCount : (attendees || []).length;
+    const attLine = attCount ? '<span class="text-[11px] text-gray-500 truncate">' + attCount + " going</span>" : "";
+    const isPinnedLlc = event.is_pinned && event.event_type === "llc";
+    const pin = isPinnedLlc ? '<span class="evt-date-pin evt-date-pin--mini" aria-label="Pinned LLC event" title="Pinned">\u{1F4CC}</span>' : "";
+    return '<a href="' + href + '" data-evt-mini="' + esc(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc(rel) : "") + (loc && rel ? " \xB7 " : "") + esc(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
+  }
+  function renderTopPicks(events, attendees, heroId, eventsById) {
+    const rail = document.getElementById("evtTopPicks");
+    const scroll = document.getElementById("evtTopPicksScroll");
+    if (!rail || !scroll) return;
+    const useVlift = document.body.classList.contains("evt-vlift");
+    const tab = window.evtActiveTab || "upcoming";
+    const inSearch = !!(api5().getSearchQuery?.() || "").trim();
+    if (!useVlift || tab !== "upcoming" || inSearch) {
+      rail.classList.add("hidden");
+      scroll.innerHTML = "";
+      return;
+    }
+    const now = /* @__PURE__ */ new Date();
+    const picks = (events || []).filter(
+      (e) => e.id !== heroId && e.is_pinned && e.event_type === "llc" && e.status !== "cancelled" && e.status !== "draft" && (api5().notHidden ? api5().notHidden(e) : true) && new Date(e.start_date) >= now
+    ).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+    if (picks.length < 2) {
+      rail.classList.add("hidden");
+      scroll.innerHTML = "";
+      return;
+    }
+    rail.classList.remove("hidden");
+    const counts = window.evtAttendeeCounts || {};
+    scroll.innerHTML = picks.map((ev) => miniCard(ev, attendees[ev.id] || [], counts[ev.id])).join("");
+    scroll.querySelectorAll("a[data-evt-mini]").forEach((link) => {
+      const id = link.getAttribute("data-evt-mini");
+      const ev = eventsById[id];
+      if (!ev) return;
+      link.addEventListener("click", (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+        e.preventDefault();
+        if (ev.slug && typeof window.evtNavigateToEvent === "function") {
+          window.evtNavigateToEvent(ev.slug);
+        } else if (typeof window.evtOpenDetail === "function") {
+          window.evtOpenDetail(ev.id);
+        }
+      });
+    });
+    const seeAll = document.getElementById("evtTopPicksSeeAll");
+    if (seeAll && !seeAll.dataset.wired) {
+      seeAll.dataset.wired = "1";
+      seeAll.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.PortalEventsListFilters.setActiveType("llc");
+        window.PortalEventsListFilters.syncTypeChips("llc");
+        const menuBtn = document.getElementById("evtTypeMenuBtn");
+        if (menuBtn) {
+          menuBtn.dataset.type = "llc";
+          const labelEl = menuBtn.querySelector("[data-type-label]");
+          if (labelEl) labelEl.textContent = "LLC";
+          document.querySelectorAll("#evtTypeMenu .evt-type-opt").forEach(
+            (o) => o.classList.toggle("evt-type-opt--active", o.dataset.type === "llc")
+          );
+        }
+        const sel = document.getElementById("typeFilter");
+        if (sel) sel.value = "llc";
+        api5().persistState?.();
+        api5().renderEvents?.();
+      });
+    }
+  }
+  var PortalEventsListHeroRails = {
+    pickHero,
+    heroBg,
+    attendeeCluster,
+    renderHero,
+    renderLiveBanner,
+    renderGoingRail,
+    miniCard,
+    renderTopPicks
+  };
+  globalThis.PortalEventsListHeroRails = PortalEventsListHeroRails;
 
   // js/portal/events/list/buckets.js
-  (function() {
-    "use strict";
-    const H = window.EventsHelpers || {};
-    const Card = window.EventsCard;
-    const E_BUCKET_TRUNCATE = 6;
-    function api() {
-      return window.PortalEventsListBucketsApi || {};
-    }
-    const E_BUCKET_EMOJI = {
-      "tonight": "\u{1F31C}",
-      "today": "\u{1F525}",
-      "tomorrow": "\u23ED\uFE0F",
-      "this week": "\u2728",
-      "this weekend": "\u{1F3A1}",
-      "next week": "\u{1F5D3}\uFE0F",
-      "later this month": "\u{1F4C5}",
-      "this month": "\u{1F4C5}",
-      "next month": "\u{1F331}",
-      "future": "\u{1F5D3}\uFE0F",
-      "past": "\u{1F570}\uFE0F",
-      "earlier": "\u{1F570}\uFE0F"
-    };
-    function bucketLabelEmoji(label) {
-      if (!label) return "";
-      const l = String(label).toLowerCase().trim();
-      if (/^results for/i.test(label)) return "\u{1F50E} " + label;
-      const e = E_BUCKET_EMOJI[l];
-      return e ? e + " " + label : label;
-    }
-    function renderBucket(label, events, rsvps, attendees) {
-      if (!events.length) return "";
-      const slug = String(label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      const useVlift = document.body.classList.contains("evt-vlift");
-      const total = events.length;
-      const isExpanded = (api().getExpandedBucket?.() ?? null) === slug;
-      const truncated = useVlift && total > E_BUCKET_TRUNCATE && !isExpanded;
-      const visible = truncated ? events.slice(0, E_BUCKET_TRUNCATE) : events;
-      const counts = window.evtAttendeeCounts || {};
-      const cards = visible.map((ev) => Card.render(ev, {
-        rsvp: rsvps[ev.id] || null,
-        href: ev.slug ? "?event=" + encodeURIComponent(ev.slug) : "javascript:void(0)",
-        variant: "portal",
-        attendees: attendees[ev.id] || [],
-        goingCount: counts[ev.id] || (attendees[ev.id] || []).length
-      })).join("");
-      let createTile = "";
-      if (useVlift && !api().getCreateTileInjected?.() && (window.evtActiveTab || "upcoming") === "upcoming") {
-        const canCreate = typeof canCreateEvents === "function" && canCreateEvents();
-        if (canCreate) {
-          createTile = '<button type="button" data-evt-create-tile class="evt-create-tile" aria-label="Create new event"><span class="evt-create-tile__plus" aria-hidden="true">+</span><span class="evt-create-tile__label">Create Event</span><span class="evt-create-tile__hint">Add a new event to the calendar</span></button>';
-          api().setCreateTileInjected?.(true);
-        }
+  var H4 = window.EventsHelpers || {};
+  var Card = window.EventsCard;
+  var E_BUCKET_TRUNCATE = 6;
+  function api6() {
+    return window.PortalEventsListBucketsApi || {};
+  }
+  var E_BUCKET_EMOJI = {
+    "tonight": "\u{1F31C}",
+    "today": "\u{1F525}",
+    "tomorrow": "\u23ED\uFE0F",
+    "this week": "\u2728",
+    "this weekend": "\u{1F3A1}",
+    "next week": "\u{1F5D3}\uFE0F",
+    "later this month": "\u{1F4C5}",
+    "this month": "\u{1F4C5}",
+    "next month": "\u{1F331}",
+    "future": "\u{1F5D3}\uFE0F",
+    "past": "\u{1F570}\uFE0F",
+    "earlier": "\u{1F570}\uFE0F"
+  };
+  function bucketLabelEmoji(label) {
+    if (!label) return "";
+    const l = String(label).toLowerCase().trim();
+    if (/^results for/i.test(label)) return "\u{1F50E} " + label;
+    const e = E_BUCKET_EMOJI[l];
+    return e ? e + " " + label : label;
+  }
+  function renderBucket(label, events, rsvps, attendees) {
+    if (!events.length) return "";
+    const slug = String(label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const useVlift = document.body.classList.contains("evt-vlift");
+    const total = events.length;
+    const isExpanded = (api6().getExpandedBucket?.() ?? null) === slug;
+    const truncated = useVlift && total > E_BUCKET_TRUNCATE && !isExpanded;
+    const visible = truncated ? events.slice(0, E_BUCKET_TRUNCATE) : events;
+    const counts = window.evtAttendeeCounts || {};
+    const cards = visible.map((ev) => Card.render(ev, {
+      rsvp: rsvps[ev.id] || null,
+      href: ev.slug ? "?event=" + encodeURIComponent(ev.slug) : "javascript:void(0)",
+      variant: "portal",
+      attendees: attendees[ev.id] || [],
+      goingCount: counts[ev.id] || (attendees[ev.id] || []).length
+    })).join("");
+    let createTile = "";
+    if (useVlift && !api6().getCreateTileInjected?.() && (window.evtActiveTab || "upcoming") === "upcoming") {
+      const canCreate = typeof canCreateEvents === "function" && canCreateEvents();
+      if (canCreate) {
+        createTile = '<button type="button" data-evt-create-tile class="evt-create-tile" aria-label="Create new event"><span class="evt-create-tile__plus" aria-hidden="true">+</span><span class="evt-create-tile__label">Create Event</span><span class="evt-create-tile__hint">Add a new event to the calendar</span></button>';
+        api6().setCreateTileInjected?.(true);
       }
-      const displayLabel = useVlift ? String(label) : label;
-      const safeLabel = (H.escapeHtml || ((s) => s))(displayLabel);
-      const countPill = useVlift ? '<span class="evt-bucket-count">' + total + (total === 1 ? " event" : " events") + "</span>" : "";
-      let headerLink = "";
-      if (useVlift && total > E_BUCKET_TRUNCATE) {
-        if (truncated) {
-          headerLink = '<button type="button" data-evt-bucket-toggle="' + slug + '" class="evt-bucket-seeall text-xs font-semibold text-brand-600 hover:text-brand-700">See all (' + total + ") \u2192</button>";
-        } else {
-          headerLink = '<button type="button" data-evt-bucket-toggle="' + slug + '" class="evt-bucket-seeall text-xs font-semibold text-brand-600 hover:text-brand-700">Show less \u2191</button>';
-        }
-      }
-      const headerCls = useVlift ? "evt-bucket-head flex items-end justify-between mb-3" : "";
-      const titleCls = useVlift ? "evt-bucket-title" : "text-xs font-bold uppercase tracking-[0.14em] text-gray-500";
-      const header = useVlift ? '<header class="' + headerCls + '"><h2 class="' + titleCls + '">' + safeLabel + '</h2><div class="flex items-center gap-2">' + countPill + headerLink + "</div></header>" : '<h2 class="' + titleCls + ' mb-3">' + safeLabel + "</h2>";
-      return '<section data-bucket="' + slug + '">' + header + '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + cards + createTile + "</div></section>";
     }
-    window.PortalEventsListBuckets = {
-      renderBucket,
-      bucketLabelEmoji,
-      E_BUCKET_TRUNCATE
-    };
-  })();
+    const displayLabel = useVlift ? String(label) : label;
+    const safeLabel = (H4.escapeHtml || ((s) => s))(displayLabel);
+    const countPill = useVlift ? '<span class="evt-bucket-count">' + total + (total === 1 ? " event" : " events") + "</span>" : "";
+    let headerLink = "";
+    if (useVlift && total > E_BUCKET_TRUNCATE) {
+      if (truncated) {
+        headerLink = '<button type="button" data-evt-bucket-toggle="' + slug + '" class="evt-bucket-seeall text-xs font-semibold text-brand-600 hover:text-brand-700">See all (' + total + ") \u2192</button>";
+      } else {
+        headerLink = '<button type="button" data-evt-bucket-toggle="' + slug + '" class="evt-bucket-seeall text-xs font-semibold text-brand-600 hover:text-brand-700">Show less \u2191</button>';
+      }
+    }
+    const headerCls = useVlift ? "evt-bucket-head flex items-end justify-between mb-3" : "";
+    const titleCls = useVlift ? "evt-bucket-title" : "text-xs font-bold uppercase tracking-[0.14em] text-gray-500";
+    const header = useVlift ? '<header class="' + headerCls + '"><h2 class="' + titleCls + '">' + safeLabel + '</h2><div class="flex items-center gap-2">' + countPill + headerLink + "</div></header>" : '<h2 class="' + titleCls + ' mb-3">' + safeLabel + "</h2>";
+    return '<section data-bucket="' + slug + '">' + header + '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' + cards + createTile + "</div></section>";
+  }
+  var PortalEventsListBuckets = {
+    renderBucket,
+    bucketLabelEmoji,
+    E_BUCKET_TRUNCATE
+  };
+  globalThis.PortalEventsListBuckets = PortalEventsListBuckets;
 
   // js/portal/events/list/shell.js
   (function() {
     "use strict";
-    const C = window.EventsConstants || {};
-    const H = window.EventsHelpers || {};
-    const P = window.EventsPills || {};
-    const Card = window.EventsCard;
+    const C5 = window.EventsConstants || {};
+    const H5 = window.EventsHelpers || {};
+    const P2 = window.EventsPills || {};
+    const Card2 = window.EventsCard;
     let _searchQuery = "";
     let _activeView = "list";
     let _calMonth = null;
@@ -2745,10 +2731,10 @@
     let _createTileInjected = false;
     let _miniCalMonth = null;
     let _activeDay = "";
-    const STATE_KEY = "evt_list_state_v1";
+    const STATE_KEY2 = "evt_list_state_v1";
     function _restoreListSessionState() {
       try {
-        const raw = sessionStorage.getItem(STATE_KEY);
+        const raw = sessionStorage.getItem(STATE_KEY2);
         if (!raw) return;
         const s = JSON.parse(raw) || {};
         if (typeof s.q === "string") _searchQuery = s.q;
@@ -2760,7 +2746,7 @@
     function _persistState() {
       return window.PortalEventsListFilters.persistState();
     }
-    function setupSearch() {
+    function setupSearch2() {
       return window.PortalEventsListSearch.setupSearch();
     }
     function _renderCalendar() {
@@ -3263,9 +3249,9 @@
     }
     function renderSkeletons() {
       const groups = document.getElementById("evtGroups");
-      if (!groups || !Card) return;
+      if (!groups || !Card2) return;
       let html = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">';
-      for (let i = 0; i < 4; i++) html += Card.skeleton();
+      for (let i = 0; i < 4; i++) html += Card2.skeleton();
       html += "</div>";
       groups.innerHTML = html;
     }
@@ -3378,7 +3364,7 @@
       const heroEl = document.getElementById("evtHero");
       const empty = document.getElementById("emptyState");
       const calMount = document.getElementById("evtCalendarMount");
-      if (!groupsEl || !Card) return;
+      if (!groupsEl || !Card2) return;
       _createTileInjected = false;
       _renderHeaderCount();
       _renderActiveFilterPill();
@@ -3472,8 +3458,8 @@
       empty?.classList.add("hidden");
       const mode = tab === "past" ? "past" : tab === "going" ? "going" : "upcoming";
       let groups;
-      if (typeof H.groupByBucket === "function") {
-        groups = H.groupByBucket(rest, mode);
+      if (typeof H5.groupByBucket === "function") {
+        groups = H5.groupByBucket(rest, mode);
       } else {
         groups = [{ label: "Events", events: rest }];
       }
@@ -3597,7 +3583,7 @@
       };
       document.head.appendChild(s);
     }
-    function initFilterChips() {
+    function initFilterChips2() {
       return window.PortalEventsListFilters.initFilterChips();
     }
     function _initStickyHeader() {
@@ -3812,13 +3798,13 @@
     window.evtUpdateHeroStats = function() {
       _renderHeaderCount();
     };
-    window.evtSetupSearch = setupSearch;
-    window.evtInitFilterChips = initFilterChips;
+    window.evtSetupSearch = setupSearch2;
+    window.evtInitFilterChips = initFilterChips2;
     window.evtRenderCard = function(event) {
       const rsvps = window.evtAllRsvps || {};
       const attendees = window.evtAttendees || {};
       const counts = window.evtAttendeeCounts || {};
-      return Card ? Card.render(event, {
+      return Card2 ? Card2.render(event, {
         rsvp: rsvps[event.id] || null,
         attendees: attendees[event.id] || [],
         goingCount: counts[event.id] || (attendees[event.id] || []).length,
@@ -3830,8 +3816,8 @@
       // ── Core public API (init.js consumers) ─────────────
       load: loadEvents,
       render: renderEvents,
-      setupSearch,
-      initFilterChips,
+      setupSearch: setupSearch2,
+      initFilterChips: initFilterChips2,
       // ── Sub-renderers ────────────────────────────────────
       renderHero: _renderHero,
       pickHero: _pickHero,
@@ -8923,11 +8909,11 @@
       { key: "comp", label: "Comp" },
       { key: "danger", label: "Danger Zone" }
     ];
-    function api() {
+    function api7() {
       return window.EventsManageShellApi || {};
     }
     function getState() {
-      return api().getState?.() || {};
+      return api7().getState?.() || {};
     }
     function ensureMounted() {
       if (document.getElementById("emSheetRoot")) return;
@@ -9033,10 +9019,10 @@
             </style>
         `;
       document.body.appendChild(root2);
-      document.getElementById("emSheetClose").addEventListener("click", () => api().onClose?.());
-      document.getElementById("emSheetBackdrop").addEventListener("click", () => api().onClose?.());
+      document.getElementById("emSheetClose").addEventListener("click", () => api7().onClose?.());
+      document.getElementById("emSheetBackdrop").addEventListener("click", () => api7().onClose?.());
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && document.getElementById("emSheet")?.classList.contains("em-open")) api().onClose?.();
+        if (e.key === "Escape" && document.getElementById("emSheet")?.classList.contains("em-open")) api7().onClose?.();
       });
     }
     function renderHeader() {
@@ -9058,7 +9044,7 @@
           const st = getState();
           st.activeTab = btn.dataset.tab;
           renderTabs();
-          api().renderTab?.(st.activeTab);
+          api7().renderTab?.(st.activeTab);
           btn.scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" });
         });
       });
@@ -9117,11 +9103,11 @@
   (function() {
     "use strict";
     const PUBLIC_SITE_URL = "https://justicemcneal.com";
-    function api() {
+    function api7() {
       return window.EventsManageOverviewApi || {};
     }
     function getState() {
-      return api().getState?.() || {};
+      return api7().getState?.() || {};
     }
     function esc(s) {
       const el = document.createElement("span");
@@ -9327,8 +9313,8 @@
       document.getElementById("emSheetContent").querySelectorAll("[data-overview-tab]").forEach((btn) => {
         btn.addEventListener("click", () => {
           STATE.activeTab = btn.dataset.overviewTab;
-          api().renderTabs?.();
-          api().renderTab?.(STATE.activeTab);
+          api7().renderTabs?.();
+          api7().renderTab?.(STATE.activeTab);
         });
       });
       const copyForm = document.getElementById("emCopyForm");
@@ -9386,8 +9372,8 @@
         if (error) throw error;
         STATE.event.title = data?.title || title;
         STATE.event.description = data?.description || null;
-        api().renderHeader?.();
-        api().renderTab?.("overview");
+        api7().renderHeader?.();
+        api7().renderTab?.("overview");
         setTimeout(() => {
           const refreshedStatus = document.getElementById("emCopyStatus");
           if (refreshedStatus) {
@@ -9398,7 +9384,7 @@
             }, 2500);
           }
         }, 0);
-        api().notifyParent?.("updated", e.id);
+        api7().notifyParent?.("updated", e.id);
       } catch (err) {
         setStatus("Update failed: " + (err.message || "unknown error"), true);
       } finally {
@@ -9438,7 +9424,7 @@
         return;
       }
       STATE.event.is_featured = newVal;
-      api().renderTab?.("overview");
+      api7().renderTab?.("overview");
       document.dispatchEvent(new CustomEvent("events:manage:updated", { detail: { eventId: STATE.event.id } }));
     }
     window.EventsManageOverview = {
@@ -9455,7 +9441,7 @@
   // js/portal/events/manage/images.js
   (function() {
     "use strict";
-    function api() {
+    function api7() {
       return window.EventsManageImagesApi || {};
     }
     function esc(s) {
@@ -9468,7 +9454,7 @@
     }
     const imgFiles = { banner: null, embed: null };
     function imgDropZone(id, label, hint, currentUrl) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const hasImg = !!currentUrl;
       return `
             <div id="${id}Zone" class="em-img-zone${hasImg ? " em-img-zone--has" : ""}" data-zone="${id}">
@@ -9488,7 +9474,7 @@
         `;
     }
     function imagesHtml() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const e = STATE.event;
       return `
             <style>
@@ -9530,7 +9516,7 @@
         `;
     }
     function wireImages() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const e = STATE.event;
       imgFiles.banner = null;
       imgFiles.embed = null;
@@ -9624,7 +9610,7 @@
           setTimeout(() => {
             status.textContent = "";
           }, 2500);
-          api().notifyParent?.("updated", e.id);
+          api7().notifyParent?.("updated", e.id);
         } catch (err) {
           status.textContent = "Error: " + (err.message || "save failed");
         } finally {
@@ -9641,7 +9627,7 @@
   // js/portal/events/manage/docs.js
   (function() {
     "use strict";
-    function api() {
+    function api7() {
       return window.EventsManageDocsApi || {};
     }
     function esc(s) {
@@ -9653,13 +9639,13 @@
       return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
     }
     async function loadDocs() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const { data, error } = await supabaseClient.from("event_documents").select("id, doc_type, label, file_name, file_size_bytes, file_path, distributed, target_user_id, created_at, profiles:target_user_id(first_name, last_name, profile_picture_url)").eq("event_id", STATE.eventId).order("created_at", { ascending: true });
       if (error) throw error;
       return { docs: data || [] };
     }
     function docTypeIcon(type) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       return {
         plane_ticket: "\u2708\uFE0F",
         group_ticket: "\u{1F3AB}",
@@ -9669,14 +9655,14 @@
       }[type] || "\u{1F4C4}";
     }
     function formatBytes(bytes) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (!bytes) return "\u2014";
       if (bytes < 1024) return bytes + " B";
       if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
       return (bytes / 1024 / 1024).toFixed(1) + " MB";
     }
     function docsHtml() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const docs = STATE.tabData.docs.docs;
       const groupDocs = docs.filter((d) => !d.target_user_id);
       const memberDocs = docs.filter((d) => d.target_user_id);
@@ -9725,7 +9711,7 @@
         }).join("");
       }
       const memberOptions = goingMembers.map((m) => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join("");
-      const typeOptions = (api().getDocTypes?.() || []).map((t) => `<option value="${esc(t.value)}">${esc(t.label)}</option>`).join("");
+      const typeOptions = (api7().getDocTypes?.() || []).map((t) => `<option value="${esc(t.value)}">${esc(t.label)}</option>`).join("");
       return `
             <div class="em-card em-command-card mb-4">
                 <p class="em-command-eyebrow">Document handoff</p>
@@ -9783,7 +9769,7 @@
         `;
     }
     function wireDocs() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const targetMode = document.getElementById("emDocTargetMode");
       const memberWrap = document.getElementById("emDocMemberWrap");
       const type = document.getElementById("emDocType");
@@ -9808,13 +9794,13 @@
             if (error) return alert("Update failed: " + error.message);
           }
           STATE.tabData.docs = null;
-          api().renderTab?.("docs");
-          api().notifyParent?.("updated", STATE.eventId);
+          api7().renderTab?.("docs");
+          api7().notifyParent?.("updated", STATE.eventId);
         });
       });
     }
     async function uploadDocFromManage() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const btn = document.getElementById("emDocUploadBtn");
       const mode = document.getElementById("emDocTargetMode")?.value || "group";
       const targetUserId = mode === "member" ? document.getElementById("emDocMember")?.value || "" : "";
@@ -9844,8 +9830,8 @@
         });
         if (dbErr) throw dbErr;
         STATE.tabData.docs = null;
-        api().renderTab?.("docs");
-        api().notifyParent?.("updated", STATE.eventId);
+        api7().renderTab?.("docs");
+        api7().notifyParent?.("updated", STATE.eventId);
       } catch (err) {
         alert("Upload failed: " + (err.message || err));
       } finally {
@@ -9864,7 +9850,7 @@
   // js/portal/events/manage/rsvps.js
   (function() {
     "use strict";
-    function api() {
+    function api7() {
       return window.EventsManageRsvpsApi || {};
     }
     function esc(s) {
@@ -9876,7 +9862,7 @@
       return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
     }
     function rsvpsHtml() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const e = STATE.event;
       const going = STATE.rsvps.filter((r) => r.status === "going");
       const maybe = STATE.rsvps.filter((r) => r.status === "maybe");
@@ -9944,9 +9930,9 @@
         `;
     }
     function wireRsvps() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       document.getElementById("emSheetContent")?.querySelectorAll("[data-remove-rsvp]").forEach((btn) => {
-        btn.addEventListener("click", () => api().removeParticipationPerson?.(btn));
+        btn.addEventListener("click", () => api7().removeParticipationPerson?.(btn));
       });
     }
     window.EventsManageRsvps = {
@@ -9958,7 +9944,7 @@
   // js/portal/events/manage/money.js
   (function() {
     "use strict";
-    function api() {
+    function api7() {
       return window.EventsManageMoneyApi || {};
     }
     function esc(s) {
@@ -9970,7 +9956,7 @@
       return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
     }
     async function loadMoney() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const eventId2 = STATE.eventId;
       const [rsvpsRes, guestRes, raffleRes, poolRes] = await Promise.all([
         supabaseClient.from("event_rsvps").select("id, user_id, status, amount_paid_cents, paid, refunded, refund_amount_cents, stripe_payment_intent_id, profiles!event_rsvps_user_id_fkey(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
@@ -9986,7 +9972,7 @@
       };
     }
     function moneyHtml() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const d = STATE.tabData.money;
       const isPaidEvent = STATE.event?.pricing_mode === "paid" || Number(STATE.event?.rsvp_cost_cents || 0) > 0;
       const paidRsvps = d.rsvps.filter((r) => r.paid);
@@ -10065,7 +10051,7 @@
         `;
     }
     function wireMoney() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
     }
     window.EventsManageMoney = {
       loadMoney,
@@ -10077,7 +10063,7 @@
   // js/portal/events/manage/competition.js
   (function() {
     "use strict";
-    function api() {
+    function api7() {
       return window.EventsManageCompetitionApi || {};
     }
     function esc(s) {
@@ -10089,7 +10075,7 @@
       return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
     }
     async function loadComp() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const eventId2 = STATE.eventId;
       const [phasesRes, entriesRes, votesRes, winnersRes, contribRes] = await Promise.all([
         supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true }),
@@ -10107,10 +10093,10 @@
       };
     }
     function compHtml() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const e = STATE.event;
       if (e.event_type !== "competition") {
-        return api().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
+        return api7().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
       }
       const d = STATE.tabData.comp;
       const fmt = window.formatCurrency || money;
@@ -10197,7 +10183,7 @@
         `;
     }
     function wireComp() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
     }
     window.EventsManageCompetition = {
       loadComp,
@@ -10209,7 +10195,7 @@
   // js/portal/events/manage/participation.js
   (function() {
     "use strict";
-    function api() {
+    function api7() {
       return window.EventsManageParticipationApi || {};
     }
     function esc(s) {
@@ -10221,7 +10207,7 @@
       return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
     }
     async function getParticipationResetCounts() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const eventId2 = STATE.eventId;
       const tables = [
         ["member RSVPs", "event_rsvps"],
@@ -10238,7 +10224,7 @@
       return results;
     }
     async function resetParticipation() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const e = STATE.event;
       if (!e) return;
       let counts = [];
@@ -10269,14 +10255,14 @@ Type RESET to continue.`
           action: "reset_participation",
           event_id: e.id
         });
-        await api().refreshEventManager?.("danger");
+        await api7().refreshEventManager?.("danger");
         alert("Participation reset complete. The event is still intact.");
       } catch (err) {
         alert("Reset failed: " + (err.message || "unknown error"));
       }
     }
     async function removeParticipationPerson(btn) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const kind = btn.dataset.removeRsvp;
       const name = btn.dataset.name || (kind === "guest" ? "this guest" : "this member");
       const isPaid = btn.dataset.paid === "1";
@@ -10306,10 +10292,10 @@ Type RESET to continue.`
             user_id: userId
           });
         }
-        await api().refreshEventManager?.("rsvps");
+        await api7().refreshEventManager?.("rsvps");
       } catch (err) {
         alert("Remove failed: " + (err.message || "unknown error"));
-        api().renderTab?.("rsvps");
+        api7().renderTab?.("rsvps");
       }
     }
     window.EventsManageParticipation = {
@@ -10322,7 +10308,7 @@ Type RESET to continue.`
   // js/portal/events/manage/raffle.js
   (function() {
     "use strict";
-    function api() {
+    function api7() {
       return window.EventsManageRaffleApi || {};
     }
     function esc(s) {
@@ -10339,7 +10325,7 @@ Type RESET to continue.`
       return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
     }
     async function loadRaffle() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const eventId2 = STATE.eventId;
       const [entriesRes, winnersRes, guestsRes] = await Promise.all([
         supabaseClient.from("event_raffle_entries").select("id, user_id, guest_token, paid, amount_paid_cents, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
@@ -10357,10 +10343,10 @@ Type RESET to continue.`
       return n + (s[(v - 20) % 10] || s[v] || s[0]);
     }
     function raffleHtml() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const e = STATE.event;
       if (!e.raffle_enabled) {
-        return api().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
+        return api7().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
       }
       const d = STATE.tabData.raffle;
       const fmt = window.formatCurrency || money;
@@ -10498,7 +10484,7 @@ Type RESET to continue.`
         `;
     }
     function wireRaffle() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const drawBtn = document.getElementById("emRaffleDrawBtn");
       if (drawBtn) {
         drawBtn.onclick = () => window.evtOpenRaffleDraw?.(STATE.eventId, STATE.event);
@@ -10532,7 +10518,7 @@ Type RESET to continue.`
       wireRafflePrizeImages();
     }
     function rafflePrizeSetupHtml(config, winners = []) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const model = window.EventsRaffleModel;
       if (!model) {
         return `<div class="em-card mt-3"><div class="em-section-head"><div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Raffle editor unavailable because the raffle model helper did not load.</p></div></div></div>`;
@@ -10647,7 +10633,7 @@ Type RESET to continue.`
         `;
     }
     function collectRafflePrizeConfigFromDom() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const model = window.EventsRaffleModel;
       if (!model) throw new Error("Raffle model helper is not loaded.");
       const categoryRows = Array.from(document.querySelectorAll("[data-em-raffle-category-row]"));
@@ -10681,7 +10667,7 @@ Type RESET to continue.`
       return model.normalizeConfig({ version: 2, categories, items });
     }
     function wireRafflePrizeImages() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       document.querySelectorAll("[data-em-prize-drop]").forEach((zone) => {
         const itemId = zone.dataset.emPrizeDrop;
         const fileInput = document.querySelector(`[data-em-prize-file="${CSS.escape(itemId)}"]`);
@@ -10710,7 +10696,7 @@ Type RESET to continue.`
       });
     }
     function setRafflePrizeImage(itemId, file) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
         alert("Please use a PNG, JPG, or WebP image.");
         return;
@@ -10733,7 +10719,7 @@ Type RESET to continue.`
       reader.readAsDataURL(file);
     }
     function clearRafflePrizeImage(itemId) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (!itemId) return;
       delete prizeImageFiles[itemId];
       delete prizeImagePreviews[itemId];
@@ -10749,7 +10735,7 @@ Type RESET to continue.`
       if (status) status.textContent = "Image removed. Save prize setup to keep this change.";
     }
     async function uploadPendingRafflePrizeImages(config) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const uploads = Object.entries(prizeImageFiles);
       if (!uploads.length) return config;
       const slug = safeFilename(STATE.event?.slug || STATE.event?.title || STATE.eventId || "event");
@@ -10766,7 +10752,7 @@ Type RESET to continue.`
       return config;
     }
     async function saveRafflePrizeSetup(action = {}) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const model = window.EventsRaffleModel;
       const status = document.getElementById("emRafflePrizeStatus");
       const saveBtn = document.getElementById("emRafflePrizeSave");
@@ -10811,7 +10797,7 @@ Type RESET to continue.`
         if (error) throw error;
         STATE.event.raffle_prizes = config;
         STATE.event.raffle_winner_count = winnerCount;
-        await api().refreshEventManager?.("raffle");
+        await api7().refreshEventManager?.("raffle");
       } catch (err) {
         if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
         else alert("Prize setup save failed: " + (err.message || "unknown error"));
@@ -10822,18 +10808,18 @@ Type RESET to continue.`
       }
     }
     function categoryPrizeQuantity(config, categoryId) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       return (config.items || []).filter((item) => item.category_id === categoryId).reduce((sum, item) => sum + Math.max(1, Number(item.quantity || 1)), 0);
     }
     function capRaffleWinnerCounts(config) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       (config.categories || []).forEach((category) => {
         const quantity = categoryPrizeQuantity(config, category.id);
         category.winner_count = Math.min(Number(category.winner_count || 0), quantity);
       });
     }
     async function saveRaffleEntryPrice() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const input = document.getElementById("emRaffleEntryPrice");
       const btn = document.getElementById("emRafflePriceSave");
       const status = document.getElementById("emRafflePriceStatus");
@@ -10858,7 +10844,7 @@ Type RESET to continue.`
         const { error } = await supabaseClient.from("events").update({ raffle_entry_cost_cents: cents }).eq("id", STATE.eventId);
         if (error) throw error;
         STATE.event.raffle_entry_cost_cents = cents;
-        await api().refreshEventManager?.("raffle");
+        await api7().refreshEventManager?.("raffle");
       } catch (err) {
         if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
         if (btn) {
@@ -10868,7 +10854,7 @@ Type RESET to continue.`
       }
     }
     async function removeRaffleEntry(btn) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const name = btn.dataset.name || "this entry";
       const isPaid = btn.dataset.paid === "1";
       const warning = isPaid ? "\n\nThis was marked paid. Removing the record does not refund Stripe payments." : "";
@@ -10882,16 +10868,16 @@ Type RESET to continue.`
           entry_id: btn.dataset.removeRaffleEntry
         });
         STATE.tabData.raffle = null;
-        await api().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
-        api().notifyParent?.("updated", STATE.eventId);
+        await api7().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
+        api7().notifyParent?.("updated", STATE.eventId);
       } catch (err) {
         alert("Raffle entry remove failed: " + (err.message || "unknown error"));
         STATE.tabData.raffle = null;
-        await api().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
+        await api7().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
       }
     }
     function winnerChoiceHtml(winner, config, winners) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (winner.selection_status !== "pending_choice") return "";
       const items = availableChoiceItems(config, winners, winner);
       if (!items.length) {
@@ -10908,7 +10894,7 @@ Type RESET to continue.`
         `;
     }
     function availableChoiceItems(config, winners, currentWinner) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const items = raffleItems(config, currentWinner.category_id);
       const used = /* @__PURE__ */ new Map();
       (winners || []).forEach((winner) => {
@@ -10919,7 +10905,7 @@ Type RESET to continue.`
       return items.filter((item) => (used.get(item.id) || 0) < item.quantity);
     }
     async function assignWinnerChoice(winnerId) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const winner = (STATE.tabData.raffle?.winners || []).find((row) => row.id === winnerId);
       if (!winner) return;
       const select = document.getElementById(`emWinnerChoice_${winnerId}`);
@@ -10937,49 +10923,49 @@ Type RESET to continue.`
       }).eq("id", winnerId).eq("event_id", STATE.eventId).eq("selection_status", "pending_choice");
       if (error) return alert("Prize assignment failed: " + error.message);
       STATE.tabData.raffle = null;
-      await api().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
+      await api7().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
       document.dispatchEvent(new CustomEvent("events:raffle:drawn", { detail: { eventId: STATE.eventId } }));
     }
     function raffleConfig(event) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
       return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
     }
     function raffleCategories(config) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (!window.EventsRaffleModel) return [];
       return window.EventsRaffleModel.getOrderedCategories(config);
     }
     function raffleItems(config, categoryId) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (!window.EventsRaffleModel) return [];
       return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
     }
     function raffleTotalWinners(config) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (!window.EventsRaffleModel) return 0;
       return window.EventsRaffleModel.getTotalWinnerCount(config);
     }
     function raffleDrawQueue(config, winners) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (!window.EventsRaffleModel) return [];
       return window.EventsRaffleModel.getDrawQueue(config, winners || []);
     }
     function drawModeLabel(drawMode) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (drawMode === "random_item") return "Random prize assigned";
       if (drawMode === "winner_choice") return "Winner chooses later";
       return "Specific prize";
     }
     function prizeSlotLabel(slot) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (!slot) return "";
       if (slot.prize_name) return slot.prize_name;
       if (slot.draw_mode === "winner_choice") return `${slot.category_label || "Prize tier"} choice`;
       return slot.category_label || "Prize";
     }
     function winnerBelongsToCategory(winner, category, config) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (!winner || !category) return false;
       if (winner.category_id) return winner.category_id === category.id;
       if (winner.category_label) return winner.category_label === category.label;
@@ -10987,7 +10973,7 @@ Type RESET to continue.`
       return slot?.category_id === category.id;
     }
     function raffleSlotByPlace(config, place) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (!window.EventsRaffleModel || place == null) return null;
       return window.EventsRaffleModel.getDrawQueue(config, []).find((slot) => Number(slot.place) === Number(place)) || null;
     }
@@ -10996,10 +10982,10 @@ Type RESET to continue.`
       Object.keys(prizeImagePreviews).forEach((key) => delete prizeImagePreviews[key]);
     }
     function refreshRaffle(eventId2) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       if (eventId2 && eventId2 !== STATE.eventId) return;
       STATE.tabData.raffle = null;
-      if (STATE.activeTab === "raffle") api().renderTab?.("raffle");
+      if (STATE.activeTab === "raffle") api7().renderTab?.("raffle");
     }
     document.addEventListener("events:raffle:drawn", (evt) => refreshRaffle(evt.detail?.eventId));
     window.EventsManageRaffle = {
@@ -11014,7 +11000,7 @@ Type RESET to continue.`
   // js/portal/events/manage/danger.js
   (function() {
     "use strict";
-    function api() {
+    function api7() {
       return window.EventsManageDangerApi || {};
     }
     function esc(s) {
@@ -11026,7 +11012,7 @@ Type RESET to continue.`
       return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
     }
     function dangerHtml() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const e = STATE.event;
       const isCancelled = e.status === "cancelled";
       const isCompleted = e.status === "completed";
@@ -11079,13 +11065,13 @@ Type RESET to continue.`
         `;
     }
     function wireDanger() {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       document.getElementById("emSheetContent").querySelectorAll("[data-action]").forEach((btn) => {
         btn.addEventListener("click", () => runDangerAction(btn.dataset.action));
       });
     }
     async function runDangerAction(action) {
-      const STATE = api().getState?.() || {};
+      const STATE = api7().getState?.() || {};
       const e = STATE.event;
       if (!e) return;
       if (action === "delete") {
@@ -11100,8 +11086,8 @@ Type RESET to continue.`
           const { error } = await supabaseClient.from("events").delete().eq("id", e.id);
           if (error) throw error;
           alert("Event deleted.");
-          api().close?.();
-          api().notifyParent?.("deleted", e.id);
+          api7().close?.();
+          api7().notifyParent?.("deleted", e.id);
         } catch (err) {
           alert("Delete failed: " + (err.message || "unknown error"));
         }
@@ -11113,16 +11099,16 @@ Type RESET to continue.`
           const { error } = await supabaseClient.from("events").update({ status: "cancelled" }).eq("id", e.id);
           if (error) throw error;
           STATE.event.status = "cancelled";
-          api().renderHeader?.();
-          api().renderTab?.("danger");
-          api().notifyParent?.("updated", e.id);
+          api7().renderHeader?.();
+          api7().renderTab?.("danger");
+          api7().notifyParent?.("updated", e.id);
         } catch (err) {
           alert("Cancel failed: " + (err.message || "unknown error"));
         }
         return;
       }
       if (action === "reset-participation") {
-        await api().resetParticipation?.();
+        await api7().resetParticipation?.();
         return;
       }
       if (action === "complete") {
@@ -11131,9 +11117,9 @@ Type RESET to continue.`
           const { error } = await supabaseClient.from("events").update({ status: "completed" }).eq("id", e.id);
           if (error) throw error;
           STATE.event.status = "completed";
-          api().renderHeader?.();
-          api().renderTab?.("danger");
-          api().notifyParent?.("updated", e.id);
+          api7().renderHeader?.();
+          api7().renderTab?.("danger");
+          api7().notifyParent?.("updated", e.id);
         } catch (err) {
           alert("Complete failed: " + (err.message || "unknown error"));
         }

@@ -41,6 +41,13 @@ function read(relPath) {
     return fs.readFileSync(path.join(root, relPath), 'utf8');
 }
 
+/** Phase 7.4: list modules export const + globalThis bridge (not always window.*). */
+function listModuleNamespace(js, name) {
+    return js.includes(`export const ${name}`)
+        || js.includes(`globalThis.${name}`)
+        || js.includes(`window.${name}`);
+}
+
 // ─── list.js file structure ──────────────────────────────
 console.log('\n── js/portal/events/list/shell.js — file structure ─────────────────────────────');
 
@@ -180,7 +187,7 @@ chainOrderOk(classicChain3a, 'core/raffle-model.js', 'list/search.js', 'list/rig
     ? pass('loader order: raffle-model → list/* → list/shell.js')
     : fail('loader list module order');
 
-listSearchJs.includes('window.PortalEventsListSearch')
+listModuleNamespace(listSearchJs, 'PortalEventsListSearch')
     ? pass('search.js assigns PortalEventsListSearch')
     : fail('PortalEventsListSearch namespace missing');
 
@@ -189,7 +196,7 @@ listSearchJs.includes('function setupSearch')
     ? pass('search.js owns setupSearch and renderSearchSuggest')
     : fail('search.js missing search functions');
 
-listRightRailJs.includes('window.PortalEventsListRightRail')
+listModuleNamespace(listRightRailJs, 'PortalEventsListRightRail')
     ? pass('right-rail.js assigns PortalEventsListRightRail')
     : fail('PortalEventsListRightRail namespace missing');
 
@@ -199,7 +206,7 @@ listRightRailJs.includes('function renderMiniCalendar')
     ? pass('right-rail.js owns mini calendar, RSVPs, stats card')
     : fail('right-rail.js missing right-rail renderers');
 
-listHeaderJs.includes('window.PortalEventsListHeader')
+listModuleNamespace(listHeaderJs, 'PortalEventsListHeader')
     && listHeaderJs.includes('function renderHeaderCount')
     && listHeaderJs.includes('function initHeaderBell')
     ? pass('header.js owns header count and bell helpers')
@@ -209,13 +216,13 @@ list.includes('PortalEventsListSearch.setupSearch')
     ? pass('list/shell.js delegates setupSearch to PortalEventsListSearch')
     : fail('list/shell.js missing setupSearch delegate');
 
-listFiltersJs.includes('window.PortalEventsListFilters')
+listModuleNamespace(listFiltersJs, 'PortalEventsListFilters')
     && listFiltersJs.includes('function initFilterChips')
     && listFiltersJs.includes('function matchesType')
     ? pass('filters.js owns filter chips and match predicates')
     : fail('filters.js missing filter functions');
 
-listCalendarJs.includes('window.PortalEventsListCalendar')
+listModuleNamespace(listCalendarJs, 'PortalEventsListCalendar')
     && listCalendarJs.includes('function renderCalendar')
     && listCalendarJs.includes('function openDayModal')
     ? pass('calendar.js owns full calendar and day modal')
@@ -226,13 +233,13 @@ list.includes('PortalEventsListFilters.initFilterChips')
     ? pass('list/shell.js delegates filters and calendar to list modules')
     : fail('list/shell.js missing filter/calendar delegates');
 
-listHeroRailsJs.includes('window.PortalEventsListHeroRails')
+listModuleNamespace(listHeroRailsJs, 'PortalEventsListHeroRails')
     && listHeroRailsJs.includes('function renderHero')
     && listHeroRailsJs.includes('function attendeeCluster')
     ? pass('hero-rails.js owns hero, rails, and attendee cluster')
     : fail('hero-rails.js missing hero/rail functions');
 
-listBucketsJs.includes('window.PortalEventsListBuckets')
+listModuleNamespace(listBucketsJs, 'PortalEventsListBuckets')
     && listBucketsJs.includes('function renderBucket')
     ? pass('buckets.js owns bucket renderer')
     : fail('buckets.js missing renderBucket');

@@ -30,11 +30,20 @@
 | `core/utils.js` | Named `export` for routing/modal/ICS helpers; `globalThis.*` assignment |
 | `compat/global-reexports.js` | Resolve handlers via `globalThis` (esbuild-safe) |
 
+## Done in Phase 7.4 (list modules)
+
+| File | Change |
+|------|--------|
+| `list/header.js`, `search.js`, `filters.js`, `calendar.js`, `right-rail.js`, `buckets.js`, `hero-rails.js` | IIFE removed; `export const PortalEventsList*` + `globalThis` bridge |
+| `list/shell.js` | Still IIFE orchestrator (delegates to list modules) |
+| `scripts/unwrap-list-iife.js` | One-off / repeat helper for list folder |
+
 ## Remaining (incremental PRs)
 
 | Area | Files | Approach |
 |------|-------|----------|
-| IIFE modules | ~40 under list/detail/create/manage | Remove IIFE wrapper; `export` handlers; import in orchestrators |
+| `list/shell.js` | 1 | Unwrap last list IIFE when ready |
+| IIFE modules | detail/create/manage/team | Same pattern as list; use unwrap script or manual |
 | `compat/global-reexports.js` | 1 | Shrink as modules import each other directly |
 | Shared components | `js/components/events/*` | Optional `export` for `EventsConstants`, etc. |
 

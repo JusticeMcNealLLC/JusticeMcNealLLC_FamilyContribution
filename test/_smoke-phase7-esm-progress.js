@@ -25,6 +25,10 @@ check('engagement/raffle.js exports', /\bexport\s*\{/.test(read('js/portal/event
 check('core/vendor-loader.js exports', read('js/portal/events/core/vendor-loader.js').includes('export async function ensureLeaflet'));
 check('core/state.js exports EventsState', read('js/portal/events/core/state.js').includes('export const EventsState'));
 check('core/utils.js exports', read('js/portal/events/core/utils.js').includes('export {'));
+const listEsm = ['header.js', 'search.js', 'filters.js', 'buckets.js'].every((f) =>
+    /export const PortalEventsList/.test(read(`js/portal/events/list/${f}`)));
+check('list modules export (7/8, shell still IIFE)', listEsm);
+check('list/shell.js still IIFE orchestrator', read('js/portal/events/list/shell.js').includes('(function () {'));
 const bundle = read('js/portal/events/events.bundle.js');
 check('bundle uses EventsState', bundle.includes('EventsState'));
 check('classic-chain-loader removed', !fs.existsSync(path.join(eventsDir, 'classic-chain-loader.js')));
