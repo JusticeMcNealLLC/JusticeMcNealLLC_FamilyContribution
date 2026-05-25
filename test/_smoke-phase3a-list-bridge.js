@@ -25,6 +25,7 @@ const {
     chainOrderOk,
     productionEventsBootLast,
 } = require('./_portal-events-classic-chain.js');
+const { hasGlobalBridge, indexConstantsOk, listShellEsmOk } = require('./_esm-bridge-helpers.js');
 
 let passed = 0;
 let failed = 0;
@@ -61,19 +62,13 @@ const listHeroRailsJs = read('js/portal/events/list/hero-rails.js');
 const listBucketsJs = read('js/portal/events/list/buckets.js');
 const classicChain3a = parseClassicChain(root);
 
-// Must be an IIFE (classic-script pattern)
-list.includes('(function ()')
-    ? pass('IIFE wrapper present ((function () {)')
-    : fail('IIFE wrapper missing — list/shell.js must remain a classic-script IIFE');
+listShellEsmOk(list)
+    ? pass('list/shell.js ESM orchestrator (Phase 7.9)')
+    : fail('list/shell.js missing portalEventsListApi or evtLoadEvents bridge');
 
 list.includes("'use strict';")
-    ? pass("'use strict' present inside IIFE")
+    ? pass("'use strict' present")
     : fail("'use strict' missing");
-
-// Must not have native ES module export
-/\bexport\s+(default|const|let|var|function|class|\{)/.test(list)
-    ? fail('Native export statement found — breaks classic script loading')
-    : pass('No native export statement (stays classic-script safe)');
 
 // File must be substantial (>2000 lines worth of content)
 list.length > 40000
@@ -94,7 +89,8 @@ const REQUIRED_GLOBALS = [
 ];
 
 REQUIRED_GLOBALS.forEach(([globalAssign, fnName, note]) => {
-    const hasAssign = list.includes(globalAssign);
+    const name = globalAssign.replace('window.', '');
+    const hasAssign = hasGlobalBridge(list, name);
     const hasFn = fnName ? list.includes('function ' + fnName + '(') || list.includes('function ' + fnName + ' (') : true;
     if (hasAssign) {
         pass(`${globalAssign} assigned in source${note ? ' (' + note + ')' : ''}`);
@@ -113,9 +109,9 @@ console.log('\n── list/shell.js — bare identifier compatibility (init.js c
 // In classic scripts, window.evtLoadEvents === evtLoadEvents, so these checks verify
 // the assignment is present (same as above — belt-and-suspenders note).
 ['evtLoadEvents', 'evtInitFilterChips', 'evtSetupSearch', 'evtRenderEvents'].forEach(name => {
-    list.includes('window.' + name + ' ')
-        ? pass(`window.${name} assignment ensures bare-identifier access for init.js`)
-        : fail(`window.${name} not assigned — init.js would get undefined`);
+    hasGlobalBridge(list, name)
+        ? pass(`${name} bridged for init.js`)
+        : fail(`${name} not bridged — init.js would get undefined`);
 });
 
 // ─── Internal functions referenced by init.js indirectly ─
@@ -257,13 +253,13 @@ list.includes('function loadEvents')
 // ─── window.PortalEvents.list namespace ──────────────────
 console.log('\n── list/shell.js — window.PortalEvents.list namespace ─────────────────────────────');
 
-list.includes('window.PortalEvents.list = {')
-    ? pass('window.PortalEvents.list namespace assigned')
-    : fail('window.PortalEvents.list namespace missing');
+(list.includes('portalEventsListApi') || list.includes('window.PortalEvents.list'))
+    ? pass('PortalEvents.list namespace assigned')
+    : fail('PortalEvents.list namespace missing');
 
-list.includes('window.PortalEvents = window.PortalEvents ||')
-    ? pass('window.PortalEvents safe-init guard present in list/shell.js')
-    : fail('window.PortalEvents safe-init guard missing in list/shell.js');
+(list.includes('globalThis.PortalEvents') || list.includes('window.PortalEvents = window.PortalEvents'))
+    ? pass('PortalEvents wired in list/shell.js')
+    : fail('PortalEvents safe-init missing in list/shell.js');
 
 // Phase 3A: verify new namespace keys are present
 const NAMESPACE_KEYS = [
@@ -368,9 +364,9 @@ initJs.includes('let _eventsPageInitialized = false')
 console.log('\n── Phase 2 bridges — regression check ─────────────────────────────────────');
 
 const indexJs = read('js/portal/events/index.js');
-indexJs.includes('window.PortalEvents.constants')
-    ? pass('window.PortalEvents.constants still present (index.js bridge intact)')
-    : fail('window.PortalEvents.constants missing — Phase 2 regression');
+indexConstantsOk(indexJs)
+    ? pass('PortalEvents.constants still present (index.js bridge intact)')
+    : fail('PortalEvents.constants missing — Phase 2 regression');
 
 const raffleJs = read('js/portal/events/core/raffle-model.js');
 raffleJs.includes('root.PortalEvents.raffleModel = api')

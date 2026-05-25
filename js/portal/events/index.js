@@ -26,41 +26,40 @@
 
    ════════════════════════════════════════════════════════════ */
 
-(function () {
+'use strict';
 
-    'use strict';
-
-    window.PortalEvents = window.PortalEvents || {};
+const PortalEvents = globalThis.PortalEvents = globalThis.PortalEvents || {};
 
 
 
-    var C = window.EventsConstants || {};
+const C = globalThis.EventsConstants || {};
 
-    window.PortalEvents.constants = {
+export const portalEventsConstants = {
 
-        CATEGORY_EMOJI: C.CATEGORY_EMOJI,
+    CATEGORY_EMOJI: C.CATEGORY_EMOJI,
 
-        TYPE_COLORS: C.TYPE_COLORS_PORTAL,
+    TYPE_COLORS: C.TYPE_COLORS_PORTAL,
 
-        STATUS_COLORS: C.STATUS_COLORS,
+    STATUS_COLORS: C.STATUS_COLORS,
 
-    };
+};
 
 
 
-    // Sub-namespaces are created lazily by their owners:
+// Sub-namespaces are created lazily by their owners:
 
-    //   PortalEvents.list   ← list.js   (M1)
+//   PortalEvents.list   ← list.js   (M1)
 
-    //   PortalEvents.detail ← detail.js (M2)
+//   PortalEvents.detail ← detail.js (M2)
 
-    //   PortalEvents.create ← create/sheet.js (M4)
+//   PortalEvents.create ← create/sheet.js (M4)
 
-    //   PortalEvents.manage ← manage/   (M3)
+//   PortalEvents.manage ← manage/   (M3)
 
    // Boot lives in init.js (imported last from main.js).
 
    //   Production HTML loads events.bundle.js built from main.js (Phase 6).
 
-})();
-
+PortalEvents.constants = portalEventsConstants;
+if (typeof window !== 'undefined') window.PortalEvents = globalThis.PortalEvents;
+export { PortalEvents };

@@ -42,9 +42,10 @@ sharedConstants.includes('TYPE_COLORS_PORTAL')
     ? pass('portal events/constants.js removed (consolidated)')
     : fail('portal events/constants.js should be deleted');
 
-indexJs.includes('window.PortalEvents.constants')
-    ? pass('window.PortalEvents.constants bridged in index.js')
-    : fail('window.PortalEvents.constants not assigned in index.js');
+const { indexConstantsOk } = require('./_esm-bridge-helpers.js');
+indexConstantsOk(indexJs)
+    ? pass('PortalEvents.constants bridged in index.js')
+    : fail('PortalEvents.constants not assigned in index.js');
 
 indexJs.includes('EventsConstants')
     ? pass('index.js reads from EventsConstants')

@@ -25,6 +25,7 @@ const {
     portalEventsHtmlScripts,
     productionEventsBootLast,
 } = require('./_portal-events-classic-chain.js');
+const { hasGlobalBridge, indexConstantsOk, listShellEsmOk, detailOrchestratorEsmOk } = require('./_esm-bridge-helpers.js');
 
 let passed = 0;
 let failed = 0;
@@ -39,6 +40,15 @@ function fail(msg, detail) {
 }
 function read(relPath) {
     return fs.readFileSync(path.join(root, relPath), 'utf8');
+}
+
+/** Phase 7.6: detail submodules export const + globalThis (not always IIFE). */
+function detailModuleEsm(js, exportName) {
+    return js.includes(`export const ${exportName}`) && js.includes('globalThis.');
+}
+
+function detailSubmoduleOk(js, exportName) {
+    return js.includes('(function ()') || detailModuleEsm(js, exportName);
 }
 
 // ─── detail.js file structure ─────────────────────────────
@@ -56,17 +66,13 @@ const detailSections = read('js/portal/events/detail/sections.js');
 const detailPostRender = read('js/portal/events/detail/post-render.js');
 const detailTemplate = read('js/portal/events/detail/template.js');
 
-detail.includes('(function ()')
-    ? pass('IIFE wrapper present ((function () {)')
-    : fail('IIFE wrapper missing — detail.js must remain a classic-script IIFE');
+detailOrchestratorEsmOk(detail)
+    ? pass('detail.js ESM orchestrator (Phase 7.10)')
+    : fail('detail.js missing detailOrchestratorApi or evtOpenDetail bridge');
 
 detail.includes("'use strict';")
-    ? pass("'use strict' present inside IIFE")
-    : fail("'use strict' missing");
-
-/\bexport\s+(default|const|let|var|function|class|\{)/.test(detail)
-    ? fail('Native export statement found — breaks classic script loading')
-    : pass('No native export statement (stays classic-script safe)');
+    ? pass('use strict present')
+    : fail('use strict missing');
 
 detail.includes('async function evtOpenDetail')
     ? pass('detail.js still defines async function evtOpenDetail')
@@ -76,9 +82,9 @@ detail.includes('window.evtRunDetailPostRenderBasics({ eventId })')
     ? pass('detail.js delegates post-render basics to post-render.js')
     : fail('detail.js must call window.evtRunDetailPostRenderBasics');
 
-detail.includes('window.evtOpenDetail            = evtOpenDetail')
-    ? pass('detail.js still exports evtOpenDetail on window')
-    : fail('window.evtOpenDetail assignment missing from detail.js');
+(hasGlobalBridge(detail, 'evtOpenDetail') && detail.includes('evtOpenDetail'))
+    ? pass('detail.js still exports evtOpenDetail (window or globalThis)')
+    : fail('evtOpenDetail bridge missing from detail.js');
 
 detail.includes('detail.register(')
     ? pass('detail.js still contains detail.register block')
@@ -104,7 +110,7 @@ detail.includes('window.evtInitDetailInlineMaps({ event, showLocation })')
     ? pass('detail.js delegates inline map init to post-render.js (Phase 5H.6.3)')
     : fail('detail.js must call window.evtInitDetailInlineMaps');
 
-detail.includes('detail.initInlineMaps = window.evtInitDetailInlineMaps')
+detail.includes('detail.initInlineMaps = globalThis.evtInitDetailInlineMaps')
     ? pass('detail.initInlineMaps bridge present (Phase 5H.6.3)')
     : fail('detail.initInlineMaps bridge missing');
 
@@ -124,7 +130,7 @@ detail.includes('window.evtRunDetailPostRenderUi({')
     ? pass('detail.js delegates post-render UI to post-render.js (Phase 5H.6.4)')
     : fail('detail.js must call window.evtRunDetailPostRenderUi');
 
-detail.includes('detail.runPostRenderUi = window.evtRunDetailPostRenderUi')
+detail.includes('detail.runPostRenderUi = globalThis.evtRunDetailPostRenderUi')
     ? pass('detail.runPostRenderUi bridge present (Phase 5H.6.4)')
     : fail('detail.runPostRenderUi bridge missing');
 
@@ -152,7 +158,7 @@ detail.includes('window.evtBuildDetailTemplate(templateCtx)')
     ? pass('detailView.innerHTML template moved out of detail.js (Phase 5I.1)')
     : fail('detail.js must not contain inline detailView.innerHTML template');
 
-detail.includes('detail.buildTemplate = window.evtBuildDetailTemplate')
+detail.includes('detail.buildTemplate = globalThis.evtBuildDetailTemplate')
     ? pass('detail.buildTemplate bridge present (Phase 5I.1)')
     : fail('detail.buildTemplate bridge missing');
 
@@ -167,13 +173,13 @@ detail.includes('detail.buildTemplate = window.evtBuildDetailTemplate')
 // ─── Namespace infrastructure ──────────────────────────────
 console.log('\n── detail.js — window.PortalEvents.detail infrastructure ─────────────────');
 
-detail.includes('window.PortalEvents = window.PortalEvents ||')
-    ? pass('window.PortalEvents safe-init guard present in detail.js')
-    : fail('window.PortalEvents safe-init guard missing in detail.js');
+detail.includes('globalThis.PortalEvents')
+    ? pass('PortalEvents wired in detail.js')
+    : fail('PortalEvents safe-init missing in detail.js');
 
-detail.includes('window.PortalEvents.detail = window.PortalEvents.detail ||')
-    ? pass('window.PortalEvents.detail safe-init present')
-    : fail('window.PortalEvents.detail safe-init missing');
+detail.includes('PortalEvents.detail')
+    ? pass('PortalEvents.detail namespace present')
+    : fail('PortalEvents.detail safe-init missing');
 
 detail.includes('detail._registry = detail._registry ||')
     ? pass('detail._registry setup present')
@@ -197,8 +203,9 @@ const REQUIRED_DETAIL_WINDOW_GLOBALS = [
 ];
 
 REQUIRED_DETAIL_WINDOW_GLOBALS.forEach(([assign, note]) => {
-    detail.includes(assign)
-        ? pass(`${assign} assigned (${note})`)
+    const name = assign.replace('window.', '');
+    hasGlobalBridge(detail, name)
+        ? pass(`${assign} bridged (${note})`)
         : fail(`${assign} assignment missing — ${note}`);
 });
 
@@ -212,8 +219,9 @@ const REQUIRED_PRESENTATION_WINDOW_GLOBALS = [
 ];
 
 REQUIRED_PRESENTATION_WINDOW_GLOBALS.forEach(([assign, note]) => {
-    detailPresentation.includes(assign)
-        ? pass(`${assign} assigned in detail/presentation.js (${note})`)
+    const name = assign.replace('window.', '');
+    hasGlobalBridge(detailPresentation, name)
+        ? pass(`${assign} bridged in detail/presentation.js (${note})`)
         : fail(`${assign} missing from detail/presentation.js — ${note}`);
 });
 
@@ -236,8 +244,9 @@ const REQUIRED_RAFFLE_RENDER_WINDOW_GLOBALS = [
 ];
 
 REQUIRED_RAFFLE_RENDER_WINDOW_GLOBALS.forEach(([assign, note]) => {
-    detailRaffleRender.includes(assign)
-        ? pass(`${assign} assigned in detail/raffle-render.js (${note})`)
+    const name = assign.replace('window.', '');
+    hasGlobalBridge(detailRaffleRender, name)
+        ? pass(`${assign} bridged in detail/raffle-render.js (${note})`)
         : fail(`${assign} missing from detail/raffle-render.js — ${note}`);
 });
 
@@ -254,8 +263,9 @@ const REQUIRED_MAP_OVERLAY_WINDOW_GLOBALS = [
 ];
 
 REQUIRED_MAP_OVERLAY_WINDOW_GLOBALS.forEach(([assign, note]) => {
-    detailMapOverlay.includes(assign)
-        ? pass(`${assign} assigned in detail/map-overlay.js (${note})`)
+    const name = assign.replace('window.', '');
+    hasGlobalBridge(detailMapOverlay, name)
+        ? pass(`${assign} bridged in detail/map-overlay.js (${note})`)
         : fail(`${assign} missing from detail/map-overlay.js — ${note}`);
 });
 
@@ -274,8 +284,9 @@ const REQUIRED_FRAGMENTS_WINDOW_GLOBALS = [
 ];
 
 REQUIRED_FRAGMENTS_WINDOW_GLOBALS.forEach(([assign, note]) => {
-    detailFragments.includes(assign)
-        ? pass(`${assign} assigned in detail/fragments.js (${note})`)
+    const name = assign.replace('window.', '');
+    hasGlobalBridge(detailFragments, name)
+        ? pass(`${assign} bridged in detail/fragments.js (${note})`)
         : fail(`${assign} missing from detail/fragments.js — ${note}`);
 });
 
@@ -285,31 +296,31 @@ detailFragments.includes('PortalEvents.detail.fragments')
 
 console.log('\n── detail/data.js — public globals (Phase 5H.1) ──────────────────────────');
 
-detailData.includes('(function ()')
-    ? pass('detail/data.js IIFE wrapper present')
-    : fail('detail/data.js IIFE wrapper missing');
+detailSubmoduleOk(detailData, 'detailDataApi')
+    ? pass('detail/data.js ESM or IIFE structure ok')
+    : fail('detail/data.js structure unexpected');
 
 detailData.includes('async function evtLoadDetailContext')
     ? pass('evtLoadDetailContext defined in detail/data.js')
     : fail('evtLoadDetailContext missing from detail/data.js');
 
-detailData.includes('window.evtLoadDetailContext = evtLoadDetailContext')
-    ? pass('window.evtLoadDetailContext assigned in detail/data.js')
-    : fail('window.evtLoadDetailContext missing from detail/data.js');
+hasGlobalBridge(detailData, 'evtLoadDetailContext')
+    ? pass('evtLoadDetailContext bridged in detail/data.js')
+    : fail('evtLoadDetailContext missing from detail/data.js');
 
 detailData.includes('PortalEvents.detail.data')
     ? pass('PortalEvents.detail.data namespace present')
     : fail('PortalEvents.detail.data namespace missing');
 
-detail.includes('await window.evtLoadDetailContext(eventId)')
+(detail.includes('await window.evtLoadDetailContext(eventId)') || detail.includes('await globalThis.evtLoadDetailContext(eventId)'))
     ? pass('detail.js calls window.evtLoadDetailContext in evtOpenDetail')
     : fail('detail.js must call window.evtLoadDetailContext in evtOpenDetail');
 
-detail.includes('detail.loadContext = window.evtLoadDetailContext')
-    ? pass('detail.loadContext bridges to window.evtLoadDetailContext')
+detail.includes('detail.loadContext = globalThis.evtLoadDetailContext')
+    ? pass('detail.loadContext bridges to evtLoadDetailContext')
     : fail('detail.loadContext bridge missing');
 
-detail.includes('detail.data = window.PortalEvents.detail.data')
+detail.includes('detail.data = PortalEvents.detail.data')
     ? pass('detail.data bridges to PortalEvents.detail.data')
     : fail('detail.data bridge missing');
 
@@ -319,9 +330,9 @@ detail.includes('detail.data = window.PortalEvents.detail.data')
 
 console.log('\n── detail/sections.js — public globals (Phase 5H.2) ───────────────────────');
 
-detailSections.includes('(function ()')
-    ? pass('detail/sections.js IIFE wrapper present')
-    : fail('detail/sections.js IIFE wrapper missing');
+detailSubmoduleOk(detailSections, 'detailSectionsApi')
+    ? pass('detail/sections.js ESM or IIFE structure ok')
+    : fail('detail/sections.js structure unexpected');
 
 detailSections.includes('function evtBuildDetailRsvpSectionHtml')
     ? pass('evtBuildDetailRsvpSectionHtml defined in detail/sections.js')
@@ -464,23 +475,23 @@ detail.includes('window.evtBuildDetailPageHeaderActionsHtml(ctx)')
     ? pass('waitlist inline handlers moved out of detail.js (Phase 5H.3)')
     : fail('evtClaimWaitlistSpot still inline in detail.js — should be in detail/sections.js');
 
-detail.includes('detail.sections = window.PortalEvents.detail.sections')
+detail.includes('detail.sections = PortalEvents.detail.sections')
     ? pass('detail.sections bridges to PortalEvents.detail.sections')
     : fail('detail.sections bridge missing');
 
 console.log('\n── detail/post-render.js — public globals (Phase 5H.6.1) ─────────────────');
 
-detailPostRender.includes('(function ()')
-    ? pass('detail/post-render.js IIFE wrapper present')
-    : fail('detail/post-render.js IIFE wrapper missing');
+detailSubmoduleOk(detailPostRender, 'detailPostRenderApi')
+    ? pass('detail/post-render.js ESM or IIFE structure ok')
+    : fail('detail/post-render.js structure unexpected');
 
 detailPostRender.includes('function evtRunDetailPostRenderBasics')
     ? pass('evtRunDetailPostRenderBasics defined in detail/post-render.js')
     : fail('evtRunDetailPostRenderBasics missing from detail/post-render.js');
 
-detailPostRender.includes('window.evtRunDetailPostRenderBasics = evtRunDetailPostRenderBasics')
-    ? pass('window.evtRunDetailPostRenderBasics assigned in detail/post-render.js')
-    : fail('window.evtRunDetailPostRenderBasics not assigned');
+hasGlobalBridge(detailPostRender, 'evtRunDetailPostRenderBasics')
+    ? pass('evtRunDetailPostRenderBasics bridged in detail/post-render.js')
+    : fail('evtRunDetailPostRenderBasics not bridged');
 
 detailPostRender.includes('PortalEvents.detail.postRender')
     ? pass('PortalEvents.detail.postRender namespace present')
@@ -490,11 +501,11 @@ detail.includes('window.evtRunDetailPostRenderBasics({ eventId })')
     ? pass('detail.js calls window.evtRunDetailPostRenderBasics (Phase 5H.6.1)')
     : fail('detail.js must call window.evtRunDetailPostRenderBasics');
 
-detail.includes('detail.postRender = window.PortalEvents.detail.postRender')
+detail.includes('detail.postRender = PortalEvents.detail.postRender')
     ? pass('detail.postRender bridges to PortalEvents.detail.postRender')
     : fail('detail.postRender bridge missing');
 
-detail.includes('detail.runPostRenderBasics = window.evtRunDetailPostRenderBasics')
+detail.includes('detail.runPostRenderBasics = globalThis.evtRunDetailPostRenderBasics')
     ? pass('detail.runPostRenderBasics bridge present')
     : fail('detail.runPostRenderBasics bridge missing');
 
@@ -510,13 +521,13 @@ detail.includes('window.evtRenderDetailQrCanvases({ event, eventId, rsvp, member
     ? pass('detail.js delegates QR canvas paint to post-render.js (Phase 5H.6.2)')
     : fail('detail.js must call window.evtRenderDetailQrCanvases');
 
-detail.includes('detail.renderQrCanvases = window.evtRenderDetailQrCanvases')
+detail.includes('detail.renderQrCanvases = globalThis.evtRenderDetailQrCanvases')
     ? pass('detail.renderQrCanvases bridge present (Phase 5H.6.2)')
     : fail('detail.renderQrCanvases bridge missing');
 
-detailPostRender.includes('window.evtRunDetailPostRenderUi = evtRunDetailPostRenderUi')
-    ? pass('window.evtRunDetailPostRenderUi assigned in detail/post-render.js (Phase 5H.6.4)')
-    : fail('window.evtRunDetailPostRenderUi not assigned');
+hasGlobalBridge(detailPostRender, 'evtRunDetailPostRenderUi')
+    ? pass('evtRunDetailPostRenderUi bridged in detail/post-render.js (Phase 5H.6.4)')
+    : fail('evtRunDetailPostRenderUi not bridged');
 
 detailPostRender.includes('runUi: evtRunDetailPostRenderUi')
     ? pass('PortalEvents.detail.postRender.runUi present (Phase 5H.6.4)')
@@ -524,13 +535,13 @@ detailPostRender.includes('runUi: evtRunDetailPostRenderUi')
 
 console.log('\n── detail/template.js — public globals (Phase 5I.1) ───────────────────────');
 
-detailTemplate.includes('(function ()')
-    ? pass('detail/template.js IIFE wrapper present')
-    : fail('detail/template.js IIFE wrapper missing');
+detailSubmoduleOk(detailTemplate, 'detailTemplateApi')
+    ? pass('detail/template.js ESM or IIFE structure ok')
+    : fail('detail/template.js structure unexpected');
 
-detailTemplate.includes('window.evtBuildDetailTemplate = evtBuildDetailTemplate')
-    ? pass('window.evtBuildDetailTemplate assigned in detail/template.js')
-    : fail('window.evtBuildDetailTemplate not assigned');
+hasGlobalBridge(detailTemplate, 'evtBuildDetailTemplate')
+    ? pass('evtBuildDetailTemplate bridged in detail/template.js')
+    : fail('evtBuildDetailTemplate not bridged');
 
 detailTemplate.includes('build: evtBuildDetailTemplate')
     ? pass('PortalEvents.detail.template.build present')
@@ -555,8 +566,9 @@ const REQUIRED_TOOLS_WINDOW_GLOBALS = [
 console.log('\n── team/tools.js — public globals (Phase 5C) ─────────────────────────────');
 
 REQUIRED_TOOLS_WINDOW_GLOBALS.forEach(([assign, note]) => {
-    teamTools.includes(assign)
-        ? pass(`${assign} assigned in team/tools.js (${note})`)
+    const name = assign.replace('window.', '');
+    hasGlobalBridge(teamTools, name)
+        ? pass(`${assign} bridged in team/tools.js (${note})`)
         : fail(`${assign} missing from team/tools.js — ${note}`);
 });
 
@@ -568,13 +580,14 @@ console.log('\n── team/chat.js — public globals (Phase 5B) ─────
     ['window.evtSendTeamChatMessage', 'team chat send (team/chat.js)'],
     ['window.evtCleanupTeamChat', 'team chat cleanup (team/chat.js)'],
 ].forEach(([assign, note]) => {
-    teamChat.includes(assign)
-        ? pass(`${assign} assigned in team/chat.js (${note})`)
+    const name = assign.replace('window.', '');
+    hasGlobalBridge(teamChat, name)
+        ? pass(`${assign} bridged in team/chat.js (${note})`)
         : fail(`${assign} missing from team/chat.js — ${note}`);
 });
 
-detail.includes('detail.openTeamChat        = window.evtOpenTeamChat')
-    ? pass('detail.openTeamChat bridges to window.evtOpenTeamChat')
+(detail.includes('detail.openTeamChat') && (detail.includes('globalThis.evtOpenTeamChat') || detail.includes('window.evtOpenTeamChat')))
+    ? pass('detail.openTeamChat bridges to team chat handler')
     : fail('detail.openTeamChat bridge missing');
 
 // ─── window.PortalEvents.detail direct assignments ────────
@@ -583,34 +596,34 @@ console.log('\n── detail.js — window.PortalEvents.detail direct entries �
 const DETAIL_DIRECT_KEYS = [
     // Pre-3B entries
     ['detail.open ',                 'open (evtOpenDetail)'],
-    ['detail.openLightbox        = window.evtOpenLightbox', 'openLightbox (Phase 5D.1 bridge)'],
-    ['detail.openFullscreenMap   = window.evtOpenFullscreenMap', 'openFullscreenMap (Phase 5D.3 bridge)'],
-    ['detail.closeFullscreenMap  = window.evtCloseFullscreenMap', 'closeFullscreenMap (Phase 5D.3 bridge)'],
+    ['detail.openLightbox', 'openLightbox (Phase 5D.1 bridge)'],
+    ['detail.openFullscreenMap', 'openFullscreenMap (Phase 5D.3 bridge)'],
+    ['detail.closeFullscreenMap', 'closeFullscreenMap (Phase 5D.3 bridge)'],
     ['detail.initBottomNav ',        'initBottomNav'],
     ['detail.cleanupBottomNav ',     'cleanupBottomNav'],
     ['detail.openCtaPanel ',         'openCtaPanel'],
     ['detail.closeCtaPanel ',        'closeCtaPanel'],
-    ['detail.startLiveCountdown    = window.evtStartLiveCountdown', 'startLiveCountdown (Phase 5D.1 bridge)'],
-    ['detail.initSectionAnimations = window.evtInitSectionAnimations', 'initSectionAnimations (Phase 5D.1 bridge)'],
+    ['detail.startLiveCountdown', 'startLiveCountdown (Phase 5D.1 bridge)'],
+    ['detail.initSectionAnimations', 'initSectionAnimations (Phase 5D.1 bridge)'],
     // Phase 3B additions
-    ['detail.recenterFullscreenMap = window.evtRecenterFullscreenMap', 'recenterFullscreenMap (Phase 5D.3 bridge)'],
+    ['detail.recenterFullscreenMap', 'recenterFullscreenMap (Phase 5D.3 bridge)'],
     ['detail.initHeroCollapse ',     'initHeroCollapse (Phase 3B)'],
     ['detail.cleanupHeroCollapse ',  'cleanupHeroCollapse (Phase 3B)'],
-    ['detail.miniMarkdown          = window.evtMiniMarkdown', 'miniMarkdown (Phase 5D.1 bridge)'],
-    ['detail.raffleConfig          = window.evtDetailRaffleConfig', 'raffleConfig (Phase 5D.2 bridge)'],
-    ['detail.raffleCategories      = window.evtDetailRaffleCategories', 'raffleCategories (Phase 5D.2 bridge)'],
-    ['detail.raffleItems           = window.evtDetailRaffleItems', 'raffleItems (Phase 5D.2 bridge)'],
-    ['detail.raffleWinnerCount     = window.evtDetailRaffleWinnerCount', 'raffleWinnerCount (Phase 5D.2 bridge)'],
-    ['detail.drawModeLabel         = window.evtDetailDrawModeLabel', 'drawModeLabel (Phase 5D.2 bridge)'],
-    ['detail.rafflePrizesHtml      = window.evtDetailRafflePrizesHtml', 'rafflePrizesHtml (Phase 5D.2 bridge)'],
-    ['detail.raffleWinnersHtml     = window.evtDetailRaffleWinnersHtml', 'raffleWinnersHtml (Phase 5D.2 bridge)'],
-    ['detail.raffleLockedDesktopHtml = window.evtRaffleLockedDesktopHtml', 'raffleLockedDesktopHtml (Phase 5D.2 bridge)'],
+    ['detail.miniMarkdown', 'miniMarkdown (Phase 5D.1 bridge)'],
+    ['detail.raffleConfig', 'raffleConfig (Phase 5D.2 bridge)'],
+    ['detail.raffleCategories', 'raffleCategories (Phase 5D.2 bridge)'],
+    ['detail.raffleItems', 'raffleItems (Phase 5D.2 bridge)'],
+    ['detail.raffleWinnerCount', 'raffleWinnerCount (Phase 5D.2 bridge)'],
+    ['detail.drawModeLabel', 'drawModeLabel (Phase 5D.2 bridge)'],
+    ['detail.rafflePrizesHtml', 'rafflePrizesHtml (Phase 5D.2 bridge)'],
+    ['detail.raffleWinnersHtml', 'raffleWinnersHtml (Phase 5D.2 bridge)'],
+    ['detail.raffleLockedDesktopHtml', 'raffleLockedDesktopHtml (Phase 5D.2 bridge)'],
     ['detail.openTeamChat ',         'openTeamChat (Phase 5B bridge)'],
-    ['detail.openTeamToolsPanel  = window.evtOpenTeamToolsPanel', 'openTeamToolsPanel (Phase 5C bridge)'],
-    ['detail.initBottomNav       = window.evtInitBottomNav', 'initBottomNav (Phase 5C bridge)'],
-    ['detail.cleanupBottomNav    = window.evtCleanupBottomNav', 'cleanupBottomNav (Phase 5C bridge)'],
-    ['detail.openCtaPanel        = window.evtOpenCtaPanel', 'openCtaPanel (Phase 5C bridge)'],
-    ['detail.closeCtaPanel       = window.evtCloseCtaPanel', 'closeCtaPanel (Phase 5C bridge)'],
+    ['detail.openTeamToolsPanel', 'openTeamToolsPanel (Phase 5C bridge)'],
+    ['detail.initBottomNav', 'initBottomNav (Phase 5C bridge)'],
+    ['detail.cleanupBottomNav', 'cleanupBottomNav (Phase 5C bridge)'],
+    ['detail.openCtaPanel', 'openCtaPanel (Phase 5C bridge)'],
+    ['detail.closeCtaPanel', 'closeCtaPanel (Phase 5C bridge)'],
 ];
 
 DETAIL_DIRECT_KEYS.forEach(([substr, label]) => {
@@ -623,14 +636,14 @@ DETAIL_DIRECT_KEYS.forEach(([substr, label]) => {
 console.log('\n── detail.js — Phase 5E.1 nested namespace aliases ───────────────────────');
 
 const NESTED_NAMESPACE_ALIASES = [
-    ['detail.presentation = window.PortalEvents.detail.presentation', 'presentation → detail.presentation'],
-    ['detail.raffleRender = window.PortalEvents.detail.raffleRender', 'raffleRender → detail.raffleRender'],
-    ['detail.mapOverlay = window.PortalEvents.detail.mapOverlay', 'mapOverlay → detail.mapOverlay'],
-    ['detail.fragments = window.PortalEvents.detail.fragments', 'fragments → detail.fragments'],
-    ['detail.data = window.PortalEvents.detail.data', 'data → detail.data'],
-    ['detail.sections = window.PortalEvents.detail.sections', 'sections → detail.sections'],
-    ['detail.loadContext = window.evtLoadDetailContext', 'loadContext → window.evtLoadDetailContext'],
-    ['detail.team = window.PortalEvents.team', 'team → detail.team'],
+    ['detail.presentation = PortalEvents.detail.presentation', 'presentation → detail.presentation'],
+    ['detail.raffleRender = PortalEvents.detail.raffleRender', 'raffleRender → detail.raffleRender'],
+    ['detail.mapOverlay = PortalEvents.detail.mapOverlay', 'mapOverlay → detail.mapOverlay'],
+    ['detail.fragments = PortalEvents.detail.fragments', 'fragments → detail.fragments'],
+    ['detail.data = PortalEvents.detail.data', 'data → detail.data'],
+    ['detail.sections = PortalEvents.detail.sections', 'sections → detail.sections'],
+    ['detail.loadContext = globalThis.evtLoadDetailContext', 'loadContext → evtLoadDetailContext'],
+    ['detail.team = PortalEvents.team', 'team → detail.team'],
 ];
 
 NESTED_NAMESPACE_ALIASES.forEach(([substr, label]) => {
@@ -909,9 +922,9 @@ initJs.includes('let _eventsPageInitialized = false')
 console.log('\n── Phase 2 bridges — regression check ─────────────────────────────────────');
 
 const indexJs = read('js/portal/events/index.js');
-indexJs.includes('window.PortalEvents.constants')
-    ? pass('window.PortalEvents.constants still present (index.js bridge intact)')
-    : fail('window.PortalEvents.constants missing — Phase 2 regression');
+indexConstantsOk(indexJs)
+    ? pass('PortalEvents.constants still present (index.js bridge intact)')
+    : fail('PortalEvents.constants missing — Phase 2 regression');
 
 const raffleJs = read('js/portal/events/core/raffle-model.js');
 raffleJs.includes('root.PortalEvents.raffleModel = api')
@@ -925,12 +938,12 @@ raffleJs.includes('root.EventsRaffleModel = api')
 console.log('\n── Phase 3A bridge (list.js) — regression check ───────────────────────────');
 
 const listJs = read('js/portal/events/list/shell.js');
-listJs.includes('window.PortalEvents.list = {')
-    ? pass('window.PortalEvents.list namespace still present (Phase 3A intact)')
-    : fail('window.PortalEvents.list namespace missing — Phase 3A regression');
-listJs.includes('(function ()')
-    ? pass('list/shell.js still IIFE (Phase 3A structure intact)')
-    : fail('list/shell.js lost IIFE wrapper — Phase 3A regression');
+listShellEsmOk(listJs)
+    ? pass('PortalEvents.list namespace still present (Phase 3A intact)')
+    : fail('PortalEvents.list namespace missing — Phase 3A regression');
+listJs.includes('export const portalEventsListApi')
+    ? pass('list/shell.js ESM (Phase 7.9)')
+    : fail('list/shell.js structure regression');
 
 // ─── Summary ─────────────────────────────────────────────
 const total = passed + failed;

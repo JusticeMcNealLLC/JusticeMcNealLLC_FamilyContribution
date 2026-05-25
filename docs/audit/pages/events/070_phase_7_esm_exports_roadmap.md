@@ -1,64 +1,48 @@
-# Phase 7 — Native ESM exports (incremental)
+# Phase 7 — Native ESM exports (complete)
 
-**Status:** Started (engagement modules export; full migration open)  
-**Date:** 2026-05-25
+**Status:** Complete (2026-05-25)  
+**Production:** `main.js` → `npm run build:events` → `events.bundle.js` (single script in `portal/events.html`)
 
-## Done in Phase 6.1
+## Summary
 
-- `main.js` is the **only** load-order manifest (`classic-chain-loader.js` removed).
-- `engagement/rsvp.js` and `engagement/raffle.js` moved from portal/events root.
-- Named `export { … }` on engagement modules; `window.*` bridges kept for HTML `onclick` and legacy callers.
-- CI: `.github/workflows/events-bundle.yml` runs `verify:events-main`, `build:events`, bundle smokes.
+All `js/portal/events/**/*.js` modules loaded by `main.js` are now ESM source files. Legacy `window.*` / `globalThis.*` bridges remain for HTML `onclick`, inline handlers, and external pages until callers migrate to imports.
 
-## Done in Phase 7.1
+**Exception (intentional):** `core/raffle-model.js` stays UMD `(function (root) { … })(this)` — shared with non-bundle contexts; exports via `root.EventsRaffleModel`.
 
-| File | Change |
-|------|--------|
-| `core/vendor-loader.js` | IIFE removed; `export` `ensureQRCode` / `ensureJsQR` / `ensureLeaflet`; `window.evtEnsure*` preserved |
+## Phases completed
 
-## Done in Phase 7.2
+| Phase | Scope |
+|-------|--------|
+| 7.1 | `core/vendor-loader.js` |
+| 7.2 | `core/state.js` + state global migration |
+| 7.3 | `core/utils.js`, `compat/global-reexports.js` |
+| 7.4 | `list/*` (7 modules; shell in 7.9) |
+| 7.5 | `team/chat.js`, `team/tools.js` |
+| 7.6 | `detail/*` pipeline (8 modules; `detail.js` in 7.10) |
+| 7.7 | `create/*` (12 modules) |
+| 7.8 | `manage/*` (11 modules) |
+| 7.9 | `list/shell.js` orchestrator |
+| 7.10 | `detail.js` orchestrator |
+| 7.11 | `index.js`, `compat/global-reexports.js` |
 
-| File | Change |
-|------|--------|
-| `core/state.js` | `export const EventsState`; `globalThis.evt*` getters/setters for legacy + esbuild |
-| 19 modules | Bare `evtCurrentUser`, `evtAllEvents`, etc. → `globalThis.*` (see `scripts/migrate-events-state-globals.js`) |
+## Unwrap scripts
 
-## Done in Phase 7.3
+| Script | Folder |
+|--------|--------|
+| `scripts/unwrap-list-iife.js` | `list/` (excl. shell) |
+| `scripts/unwrap-list-shell-iife.js` | `list/shell.js` |
+| `scripts/unwrap-team-iife.js` | `team/` |
+| `scripts/unwrap-detail-iife.js` | `detail/` submodules |
+| `scripts/unwrap-detail-orchestrator-iife.js` | `detail.js` |
+| `scripts/unwrap-create-iife.js` | `create/` |
+| `scripts/unwrap-manage-iife.js` | `manage/` |
+| `scripts/unwrap-index-iife.js` | `index.js` |
+| `scripts/unwrap-compat-reexports-iife.js` | `compat/global-reexports.js` |
 
-| File | Change |
-|------|--------|
-| `core/utils.js` | Named `export` for routing/modal/ICS helpers; `globalThis.*` assignment |
-| `compat/global-reexports.js` | Resolve handlers via `globalThis` (esbuild-safe) |
-
-## Done in Phase 7.4 (list modules)
-
-| File | Change |
-|------|--------|
-| `list/header.js`, `search.js`, `filters.js`, `calendar.js`, `right-rail.js`, `buckets.js`, `hero-rails.js` | IIFE removed; `export const PortalEventsList*` + `globalThis` bridge |
-| `list/shell.js` | Still IIFE orchestrator (delegates to list modules) |
-| `scripts/unwrap-list-iife.js` | One-off / repeat helper for list folder |
-
-## Done in Phase 7.5 (team)
-
-| File | Change |
-|------|--------|
-| `team/chat.js` | `export const teamChatApi`; `PortalEvents.team.chat` bridge; `globalThis.evtOpenTeamChat` |
-| `team/tools.js` | `export const teamToolsApi`; CTA/tools `globalThis.evt*` bridge |
-| `scripts/unwrap-team-iife.js` | Helper for team folder |
-
-## Remaining (incremental PRs)
-
-| Area | Files | Approach |
-|------|-------|----------|
-| `list/shell.js` | 1 | Unwrap last list IIFE when ready |
-| IIFE modules | detail/*, create/*, manage/* | `scripts/unwrap-list-iife.js` pattern or folder-specific unwrap |
-| `compat/global-reexports.js` | 1 | Shrink as modules import each other directly |
-| Shared components | `js/components/events/*` | Optional `export` for `EventsConstants`, etc. |
-
-## Rule until migration complete
+## Workflow (unchanged)
 
 1. Edit **`main.js`** when load order changes → `npm run verify:events-main` → `npm run build:events`.
-2. New public APIs: add **`export`** and keep **`window.*`** assignment until all callers import.
+2. Bump `events.bundle.js?v=` in `portal/events.html` on deploy.
 3. Do not edit `events.bundle.js` by hand.
 
 ## Verification
@@ -67,4 +51,16 @@
 npm run verify:events-main
 npm run build:events
 node test/_smoke-events-bundle.js
+node test/_smoke-phase7-esm-progress.js
+node test/_smoke-phase3a-list-bridge.js
+node test/_smoke-phase3b-detail-bridge.js
+node test/_smoke-phase3c-manage-bridge.js
+node test/_smoke-phase3d-create-bridge.js
 ```
+
+## Optional follow-ups (not required for Phase 7)
+
+- Replace `window.*` onclick handlers with `data-action` + delegated listeners.
+- `import` between modules instead of `globalThis` bridges.
+- ESM `export` on `js/components/events/*` shared components.
+- Convert `core/raffle-model.js` UMD to ESM if bundle-only.

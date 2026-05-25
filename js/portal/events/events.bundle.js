@@ -298,7 +298,7 @@
           const number = Number(value);
           return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : null;
         }
-        const api7 = {
+        const api17 = {
           VERSION,
           DEFAULT_EMOJI,
           normalizeConfig,
@@ -311,10 +311,10 @@
           getDrawQueue,
           validateConfig
         };
-        root2.EventsRaffleModel = api7;
-        if (typeof module !== "undefined" && module.exports) module.exports = api7;
+        root2.EventsRaffleModel = api17;
+        if (typeof module !== "undefined" && module.exports) module.exports = api17;
         if (typeof root2.PortalEvents === "undefined") root2.PortalEvents = {};
-        root2.PortalEvents.raffleModel = api7;
+        root2.PortalEvents.raffleModel = api17;
       })(typeof globalThis !== "undefined" ? globalThis : window);
     }
   });
@@ -443,14 +443,14 @@
     }
     function miniMarkdown(text, escapeFirst = false) {
       if (!text) return "";
-      let html = escapeFirst ? escapeHtml(text) : text;
-      html = html.replace(
+      let html5 = escapeFirst ? escapeHtml(text) : text;
+      html5 = html5.replace(
         /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
         '<a href="$2" target="_blank" rel="noopener">$1</a>'
       );
-      html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-      html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
-      return html;
+      html5 = html5.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      html5 = html5.replace(/\*(.+?)\*/g, "<em>$1</em>");
+      return html5;
     }
     function formatMoney(cents, opts = {}) {
       const n = Number(cents) || 0;
@@ -523,7 +523,7 @@
         lb.setAttribute("role", "dialog");
         lb.setAttribute("aria-label", "Image preview");
         lb.innerHTML = '<button class="evt-lightbox-close" aria-label="Close preview"><svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button><img src="" alt="Event banner full size">';
-        const close = () => {
+        const close3 = () => {
           lb.classList.remove("active");
           document.body.style.overflow = "";
           setTimeout(() => {
@@ -531,7 +531,7 @@
           }, 250);
         };
         lb.addEventListener("click", (e) => {
-          if (e.target === lb || e.target.closest(".evt-lightbox-close")) close();
+          if (e.target === lb || e.target.closest(".evt-lightbox-close")) close3();
         });
         document.body.appendChild(lb);
       }
@@ -656,7 +656,7 @@
         const b = bucketOf(e);
         if (buckets[b]) buckets[b].push(e);
       }
-      return labels.map((label) => ({ label, events: buckets[label] })).filter((g) => g.events.length > 0);
+      return labels.map((label) => ({ label, events: buckets[label] })).filter((g2) => g2.events.length > 0);
     }
     function toggleModal(id, show) {
       const modal = document.getElementById(id);
@@ -690,9 +690,9 @@
   // js/components/events/pills.js
   (function() {
     "use strict";
-    const C5 = window.EventsConstants || {};
+    const C7 = window.EventsConstants || {};
     function statusPill(status) {
-      const cls = C5.STATUS_COLORS && C5.STATUS_COLORS[status] || "bg-gray-100 text-gray-600";
+      const cls = C7.STATUS_COLORS && C7.STATUS_COLORS[status] || "bg-gray-100 text-gray-600";
       const label = status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
       return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${cls}">${label}</span>`;
     }
@@ -744,14 +744,14 @@
     }
     function typePill(eventType, flavor = "portal") {
       if (flavor === "public") {
-        const tc2 = C5.TYPE_COLORS_PUBLIC && C5.TYPE_COLORS_PUBLIC[eventType] || C5.TYPE_COLORS_PUBLIC?.llc || { bg: "#f7f7f7", color: "#222", label: "Event" };
+        const tc2 = C7.TYPE_COLORS_PUBLIC && C7.TYPE_COLORS_PUBLIC[eventType] || C7.TYPE_COLORS_PUBLIC?.llc || { bg: "#f7f7f7", color: "#222", label: "Event" };
         return `<span class="evt-tag" style="background:${tc2.bg};color:${tc2.color}">${tc2.label}</span>`;
       }
-      const tc = C5.TYPE_COLORS_PORTAL && C5.TYPE_COLORS_PORTAL[eventType] || C5.TYPE_COLORS_PORTAL?.llc || { bg: "bg-gray-100", text: "text-gray-700", label: "Event" };
+      const tc = C7.TYPE_COLORS_PORTAL && C7.TYPE_COLORS_PORTAL[eventType] || C7.TYPE_COLORS_PORTAL?.llc || { bg: "bg-gray-100", text: "text-gray-700", label: "Event" };
       return `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ${tc.bg} ${tc.text} whitespace-nowrap">${tc.label}</span>`;
     }
     function categoryTag(category) {
-      const tag = C5.CATEGORY_TAG && C5.CATEGORY_TAG[category] || C5.DEFAULT_TAG || { cls: "evt-tag--purple", label: "Event" };
+      const tag = C7.CATEGORY_TAG && C7.CATEGORY_TAG[category] || C7.DEFAULT_TAG || { cls: "evt-tag--purple", label: "Event" };
       return `<span class="evt-tag ${tag.cls}">${tag.label}</span>`;
     }
     function rsvpChip(rsvp) {
@@ -781,9 +781,9 @@
   // js/components/events/card.js
   (function() {
     "use strict";
-    const C5 = window.EventsConstants || {};
-    const H5 = window.EventsHelpers || {};
-    const P2 = window.EventsPills || {};
+    const C7 = window.EventsConstants || {};
+    const H6 = window.EventsHelpers || {};
+    const P3 = window.EventsPills || {};
     function _startDate(event) {
       const raw = event.start_date || event.start_at || event.starts_at;
       if (!raw) return null;
@@ -792,24 +792,24 @@
     }
     function _bannerBg(event) {
       if (event.banner_url) {
-        return `background:linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.45)),url('${H5.escapeHtml(event.banner_url)}') center/cover`;
+        return `background:linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.45)),url('${H6.escapeHtml(event.banner_url)}') center/cover`;
       }
-      const grad = C5.CATEGORY_GRADIENT && C5.CATEGORY_GRADIENT[event.category] || C5.DEFAULT_GRADIENT || "linear-gradient(135deg,#1f2937,#6b7280)";
+      const grad = C7.CATEGORY_GRADIENT && C7.CATEGORY_GRADIENT[event.category] || C7.DEFAULT_GRADIENT || "linear-gradient(135deg,#1f2937,#6b7280)";
       return `background:${grad}`;
     }
     function _emptyBannerEmoji(event) {
       if (event.banner_url) return "";
-      const emoji = C5.CATEGORY_EMOJI && C5.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
+      const emoji = C7.CATEGORY_EMOJI && C7.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
       return `<div class="absolute inset-0 flex items-center justify-center text-6xl opacity-40 pointer-events-none select-none">${emoji}</div>`;
     }
     function _categoryChip(event) {
       if (!event || !event.category) return "";
-      const emoji = C5.CATEGORY_EMOJI && C5.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
-      const label = C5.CATEGORY_TAG && C5.CATEGORY_TAG[event.category]?.label || event.category;
-      const esc = H5.escapeHtml || ((s) => String(s == null ? "" : s));
-      return `<button type="button" data-evt-cat="${esc(event.category)}"
+      const emoji = C7.CATEGORY_EMOJI && C7.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
+      const label = C7.CATEGORY_TAG && C7.CATEGORY_TAG[event.category]?.label || event.category;
+      const esc9 = H6.escapeHtml || ((s) => String(s == null ? "" : s));
+      return `<button type="button" data-evt-cat="${esc9(event.category)}"
             class="evt-cat-chip absolute top-2 left-2 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-base leading-none hover:scale-110 active:scale-95 transition-transform"
-            aria-label="Filter by ${esc(label)}" title="Filter by ${esc(label)}">${emoji}</button>`;
+            aria-label="Filter by ${esc9(label)}" title="Filter by ${esc9(label)}">${emoji}</button>`;
     }
     function _dateStamp(event) {
       const d = _startDate(event);
@@ -828,21 +828,21 @@
     }
     function _relativeLabel(event) {
       const d = _startDate(event);
-      if (!d || !H5.relativeDate) return "";
-      const lbl = H5.relativeDate(d);
+      if (!d || !H6.relativeDate) return "";
+      const lbl = H6.relativeDate(d);
       if (!lbl) return "";
       return `<span class="text-[12px] font-semibold text-gray-500">${lbl}</span>`;
     }
     function _meta(event) {
       const parts = [];
-      const catLabel = C5.CATEGORY_TAG && C5.CATEGORY_TAG[event.category]?.label || null;
+      const catLabel = C7.CATEGORY_TAG && C7.CATEGORY_TAG[event.category]?.label || null;
       if (catLabel) parts.push(catLabel);
-      const tc = C5.TYPE_COLORS_PORTAL && C5.TYPE_COLORS_PORTAL[event.event_type];
+      const tc = C7.TYPE_COLORS_PORTAL && C7.TYPE_COLORS_PORTAL[event.event_type];
       if (tc?.label) parts.push(tc.label);
       const loc = event.location_nickname || event.location_text;
-      if (loc) parts.push(H5.escapeHtml ? H5.escapeHtml(loc) : loc);
+      if (loc) parts.push(H6.escapeHtml ? H6.escapeHtml(loc) : loc);
       const time = _startDate(event);
-      if (time && H5.formatDate) parts.push(H5.formatDate(time, "time"));
+      if (time && H6.formatDate) parts.push(H6.formatDate(time, "time"));
       if (!parts.length) return "";
       return `<p class="text-[13px] text-gray-500 truncate mt-1" data-evt-legacy-meta>${parts.join(" \xB7 ")}</p>`;
     }
@@ -852,9 +852,9 @@
       const visible = list.slice(0, 4);
       const overflow = Math.max(0, list.length - 4);
       const pieces = visible.map((a) => {
-        const name = H5.escapeHtml ? H5.escapeHtml(a.first_name || "") : a.first_name || "";
+        const name = H6.escapeHtml ? H6.escapeHtml(a.first_name || "") : a.first_name || "";
         if (a.profile_picture_url) {
-          const url = H5.escapeHtml ? H5.escapeHtml(a.profile_picture_url) : a.profile_picture_url;
+          const url = H6.escapeHtml ? H6.escapeHtml(a.profile_picture_url) : a.profile_picture_url;
           return `<img src="${url}" alt="${name}" loading="lazy" class="w-7 h-7 rounded-full ring-2 ring-white object-cover bg-gray-100">`;
         }
         const initial = (a.first_name || "?").trim().charAt(0).toUpperCase() || "?";
@@ -876,21 +876,21 @@
     function _adminFooter(event, adminMeta) {
       const rsvps = adminMeta?.rsvps ?? 0;
       const revenue = adminMeta?.revenue ?? 0;
-      const revStr = H5.formatMoney ? H5.formatMoney(revenue) : `$${(revenue / 100).toFixed(0)}`;
+      const revStr = H6.formatMoney ? H6.formatMoney(revenue) : `$${(revenue / 100).toFixed(0)}`;
       return `<div class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3 text-xs text-gray-500">
             <span class="font-semibold text-gray-700">${rsvps}</span> RSVPs
             <span class="text-gray-300">\xB7</span>
             <span class="font-semibold text-gray-700">${revStr}</span> revenue
-            <span class="ml-auto">${P2.statusPill ? P2.statusPill(event.status) : ""}</span>
+            <span class="ml-auto">${P3.statusPill ? P3.statusPill(event.status) : ""}</span>
         </div>`;
     }
     function render(event, opts = {}) {
       if (!event) return "";
       const variant = opts.variant || "portal";
       const href = opts.href || `?event=${encodeURIComponent(event.slug || "")}`;
-      const title = H5.escapeHtml ? H5.escapeHtml(event.title || "Untitled event") : event.title || "";
-      const stateP = P2.statePill ? P2.statePill(event) : "";
-      const countP = variant === "portal" && P2.countdownChip ? P2.countdownChip(event) : "";
+      const title = H6.escapeHtml ? H6.escapeHtml(event.title || "Untitled event") : event.title || "";
+      const stateP = P3.statePill ? P3.statePill(event) : "";
+      const countP = variant === "portal" && P3.countdownChip ? P3.countdownChip(event) : "";
       const ribbon = variant === "portal" ? _goingRibbon(opts.rsvp) : "";
       const stack = variant === "portal" ? _avatarStack(opts.attendees) : "";
       const _d = _startDate(event);
@@ -901,13 +901,13 @@
       const dateChipOverlay = _d ? `<div class="evt-card-date-chip" aria-hidden="true"><span class="evt-card-date-mon">${_mon}</span><span class="evt-card-date-day">${_day}</span><span class="evt-card-date-dow" data-f15-dow>${_dow}</span></div>` : "";
       const isGoing = !!(opts.rsvp && opts.rsvp.status === "going");
       const rsvpFooter = variant === "portal" ? `<button type="button" data-evt-card-rsvp="${event.id}" class="evt-card-rsvp${isGoing ? " evt-card-rsvp--on" : ""}" aria-pressed="${isGoing ? "true" : "false"}">${isGoing ? "\u2713 Going" : "Details"}</button>` : "";
-      const _tcLabel = C5.TYPE_COLORS_PORTAL && C5.TYPE_COLORS_PORTAL[event.event_type]?.label || "";
-      const _catLabel = C5.CATEGORY_TAG && C5.CATEGORY_TAG[event.category]?.label || "";
-      const f15TypeHost = _tcLabel || _catLabel ? `<p class="evt-card-f15-type" data-f15-type>${[_tcLabel, _catLabel].filter(Boolean).map((s) => H5.escapeHtml ? H5.escapeHtml(s) : s).join(" \xB7 ")}</p>` : "";
+      const _tcLabel = C7.TYPE_COLORS_PORTAL && C7.TYPE_COLORS_PORTAL[event.event_type]?.label || "";
+      const _catLabel = C7.CATEGORY_TAG && C7.CATEGORY_TAG[event.category]?.label || "";
+      const f15TypeHost = _tcLabel || _catLabel ? `<p class="evt-card-f15-type" data-f15-type>${[_tcLabel, _catLabel].filter(Boolean).map((s) => H6.escapeHtml ? H6.escapeHtml(s) : s).join(" \xB7 ")}</p>` : "";
       const _f15Loc = event.location_nickname || event.location_text || "";
-      const _f15Time = _d && H5.formatDate ? H5.formatDate(_d, "time") : "";
-      const f15LocRow = _f15Loc ? `<p class="evt-card-f15-row" data-f15-loc><svg class="evt-card-f15-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s7-7.58 7-13a7 7 0 10-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="truncate">${H5.escapeHtml ? H5.escapeHtml(_f15Loc) : _f15Loc}</span></p>` : "";
-      const f15TimeRow = _f15Time ? `<p class="evt-card-f15-row" data-f15-time><svg class="evt-card-f15-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg><span>${H5.escapeHtml ? H5.escapeHtml(_f15Time) : _f15Time}</span></p>` : "";
+      const _f15Time = _d && H6.formatDate ? H6.formatDate(_d, "time") : "";
+      const f15LocRow = _f15Loc ? `<p class="evt-card-f15-row" data-f15-loc><svg class="evt-card-f15-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s7-7.58 7-13a7 7 0 10-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="truncate">${H6.escapeHtml ? H6.escapeHtml(_f15Loc) : _f15Loc}</span></p>` : "";
+      const f15TimeRow = _f15Time ? `<p class="evt-card-f15-row" data-f15-time><svg class="evt-card-f15-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg><span>${H6.escapeHtml ? H6.escapeHtml(_f15Time) : _f15Time}</span></p>` : "";
       const f15Body = f15TypeHost || f15LocRow || f15TimeRow ? `<div class="evt-card-f15" data-f15>${f15TypeHost}${f15LocRow}${f15TimeRow}</div>` : "";
       const _goingCount = opts.goingCount != null ? opts.goingCount : Array.isArray(opts.attendees) ? opts.attendees.length : 0;
       const f15GoingLabel = _goingCount > 0 ? `<span class="evt-card-f15-going">${_goingCount} going</span>` : "";
@@ -960,16 +960,15 @@
   })();
 
   // js/portal/events/index.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    var C5 = window.EventsConstants || {};
-    window.PortalEvents.constants = {
-      CATEGORY_EMOJI: C5.CATEGORY_EMOJI,
-      TYPE_COLORS: C5.TYPE_COLORS_PORTAL,
-      STATUS_COLORS: C5.STATUS_COLORS
-    };
-  })();
+  var PortalEvents = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  var C = globalThis.EventsConstants || {};
+  var portalEventsConstants = {
+    CATEGORY_EMOJI: C.CATEGORY_EMOJI,
+    TYPE_COLORS: C.TYPE_COLORS_PORTAL,
+    STATUS_COLORS: C.STATUS_COLORS
+  };
+  PortalEvents.constants = portalEventsConstants;
+  if (typeof window !== "undefined") window.PortalEvents = globalThis.PortalEvents;
 
   // js/portal/events/core/state.js
   var EventsState = {
@@ -1263,7 +1262,7 @@
   var import_raffle_model = __toESM(require_raffle_model());
 
   // js/portal/events/list/search.js
-  var C = window.EventsConstants || {};
+  var C2 = window.EventsConstants || {};
   var SEARCH_HIST_KEY = "evt_search_hist_v1";
   var SEARCH_HIST_MAX = 8;
   var SEARCH_HIST_SHOW = 5;
@@ -1347,8 +1346,8 @@
     parts.push('<div class="px-3 ' + (hist.length ? "pt-3" : "pt-2") + ' pb-1 text-[11px] uppercase tracking-wide text-gray-500">Quick categories</div>');
     parts.push('<div class="evt-suggest-chip-row flex flex-wrap gap-2 px-3 pb-3">');
     QUICK_CATS.forEach((cat) => {
-      const emoji = C.CATEGORY_EMOJI && C.CATEGORY_EMOJI[cat] || "\u{1F4C5}";
-      const label = C.CATEGORY_TAG && C.CATEGORY_TAG[cat]?.label || cat;
+      const emoji = C2.CATEGORY_EMOJI && C2.CATEGORY_EMOJI[cat] || "\u{1F4C5}";
+      const label = C2.CATEGORY_TAG && C2.CATEGORY_TAG[cat]?.label || cat;
       parts.push(
         '<button type="button" class="evt-suggest-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-brand-50 border border-gray-200 text-sm text-gray-700" data-suggest-cat="' + cat + '"><span aria-hidden="true">' + emoji + "</span><span>" + label + "</span></button>"
       );
@@ -1594,7 +1593,7 @@
     }
     const all = window.evtAllEvents || [];
     const rsvps = window.evtAllRsvps || {};
-    const esc = H.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc9 = H.escapeHtml || ((s) => String(s == null ? "" : s));
     const now = Date.now();
     const mine = all.filter((ev) => {
       const r = rsvps[ev.id];
@@ -1612,8 +1611,8 @@
       const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
       const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
       const hasBanner = !!ev.banner_url;
-      const thumbStyle = hasBanner ? "background: url('" + esc(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);";
-      return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc(dateStr) + ", " + esc(timeStr) + "</span></span></button>";
+      const thumbStyle = hasBanner ? "background: url('" + esc9(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);";
+      return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc9(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc9(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc9(dateStr) + ", " + esc9(timeStr) + "</span></span></button>";
     }).join("");
     mount.innerHTML = '<div class="evt-myrsvps"><div class="evt-myrsvps-head"><h3 class="evt-myrsvps-title">Your Upcoming RSVPs</h3><span class="evt-myrsvps-count">' + total + '</span></div><div class="evt-myrsvps-list">' + rows + '</div><button type="button" class="evt-myrsvps-all" data-evt-myrsvps-all>View All My Events</button></div>';
     mount.querySelectorAll("[data-evt-myrsvp]").forEach((btn) => {
@@ -1683,19 +1682,19 @@
       if (slot && name) slot.textContent = name;
       return;
     }
-    let g = document.getElementById("evtHeaderGreeting");
+    let g2 = document.getElementById("evtHeaderGreeting");
     if (!name) {
-      if (g) g.remove();
+      if (g2) g2.remove();
       return;
     }
-    if (!g) {
-      g = document.createElement("small");
-      g.id = "evtHeaderGreeting";
-      g.className = "evt-header-greeting block text-xs text-gray-400 mb-1";
-      title.parentNode.insertBefore(g, title);
+    if (!g2) {
+      g2 = document.createElement("small");
+      g2.id = "evtHeaderGreeting";
+      g2.className = "evt-header-greeting block text-xs text-gray-400 mb-1";
+      title.parentNode.insertBefore(g2, title);
     }
-    const esc = H2.escapeHtml || ((s) => String(s == null ? "" : s));
-    g.textContent = "Hey " + esc(name) + " \u{1F44B}";
+    const esc9 = H2.escapeHtml || ((s) => String(s == null ? "" : s));
+    g2.textContent = "Hey " + esc9(name) + " \u{1F44B}";
   }
   function renderHeaderCount() {
     const el = document.getElementById("evtHeaderCount");
@@ -1770,7 +1769,7 @@
   globalThis.PortalEventsListHeader = PortalEventsListHeader;
 
   // js/portal/events/list/filters.js
-  var C2 = window.EventsConstants || {};
+  var C3 = window.EventsConstants || {};
   var STATE_KEY = "evt_list_state_v1";
   var _activeType = "all";
   var _activeCategory = "";
@@ -1923,10 +1922,10 @@
       host.innerHTML = "";
       return;
     }
-    const esc = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
-    const emoji = C2.CATEGORY_EMOJI && C2.CATEGORY_EMOJI[_activeCategory] || "\u{1F4C5}";
-    const label = C2.CATEGORY_TAG && C2.CATEGORY_TAG[_activeCategory]?.label || _activeCategory;
-    host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc(label) + '</span><span aria-hidden="true" class="text-brand-500">\xD7</span><span class="sr-only">Clear ' + esc(label) + " filter</span></button>";
+    const esc9 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    const emoji = C3.CATEGORY_EMOJI && C3.CATEGORY_EMOJI[_activeCategory] || "\u{1F4C5}";
+    const label = C3.CATEGORY_TAG && C3.CATEGORY_TAG[_activeCategory]?.label || _activeCategory;
+    host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc9(label) + '</span><span aria-hidden="true" class="text-brand-500">\xD7</span><span class="sr-only">Clear ' + esc9(label) + " filter</span></button>";
     host.querySelector("[data-clear-cat]")?.addEventListener("click", () => {
       _activeCategory = "";
       persistState();
@@ -1973,7 +1972,7 @@
     const btn = document.getElementById("evtDateMenuBtn");
     const menu = document.getElementById("evtDateMenu");
     if (!btn || !menu) return;
-    const close = () => {
+    const close3 = () => {
       menu.classList.add("hidden");
       btn.setAttribute("aria-expanded", "false");
     };
@@ -1984,10 +1983,10 @@
       btn.setAttribute("aria-expanded", String(willOpen));
     });
     document.addEventListener("click", (e) => {
-      if (!menu.contains(e.target) && e.target !== btn) close();
+      if (!menu.contains(e.target) && e.target !== btn) close3();
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") close3();
     });
     menu.querySelectorAll(".evt-date-opt").forEach((opt) => {
       opt.addEventListener("click", () => {
@@ -1996,7 +1995,7 @@
         const labelEl = btn.querySelector("[data-date-label]");
         if (labelEl) labelEl.textContent = _activeDate === "any" ? "Date" : opt.textContent.trim();
         menu.querySelectorAll(".evt-date-opt").forEach((o) => o.classList.toggle("evt-date-opt--active", o === opt));
-        close();
+        close3();
         api3().renderEvents?.();
       });
     });
@@ -2112,7 +2111,7 @@
   globalThis.PortalEventsListFilters = PortalEventsListFilters;
 
   // js/portal/events/list/calendar.js
-  var C3 = window.EventsConstants || {};
+  var C4 = window.EventsConstants || {};
   var MONTH_NAMES = [
     "January",
     "February",
@@ -2227,7 +2226,7 @@
   function renderCalendar() {
     const mount = document.getElementById("evtCalendarMount");
     if (!mount) return;
-    const esc = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc9 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
     let calMonth = api4().getCalMonth?.();
     if (!calMonth) {
       const now = /* @__PURE__ */ new Date();
@@ -2267,7 +2266,7 @@
       if (hasEv) {
         const shown = dayEvents.slice(0, 3);
         dots = '<div class="evt-cal-dots">' + shown.map((ev) => {
-          const grad = C3.CATEGORY_GRADIENT && C3.CATEGORY_GRADIENT[ev.category] || C3.DEFAULT_GRADIENT || "linear-gradient(135deg,#6366f1,#8b5cf6)";
+          const grad = C4.CATEGORY_GRADIENT && C4.CATEGORY_GRADIENT[ev.category] || C4.DEFAULT_GRADIENT || "linear-gradient(135deg,#6366f1,#8b5cf6)";
           const m = /#([0-9a-f]{3,6})/i.exec(grad);
           const color = m ? "#" + m[1] : "#6366f1";
           return '<span class="evt-cal-dot" style="background:' + color + '"></span>';
@@ -2275,7 +2274,7 @@
       }
       const clsCell = "evt-cal-cell" + (hasEv ? " evt-cal-cell--has" : "") + (isToday ? " evt-cal-cell--today" : "");
       parts.push(
-        '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc(dateObj.toDateString()) + '"' : 'aria-label="' + esc(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
+        '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc9(dateObj.toDateString()) + '"' : 'aria-label="' + esc9(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
       );
     }
     parts.push("</div>");
@@ -2293,7 +2292,7 @@
   globalThis.PortalEventsListCalendar = PortalEventsListCalendar;
 
   // js/portal/events/list/hero-rails.js
-  var C4 = window.EventsConstants || {};
+  var C5 = window.EventsConstants || {};
   var H3 = window.EventsHelpers || {};
   var P = window.EventsPills || {};
   function api5() {
@@ -2313,7 +2312,7 @@
       }
       return "background: linear-gradient(0deg, rgba(0,0,0,.65), rgba(0,0,0,.05) 55%), url('" + safe + "') center/cover;";
     }
-    const grad = C4.CATEGORY_GRADIENT && (C4.CATEGORY_GRADIENT[event.category] || C4.CATEGORY_GRADIENT.default) || "linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)";
+    const grad = C5.CATEGORY_GRADIENT && (C5.CATEGORY_GRADIENT[event.category] || C5.CATEGORY_GRADIENT.default) || "linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)";
     return "background: " + grad + ";";
   }
   function renderHero(event, rsvp) {
@@ -2323,7 +2322,7 @@
       heroEl.innerHTML = "";
       return;
     }
-    const esc = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc9 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const start = new Date(event.start_date);
     const rel = H3.relativeDate ? H3.relativeDate(start) : "";
     const time = H3.formatDate ? H3.formatDate(event.start_date, "time") : "";
@@ -2335,7 +2334,7 @@
     const isFav = !!(rsvp && rsvp.status === "maybe");
     const heartCls = "evt-hero-heart" + (isFav ? " evt-hero-heart--on" : "");
     const heartPath = isFav ? '<path d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z" fill="currentColor"/>' : '<path stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none" d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z"/>';
-    const heartBtn = '<button type="button" data-evt-hero-heart="' + esc(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
+    const heartBtn = '<button type="button" data-evt-hero-heart="' + esc9(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
     const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
     const useVlift = document.body.classList.contains("evt-vlift");
     if (useVlift) {
@@ -2391,12 +2390,12 @@
       })();
       const descRaw = event.description ? String(event.description).trim() : "";
       const descShort = descRaw.length > 180 ? descRaw.slice(0, 177) + "\u2026" : descRaw;
-      heroEl.innerHTML = '<div class="evt-hero-vlift relative"><a href="' + href + '" data-evt-hero="' + esc(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event, true) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + "</div>" + // F14 — FEATURED EVENT kicker (vlift only; only shown when admin-featured)
+      heroEl.innerHTML = '<div class="evt-hero-vlift relative"><a href="' + href + '" data-evt-hero="' + esc9(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event, true) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + "</div>" + // F14 — FEATURED EVENT kicker (vlift only; only shown when admin-featured)
       (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : "") + // Bottom-edge dark fade for legibility
-      '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div><div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' + (fMon ? '<span class="evt-hero-datechip__mon">' + esc(fMon) + "</span>" : "") + (fDay !== "" ? '<span class="evt-hero-datechip__day">' + esc(fDay) + "</span>" : "") + (fDow ? '<span class="evt-hero-datechip__dow">' + esc(fDow) + "</span>" : "") + '</div><div class="evt-hero-meta-body">' + // E7 — Avatar cluster
-      attendeeCluster(event.id) + '<h2 class="text-xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc(event.title || "Untitled event") + "</h2>" + // F14 — Host line
-      (hostLine ? '<p class="evt-hero-host" data-f14-host>' + esc(hostLine) + "</p>" : "") + // F20 — Time + location on the same line
-      (timeShort || loc ? '<div class="evt-hero-timeloc" data-f14-timeloc>' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc(loc) + "</span>" : "") + "</div>" : "") + '</div></div><div class="evt-hero-side" data-f14-side>' + (descShort ? '<p class="evt-hero-side__desc">' + esc(descShort) + "</p>" : "") + '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc(event.id) + '" role="button" aria-hidden="true">View Details</span></div></a><button type="button" data-evt-hero-cta="' + esc(event.id) + '" class="evt-hero-cta" aria-label="View details for ' + esc(event.title || "this event") + '">View Details</button></div>';
+      '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div><div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' + (fMon ? '<span class="evt-hero-datechip__mon">' + esc9(fMon) + "</span>" : "") + (fDay !== "" ? '<span class="evt-hero-datechip__day">' + esc9(fDay) + "</span>" : "") + (fDow ? '<span class="evt-hero-datechip__dow">' + esc9(fDow) + "</span>" : "") + '</div><div class="evt-hero-meta-body">' + // E7 — Avatar cluster
+      attendeeCluster(event.id) + '<h2 class="text-xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc9(event.title || "Untitled event") + "</h2>" + // F14 — Host line
+      (hostLine ? '<p class="evt-hero-host" data-f14-host>' + esc9(hostLine) + "</p>" : "") + // F20 — Time + location on the same line
+      (timeShort || loc ? '<div class="evt-hero-timeloc" data-f14-timeloc>' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc9(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc9(loc) + "</span>" : "") + "</div>" : "") + '</div></div><div class="evt-hero-side" data-f14-side>' + (descShort ? '<p class="evt-hero-side__desc">' + esc9(descShort) + "</p>" : "") + '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc9(event.id) + '" role="button" aria-hidden="true">View Details</span></div></a><button type="button" data-evt-hero-cta="' + esc9(event.id) + '" class="evt-hero-cta" aria-label="View details for ' + esc9(event.title || "this event") + '">View Details</button></div>';
       const ctaBtn = heroEl.querySelector("button[data-evt-hero-cta]");
       if (ctaBtn) {
         ctaBtn.addEventListener("click", (e) => {
@@ -2442,7 +2441,7 @@
         });
       }
     } else {
-      heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc(loc) + "</p>" : "") + "</div></a>";
+      heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc9(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc9(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc9(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc9(loc) + "</p>" : "") + "</div></a>";
     }
     const link = heroEl.querySelector("a[data-evt-hero]");
     if (link) {
@@ -2460,18 +2459,18 @@
   function attendeeCluster(eventId2) {
     const list = window.evtAttendees && window.evtAttendees[eventId2] || [];
     if (!list.length) return "";
-    const esc = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc9 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const bubs = list.slice(0, 5).map((p, i) => {
       const pic = p && p.profile_picture_url;
       const first = p && p.first_name || "";
       const initial = (first.trim().charAt(0) || "?").toUpperCase();
       const ml = i === 0 ? "" : " -ml-2";
-      const inner = pic ? '<img src="' + esc(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc(initial) + "</span>";
-      return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc(first) + '">' + inner + "</span>";
+      const inner = pic ? '<img src="' + esc9(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc9(initial) + "</span>";
+      return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc9(first) + '">' + inner + "</span>";
     }).join("");
     const trueCount = window.evtAttendeeCounts && window.evtAttendeeCounts[eventId2] || list.length;
     const labelN = String(trueCount);
-    return '<button type="button" data-evt-hero-going="' + esc(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
+    return '<button type="button" data-evt-hero-going="' + esc9(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
   }
   function renderLiveBanner(events) {
     const el = document.getElementById("evtLiveBanner");
@@ -2490,12 +2489,12 @@
       el.innerHTML = "";
       return;
     }
-    const esc = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc9 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const first = live[0];
-    const label = live.length === 1 ? esc(first.title || "An event") + " is happening now" : live.length + " events happening now";
+    const label = live.length === 1 ? esc9(first.title || "An event") + " is happening now" : live.length + " events happening now";
     const href = live.length === 1 && first.slug ? "?event=" + encodeURIComponent(first.slug) : "javascript:void(0)";
     el.classList.remove("hidden");
-    el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
+    el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc9(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
     const link = el.querySelector("a[data-evt-live]");
     if (link && live.length === 1) {
       link.addEventListener("click", (e) => {
@@ -2546,27 +2545,27 @@
     });
   }
   function miniCard(event, attendees, goingCount) {
-    const esc = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc9 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const d = new Date(event.start_date);
     const day = d.getDate();
     const mon = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
     const rel = H3.relativeDate ? H3.relativeDate(d) : "";
     const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
-    const title = esc(event.title || "Untitled event");
+    const title = esc9(event.title || "Untitled event");
     const loc = event.location_nickname || event.location_text || "";
     let bannerStyle;
     if (event.banner_url) {
       const safe = String(event.banner_url).replace(/'/g, "%27");
       bannerStyle = "background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55)), url('" + safe + "') center/cover;";
     } else {
-      const grad = C4.CATEGORY_GRADIENT && (C4.CATEGORY_GRADIENT[event.category] || C4.DEFAULT_GRADIENT) || "linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)";
+      const grad = C5.CATEGORY_GRADIENT && (C5.CATEGORY_GRADIENT[event.category] || C5.DEFAULT_GRADIENT) || "linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)";
       bannerStyle = "background: " + grad + ";";
     }
     const attCount = goingCount != null ? goingCount : (attendees || []).length;
     const attLine = attCount ? '<span class="text-[11px] text-gray-500 truncate">' + attCount + " going</span>" : "";
     const isPinnedLlc = event.is_pinned && event.event_type === "llc";
     const pin = isPinnedLlc ? '<span class="evt-date-pin evt-date-pin--mini" aria-label="Pinned LLC event" title="Pinned">\u{1F4CC}</span>' : "";
-    return '<a href="' + href + '" data-evt-mini="' + esc(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc(rel) : "") + (loc && rel ? " \xB7 " : "") + esc(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
+    return '<a href="' + href + '" data-evt-mini="' + esc9(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc9(rel) : "") + (loc && rel ? " \xB7 " : "") + esc9(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
   }
   function renderTopPicks(events, attendees, heroId, eventsById) {
     const rail = document.getElementById("evtTopPicks");
@@ -2717,1203 +2716,1203 @@
   globalThis.PortalEventsListBuckets = PortalEventsListBuckets;
 
   // js/portal/events/list/shell.js
-  (function() {
-    "use strict";
-    const C5 = window.EventsConstants || {};
-    const H5 = window.EventsHelpers || {};
-    const P2 = window.EventsPills || {};
-    const Card2 = window.EventsCard;
-    let _searchQuery = "";
-    let _activeView = "list";
-    let _calMonth = null;
-    let _searchDebounce = null;
-    let _expandedBucket = null;
-    let _createTileInjected = false;
-    let _miniCalMonth = null;
-    let _activeDay = "";
-    const STATE_KEY2 = "evt_list_state_v1";
-    function _restoreListSessionState() {
-      try {
-        const raw = sessionStorage.getItem(STATE_KEY2);
-        if (!raw) return;
-        const s = JSON.parse(raw) || {};
-        if (typeof s.q === "string") _searchQuery = s.q;
-        if (typeof s.v === "string" && (s.v === "list" || s.v === "calendar")) _activeView = s.v;
-      } catch (_) {
-      }
+  var C6 = window.EventsConstants || {};
+  var H5 = window.EventsHelpers || {};
+  var P2 = window.EventsPills || {};
+  var Card2 = window.EventsCard;
+  var _searchQuery = "";
+  var _activeView = "list";
+  var _calMonth = null;
+  var _searchDebounce = null;
+  var _expandedBucket = null;
+  var _createTileInjected = false;
+  var _miniCalMonth = null;
+  var _activeDay = "";
+  var STATE_KEY2 = "evt_list_state_v1";
+  function _restoreListSessionState() {
+    try {
+      const raw = sessionStorage.getItem(STATE_KEY2);
+      if (!raw) return;
+      const s = JSON.parse(raw) || {};
+      if (typeof s.q === "string") _searchQuery = s.q;
+      if (typeof s.v === "string" && (s.v === "list" || s.v === "calendar")) _activeView = s.v;
+    } catch (_) {
     }
-    _restoreListSessionState();
-    function _persistState() {
-      return window.PortalEventsListFilters.persistState();
+  }
+  _restoreListSessionState();
+  function _persistState() {
+    return window.PortalEventsListFilters.persistState();
+  }
+  function setupSearch2() {
+    return window.PortalEventsListSearch.setupSearch();
+  }
+  function _renderCalendar() {
+    return window.PortalEventsListCalendar.renderCalendar();
+  }
+  function _initViewToggle() {
+    const btn = document.getElementById("evtViewToggle");
+    if (!btn || btn.dataset.wired === "1") return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      _activeView = _activeView === "calendar" ? "list" : "calendar";
+      _persistState();
+      _applyViewChrome();
+      renderEvents();
+    });
+  }
+  function _applyViewChrome() {
+    const btn = document.getElementById("evtViewToggle");
+    const listIcon = btn?.querySelector(".evt-view-icon--list");
+    const calIcon = btn?.querySelector(".evt-view-icon--calendar");
+    if (btn) {
+      btn.setAttribute("aria-pressed", _activeView === "calendar" ? "true" : "false");
+      btn.setAttribute("data-view", _activeView);
+      btn.setAttribute("aria-label", _activeView === "calendar" ? "Switch to list view" : "Switch to calendar view");
     }
-    function setupSearch2() {
-      return window.PortalEventsListSearch.setupSearch();
+    if (listIcon && calIcon) {
+      listIcon.classList.toggle("hidden", _activeView === "list");
+      calIcon.classList.toggle("hidden", _activeView === "calendar");
     }
-    function _renderCalendar() {
-      return window.PortalEventsListCalendar.renderCalendar();
-    }
-    function _initViewToggle() {
-      const btn = document.getElementById("evtViewToggle");
-      if (!btn || btn.dataset.wired === "1") return;
-      btn.dataset.wired = "1";
-      btn.addEventListener("click", () => {
-        _activeView = _activeView === "calendar" ? "list" : "calendar";
-        _persistState();
-        _applyViewChrome();
-        renderEvents();
-      });
-    }
-    function _applyViewChrome() {
-      const btn = document.getElementById("evtViewToggle");
-      const listIcon = btn?.querySelector(".evt-view-icon--list");
-      const calIcon = btn?.querySelector(".evt-view-icon--calendar");
-      if (btn) {
-        btn.setAttribute("aria-pressed", _activeView === "calendar" ? "true" : "false");
-        btn.setAttribute("data-view", _activeView);
-        btn.setAttribute("aria-label", _activeView === "calendar" ? "Switch to list view" : "Switch to calendar view");
-      }
-      if (listIcon && calIcon) {
-        listIcon.classList.toggle("hidden", _activeView === "list");
-        calIcon.classList.toggle("hidden", _activeView === "calendar");
-      }
-      document.body.classList.toggle("evt-view--calendar", _activeView === "calendar");
-    }
-    const VLIFT_KEY = "evt_vlift";
-    function _readVlift() {
-      try {
-        const url = new URL(window.location.href);
-        const q = url.searchParams.get("vlift");
-        if (q === "1") {
-          try {
-            localStorage.setItem(VLIFT_KEY, "1");
-          } catch (_) {
-          }
-          return true;
-        }
-        if (q === "0") {
-          try {
-            localStorage.setItem(VLIFT_KEY, "0");
-          } catch (_) {
-          }
-          return false;
-        }
-        const stored = (() => {
-          try {
-            return localStorage.getItem(VLIFT_KEY);
-          } catch (_) {
-            return null;
-          }
-        })();
-        if (stored === "0") return false;
-        return true;
-      } catch (_) {
-        return true;
-      }
-    }
-    function _initVlift() {
-      const on = _readVlift();
-      try {
-        document.body.classList.toggle("evt-vlift", on);
-        if (on) document.documentElement.dataset.vlift = "1";
-        else delete document.documentElement.dataset.vlift;
-      } catch (_) {
-      }
-      try {
-        window.evtSetVlift = function(v) {
-          try {
-            localStorage.setItem(VLIFT_KEY, v ? "1" : "0");
-          } catch (_) {
-          }
-          document.body.classList.toggle("evt-vlift", !!v);
-        };
-      } catch (_) {
-      }
-      try {
-        window.evtIsVlift = function() {
-          return document.body.classList.contains("evt-vlift");
-        };
-      } catch (_) {
-      }
-    }
-    function _initGreeting() {
-      if (!document.body.classList.contains("evt-vlift")) return;
-      const slot = document.querySelector("#evtGreetingHello [data-greeting-name]");
-      if (!slot) return;
-      const apply = () => {
-        const fromState = (window.evtCurrentUserName || "").trim();
-        if (fromState) {
-          slot.textContent = fromState;
-          return true;
-        }
-        const navEl = document.getElementById("navName");
-        const name = (navEl && navEl.textContent || "").trim();
-        if (name) {
-          slot.textContent = name;
-          return true;
-        }
-        return false;
-      };
-      if (apply()) return;
-      let tries = 0;
-      const t = setInterval(() => {
-        tries++;
-        if (apply() || tries > 20) clearInterval(t);
-      }, 300);
-    }
-    const _hiddenIds = /* @__PURE__ */ new Set();
-    const SWIPE_THRESHOLD = 56;
-    const SWIPE_MAX = 120;
-    const LONGPRESS_MS = 500;
-    const LONGPRESS_MOVE = 8;
-    let _activeSwipe = null;
-    let _longPressTimer = null;
-    let _longPressFired = false;
-    function _isMobileTouch() {
-      return "ontouchstart" in window && window.innerWidth < 640;
-    }
-    function _prefersReducedMotion() {
-      return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    }
-    function _notHidden(ev) {
-      return !_hiddenIds.has(ev?.id);
-    }
-    function _resetSwipeCard(card) {
-      if (!card) return;
-      card.classList.remove("evt-swipe--revealed", "evt-swipe--dragging");
-      card.style.transform = "";
-      const action = card.querySelector(".evt-swipe-action");
-      if (action) action.style.opacity = "";
-    }
-    function _ensureSwipeAction(card, eventId2) {
-      let action = card.querySelector(".evt-swipe-action");
-      if (action) return action;
-      action = document.createElement("button");
-      action.type = "button";
-      action.className = "evt-swipe-action";
-      action.setAttribute("data-swipe-cancel", eventId2);
-      action.setAttribute("aria-label", "Cancel RSVP");
-      action.innerHTML = '<span class="evt-swipe-action__icon" aria-hidden="true"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></span><span class="evt-swipe-action__label">Cancel</span>';
-      card.classList.add("evt-swipe-host");
-      card.appendChild(action);
-      return action;
-    }
-    function _initSwipeGestures() {
-      if (!_isMobileTouch()) return;
-      const rail = document.getElementById("evtGoingRailScroll");
-      if (rail && rail.dataset.swipeWired !== "1") {
-        rail.dataset.swipeWired = "1";
-        rail.addEventListener("touchstart", (e) => {
-          const card = e.target.closest("a[data-evt-mini]");
-          if (!card) return;
-          rail.querySelectorAll(".evt-swipe--revealed").forEach((c) => {
-            if (c !== card) _resetSwipeCard(c);
-          });
-          const t = e.touches[0];
-          _activeSwipe = { card, startX: t.clientX, startY: t.clientY, dx: 0, locked: null };
-          _ensureSwipeAction(card, card.getAttribute("data-evt-mini") || "");
-        }, { passive: true });
-        rail.addEventListener("touchmove", (e) => {
-          if (!_activeSwipe) return;
-          const t = e.touches[0];
-          const dx = t.clientX - _activeSwipe.startX;
-          const dy = t.clientY - _activeSwipe.startY;
-          if (_activeSwipe.locked === null) {
-            if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-            _activeSwipe.locked = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
-            if (_activeSwipe.locked === "x") _activeSwipe.card.classList.add("evt-swipe--dragging");
-          }
-          if (_activeSwipe.locked !== "x") return;
-          const clamped = Math.max(-SWIPE_MAX, Math.min(0, dx));
-          _activeSwipe.dx = clamped;
-          _activeSwipe.card.style.transform = "translateX(" + clamped + "px)";
-          const action = _activeSwipe.card.querySelector(".evt-swipe-action");
-          if (action) action.style.opacity = String(Math.min(1, Math.abs(clamped) / SWIPE_THRESHOLD));
-        }, { passive: true });
-        const finish = () => {
-          if (!_activeSwipe) return;
-          const { card, dx, locked } = _activeSwipe;
-          _activeSwipe = null;
-          if (locked !== "x") {
-            _resetSwipeCard(card);
-            return;
-          }
-          if (Math.abs(dx) >= SWIPE_THRESHOLD) {
-            card.classList.remove("evt-swipe--dragging");
-            card.classList.add("evt-swipe--revealed");
-            card.style.transform = "";
-            const action = card.querySelector(".evt-swipe-action");
-            if (action) action.style.opacity = "1";
-          } else {
-            _resetSwipeCard(card);
-          }
-        };
-        rail.addEventListener("touchend", finish, { passive: true });
-        rail.addEventListener("touchcancel", finish, { passive: true });
-        rail.addEventListener("click", (e) => {
-          const cancelBtn = e.target.closest("[data-swipe-cancel]");
-          if (cancelBtn) {
-            e.preventDefault();
-            e.stopPropagation();
-            const id = cancelBtn.getAttribute("data-swipe-cancel") || "";
-            _confirmCancelRsvp(id);
-            return;
-          }
-          const revealed = e.target.closest(".evt-swipe--revealed");
-          if (revealed) {
-            e.preventDefault();
-            e.stopPropagation();
-            _resetSwipeCard(revealed);
-          }
-        });
-      }
-      const groups = document.getElementById("evtGroups");
-      if (groups && groups.dataset.lpWired !== "1") {
-        groups.dataset.lpWired = "1";
-        const cancelLp = () => {
-          if (_longPressTimer) {
-            clearTimeout(_longPressTimer);
-            _longPressTimer = null;
-          }
-        };
-        groups.addEventListener("touchstart", (e) => {
-          const card = e.target.closest("a[data-evt-card], a[data-evt-mini], a[data-evt-hero]");
-          if (!card) return;
-          _longPressFired = false;
-          const t = e.touches[0];
-          const startX = t.clientX, startY = t.clientY;
-          cancelLp();
-          _longPressTimer = setTimeout(() => {
-            _longPressFired = true;
-            const id = card.getAttribute("data-evt-card") || card.getAttribute("data-evt-mini") || card.getAttribute("data-evt-hero") || "";
-            _openContextSheet(id);
-          }, LONGPRESS_MS);
-          const moveHandler = (mv) => {
-            const m = mv.touches[0];
-            if (Math.abs(m.clientX - startX) > LONGPRESS_MOVE || Math.abs(m.clientY - startY) > LONGPRESS_MOVE) cancelLp();
-          };
-          const endHandler = () => {
-            cancelLp();
-            groups.removeEventListener("touchmove", moveHandler);
-            groups.removeEventListener("touchend", endHandler);
-            groups.removeEventListener("touchcancel", endHandler);
-          };
-          groups.addEventListener("touchmove", moveHandler, { passive: true });
-          groups.addEventListener("touchend", endHandler, { passive: true });
-          groups.addEventListener("touchcancel", endHandler, { passive: true });
-        }, { passive: true });
-        groups.addEventListener("click", (e) => {
-          if (_longPressFired) {
-            _longPressFired = false;
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }, true);
-      }
-    }
-    async function _confirmCancelRsvp(eventId2) {
-      if (!eventId2) return;
-      const all = window.evtAllEvents || [];
-      const ev = all.find((x) => x.id === eventId2);
-      const title = ev && ev.title ? ev.title : "this event";
-      if (!window.confirm('Cancel your RSVP for "' + title + '"?')) return;
-      try {
-        if (typeof window.evtHandleRsvp === "function") {
-          await window.evtHandleRsvp(eventId2, "going");
-        }
-      } catch (err) {
-        console.error("Cancel RSVP failed", err);
-      }
-    }
-    function _ensureContextSheet() {
-      let sheet = document.getElementById("evtContextSheet");
-      if (sheet) return sheet;
-      sheet = document.createElement("div");
-      sheet.id = "evtContextSheet";
-      sheet.className = "evt-context-sheet hidden fixed inset-0 z-[75]";
-      sheet.setAttribute("role", "dialog");
-      sheet.setAttribute("aria-modal", "true");
-      sheet.innerHTML = '<div class="absolute inset-0 bg-black/40" data-ctx-close="1"></div><div class="evt-context-sheet__panel absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:max-w-sm sm:h-fit sm:rounded-2xl bg-white rounded-t-2xl shadow-2xl overflow-hidden"><div class="px-4 pt-3 pb-2 border-b border-gray-100"><h3 id="evtContextTitle" class="text-sm font-semibold text-gray-900 truncate"></h3></div><ul class="py-1"><li><button type="button" data-ctx-act="share"   class="evt-context-row"><span aria-hidden="true">\u{1F517}</span><span>Share link</span></button></li><li><button type="button" data-ctx-act="copy"    class="evt-context-row"><span aria-hidden="true">\u{1F4CB}</span><span>Copy link</span></button></li><li><button type="button" data-ctx-act="ics"     class="evt-context-row"><span aria-hidden="true">\u{1F4C5}</span><span>Add to calendar</span></button></li><li><button type="button" data-ctx-act="hide"    class="evt-context-row evt-context-row--danger"><span aria-hidden="true">\u{1F648}</span><span>Hide from list</span></button></li><li class="border-t border-gray-100 mt-1"><button type="button" data-ctx-close="1" class="evt-context-row evt-context-row--cancel"><span>Cancel</span></button></li></ul></div>';
-      document.body.appendChild(sheet);
-      sheet.addEventListener("click", (e) => {
-        if (e.target.closest("[data-ctx-close]")) {
-          _closeContextSheet();
-          return;
-        }
-        const row = e.target.closest("[data-ctx-act]");
-        if (!row) return;
-        const act = row.getAttribute("data-ctx-act");
-        const id = sheet.dataset.eventId || "";
-        _runContextAction(act, id);
-      });
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && !sheet.classList.contains("hidden")) _closeContextSheet();
-      });
-      return sheet;
-    }
-    function _openContextSheet(eventId2) {
-      if (!eventId2) return;
-      const all = window.evtAllEvents || [];
-      const ev = all.find((x) => x.id === eventId2);
-      if (!ev) return;
-      const sheet = _ensureContextSheet();
-      sheet.dataset.eventId = eventId2;
-      const title = sheet.querySelector("#evtContextTitle");
-      if (title) title.textContent = ev.title || "Event";
-      sheet.classList.remove("hidden");
-      document.body.classList.add("overflow-hidden");
-    }
-    function _closeContextSheet() {
-      const sheet = document.getElementById("evtContextSheet");
-      if (!sheet) return;
-      sheet.classList.add("hidden");
-      document.body.classList.remove("overflow-hidden");
-    }
-    async function _runContextAction(act, eventId2) {
-      const all = window.evtAllEvents || [];
-      const ev = all.find((x) => x.id === eventId2);
-      if (!ev) {
-        _closeContextSheet();
-        return;
-      }
-      const url = _eventShareUrl(ev);
-      if (act === "share") {
+    document.body.classList.toggle("evt-view--calendar", _activeView === "calendar");
+  }
+  var VLIFT_KEY = "evt_vlift";
+  function _readVlift() {
+    try {
+      const url = new URL(window.location.href);
+      const q = url.searchParams.get("vlift");
+      if (q === "1") {
         try {
-          if (navigator.share) {
-            await navigator.share({ title: ev.title || "Event", url });
-          } else {
-            await _copyToClipboard(url);
-            _toast("Link copied");
-          }
+          localStorage.setItem(VLIFT_KEY, "1");
         } catch (_) {
         }
-        _closeContextSheet();
-        return;
-      }
-      if (act === "copy") {
-        await _copyToClipboard(url);
-        _toast("Link copied");
-        _closeContextSheet();
-        return;
-      }
-      if (act === "ics") {
-        _downloadIcs(ev);
-        _closeContextSheet();
-        return;
-      }
-      if (act === "hide") {
-        _hiddenIds.add(eventId2);
-        _toast("Hidden for this session");
-        _closeContextSheet();
-        renderEvents();
-        return;
-      }
-    }
-    function _eventShareUrl(ev) {
-      const origin = location.origin;
-      const base = origin + (location.pathname.includes("/portal/") ? location.pathname.split("?")[0] : "/portal/events.html");
-      return ev.slug ? base + "?event=" + encodeURIComponent(ev.slug) : base;
-    }
-    async function _copyToClipboard(text) {
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(text);
-          return true;
-        }
-      } catch (_) {
-      }
-      try {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
         return true;
-      } catch (_) {
+      }
+      if (q === "0") {
+        try {
+          localStorage.setItem(VLIFT_KEY, "0");
+        } catch (_) {
+        }
         return false;
       }
-    }
-    function _toast(msg) {
-      let t = document.getElementById("evtToast");
-      if (!t) {
-        t = document.createElement("div");
-        t.id = "evtToast";
-        t.className = "evt-toast";
-        document.body.appendChild(t);
-      }
-      t.textContent = msg;
-      t.classList.add("evt-toast--show");
-      clearTimeout(t._hideT);
-      t._hideT = setTimeout(() => t.classList.remove("evt-toast--show"), 1800);
-    }
-    function _icsDate(d) {
-      const pad = (n) => String(n).padStart(2, "0");
-      return d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + "T" + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + "Z";
-    }
-    function _icsEscape(s) {
-      return String(s == null ? "" : s).replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
-    }
-    function _downloadIcs(ev) {
-      const start = new Date(ev.start_date);
-      const endRaw = ev.end_date || ev.end_at || ev.ends_at;
-      const end = endRaw ? new Date(endRaw) : new Date(start.getTime() + 2 * 60 * 60 * 1e3);
-      const uid = (ev.id || "evt-" + Date.now()) + "@justicemcneal";
-      const url = _eventShareUrl(ev);
-      const lines = [
-        "BEGIN:VCALENDAR",
-        "VERSION:2.0",
-        "PRODID:-//JusticeMcNeal//Portal Events//EN",
-        "CALSCALE:GREGORIAN",
-        "BEGIN:VEVENT",
-        "UID:" + uid,
-        "DTSTAMP:" + _icsDate(/* @__PURE__ */ new Date()),
-        "DTSTART:" + _icsDate(start),
-        "DTEND:" + _icsDate(end),
-        "SUMMARY:" + _icsEscape(ev.title || "Event"),
-        "DESCRIPTION:" + _icsEscape((ev.description || "") + "\n\n" + url),
-        "URL:" + _icsEscape(url)
-      ];
-      if (ev.location_text || ev.location_nickname) {
-        lines.push("LOCATION:" + _icsEscape(ev.location_text || ev.location_nickname));
-      }
-      lines.push("END:VEVENT", "END:VCALENDAR");
-      const ics = lines.join("\r\n");
-      const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-      const a = document.createElement("a");
-      const slug = ev.slug || ev.id || "event";
-      a.href = URL.createObjectURL(blob);
-      a.download = slug + ".ics";
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        URL.revokeObjectURL(a.href);
-        a.remove();
-      }, 0);
-    }
-    function _applyRestoredUi() {
-      return window.PortalEventsListFilters.applyRestoredUi();
-    }
-    async function loadEvents() {
-      try {
-        const { data: events, error } = await supabaseClient.from("events").select("*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)").in("status", ["open", "confirmed", "active", "completed"]).order("start_date", { ascending: true });
-        if (error) throw error;
-        window.evtAllEvents = events || [];
-        if (typeof canManageEvents === "function" && canManageEvents() && globalThis.evtCurrentUser) {
-          const { data: drafts } = await supabaseClient.from("events").select("*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)").eq("status", "draft").eq("created_by", globalThis.evtCurrentUser.id).order("created_at", { ascending: false });
-          if (drafts && drafts.length) {
-            window.evtAllEvents = [...drafts, ...window.evtAllEvents];
-          }
+      const stored = (() => {
+        try {
+          return localStorage.getItem(VLIFT_KEY);
+        } catch (_) {
+          return null;
         }
-        const ids = window.evtAllEvents.map((e) => e.id);
-        window.evtAllRsvps = {};
-        if (globalThis.evtCurrentUser && ids.length) {
-          const { data: rsvps } = await supabaseClient.from("event_rsvps").select("*").eq("user_id", globalThis.evtCurrentUser.id).in("event_id", ids);
-          (rsvps || []).forEach((r) => {
-            window.evtAllRsvps[r.event_id] = r;
-          });
+      })();
+      if (stored === "0") return false;
+      return true;
+    } catch (_) {
+      return true;
+    }
+  }
+  function _initVlift() {
+    const on = _readVlift();
+    try {
+      document.body.classList.toggle("evt-vlift", on);
+      if (on) document.documentElement.dataset.vlift = "1";
+      else delete document.documentElement.dataset.vlift;
+    } catch (_) {
+    }
+    try {
+      globalThis.evtSetVlift = function(v) {
+        try {
+          localStorage.setItem(VLIFT_KEY, v ? "1" : "0");
+        } catch (_) {
         }
-        window.evtAttendees = {};
-        window.evtAttendeeCounts = {};
-        if (ids.length) {
-          const [{ data: going, error: aErr }, { data: guestGoing, error: gErr }] = await Promise.all([
-            supabaseClient.from("event_rsvps").select("event_id, profiles:user_id(profile_picture_url, first_name)").eq("status", "going").in("event_id", ids),
-            supabaseClient.from("event_guest_rsvps").select("event_id, status, paid").in("event_id", ids)
-          ]);
-          if (!aErr && going) {
-            going.forEach((row) => {
-              var _a, _b;
-              if (!row.profiles) return;
-              const list = (_a = window.evtAttendees)[_b = row.event_id] || (_a[_b] = []);
-              if (list.length < 5) list.push(row.profiles);
-              window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
-            });
-          }
-          if (!gErr && guestGoing) {
-            guestGoing.forEach((row) => {
-              if (row.status === "going" || row.paid === true) {
-                window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
-              }
-            });
-          }
+        document.body.classList.toggle("evt-vlift", !!v);
+      };
+    } catch (_) {
+    }
+    try {
+      globalThis.evtIsVlift = function() {
+        return document.body.classList.contains("evt-vlift");
+      };
+    } catch (_) {
+    }
+  }
+  function _initGreeting() {
+    if (!document.body.classList.contains("evt-vlift")) return;
+    const slot = document.querySelector("#evtGreetingHello [data-greeting-name]");
+    if (!slot) return;
+    const apply = () => {
+      const fromState = (window.evtCurrentUserName || "").trim();
+      if (fromState) {
+        slot.textContent = fromState;
+        return true;
+      }
+      const navEl = document.getElementById("navName");
+      const name = (navEl && navEl.textContent || "").trim();
+      if (name) {
+        slot.textContent = name;
+        return true;
+      }
+      return false;
+    };
+    if (apply()) return;
+    let tries = 0;
+    const t = setInterval(() => {
+      tries++;
+      if (apply() || tries > 20) clearInterval(t);
+    }, 300);
+  }
+  var _hiddenIds = /* @__PURE__ */ new Set();
+  var SWIPE_THRESHOLD = 56;
+  var SWIPE_MAX = 120;
+  var LONGPRESS_MS = 500;
+  var LONGPRESS_MOVE = 8;
+  var _activeSwipe = null;
+  var _longPressTimer = null;
+  var _longPressFired = false;
+  function _isMobileTouch() {
+    return "ontouchstart" in window && window.innerWidth < 640;
+  }
+  function _notHidden(ev) {
+    return !_hiddenIds.has(ev?.id);
+  }
+  function _resetSwipeCard(card2) {
+    if (!card2) return;
+    card2.classList.remove("evt-swipe--revealed", "evt-swipe--dragging");
+    card2.style.transform = "";
+    const action = card2.querySelector(".evt-swipe-action");
+    if (action) action.style.opacity = "";
+  }
+  function _ensureSwipeAction(card2, eventId2) {
+    let action = card2.querySelector(".evt-swipe-action");
+    if (action) return action;
+    action = document.createElement("button");
+    action.type = "button";
+    action.className = "evt-swipe-action";
+    action.setAttribute("data-swipe-cancel", eventId2);
+    action.setAttribute("aria-label", "Cancel RSVP");
+    action.innerHTML = '<span class="evt-swipe-action__icon" aria-hidden="true"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></span><span class="evt-swipe-action__label">Cancel</span>';
+    card2.classList.add("evt-swipe-host");
+    card2.appendChild(action);
+    return action;
+  }
+  function _initSwipeGestures() {
+    if (!_isMobileTouch()) return;
+    const rail = document.getElementById("evtGoingRailScroll");
+    if (rail && rail.dataset.swipeWired !== "1") {
+      rail.dataset.swipeWired = "1";
+      rail.addEventListener("touchstart", (e) => {
+        const card2 = e.target.closest("a[data-evt-mini]");
+        if (!card2) return;
+        rail.querySelectorAll(".evt-swipe--revealed").forEach((c) => {
+          if (c !== card2) _resetSwipeCard(c);
+        });
+        const t = e.touches[0];
+        _activeSwipe = { card: card2, startX: t.clientX, startY: t.clientY, dx: 0, locked: null };
+        _ensureSwipeAction(card2, card2.getAttribute("data-evt-mini") || "");
+      }, { passive: true });
+      rail.addEventListener("touchmove", (e) => {
+        if (!_activeSwipe) return;
+        const t = e.touches[0];
+        const dx = t.clientX - _activeSwipe.startX;
+        const dy = t.clientY - _activeSwipe.startY;
+        if (_activeSwipe.locked === null) {
+          if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+          _activeSwipe.locked = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+          if (_activeSwipe.locked === "x") _activeSwipe.card.classList.add("evt-swipe--dragging");
         }
-        renderEvents();
-      } catch (err) {
-        console.error("Failed to load events:", err);
-        const groups = document.getElementById("evtGroups");
-        if (groups) {
-          groups.innerHTML = '<p class="text-sm text-red-500 text-center py-8">Failed to load events. Please refresh.</p>';
-        }
-      }
-    }
-    function renderSkeletons() {
-      const groups = document.getElementById("evtGroups");
-      if (!groups || !Card2) return;
-      let html = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">';
-      for (let i = 0; i < 4; i++) html += Card2.skeleton();
-      html += "</div>";
-      groups.innerHTML = html;
-    }
-    function _renderHeaderCount() {
-      return window.PortalEventsListHeader.renderHeaderCount();
-    }
-    function _initHeaderBell() {
-      return window.PortalEventsListHeader.initHeaderBell();
-    }
-    function _pickHero(events) {
-      return window.PortalEventsListHeroRails.pickHero(events);
-    }
-    function _renderHero(event, rsvp) {
-      return window.PortalEventsListHeroRails.renderHero(event, rsvp);
-    }
-    function _renderLiveBanner(events) {
-      return window.PortalEventsListHeroRails.renderLiveBanner(events);
-    }
-    function _renderGoingRail(events, rsvps, attendees, heroId, eventsById) {
-      return window.PortalEventsListHeroRails.renderGoingRail(events, rsvps, attendees, heroId, eventsById);
-    }
-    function _miniCard(event, attendees, goingCount) {
-      return window.PortalEventsListHeroRails.miniCard(event, attendees, goingCount);
-    }
-    function _renderTopPicks(events, attendees, heroId, eventsById) {
-      return window.PortalEventsListHeroRails.renderTopPicks(events, attendees, heroId, eventsById);
-    }
-    function _renderBucket(label, events, rsvps, attendees) {
-      return window.PortalEventsListBuckets.renderBucket(label, events, rsvps, attendees);
-    }
-    function _renderMiniCalendar() {
-      return window.PortalEventsListRightRail.renderMiniCalendar();
-    }
-    function _renderMyRsvps() {
-      return window.PortalEventsListRightRail.renderMyRsvps();
-    }
-    function _renderStatsCard() {
-      return window.PortalEventsListRightRail.renderStatsCard();
-    }
-    function _wireCardClicks(scope, eventsById) {
-      scope.querySelectorAll("button[data-evt-create-tile]").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          document.getElementById("createEventBtn")?.click();
-        });
-      });
-      scope.querySelectorAll("button[data-evt-bucket-toggle]").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const slug = btn.getAttribute("data-evt-bucket-toggle");
-          _expandedBucket = _expandedBucket === slug ? null : slug;
-          renderEvents();
-        });
-      });
-      scope.querySelectorAll("a[data-evt-card]").forEach((link) => {
-        const id = link.getAttribute("data-evt-card");
-        const ev = eventsById[id];
-        if (!ev) return;
-        link.addEventListener("click", (e) => {
-          const catBtn = e.target.closest("button[data-evt-cat]");
-          if (catBtn && link.contains(catBtn)) {
-            e.preventDefault();
-            e.stopPropagation();
-            const cat = catBtn.getAttribute("data-evt-cat");
-            window.PortalEventsListFilters.toggleActiveCategory(cat);
-            _persistState();
-            renderEvents();
-            return;
-          }
-          const rsvpBtn = e.target.closest("button[data-evt-card-rsvp]");
-          if (rsvpBtn && link.contains(rsvpBtn)) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (ev.slug && typeof window.evtNavigateToEvent === "function") {
-              window.evtNavigateToEvent(ev.slug);
-            } else if (typeof window.evtOpenDetail === "function") {
-              window.evtOpenDetail(ev.id);
-            }
-            return;
-          }
-          if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
-          e.preventDefault();
-          if (ev.slug && typeof window.evtNavigateToEvent === "function") {
-            window.evtNavigateToEvent(ev.slug);
-          } else if (typeof window.evtOpenDetail === "function") {
-            window.evtOpenDetail(ev.id);
-          }
-        });
-      });
-    }
-    function _renderActiveFilterPill() {
-      return window.PortalEventsListFilters.renderActiveFilterPill();
-    }
-    function _matchesType(ev) {
-      return window.PortalEventsListFilters.matchesType(ev);
-    }
-    function _matchesCategory(ev) {
-      return window.PortalEventsListFilters.matchesCategory(ev);
-    }
-    function _matchesLifecycle(ev) {
-      return window.PortalEventsListFilters.matchesLifecycle(ev);
-    }
-    function _matchesDate(ev) {
-      return window.PortalEventsListFilters.matchesDate(ev);
-    }
-    function renderEvents() {
-      const groupsEl = document.getElementById("evtGroups");
-      const heroEl = document.getElementById("evtHero");
-      const empty = document.getElementById("emptyState");
-      const calMount = document.getElementById("evtCalendarMount");
-      if (!groupsEl || !Card2) return;
-      _createTileInjected = false;
-      _renderHeaderCount();
-      _renderActiveFilterPill();
-      if (_activeView === "calendar") {
-        if (heroEl) heroEl.innerHTML = "";
-        const rail = document.getElementById("evtGoingRail");
-        const banner = document.getElementById("evtLiveBanner");
-        if (rail) rail.classList.add("hidden");
-        if (banner) banner.classList.add("hidden");
-        groupsEl.innerHTML = "";
-        empty?.classList.add("hidden");
-        if (calMount) calMount.classList.remove("hidden");
-        _renderCalendar();
-        return;
-      }
-      if (calMount) {
-        calMount.classList.add("hidden");
-        calMount.innerHTML = "";
-      }
-      const all = window.evtAllEvents || [];
-      const rsvps = window.evtAllRsvps || {};
-      const attendees = window.evtAttendees || {};
-      const eventsById = {};
-      all.forEach((e) => {
-        eventsById[e.id] = e;
-      });
-      if (_searchQuery) {
-        if (heroEl) heroEl.innerHTML = "";
-        const rail = document.getElementById("evtGoingRail");
-        if (rail) rail.classList.add("hidden");
-        const banner = document.getElementById("evtLiveBanner");
-        if (banner) banner.classList.add("hidden");
-        const picks = document.getElementById("evtTopPicks");
-        if (picks) picks.classList.add("hidden");
-        const q = _searchQuery.toLowerCase();
-        const titleHits = [];
-        const descHits = [];
-        all.forEach((e) => {
-          if (e.status === "cancelled") return;
-          if (!_notHidden(e)) return;
-          if (!_matchesCategory(e)) return;
-          if ((e.title || "").toLowerCase().includes(q)) {
-            titleHits.push(e);
-          } else if ((e.description || "").toLowerCase().includes(q)) {
-            descHits.push(e);
-          }
-        });
-        const byDateAsc = (a, b) => new Date(a.start_date) - new Date(b.start_date);
-        titleHits.sort(byDateAsc);
-        descHits.sort(byDateAsc);
-        const flat = titleHits.concat(descHits);
-        if (!flat.length) {
-          groupsEl.innerHTML = "";
-          empty?.classList.remove("hidden");
-          _renderEmptyCopy();
+        if (_activeSwipe.locked !== "x") return;
+        const clamped = Math.max(-SWIPE_MAX, Math.min(0, dx));
+        _activeSwipe.dx = clamped;
+        _activeSwipe.card.style.transform = "translateX(" + clamped + "px)";
+        const action = _activeSwipe.card.querySelector(".evt-swipe-action");
+        if (action) action.style.opacity = String(Math.min(1, Math.abs(clamped) / SWIPE_THRESHOLD));
+      }, { passive: true });
+      const finish = () => {
+        if (!_activeSwipe) return;
+        const { card: card2, dx, locked } = _activeSwipe;
+        _activeSwipe = null;
+        if (locked !== "x") {
+          _resetSwipeCard(card2);
           return;
         }
-        empty?.classList.add("hidden");
-        groupsEl.innerHTML = _renderBucket(
-          'Results for "' + _searchQuery + '"',
-          flat,
-          rsvps,
-          attendees
-        );
-        _wireCardClicks(groupsEl, eventsById);
+        if (Math.abs(dx) >= SWIPE_THRESHOLD) {
+          card2.classList.remove("evt-swipe--dragging");
+          card2.classList.add("evt-swipe--revealed");
+          card2.style.transform = "";
+          const action = card2.querySelector(".evt-swipe-action");
+          if (action) action.style.opacity = "1";
+        } else {
+          _resetSwipeCard(card2);
+        }
+      };
+      rail.addEventListener("touchend", finish, { passive: true });
+      rail.addEventListener("touchcancel", finish, { passive: true });
+      rail.addEventListener("click", (e) => {
+        const cancelBtn = e.target.closest("[data-swipe-cancel]");
+        if (cancelBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          const id = cancelBtn.getAttribute("data-swipe-cancel") || "";
+          _confirmCancelRsvp(id);
+          return;
+        }
+        const revealed = e.target.closest(".evt-swipe--revealed");
+        if (revealed) {
+          e.preventDefault();
+          e.stopPropagation();
+          _resetSwipeCard(revealed);
+        }
+      });
+    }
+    const groups = document.getElementById("evtGroups");
+    if (groups && groups.dataset.lpWired !== "1") {
+      groups.dataset.lpWired = "1";
+      const cancelLp = () => {
+        if (_longPressTimer) {
+          clearTimeout(_longPressTimer);
+          _longPressTimer = null;
+        }
+      };
+      groups.addEventListener("touchstart", (e) => {
+        const card2 = e.target.closest("a[data-evt-card], a[data-evt-mini], a[data-evt-hero]");
+        if (!card2) return;
+        _longPressFired = false;
+        const t = e.touches[0];
+        const startX = t.clientX, startY = t.clientY;
+        cancelLp();
+        _longPressTimer = setTimeout(() => {
+          _longPressFired = true;
+          const id = card2.getAttribute("data-evt-card") || card2.getAttribute("data-evt-mini") || card2.getAttribute("data-evt-hero") || "";
+          _openContextSheet(id);
+        }, LONGPRESS_MS);
+        const moveHandler = (mv) => {
+          const m = mv.touches[0];
+          if (Math.abs(m.clientX - startX) > LONGPRESS_MOVE || Math.abs(m.clientY - startY) > LONGPRESS_MOVE) cancelLp();
+        };
+        const endHandler = () => {
+          cancelLp();
+          groups.removeEventListener("touchmove", moveHandler);
+          groups.removeEventListener("touchend", endHandler);
+          groups.removeEventListener("touchcancel", endHandler);
+        };
+        groups.addEventListener("touchmove", moveHandler, { passive: true });
+        groups.addEventListener("touchend", endHandler, { passive: true });
+        groups.addEventListener("touchcancel", endHandler, { passive: true });
+      }, { passive: true });
+      groups.addEventListener("click", (e) => {
+        if (_longPressFired) {
+          _longPressFired = false;
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+    }
+  }
+  async function _confirmCancelRsvp(eventId2) {
+    if (!eventId2) return;
+    const all = window.evtAllEvents || [];
+    const ev = all.find((x) => x.id === eventId2);
+    const title = ev && ev.title ? ev.title : "this event";
+    if (!window.confirm('Cancel your RSVP for "' + title + '"?')) return;
+    try {
+      if (typeof globalThis.evtHandleRsvp === "function") {
+        await window.evtHandleRsvp(eventId2, "going");
+      }
+    } catch (err) {
+      console.error("Cancel RSVP failed", err);
+    }
+  }
+  function _ensureContextSheet() {
+    let sheet = document.getElementById("evtContextSheet");
+    if (sheet) return sheet;
+    sheet = document.createElement("div");
+    sheet.id = "evtContextSheet";
+    sheet.className = "evt-context-sheet hidden fixed inset-0 z-[75]";
+    sheet.setAttribute("role", "dialog");
+    sheet.setAttribute("aria-modal", "true");
+    sheet.innerHTML = '<div class="absolute inset-0 bg-black/40" data-ctx-close="1"></div><div class="evt-context-sheet__panel absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:max-w-sm sm:h-fit sm:rounded-2xl bg-white rounded-t-2xl shadow-2xl overflow-hidden"><div class="px-4 pt-3 pb-2 border-b border-gray-100"><h3 id="evtContextTitle" class="text-sm font-semibold text-gray-900 truncate"></h3></div><ul class="py-1"><li><button type="button" data-ctx-act="share"   class="evt-context-row"><span aria-hidden="true">\u{1F517}</span><span>Share link</span></button></li><li><button type="button" data-ctx-act="copy"    class="evt-context-row"><span aria-hidden="true">\u{1F4CB}</span><span>Copy link</span></button></li><li><button type="button" data-ctx-act="ics"     class="evt-context-row"><span aria-hidden="true">\u{1F4C5}</span><span>Add to calendar</span></button></li><li><button type="button" data-ctx-act="hide"    class="evt-context-row evt-context-row--danger"><span aria-hidden="true">\u{1F648}</span><span>Hide from list</span></button></li><li class="border-t border-gray-100 mt-1"><button type="button" data-ctx-close="1" class="evt-context-row evt-context-row--cancel"><span>Cancel</span></button></li></ul></div>';
+    document.body.appendChild(sheet);
+    sheet.addEventListener("click", (e) => {
+      if (e.target.closest("[data-ctx-close]")) {
+        _closeContextSheet();
         return;
       }
-      const filtered = all.filter((e) => _matchesType(e) && _matchesCategory(e) && _matchesLifecycle(e) && _matchesDate(e) && _notHidden(e));
-      const tab = window.evtActiveTab || "upcoming";
-      const hero = tab === "upcoming" ? _pickHero(filtered) : null;
-      _renderHero(hero, hero ? rsvps[hero.id] : null);
-      if (tab === "upcoming") {
-        _renderLiveBanner(all);
-        _renderGoingRail(all, rsvps, attendees, hero ? hero.id : null, eventsById);
-        _renderTopPicks(filtered, attendees, hero ? hero.id : null, eventsById);
-      } else {
-        const rail = document.getElementById("evtGoingRail");
-        if (rail) rail.classList.add("hidden");
-        const banner = document.getElementById("evtLiveBanner");
-        if (banner) banner.classList.add("hidden");
-        const picks = document.getElementById("evtTopPicks");
-        if (picks) picks.classList.add("hidden");
+      const row = e.target.closest("[data-ctx-act]");
+      if (!row) return;
+      const act = row.getAttribute("data-ctx-act");
+      const id = sheet.dataset.eventId || "";
+      _runContextAction(act, id);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !sheet.classList.contains("hidden")) _closeContextSheet();
+    });
+    return sheet;
+  }
+  function _openContextSheet(eventId2) {
+    if (!eventId2) return;
+    const all = window.evtAllEvents || [];
+    const ev = all.find((x) => x.id === eventId2);
+    if (!ev) return;
+    const sheet = _ensureContextSheet();
+    sheet.dataset.eventId = eventId2;
+    const title = sheet.querySelector("#evtContextTitle");
+    if (title) title.textContent = ev.title || "Event";
+    sheet.classList.remove("hidden");
+    document.body.classList.add("overflow-hidden");
+  }
+  function _closeContextSheet() {
+    const sheet = document.getElementById("evtContextSheet");
+    if (!sheet) return;
+    sheet.classList.add("hidden");
+    document.body.classList.remove("overflow-hidden");
+  }
+  async function _runContextAction(act, eventId2) {
+    const all = window.evtAllEvents || [];
+    const ev = all.find((x) => x.id === eventId2);
+    if (!ev) {
+      _closeContextSheet();
+      return;
+    }
+    const url = _eventShareUrl(ev);
+    if (act === "share") {
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: ev.title || "Event", url });
+        } else {
+          await _copyToClipboard(url);
+          _toast("Link copied");
+        }
+      } catch (_) {
       }
-      const rest = hero ? filtered.filter((e) => e.id !== hero.id) : filtered;
-      if (!rest.length && !hero) {
+      _closeContextSheet();
+      return;
+    }
+    if (act === "copy") {
+      await _copyToClipboard(url);
+      _toast("Link copied");
+      _closeContextSheet();
+      return;
+    }
+    if (act === "ics") {
+      _downloadIcs(ev);
+      _closeContextSheet();
+      return;
+    }
+    if (act === "hide") {
+      _hiddenIds.add(eventId2);
+      _toast("Hidden for this session");
+      _closeContextSheet();
+      renderEvents();
+      return;
+    }
+  }
+  function _eventShareUrl(ev) {
+    const origin = location.origin;
+    const base = origin + (location.pathname.includes("/portal/") ? location.pathname.split("?")[0] : "/portal/events.html");
+    return ev.slug ? base + "?event=" + encodeURIComponent(ev.slug) : base;
+  }
+  async function _copyToClipboard(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (_) {
+    }
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+  function _toast(msg) {
+    let t = document.getElementById("evtToast");
+    if (!t) {
+      t = document.createElement("div");
+      t.id = "evtToast";
+      t.className = "evt-toast";
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add("evt-toast--show");
+    clearTimeout(t._hideT);
+    t._hideT = setTimeout(() => t.classList.remove("evt-toast--show"), 1800);
+  }
+  function _icsDate(d) {
+    const pad = (n) => String(n).padStart(2, "0");
+    return d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + "T" + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + "Z";
+  }
+  function _icsEscape(s) {
+    return String(s == null ? "" : s).replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+  }
+  function _downloadIcs(ev) {
+    const start = new Date(ev.start_date);
+    const endRaw = ev.end_date || ev.end_at || ev.ends_at;
+    const end = endRaw ? new Date(endRaw) : new Date(start.getTime() + 2 * 60 * 60 * 1e3);
+    const uid = (ev.id || "evt-" + Date.now()) + "@justicemcneal";
+    const url = _eventShareUrl(ev);
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//JusticeMcNeal//Portal Events//EN",
+      "CALSCALE:GREGORIAN",
+      "BEGIN:VEVENT",
+      "UID:" + uid,
+      "DTSTAMP:" + _icsDate(/* @__PURE__ */ new Date()),
+      "DTSTART:" + _icsDate(start),
+      "DTEND:" + _icsDate(end),
+      "SUMMARY:" + _icsEscape(ev.title || "Event"),
+      "DESCRIPTION:" + _icsEscape((ev.description || "") + "\n\n" + url),
+      "URL:" + _icsEscape(url)
+    ];
+    if (ev.location_text || ev.location_nickname) {
+      lines.push("LOCATION:" + _icsEscape(ev.location_text || ev.location_nickname));
+    }
+    lines.push("END:VEVENT", "END:VCALENDAR");
+    const ics = lines.join("\r\n");
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const a = document.createElement("a");
+    const slug = ev.slug || ev.id || "event";
+    a.href = URL.createObjectURL(blob);
+    a.download = slug + ".ics";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(a.href);
+      a.remove();
+    }, 0);
+  }
+  function _applyRestoredUi() {
+    return window.PortalEventsListFilters.applyRestoredUi();
+  }
+  async function loadEvents() {
+    try {
+      const { data: events, error } = await supabaseClient.from("events").select("*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)").in("status", ["open", "confirmed", "active", "completed"]).order("start_date", { ascending: true });
+      if (error) throw error;
+      globalThis.evtAllEvents = events || [];
+      if (typeof canManageEvents === "function" && canManageEvents() && globalThis.evtCurrentUser) {
+        const { data: drafts } = await supabaseClient.from("events").select("*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)").eq("status", "draft").eq("created_by", globalThis.evtCurrentUser.id).order("created_at", { ascending: false });
+        if (drafts && drafts.length) {
+          globalThis.evtAllEvents = [...drafts, ...window.evtAllEvents];
+        }
+      }
+      const ids = window.evtAllEvents.map((e) => e.id);
+      globalThis.evtAllRsvps = {};
+      if (globalThis.evtCurrentUser && ids.length) {
+        const { data: rsvps } = await supabaseClient.from("event_rsvps").select("*").eq("user_id", globalThis.evtCurrentUser.id).in("event_id", ids);
+        (rsvps || []).forEach((r) => {
+          window.evtAllRsvps[r.event_id] = r;
+        });
+      }
+      globalThis.evtAttendees = {};
+      globalThis.evtAttendeeCounts = {};
+      if (ids.length) {
+        const [{ data: going, error: aErr }, { data: guestGoing, error: gErr }] = await Promise.all([
+          supabaseClient.from("event_rsvps").select("event_id, profiles:user_id(profile_picture_url, first_name)").eq("status", "going").in("event_id", ids),
+          supabaseClient.from("event_guest_rsvps").select("event_id, status, paid").in("event_id", ids)
+        ]);
+        if (!aErr && going) {
+          going.forEach((row) => {
+            var _a, _b;
+            if (!row.profiles) return;
+            const list = (_a = window.evtAttendees)[_b = row.event_id] || (_a[_b] = []);
+            if (list.length < 5) list.push(row.profiles);
+            window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
+          });
+        }
+        if (!gErr && guestGoing) {
+          guestGoing.forEach((row) => {
+            if (row.status === "going" || row.paid === true) {
+              window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
+            }
+          });
+        }
+      }
+      renderEvents();
+    } catch (err) {
+      console.error("Failed to load events:", err);
+      const groups = document.getElementById("evtGroups");
+      if (groups) {
+        groups.innerHTML = '<p class="text-sm text-red-500 text-center py-8">Failed to load events. Please refresh.</p>';
+      }
+    }
+  }
+  function renderSkeletons() {
+    const groups = document.getElementById("evtGroups");
+    if (!groups || !Card2) return;
+    let html5 = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">';
+    for (let i = 0; i < 4; i++) html5 += Card2.skeleton();
+    html5 += "</div>";
+    groups.innerHTML = html5;
+  }
+  function _renderHeaderCount() {
+    return window.PortalEventsListHeader.renderHeaderCount();
+  }
+  function _initHeaderBell() {
+    return window.PortalEventsListHeader.initHeaderBell();
+  }
+  function _pickHero(events) {
+    return window.PortalEventsListHeroRails.pickHero(events);
+  }
+  function _renderHero(event, rsvp) {
+    return window.PortalEventsListHeroRails.renderHero(event, rsvp);
+  }
+  function _renderLiveBanner(events) {
+    return window.PortalEventsListHeroRails.renderLiveBanner(events);
+  }
+  function _renderGoingRail(events, rsvps, attendees, heroId, eventsById) {
+    return window.PortalEventsListHeroRails.renderGoingRail(events, rsvps, attendees, heroId, eventsById);
+  }
+  function _renderTopPicks(events, attendees, heroId, eventsById) {
+    return window.PortalEventsListHeroRails.renderTopPicks(events, attendees, heroId, eventsById);
+  }
+  function _renderBucket(label, events, rsvps, attendees) {
+    return window.PortalEventsListBuckets.renderBucket(label, events, rsvps, attendees);
+  }
+  function _renderMiniCalendar() {
+    return window.PortalEventsListRightRail.renderMiniCalendar();
+  }
+  function _renderMyRsvps() {
+    return window.PortalEventsListRightRail.renderMyRsvps();
+  }
+  function _renderStatsCard() {
+    return window.PortalEventsListRightRail.renderStatsCard();
+  }
+  function _wireCardClicks(scope, eventsById) {
+    scope.querySelectorAll("button[data-evt-create-tile]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        document.getElementById("createEventBtn")?.click();
+      });
+    });
+    scope.querySelectorAll("button[data-evt-bucket-toggle]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const slug = btn.getAttribute("data-evt-bucket-toggle");
+        _expandedBucket = _expandedBucket === slug ? null : slug;
+        renderEvents();
+      });
+    });
+    scope.querySelectorAll("a[data-evt-card]").forEach((link) => {
+      const id = link.getAttribute("data-evt-card");
+      const ev = eventsById[id];
+      if (!ev) return;
+      link.addEventListener("click", (e) => {
+        const catBtn = e.target.closest("button[data-evt-cat]");
+        if (catBtn && link.contains(catBtn)) {
+          e.preventDefault();
+          e.stopPropagation();
+          const cat = catBtn.getAttribute("data-evt-cat");
+          window.PortalEventsListFilters.toggleActiveCategory(cat);
+          _persistState();
+          renderEvents();
+          return;
+        }
+        const rsvpBtn = e.target.closest("button[data-evt-card-rsvp]");
+        if (rsvpBtn && link.contains(rsvpBtn)) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (ev.slug && typeof globalThis.evtNavigateToEvent === "function") {
+            window.evtNavigateToEvent(ev.slug);
+          } else if (typeof globalThis.evtOpenDetail === "function") {
+            window.evtOpenDetail(ev.id);
+          }
+          return;
+        }
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+        e.preventDefault();
+        if (ev.slug && typeof globalThis.evtNavigateToEvent === "function") {
+          window.evtNavigateToEvent(ev.slug);
+        } else if (typeof globalThis.evtOpenDetail === "function") {
+          window.evtOpenDetail(ev.id);
+        }
+      });
+    });
+  }
+  function _renderActiveFilterPill() {
+    return window.PortalEventsListFilters.renderActiveFilterPill();
+  }
+  function _matchesType(ev) {
+    return window.PortalEventsListFilters.matchesType(ev);
+  }
+  function _matchesCategory(ev) {
+    return window.PortalEventsListFilters.matchesCategory(ev);
+  }
+  function _matchesLifecycle(ev) {
+    return window.PortalEventsListFilters.matchesLifecycle(ev);
+  }
+  function _matchesDate(ev) {
+    return window.PortalEventsListFilters.matchesDate(ev);
+  }
+  function renderEvents() {
+    const groupsEl = document.getElementById("evtGroups");
+    const heroEl = document.getElementById("evtHero");
+    const empty = document.getElementById("emptyState");
+    const calMount = document.getElementById("evtCalendarMount");
+    if (!groupsEl || !Card2) return;
+    _createTileInjected = false;
+    _renderHeaderCount();
+    _renderActiveFilterPill();
+    if (_activeView === "calendar") {
+      if (heroEl) heroEl.innerHTML = "";
+      const rail = document.getElementById("evtGoingRail");
+      const banner = document.getElementById("evtLiveBanner");
+      if (rail) rail.classList.add("hidden");
+      if (banner) banner.classList.add("hidden");
+      groupsEl.innerHTML = "";
+      empty?.classList.add("hidden");
+      if (calMount) calMount.classList.remove("hidden");
+      _renderCalendar();
+      return;
+    }
+    if (calMount) {
+      calMount.classList.add("hidden");
+      calMount.innerHTML = "";
+    }
+    const all = window.evtAllEvents || [];
+    const rsvps = window.evtAllRsvps || {};
+    const attendees = window.evtAttendees || {};
+    const eventsById = {};
+    all.forEach((e) => {
+      eventsById[e.id] = e;
+    });
+    if (_searchQuery) {
+      if (heroEl) heroEl.innerHTML = "";
+      const rail = document.getElementById("evtGoingRail");
+      if (rail) rail.classList.add("hidden");
+      const banner = document.getElementById("evtLiveBanner");
+      if (banner) banner.classList.add("hidden");
+      const picks = document.getElementById("evtTopPicks");
+      if (picks) picks.classList.add("hidden");
+      const q = _searchQuery.toLowerCase();
+      const titleHits = [];
+      const descHits = [];
+      all.forEach((e) => {
+        if (e.status === "cancelled") return;
+        if (!_notHidden(e)) return;
+        if (!_matchesCategory(e)) return;
+        if ((e.title || "").toLowerCase().includes(q)) {
+          titleHits.push(e);
+        } else if ((e.description || "").toLowerCase().includes(q)) {
+          descHits.push(e);
+        }
+      });
+      const byDateAsc = (a, b) => new Date(a.start_date) - new Date(b.start_date);
+      titleHits.sort(byDateAsc);
+      descHits.sort(byDateAsc);
+      const flat = titleHits.concat(descHits);
+      if (!flat.length) {
         groupsEl.innerHTML = "";
         empty?.classList.remove("hidden");
         _renderEmptyCopy();
         return;
       }
       empty?.classList.add("hidden");
-      const mode = tab === "past" ? "past" : tab === "going" ? "going" : "upcoming";
-      let groups;
-      if (typeof H5.groupByBucket === "function") {
-        groups = H5.groupByBucket(rest, mode);
-      } else {
-        groups = [{ label: "Events", events: rest }];
-      }
-      const dir = tab === "past" ? -1 : 1;
-      groups.forEach((g) => {
-        g.events.sort((a, b) => {
-          const ap = a.is_pinned && a.event_type === "llc" ? 0 : 1;
-          const bp = b.is_pinned && b.event_type === "llc" ? 0 : 1;
-          if (ap !== bp) return ap - bp;
-          return dir * (new Date(a.start_date) - new Date(b.start_date));
-        });
-      });
-      if (_expandedBucket) {
-        const slugs = groups.map((g) => String(g.label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
-        if (!slugs.includes(_expandedBucket)) _expandedBucket = null;
-      }
-      groupsEl.innerHTML = groups.filter((g) => g.events.length).filter((g) => {
-        if (!_expandedBucket) return true;
-        const s = String(g.label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-        return s === _expandedBucket;
-      }).map((g) => _renderBucket(g.label, g.events, rsvps, attendees)).join("");
-      if (!_createTileInjected && document.body.classList.contains("evt-vlift") && tab === "upcoming") {
-        const canCreate = typeof canCreateEvents === "function" && canCreateEvents();
-        if (canCreate) {
-          const tileWrap = '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"><button type="button" data-evt-create-tile class="evt-create-tile" aria-label="Create new event"><span class="evt-create-tile__plus" aria-hidden="true">+</span><span class="evt-create-tile__label">Create Event</span><span class="evt-create-tile__hint">Add a new event to the calendar</span></button></div>';
-          groupsEl.innerHTML += tileWrap;
-          _createTileInjected = true;
-        }
-      }
+      groupsEl.innerHTML = _renderBucket(
+        'Results for "' + _searchQuery + '"',
+        flat,
+        rsvps,
+        attendees
+      );
       _wireCardClicks(groupsEl, eventsById);
-      _renderMiniCalendar();
-      _renderMyRsvps();
-      _renderStatsCard();
+      return;
     }
-    function _renderEmptyCopy() {
-      const tab = window.evtActiveTab || "upcoming";
-      const titleEl = document.getElementById("emptyTitle");
-      const subEl = document.getElementById("emptySubtext");
-      const ctaBtn = document.getElementById("emptyCreateBtn");
-      const secBtn = document.getElementById("emptySecondaryBtn");
+    const filtered = all.filter((e) => _matchesType(e) && _matchesCategory(e) && _matchesLifecycle(e) && _matchesDate(e) && _notHidden(e));
+    const tab = window.evtActiveTab || "upcoming";
+    const hero = tab === "upcoming" ? _pickHero(filtered) : null;
+    _renderHero(hero, hero ? rsvps[hero.id] : null);
+    if (tab === "upcoming") {
+      _renderLiveBanner(all);
+      _renderGoingRail(all, rsvps, attendees, hero ? hero.id : null, eventsById);
+      _renderTopPicks(filtered, attendees, hero ? hero.id : null, eventsById);
+    } else {
+      const rail = document.getElementById("evtGoingRail");
+      if (rail) rail.classList.add("hidden");
+      const banner = document.getElementById("evtLiveBanner");
+      if (banner) banner.classList.add("hidden");
+      const picks = document.getElementById("evtTopPicks");
+      if (picks) picks.classList.add("hidden");
+    }
+    const rest = hero ? filtered.filter((e) => e.id !== hero.id) : filtered;
+    if (!rest.length && !hero) {
+      groupsEl.innerHTML = "";
+      empty?.classList.remove("hidden");
+      _renderEmptyCopy();
+      return;
+    }
+    empty?.classList.add("hidden");
+    const mode = tab === "past" ? "past" : tab === "going" ? "going" : "upcoming";
+    let groups;
+    if (typeof H5.groupByBucket === "function") {
+      groups = H5.groupByBucket(rest, mode);
+    } else {
+      groups = [{ label: "Events", events: rest }];
+    }
+    const dir = tab === "past" ? -1 : 1;
+    groups.forEach((g2) => {
+      g2.events.sort((a, b) => {
+        const ap = a.is_pinned && a.event_type === "llc" ? 0 : 1;
+        const bp = b.is_pinned && b.event_type === "llc" ? 0 : 1;
+        if (ap !== bp) return ap - bp;
+        return dir * (new Date(a.start_date) - new Date(b.start_date));
+      });
+    });
+    if (_expandedBucket) {
+      const slugs = groups.map((g2) => String(g2.label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
+      if (!slugs.includes(_expandedBucket)) _expandedBucket = null;
+    }
+    groupsEl.innerHTML = groups.filter((g2) => g2.events.length).filter((g2) => {
+      if (!_expandedBucket) return true;
+      const s = String(g2.label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      return s === _expandedBucket;
+    }).map((g2) => _renderBucket(g2.label, g2.events, rsvps, attendees)).join("");
+    if (!_createTileInjected && document.body.classList.contains("evt-vlift") && tab === "upcoming") {
       const canCreate = typeof canCreateEvents === "function" && canCreateEvents();
-      let title, sub, showCta = false, secText = "", secAction = null;
-      if (_searchQuery) {
-        title = 'No events match "' + _searchQuery + '"';
-        sub = "Try a shorter term, or clear your filters to see everything.";
-        secText = "Clear filters";
-        secAction = () => {
-          const input = document.getElementById("evtSearchInput");
-          const clear = document.getElementById("evtSearchClear");
-          if (input) input.value = "";
-          clear?.classList.add("hidden");
-          window.PortalEventsListFilters.clearFiltersForEmptySearch();
-        };
-      } else if (tab === "past") {
-        title = "No past events yet";
-        sub = "Past events will appear here after they wrap up.";
-      } else if (tab === "going") {
-        title = "Not going to any events";
-        sub = "RSVP to an event to see it here.";
-      } else if (canCreate) {
-        title = "No events yet";
-        sub = "Create your family's first one.";
-        showCta = true;
-      } else {
-        title = "No events on the books";
-        sub = "Check back soon \u2014 we'll post new gatherings here.";
-        secText = "Browse past events";
-        secAction = () => _switchLifecycleTab("past");
+      if (canCreate) {
+        const tileWrap = '<div class="evt-card-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"><button type="button" data-evt-create-tile class="evt-create-tile" aria-label="Create new event"><span class="evt-create-tile__plus" aria-hidden="true">+</span><span class="evt-create-tile__label">Create Event</span><span class="evt-create-tile__hint">Add a new event to the calendar</span></button></div>';
+        groupsEl.innerHTML += tileWrap;
+        _createTileInjected = true;
       }
-      if (titleEl) titleEl.textContent = title;
-      if (subEl) subEl.textContent = sub;
-      if (ctaBtn) ctaBtn.classList.toggle("hidden", !showCta);
-      if (secBtn) {
-        secBtn.classList.toggle("hidden", !secText);
-        if (secText) {
-          secBtn.textContent = secText;
-          secBtn.onclick = secAction;
-        } else {
-          secBtn.onclick = null;
-        }
-      }
-      _upgradeEmptyIllo();
     }
-    function _switchLifecycleTab(tab) {
-      return window.PortalEventsListFilters.switchLifecycleTab(tab);
-    }
-    let _lottieLoading = false;
-    let _lottieUpgraded = false;
-    function _upgradeEmptyIllo() {
-      if (_lottieUpgraded) return;
-      const slot = document.getElementById("emptyIllo");
-      if (!slot) return;
-      const go = () => {
-        if (_lottieUpgraded) return;
-        if (!window.lottie || typeof window.lottie.loadAnimation !== "function") return;
-        try {
-          slot.innerHTML = "";
-          slot.classList.add("evt-empty-illo--lottie");
-          window.lottie.loadAnimation({
-            container: slot,
-            renderer: "svg",
-            loop: true,
-            autoplay: true,
-            path: "/assets/lottie/cat-playing.json"
-          });
-          _lottieUpgraded = true;
-        } catch (_) {
-        }
+    _wireCardClicks(groupsEl, eventsById);
+    _renderMiniCalendar();
+    _renderMyRsvps();
+    _renderStatsCard();
+  }
+  function _renderEmptyCopy() {
+    const tab = window.evtActiveTab || "upcoming";
+    const titleEl = document.getElementById("emptyTitle");
+    const subEl = document.getElementById("emptySubtext");
+    const ctaBtn = document.getElementById("emptyCreateBtn");
+    const secBtn = document.getElementById("emptySecondaryBtn");
+    const canCreate = typeof canCreateEvents === "function" && canCreateEvents();
+    let title, sub, showCta = false, secText = "", secAction = null;
+    if (_searchQuery) {
+      title = 'No events match "' + _searchQuery + '"';
+      sub = "Try a shorter term, or clear your filters to see everything.";
+      secText = "Clear filters";
+      secAction = () => {
+        const input = document.getElementById("evtSearchInput");
+        const clear = document.getElementById("evtSearchClear");
+        if (input) input.value = "";
+        clear?.classList.add("hidden");
+        window.PortalEventsListFilters.clearFiltersForEmptySearch();
       };
-      if (window.lottie) {
-        go();
+    } else if (tab === "past") {
+      title = "No past events yet";
+      sub = "Past events will appear here after they wrap up.";
+    } else if (tab === "going") {
+      title = "Not going to any events";
+      sub = "RSVP to an event to see it here.";
+    } else if (canCreate) {
+      title = "No events yet";
+      sub = "Create your family's first one.";
+      showCta = true;
+    } else {
+      title = "No events on the books";
+      sub = "Check back soon \u2014 we'll post new gatherings here.";
+      secText = "Browse past events";
+      secAction = () => _switchLifecycleTab("past");
+    }
+    if (titleEl) titleEl.textContent = title;
+    if (subEl) subEl.textContent = sub;
+    if (ctaBtn) ctaBtn.classList.toggle("hidden", !showCta);
+    if (secBtn) {
+      secBtn.classList.toggle("hidden", !secText);
+      if (secText) {
+        secBtn.textContent = secText;
+        secBtn.onclick = secAction;
+      } else {
+        secBtn.onclick = null;
+      }
+    }
+    _upgradeEmptyIllo();
+  }
+  function _switchLifecycleTab(tab) {
+    return window.PortalEventsListFilters.switchLifecycleTab(tab);
+  }
+  var _lottieLoading = false;
+  var _lottieUpgraded = false;
+  function _upgradeEmptyIllo() {
+    if (_lottieUpgraded) return;
+    const slot = document.getElementById("emptyIllo");
+    if (!slot) return;
+    const go = () => {
+      if (_lottieUpgraded) return;
+      if (!window.lottie || typeof window.lottie.loadAnimation !== "function") return;
+      try {
+        slot.innerHTML = "";
+        slot.classList.add("evt-empty-illo--lottie");
+        window.lottie.loadAnimation({
+          container: slot,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          path: "/assets/lottie/cat-playing.json"
+        });
+        _lottieUpgraded = true;
+      } catch (_) {
+      }
+    };
+    if (window.lottie) {
+      go();
+      return;
+    }
+    if (_lottieLoading) return;
+    _lottieLoading = true;
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js";
+    s.async = true;
+    s.onload = go;
+    s.onerror = () => {
+    };
+    document.head.appendChild(s);
+  }
+  function initFilterChips2() {
+    return window.PortalEventsListFilters.initFilterChips();
+  }
+  function _initStickyHeader() {
+    const header = document.getElementById("evtPageHeader");
+    const sentinel = document.getElementById("evtHeaderSentinel");
+    const strip = document.getElementById("evtFilterStrip");
+    if (!header || !sentinel) return;
+    const updateHeaderVar = () => {
+      const h = header.getBoundingClientRect().height;
+      document.documentElement.style.setProperty("--evt-header-h", h + "px");
+    };
+    updateHeaderVar();
+    window.addEventListener("resize", updateHeaderVar);
+    if (!("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        header.classList.toggle("evt-header--condensed", !e.isIntersecting);
+        requestAnimationFrame(updateHeaderVar);
+      });
+    }, { threshold: 0 });
+    io.observe(sentinel);
+  }
+  function _initMobileFab() {
+    const fab = document.getElementById("evtCreateFab");
+    if (!fab) return;
+    const canCreate = typeof canCreateEvents === "function" && canCreateEvents();
+    if (!canCreate) return;
+    fab.classList.remove("hidden");
+    fab.classList.add("flex");
+    fab.addEventListener("click", () => {
+      document.getElementById("createEventBtn")?.click();
+    });
+    let lastY = window.scrollY || 0;
+    let ticking = false;
+    const TH = 8;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY || 0;
+        const dy = y - lastY;
+        if (y < 20) {
+          fab.classList.remove("evt-fab--hidden");
+        } else if (dy > TH) {
+          fab.classList.add("evt-fab--hidden");
+        } else if (dy < -TH) {
+          fab.classList.remove("evt-fab--hidden");
+        }
+        if (Math.abs(dy) > TH) lastY = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    const mo = new MutationObserver(() => {
+      const modalOpen = document.body.classList.contains("modal-open") || document.body.classList.contains("overflow-hidden");
+      fab.classList.toggle("evt-fab--modal-hidden", modalOpen);
+    });
+    mo.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+  }
+  function _initPullToRefresh() {
+    if (!("ontouchstart" in window)) return;
+    const isMobile = () => window.innerWidth < 640;
+    if (!isMobile()) return;
+    const TRIGGER = 60;
+    const MAX = 120;
+    const DAMPING = 0.45;
+    let ind = document.getElementById("evtPtrIndicator");
+    if (!ind) {
+      ind = document.createElement("div");
+      ind.id = "evtPtrIndicator";
+      ind.className = "evt-ptr";
+      ind.innerHTML = '<svg class="evt-ptr-spin" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="40 60"/></svg>';
+      document.body.appendChild(ind);
+    }
+    let startY = 0, dy = 0, pulling = false, committed = false, refreshing = false;
+    const inRail = (target) => !!(target && target.closest && target.closest("#evtGoingRailScroll"));
+    const anyModal = () => document.body.classList.contains("modal-open") || document.body.classList.contains("overflow-hidden");
+    const setOffset = (v) => {
+      ind.style.transform = "translate(-50%," + v + "px)";
+      ind.style.opacity = String(Math.min(1, Math.abs(v) / TRIGGER));
+    };
+    const reset = () => {
+      pulling = false;
+      committed = false;
+      dy = 0;
+      ind.classList.remove("evt-ptr--active", "evt-ptr--refreshing");
+      ind.style.transform = "";
+      ind.style.opacity = "";
+    };
+    document.addEventListener("touchstart", (e) => {
+      if (refreshing) return;
+      if (anyModal()) return;
+      if (window.scrollY > 0) return;
+      if (inRail(e.target)) return;
+      startY = e.touches[0].clientY;
+      pulling = true;
+      dy = 0;
+    }, { passive: true });
+    document.addEventListener("touchmove", (e) => {
+      if (!pulling || refreshing) return;
+      const y = e.touches[0].clientY;
+      dy = (y - startY) * DAMPING;
+      if (dy <= 0) {
+        reset();
         return;
       }
-      if (_lottieLoading) return;
-      _lottieLoading = true;
-      const s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie_light.min.js";
-      s.async = true;
-      s.onload = go;
-      s.onerror = () => {
-      };
-      document.head.appendChild(s);
-    }
-    function initFilterChips2() {
-      return window.PortalEventsListFilters.initFilterChips();
-    }
-    function _initStickyHeader() {
-      const header = document.getElementById("evtPageHeader");
-      const sentinel = document.getElementById("evtHeaderSentinel");
-      const strip = document.getElementById("evtFilterStrip");
-      if (!header || !sentinel) return;
-      const updateHeaderVar = () => {
-        const h = header.getBoundingClientRect().height;
-        document.documentElement.style.setProperty("--evt-header-h", h + "px");
-      };
-      updateHeaderVar();
-      window.addEventListener("resize", updateHeaderVar);
-      if (!("IntersectionObserver" in window)) return;
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach((e) => {
-          header.classList.toggle("evt-header--condensed", !e.isIntersecting);
-          requestAnimationFrame(updateHeaderVar);
-        });
-      }, { threshold: 0 });
-      io.observe(sentinel);
-    }
-    function _initMobileFab() {
-      const fab = document.getElementById("evtCreateFab");
-      if (!fab) return;
-      const canCreate = typeof canCreateEvents === "function" && canCreateEvents();
-      if (!canCreate) return;
-      fab.classList.remove("hidden");
-      fab.classList.add("flex");
-      fab.addEventListener("click", () => {
-        document.getElementById("createEventBtn")?.click();
-      });
-      let lastY = window.scrollY || 0;
-      let ticking = false;
-      const TH = 8;
-      const onScroll = () => {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(() => {
-          const y = window.scrollY || 0;
-          const dy = y - lastY;
-          if (y < 20) {
-            fab.classList.remove("evt-fab--hidden");
-          } else if (dy > TH) {
-            fab.classList.add("evt-fab--hidden");
-          } else if (dy < -TH) {
-            fab.classList.remove("evt-fab--hidden");
-          }
-          if (Math.abs(dy) > TH) lastY = y;
-          ticking = false;
-        });
-      };
-      window.addEventListener("scroll", onScroll, { passive: true });
-      const mo = new MutationObserver(() => {
-        const modalOpen = document.body.classList.contains("modal-open") || document.body.classList.contains("overflow-hidden");
-        fab.classList.toggle("evt-fab--modal-hidden", modalOpen);
-      });
-      mo.observe(document.body, { attributes: true, attributeFilter: ["class"] });
-    }
-    function _initPullToRefresh() {
-      if (!("ontouchstart" in window)) return;
-      const isMobile = () => window.innerWidth < 640;
-      if (!isMobile()) return;
-      const TRIGGER = 60;
-      const MAX = 120;
-      const DAMPING = 0.45;
-      let ind = document.getElementById("evtPtrIndicator");
-      if (!ind) {
-        ind = document.createElement("div");
-        ind.id = "evtPtrIndicator";
-        ind.className = "evt-ptr";
-        ind.innerHTML = '<svg class="evt-ptr-spin" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="40 60"/></svg>';
-        document.body.appendChild(ind);
+      if (dy > MAX) dy = MAX;
+      ind.classList.add("evt-ptr--active");
+      setOffset(dy);
+      committed = dy >= TRIGGER;
+      ind.classList.toggle("evt-ptr--ready", committed);
+    }, { passive: true });
+    document.addEventListener("touchend", () => {
+      if (!pulling || refreshing) return;
+      if (!committed) {
+        reset();
+        return;
       }
-      let startY = 0, dy = 0, pulling = false, committed = false, refreshing = false;
-      const inRail = (target) => !!(target && target.closest && target.closest("#evtGoingRailScroll"));
-      const anyModal = () => document.body.classList.contains("modal-open") || document.body.classList.contains("overflow-hidden");
-      const setOffset = (v) => {
-        ind.style.transform = "translate(-50%," + v + "px)";
-        ind.style.opacity = String(Math.min(1, Math.abs(v) / TRIGGER));
+      refreshing = true;
+      ind.classList.add("evt-ptr--refreshing");
+      ind.classList.remove("evt-ptr--ready");
+      ind.style.transform = "translate(-50%," + TRIGGER + "px)";
+      ind.style.opacity = "1";
+      const done = () => {
+        refreshing = false;
+        reset();
       };
-      const reset = () => {
-        pulling = false;
-        committed = false;
-        dy = 0;
-        ind.classList.remove("evt-ptr--active", "evt-ptr--refreshing");
-        ind.style.transform = "";
-        ind.style.opacity = "";
-      };
-      document.addEventListener("touchstart", (e) => {
-        if (refreshing) return;
-        if (anyModal()) return;
-        if (window.scrollY > 0) return;
-        if (inRail(e.target)) return;
-        startY = e.touches[0].clientY;
-        pulling = true;
-        dy = 0;
-      }, { passive: true });
-      document.addEventListener("touchmove", (e) => {
-        if (!pulling || refreshing) return;
-        const y = e.touches[0].clientY;
-        dy = (y - startY) * DAMPING;
-        if (dy <= 0) {
-          reset();
-          return;
-        }
-        if (dy > MAX) dy = MAX;
-        ind.classList.add("evt-ptr--active");
-        setOffset(dy);
-        committed = dy >= TRIGGER;
-        ind.classList.toggle("evt-ptr--ready", committed);
-      }, { passive: true });
-      document.addEventListener("touchend", () => {
-        if (!pulling || refreshing) return;
-        if (!committed) {
-          reset();
-          return;
-        }
-        refreshing = true;
-        ind.classList.add("evt-ptr--refreshing");
-        ind.classList.remove("evt-ptr--ready");
-        ind.style.transform = "translate(-50%," + TRIGGER + "px)";
-        ind.style.opacity = "1";
-        const done = () => {
-          refreshing = false;
-          reset();
-        };
-        try {
-          const p = typeof window.evtLoadEvents === "function" ? window.evtLoadEvents() : Promise.resolve();
-          Promise.resolve(p).finally(() => setTimeout(done, 300));
-        } catch (_) {
-          done();
-        }
-      });
-    }
-    function _bindListModuleApis() {
-      window.PortalEventsListSearchApi = {
-        getSearchQuery: () => _searchQuery,
-        setSearchQuery: (q) => {
-          _searchQuery = q;
-        },
-        getActiveCategory: () => window.PortalEventsListFilters.getActiveCategory(),
-        setActiveCategory: (c) => window.PortalEventsListFilters.setActiveCategory(c),
-        persistState: _persistState,
-        renderEvents,
-        getSearchDebounce: () => _searchDebounce,
-        setSearchDebounce: (id) => {
-          _searchDebounce = id;
-        }
-      };
-      window.PortalEventsListFiltersApi = {
-        getSearchQuery: () => _searchQuery,
-        setSearchQuery: (q) => {
-          _searchQuery = q;
-        },
-        getActiveView: () => _activeView,
-        setActiveView: (v) => {
-          _activeView = v;
-        },
-        getActiveDay: () => _activeDay,
-        setActiveDay: (d) => {
-          _activeDay = d;
-        },
-        getExpandedBucket: () => _expandedBucket,
-        setExpandedBucket: (b) => {
-          _expandedBucket = b;
-        },
-        applyViewChrome: _applyViewChrome,
-        renderEvents
-      };
-      window.PortalEventsListCalendarApi = {
-        getCalMonth: () => _calMonth,
-        setCalMonth: (d) => {
-          _calMonth = d;
-        },
-        notHidden: _notHidden,
-        miniCard: (ev, att, cnt) => window.PortalEventsListHeroRails.miniCard(ev, att, cnt)
-      };
-      window.PortalEventsListHeroRailsApi = {
-        getSearchQuery: () => _searchQuery,
-        notHidden: _notHidden,
-        persistState: _persistState,
-        renderEvents
-      };
-      window.PortalEventsListBucketsApi = {
-        getExpandedBucket: () => _expandedBucket,
-        setExpandedBucket: (b) => {
-          _expandedBucket = b;
-        },
-        getCreateTileInjected: () => _createTileInjected,
-        setCreateTileInjected: (v) => {
-          _createTileInjected = v;
-        }
-      };
-      window.PortalEventsListRightRailApi = {
-        getMiniCalMonth: () => _miniCalMonth,
-        setMiniCalMonth: (d) => {
-          _miniCalMonth = d;
-        },
-        getActiveDay: () => _activeDay,
-        setActiveDay: (d) => {
-          _activeDay = d;
-        },
-        renderEvents
-      };
-    }
-    _bindListModuleApis();
-    window.evtLoadEvents = loadEvents;
-    window.evtRenderEvents = renderEvents;
-    window.evtRenderFeatured = function() {
-    };
-    window.evtUpdateHeroStats = function() {
-      _renderHeaderCount();
-    };
-    window.evtSetupSearch = setupSearch2;
-    window.evtInitFilterChips = initFilterChips2;
-    window.evtRenderCard = function(event) {
-      const rsvps = window.evtAllRsvps || {};
-      const attendees = window.evtAttendees || {};
-      const counts = window.evtAttendeeCounts || {};
-      return Card2 ? Card2.render(event, {
-        rsvp: rsvps[event.id] || null,
-        attendees: attendees[event.id] || [],
-        goingCount: counts[event.id] || (attendees[event.id] || []).length,
-        variant: "portal"
-      }) : "";
-    };
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.list = {
-      // ── Core public API (init.js consumers) ─────────────
-      load: loadEvents,
-      render: renderEvents,
-      setupSearch: setupSearch2,
-      initFilterChips: initFilterChips2,
-      // ── Sub-renderers ────────────────────────────────────
-      renderHero: _renderHero,
-      pickHero: _pickHero,
-      renderSkeletons,
-      renderCalendar: _renderCalendar,
-      renderGoingRail: _renderGoingRail,
-      renderTopPicks: _renderTopPicks,
-      renderMiniCalendar: _renderMiniCalendar,
-      renderMyRsvps: _renderMyRsvps,
-      renderStatsCard: _renderStatsCard,
-      renderBucket: _renderBucket,
-      // ── Filter predicates ────────────────────────────────
-      matchesType: _matchesType,
-      matchesCategory: _matchesCategory,
-      matchesLifecycle: _matchesLifecycle,
-      matchesDate: _matchesDate,
-      // ── UI initializers ──────────────────────────────────
-      initStickyHeader: _initStickyHeader,
-      initMobileFab: _initMobileFab
-    };
-    function _initMobileFilterStrip() {
-      const searchExpand = document.getElementById("evtSearchExpand");
-      const mSearchHost = document.getElementById("evtMobileSearchHost");
-      const filterRow2 = document.getElementById("evtFilterRow2");
-      if (!searchExpand || !mSearchHost) return;
-      if (!searchExpand.dataset.dHome) {
-        searchExpand.dataset.dHome = "1";
-        searchExpand._dHomeParent = searchExpand.parentElement;
-        searchExpand._dHomeNext = searchExpand.nextSibling;
+      try {
+        const p = typeof globalThis.evtLoadEvents === "function" ? window.evtLoadEvents() : Promise.resolve();
+        Promise.resolve(p).finally(() => setTimeout(done, 300));
+      } catch (_) {
+        done();
       }
-      const mq = window.matchMedia("(max-width: 639px)");
-      const apply = () => {
-        if (mq.matches) {
-          if (searchExpand.parentElement !== mSearchHost) {
-            mSearchHost.appendChild(searchExpand);
-          }
-          searchExpand.classList.remove("hidden", "mt-2");
-          if (filterRow2) filterRow2.classList.add("hidden");
-        } else {
-          if (searchExpand.parentElement !== searchExpand._dHomeParent) {
-            searchExpand._dHomeParent.insertBefore(
-              searchExpand,
-              searchExpand._dHomeNext && searchExpand._dHomeNext.parentElement === searchExpand._dHomeParent ? searchExpand._dHomeNext : null
-            );
-            if (!_searchQuery) searchExpand.classList.add("hidden");
-            searchExpand.classList.add("mt-2");
-          }
-          if (filterRow2) filterRow2.classList.remove("hidden");
-        }
-      };
-      apply();
-      if (mq.addEventListener) mq.addEventListener("change", apply);
-      else if (mq.addListener) mq.addListener(apply);
+    });
+  }
+  function _bindListModuleApis() {
+    globalThis.PortalEventsListSearchApi = {
+      getSearchQuery: () => _searchQuery,
+      setSearchQuery: (q) => {
+        _searchQuery = q;
+      },
+      getActiveCategory: () => window.PortalEventsListFilters.getActiveCategory(),
+      setActiveCategory: (c) => window.PortalEventsListFilters.setActiveCategory(c),
+      persistState: _persistState,
+      renderEvents,
+      getSearchDebounce: () => _searchDebounce,
+      setSearchDebounce: (id) => {
+        _searchDebounce = id;
+      }
+    };
+    globalThis.PortalEventsListFiltersApi = {
+      getSearchQuery: () => _searchQuery,
+      setSearchQuery: (q) => {
+        _searchQuery = q;
+      },
+      getActiveView: () => _activeView,
+      setActiveView: (v) => {
+        _activeView = v;
+      },
+      getActiveDay: () => _activeDay,
+      setActiveDay: (d) => {
+        _activeDay = d;
+      },
+      getExpandedBucket: () => _expandedBucket,
+      setExpandedBucket: (b) => {
+        _expandedBucket = b;
+      },
+      applyViewChrome: _applyViewChrome,
+      renderEvents
+    };
+    globalThis.PortalEventsListCalendarApi = {
+      getCalMonth: () => _calMonth,
+      setCalMonth: (d) => {
+        _calMonth = d;
+      },
+      notHidden: _notHidden,
+      miniCard: (ev, att, cnt) => window.PortalEventsListHeroRails.miniCard(ev, att, cnt)
+    };
+    globalThis.PortalEventsListHeroRailsApi = {
+      getSearchQuery: () => _searchQuery,
+      notHidden: _notHidden,
+      persistState: _persistState,
+      renderEvents
+    };
+    globalThis.PortalEventsListBucketsApi = {
+      getExpandedBucket: () => _expandedBucket,
+      setExpandedBucket: (b) => {
+        _expandedBucket = b;
+      },
+      getCreateTileInjected: () => _createTileInjected,
+      setCreateTileInjected: (v) => {
+        _createTileInjected = v;
+      }
+    };
+    globalThis.PortalEventsListRightRailApi = {
+      getMiniCalMonth: () => _miniCalMonth,
+      setMiniCalMonth: (d) => {
+        _miniCalMonth = d;
+      },
+      getActiveDay: () => _activeDay,
+      setActiveDay: (d) => {
+        _activeDay = d;
+      },
+      renderEvents
+    };
+  }
+  _bindListModuleApis();
+  globalThis.evtLoadEvents = loadEvents;
+  globalThis.evtRenderEvents = renderEvents;
+  globalThis.evtRenderFeatured = function() {
+  };
+  globalThis.evtUpdateHeroStats = function() {
+    _renderHeaderCount();
+  };
+  globalThis.evtSetupSearch = setupSearch2;
+  globalThis.evtInitFilterChips = initFilterChips2;
+  window.evtLoadEvents = globalThis.evtLoadEvents;
+  window.evtRenderEvents = globalThis.evtRenderEvents;
+  window.evtRenderFeatured = globalThis.evtRenderFeatured;
+  window.evtUpdateHeroStats = globalThis.evtUpdateHeroStats;
+  window.evtSetupSearch = globalThis.evtSetupSearch;
+  window.evtInitFilterChips = globalThis.evtInitFilterChips;
+  globalThis.evtRenderCard = function(event) {
+    const rsvps = window.evtAllRsvps || {};
+    const attendees = window.evtAttendees || {};
+    const counts = window.evtAttendeeCounts || {};
+    return Card2 ? Card2.render(event, {
+      rsvp: rsvps[event.id] || null,
+      attendees: attendees[event.id] || [],
+      goingCount: counts[event.id] || (attendees[event.id] || []).length,
+      variant: "portal"
+    }) : "";
+  };
+  window.evtRenderCard = globalThis.evtRenderCard;
+  var portalEventsListApi = {
+    // ── Core public API (init.js consumers) ─────────────
+    load: loadEvents,
+    render: renderEvents,
+    setupSearch: setupSearch2,
+    initFilterChips: initFilterChips2,
+    // ── Sub-renderers ────────────────────────────────────
+    renderHero: _renderHero,
+    pickHero: _pickHero,
+    renderSkeletons,
+    renderCalendar: _renderCalendar,
+    renderGoingRail: _renderGoingRail,
+    renderTopPicks: _renderTopPicks,
+    renderMiniCalendar: _renderMiniCalendar,
+    renderMyRsvps: _renderMyRsvps,
+    renderStatsCard: _renderStatsCard,
+    renderBucket: _renderBucket,
+    // ── Filter predicates ────────────────────────────────
+    matchesType: _matchesType,
+    matchesCategory: _matchesCategory,
+    matchesLifecycle: _matchesLifecycle,
+    matchesDate: _matchesDate,
+    // ── UI initializers ──────────────────────────────────
+    initStickyHeader: _initStickyHeader,
+    initMobileFab: _initMobileFab
+  };
+  function _initMobileFilterStrip() {
+    const searchExpand = document.getElementById("evtSearchExpand");
+    const mSearchHost = document.getElementById("evtMobileSearchHost");
+    const filterRow2 = document.getElementById("evtFilterRow2");
+    if (!searchExpand || !mSearchHost) return;
+    if (!searchExpand.dataset.dHome) {
+      searchExpand.dataset.dHome = "1";
+      searchExpand._dHomeParent = searchExpand.parentElement;
+      searchExpand._dHomeNext = searchExpand.nextSibling;
     }
-    function _onReady() {
-      const groupsEl = document.getElementById("evtGroups");
-      if (groupsEl && !groupsEl.innerHTML.trim()) renderSkeletons();
-      _initStickyHeader();
-      _initMobileFab();
-      _initPullToRefresh();
-      _initViewToggle();
-      _initVlift();
-      _initSwipeGestures();
-      _initGreeting();
-      _initMobileFilterStrip();
-      _applyRestoredUi();
-      _initHeaderBell();
-      setTimeout(_initHeaderBell, 300);
-      setTimeout(_initHeaderBell, 1200);
-      if (document.body.classList.contains("evt-vlift") && !document.getElementById("evtHeaderBell")) {
-        const _bellMountObs = new MutationObserver(() => {
-          if (document.getElementById("notifBtn") && !document.getElementById("evtHeaderBell")) {
-            _initHeaderBell();
-            if (document.getElementById("evtHeaderBell")) {
-              try {
-                _bellMountObs.disconnect();
-              } catch (_) {
-              }
+    const mq = window.matchMedia("(max-width: 639px)");
+    const apply = () => {
+      if (mq.matches) {
+        if (searchExpand.parentElement !== mSearchHost) {
+          mSearchHost.appendChild(searchExpand);
+        }
+        searchExpand.classList.remove("hidden", "mt-2");
+        if (filterRow2) filterRow2.classList.add("hidden");
+      } else {
+        if (searchExpand.parentElement !== searchExpand._dHomeParent) {
+          searchExpand._dHomeParent.insertBefore(
+            searchExpand,
+            searchExpand._dHomeNext && searchExpand._dHomeNext.parentElement === searchExpand._dHomeParent ? searchExpand._dHomeNext : null
+          );
+          if (!_searchQuery) searchExpand.classList.add("hidden");
+          searchExpand.classList.add("mt-2");
+        }
+        if (filterRow2) filterRow2.classList.remove("hidden");
+      }
+    };
+    apply();
+    if (mq.addEventListener) mq.addEventListener("change", apply);
+    else if (mq.addListener) mq.addListener(apply);
+  }
+  function _onReady() {
+    const groupsEl = document.getElementById("evtGroups");
+    if (groupsEl && !groupsEl.innerHTML.trim()) renderSkeletons();
+    _initStickyHeader();
+    _initMobileFab();
+    _initPullToRefresh();
+    _initViewToggle();
+    _initVlift();
+    _initSwipeGestures();
+    _initGreeting();
+    _initMobileFilterStrip();
+    _applyRestoredUi();
+    _initHeaderBell();
+    setTimeout(_initHeaderBell, 300);
+    setTimeout(_initHeaderBell, 1200);
+    if (document.body.classList.contains("evt-vlift") && !document.getElementById("evtHeaderBell")) {
+      const _bellMountObs = new MutationObserver(() => {
+        if (document.getElementById("notifBtn") && !document.getElementById("evtHeaderBell")) {
+          _initHeaderBell();
+          if (document.getElementById("evtHeaderBell")) {
+            try {
+              _bellMountObs.disconnect();
+            } catch (_) {
             }
           }
-        });
-        _bellMountObs.observe(document.body, { childList: true, subtree: true });
-        setTimeout(() => {
-          try {
-            _bellMountObs.disconnect();
-          } catch (_) {
-          }
-        }, 15e3);
-      }
+        }
+      });
+      _bellMountObs.observe(document.body, { childList: true, subtree: true });
+      setTimeout(() => {
+        try {
+          _bellMountObs.disconnect();
+        } catch (_) {
+        }
+      }, 15e3);
     }
-    if (document.readyState !== "loading") _onReady();
-    else document.addEventListener("DOMContentLoaded", _onReady, { once: true });
-    document.addEventListener("events:manage:updated", function() {
-      if (typeof window.evtLoadEvents === "function") window.evtLoadEvents();
-    });
-  })();
+  }
+  if (document.readyState !== "loading") _onReady();
+  else document.addEventListener("DOMContentLoaded", _onReady, { once: true });
+  document.addEventListener("events:manage:updated", function() {
+    if (typeof globalThis.evtLoadEvents === "function") window.evtLoadEvents();
+  });
+  globalThis.PortalEvents = globalThis.PortalEvents || {};
+  globalThis.PortalEvents.list = portalEventsListApi;
+  if (typeof window !== "undefined") window.PortalEvents = globalThis.PortalEvents;
 
   // js/portal/events/team/chat.js
   var EVT_TEAM_CHAT_MAX_LEN = 4e3;
@@ -4260,9 +4259,9 @@
   globalThis.evtOpenTeamChat = open;
   globalThis.evtSendTeamChatMessage = send;
   globalThis.evtCleanupTeamChat = cleanup;
-  var PortalEvents = globalThis.PortalEvents = globalThis.PortalEvents || {};
-  PortalEvents.team = PortalEvents.team || {};
-  PortalEvents.team.chat = teamChatApi;
+  var PortalEvents2 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents2.team = PortalEvents2.team || {};
+  PortalEvents2.team.chat = teamChatApi;
 
   // js/portal/events/team/tools.js
   var EVT_CTA_ICONS = {
@@ -4618,1714 +4617,1704 @@
   globalThis.evtOpenCtaPanel = openCtaPanel;
   globalThis.evtInitBottomNav = initBottomNav;
   globalThis.evtCleanupBottomNav = cleanupBottomNav;
-  var PortalEvents2 = globalThis.PortalEvents = globalThis.PortalEvents || {};
-  PortalEvents2.team = PortalEvents2.team || {};
-  PortalEvents2.team.tools = teamToolsApi;
+  var PortalEvents3 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents3.team = PortalEvents3.team || {};
+  PortalEvents3.team.tools = teamToolsApi;
 
   // js/portal/events/detail/presentation.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.detail = window.PortalEvents.detail || {};
-    function evtMiniMarkdown(text) {
-      if (!text) return "";
-      let html = evtEscapeHtml(text);
-      html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-      html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-      html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
-      return html;
-    }
-    function evtOpenLightbox(imgUrl) {
-      if (!imgUrl) return;
-      const lb = document.createElement("div");
-      lb.className = "evt-lightbox";
-      lb.innerHTML = `<button class="evt-lightbox-close" aria-label="Close"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button><img src="${imgUrl}" alt="Event banner">`;
-      lb.onclick = (e) => {
-        if (e.target === lb || e.target.closest(".evt-lightbox-close")) {
-          lb.classList.remove("active");
-          setTimeout(() => lb.remove(), 250);
+  function evtMiniMarkdown(text) {
+    if (!text) return "";
+    let html5 = evtEscapeHtml(text);
+    html5 = html5.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    html5 = html5.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    html5 = html5.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    return html5;
+  }
+  function evtOpenLightbox(imgUrl) {
+    if (!imgUrl) return;
+    const lb = document.createElement("div");
+    lb.className = "evt-lightbox";
+    lb.innerHTML = `<button class="evt-lightbox-close" aria-label="Close"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button><img src="${imgUrl}" alt="Event banner">`;
+    lb.onclick = (e) => {
+      if (e.target === lb || e.target.closest(".evt-lightbox-close")) {
+        lb.classList.remove("active");
+        setTimeout(() => lb.remove(), 250);
+      }
+    };
+    document.body.appendChild(lb);
+    requestAnimationFrame(() => lb.classList.add("active"));
+  }
+  function evtInitSectionAnimations() {
+    const sections = document.querySelectorAll("#eventsDetailView .ed-card");
+    if (!sections.length) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("ed-visible");
+          obs.unobserve(e.target);
         }
-      };
-      document.body.appendChild(lb);
-      requestAnimationFrame(() => lb.classList.add("active"));
-    }
-    function evtInitSectionAnimations() {
-      const sections = document.querySelectorAll("#eventsDetailView .ed-card");
-      if (!sections.length) return;
-      const obs = new IntersectionObserver((entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add("ed-visible");
-            obs.unobserve(e.target);
-          }
-        });
-      }, { threshold: 0.08 });
-      sections.forEach((s, i) => {
-        s.style.animationDelay = `${i * 0.06}s`;
-        obs.observe(s);
       });
-    }
-    var _evtCountdownInterval = null;
-    function evtStartLiveCountdown(startDate) {
-      if (_evtCountdownInterval) clearInterval(_evtCountdownInterval);
-      const badgeEl = document.querySelector("#eventsDetailView .evt-status-badge");
-      if (!badgeEl) return;
-      function tick() {
-        const ms = new Date(startDate) - /* @__PURE__ */ new Date();
-        if (ms <= 0) {
-          badgeEl.className = "evt-status-badge evt-status-live";
-          badgeEl.innerHTML = '<span class="evt-status-dot pulse"></span>Live';
-          clearInterval(_evtCountdownInterval);
-          return;
-        }
-        const d = Math.floor(ms / 864e5);
-        const h = Math.floor(ms % 864e5 / 36e5);
-        const m = Math.floor(ms % 36e5 / 6e4);
-        const s = Math.floor(ms % 6e4 / 1e3);
-        let lbl;
-        if (d > 0) lbl = `${d}d ${h}h`;
-        else if (h > 0) lbl = `${h}h ${m}m`;
-        else lbl = `${m}m ${s}s`;
-        badgeEl.innerHTML = `<span class="evt-status-dot${d === 0 ? " pulse" : ""}"></span>${lbl}`;
-      }
-      const msUntil = new Date(startDate) - /* @__PURE__ */ new Date();
-      const interval = msUntil < 36e5 ? 1e3 : 6e4;
-      _evtCountdownInterval = setInterval(tick, interval);
-      if (interval === 6e4) {
-        const upgradeIn = msUntil - 36e5;
-        if (upgradeIn > 0) {
-          setTimeout(() => {
-            clearInterval(_evtCountdownInterval);
-            _evtCountdownInterval = setInterval(tick, 1e3);
-          }, upgradeIn);
-        }
-      }
-    }
-    window.PortalEvents.detail.presentation = {
-      miniMarkdown: evtMiniMarkdown,
-      openLightbox: evtOpenLightbox,
-      initSectionAnimations: evtInitSectionAnimations,
-      startLiveCountdown: evtStartLiveCountdown
-    };
-    window.evtMiniMarkdown = evtMiniMarkdown;
-    window.evtOpenLightbox = evtOpenLightbox;
-    window.evtInitSectionAnimations = evtInitSectionAnimations;
-    window.evtStartLiveCountdown = evtStartLiveCountdown;
-  })();
-
-  // js/portal/events/detail/raffle-render.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.detail = window.PortalEvents.detail || {};
-    function _raffleSectionHead(title) {
-      return `<div class="ed-section-head"><h3>${title}</h3></div>`;
-    }
-    function evtDetailRaffleConfig(event) {
-      if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
-      return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
-    }
-    function evtDetailRaffleCategories(config) {
-      if (!window.EventsRaffleModel) return [];
-      return window.EventsRaffleModel.getOrderedCategories(config);
-    }
-    function evtDetailRaffleItems(config, categoryId) {
-      if (!window.EventsRaffleModel) return [];
-      return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
-    }
-    function evtDetailRaffleWinnerCount(config, event) {
-      if (window.EventsRaffleModel) return window.EventsRaffleModel.getTotalWinnerCount(config);
-      return event?.raffle_winner_count || (Array.isArray(event?.raffle_prizes) ? event.raffle_prizes.length : 0);
-    }
-    function evtDetailDrawModeLabel(drawMode) {
-      if (drawMode === "random_item") return "Random prize assigned";
-      if (drawMode === "winner_choice") return "Winner chooses from this tier";
-      return "Drawing specific prizes";
-    }
-    function evtDetailPrizeMedia(item) {
-      if (item?.image_url) return `<img src="${evtEscapeHtml(item.image_url)}" alt="" loading="lazy">`;
-      return `<span>${evtEscapeHtml(item?.emoji || window.EventsRaffleModel?.DEFAULT_EMOJI || "\u{1F381}")}</span>`;
-    }
-    function evtDetailRafflePrizeItems(config) {
-      return evtDetailRaffleCategories(config).flatMap((category) => evtDetailRaffleItems(config, category.id));
-    }
-    function evtDetailRafflePrizesHtml(event) {
-      const config = evtDetailRaffleConfig(event);
-      const items = evtDetailRafflePrizeItems(config);
-      if (!items.length) return "";
-      return `<div class="ed-raffle-prize-rail">${items.map((item) => `
-        <article class="ed-raffle-prize-tile" title="${evtEscapeHtml(item.name)}">
-            <div class="ed-raffle-prize-media">${evtDetailPrizeMedia(item)}</div>
-            <p>${evtEscapeHtml(item.name)}</p>
-        </article>
-    `).join("")}</div>`;
-    }
-    function evtDetailRaffleWinnersHtml(winners) {
-      if (!winners.length) return "";
-      const rows = winners.map((w) => {
-        const initials = w.profiles ? `${w.profiles.first_name?.[0] || ""}${w.profiles.last_name?.[0] || ""}`.toUpperCase() : "";
-        const avatar = w.profiles?.profile_picture_url ? `<img src="${evtEscapeHtml(w.profiles.profile_picture_url)}" alt="" loading="lazy">` : `<span>${evtEscapeHtml(initials || (w.guest_token ? "G" : "W"))}</span>`;
-        const prize = w.selection_status === "pending_choice" ? "Choosing later" : w.prize_description || "Prize pending";
-        const emoji = evtEscapeHtml(w.prize_emoji || "\u{1F381}");
-        return `<article class="ed-winner-card">
-            <div class="ed-winner-avatar">${avatar}<b>${w.place}</b></div>
-            <div class="ed-winner-copy"><span>${emoji}</span><p>${evtEscapeHtml(prize)}</p></div>
-        </article>`;
-      }).join("");
-      return `<div class="ed-winners ed-winners-compact">${_raffleSectionHead("Winners")}<div class="ed-winner-rail">${rows}</div></div>`;
-    }
-    function evtRaffleLockedDesktopHtml(eventId2, showTeamHint) {
-      const mobileHint = showTeamHint ? `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the bar below, or open <button type="button" class="ed-link-btn" onclick="evtOpenTeamToolsPanel('${eventId2}')">Team</button> to RSVP as yourself.</p>` : `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the sticky bar below, then enter the raffle.</p>`;
-      return `<div class="ed-raffle-desktop-action ed-raffle-locked-block">
-        <button type="button" class="ed-raffle-btn ed-raffle-btn-locked" disabled aria-disabled="true">\u{1F39F}\uFE0F Enter Raffle</button>
-        <p class="ed-raffle-locked-hint">RSVP first to enter the raffle</p>
-    </div>${mobileHint}`;
-    }
-    window.PortalEvents.detail.raffleRender = {
-      config: evtDetailRaffleConfig,
-      categories: evtDetailRaffleCategories,
-      items: evtDetailRaffleItems,
-      winnerCount: evtDetailRaffleWinnerCount,
-      drawModeLabel: evtDetailDrawModeLabel,
-      prizesHtml: evtDetailRafflePrizesHtml,
-      winnersHtml: evtDetailRaffleWinnersHtml,
-      lockedDesktopHtml: evtRaffleLockedDesktopHtml
-    };
-    window.evtDetailRaffleConfig = evtDetailRaffleConfig;
-    window.evtDetailRaffleCategories = evtDetailRaffleCategories;
-    window.evtDetailRaffleItems = evtDetailRaffleItems;
-    window.evtDetailRaffleWinnerCount = evtDetailRaffleWinnerCount;
-    window.evtDetailDrawModeLabel = evtDetailDrawModeLabel;
-    window.evtDrawModeLabel = evtDetailDrawModeLabel;
-    window.evtDetailRafflePrizesHtml = evtDetailRafflePrizesHtml;
-    window.evtDetailRaffleWinnersHtml = evtDetailRaffleWinnersHtml;
-    window.evtRaffleLockedDesktopHtml = evtRaffleLockedDesktopHtml;
-  })();
-
-  // js/portal/events/detail/map-overlay.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.detail = window.PortalEvents.detail || {};
-    let _fullscreenMap = null;
-    let _fullscreenMapCoords = null;
-    async function evtOpenFullscreenMap(lat, lng, label) {
-      const overlay = document.getElementById("fullscreenMapOverlay");
-      if (!overlay) return;
-      try {
-        if (typeof window.evtEnsureLeaflet === "function") await window.evtEnsureLeaflet();
-      } catch (err) {
-        console.error("Leaflet load error:", err);
+    }, { threshold: 0.08 });
+    sections.forEach((s, i) => {
+      s.style.animationDelay = `${i * 0.06}s`;
+      obs.observe(s);
+    });
+  }
+  var _evtCountdownInterval = null;
+  function evtStartLiveCountdown(startDate) {
+    if (_evtCountdownInterval) clearInterval(_evtCountdownInterval);
+    const badgeEl = document.querySelector("#eventsDetailView .evt-status-badge");
+    if (!badgeEl) return;
+    function tick() {
+      const ms = new Date(startDate) - /* @__PURE__ */ new Date();
+      if (ms <= 0) {
+        badgeEl.className = "evt-status-badge evt-status-live";
+        badgeEl.innerHTML = '<span class="evt-status-dot pulse"></span>Live';
+        clearInterval(_evtCountdownInterval);
         return;
       }
-      if (typeof L === "undefined") return;
-      overlay.classList.remove("hidden");
-      document.body.style.overflow = "hidden";
-      const dirBtn = document.getElementById("fullscreenMapDirections");
-      if (dirBtn) {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const addr = encodeURIComponent(label || `${lat},${lng}`);
-        dirBtn.href = isIOS ? `https://maps.apple.com/?daddr=${addr}` : `https://www.google.com/maps/dir/?api=1&destination=${addr}`;
+      const d = Math.floor(ms / 864e5);
+      const h = Math.floor(ms % 864e5 / 36e5);
+      const m = Math.floor(ms % 36e5 / 6e4);
+      const s = Math.floor(ms % 6e4 / 1e3);
+      let lbl;
+      if (d > 0) lbl = `${d}d ${h}h`;
+      else if (h > 0) lbl = `${h}h ${m}m`;
+      else lbl = `${m}m ${s}s`;
+      badgeEl.innerHTML = `<span class="evt-status-dot${d === 0 ? " pulse" : ""}"></span>${lbl}`;
+    }
+    const msUntil = new Date(startDate) - /* @__PURE__ */ new Date();
+    const interval = msUntil < 36e5 ? 1e3 : 6e4;
+    _evtCountdownInterval = setInterval(tick, interval);
+    if (interval === 6e4) {
+      const upgradeIn = msUntil - 36e5;
+      if (upgradeIn > 0) {
+        setTimeout(() => {
+          clearInterval(_evtCountdownInterval);
+          _evtCountdownInterval = setInterval(tick, 1e3);
+        }, upgradeIn);
       }
-      setTimeout(() => {
-        _fullscreenMapCoords = { lat, lng };
-        if (_fullscreenMap) {
-          _fullscreenMap.remove();
-          _fullscreenMap = null;
-        }
-        _fullscreenMap = L.map("fullscreenMapContainer", {
-          zoomControl: true,
-          attributionControl: false,
-          dragging: true,
-          scrollWheelZoom: true
-        }).setView([lat, lng], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(_fullscreenMap);
-        L.marker([lat, lng]).addTo(_fullscreenMap).bindPopup(evtEscapeHtml(label || "Event Location")).openPopup();
-        setTimeout(() => _fullscreenMap.invalidateSize(), 50);
-      }, 50);
     }
-    function evtRecenterFullscreenMap() {
-      if (!_fullscreenMap || !_fullscreenMapCoords) return;
-      _fullscreenMap.setView([_fullscreenMapCoords.lat, _fullscreenMapCoords.lng], 16, { animate: true, duration: 0.5 });
+  }
+  var detailPresentationApi = {
+    miniMarkdown: evtMiniMarkdown,
+    openLightbox: evtOpenLightbox,
+    initSectionAnimations: evtInitSectionAnimations,
+    startLiveCountdown: evtStartLiveCountdown
+  };
+  globalThis.evtMiniMarkdown = evtMiniMarkdown;
+  globalThis.evtOpenLightbox = evtOpenLightbox;
+  globalThis.evtInitSectionAnimations = evtInitSectionAnimations;
+  globalThis.evtStartLiveCountdown = evtStartLiveCountdown;
+  var PortalEvents4 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents4.detail = PortalEvents4.detail || {};
+  PortalEvents4.detail.presentation = detailPresentationApi;
+
+  // js/portal/events/detail/raffle-render.js
+  function _raffleSectionHead(title) {
+    return `<div class="ed-section-head"><h3>${title}</h3></div>`;
+  }
+  function evtDetailRaffleConfig(event) {
+    if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
+    return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
+  }
+  function evtDetailRaffleCategories(config) {
+    if (!window.EventsRaffleModel) return [];
+    return window.EventsRaffleModel.getOrderedCategories(config);
+  }
+  function evtDetailRaffleItems(config, categoryId) {
+    if (!window.EventsRaffleModel) return [];
+    return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
+  }
+  function evtDetailRaffleWinnerCount(config, event) {
+    if (window.EventsRaffleModel) return window.EventsRaffleModel.getTotalWinnerCount(config);
+    return event?.raffle_winner_count || (Array.isArray(event?.raffle_prizes) ? event.raffle_prizes.length : 0);
+  }
+  function evtDetailDrawModeLabel(drawMode) {
+    if (drawMode === "random_item") return "Random prize assigned";
+    if (drawMode === "winner_choice") return "Winner chooses from this tier";
+    return "Drawing specific prizes";
+  }
+  function evtDetailPrizeMedia(item) {
+    if (item?.image_url) return `<img src="${evtEscapeHtml(item.image_url)}" alt="" loading="lazy">`;
+    return `<span>${evtEscapeHtml(item?.emoji || window.EventsRaffleModel?.DEFAULT_EMOJI || "\u{1F381}")}</span>`;
+  }
+  function evtDetailRafflePrizeItems(config) {
+    return evtDetailRaffleCategories(config).flatMap((category) => evtDetailRaffleItems(config, category.id));
+  }
+  function evtDetailRafflePrizesHtml(event) {
+    const config = evtDetailRaffleConfig(event);
+    const items = evtDetailRafflePrizeItems(config);
+    if (!items.length) return "";
+    return `<div class="ed-raffle-prize-rail">${items.map((item) => `
+    <article class="ed-raffle-prize-tile" title="${evtEscapeHtml(item.name)}">
+        <div class="ed-raffle-prize-media">${evtDetailPrizeMedia(item)}</div>
+        <p>${evtEscapeHtml(item.name)}</p>
+    </article>
+`).join("")}</div>`;
+  }
+  function evtDetailRaffleWinnersHtml(winners) {
+    if (!winners.length) return "";
+    const rows = winners.map((w) => {
+      const initials = w.profiles ? `${w.profiles.first_name?.[0] || ""}${w.profiles.last_name?.[0] || ""}`.toUpperCase() : "";
+      const avatar = w.profiles?.profile_picture_url ? `<img src="${evtEscapeHtml(w.profiles.profile_picture_url)}" alt="" loading="lazy">` : `<span>${evtEscapeHtml(initials || (w.guest_token ? "G" : "W"))}</span>`;
+      const prize = w.selection_status === "pending_choice" ? "Choosing later" : w.prize_description || "Prize pending";
+      const emoji = evtEscapeHtml(w.prize_emoji || "\u{1F381}");
+      return `<article class="ed-winner-card">
+        <div class="ed-winner-avatar">${avatar}<b>${w.place}</b></div>
+        <div class="ed-winner-copy"><span>${emoji}</span><p>${evtEscapeHtml(prize)}</p></div>
+    </article>`;
+    }).join("");
+    return `<div class="ed-winners ed-winners-compact">${_raffleSectionHead("Winners")}<div class="ed-winner-rail">${rows}</div></div>`;
+  }
+  function evtRaffleLockedDesktopHtml(eventId2, showTeamHint) {
+    const mobileHint = showTeamHint ? `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the bar below, or open <button type="button" class="ed-link-btn" onclick="evtOpenTeamToolsPanel('${eventId2}')">Team</button> to RSVP as yourself.</p>` : `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the sticky bar below, then enter the raffle.</p>`;
+    return `<div class="ed-raffle-desktop-action ed-raffle-locked-block">
+    <button type="button" class="ed-raffle-btn ed-raffle-btn-locked" disabled aria-disabled="true">\u{1F39F}\uFE0F Enter Raffle</button>
+    <p class="ed-raffle-locked-hint">RSVP first to enter the raffle</p>
+</div>${mobileHint}`;
+  }
+  var detailRaffleRenderApi = {
+    config: evtDetailRaffleConfig,
+    categories: evtDetailRaffleCategories,
+    items: evtDetailRaffleItems,
+    winnerCount: evtDetailRaffleWinnerCount,
+    drawModeLabel: evtDetailDrawModeLabel,
+    prizesHtml: evtDetailRafflePrizesHtml,
+    winnersHtml: evtDetailRaffleWinnersHtml,
+    lockedDesktopHtml: evtRaffleLockedDesktopHtml
+  };
+  globalThis.evtDetailRaffleConfig = evtDetailRaffleConfig;
+  globalThis.evtDetailRaffleCategories = evtDetailRaffleCategories;
+  globalThis.evtDetailRaffleItems = evtDetailRaffleItems;
+  globalThis.evtDetailRaffleWinnerCount = evtDetailRaffleWinnerCount;
+  globalThis.evtDetailDrawModeLabel = evtDetailDrawModeLabel;
+  globalThis.evtDrawModeLabel = evtDetailDrawModeLabel;
+  globalThis.evtDetailRafflePrizesHtml = evtDetailRafflePrizesHtml;
+  globalThis.evtDetailRaffleWinnersHtml = evtDetailRaffleWinnersHtml;
+  globalThis.evtRaffleLockedDesktopHtml = evtRaffleLockedDesktopHtml;
+  var PortalEvents5 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents5.detail = PortalEvents5.detail || {};
+  PortalEvents5.detail.raffleRender = detailRaffleRenderApi;
+
+  // js/portal/events/detail/map-overlay.js
+  var _fullscreenMap = null;
+  var _fullscreenMapCoords = null;
+  async function evtOpenFullscreenMap(lat, lng, label) {
+    const overlay = document.getElementById("fullscreenMapOverlay");
+    if (!overlay) return;
+    try {
+      if (typeof globalThis.evtEnsureLeaflet === "function") await window.evtEnsureLeaflet();
+    } catch (err) {
+      console.error("Leaflet load error:", err);
+      return;
     }
-    function evtCloseFullscreenMap() {
-      const overlay = document.getElementById("fullscreenMapOverlay");
-      if (overlay) overlay.classList.add("hidden");
+    if (typeof L === "undefined") return;
+    overlay.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+    const dirBtn = document.getElementById("fullscreenMapDirections");
+    if (dirBtn) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const addr = encodeURIComponent(label || `${lat},${lng}`);
+      dirBtn.href = isIOS ? `https://maps.apple.com/?daddr=${addr}` : `https://www.google.com/maps/dir/?api=1&destination=${addr}`;
+    }
+    setTimeout(() => {
+      _fullscreenMapCoords = { lat, lng };
       if (_fullscreenMap) {
         _fullscreenMap.remove();
         _fullscreenMap = null;
       }
-      document.body.style.overflow = "";
+      _fullscreenMap = L.map("fullscreenMapContainer", {
+        zoomControl: true,
+        attributionControl: false,
+        dragging: true,
+        scrollWheelZoom: true
+      }).setView([lat, lng], 16);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(_fullscreenMap);
+      L.marker([lat, lng]).addTo(_fullscreenMap).bindPopup(evtEscapeHtml(label || "Event Location")).openPopup();
+      setTimeout(() => _fullscreenMap.invalidateSize(), 50);
+    }, 50);
+  }
+  function evtRecenterFullscreenMap() {
+    if (!_fullscreenMap || !_fullscreenMapCoords) return;
+    _fullscreenMap.setView([_fullscreenMapCoords.lat, _fullscreenMapCoords.lng], 16, { animate: true, duration: 0.5 });
+  }
+  function evtCloseFullscreenMap() {
+    const overlay = document.getElementById("fullscreenMapOverlay");
+    if (overlay) overlay.classList.add("hidden");
+    if (_fullscreenMap) {
+      _fullscreenMap.remove();
+      _fullscreenMap = null;
     }
-    window.PortalEvents.detail.mapOverlay = {
-      open: evtOpenFullscreenMap,
-      recenter: evtRecenterFullscreenMap,
-      close: evtCloseFullscreenMap
-    };
-    window.evtOpenFullscreenMap = evtOpenFullscreenMap;
-    window.evtRecenterFullscreenMap = evtRecenterFullscreenMap;
-    window.evtCloseFullscreenMap = evtCloseFullscreenMap;
-  })();
+    document.body.style.overflow = "";
+  }
+  var detailMapOverlayApi = {
+    open: evtOpenFullscreenMap,
+    recenter: evtRecenterFullscreenMap,
+    close: evtCloseFullscreenMap
+  };
+  globalThis.evtOpenFullscreenMap = evtOpenFullscreenMap;
+  globalThis.evtRecenterFullscreenMap = evtRecenterFullscreenMap;
+  globalThis.evtCloseFullscreenMap = evtCloseFullscreenMap;
+  var PortalEvents6 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents6.detail = PortalEvents6.detail || {};
+  PortalEvents6.detail.mapOverlay = detailMapOverlayApi;
 
   // js/portal/events/detail/fragments.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.detail = window.PortalEvents.detail || {};
-    function metaRow(icon, label, value, extra) {
-      return `<div class="ed-meta-row">
-        <div class="ed-meta-icon">${icon}</div>
-        <div class="ed-meta-text">
-            <span class="ed-meta-label">${label}</span>
-            <span class="ed-meta-value">${value}</span>
-            ${extra || ""}
-        </div>
-    </div>`;
-    }
-    function pill(text, cls) {
-      return `<span class="ed-pill ${cls || ""}">${text}</span>`;
-    }
-    function card(content, extraCls) {
-      return `<div class="ed-card ${extraCls || ""}">${content}</div>`;
-    }
-    function notice(emoji, title, sub) {
-      return `<div class="ed-notice">
-        <span class="ed-notice-emoji">${emoji}</span>
-        <div><p class="ed-notice-title">${title}</p><p class="ed-notice-sub">${sub}</p></div>
-    </div>`;
-    }
-    function sectionHead(title) {
-      return `<div class="ed-section-head"><h3>${title}</h3></div>`;
-    }
-    window.PortalEvents.detail.fragments = {
-      metaRow,
-      pill,
-      card,
-      notice,
-      sectionHead
-    };
-    window.evtEdMetaRow = metaRow;
-    window.evtEdPill = pill;
-    window.evtEdCard = card;
-    window.evtEdNotice = notice;
-    window.evtEdSectionHead = sectionHead;
-  })();
+  function metaRow(icon, label, value, extra) {
+    return `<div class="ed-meta-row">
+    <div class="ed-meta-icon">${icon}</div>
+    <div class="ed-meta-text">
+        <span class="ed-meta-label">${label}</span>
+        <span class="ed-meta-value">${value}</span>
+        ${extra || ""}
+    </div>
+</div>`;
+  }
+  function pill(text, cls) {
+    return `<span class="ed-pill ${cls || ""}">${text}</span>`;
+  }
+  function card(content, extraCls) {
+    return `<div class="ed-card ${extraCls || ""}">${content}</div>`;
+  }
+  function notice(emoji, title, sub) {
+    return `<div class="ed-notice">
+    <span class="ed-notice-emoji">${emoji}</span>
+    <div><p class="ed-notice-title">${title}</p><p class="ed-notice-sub">${sub}</p></div>
+</div>`;
+  }
+  function sectionHead(title) {
+    return `<div class="ed-section-head"><h3>${title}</h3></div>`;
+  }
+  var detailFragmentsApi = {
+    metaRow,
+    pill,
+    card,
+    notice,
+    sectionHead
+  };
+  globalThis.evtEdMetaRow = metaRow;
+  globalThis.evtEdPill = pill;
+  globalThis.evtEdCard = card;
+  globalThis.evtEdNotice = notice;
+  globalThis.evtEdSectionHead = sectionHead;
+  var PortalEvents7 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents7.detail = PortalEvents7.detail || {};
+  PortalEvents7.detail.fragments = detailFragmentsApi;
 
   // js/portal/events/detail/data.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.detail = window.PortalEvents.detail || {};
-    async function evtLoadDetailContext(eventId2) {
-      const events = window.evtAllEvents || globalThis.evtAllEvents;
-      const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps;
-      const event = events.find((e) => e.id === eventId2);
-      if (!event) return null;
-      const rsvp = rsvpMap[eventId2];
-      const start = new Date(event.start_date);
-      const end = event.end_date ? new Date(event.end_date) : null;
-      const dateStr = start.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-      const timeStr = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-      const endTimeStr = end ? end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "";
-      const typeColors = window.EventsConstants && window.EventsConstants.TYPE_COLORS_PORTAL || {};
-      const tc = typeColors[event.event_type] || typeColors.member;
-      const isLlc = event.event_type === "llc";
-      const isComp = event.event_type === "competition";
-      const [{ data: rsvps }, { data: guestRsvps }] = await Promise.all([
-        supabaseClient.from("event_rsvps").select("user_id, status, paid, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
-        supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, status, paid").eq("event_id", eventId2)
-      ]);
-      const goingList = (rsvps || []).filter((r) => typeof window.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(r) : r.status === "going" || r.paid === true);
-      const maybeList = (rsvps || []).filter((r) => r.status === "maybe");
-      const notGoingList = (rsvps || []).filter((r) => r.status === "not_going");
-      const guestGoingList = (guestRsvps || []).filter((g) => g.status === "going" || g.paid === true);
-      const { data: checkins, count: checkinCount } = await supabaseClient.from("event_checkins").select("user_id, profiles!event_checkins_user_id_fkey(first_name, last_name, profile_picture_url)", { count: "exact" }).eq("event_id", eventId2);
-      let costItems = [];
-      if (isLlc) {
-        const { data: ci } = await supabaseClient.from("event_cost_items").select("*").eq("event_id", eventId2).order("sort_order", { ascending: true });
-        costItems = ci || [];
-      }
-      let waitlist = [];
-      let myWaitlistEntry = null;
-      if (isLlc) {
-        const { data: wl } = await supabaseClient.from("event_waitlist").select("*, profiles:user_id(first_name, last_name)").eq("event_id", eventId2).order("position", { ascending: true });
-        waitlist = wl || [];
-        myWaitlistEntry = waitlist.find((w) => w.user_id === globalThis.evtCurrentUser.id);
-      }
-      let raffleEntryCount = 0;
-      let myRaffleEntry = null;
-      let raffleWinners = [];
-      if (event.raffle_enabled) {
-        const { count: rCount } = await supabaseClient.from("event_raffle_entries").select("id", { count: "exact", head: true }).eq("event_id", eventId2);
-        raffleEntryCount = rCount || 0;
-        const { data: myEntry } = await supabaseClient.from("event_raffle_entries").select("*").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
-        myRaffleEntry = myEntry;
-        const { data: winners } = await supabaseClient.from("event_raffle_winners").select("*, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).order("place", { ascending: true });
-        raffleWinners = winners || [];
-      }
-      const isCreator = event.created_by === globalThis.evtCurrentUser.id;
-      const { data: hostRecord } = await supabaseClient.from("event_hosts").select("id").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
-      const canManageEvent = isCreator || !!hostRecord || typeof canManageEvents === "function" && canManageEvents();
-      const canAccessTeamHub = canManageEvent || typeof canAccessAdminDashboard === "function" && canAccessAdminDashboard();
-      const isHost = canManageEvent;
-      const canCreateTeamChat2 = isCreator || typeof canManageEvents === "function" && canManageEvents();
-      let creatorProfile = event.creator && event.creator.id ? { ...event.creator } : null;
-      if (event.created_by) {
-        const { data: cp } = await supabaseClient.from("profiles").select("id, first_name, last_name, profile_picture_url, displayed_badge, title, bio").eq("id", event.created_by).maybeSingle();
-        if (cp) creatorProfile = { ...creatorProfile || {}, ...cp };
-        else if (!creatorProfile) {
-          creatorProfile = {
-            id: event.created_by,
-            first_name: "",
-            last_name: "",
-            profile_picture_url: null,
-            displayed_badge: null,
-            title: "Member",
-            bio: null
-          };
-        }
-      }
-      const cpName = creatorProfile ? [creatorProfile.first_name, creatorProfile.last_name].filter(Boolean).join(" ") || "Member" : "";
-      const cpInitials = creatorProfile ? ((creatorProfile.first_name || "?")[0] + (creatorProfile.last_name || "")[0]).toUpperCase() : "";
-      const cpBadge = creatorProfile ? evtBadgeChip(creatorProfile.displayed_badge) : "";
-      const cpTitle = creatorProfile ? creatorProfile.title || "Member" : "";
-      const memberGoing = typeof window.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
-      const hasRsvp = rsvp && (memberGoing || rsvp.status === "maybe");
-      const documentsHtml = await evtBuildDocumentsHtml(event, isHost, hasRsvp);
-      const mapHtml = evtBuildMapHtml(event, hasRsvp, isHost);
-      const competitionHtml = isComp ? await evtBuildCompetitionHtml(event, isHost) : "";
-      const scrapbookHtml = await evtBuildScrapbookHtml(event, !!hasRsvp);
-      const showTime = !event.gate_time || hasRsvp || isHost;
-      const showLocation = !event.gate_location || hasRsvp || isHost;
-      const showNotes = !event.gate_notes || hasRsvp || isHost;
-      const isClosed = event.status === "completed" || event.status === "cancelled";
-      const isPast = new Date(event.start_date) < /* @__PURE__ */ new Date() && event.status !== "active";
-      const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < /* @__PURE__ */ new Date();
-      const entriesClosed = isClosed || isPast || deadlinePassed;
-      const rsvpEnabled = event.rsvp_enabled !== false;
-      const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
-      const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
-      return {
-        eventId: eventId2,
-        event,
-        rsvp,
-        start,
-        dateStr,
-        timeStr,
-        endTimeStr,
-        tc,
-        isLlc,
-        isComp,
-        goingList,
-        maybeList,
-        notGoingList,
-        guestGoingList,
-        checkins,
-        checkinCount,
-        costItems,
-        waitlist,
-        myWaitlistEntry,
-        raffleEntryCount,
-        myRaffleEntry,
-        raffleWinners,
-        isCreator,
-        canManageEvent,
-        canAccessTeamHub,
-        isHost,
-        canCreateTeamChat: canCreateTeamChat2,
-        creatorProfile,
-        cpName,
-        cpInitials,
-        cpBadge,
-        cpTitle,
-        memberGoing,
-        hasRsvp,
-        documentsHtml,
-        mapHtml,
-        competitionHtml,
-        scrapbookHtml,
-        showTime,
-        showLocation,
-        showNotes,
-        isClosed,
-        isPast,
-        deadlinePassed,
-        entriesClosed,
-        rsvpEnabled,
-        canRsvp,
-        eventIsFull
-      };
+  async function evtLoadDetailContext(eventId2) {
+    const events = window.evtAllEvents || globalThis.evtAllEvents;
+    const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps;
+    const event = events.find((e) => e.id === eventId2);
+    if (!event) return null;
+    const rsvp = rsvpMap[eventId2];
+    const start = new Date(event.start_date);
+    const end = event.end_date ? new Date(event.end_date) : null;
+    const dateStr = start.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    const timeStr = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    const endTimeStr = end ? end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "";
+    const typeColors = window.EventsConstants && window.EventsConstants.TYPE_COLORS_PORTAL || {};
+    const tc = typeColors[event.event_type] || typeColors.member;
+    const isLlc = event.event_type === "llc";
+    const isComp = event.event_type === "competition";
+    const [{ data: rsvps }, { data: guestRsvps }] = await Promise.all([
+      supabaseClient.from("event_rsvps").select("user_id, status, paid, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
+      supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, status, paid").eq("event_id", eventId2)
+    ]);
+    const goingList = (rsvps || []).filter((r) => typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(r) : r.status === "going" || r.paid === true);
+    const maybeList = (rsvps || []).filter((r) => r.status === "maybe");
+    const notGoingList = (rsvps || []).filter((r) => r.status === "not_going");
+    const guestGoingList = (guestRsvps || []).filter((g2) => g2.status === "going" || g2.paid === true);
+    const { data: checkins, count: checkinCount } = await supabaseClient.from("event_checkins").select("user_id, profiles!event_checkins_user_id_fkey(first_name, last_name, profile_picture_url)", { count: "exact" }).eq("event_id", eventId2);
+    let costItems = [];
+    if (isLlc) {
+      const { data: ci } = await supabaseClient.from("event_cost_items").select("*").eq("event_id", eventId2).order("sort_order", { ascending: true });
+      costItems = ci || [];
     }
-    window.evtLoadDetailContext = evtLoadDetailContext;
-    window.PortalEvents.detail.data = {
-      loadContext: evtLoadDetailContext
+    let waitlist = [];
+    let myWaitlistEntry = null;
+    if (isLlc) {
+      const { data: wl } = await supabaseClient.from("event_waitlist").select("*, profiles:user_id(first_name, last_name)").eq("event_id", eventId2).order("position", { ascending: true });
+      waitlist = wl || [];
+      myWaitlistEntry = waitlist.find((w) => w.user_id === globalThis.evtCurrentUser.id);
+    }
+    let raffleEntryCount = 0;
+    let myRaffleEntry = null;
+    let raffleWinners = [];
+    if (event.raffle_enabled) {
+      const { count: rCount } = await supabaseClient.from("event_raffle_entries").select("id", { count: "exact", head: true }).eq("event_id", eventId2);
+      raffleEntryCount = rCount || 0;
+      const { data: myEntry } = await supabaseClient.from("event_raffle_entries").select("*").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
+      myRaffleEntry = myEntry;
+      const { data: winners } = await supabaseClient.from("event_raffle_winners").select("*, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).order("place", { ascending: true });
+      raffleWinners = winners || [];
+    }
+    const isCreator = event.created_by === globalThis.evtCurrentUser.id;
+    const { data: hostRecord } = await supabaseClient.from("event_hosts").select("id").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
+    const canManageEvent = isCreator || !!hostRecord || typeof canManageEvents === "function" && canManageEvents();
+    const canAccessTeamHub = canManageEvent || typeof canAccessAdminDashboard === "function" && canAccessAdminDashboard();
+    const isHost = canManageEvent;
+    const canCreateTeamChat2 = isCreator || typeof canManageEvents === "function" && canManageEvents();
+    let creatorProfile = event.creator && event.creator.id ? { ...event.creator } : null;
+    if (event.created_by) {
+      const { data: cp } = await supabaseClient.from("profiles").select("id, first_name, last_name, profile_picture_url, displayed_badge, title, bio").eq("id", event.created_by).maybeSingle();
+      if (cp) creatorProfile = { ...creatorProfile || {}, ...cp };
+      else if (!creatorProfile) {
+        creatorProfile = {
+          id: event.created_by,
+          first_name: "",
+          last_name: "",
+          profile_picture_url: null,
+          displayed_badge: null,
+          title: "Member",
+          bio: null
+        };
+      }
+    }
+    const cpName = creatorProfile ? [creatorProfile.first_name, creatorProfile.last_name].filter(Boolean).join(" ") || "Member" : "";
+    const cpInitials = creatorProfile ? ((creatorProfile.first_name || "?")[0] + (creatorProfile.last_name || "")[0]).toUpperCase() : "";
+    const cpBadge = creatorProfile ? evtBadgeChip(creatorProfile.displayed_badge) : "";
+    const cpTitle = creatorProfile ? creatorProfile.title || "Member" : "";
+    const memberGoing = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+    const hasRsvp = rsvp && (memberGoing || rsvp.status === "maybe");
+    const documentsHtml = await evtBuildDocumentsHtml(event, isHost, hasRsvp);
+    const mapHtml = evtBuildMapHtml(event, hasRsvp, isHost);
+    const competitionHtml = isComp ? await evtBuildCompetitionHtml(event, isHost) : "";
+    const scrapbookHtml = await evtBuildScrapbookHtml(event, !!hasRsvp);
+    const showTime = !event.gate_time || hasRsvp || isHost;
+    const showLocation = !event.gate_location || hasRsvp || isHost;
+    const showNotes = !event.gate_notes || hasRsvp || isHost;
+    const isClosed = event.status === "completed" || event.status === "cancelled";
+    const isPast = new Date(event.start_date) < /* @__PURE__ */ new Date() && event.status !== "active";
+    const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < /* @__PURE__ */ new Date();
+    const entriesClosed = isClosed || isPast || deadlinePassed;
+    const rsvpEnabled = event.rsvp_enabled !== false;
+    const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
+    const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
+    return {
+      eventId: eventId2,
+      event,
+      rsvp,
+      start,
+      dateStr,
+      timeStr,
+      endTimeStr,
+      tc,
+      isLlc,
+      isComp,
+      goingList,
+      maybeList,
+      notGoingList,
+      guestGoingList,
+      checkins,
+      checkinCount,
+      costItems,
+      waitlist,
+      myWaitlistEntry,
+      raffleEntryCount,
+      myRaffleEntry,
+      raffleWinners,
+      isCreator,
+      canManageEvent,
+      canAccessTeamHub,
+      isHost,
+      canCreateTeamChat: canCreateTeamChat2,
+      creatorProfile,
+      cpName,
+      cpInitials,
+      cpBadge,
+      cpTitle,
+      memberGoing,
+      hasRsvp,
+      documentsHtml,
+      mapHtml,
+      competitionHtml,
+      scrapbookHtml,
+      showTime,
+      showLocation,
+      showNotes,
+      isClosed,
+      isPast,
+      deadlinePassed,
+      entriesClosed,
+      rsvpEnabled,
+      canRsvp,
+      eventIsFull
     };
-  })();
+  }
+  globalThis.evtLoadDetailContext = evtLoadDetailContext;
+  var detailDataApi = {
+    loadContext: evtLoadDetailContext
+  };
+  var PortalEvents8 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents8.detail = PortalEvents8.detail || {};
+  PortalEvents8.detail.data = detailDataApi;
 
   // js/portal/events/detail/sections.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.detail = window.PortalEvents.detail || {};
-    const _edPill = window.evtEdPill;
-    const _edNotice = window.evtEdNotice;
-    const _edSectionHead = window.evtEdSectionHead;
-    function evtBuildDetailRsvpSectionHtml(ctx) {
-      const {
-        eventId: eventId2,
-        event,
-        rsvp,
-        isHost,
-        canAccessTeamHub,
-        rsvpEnabled,
-        canRsvp,
-        eventIsFull,
-        entriesClosed,
-        isClosed,
-        isPast,
-        deadlinePassed
-      } = ctx;
-      let rsvpButtons = "";
-      if (!rsvpEnabled) {
-        rsvpButtons = _edNotice("\u2139\uFE0F", "Informational Event", "RSVP is not required for this event");
-      } else if (isHost) {
-        const teamBtnHtml = canAccessTeamHub ? `<button type="button" onclick="evtOpenTeamToolsPanel('${eventId2}')" class="ed-outline-btn" aria-label="Open event team tools">Team</button>` : "";
+  var _edPill = window.evtEdPill;
+  var _edNotice = window.evtEdNotice;
+  var _edSectionHead = window.evtEdSectionHead;
+  function evtBuildDetailRsvpSectionHtml(ctx) {
+    const {
+      eventId: eventId2,
+      event,
+      rsvp,
+      isHost,
+      canAccessTeamHub,
+      rsvpEnabled,
+      canRsvp,
+      eventIsFull,
+      entriesClosed,
+      isClosed,
+      isPast,
+      deadlinePassed
+    } = ctx;
+    let rsvpButtons = "";
+    if (!rsvpEnabled) {
+      rsvpButtons = _edNotice("\u2139\uFE0F", "Informational Event", "RSVP is not required for this event");
+    } else if (isHost) {
+      const teamBtnHtml = canAccessTeamHub ? `<button type="button" onclick="evtOpenTeamToolsPanel('${eventId2}')" class="ed-outline-btn" aria-label="Open event team tools">Team</button>` : "";
+      rsvpButtons = `
+        <div class="ed-rsvp-confirmed">
+            <div class="ed-rsvp-confirmed-row">
+                <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
+                <div><span class="ed-rsvp-confirmed-title">You're hosting!</span><span class="ed-rsvp-confirmed-sub">You're automatically counted as attending.</span></div>
+            </div>
+        </div>
+        <div class="ed-rsvp-host-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+            ${teamBtnHtml}
+            <button type="button" onclick="window.EventsManage ? window.EventsManage.open('${eventId2}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId2}')" class="ed-outline-btn">Manage Event</button>
+        </div>
+        ${canAccessTeamHub ? '<p class="ed-hint">Use <strong>Team</strong> for RSVP as yourself, raffle entry, and your ticket.</p>' : ""}`;
+    } else if (canRsvp && !eventIsFull && event.pricing_mode === "paid") {
+      if (rsvp?.paid) {
         rsvpButtons = `
             <div class="ed-rsvp-confirmed">
                 <div class="ed-rsvp-confirmed-row">
                     <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
-                    <div><span class="ed-rsvp-confirmed-title">You're hosting!</span><span class="ed-rsvp-confirmed-sub">You're automatically counted as attending.</span></div>
+                    <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">Non-refundable \xB7 Contact admin for changes</span></div>
                 </div>
-            </div>
-            <div class="ed-rsvp-host-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
-                ${teamBtnHtml}
-                <button type="button" onclick="window.EventsManage ? window.EventsManage.open('${eventId2}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId2}')" class="ed-outline-btn">Manage Event</button>
-            </div>
-            ${canAccessTeamHub ? '<p class="ed-hint">Use <strong>Team</strong> for RSVP as yourself, raffle entry, and your ticket.</p>' : ""}`;
-      } else if (canRsvp && !eventIsFull && event.pricing_mode === "paid") {
-        if (rsvp?.paid) {
-          rsvpButtons = `
-                <div class="ed-rsvp-confirmed">
-                    <div class="ed-rsvp-confirmed-row">
-                        <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
-                        <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">Non-refundable \xB7 Contact admin for changes</span></div>
-                    </div>
-                </div>`;
-        } else {
-          rsvpButtons = `
-                <button onclick="evtHandleRsvp('${eventId2}','going')" class="ed-primary-btn">RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>
-                <button onclick="evtMessageHost('${eventId2}')" class="ed-outline-btn">Message Host</button>
-                <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? " \xB7 Includes raffle entry" : ""}</p>`;
-        }
-      } else if (canRsvp && !eventIsFull) {
-        if (rsvp?.status === "going") {
-          rsvpButtons = `
-                <div class="ed-rsvp-confirmed">
-                    <div class="ed-rsvp-confirmed-row">
-                        <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
-                        <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">We'll see you there.</span></div>
-                    </div>
-                </div>
-                <button onclick="evtHandleRsvp('${eventId2}','going')" class="ed-outline-btn">Update RSVP</button>`;
-        } else {
-          const interestedActive = rsvp?.status === "maybe" ? " active" : "";
-          rsvpButtons = `
-                <button onclick="evtHandleRsvp('${eventId2}','going')" class="ed-primary-btn">RSVP</button>
-                <button onclick="evtMessageHost('${eventId2}')" class="ed-outline-btn">Message Host</button>
-                <div class="ed-rsvp-secondary">
-                    <button onclick="evtHandleRsvp('${eventId2}','maybe')" class="ed-rsvp-sm${interestedActive ? " active" : ""}">\u2764\uFE0F Interested</button>
-                </div>`;
-        }
-      }
-      if (rsvpEnabled && !isHost && entriesClosed && !rsvpButtons) {
-        let closedReason = "";
-        if (isClosed) closedReason = event.status === "cancelled" ? "Event cancelled" : "Event ended";
-        else if (isPast) closedReason = "Event has already started";
-        else if (deadlinePassed) closedReason = "RSVP deadline passed";
-        if (rsvp) {
-          const statusEmoji = rsvp.status === "going" ? "\u2705" : rsvp.status === "maybe" ? "\u2764\uFE0F" : "\u274C";
-          const statusLabel = rsvp.status === "going" ? "Going" : rsvp.status === "maybe" ? "Interested" : "Not Going";
-          rsvpButtons = _edNotice(statusEmoji, `Your RSVP: ${statusLabel}`, closedReason);
-        } else {
-          rsvpButtons = _edNotice("\u{1F512}", "RSVP Closed", closedReason);
-        }
-      }
-      return rsvpButtons;
-    }
-    function evtBuildDetailRaffleSectionHtml(ctx) {
-      const {
-        eventId: eventId2,
-        event,
-        rsvp,
-        myRaffleEntry,
-        raffleEntryCount,
-        raffleWinners,
-        memberGoing,
-        isHost,
-        canAccessTeamHub,
-        rsvpEnabled,
-        entriesClosed,
-        isClosed,
-        isPast,
-        deadlinePassed
-      } = ctx;
-      if (!event.raffle_enabled) return "";
-      const raffleConfig = window.evtDetailRaffleConfig(event);
-      const prizeCount = window.evtDetailRaffleWinnerCount(raffleConfig, event);
-      const prizesHtml = window.evtDetailRafflePrizesHtml(event);
-      let entryStatusHtml = "";
-      const hasRaffleRsvp = memberGoing;
-      const raffleBundled = typeof window.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
-      if (myRaffleEntry) {
-        entryStatusHtml = `<div class="ed-raffle-entry-chip">\u{1F39F}\uFE0F Entered</div>`;
-      } else if (entriesClosed && !myRaffleEntry) {
-        let lockedReason = "";
-        if (isClosed) lockedReason = event.status === "cancelled" ? "Event cancelled" : "Event ended";
-        else if (isPast) lockedReason = "Event in progress";
-        else if (deadlinePassed) lockedReason = "RSVP deadline passed";
-        entryStatusHtml = `<div class="ed-notice"><span class="ed-notice-emoji">\u{1F512}</span><div><p class="ed-notice-title">Entries Closed</p><p class="ed-notice-sub">${lockedReason}</p></div></div>`;
-      } else if (raffleBundled && !rsvp?.paid) {
-        entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Raffle entry included with paid RSVP</p>`;
-      } else if (!hasRaffleRsvp) {
-        entryStatusHtml = window.evtRaffleLockedDesktopHtml(eventId2, isHost && canAccessTeamHub);
-      } else if (event.raffle_entry_cost_cents > 0 && !entriesClosed) {
-        entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleRaffleEntry('${eventId2}')" class="ed-raffle-btn">\u{1F39F}\uFE0F Buy Raffle Entry \u2014 ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
-      } else if ((!event.raffle_entry_cost_cents || event.raffle_entry_cost_cents === 0) && !entriesClosed) {
-        entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleFreeRaffleEntry('${eventId2}')" class="ed-raffle-btn">\u{1F39F}\uFE0F Enter Raffle \u2014 Free</button></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
-      }
-      let winnersHtml = "";
-      if (raffleWinners.length > 0) {
-        winnersHtml = window.evtDetailRaffleWinnersHtml(raffleWinners);
-      }
-      const rafflePills = [
-        event.pricing_mode !== "paid" && event.raffle_entry_cost_cents > 0 ? _edPill(`\u{1F39F}\uFE0F Entry: ${formatCurrency(event.raffle_entry_cost_cents)}`) : "",
-        event.pricing_mode === "paid" ? _edPill("\u2705 Included with RSVP") : "",
-        !event.raffle_entry_cost_cents && event.pricing_mode !== "paid" ? _edPill("\u{1F39F}\uFE0F Free entry") : ""
-      ].filter(Boolean).join("");
-      return `
-            <div class="ed-raffle-compact">
-                <div class="ed-raffle-compact-head">
-                    <div>${_edSectionHead("Raffle")}<div class="ed-raffle-compact-info-row"><p>${raffleEntryCount} ${raffleEntryCount === 1 ? "entry" : "entries"}${prizeCount ? ` \xB7 ${prizeCount} ${prizeCount === 1 ? "winner" : "winners"}` : ""}</p>${rafflePills}</div></div>
-                </div>
-                <div class="ed-raffle-content-grid">
-                    ${prizesHtml ? `<div class="ed-raffle-panel">${_edSectionHead("Prizes")}${prizesHtml}</div>` : `<p class="ed-hint" style="font-style:italic">Prizes to be announced</p>`}
-                    ${winnersHtml ? `<div class="ed-raffle-panel">${winnersHtml}</div>` : ""}
-                </div>
-                ${entryStatusHtml ? `<div class="ed-raffle-entry-status">${entryStatusHtml}</div>` : ""}
             </div>`;
-    }
-    function evtBuildDetailHostControlsHtml(ctx) {
-      const { eventId: eventId2, event, isHost, isLlc } = ctx;
-      if (!isHost) return "";
-      let primaryBtn = "";
-      let dropdownItems = "";
-      if (event.status === "draft") primaryBtn = `<button onclick="evtUpdateStatus('${eventId2}','open')" class="evt-host-btn primary">Publish Event</button>`;
-      if (["open", "confirmed", "active"].includes(event.status)) {
-        if (!primaryBtn) primaryBtn = `<button onclick="evtUpdateStatus('${eventId2}','completed')" class="evt-host-btn primary">Mark Completed</button>`;
-        else dropdownItems += `<button onclick="evtUpdateStatus('${eventId2}','completed')">\u2713 Mark Completed</button>`;
-        dropdownItems += `<button onclick="evtCancelEvent('${eventId2}')" class="danger">\u2715 Cancel Event</button>`;
-        if (isLlc) dropdownItems += `<button onclick="evtRescheduleEvent('${eventId2}')">\u{1F4C5} Reschedule</button>`;
-      }
-      dropdownItems += `<button onclick="evtDuplicateEvent('${eventId2}')">\u{1F4CB} Duplicate Event</button>`;
-      if (typeof canManageEvents === "function" && canManageEvents()) dropdownItems += `<button onclick="evtDeleteEvent('${eventId2}')" class="danger">\u{1F5D1} Delete Event</button>`;
-      const manageOnClick = `if(window.EventsManage){window.EventsManage.open('${eventId2}',{source:'portal'})}else{this.nextElementSibling.classList.toggle('open')}`;
-      return `
-            ${_edSectionHead("Host Controls")}
-            <div class="evt-host-primary">${primaryBtn}<div class="evt-host-more-wrap"><button class="evt-host-more-btn" onclick="${manageOnClick}" aria-label="Manage event"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;display:inline-block;vertical-align:-3px;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Manage event</button><div class="evt-host-dropdown">${dropdownItems}</div></div></div>`;
-    }
-    function evtBuildDetailWaitlistHtml(ctx) {
-      const {
-        eventId: eventId2,
-        event,
-        rsvp,
-        isLlc,
-        goingList,
-        waitlist,
-        myWaitlistEntry
-      } = ctx;
-      if (!isLlc || !event.max_participants) return "";
-      const isFull = goingList.length >= event.max_participants;
-      const canRsvpWl = ["open", "confirmed", "active"].includes(event.status);
-      const activeWaitlist = waitlist.filter((w) => ["waiting", "offered"].includes(w.status));
-      if (!isFull || !canRsvpWl) return "";
-      const hasOffer = myWaitlistEntry?.status === "offered" && myWaitlistEntry.offer_expires_at && new Date(myWaitlistEntry.offer_expires_at) > /* @__PURE__ */ new Date();
-      const isWaiting = myWaitlistEntry?.status === "waiting";
-      let waitlistAction = "";
-      if (hasOffer) {
-        const expiresStr = new Date(myWaitlistEntry.offer_expires_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-        waitlistAction = `
-                    <div class="ed-notice ed-notice-highlight">
-                        <span class="ed-notice-emoji">\u{1F389}</span>
-                        <div style="flex:1">
-                            <p class="ed-notice-title">A spot opened up for you!</p>
-                            <p class="ed-notice-sub">Complete your RSVP by ${expiresStr}</p>
-                            <button onclick="evtClaimWaitlistSpot('${eventId2}')" class="ed-primary-btn" style="margin-top:10px">Claim Spot \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>
-                        </div>
-                    </div>`;
-      } else if (isWaiting) {
-        const pos = activeWaitlist.findIndex((w) => w.user_id === globalThis.evtCurrentUser.id) + 1;
-        waitlistAction = `
-                    <div class="ed-notice" style="justify-content:space-between">
-                        <div><p class="ed-notice-title">You're #${pos} on the waitlist</p><p class="ed-notice-sub">We'll notify you if a spot opens</p></div>
-                        <button onclick="evtLeaveWaitlist('${eventId2}')" class="ed-link-btn danger">Leave</button>
-                    </div>`;
-      } else if (!rsvp?.paid) {
-        waitlistAction = `<button onclick="evtJoinWaitlist('${eventId2}')" class="ed-action-btn">Join Waitlist</button>
-                    <p class="ed-hint">No payment required to join the waitlist</p>`;
-      }
-      return `${_edSectionHead("Waitlist")}<p class="ed-sub-count">${activeWaitlist.length} waiting</p>${waitlistAction}`;
-    }
-    function evtBuildDetailGraceNoticeHtml(ctx) {
-      const { eventId: eventId2, event, rsvp } = ctx;
-      if (!event.rescheduled_at || !event.grace_window_end || new Date(event.grace_window_end) <= /* @__PURE__ */ new Date()) {
-        return "";
-      }
-      const graceEnd = new Date(event.grace_window_end).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-      return `<div class="ed-notice ed-notice-warn">
-            <span class="ed-notice-emoji">\u{1F4C5}</span>
-            <div>
-                <p class="ed-notice-title">This event was rescheduled</p>
-                <p class="ed-notice-sub">Request a full refund until <strong>${graceEnd}</strong> if the new date doesn't work.</p>
-                ${rsvp?.paid ? `<button onclick="evtRequestGraceRefund('${eventId2}')" class="ed-link-btn danger" style="margin-top:8px">Request Full Refund</button>` : ""}
-            </div>
-        </div>`;
-    }
-    function evtBuildDetailCostBreakdownHtml(ctx) {
-      const { event, isLlc, isHost, costItems } = ctx;
-      const showBreakdownToAttendees = event.show_cost_breakdown !== false;
-      if (!isLlc || costItems.length === 0 || !(showBreakdownToAttendees || isHost)) {
-        return "";
-      }
-      const CATEGORY_ICONS = { lodging: "\u{1F3E0}", transportation: "\u{1F697}", food: "\u{1F355}", gear: "\u{1F3BF}", entertainment: "\u{1F3AD}", other: "\u{1F4E6}" };
-      const included = costItems.filter((i) => i.included_in_buyin);
-      const oop = costItems.filter((i) => !i.included_in_buyin);
-      const totalIncluded = included.reduce((s, i) => s + (i.total_cost_cents || 0), 0);
-      const totalOop = oop.reduce((s, i) => s + (i.avg_per_person_cents || 0), 0);
-      const minP = event.min_participants || event.max_participants || 0;
-      const baseBuyIn = minP > 0 ? Math.ceil(totalIncluded / minP) : 0;
-      const llcCut = Math.round(baseBuyIn * (event.llc_cut_pct || 0) / 100);
-      const finalBuyIn = baseBuyIn + llcCut;
-      const lockedLabel = event.cost_breakdown_locked ? ` ${_edPill("\u{1F512} Locked", "ed-pill-muted")}` : "";
-      const hostOnlyLabel = !showBreakdownToAttendees ? ` ${_edPill("Host Only", "ed-pill-muted")}` : "";
-      const itemRows = costItems.map((i) => `
-            <div class="ed-cost-item">
-                <div class="ed-cost-item-left"><span class="ed-cost-item-icon">${CATEGORY_ICONS[i.category] || "\u{1F4E6}"}</span><span>${evtEscapeHtml(i.name)}</span></div>
-                <div class="ed-cost-item-right">
-                    ${i.included_in_buyin ? `<span class="ed-cost-item-amount">${formatCurrency(i.total_cost_cents)}</span>${_edPill("INCLUDED", "ed-pill-green")}` : `<span class="ed-cost-item-amount" style="color:#8b8b8b">~${formatCurrency(i.avg_per_person_cents)}/pp</span>${_edPill("OOP", "ed-pill-muted")}`}
-                </div>
-            </div>`).join("");
-      return `
-            ${_edSectionHead(`Cost Breakdown${lockedLabel}${hostOnlyLabel}`)}
-            <div class="ed-cost-list">${itemRows}</div>
-            <div class="ed-cost-summary">
-                <div class="ed-cost-line"><span>Total Included</span><span>${formatCurrency(totalIncluded)}</span></div>
-                <div class="ed-cost-line"><span>Min Participants</span><span>${minP}</span></div>
-                <div class="ed-cost-divider"></div>
-                <div class="ed-cost-line ed-cost-line-bold"><span>\u{1F4A1} Suggested Buy-In</span><span>${formatCurrency(finalBuyIn)}/person</span></div>
-                <div class="ed-cost-line ed-cost-line-bold"><span>\u{1F4B3} Actual RSVP</span><span>${formatCurrency(event.rsvp_cost_cents)}/person</span></div>
-                ${event.llc_cut_pct > 0 ? `<div class="ed-cost-line ed-cost-line-muted"><span>Includes ${event.llc_cut_pct}% LLC contribution</span><span>+${formatCurrency(llcCut)}</span></div>` : ""}
-                <div class="ed-cost-line"><span>\u2708 Est. Out-of-Pocket</span><span>~${formatCurrency(totalOop)}/person</span></div>
-                <div class="ed-cost-divider thick"></div>
-                <div class="ed-cost-line ed-cost-total"><span>\u{1F4B0} Est. Total/Person</span><span>~${formatCurrency((event.rsvp_cost_cents || finalBuyIn) + totalOop)}</span></div>
-            </div>`;
-    }
-    function evtBuildDetailHeroStatusBadgeHtml(ctx) {
-      const { event, isPast } = ctx;
-      let badgeLabel = "";
-      let badgeCls = "";
-      let dotPulse = false;
-      if (event.status === "cancelled") {
-        badgeLabel = "Cancelled";
-        badgeCls = "evt-status-cancelled";
-      } else if (event.status === "completed" || isPast) {
-        badgeLabel = "Ended";
-        badgeCls = "evt-status-ended";
-      } else if (event.status === "active") {
-        badgeLabel = "Live";
-        badgeCls = "evt-status-live";
-        dotPulse = true;
       } else {
-        const msUntil = new Date(event.start_date) - /* @__PURE__ */ new Date();
-        const d = Math.floor(msUntil / 864e5);
-        const h = Math.floor(msUntil % 864e5 / 36e5);
-        const m = Math.floor(msUntil % 36e5 / 6e4);
-        if (d > 0) badgeLabel = `${d}d ${h}h`;
-        else if (h > 0) badgeLabel = `${h}h ${m}m`;
-        else badgeLabel = `${m}m`;
-        badgeCls = "evt-status-soon";
-        dotPulse = d === 0;
+        rsvpButtons = `
+            <button onclick="evtHandleRsvp('${eventId2}','going')" class="ed-primary-btn">RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>
+            <button onclick="evtMessageHost('${eventId2}')" class="ed-outline-btn">Message Host</button>
+            <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? " \xB7 Includes raffle entry" : ""}</p>`;
       }
-      return `<span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? " pulse" : ""}"></span>${badgeLabel}</span>`;
-    }
-    function evtBuildDetailTransportNoticeHtml(ctx) {
-      const { event, isLlc } = ctx;
-      if (!isLlc || event.transportation_enabled === false || !event.transportation_mode) {
-        return "";
-      }
-      const isProvided = event.transportation_mode === "llc_provides";
-      return `<div class="ed-context-row"><span>${isProvided ? "\u2708\uFE0F" : "\u{1F9F3}"}</span><div><strong>${isProvided ? "LLC provides transportation" : "Self-arranged transportation"}</strong><p>${isProvided ? "Tickets will appear in documents when available." : `Members book their own travel${event.transportation_estimate_cents ? ` \u2014 est. ~${formatCurrency(event.transportation_estimate_cents)}` : ""}.`}</p></div></div>`;
-    }
-    function evtBuildDetailLocationNoticeHtml(ctx) {
-      const { event, isLlc } = ctx;
-      if (!isLlc || !event.location_required) {
-        return "";
-      }
-      return _edNotice("\u{1F4CD}", "Location sharing required", "You'll need to enable location sharing at check-in");
-    }
-    function evtBuildDetailThresholdHtml(ctx) {
-      const { event, isLlc, isHost, goingList } = ctx;
-      if (!isLlc || !event.min_participants || isHost) {
-        return "";
-      }
-      const currentGoing = goingList.length;
-      const minNeeded = event.min_participants;
-      const isMet = currentGoing >= minNeeded;
-      const deadlineStr = event.rsvp_deadline ? new Date(event.rsvp_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBD";
-      const socialThreshold = Math.min(Math.floor(minNeeded * 0.5), 3);
-      const showExactCount = currentGoing >= socialThreshold;
-      let socialText = "";
-      if (isMet) socialText = `Event confirmed \xB7 ${currentGoing} going${event.max_participants ? " \xB7 " + (event.max_participants - currentGoing) + " spots left" : ""}`;
-      else if (showExactCount) socialText = `${currentGoing} going toward ${minNeeded} needed`;
-      else socialText = `Minimum of ${minNeeded} needed to confirm`;
-      return `<div class="ed-context-row"><span>${isMet ? "\u2705" : "\u26A0\uFE0F"}</span><div><strong>${isMet ? "Minimum met" : "Minimum threshold"}</strong><p>${socialText}${event.rsvp_deadline ? ` \xB7 RSVP by ${deadlineStr}` : ""}</p></div></div>`;
-    }
-    function evtBuildDetailAttendeePreviewHtml(ctx) {
-      const { eventId: eventId2, goingList, guestGoingList, maybeList } = ctx;
-      const totalGoing = goingList.length + guestGoingList.length;
-      if (totalGoing <= 0 && maybeList.length <= 0) {
-        return "";
-      }
-      const _allAvatars = [
-        ...goingList.map((r) => {
-          const p = r.profiles;
-          return { type: "member", id: p?.id, name: evtEscapeHtml((p?.first_name || "") + " " + (p?.last_name || "")).trim(), img: p?.profile_picture_url || null };
-        }),
-        ...guestGoingList.map((g) => ({ type: "guest", name: evtEscapeHtml(g.guest_name || "Guest"), img: null }))
-      ];
-      window._edAvatarData = window._edAvatarData || {};
-      window._edAvatarData[eventId2] = { avatars: _allAvatars, totalGoing, maybeCount: maybeList.length };
-      const countParts = [];
-      if (totalGoing > 0) countParts.push(`${totalGoing} going`);
-      if (maybeList.length > 0) countParts.push(`${maybeList.length} interested`);
-      return `
-            <div class="ed-attendee-row" id="edAttendeeRow-${eventId2}">
-                <div class="ed-avatar-stack" id="edAvatarStack-${eventId2}"></div>
-                <span class="ed-attendee-count">${countParts.join(" \xB7 ")}</span>
-            </div>`;
-    }
-    function evtBuildDetailShareCardHtml(ctx) {
-      const { event } = ctx;
-      return `
-                        <p class="ed-summary-heading">Share This Event</p>
-                        <div class="ed-share-row">
-                            <button class="ed-share-btn" title="Copy link" onclick="(function(){navigator.clipboard.writeText(window.location.href);const b=this;b.classList.add('ed-share-btn-copied');setTimeout(()=>b.classList.remove('ed-share-btn-copied'),1500)}).call(this)">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                            </button>
-                            <a class="ed-share-btn" title="Share on Facebook" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}" target="_blank" rel="noopener">
-                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                            </a>
-                            <a class="ed-share-btn" title="Share on X" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&text=${encodeURIComponent(event.title)}" target="_blank" rel="noopener">
-                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                            </a>
-                            <a class="ed-share-btn" title="Share on Instagram" href="https://instagram.com" target="_blank" rel="noopener">
-                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                            </a>
-                        </div>`;
-    }
-    function evtBuildDetailOrganizerHtml(ctx) {
-      const { event, isLlc, creatorProfile, cpName, cpInitials, cpBadge } = ctx;
-      if (!isLlc && event.created_by) {
-        const avatarImg = creatorProfile.profile_picture_url ? `<img src="${creatorProfile.profile_picture_url}" class="ed-org-avatar" alt="${evtEscapeHtml(cpName)}">` : `<div class="ed-org-avatar ed-org-avatar-fallback">${cpInitials}</div>`;
-        const avatarEl = cpBadge ? `<div style="position:relative;flex-shrink:0">${avatarImg}<div style="position:absolute;bottom:-2px;right:-2px;transform:scale(.65);transform-origin:bottom right">${cpBadge}</div></div>` : avatarImg;
-        return `
-            <a href="profile.html?id=${creatorProfile.id}" class="ed-org-block">
-                <div class="ed-org-block-row">
-                    ${avatarEl}
-                    <div>
-                        <span class="ed-org-block-label">Hosted By</span>
-                        <span class="ed-org-name-row"><span class="ed-org-name">${evtEscapeHtml(cpName)}</span><svg class="ed-org-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg></span>
-                    </div>
-                </div>
-            </a>
-        `;
-      }
-      if (isLlc) {
-        return `
-            <div class="ed-org-block ed-org-block-llc">
-                <div class="ed-org-block-row">
-                    <div class="ed-org-avatar ed-org-avatar-llc">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-                    </div>
-                    <div>
-                        <span class="ed-org-block-label">Hosted By</span>
-                        <span class="ed-org-name">LLC</span>
-                    </div>
+    } else if (canRsvp && !eventIsFull) {
+      if (rsvp?.status === "going") {
+        rsvpButtons = `
+            <div class="ed-rsvp-confirmed">
+                <div class="ed-rsvp-confirmed-row">
+                    <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
+                    <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">We'll see you there.</span></div>
                 </div>
             </div>
-        `;
+            <button onclick="evtHandleRsvp('${eventId2}','going')" class="ed-outline-btn">Update RSVP</button>`;
+      } else {
+        const interestedActive = rsvp?.status === "maybe" ? " active" : "";
+        rsvpButtons = `
+            <button onclick="evtHandleRsvp('${eventId2}','going')" class="ed-primary-btn">RSVP</button>
+            <button onclick="evtMessageHost('${eventId2}')" class="ed-outline-btn">Message Host</button>
+            <div class="ed-rsvp-secondary">
+                <button onclick="evtHandleRsvp('${eventId2}','maybe')" class="ed-rsvp-sm${interestedActive ? " active" : ""}">\u2764\uFE0F Interested</button>
+            </div>`;
       }
+    }
+    if (rsvpEnabled && !isHost && entriesClosed && !rsvpButtons) {
+      let closedReason = "";
+      if (isClosed) closedReason = event.status === "cancelled" ? "Event cancelled" : "Event ended";
+      else if (isPast) closedReason = "Event has already started";
+      else if (deadlinePassed) closedReason = "RSVP deadline passed";
+      if (rsvp) {
+        const statusEmoji = rsvp.status === "going" ? "\u2705" : rsvp.status === "maybe" ? "\u2764\uFE0F" : "\u274C";
+        const statusLabel = rsvp.status === "going" ? "Going" : rsvp.status === "maybe" ? "Interested" : "Not Going";
+        rsvpButtons = _edNotice(statusEmoji, `Your RSVP: ${statusLabel}`, closedReason);
+      } else {
+        rsvpButtons = _edNotice("\u{1F512}", "RSVP Closed", closedReason);
+      }
+    }
+    return rsvpButtons;
+  }
+  function evtBuildDetailRaffleSectionHtml(ctx) {
+    const {
+      eventId: eventId2,
+      event,
+      rsvp,
+      myRaffleEntry,
+      raffleEntryCount,
+      raffleWinners,
+      memberGoing,
+      isHost,
+      canAccessTeamHub,
+      rsvpEnabled,
+      entriesClosed,
+      isClosed,
+      isPast,
+      deadlinePassed
+    } = ctx;
+    if (!event.raffle_enabled) return "";
+    const raffleConfig2 = window.evtDetailRaffleConfig(event);
+    const prizeCount = window.evtDetailRaffleWinnerCount(raffleConfig2, event);
+    const prizesHtml = window.evtDetailRafflePrizesHtml(event);
+    let entryStatusHtml = "";
+    const hasRaffleRsvp = memberGoing;
+    const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
+    if (myRaffleEntry) {
+      entryStatusHtml = `<div class="ed-raffle-entry-chip">\u{1F39F}\uFE0F Entered</div>`;
+    } else if (entriesClosed && !myRaffleEntry) {
+      let lockedReason = "";
+      if (isClosed) lockedReason = event.status === "cancelled" ? "Event cancelled" : "Event ended";
+      else if (isPast) lockedReason = "Event in progress";
+      else if (deadlinePassed) lockedReason = "RSVP deadline passed";
+      entryStatusHtml = `<div class="ed-notice"><span class="ed-notice-emoji">\u{1F512}</span><div><p class="ed-notice-title">Entries Closed</p><p class="ed-notice-sub">${lockedReason}</p></div></div>`;
+    } else if (raffleBundled && !rsvp?.paid) {
+      entryStatusHtml = `<p class="ed-hint" style="font-style:italic">Raffle entry included with paid RSVP</p>`;
+    } else if (!hasRaffleRsvp) {
+      entryStatusHtml = window.evtRaffleLockedDesktopHtml(eventId2, isHost && canAccessTeamHub);
+    } else if (event.raffle_entry_cost_cents > 0 && !entriesClosed) {
+      entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleRaffleEntry('${eventId2}')" class="ed-raffle-btn">\u{1F39F}\uFE0F Buy Raffle Entry \u2014 ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
+    } else if ((!event.raffle_entry_cost_cents || event.raffle_entry_cost_cents === 0) && !entriesClosed) {
+      entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleFreeRaffleEntry('${eventId2}')" class="ed-raffle-btn">\u{1F39F}\uFE0F Enter Raffle \u2014 Free</button></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
+    }
+    let winnersHtml = "";
+    if (raffleWinners.length > 0) {
+      winnersHtml = window.evtDetailRaffleWinnersHtml(raffleWinners);
+    }
+    const rafflePills = [
+      event.pricing_mode !== "paid" && event.raffle_entry_cost_cents > 0 ? _edPill(`\u{1F39F}\uFE0F Entry: ${formatCurrency(event.raffle_entry_cost_cents)}`) : "",
+      event.pricing_mode === "paid" ? _edPill("\u2705 Included with RSVP") : "",
+      !event.raffle_entry_cost_cents && event.pricing_mode !== "paid" ? _edPill("\u{1F39F}\uFE0F Free entry") : ""
+    ].filter(Boolean).join("");
+    return `
+        <div class="ed-raffle-compact">
+            <div class="ed-raffle-compact-head">
+                <div>${_edSectionHead("Raffle")}<div class="ed-raffle-compact-info-row"><p>${raffleEntryCount} ${raffleEntryCount === 1 ? "entry" : "entries"}${prizeCount ? ` \xB7 ${prizeCount} ${prizeCount === 1 ? "winner" : "winners"}` : ""}</p>${rafflePills}</div></div>
+            </div>
+            <div class="ed-raffle-content-grid">
+                ${prizesHtml ? `<div class="ed-raffle-panel">${_edSectionHead("Prizes")}${prizesHtml}</div>` : `<p class="ed-hint" style="font-style:italic">Prizes to be announced</p>`}
+                ${winnersHtml ? `<div class="ed-raffle-panel">${winnersHtml}</div>` : ""}
+            </div>
+            ${entryStatusHtml ? `<div class="ed-raffle-entry-status">${entryStatusHtml}</div>` : ""}
+        </div>`;
+  }
+  function evtBuildDetailHostControlsHtml(ctx) {
+    const { eventId: eventId2, event, isHost, isLlc } = ctx;
+    if (!isHost) return "";
+    let primaryBtn = "";
+    let dropdownItems = "";
+    if (event.status === "draft") primaryBtn = `<button onclick="evtUpdateStatus('${eventId2}','open')" class="evt-host-btn primary">Publish Event</button>`;
+    if (["open", "confirmed", "active"].includes(event.status)) {
+      if (!primaryBtn) primaryBtn = `<button onclick="evtUpdateStatus('${eventId2}','completed')" class="evt-host-btn primary">Mark Completed</button>`;
+      else dropdownItems += `<button onclick="evtUpdateStatus('${eventId2}','completed')">\u2713 Mark Completed</button>`;
+      dropdownItems += `<button onclick="evtCancelEvent('${eventId2}')" class="danger">\u2715 Cancel Event</button>`;
+      if (isLlc) dropdownItems += `<button onclick="evtRescheduleEvent('${eventId2}')">\u{1F4C5} Reschedule</button>`;
+    }
+    dropdownItems += `<button onclick="evtDuplicateEvent('${eventId2}')">\u{1F4CB} Duplicate Event</button>`;
+    if (typeof canManageEvents === "function" && canManageEvents()) dropdownItems += `<button onclick="evtDeleteEvent('${eventId2}')" class="danger">\u{1F5D1} Delete Event</button>`;
+    const manageOnClick = `if(window.EventsManage){window.EventsManage.open('${eventId2}',{source:'portal'})}else{this.nextElementSibling.classList.toggle('open')}`;
+    return `
+        ${_edSectionHead("Host Controls")}
+        <div class="evt-host-primary">${primaryBtn}<div class="evt-host-more-wrap"><button class="evt-host-more-btn" onclick="${manageOnClick}" aria-label="Manage event"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;display:inline-block;vertical-align:-3px;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Manage event</button><div class="evt-host-dropdown">${dropdownItems}</div></div></div>`;
+  }
+  function evtBuildDetailWaitlistHtml(ctx) {
+    const {
+      eventId: eventId2,
+      event,
+      rsvp,
+      isLlc,
+      goingList,
+      waitlist,
+      myWaitlistEntry
+    } = ctx;
+    if (!isLlc || !event.max_participants) return "";
+    const isFull = goingList.length >= event.max_participants;
+    const canRsvpWl = ["open", "confirmed", "active"].includes(event.status);
+    const activeWaitlist = waitlist.filter((w) => ["waiting", "offered"].includes(w.status));
+    if (!isFull || !canRsvpWl) return "";
+    const hasOffer = myWaitlistEntry?.status === "offered" && myWaitlistEntry.offer_expires_at && new Date(myWaitlistEntry.offer_expires_at) > /* @__PURE__ */ new Date();
+    const isWaiting = myWaitlistEntry?.status === "waiting";
+    let waitlistAction = "";
+    if (hasOffer) {
+      const expiresStr = new Date(myWaitlistEntry.offer_expires_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+      waitlistAction = `
+                <div class="ed-notice ed-notice-highlight">
+                    <span class="ed-notice-emoji">\u{1F389}</span>
+                    <div style="flex:1">
+                        <p class="ed-notice-title">A spot opened up for you!</p>
+                        <p class="ed-notice-sub">Complete your RSVP by ${expiresStr}</p>
+                        <button onclick="evtClaimWaitlistSpot('${eventId2}')" class="ed-primary-btn" style="margin-top:10px">Claim Spot \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>
+                    </div>
+                </div>`;
+    } else if (isWaiting) {
+      const pos = activeWaitlist.findIndex((w) => w.user_id === globalThis.evtCurrentUser.id) + 1;
+      waitlistAction = `
+                <div class="ed-notice" style="justify-content:space-between">
+                    <div><p class="ed-notice-title">You're #${pos} on the waitlist</p><p class="ed-notice-sub">We'll notify you if a spot opens</p></div>
+                    <button onclick="evtLeaveWaitlist('${eventId2}')" class="ed-link-btn danger">Leave</button>
+                </div>`;
+    } else if (!rsvp?.paid) {
+      waitlistAction = `<button onclick="evtJoinWaitlist('${eventId2}')" class="ed-action-btn">Join Waitlist</button>
+                <p class="ed-hint">No payment required to join the waitlist</p>`;
+    }
+    return `${_edSectionHead("Waitlist")}<p class="ed-sub-count">${activeWaitlist.length} waiting</p>${waitlistAction}`;
+  }
+  function evtBuildDetailGraceNoticeHtml(ctx) {
+    const { eventId: eventId2, event, rsvp } = ctx;
+    if (!event.rescheduled_at || !event.grace_window_end || new Date(event.grace_window_end) <= /* @__PURE__ */ new Date()) {
       return "";
     }
-    function evtBuildDetailTeamHubHtml(ctx) {
-      const { eventId: eventId2, canAccessTeamHub, isHost } = ctx;
-      if (!canAccessTeamHub || isHost) return "";
-      return `
-            <div class="ed-card ed-card-rsvp event-detail-card-tight portal-action-card">
-                <p class="ed-summary-heading">Event Team</p>
-                <p class="ed-hint">Staff tools for coordination and your own attendance.</p>
-                <button type="button" onclick="evtOpenTeamToolsPanel('${eventId2}')" class="ed-outline-btn" aria-label="Open event team tools">Team</button>
-            </div>`;
+    const graceEnd = new Date(event.grace_window_end).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    return `<div class="ed-notice ed-notice-warn">
+        <span class="ed-notice-emoji">\u{1F4C5}</span>
+        <div>
+            <p class="ed-notice-title">This event was rescheduled</p>
+            <p class="ed-notice-sub">Request a full refund until <strong>${graceEnd}</strong> if the new date doesn't work.</p>
+            ${rsvp?.paid ? `<button onclick="evtRequestGraceRefund('${eventId2}')" class="ed-link-btn danger" style="margin-top:8px">Request Full Refund</button>` : ""}
+        </div>
+    </div>`;
+  }
+  function evtBuildDetailCostBreakdownHtml(ctx) {
+    const { event, isLlc, isHost, costItems } = ctx;
+    const showBreakdownToAttendees = event.show_cost_breakdown !== false;
+    if (!isLlc || costItems.length === 0 || !(showBreakdownToAttendees || isHost)) {
+      return "";
     }
-    function evtBuildDetailRelatedEventsHtml(ctx) {
-      const { eventId: eventId2 } = ctx;
-      if (typeof globalThis.evtAllEvents === "undefined" || globalThis.evtAllEvents.length <= 1) return "";
-      const upcoming = globalThis.evtAllEvents.filter((e) => e.id !== eventId2 && e.status !== "cancelled").slice(0, 4);
-      if (!upcoming.length) return "";
-      const cards = upcoming.map((e) => {
-        const d = new Date(e.start_date);
-        const dateLabel = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-        const imgHtml = e.banner_url ? `<img src="${e.banner_url}" alt="" loading="lazy">` : `<div style="height:120px;background:linear-gradient(135deg,#6366f1,#8b5cf6)"></div>`;
-        const onclickHandler = e.slug ? `globalThis.evtNavigateToEvent('${e.slug}')` : `globalThis.evtOpenDetail('${e.id}')`;
-        return `<div class="evt-related-card" onclick="${onclickHandler}">${imgHtml}<div class="evt-related-card-body"><p class="evt-related-card-title">${evtEscapeHtml(e.title)}</p><p class="evt-related-card-meta">${dateLabel}${e.location_nickname ? " \xB7 " + evtEscapeHtml(e.location_nickname) : ""}</p></div></div>`;
-      }).join("");
-      return `${_edSectionHead("More Events")}<div class="evt-related-scroll">${cards}</div>`;
+    const CATEGORY_ICONS = { lodging: "\u{1F3E0}", transportation: "\u{1F697}", food: "\u{1F355}", gear: "\u{1F3BF}", entertainment: "\u{1F3AD}", other: "\u{1F4E6}" };
+    const included = costItems.filter((i) => i.included_in_buyin);
+    const oop = costItems.filter((i) => !i.included_in_buyin);
+    const totalIncluded = included.reduce((s, i) => s + (i.total_cost_cents || 0), 0);
+    const totalOop = oop.reduce((s, i) => s + (i.avg_per_person_cents || 0), 0);
+    const minP = event.min_participants || event.max_participants || 0;
+    const baseBuyIn = minP > 0 ? Math.ceil(totalIncluded / minP) : 0;
+    const llcCut = Math.round(baseBuyIn * (event.llc_cut_pct || 0) / 100);
+    const finalBuyIn = baseBuyIn + llcCut;
+    const lockedLabel = event.cost_breakdown_locked ? ` ${_edPill("\u{1F512} Locked", "ed-pill-muted")}` : "";
+    const hostOnlyLabel = !showBreakdownToAttendees ? ` ${_edPill("Host Only", "ed-pill-muted")}` : "";
+    const itemRows = costItems.map((i) => `
+        <div class="ed-cost-item">
+            <div class="ed-cost-item-left"><span class="ed-cost-item-icon">${CATEGORY_ICONS[i.category] || "\u{1F4E6}"}</span><span>${evtEscapeHtml(i.name)}</span></div>
+            <div class="ed-cost-item-right">
+                ${i.included_in_buyin ? `<span class="ed-cost-item-amount">${formatCurrency(i.total_cost_cents)}</span>${_edPill("INCLUDED", "ed-pill-green")}` : `<span class="ed-cost-item-amount" style="color:#8b8b8b">~${formatCurrency(i.avg_per_person_cents)}/pp</span>${_edPill("OOP", "ed-pill-muted")}`}
+            </div>
+        </div>`).join("");
+    return `
+        ${_edSectionHead(`Cost Breakdown${lockedLabel}${hostOnlyLabel}`)}
+        <div class="ed-cost-list">${itemRows}</div>
+        <div class="ed-cost-summary">
+            <div class="ed-cost-line"><span>Total Included</span><span>${formatCurrency(totalIncluded)}</span></div>
+            <div class="ed-cost-line"><span>Min Participants</span><span>${minP}</span></div>
+            <div class="ed-cost-divider"></div>
+            <div class="ed-cost-line ed-cost-line-bold"><span>\u{1F4A1} Suggested Buy-In</span><span>${formatCurrency(finalBuyIn)}/person</span></div>
+            <div class="ed-cost-line ed-cost-line-bold"><span>\u{1F4B3} Actual RSVP</span><span>${formatCurrency(event.rsvp_cost_cents)}/person</span></div>
+            ${event.llc_cut_pct > 0 ? `<div class="ed-cost-line ed-cost-line-muted"><span>Includes ${event.llc_cut_pct}% LLC contribution</span><span>+${formatCurrency(llcCut)}</span></div>` : ""}
+            <div class="ed-cost-line"><span>\u2708 Est. Out-of-Pocket</span><span>~${formatCurrency(totalOop)}/person</span></div>
+            <div class="ed-cost-divider thick"></div>
+            <div class="ed-cost-line ed-cost-total"><span>\u{1F4B0} Est. Total/Person</span><span>~${formatCurrency((event.rsvp_cost_cents || finalBuyIn) + totalOop)}</span></div>
+        </div>`;
+  }
+  function evtBuildDetailHeroStatusBadgeHtml(ctx) {
+    const { event, isPast } = ctx;
+    let badgeLabel = "";
+    let badgeCls = "";
+    let dotPulse = false;
+    if (event.status === "cancelled") {
+      badgeLabel = "Cancelled";
+      badgeCls = "evt-status-cancelled";
+    } else if (event.status === "completed" || isPast) {
+      badgeLabel = "Ended";
+      badgeCls = "evt-status-ended";
+    } else if (event.status === "active") {
+      badgeLabel = "Live";
+      badgeCls = "evt-status-live";
+      dotPulse = true;
+    } else {
+      const msUntil = new Date(event.start_date) - /* @__PURE__ */ new Date();
+      const d = Math.floor(msUntil / 864e5);
+      const h = Math.floor(msUntil % 864e5 / 36e5);
+      const m = Math.floor(msUntil % 36e5 / 6e4);
+      if (d > 0) badgeLabel = `${d}d ${h}h`;
+      else if (h > 0) badgeLabel = `${h}h ${m}m`;
+      else badgeLabel = `${m}m`;
+      badgeCls = "evt-status-soon";
+      dotPulse = d === 0;
     }
-    function evtBuildDetailMobileAttendeesHtml(ctx) {
-      const { eventId: eventId2, goingList, guestGoingList, maybeList } = ctx;
-      const totalGoing = goingList.length + guestGoingList.length;
-      if (totalGoing <= 0 && maybeList.length <= 0) return "";
-      return `
-                    <div class="ed-mobile-attendees-card">
-                        <div class="ed-avatar-stack ed-avatar-stack-sm" id="edAvatarStackMobile-${eventId2}"></div>
-                        <span class="ed-mobile-att-count">${totalGoing > 0 ? `${totalGoing} going` : ""}${totalGoing > 0 && maybeList.length > 0 ? " \xB7 " : ""}${maybeList.length > 0 ? `${maybeList.length} interested` : ""}</span>
+    return `<span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? " pulse" : ""}"></span>${badgeLabel}</span>`;
+  }
+  function evtBuildDetailTransportNoticeHtml(ctx) {
+    const { event, isLlc } = ctx;
+    if (!isLlc || event.transportation_enabled === false || !event.transportation_mode) {
+      return "";
+    }
+    const isProvided = event.transportation_mode === "llc_provides";
+    return `<div class="ed-context-row"><span>${isProvided ? "\u2708\uFE0F" : "\u{1F9F3}"}</span><div><strong>${isProvided ? "LLC provides transportation" : "Self-arranged transportation"}</strong><p>${isProvided ? "Tickets will appear in documents when available." : `Members book their own travel${event.transportation_estimate_cents ? ` \u2014 est. ~${formatCurrency(event.transportation_estimate_cents)}` : ""}.`}</p></div></div>`;
+  }
+  function evtBuildDetailLocationNoticeHtml(ctx) {
+    const { event, isLlc } = ctx;
+    if (!isLlc || !event.location_required) {
+      return "";
+    }
+    return _edNotice("\u{1F4CD}", "Location sharing required", "You'll need to enable location sharing at check-in");
+  }
+  function evtBuildDetailThresholdHtml(ctx) {
+    const { event, isLlc, isHost, goingList } = ctx;
+    if (!isLlc || !event.min_participants || isHost) {
+      return "";
+    }
+    const currentGoing = goingList.length;
+    const minNeeded = event.min_participants;
+    const isMet = currentGoing >= minNeeded;
+    const deadlineStr = event.rsvp_deadline ? new Date(event.rsvp_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBD";
+    const socialThreshold = Math.min(Math.floor(minNeeded * 0.5), 3);
+    const showExactCount = currentGoing >= socialThreshold;
+    let socialText = "";
+    if (isMet) socialText = `Event confirmed \xB7 ${currentGoing} going${event.max_participants ? " \xB7 " + (event.max_participants - currentGoing) + " spots left" : ""}`;
+    else if (showExactCount) socialText = `${currentGoing} going toward ${minNeeded} needed`;
+    else socialText = `Minimum of ${minNeeded} needed to confirm`;
+    return `<div class="ed-context-row"><span>${isMet ? "\u2705" : "\u26A0\uFE0F"}</span><div><strong>${isMet ? "Minimum met" : "Minimum threshold"}</strong><p>${socialText}${event.rsvp_deadline ? ` \xB7 RSVP by ${deadlineStr}` : ""}</p></div></div>`;
+  }
+  function evtBuildDetailAttendeePreviewHtml(ctx) {
+    const { eventId: eventId2, goingList, guestGoingList, maybeList } = ctx;
+    const totalGoing = goingList.length + guestGoingList.length;
+    if (totalGoing <= 0 && maybeList.length <= 0) {
+      return "";
+    }
+    const _allAvatars = [
+      ...goingList.map((r) => {
+        const p = r.profiles;
+        return { type: "member", id: p?.id, name: evtEscapeHtml((p?.first_name || "") + " " + (p?.last_name || "")).trim(), img: p?.profile_picture_url || null };
+      }),
+      ...guestGoingList.map((g2) => ({ type: "guest", name: evtEscapeHtml(g2.guest_name || "Guest"), img: null }))
+    ];
+    window._edAvatarData = window._edAvatarData || {};
+    window._edAvatarData[eventId2] = { avatars: _allAvatars, totalGoing, maybeCount: maybeList.length };
+    const countParts = [];
+    if (totalGoing > 0) countParts.push(`${totalGoing} going`);
+    if (maybeList.length > 0) countParts.push(`${maybeList.length} interested`);
+    return `
+        <div class="ed-attendee-row" id="edAttendeeRow-${eventId2}">
+            <div class="ed-avatar-stack" id="edAvatarStack-${eventId2}"></div>
+            <span class="ed-attendee-count">${countParts.join(" \xB7 ")}</span>
+        </div>`;
+  }
+  function evtBuildDetailShareCardHtml(ctx) {
+    const { event } = ctx;
+    return `
+                    <p class="ed-summary-heading">Share This Event</p>
+                    <div class="ed-share-row">
+                        <button class="ed-share-btn" title="Copy link" onclick="(function(){navigator.clipboard.writeText(window.location.href);const b=this;b.classList.add('ed-share-btn-copied');setTimeout(()=>b.classList.remove('ed-share-btn-copied'),1500)}).call(this)">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        </button>
+                        <a class="ed-share-btn" title="Share on Facebook" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}" target="_blank" rel="noopener">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        </a>
+                        <a class="ed-share-btn" title="Share on X" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&text=${encodeURIComponent(event.title)}" target="_blank" rel="noopener">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        <a class="ed-share-btn" title="Share on Instagram" href="https://instagram.com" target="_blank" rel="noopener">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                        </a>
                     </div>`;
-    }
-    function evtBuildDetailMobileHostedHtml(ctx) {
-      const { isLlc, creatorProfile, cpName, cpInitials, cpBadge } = ctx;
-      if (!creatorProfile && !isLlc) return "";
+  }
+  function evtBuildDetailOrganizerHtml(ctx) {
+    const { event, isLlc, creatorProfile, cpName, cpInitials, cpBadge } = ctx;
+    if (!isLlc && event.created_by) {
+      const avatarImg = creatorProfile.profile_picture_url ? `<img src="${creatorProfile.profile_picture_url}" class="ed-org-avatar" alt="${evtEscapeHtml(cpName)}">` : `<div class="ed-org-avatar ed-org-avatar-fallback">${cpInitials}</div>`;
+      const avatarEl = cpBadge ? `<div style="position:relative;flex-shrink:0">${avatarImg}<div style="position:absolute;bottom:-2px;right:-2px;transform:scale(.65);transform-origin:bottom right">${cpBadge}</div></div>` : avatarImg;
       return `
-                    <div class="ed-mobile-hosted-card" ${creatorProfile ? `onclick="window.location.href='profile.html?id=${creatorProfile.id}'" style="cursor:pointer"` : ""}>
-                        <div class="ed-mh-avatar-wrap" style="position:relative;flex-shrink:0">
-                            ${creatorProfile?.profile_picture_url ? `<img src="${creatorProfile.profile_picture_url}" class="ed-mh-avatar" alt="${evtEscapeHtml(cpName)}">` : `<div class="ed-mh-avatar ed-mh-avatar-fallback">${isLlc ? `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>` : cpInitials}</div>`}
-                            ${cpBadge ? cpBadge : ""}
-                        </div>
-                        <div class="ed-mh-body">
-                            <span class="ed-mh-label">Hosted by</span>
-                            <span class="ed-mh-name">${isLlc ? "Justice McNeal LLC" : evtEscapeHtml(cpName)}</span>
-                            ${!isLlc ? `<span class="ed-mh-sub">Organizer of this event</span>` : ""}
-                        </div>
-                        ${creatorProfile ? `<svg class="ed-mh-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>` : ""}
-                    </div>`;
-    }
-    function evtBuildDetailPageHeaderActionsHtml(ctx) {
-      const { eventId: eventId2, event } = ctx;
-      return `
-                    <button onclick="globalThis.evtCopyShareUrl('${event.slug}')" class="ed-page-header-btn" aria-label="Share event">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                        <span class="ed-page-header-btn-label">Share</span>
-                    </button>
-                    <button onclick="event.stopPropagation();globalThis.evtDownloadIcs('${eventId2}')" class="ed-page-header-btn ed-page-header-btn-cal" aria-label="Add to calendar">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        <span class="ed-page-header-btn-label">Add to Calendar</span>
-                    </button>
-                    <button onclick="event.stopPropagation();globalThis.evtDownloadIcs('${eventId2}')" class="ed-page-header-btn ed-page-header-btn-bookmark" aria-label="Save event">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
-                    </button>`;
-    }
-    function evtBuildDetailAttendeeBreakdownHtml(ctx) {
-      const { isHost, goingList, maybeList, checkins, checkinCount } = ctx;
-      if (!isHost) return "";
-      function buildPersonRow(p) {
-        const initials = ((p?.first_name?.[0] || "") + (p?.last_name?.[0] || "")).toUpperCase() || "?";
-        const avatar = p?.profile_picture_url ? `<img src="${p.profile_picture_url}" class="w-7 h-7 rounded-full object-cover" alt="">` : `<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xs font-bold">${initials}</div>`;
-        return `<div class="flex items-center gap-2">${avatar}<span class="text-sm text-gray-700">${evtEscapeHtml(p?.first_name || "")} ${evtEscapeHtml(p?.last_name || "")}</span></div>`;
-      }
-      const checkinRows = (checkins || []).map((c) => buildPersonRow(c.profiles)).join("") || `<p class="text-xs text-gray-400 italic ml-6">None</p>`;
-      return `
-            <div>
-                ${_edSectionHead("Attendee Breakdown")}
-                <div class="mb-3">
-                    <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">\u2705</span><span class="text-xs font-bold text-emerald-700 uppercase tracking-wide">Going (${goingList.length})</span></div>
-                    <div class="space-y-1.5 ml-6">${goingList.length ? goingList.map((r) => buildPersonRow(r.profiles)).join("") : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
+        <a href="profile.html?id=${creatorProfile.id}" class="ed-org-block">
+            <div class="ed-org-block-row">
+                ${avatarEl}
+                <div>
+                    <span class="ed-org-block-label">Hosted By</span>
+                    <span class="ed-org-name-row"><span class="ed-org-name">${evtEscapeHtml(cpName)}</span><svg class="ed-org-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg></span>
                 </div>
-                <div class="mb-3">
-                    <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">\u2764\uFE0F</span><span class="text-xs font-bold text-pink-700 uppercase tracking-wide">Interested (${maybeList.length})</span></div>
-                    <div class="space-y-1.5 ml-6">${maybeList.length ? maybeList.map((r) => buildPersonRow(r.profiles)).join("") : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
+            </div>
+        </a>
+    `;
+    }
+    if (isLlc) {
+      return `
+        <div class="ed-org-block ed-org-block-llc">
+            <div class="ed-org-block-row">
+                <div class="ed-org-avatar ed-org-avatar-llc">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">\u{1F4CD}</span><span class="text-xs font-bold text-violet-700 uppercase tracking-wide">Checked In (${checkinCount || 0})</span></div>
-                    <div class="space-y-1.5 ml-6">${checkinRows}</div>
+                    <span class="ed-org-block-label">Hosted By</span>
+                    <span class="ed-org-name">LLC</span>
                 </div>
-            </div>`;
+            </div>
+        </div>
+    `;
     }
-    window.evtBuildDetailRsvpSectionHtml = evtBuildDetailRsvpSectionHtml;
-    window.evtBuildDetailRaffleSectionHtml = evtBuildDetailRaffleSectionHtml;
-    window.evtBuildDetailHostControlsHtml = evtBuildDetailHostControlsHtml;
-    window.evtBuildDetailWaitlistHtml = evtBuildDetailWaitlistHtml;
-    window.evtBuildDetailGraceNoticeHtml = evtBuildDetailGraceNoticeHtml;
-    window.evtBuildDetailCostBreakdownHtml = evtBuildDetailCostBreakdownHtml;
-    window.evtBuildDetailAttendeeBreakdownHtml = evtBuildDetailAttendeeBreakdownHtml;
-    window.evtBuildDetailHeroStatusBadgeHtml = evtBuildDetailHeroStatusBadgeHtml;
-    window.evtBuildDetailTransportNoticeHtml = evtBuildDetailTransportNoticeHtml;
-    window.evtBuildDetailLocationNoticeHtml = evtBuildDetailLocationNoticeHtml;
-    window.evtBuildDetailThresholdHtml = evtBuildDetailThresholdHtml;
-    window.evtBuildDetailAttendeePreviewHtml = evtBuildDetailAttendeePreviewHtml;
-    window.evtBuildDetailShareCardHtml = evtBuildDetailShareCardHtml;
-    window.evtBuildDetailOrganizerHtml = evtBuildDetailOrganizerHtml;
-    window.evtBuildDetailTeamHubHtml = evtBuildDetailTeamHubHtml;
-    window.evtBuildDetailRelatedEventsHtml = evtBuildDetailRelatedEventsHtml;
-    window.evtBuildDetailMobileAttendeesHtml = evtBuildDetailMobileAttendeesHtml;
-    window.evtBuildDetailMobileHostedHtml = evtBuildDetailMobileHostedHtml;
-    window.evtBuildDetailPageHeaderActionsHtml = evtBuildDetailPageHeaderActionsHtml;
-    window.PortalEvents.detail.sections = {
-      buildRsvpSectionHtml: evtBuildDetailRsvpSectionHtml,
-      buildRaffleSectionHtml: evtBuildDetailRaffleSectionHtml,
-      buildHostControlsHtml: evtBuildDetailHostControlsHtml,
-      buildWaitlistHtml: evtBuildDetailWaitlistHtml,
-      buildGraceNoticeHtml: evtBuildDetailGraceNoticeHtml,
-      buildCostBreakdownHtml: evtBuildDetailCostBreakdownHtml,
-      buildAttendeeBreakdownHtml: evtBuildDetailAttendeeBreakdownHtml,
-      buildHeroStatusBadgeHtml: evtBuildDetailHeroStatusBadgeHtml,
-      buildTransportNoticeHtml: evtBuildDetailTransportNoticeHtml,
-      buildLocationNoticeHtml: evtBuildDetailLocationNoticeHtml,
-      buildThresholdHtml: evtBuildDetailThresholdHtml,
-      buildAttendeePreviewHtml: evtBuildDetailAttendeePreviewHtml,
-      buildShareCardHtml: evtBuildDetailShareCardHtml,
-      buildOrganizerHtml: evtBuildDetailOrganizerHtml,
-      buildTeamHubHtml: evtBuildDetailTeamHubHtml,
-      buildRelatedEventsHtml: evtBuildDetailRelatedEventsHtml,
-      buildMobileAttendeesHtml: evtBuildDetailMobileAttendeesHtml,
-      buildMobileHostedHtml: evtBuildDetailMobileHostedHtml,
-      buildPageHeaderActionsHtml: evtBuildDetailPageHeaderActionsHtml
-    };
-  })();
+    return "";
+  }
+  function evtBuildDetailTeamHubHtml(ctx) {
+    const { eventId: eventId2, canAccessTeamHub, isHost } = ctx;
+    if (!canAccessTeamHub || isHost) return "";
+    return `
+        <div class="ed-card ed-card-rsvp event-detail-card-tight portal-action-card">
+            <p class="ed-summary-heading">Event Team</p>
+            <p class="ed-hint">Staff tools for coordination and your own attendance.</p>
+            <button type="button" onclick="evtOpenTeamToolsPanel('${eventId2}')" class="ed-outline-btn" aria-label="Open event team tools">Team</button>
+        </div>`;
+  }
+  function evtBuildDetailRelatedEventsHtml(ctx) {
+    const { eventId: eventId2 } = ctx;
+    if (typeof globalThis.evtAllEvents === "undefined" || globalThis.evtAllEvents.length <= 1) return "";
+    const upcoming = globalThis.evtAllEvents.filter((e) => e.id !== eventId2 && e.status !== "cancelled").slice(0, 4);
+    if (!upcoming.length) return "";
+    const cards = upcoming.map((e) => {
+      const d = new Date(e.start_date);
+      const dateLabel = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      const imgHtml = e.banner_url ? `<img src="${e.banner_url}" alt="" loading="lazy">` : `<div style="height:120px;background:linear-gradient(135deg,#6366f1,#8b5cf6)"></div>`;
+      const onclickHandler = e.slug ? `globalThis.evtNavigateToEvent('${e.slug}')` : `globalThis.evtOpenDetail('${e.id}')`;
+      return `<div class="evt-related-card" onclick="${onclickHandler}">${imgHtml}<div class="evt-related-card-body"><p class="evt-related-card-title">${evtEscapeHtml(e.title)}</p><p class="evt-related-card-meta">${dateLabel}${e.location_nickname ? " \xB7 " + evtEscapeHtml(e.location_nickname) : ""}</p></div></div>`;
+    }).join("");
+    return `${_edSectionHead("More Events")}<div class="evt-related-scroll">${cards}</div>`;
+  }
+  function evtBuildDetailMobileAttendeesHtml(ctx) {
+    const { eventId: eventId2, goingList, guestGoingList, maybeList } = ctx;
+    const totalGoing = goingList.length + guestGoingList.length;
+    if (totalGoing <= 0 && maybeList.length <= 0) return "";
+    return `
+                <div class="ed-mobile-attendees-card">
+                    <div class="ed-avatar-stack ed-avatar-stack-sm" id="edAvatarStackMobile-${eventId2}"></div>
+                    <span class="ed-mobile-att-count">${totalGoing > 0 ? `${totalGoing} going` : ""}${totalGoing > 0 && maybeList.length > 0 ? " \xB7 " : ""}${maybeList.length > 0 ? `${maybeList.length} interested` : ""}</span>
+                </div>`;
+  }
+  function evtBuildDetailMobileHostedHtml(ctx) {
+    const { isLlc, creatorProfile, cpName, cpInitials, cpBadge } = ctx;
+    if (!creatorProfile && !isLlc) return "";
+    return `
+                <div class="ed-mobile-hosted-card" ${creatorProfile ? `onclick="window.location.href='profile.html?id=${creatorProfile.id}'" style="cursor:pointer"` : ""}>
+                    <div class="ed-mh-avatar-wrap" style="position:relative;flex-shrink:0">
+                        ${creatorProfile?.profile_picture_url ? `<img src="${creatorProfile.profile_picture_url}" class="ed-mh-avatar" alt="${evtEscapeHtml(cpName)}">` : `<div class="ed-mh-avatar ed-mh-avatar-fallback">${isLlc ? `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>` : cpInitials}</div>`}
+                        ${cpBadge ? cpBadge : ""}
+                    </div>
+                    <div class="ed-mh-body">
+                        <span class="ed-mh-label">Hosted by</span>
+                        <span class="ed-mh-name">${isLlc ? "Justice McNeal LLC" : evtEscapeHtml(cpName)}</span>
+                        ${!isLlc ? `<span class="ed-mh-sub">Organizer of this event</span>` : ""}
+                    </div>
+                    ${creatorProfile ? `<svg class="ed-mh-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>` : ""}
+                </div>`;
+  }
+  function evtBuildDetailPageHeaderActionsHtml(ctx) {
+    const { eventId: eventId2, event } = ctx;
+    return `
+                <button onclick="globalThis.evtCopyShareUrl('${event.slug}')" class="ed-page-header-btn" aria-label="Share event">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                    <span class="ed-page-header-btn-label">Share</span>
+                </button>
+                <button onclick="event.stopPropagation();globalThis.evtDownloadIcs('${eventId2}')" class="ed-page-header-btn ed-page-header-btn-cal" aria-label="Add to calendar">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span class="ed-page-header-btn-label">Add to Calendar</span>
+                </button>
+                <button onclick="event.stopPropagation();globalThis.evtDownloadIcs('${eventId2}')" class="ed-page-header-btn ed-page-header-btn-bookmark" aria-label="Save event">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                </button>`;
+  }
+  function evtBuildDetailAttendeeBreakdownHtml(ctx) {
+    const { isHost, goingList, maybeList, checkins, checkinCount } = ctx;
+    if (!isHost) return "";
+    function buildPersonRow(p) {
+      const initials = ((p?.first_name?.[0] || "") + (p?.last_name?.[0] || "")).toUpperCase() || "?";
+      const avatar = p?.profile_picture_url ? `<img src="${p.profile_picture_url}" class="w-7 h-7 rounded-full object-cover" alt="">` : `<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xs font-bold">${initials}</div>`;
+      return `<div class="flex items-center gap-2">${avatar}<span class="text-sm text-gray-700">${evtEscapeHtml(p?.first_name || "")} ${evtEscapeHtml(p?.last_name || "")}</span></div>`;
+    }
+    const checkinRows = (checkins || []).map((c) => buildPersonRow(c.profiles)).join("") || `<p class="text-xs text-gray-400 italic ml-6">None</p>`;
+    return `
+        <div>
+            ${_edSectionHead("Attendee Breakdown")}
+            <div class="mb-3">
+                <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">\u2705</span><span class="text-xs font-bold text-emerald-700 uppercase tracking-wide">Going (${goingList.length})</span></div>
+                <div class="space-y-1.5 ml-6">${goingList.length ? goingList.map((r) => buildPersonRow(r.profiles)).join("") : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
+            </div>
+            <div class="mb-3">
+                <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">\u2764\uFE0F</span><span class="text-xs font-bold text-pink-700 uppercase tracking-wide">Interested (${maybeList.length})</span></div>
+                <div class="space-y-1.5 ml-6">${maybeList.length ? maybeList.map((r) => buildPersonRow(r.profiles)).join("") : '<p class="text-xs text-gray-400 italic">None</p>'}</div>
+            </div>
+            <div>
+                <div class="flex items-center gap-2 mb-1.5"><span class="text-sm">\u{1F4CD}</span><span class="text-xs font-bold text-violet-700 uppercase tracking-wide">Checked In (${checkinCount || 0})</span></div>
+                <div class="space-y-1.5 ml-6">${checkinRows}</div>
+            </div>
+        </div>`;
+  }
+  globalThis.evtBuildDetailRsvpSectionHtml = evtBuildDetailRsvpSectionHtml;
+  globalThis.evtBuildDetailRaffleSectionHtml = evtBuildDetailRaffleSectionHtml;
+  globalThis.evtBuildDetailHostControlsHtml = evtBuildDetailHostControlsHtml;
+  globalThis.evtBuildDetailWaitlistHtml = evtBuildDetailWaitlistHtml;
+  globalThis.evtBuildDetailGraceNoticeHtml = evtBuildDetailGraceNoticeHtml;
+  globalThis.evtBuildDetailCostBreakdownHtml = evtBuildDetailCostBreakdownHtml;
+  globalThis.evtBuildDetailAttendeeBreakdownHtml = evtBuildDetailAttendeeBreakdownHtml;
+  globalThis.evtBuildDetailHeroStatusBadgeHtml = evtBuildDetailHeroStatusBadgeHtml;
+  globalThis.evtBuildDetailTransportNoticeHtml = evtBuildDetailTransportNoticeHtml;
+  globalThis.evtBuildDetailLocationNoticeHtml = evtBuildDetailLocationNoticeHtml;
+  globalThis.evtBuildDetailThresholdHtml = evtBuildDetailThresholdHtml;
+  globalThis.evtBuildDetailAttendeePreviewHtml = evtBuildDetailAttendeePreviewHtml;
+  globalThis.evtBuildDetailShareCardHtml = evtBuildDetailShareCardHtml;
+  globalThis.evtBuildDetailOrganizerHtml = evtBuildDetailOrganizerHtml;
+  globalThis.evtBuildDetailTeamHubHtml = evtBuildDetailTeamHubHtml;
+  globalThis.evtBuildDetailRelatedEventsHtml = evtBuildDetailRelatedEventsHtml;
+  globalThis.evtBuildDetailMobileAttendeesHtml = evtBuildDetailMobileAttendeesHtml;
+  globalThis.evtBuildDetailMobileHostedHtml = evtBuildDetailMobileHostedHtml;
+  globalThis.evtBuildDetailPageHeaderActionsHtml = evtBuildDetailPageHeaderActionsHtml;
+  var detailSectionsApi = {
+    buildRsvpSectionHtml: evtBuildDetailRsvpSectionHtml,
+    buildRaffleSectionHtml: evtBuildDetailRaffleSectionHtml,
+    buildHostControlsHtml: evtBuildDetailHostControlsHtml,
+    buildWaitlistHtml: evtBuildDetailWaitlistHtml,
+    buildGraceNoticeHtml: evtBuildDetailGraceNoticeHtml,
+    buildCostBreakdownHtml: evtBuildDetailCostBreakdownHtml,
+    buildAttendeeBreakdownHtml: evtBuildDetailAttendeeBreakdownHtml,
+    buildHeroStatusBadgeHtml: evtBuildDetailHeroStatusBadgeHtml,
+    buildTransportNoticeHtml: evtBuildDetailTransportNoticeHtml,
+    buildLocationNoticeHtml: evtBuildDetailLocationNoticeHtml,
+    buildThresholdHtml: evtBuildDetailThresholdHtml,
+    buildAttendeePreviewHtml: evtBuildDetailAttendeePreviewHtml,
+    buildShareCardHtml: evtBuildDetailShareCardHtml,
+    buildOrganizerHtml: evtBuildDetailOrganizerHtml,
+    buildTeamHubHtml: evtBuildDetailTeamHubHtml,
+    buildRelatedEventsHtml: evtBuildDetailRelatedEventsHtml,
+    buildMobileAttendeesHtml: evtBuildDetailMobileAttendeesHtml,
+    buildMobileHostedHtml: evtBuildDetailMobileHostedHtml,
+    buildPageHeaderActionsHtml: evtBuildDetailPageHeaderActionsHtml
+  };
+  var PortalEvents9 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents9.detail = PortalEvents9.detail || {};
+  PortalEvents9.detail.sections = detailSectionsApi;
 
   // js/portal/events/detail/post-render.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.detail = window.PortalEvents.detail || {};
-    function _buildAvatarHtml(avatars, overflow, sm) {
-      const cls = sm ? "ed-avatar ed-avatar-sm" : "ed-avatar";
-      return avatars.map((a) => {
-        if (a.img) {
-          return `<div class="${cls}" ${a.id ? `onclick="window.location.href='profile.html?id=${a.id}'" style="cursor:pointer"` : ""} title="${a.name}" role="button"><img src="${a.img}" alt=""></div>`;
+  function _buildAvatarHtml(avatars, overflow, sm) {
+    const cls = sm ? "ed-avatar ed-avatar-sm" : "ed-avatar";
+    return avatars.map((a) => {
+      if (a.img) {
+        return `<div class="${cls}" ${a.id ? `onclick="window.location.href='profile.html?id=${a.id}'" style="cursor:pointer"` : ""} title="${a.name}" role="button"><img src="${a.img}" alt=""></div>`;
+      }
+      const ini = a.name.split(" ").map((w) => w[0] || "").join("").toUpperCase().slice(0, 2) || "?";
+      const gc = a.type === "guest" ? " ed-avatar-guest" : "";
+      return `<div class="${cls}${gc}" title="${a.name}"><span>${ini}</span></div>`;
+    }).join("") + (overflow > 0 ? `<div class="${cls} ed-avatar-overflow"><span>+${overflow}</span></div>` : "");
+  }
+  function _paintAttendeeAvatars(eventId2) {
+    setTimeout(() => {
+      const row = document.getElementById(`edAttendeeRow-${eventId2}`);
+      const stack = document.getElementById(`edAvatarStack-${eventId2}`);
+      const data = window._edAvatarData?.[eventId2];
+      if (!row || !stack || !data) return;
+      function paintAvatars() {
+        const countEl = row.querySelector(".ed-attendee-count");
+        const countW = countEl ? countEl.offsetWidth + 12 : 90;
+        const available = row.offsetWidth - countW;
+        const maxAvatars = Math.min(5, available > 0 ? Math.max(1, Math.floor((available - 40) / 32) + 1) : 3);
+        const shown = data.avatars.slice(0, maxAvatars);
+        stack.innerHTML = _buildAvatarHtml(shown, data.avatars.length - shown.length, false);
+      }
+      paintAvatars();
+      if (typeof ResizeObserver !== "undefined") {
+        new ResizeObserver(paintAvatars).observe(row);
+      }
+      const mobileStack = document.getElementById(`edAvatarStackMobile-${eventId2}`);
+      if (mobileStack && data) {
+        const shown = data.avatars.slice(0, 4);
+        mobileStack.innerHTML = _buildAvatarHtml(shown, data.avatars.length - shown.length, true);
+      }
+    }, 0);
+  }
+  function _bindHostDropdownOutsideClick() {
+    document.addEventListener("click", (e) => {
+      const dd = document.querySelector(".evt-host-dropdown.open");
+      if (dd && !dd.parentElement.contains(e.target)) dd.classList.remove("open");
+    }, { once: false });
+  }
+  function evtRunDetailPostRenderBasics(ctx) {
+    const eventId2 = ctx && ctx.eventId;
+    if (!eventId2) return;
+    if (typeof globalThis.evtLoadComments === "function") {
+      window.evtLoadComments(eventId2);
+    }
+    _bindHostDropdownOutsideClick();
+    _paintAttendeeAvatars(eventId2);
+  }
+  async function evtRenderDetailQrCanvases(ctx) {
+    if (!ctx || !ctx.event) return;
+    const { event, rsvp, memberGoing } = ctx;
+    if (!memberGoing || event.checkin_mode !== "attendee_ticket") return;
+    if (!rsvp || !rsvp.qr_token) return;
+    const canvas = document.getElementById("myTicketQR");
+    if (!canvas) return;
+    try {
+      const QRCode = typeof globalThis.evtEnsureQRCode === "function" ? await window.evtEnsureQRCode() : window.QRCode;
+      if (!QRCode) return;
+      QRCode.toCanvas(
+        canvas,
+        `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`,
+        { width: 180, margin: 2 }
+      );
+    } catch (err) {
+      console.warn("Ticket QR render failed:", err);
+    }
+  }
+  async function evtInitDetailInlineMaps(ctx) {
+    if (!ctx || !ctx.event) return;
+    const { event, showLocation } = ctx;
+    if (!showLocation || !event.location_lat || !event.location_lng) return;
+    try {
+      if (typeof globalThis.evtEnsureLeaflet === "function") await window.evtEnsureLeaflet();
+    } catch (err) {
+      console.warn("Inline map library failed:", err);
+      return;
+    }
+    if (typeof L === "undefined") return;
+    const lat = event.location_lat;
+    const lng = event.location_lng;
+    const locationText = event.location_text || "";
+    const escapeHtml = typeof globalThis.evtEscapeHtml === "function" ? window.evtEscapeHtml : (s) => String(s);
+    function initMap(id) {
+      const mapEl = document.getElementById(id);
+      if (!mapEl) return;
+      const dMap = L.map(id, {
+        zoomControl: false,
+        attributionControl: false,
+        dragging: true,
+        scrollWheelZoom: false,
+        tap: true
+      }).setView([lat, lng], 15);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(dMap);
+      L.marker([lat, lng]).addTo(dMap);
+      setTimeout(() => dMap.invalidateSize(), 100);
+      dMap.on("click", () => {
+        if (typeof globalThis.evtOpenFullscreenMap === "function") {
+          window.evtOpenFullscreenMap(lat, lng, escapeHtml(locationText));
         }
-        const ini = a.name.split(" ").map((w) => w[0] || "").join("").toUpperCase().slice(0, 2) || "?";
-        const gc = a.type === "guest" ? " ed-avatar-guest" : "";
-        return `<div class="${cls}${gc}" title="${a.name}"><span>${ini}</span></div>`;
-      }).join("") + (overflow > 0 ? `<div class="${cls} ed-avatar-overflow"><span>+${overflow}</span></div>` : "");
+      });
     }
-    function _paintAttendeeAvatars(eventId2) {
-      setTimeout(() => {
-        const row = document.getElementById(`edAttendeeRow-${eventId2}`);
-        const stack = document.getElementById(`edAvatarStack-${eventId2}`);
-        const data = window._edAvatarData?.[eventId2];
-        if (!row || !stack || !data) return;
-        function paintAvatars() {
-          const countEl = row.querySelector(".ed-attendee-count");
-          const countW = countEl ? countEl.offsetWidth + 12 : 90;
-          const available = row.offsetWidth - countW;
-          const maxAvatars = Math.min(5, available > 0 ? Math.max(1, Math.floor((available - 40) / 32) + 1) : 3);
-          const shown = data.avatars.slice(0, maxAvatars);
-          stack.innerHTML = _buildAvatarHtml(shown, data.avatars.length - shown.length, false);
+    initMap("detailEventMap");
+    initMap("detailEventMapMobile");
+  }
+  function evtRunDetailPostRenderUi(ctx) {
+    if (!ctx || !ctx.event || !ctx.eventId) return;
+    const {
+      event,
+      eventId: eventId2,
+      isPast,
+      isClosed,
+      rsvp,
+      myRaffleEntry,
+      entriesClosed,
+      eventIsFull,
+      isHost,
+      canAccessTeamHub,
+      canCreateTeamChat: canCreateTeamChat2
+    } = ctx;
+    if (!isPast && !isClosed) {
+      let _tickCd = function() {
+        const diff = _cdTarget - Date.now();
+        if (!_cdEls[0] || diff < 0) {
+          if (_cdCard) _cdCard.style.display = "none";
+          return;
         }
-        paintAvatars();
-        if (typeof ResizeObserver !== "undefined") {
-          new ResizeObserver(paintAvatars).observe(row);
-        }
-        const mobileStack = document.getElementById(`edAvatarStackMobile-${eventId2}`);
-        if (mobileStack && data) {
-          const shown = data.avatars.slice(0, 4);
-          mobileStack.innerHTML = _buildAvatarHtml(shown, data.avatars.length - shown.length, true);
-        }
-      }, 0);
-    }
-    function _bindHostDropdownOutsideClick() {
-      document.addEventListener("click", (e) => {
-        const dd = document.querySelector(".evt-host-dropdown.open");
-        if (dd && !dd.parentElement.contains(e.target)) dd.classList.remove("open");
-      }, { once: false });
-    }
-    function evtRunDetailPostRenderBasics(ctx) {
-      const eventId2 = ctx && ctx.eventId;
-      if (!eventId2) return;
-      if (typeof window.evtLoadComments === "function") {
-        window.evtLoadComments(eventId2);
-      }
-      _bindHostDropdownOutsideClick();
-      _paintAttendeeAvatars(eventId2);
-    }
-    async function evtRenderDetailQrCanvases(ctx) {
-      if (!ctx || !ctx.event) return;
-      const { event, rsvp, memberGoing } = ctx;
-      if (!memberGoing || event.checkin_mode !== "attendee_ticket") return;
-      if (!rsvp || !rsvp.qr_token) return;
-      const canvas = document.getElementById("myTicketQR");
-      if (!canvas) return;
-      try {
-        const QRCode = typeof window.evtEnsureQRCode === "function" ? await window.evtEnsureQRCode() : window.QRCode;
-        if (!QRCode) return;
-        QRCode.toCanvas(
-          canvas,
-          `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`,
-          { width: 180, margin: 2 }
-        );
-      } catch (err) {
-        console.warn("Ticket QR render failed:", err);
-      }
-    }
-    async function evtInitDetailInlineMaps(ctx) {
-      if (!ctx || !ctx.event) return;
-      const { event, showLocation } = ctx;
-      if (!showLocation || !event.location_lat || !event.location_lng) return;
-      try {
-        if (typeof window.evtEnsureLeaflet === "function") await window.evtEnsureLeaflet();
-      } catch (err) {
-        console.warn("Inline map library failed:", err);
-        return;
-      }
-      if (typeof L === "undefined") return;
-      const lat = event.location_lat;
-      const lng = event.location_lng;
-      const locationText = event.location_text || "";
-      const escapeHtml = typeof window.evtEscapeHtml === "function" ? window.evtEscapeHtml : (s) => String(s);
-      function initMap(id) {
-        const mapEl = document.getElementById(id);
-        if (!mapEl) return;
-        const dMap = L.map(id, {
-          zoomControl: false,
-          attributionControl: false,
-          dragging: true,
-          scrollWheelZoom: false,
-          tap: true
-        }).setView([lat, lng], 15);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(dMap);
-        L.marker([lat, lng]).addTo(dMap);
-        setTimeout(() => dMap.invalidateSize(), 100);
-        dMap.on("click", () => {
-          if (typeof window.evtOpenFullscreenMap === "function") {
-            window.evtOpenFullscreenMap(lat, lng, escapeHtml(locationText));
-          }
-        });
-      }
-      initMap("detailEventMap");
-      initMap("detailEventMapMobile");
-    }
-    function evtRunDetailPostRenderUi(ctx) {
-      if (!ctx || !ctx.event || !ctx.eventId) return;
-      const {
-        event,
-        eventId: eventId2,
-        isPast,
-        isClosed,
-        rsvp,
-        myRaffleEntry,
-        entriesClosed,
-        eventIsFull,
-        isHost,
-        canAccessTeamHub,
-        canCreateTeamChat: canCreateTeamChat2
-      } = ctx;
-      if (!isPast && !isClosed) {
-        let _tickCd = function() {
-          const diff = _cdTarget - Date.now();
-          if (!_cdEls[0] || diff < 0) {
-            if (_cdCard) _cdCard.style.display = "none";
-            return;
-          }
-          const d = Math.floor(diff / 864e5);
-          const h = Math.floor(diff % 864e5 / 36e5);
-          const m = Math.floor(diff % 36e5 / 6e4);
-          const s = Math.floor(diff % 6e4 / 1e3);
-          _cdEls[0].textContent = String(d).padStart(2, "0");
-          _cdEls[1].textContent = String(h).padStart(2, "0");
-          _cdEls[2].textContent = String(m).padStart(2, "0");
-          _cdEls[3].textContent = String(s).padStart(2, "0");
-        };
-        const _cdTarget = new Date(event.start_date).getTime();
-        const _cdEls = ["edCdDays", "edCdHours", "edCdMins", "edCdSecs"].map((id) => document.getElementById(id));
-        const _cdCard = document.getElementById("edCountdownCard");
-        _tickCd();
-        const _cdTimer = setInterval(_tickCd, 1e3);
-        const _cdCleanup = () => clearInterval(_cdTimer);
-        window.addEventListener("popstate", _cdCleanup, { once: true });
-        document.addEventListener("evtDetailUnmount", _cdCleanup, { once: true });
-      }
-      window.__evtTeamToolsCtx = {
-        eventId: eventId2,
-        myRaffleEntry,
-        entriesClosed,
-        eventIsFull,
-        canManageEvent: isHost,
-        canAccessTeamHub,
-        canCreateTeamChat: canCreateTeamChat2
+        const d = Math.floor(diff / 864e5);
+        const h = Math.floor(diff % 864e5 / 36e5);
+        const m = Math.floor(diff % 36e5 / 6e4);
+        const s = Math.floor(diff % 6e4 / 1e3);
+        _cdEls[0].textContent = String(d).padStart(2, "0");
+        _cdEls[1].textContent = String(h).padStart(2, "0");
+        _cdEls[2].textContent = String(m).padStart(2, "0");
+        _cdEls[3].textContent = String(s).padStart(2, "0");
       };
-      if (typeof window.evtInitBottomNav === "function") {
-        window.evtInitBottomNav(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub);
-      }
+      const _cdTarget = new Date(event.start_date).getTime();
+      const _cdEls = ["edCdDays", "edCdHours", "edCdMins", "edCdSecs"].map((id) => document.getElementById(id));
+      const _cdCard = document.getElementById("edCountdownCard");
+      _tickCd();
+      const _cdTimer = setInterval(_tickCd, 1e3);
+      const _cdCleanup = () => clearInterval(_cdTimer);
+      window.addEventListener("popstate", _cdCleanup, { once: true });
+      document.addEventListener("evtDetailUnmount", _cdCleanup, { once: true });
     }
-    window.PortalEvents.detail.postRender = {
-      runBasics: evtRunDetailPostRenderBasics,
-      renderQrCanvases: evtRenderDetailQrCanvases,
-      initInlineMaps: evtInitDetailInlineMaps,
-      runUi: evtRunDetailPostRenderUi
+    window.__evtTeamToolsCtx = {
+      eventId: eventId2,
+      myRaffleEntry,
+      entriesClosed,
+      eventIsFull,
+      canManageEvent: isHost,
+      canAccessTeamHub,
+      canCreateTeamChat: canCreateTeamChat2
     };
-    window.evtRunDetailPostRenderBasics = evtRunDetailPostRenderBasics;
-    window.evtRenderDetailQrCanvases = evtRenderDetailQrCanvases;
-    window.evtInitDetailInlineMaps = evtInitDetailInlineMaps;
-    window.evtRunDetailPostRenderUi = evtRunDetailPostRenderUi;
-  })();
+    if (typeof globalThis.evtInitBottomNav === "function") {
+      window.evtInitBottomNav(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub);
+    }
+  }
+  var detailPostRenderApi = {
+    runBasics: evtRunDetailPostRenderBasics,
+    renderQrCanvases: evtRenderDetailQrCanvases,
+    initInlineMaps: evtInitDetailInlineMaps,
+    runUi: evtRunDetailPostRenderUi
+  };
+  globalThis.evtRunDetailPostRenderBasics = evtRunDetailPostRenderBasics;
+  globalThis.evtRenderDetailQrCanvases = evtRenderDetailQrCanvases;
+  globalThis.evtInitDetailInlineMaps = evtInitDetailInlineMaps;
+  globalThis.evtRunDetailPostRenderUi = evtRunDetailPostRenderUi;
+  var PortalEvents10 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents10.detail = PortalEvents10.detail || {};
+  PortalEvents10.detail.postRender = detailPostRenderApi;
 
   // js/portal/events/detail/template.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.detail = window.PortalEvents.detail || {};
-    function evtBuildDetailTemplate(templateCtx) {
-      const _edCard = window.evtEdCard;
-      const _edSectionHead = window.evtEdSectionHead;
-      const evtEscapeHtml3 = window.evtEscapeHtml;
-      const {
-        event,
-        eventId: eventId2,
-        start,
-        timeStr,
-        tc,
-        cpName,
-        showTime,
-        showLocation,
-        showNotes,
-        isPast,
-        isClosed,
-        deadlinePassed,
-        rsvpEnabled,
-        bannerBg,
-        heroStatusBadgeHtml,
-        pageHeaderActionsHtml,
-        mobileAttendeesHtml,
-        mobileHostedHtml,
-        descHtml,
-        descIsLong,
-        eventContextHtml,
-        attendeePreviewHtml,
-        organizerHtml,
-        waitlistHtml,
-        thresholdHtml,
-        costBreakdownHtml,
-        locationReqHtml,
-        graceHtml,
-        raffleHtml,
-        mapHtml,
-        competitionHtml,
-        scrapbookHtml,
-        relatedHtml,
-        rsvpButtons,
-        teamHubCardHtml,
-        qrHtml,
-        documentsHtml,
-        shareCardHtml
-      } = templateCtx;
-      return `
-        <!-- \u2500\u2500\u2500 Detail Page Header \u2500\u2500\u2500 -->
-        <div class="ed-page-header">
-            <div class="ed-page-header-inner">
-                <button onclick="globalThis.evtNavigateToList()" class="ed-page-header-back" aria-label="Back to events">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                    <span class="ed-page-header-back-label">Back to Events</span>
-                </button>
-                <div class="ed-page-header-title">
-                    <h2>Event Details</h2>
-                    <p class="ed-page-header-sub">Discover and join events in your community.</p>
-                </div>
-                <div class="ed-page-header-actions">
-                    ${pageHeaderActionsHtml}
-                </div>
+  function evtBuildDetailTemplate(templateCtx) {
+    const _edCard = window.evtEdCard;
+    const _edSectionHead2 = window.evtEdSectionHead;
+    const evtEscapeHtml3 = window.evtEscapeHtml;
+    const {
+      event,
+      eventId: eventId2,
+      start,
+      timeStr,
+      tc,
+      cpName,
+      showTime,
+      showLocation,
+      showNotes,
+      isPast,
+      isClosed,
+      deadlinePassed,
+      rsvpEnabled,
+      bannerBg,
+      heroStatusBadgeHtml,
+      pageHeaderActionsHtml,
+      mobileAttendeesHtml,
+      mobileHostedHtml,
+      descHtml,
+      descIsLong,
+      eventContextHtml,
+      attendeePreviewHtml,
+      organizerHtml,
+      waitlistHtml,
+      thresholdHtml,
+      costBreakdownHtml,
+      locationReqHtml,
+      graceHtml,
+      raffleHtml: raffleHtml2,
+      mapHtml,
+      competitionHtml,
+      scrapbookHtml,
+      relatedHtml,
+      rsvpButtons,
+      teamHubCardHtml,
+      qrHtml,
+      documentsHtml,
+      shareCardHtml
+    } = templateCtx;
+    return `
+    <!-- \u2500\u2500\u2500 Detail Page Header \u2500\u2500\u2500 -->
+    <div class="ed-page-header">
+        <div class="ed-page-header-inner">
+            <button onclick="globalThis.evtNavigateToList()" class="ed-page-header-back" aria-label="Back to events">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                <span class="ed-page-header-back-label">Back to Events</span>
+            </button>
+            <div class="ed-page-header-title">
+                <h2>Event Details</h2>
+                <p class="ed-page-header-sub">Discover and join events in your community.</p>
+            </div>
+            <div class="ed-page-header-actions">
+                ${pageHeaderActionsHtml}
             </div>
         </div>
+    </div>
 
-        <!-- \u2500\u2500\u2500 Two-column layout: hero+content LEFT, summary sidebar RIGHT \u2500\u2500\u2500 -->
-        <div class="ed-content event-detail-shell portal-event-shell">
-            <div class="ed-detail-body event-detail-grid portal-event-grid">
-                <div class="ed-main event-detail-main portal-event-story">
+    <!-- \u2500\u2500\u2500 Two-column layout: hero+content LEFT, summary sidebar RIGHT \u2500\u2500\u2500 -->
+    <div class="ed-content event-detail-shell portal-event-shell">
+        <div class="ed-detail-body event-detail-grid portal-event-grid">
+            <div class="ed-main event-detail-main portal-event-story">
 
-                <!-- \u2500\u2500\u2500 Immersive Hero \u2500\u2500\u2500 -->
-                <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `onclick="evtOpenLightbox('${event.banner_url}')"` : ""} role="img" aria-label="Event banner">
-                    <div class="ed-hero-scrim"></div>
-                    <div class="ed-hero-nav">
-                        ${heroStatusBadgeHtml}
-                        <div class="ed-hero-pill-row">
-                            <button onclick="event.stopPropagation();globalThis.evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-                            </button>
-                        </div>
+            <!-- \u2500\u2500\u2500 Immersive Hero \u2500\u2500\u2500 -->
+            <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `onclick="evtOpenLightbox('${event.banner_url}')"` : ""} role="img" aria-label="Event banner">
+                <div class="ed-hero-scrim"></div>
+                <div class="ed-hero-nav">
+                    ${heroStatusBadgeHtml}
+                    <div class="ed-hero-pill-row">
+                        <button onclick="event.stopPropagation();globalThis.evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
                     </div>
-                    <div class="ed-hero-bottom-content">
-                        <h1 class="ed-hero-title">${evtEscapeHtml3(event.title)}</h1>
-                        <p class="ed-hero-subtitle">${cpName ? `Hosted by ${evtEscapeHtml3(cpName)}` : evtEscapeHtml3(tc.label)}${event.category ? ` &bull; ${evtEscapeHtml3((event.category || "").replace(/_/g, " "))}` : ""}</p>
-                        <div class="ed-hero-info-bar">
-                            <div class="ed-hero-info-item">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                <div>
-                                    <span class="ed-hero-info-main">${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                                    <span class="ed-hero-info-sub">${start.toLocaleDateString("en-US", { weekday: "short" })}</span>
-                                </div>
-                            </div>
-                            ${showTime ? `<div class="ed-hero-info-item">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <div>
-                                    <span class="ed-hero-info-main">${timeStr}</span>
-                                    <span class="ed-hero-info-sub">Start time</span>
-                                </div>
-                            </div>` : ""}
-                            ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-hero-info-item">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <div>
-                                    <span class="ed-hero-info-main">${evtEscapeHtml3(event.location_nickname || event.location_text || "")}</span>
-                                    <span class="ed-hero-info-sub">${evtEscapeHtml3(event.location_text && event.location_nickname ? event.location_text : "")}</span>
-                                </div>
-                            </div>` : ""}
-                        </div>
-                    </div>
-                </div><!-- /ed-hero -->
-
-                <div class="ed-content-cards portal-event-sections">
-                    <!-- Quick-Info Bar (mobile only: date / time / location) -->
-                    <div class="ed-qi-bar">
-                        <div class="ed-qi-col">
-                            <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                            <span class="ed-qi-main">${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                            <span class="ed-qi-sub">${start.toLocaleDateString("en-US", { weekday: "short" })}</span>
-                        </div>
-                        ${showTime ? `<div class="ed-qi-col">
-                            <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            <span class="ed-qi-main">${timeStr}</span>
-                            <span class="ed-qi-sub">Start time</span>
-                        </div>` : ""}
-                        ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-qi-col${event.location_lat && event.location_lng ? " ed-qi-col-loc" : ""}"${event.location_lat && event.location_lng ? ` onclick="evtOpenFullscreenMap(${event.location_lat},${event.location_lng})"` : ""}>
-                            <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span class="ed-qi-main">${evtEscapeHtml3(event.location_nickname || event.location_text || "")}</span>
-                            <span class="ed-qi-sub">${event.location_nickname && event.location_text ? evtEscapeHtml3(event.location_text) : "Location"}</span>
-                        </div>` : ""}
-                    </div>
-                    <!-- Mobile Map Card (S5 \u2014 hidden on desktop) -->
-                    ${showLocation && event.location_lat && event.location_lng ? `
-                    <div class="ed-mobile-map-card">
-                        <div id="detailEventMapMobile" class="ed-mobile-map"></div>
-                        <div class="ed-map-overlay ed-mobile-map-overlay">
-                            <span class="ed-map-overlay-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
-                            <div class="ed-map-overlay-body">
-                                <p class="ed-map-overlay-name">${evtEscapeHtml3(event.location_nickname || event.location_text || "Venue")}</p>
-                                ${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${evtEscapeHtml3(event.location_text)}</p>` : ""}
-                                <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? "https://maps.apple.com/?daddr=" : "https://www.google.com/maps/dir/?api=1&destination="}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-map-overlay-link">View on Maps \u2197</a>
+                </div>
+                <div class="ed-hero-bottom-content">
+                    <h1 class="ed-hero-title">${evtEscapeHtml3(event.title)}</h1>
+                    <p class="ed-hero-subtitle">${cpName ? `Hosted by ${evtEscapeHtml3(cpName)}` : evtEscapeHtml3(tc.label)}${event.category ? ` &bull; ${evtEscapeHtml3((event.category || "").replace(/_/g, " "))}` : ""}</p>
+                    <div class="ed-hero-info-bar">
+                        <div class="ed-hero-info-item">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <div>
+                                <span class="ed-hero-info-main">${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                                <span class="ed-hero-info-sub">${start.toLocaleDateString("en-US", { weekday: "short" })}</span>
                             </div>
                         </div>
+                        ${showTime ? `<div class="ed-hero-info-item">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <div>
+                                <span class="ed-hero-info-main">${timeStr}</span>
+                                <span class="ed-hero-info-sub">Start time</span>
+                            </div>
+                        </div>` : ""}
+                        ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-hero-info-item">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <div>
+                                <span class="ed-hero-info-main">${evtEscapeHtml3(event.location_nickname || event.location_text || "")}</span>
+                                <span class="ed-hero-info-sub">${evtEscapeHtml3(event.location_text && event.location_nickname ? event.location_text : "")}</span>
+                            </div>
+                        </div>` : ""}
+                    </div>
+                </div>
+            </div><!-- /ed-hero -->
+
+            <div class="ed-content-cards portal-event-sections">
+                <!-- Quick-Info Bar (mobile only: date / time / location) -->
+                <div class="ed-qi-bar">
+                    <div class="ed-qi-col">
+                        <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span class="ed-qi-main">${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                        <span class="ed-qi-sub">${start.toLocaleDateString("en-US", { weekday: "short" })}</span>
+                    </div>
+                    ${showTime ? `<div class="ed-qi-col">
+                        <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span class="ed-qi-main">${timeStr}</span>
+                        <span class="ed-qi-sub">Start time</span>
                     </div>` : ""}
-                    <!-- Mobile Attendees Card (S7) -->
-                    ${mobileAttendeesHtml}
-                    <!-- Mobile Hosted By Card (S8) -->
-                    ${mobileHostedHtml}
-                    <!-- About Card -->
-                    <div class="ed-about-grid event-detail-card">
-                        <div class="ed-about-left">
-                            <div class="ed-about-desc-col">
-                                ${deadlinePassed && !isClosed && !isPast ? '<div class="ed-deadline-banner" style="margin-bottom:14px">\u{1F512} RSVP deadline passed</div>' : ""}
-                                <p class="ed-about-heading">About This Event</p>
-                                <div class="ed-desc${descIsLong ? " ed-desc-collapsed" : ""}" id="evtDescWrap">${descHtml}</div>
-                                ${descIsLong ? `<button class="ed-read-more" onclick="var w=document.getElementById('evtDescWrap'),c=w.classList.toggle('ed-desc-collapsed');this.textContent=c?'Read more':'Show less'">Read more</button>` : ""}
-                                ${eventContextHtml ? `<div class="ed-context-list">${eventContextHtml}</div>` : ""}
-                            </div>
-                            ${attendeePreviewHtml ? `
-                            <div class="ed-about-desc-col">
-                                <p class="ed-card-heading" style="margin-bottom:12px">Attendees</p>
-                                ${attendeePreviewHtml}
-                            </div>` : ""}
+                    ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-qi-col${event.location_lat && event.location_lng ? " ed-qi-col-loc" : ""}"${event.location_lat && event.location_lng ? ` onclick="evtOpenFullscreenMap(${event.location_lat},${event.location_lng})"` : ""}>
+                        <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span class="ed-qi-main">${evtEscapeHtml3(event.location_nickname || event.location_text || "")}</span>
+                        <span class="ed-qi-sub">${event.location_nickname && event.location_text ? evtEscapeHtml3(event.location_text) : "Location"}</span>
+                    </div>` : ""}
+                </div>
+                <!-- Mobile Map Card (S5 \u2014 hidden on desktop) -->
+                ${showLocation && event.location_lat && event.location_lng ? `
+                <div class="ed-mobile-map-card">
+                    <div id="detailEventMapMobile" class="ed-mobile-map"></div>
+                    <div class="ed-map-overlay ed-mobile-map-overlay">
+                        <span class="ed-map-overlay-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
+                        <div class="ed-map-overlay-body">
+                            <p class="ed-map-overlay-name">${evtEscapeHtml3(event.location_nickname || event.location_text || "Venue")}</p>
+                            ${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${evtEscapeHtml3(event.location_text)}</p>` : ""}
+                            <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? "https://maps.apple.com/?daddr=" : "https://www.google.com/maps/dir/?api=1&destination="}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-map-overlay-link">View on Maps \u2197</a>
                         </div>
-                        ${organizerHtml || showLocation && event.location_lat && event.location_lng ? `
-                        <div class="ed-about-right">
-                            ${organizerHtml ? `<div class="ed-about-org-col">${organizerHtml}</div>` : ""}
-                            ${showLocation && event.location_lat && event.location_lng ? `
-                            <div class="ed-about-map-col">
-                                <div class="ed-map-wrap">
-                                    <div id="detailEventMap" class="ed-map"></div>
-                                    <div class="ed-map-overlay">
-                                        <span class="ed-map-overlay-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
-                                        <div class="ed-map-overlay-body">
-                                            <p class="ed-map-overlay-name">${evtEscapeHtml3(event.location_nickname || event.location_text || "Venue")}</p>
-                                            ${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${evtEscapeHtml3(event.location_text)}</p>` : ""}
-                                            <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? "https://maps.apple.com/?daddr=" : "https://www.google.com/maps/dir/?api=1&destination="}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-map-overlay-link">View on Maps \u2197</a>
-                                        </div>
+                    </div>
+                </div>` : ""}
+                <!-- Mobile Attendees Card (S7) -->
+                ${mobileAttendeesHtml}
+                <!-- Mobile Hosted By Card (S8) -->
+                ${mobileHostedHtml}
+                <!-- About Card -->
+                <div class="ed-about-grid event-detail-card">
+                    <div class="ed-about-left">
+                        <div class="ed-about-desc-col">
+                            ${deadlinePassed && !isClosed && !isPast ? '<div class="ed-deadline-banner" style="margin-bottom:14px">\u{1F512} RSVP deadline passed</div>' : ""}
+                            <p class="ed-about-heading">About This Event</p>
+                            <div class="ed-desc${descIsLong ? " ed-desc-collapsed" : ""}" id="evtDescWrap">${descHtml}</div>
+                            ${descIsLong ? `<button class="ed-read-more" onclick="var w=document.getElementById('evtDescWrap'),c=w.classList.toggle('ed-desc-collapsed');this.textContent=c?'Read more':'Show less'">Read more</button>` : ""}
+                            ${eventContextHtml ? `<div class="ed-context-list">${eventContextHtml}</div>` : ""}
+                        </div>
+                        ${attendeePreviewHtml ? `
+                        <div class="ed-about-desc-col">
+                            <p class="ed-card-heading" style="margin-bottom:12px">Attendees</p>
+                            ${attendeePreviewHtml}
+                        </div>` : ""}
+                    </div>
+                    ${organizerHtml || showLocation && event.location_lat && event.location_lng ? `
+                    <div class="ed-about-right">
+                        ${organizerHtml ? `<div class="ed-about-org-col">${organizerHtml}</div>` : ""}
+                        ${showLocation && event.location_lat && event.location_lng ? `
+                        <div class="ed-about-map-col">
+                            <div class="ed-map-wrap">
+                                <div id="detailEventMap" class="ed-map"></div>
+                                <div class="ed-map-overlay">
+                                    <span class="ed-map-overlay-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>
+                                    <div class="ed-map-overlay-body">
+                                        <p class="ed-map-overlay-name">${evtEscapeHtml3(event.location_nickname || event.location_text || "Venue")}</p>
+                                        ${event.location_nickname && event.location_text ? `<p class="ed-map-overlay-addr">${evtEscapeHtml3(event.location_text)}</p>` : ""}
+                                        <a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? "https://maps.apple.com/?daddr=" : "https://www.google.com/maps/dir/?api=1&destination="}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-map-overlay-link">View on Maps \u2197</a>
                                     </div>
                                 </div>
-                            </div>` : ""}
+                            </div>
+                        </div>` : ""}
+                    </div>` : ""}
+                </div>
+
+        <!-- Gated Notes Card -->
+        ${showNotes && event.gated_notes ? `<div class="ed-card event-detail-card">${_edSectionHead2("Attendee Details")}<p class="ed-body-text whitespace-pre-line">${evtEscapeHtml3(event.gated_notes)}</p></div>` : ""}
+
+        <!-- Attendees Card moved into about grid right column -->
+
+        <!-- Dynamic sections (notices, QR, cost, raffle\u2026) -->
+        <!-- scannerBtn + venueQrHtml moved into Manage Event sheet -->
+        ${[waitlistHtml, thresholdHtml, costBreakdownHtml, locationReqHtml, graceHtml, raffleHtml2, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map((s) => _edCard(s, "event-detail-card")).join("")}
+
+        <!-- Stats & Breakdown moved into Manage Event sheet (EventsManage) -->
+
+        <!-- Comments -->
+        <div class="ed-card event-detail-card" id="portalCommentsSection" role="region" aria-label="Discussion">
+            ${_edSectionHead2("Discussion")}
+            <div id="portalCommentsList" class="ed-comments-list"></div>
+            <div class="ed-comment-input-row">
+                <div class="ed-comment-self-avatar" id="portalCommentSelfAvatar"></div>
+                <div class="ed-comment-input-wrap">
+                    <input type="text" id="portalCommentInput" placeholder="Add a comment\u2026" class="ed-comment-input" aria-label="Write a comment">
+                    <button onclick="evtPostComment('${eventId2}')" class="ed-comment-post" aria-label="Post comment">Post</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Events -->
+        ${relatedHtml ? _edCard(relatedHtml, "event-detail-card") : ""}
+
+        <!-- Host Controls inline card removed \u2014 opens via Manage Event sheet -->
+
+        ${event.cancellation_note ? _edCard(`<div class="ed-cancel-banner"><p class="ed-cancel-title">Cancellation Note</p><p class="ed-cancel-text">${evtEscapeHtml3(event.cancellation_note)}</p></div>`, "event-detail-card") : ""}
+
+                <div style="height:80px" class="lg:hidden"></div>
+                <div style="height:32px" class="hidden lg:block"></div>
+            </div><!-- /ed-content-cards -->
+            </div><!-- /ed-main -->
+
+            <!-- \u2500\u2500\u2500 Event Summary Sidebar \u2500\u2500\u2500 -->
+            <div class="ed-sidebar event-detail-rail portal-event-rail">
+                <div class="ed-card ed-summary-card event-detail-card-tight portal-summary-card">
+                    <p class="ed-summary-heading">Event Summary</p>
+                    <div class="ed-summary-header-row">
+                        ${event.banner_url ? `<img src="${event.banner_url}" class="ed-summary-thumb" alt="" loading="eager" decoding="async">` : `<div class="ed-summary-thumb ed-summary-thumb-placeholder"></div>`}
+                        <div class="ed-summary-header-text">
+                            <p class="ed-summary-title">${evtEscapeHtml3(event.title)}</p>
+                            <p class="ed-summary-sub">${cpName ? `Hosted by ${evtEscapeHtml3(cpName)}` : evtEscapeHtml3(tc.label)}</p>
+                            ${event.category ? `<p class="ed-summary-cat">${evtEscapeHtml3((event.category || "").replace(/_/g, " "))}</p>` : ""}
+                        </div>
+                    </div>
+                    <hr class="ed-divider" style="margin:14px 0">
+                    <div class="ed-summary-rows">
+                        <div class="ed-summary-row">
+                            <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg></div>
+                            <div>
+                                <span class="ed-summary-main">${start.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+                                <span class="ed-summary-sub2">${start.toLocaleDateString("en-US", { weekday: "long" })}</span>
+                            </div>
+                        </div>
+                        ${showTime ? `<div class="ed-summary-row">
+                            <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                            <div>
+                                <span class="ed-summary-main">${timeStr}</span>
+                                <span class="ed-summary-sub2">Start time</span>
+                            </div>
+                        </div>` : ""}
+                        ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-summary-row">
+                            <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg></div>
+                            <div>
+                                <span class="ed-summary-main">${evtEscapeHtml3(event.location_nickname || event.location_text || "")}</span>
+                                ${event.location_text && event.location_nickname ? `<span class="ed-summary-sub2">${evtEscapeHtml3(event.location_text)}</span>` : ""}
+                                ${event.location_text ? `<a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? "https://maps.apple.com/?daddr=" : "https://www.google.com/maps/dir/?api=1&destination="}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-maps-link">View on Maps \u2197</a>` : ""}
+                            </div>
                         </div>` : ""}
                     </div>
-
-            <!-- Gated Notes Card -->
-            ${showNotes && event.gated_notes ? `<div class="ed-card event-detail-card">${_edSectionHead("Attendee Details")}<p class="ed-body-text whitespace-pre-line">${evtEscapeHtml3(event.gated_notes)}</p></div>` : ""}
-
-            <!-- Attendees Card moved into about grid right column -->
-
-            <!-- Dynamic sections (notices, QR, cost, raffle\u2026) -->
-            <!-- scannerBtn + venueQrHtml moved into Manage Event sheet -->
-            ${[waitlistHtml, thresholdHtml, costBreakdownHtml, locationReqHtml, graceHtml, raffleHtml, mapHtml, competitionHtml, scrapbookHtml].filter(Boolean).map((s) => _edCard(s, "event-detail-card")).join("")}
-
-            <!-- Stats & Breakdown moved into Manage Event sheet (EventsManage) -->
-
-            <!-- Comments -->
-            <div class="ed-card event-detail-card" id="portalCommentsSection" role="region" aria-label="Discussion">
-                ${_edSectionHead("Discussion")}
-                <div id="portalCommentsList" class="ed-comments-list"></div>
-                <div class="ed-comment-input-row">
-                    <div class="ed-comment-self-avatar" id="portalCommentSelfAvatar"></div>
-                    <div class="ed-comment-input-wrap">
-                        <input type="text" id="portalCommentInput" placeholder="Add a comment\u2026" class="ed-comment-input" aria-label="Write a comment">
-                        <button onclick="evtPostComment('${eventId2}')" class="ed-comment-post" aria-label="Post comment">Post</button>
-                    </div>
                 </div>
-            </div>
-
-            <!-- Related Events -->
-            ${relatedHtml ? _edCard(relatedHtml, "event-detail-card") : ""}
-
-            <!-- Host Controls inline card removed \u2014 opens via Manage Event sheet -->
-
-            ${event.cancellation_note ? _edCard(`<div class="ed-cancel-banner"><p class="ed-cancel-title">Cancellation Note</p><p class="ed-cancel-text">${evtEscapeHtml3(event.cancellation_note)}</p></div>`, "event-detail-card") : ""}
-
-                    <div style="height:80px" class="lg:hidden"></div>
-                    <div style="height:32px" class="hidden lg:block"></div>
-                </div><!-- /ed-content-cards -->
-                </div><!-- /ed-main -->
-
-                <!-- \u2500\u2500\u2500 Event Summary Sidebar \u2500\u2500\u2500 -->
-                <div class="ed-sidebar event-detail-rail portal-event-rail">
-                    <div class="ed-card ed-summary-card event-detail-card-tight portal-summary-card">
-                        <p class="ed-summary-heading">Event Summary</p>
-                        <div class="ed-summary-header-row">
-                            ${event.banner_url ? `<img src="${event.banner_url}" class="ed-summary-thumb" alt="" loading="eager" decoding="async">` : `<div class="ed-summary-thumb ed-summary-thumb-placeholder"></div>`}
-                            <div class="ed-summary-header-text">
-                                <p class="ed-summary-title">${evtEscapeHtml3(event.title)}</p>
-                                <p class="ed-summary-sub">${cpName ? `Hosted by ${evtEscapeHtml3(cpName)}` : evtEscapeHtml3(tc.label)}</p>
-                                ${event.category ? `<p class="ed-summary-cat">${evtEscapeHtml3((event.category || "").replace(/_/g, " "))}</p>` : ""}
-                            </div>
-                        </div>
-                        <hr class="ed-divider" style="margin:14px 0">
-                        <div class="ed-summary-rows">
-                            <div class="ed-summary-row">
-                                <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg></div>
-                                <div>
-                                    <span class="ed-summary-main">${start.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
-                                    <span class="ed-summary-sub2">${start.toLocaleDateString("en-US", { weekday: "long" })}</span>
-                                </div>
-                            </div>
-                            ${showTime ? `<div class="ed-summary-row">
-                                <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-                                <div>
-                                    <span class="ed-summary-main">${timeStr}</span>
-                                    <span class="ed-summary-sub2">Start time</span>
-                                </div>
-                            </div>` : ""}
-                            ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-summary-row">
-                                <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg></div>
-                                <div>
-                                    <span class="ed-summary-main">${evtEscapeHtml3(event.location_nickname || event.location_text || "")}</span>
-                                    ${event.location_text && event.location_nickname ? `<span class="ed-summary-sub2">${evtEscapeHtml3(event.location_text)}</span>` : ""}
-                                    ${event.location_text ? `<a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? "https://maps.apple.com/?daddr=" : "https://www.google.com/maps/dir/?api=1&destination="}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-maps-link">View on Maps \u2197</a>` : ""}
-                                </div>
-                            </div>` : ""}
-                        </div>
+                ${rsvpButtons && rsvpEnabled ? `
+                <div class="ed-card ed-card-rsvp event-detail-card-tight portal-action-card">
+                    <p class="ed-summary-heading">Your RSVP</p>
+                    ${rsvpButtons}
+                </div>` : ""}
+                ${teamHubCardHtml}
+                ${qrHtml ? `
+                <div class="ed-card event-detail-card-tight portal-action-card portal-ticket-card">
+                    ${qrHtml}
+                </div>` : ""}
+                ${documentsHtml ? `
+                <div class="ed-card event-detail-card-tight portal-action-card portal-docs-card">
+                    ${documentsHtml}
+                </div>` : ""}
+                ${!isPast && !isClosed ? `
+                <div class="ed-card ed-countdown-card event-detail-card-tight portal-utility-card" id="edCountdownCard">
+                    <p class="ed-summary-heading">Starts In</p>
+                    <div class="ed-countdown-grid">
+                        <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdDays">--</span><span class="ed-countdown-lbl">Days</span></div>
+                        <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdHours">--</span><span class="ed-countdown-lbl">Hours</span></div>
+                        <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdMins">--</span><span class="ed-countdown-lbl">Mins</span></div>
+                        <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdSecs">--</span><span class="ed-countdown-lbl">Secs</span></div>
                     </div>
-                    ${rsvpButtons && rsvpEnabled ? `
-                    <div class="ed-card ed-card-rsvp event-detail-card-tight portal-action-card">
-                        <p class="ed-summary-heading">Your RSVP</p>
-                        ${rsvpButtons}
-                    </div>` : ""}
-                    ${teamHubCardHtml}
-                    ${qrHtml ? `
-                    <div class="ed-card event-detail-card-tight portal-action-card portal-ticket-card">
-                        ${qrHtml}
-                    </div>` : ""}
-                    ${documentsHtml ? `
-                    <div class="ed-card event-detail-card-tight portal-action-card portal-docs-card">
-                        ${documentsHtml}
-                    </div>` : ""}
-                    ${!isPast && !isClosed ? `
-                    <div class="ed-card ed-countdown-card event-detail-card-tight portal-utility-card" id="edCountdownCard">
-                        <p class="ed-summary-heading">Starts In</p>
-                        <div class="ed-countdown-grid">
-                            <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdDays">--</span><span class="ed-countdown-lbl">Days</span></div>
-                            <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdHours">--</span><span class="ed-countdown-lbl">Hours</span></div>
-                            <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdMins">--</span><span class="ed-countdown-lbl">Mins</span></div>
-                            <div class="ed-countdown-cell"><span class="ed-countdown-num" id="edCdSecs">--</span><span class="ed-countdown-lbl">Secs</span></div>
-                        </div>
-                    </div>` : ""}
-                    <div class="ed-card ed-share-card event-detail-card-tight portal-utility-card">
-                        ${shareCardHtml}
-                    </div>
-            </div><!-- /ed-detail-body -->
-        </div>
+                </div>` : ""}
+                <div class="ed-card ed-share-card event-detail-card-tight portal-utility-card">
+                    ${shareCardHtml}
+                </div>
+        </div><!-- /ed-detail-body -->
+    </div>
 `;
-    }
-    window.PortalEvents.detail.template = {
-      build: evtBuildDetailTemplate
-    };
-    window.evtBuildDetailTemplate = evtBuildDetailTemplate;
-  })();
+  }
+  var detailTemplateApi = {
+    build: evtBuildDetailTemplate
+  };
+  globalThis.evtBuildDetailTemplate = evtBuildDetailTemplate;
+  var PortalEvents11 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents11.detail = PortalEvents11.detail || {};
+  PortalEvents11.detail.template = detailTemplateApi;
 
   // js/portal/events/detail.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    const detail = window.PortalEvents.detail = window.PortalEvents.detail || {};
-    detail._registry = detail._registry || {};
-    detail.register = function(name, fn) {
-      detail._registry[name] = fn;
-    };
-    detail.get = function(name) {
-      return detail._registry[name];
-    };
-    async function evtOpenDetail(eventId2) {
-      const ctx = await window.evtLoadDetailContext(eventId2);
-      if (!ctx) return;
-      const {
-        event,
-        rsvp,
-        start,
-        dateStr,
-        timeStr,
-        endTimeStr,
-        tc,
-        isLlc,
-        isComp,
-        goingList,
-        maybeList,
-        guestGoingList,
-        checkins,
-        checkinCount,
-        costItems,
-        waitlist,
-        myWaitlistEntry,
-        raffleEntryCount,
-        myRaffleEntry,
-        raffleWinners,
-        isCreator,
-        canManageEvent,
-        canAccessTeamHub,
-        isHost,
-        canCreateTeamChat: canCreateTeamChat2,
-        creatorProfile,
-        cpName,
-        cpInitials,
-        cpBadge,
-        cpTitle,
-        memberGoing,
-        hasRsvp,
-        documentsHtml,
-        mapHtml,
-        competitionHtml,
-        scrapbookHtml,
-        showTime,
-        showLocation,
-        showNotes,
-        isClosed,
-        isPast,
-        deadlinePassed,
-        entriesClosed,
-        rsvpEnabled,
-        canRsvp,
-        eventIsFull
-      } = ctx;
-      const heroStatusBadgeHtml = window.evtBuildDetailHeroStatusBadgeHtml(ctx);
-      const bannerBg = event.banner_url ? `background-image:url('${event.banner_url}');background-size:cover;background-position:center;` : `background:linear-gradient(135deg, #312e81 0%, #6d28d9 50%, #a855f7 100%);`;
-      const transportContextHtml = window.evtBuildDetailTransportNoticeHtml(ctx);
-      const locationReqHtml = window.evtBuildDetailLocationNoticeHtml(ctx);
-      let qrHtml = "";
-      let myCheckin = null;
-      const checkinEnabled = event.checkin_enabled !== false;
-      if (checkinEnabled && memberGoing && event.checkin_mode === "attendee_ticket") {
-        const { data: ci } = await supabaseClient.from("event_checkins").select("checked_in_at").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
-        myCheckin = ci;
-        const checkedInTime = myCheckin ? new Date(myCheckin.checked_in_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : null;
-        const checkedInDate = myCheckin ? new Date(myCheckin.checked_in_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null;
-        qrHtml = `
-            <div class="ed-qr-wrap">
-                <div class="ed-qr-header">${myCheckin ? "\u2705 Checked In" : "\u{1F3AB} Your Event Ticket"}</div>
-                <div style="position:relative;display:inline-block">
-                    <canvas id="myTicketQR" style="display:block;margin:0 auto;border-radius:12px;${myCheckin ? "opacity:.25" : ""}"></canvas>
-                    ${myCheckin ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-                        <div style="width:56px;height:56px;border-radius:50%;background:#10b981;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(16,185,129,.4)">
-                            <svg style="width:28px;height:28px;color:#fff" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                        </div>
-                    </div>` : ""}
-                </div>
-                <p class="ed-qr-hint">${myCheckin ? `Scanned at ${checkedInTime} \xB7 ${checkedInDate}` : "Show this QR code at check-in"}</p>
-            </div>`;
-      }
-      let costBreakdownHtml = window.evtBuildDetailCostBreakdownHtml(ctx);
-      const thresholdContextHtml = window.evtBuildDetailThresholdHtml(ctx);
-      const eventContextHtml = [thresholdContextHtml, transportContextHtml].filter(Boolean).join("");
-      const waitlistHtml = window.evtBuildDetailWaitlistHtml(ctx);
-      const graceHtml = window.evtBuildDetailGraceNoticeHtml(ctx);
-      const rsvpButtons = window.evtBuildDetailRsvpSectionHtml(ctx);
-      const raffleHtml = window.evtBuildDetailRaffleSectionHtml(ctx);
-      const attendeePreviewHtml = window.evtBuildDetailAttendeePreviewHtml(ctx);
-      const shareCardHtml = window.evtBuildDetailShareCardHtml(ctx);
-      const organizerHtml = window.evtBuildDetailOrganizerHtml(ctx);
-      const teamHubCardHtml = window.evtBuildDetailTeamHubHtml(ctx);
-      const relatedHtml = window.evtBuildDetailRelatedEventsHtml(ctx);
-      const mobileAttendeesHtml = window.evtBuildDetailMobileAttendeesHtml(ctx);
-      const mobileHostedHtml = window.evtBuildDetailMobileHostedHtml(ctx);
-      const pageHeaderActionsHtml = window.evtBuildDetailPageHeaderActionsHtml(ctx);
-      const rawDesc = event.description || "";
-      const descHtml = rawDesc ? window.evtMiniMarkdown(rawDesc) : '<span class="ed-no-desc">No details yet \u2014 check back closer to the event.</span>';
-      const descIsLong = rawDesc.length > 500;
-      if (costBreakdownHtml && event.rsvp_cost_cents) {
-        costBreakdownHtml = `
-            <div class="evt-cost-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')" role="button" aria-expanded="false" aria-label="Toggle cost breakdown">
-                <div><span class="evt-cost-toggle-label">Cost Breakdown</span></div>
-                <div style="display:flex;align-items:center;gap:8px"><span class="evt-cost-toggle-price">${formatCurrency(event.rsvp_cost_cents)}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></div>
+  var PortalEvents12 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  var detail = PortalEvents12.detail = PortalEvents12.detail || {};
+  detail._registry = detail._registry || {};
+  detail.register = function(name, fn) {
+    detail._registry[name] = fn;
+  };
+  detail.get = function(name) {
+    return detail._registry[name];
+  };
+  async function evtOpenDetail(eventId2) {
+    const ctx = await window.evtLoadDetailContext(eventId2);
+    if (!ctx) return;
+    const {
+      event,
+      rsvp,
+      start,
+      dateStr,
+      timeStr,
+      endTimeStr,
+      tc,
+      isLlc,
+      isComp,
+      goingList,
+      maybeList,
+      guestGoingList,
+      checkins,
+      checkinCount,
+      costItems,
+      waitlist,
+      myWaitlistEntry,
+      raffleEntryCount,
+      myRaffleEntry,
+      raffleWinners,
+      isCreator,
+      canManageEvent,
+      canAccessTeamHub,
+      isHost,
+      canCreateTeamChat: canCreateTeamChat2,
+      creatorProfile,
+      cpName,
+      cpInitials,
+      cpBadge,
+      cpTitle,
+      memberGoing,
+      hasRsvp,
+      documentsHtml,
+      mapHtml,
+      competitionHtml,
+      scrapbookHtml,
+      showTime,
+      showLocation,
+      showNotes,
+      isClosed,
+      isPast,
+      deadlinePassed,
+      entriesClosed,
+      rsvpEnabled,
+      canRsvp,
+      eventIsFull
+    } = ctx;
+    const heroStatusBadgeHtml = window.evtBuildDetailHeroStatusBadgeHtml(ctx);
+    const bannerBg = event.banner_url ? `background-image:url('${event.banner_url}');background-size:cover;background-position:center;` : `background:linear-gradient(135deg, #312e81 0%, #6d28d9 50%, #a855f7 100%);`;
+    const transportContextHtml = window.evtBuildDetailTransportNoticeHtml(ctx);
+    const locationReqHtml = window.evtBuildDetailLocationNoticeHtml(ctx);
+    let qrHtml = "";
+    let myCheckin = null;
+    const checkinEnabled = event.checkin_enabled !== false;
+    if (checkinEnabled && memberGoing && event.checkin_mode === "attendee_ticket") {
+      const { data: ci } = await supabaseClient.from("event_checkins").select("checked_in_at").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
+      myCheckin = ci;
+      const checkedInTime = myCheckin ? new Date(myCheckin.checked_in_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : null;
+      const checkedInDate = myCheckin ? new Date(myCheckin.checked_in_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null;
+      qrHtml = `
+        <div class="ed-qr-wrap">
+            <div class="ed-qr-header">${myCheckin ? "\u2705 Checked In" : "\u{1F3AB} Your Event Ticket"}</div>
+            <div style="position:relative;display:inline-block">
+                <canvas id="myTicketQR" style="display:block;margin:0 auto;border-radius:12px;${myCheckin ? "opacity:.25" : ""}"></canvas>
+                ${myCheckin ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+                    <div style="width:56px;height:56px;border-radius:50%;background:#10b981;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(16,185,129,.4)">
+                        <svg style="width:28px;height:28px;color:#fff" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                </div>` : ""}
             </div>
-            <div class="evt-cost-details">${costBreakdownHtml}</div>`;
-      }
-      const detailView = document.getElementById("eventsDetailView");
-      detailView.classList.add("event-detail-surface", "portal-event-detail-v2");
-      const templateCtx = {
-        event,
-        eventId: eventId2,
-        start,
-        timeStr,
-        tc,
-        cpName,
-        showTime,
-        showLocation,
-        showNotes,
-        isPast,
-        isClosed,
-        deadlinePassed,
-        rsvpEnabled,
-        bannerBg,
-        heroStatusBadgeHtml,
-        pageHeaderActionsHtml,
-        mobileAttendeesHtml,
-        mobileHostedHtml,
-        descHtml,
-        descIsLong,
-        eventContextHtml,
-        attendeePreviewHtml,
-        organizerHtml,
-        waitlistHtml,
-        thresholdHtml: "",
-        costBreakdownHtml,
-        locationReqHtml,
-        graceHtml,
-        raffleHtml,
-        mapHtml,
-        competitionHtml,
-        scrapbookHtml,
-        relatedHtml,
-        rsvpButtons,
-        teamHubCardHtml,
-        qrHtml,
-        documentsHtml,
-        shareCardHtml
-      };
-      detailView.innerHTML = window.evtBuildDetailTemplate(templateCtx);
-      document.title = `${event.title} | Events | Justice McNeal LLC`;
-      window.scrollTo({ top: 0, behavior: "instant" });
-      window.evtInitSectionAnimations();
-      window.evtRunDetailPostRenderUi({
-        event,
-        eventId: eventId2,
-        isPast,
-        isClosed,
-        rsvp,
-        myRaffleEntry,
-        entriesClosed,
-        eventIsFull,
-        isHost,
-        canAccessTeamHub,
-        canCreateTeamChat: canCreateTeamChat2
-      });
-      evtInitHeroCollapse();
-      window.evtRunDetailPostRenderBasics({ eventId: eventId2 });
-      setTimeout(() => {
-        window.evtRenderDetailQrCanvases({ event, eventId: eventId2, rsvp, memberGoing });
-        window.evtInitDetailInlineMaps({ event, showLocation });
-      }, 100);
+            <p class="ed-qr-hint">${myCheckin ? `Scanned at ${checkedInTime} \xB7 ${checkedInDate}` : "Show this QR code at check-in"}</p>
+        </div>`;
     }
-    function evtInitHeroCollapse() {
+    let costBreakdownHtml = window.evtBuildDetailCostBreakdownHtml(ctx);
+    const thresholdContextHtml = window.evtBuildDetailThresholdHtml(ctx);
+    const eventContextHtml = [thresholdContextHtml, transportContextHtml].filter(Boolean).join("");
+    const waitlistHtml = window.evtBuildDetailWaitlistHtml(ctx);
+    const graceHtml = window.evtBuildDetailGraceNoticeHtml(ctx);
+    const rsvpButtons = window.evtBuildDetailRsvpSectionHtml(ctx);
+    const raffleHtml2 = window.evtBuildDetailRaffleSectionHtml(ctx);
+    const attendeePreviewHtml = window.evtBuildDetailAttendeePreviewHtml(ctx);
+    const shareCardHtml = window.evtBuildDetailShareCardHtml(ctx);
+    const organizerHtml = window.evtBuildDetailOrganizerHtml(ctx);
+    const teamHubCardHtml = window.evtBuildDetailTeamHubHtml(ctx);
+    const relatedHtml = window.evtBuildDetailRelatedEventsHtml(ctx);
+    const mobileAttendeesHtml = window.evtBuildDetailMobileAttendeesHtml(ctx);
+    const mobileHostedHtml = window.evtBuildDetailMobileHostedHtml(ctx);
+    const pageHeaderActionsHtml = window.evtBuildDetailPageHeaderActionsHtml(ctx);
+    const rawDesc = event.description || "";
+    const descHtml = rawDesc ? window.evtMiniMarkdown(rawDesc) : '<span class="ed-no-desc">No details yet \u2014 check back closer to the event.</span>';
+    const descIsLong = rawDesc.length > 500;
+    if (costBreakdownHtml && event.rsvp_cost_cents) {
+      costBreakdownHtml = `
+        <div class="evt-cost-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')" role="button" aria-expanded="false" aria-label="Toggle cost breakdown">
+            <div><span class="evt-cost-toggle-label">Cost Breakdown</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span class="evt-cost-toggle-price">${formatCurrency(event.rsvp_cost_cents)}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></div>
+        </div>
+        <div class="evt-cost-details">${costBreakdownHtml}</div>`;
     }
-    function evtCleanupHeroCollapse() {
-    }
-    window.evtOpenDetail = globalThis.evtOpenDetail;
-    window.evtInitHeroCollapse = evtInitHeroCollapse;
-    window.evtCleanupHeroCollapse = evtCleanupHeroCollapse;
-    detail.open = globalThis.evtOpenDetail;
-    detail.openLightbox = window.evtOpenLightbox;
-    detail.openFullscreenMap = window.evtOpenFullscreenMap;
-    detail.closeFullscreenMap = window.evtCloseFullscreenMap;
-    detail.initBottomNav = globalThis.evtInitBottomNav;
-    detail.cleanupBottomNav = globalThis.evtCleanupBottomNav;
-    detail.openCtaPanel = globalThis.evtOpenCtaPanel;
-    detail.closeCtaPanel = globalThis.evtCloseCtaPanel;
-    detail.openTeamToolsPanel = globalThis.evtOpenTeamToolsPanel;
-    detail.openTeamChat = globalThis.evtOpenTeamChat;
-    detail.startLiveCountdown = window.evtStartLiveCountdown;
-    detail.initSectionAnimations = window.evtInitSectionAnimations;
-    detail.recenterFullscreenMap = window.evtRecenterFullscreenMap;
-    detail.initHeroCollapse = evtInitHeroCollapse;
-    detail.cleanupHeroCollapse = evtCleanupHeroCollapse;
-    detail.miniMarkdown = window.evtMiniMarkdown;
-    detail.raffleConfig = window.evtDetailRaffleConfig;
-    detail.raffleCategories = window.evtDetailRaffleCategories;
-    detail.raffleItems = window.evtDetailRaffleItems;
-    detail.raffleWinnerCount = window.evtDetailRaffleWinnerCount;
-    detail.drawModeLabel = window.evtDetailDrawModeLabel;
-    detail.rafflePrizesHtml = window.evtDetailRafflePrizesHtml;
-    detail.raffleWinnersHtml = window.evtDetailRaffleWinnersHtml;
-    detail.raffleLockedDesktopHtml = window.evtRaffleLockedDesktopHtml;
-    if (window.PortalEvents.detail.presentation) {
-      detail.presentation = window.PortalEvents.detail.presentation;
-    }
-    if (window.PortalEvents.detail.raffleRender) {
-      detail.raffleRender = window.PortalEvents.detail.raffleRender;
-    }
-    if (window.PortalEvents.detail.mapOverlay) {
-      detail.mapOverlay = window.PortalEvents.detail.mapOverlay;
-    }
-    if (window.PortalEvents.team) {
-      detail.team = window.PortalEvents.team;
-    }
-    if (window.PortalEvents.detail.fragments) {
-      detail.fragments = window.PortalEvents.detail.fragments;
-    }
-    if (window.PortalEvents.detail.data) {
-      detail.data = window.PortalEvents.detail.data;
-    }
-    if (window.PortalEvents.detail.sections) {
-      detail.sections = window.PortalEvents.detail.sections;
-    }
-    if (window.PortalEvents.detail.postRender) {
-      detail.postRender = window.PortalEvents.detail.postRender;
-    }
-    if (window.PortalEvents.detail.template) {
-      detail.template = window.PortalEvents.detail.template;
-    }
-    detail.loadContext = window.evtLoadDetailContext;
-    detail.buildTemplate = window.evtBuildDetailTemplate;
-    detail.runPostRenderBasics = window.evtRunDetailPostRenderBasics;
-    detail.renderQrCanvases = window.evtRenderDetailQrCanvases;
-    detail.initInlineMaps = window.evtInitDetailInlineMaps;
-    detail.runPostRenderUi = window.evtRunDetailPostRenderUi;
-    detail.register("rsvp", { handle: () => window.evtHandleRsvp });
-    detail.register("raffle", { handle: () => window.evtHandleRaffleEntry });
-    detail.register("competition", { build: () => window.evtBuildCompetitionHtml });
-    detail.register("comments", { load: () => window.evtLoadComments, post: () => window.evtPostComment });
-    detail.register("documents", { build: () => window.evtBuildDocumentsHtml });
-    detail.register("scrapbook", { build: () => window.evtBuildScrapbookHtml });
-    detail.register("map", { build: () => window.evtBuildMapHtml });
-    detail.register("scanner", { open: () => window.evtOpenScanner });
-  })();
+    const detailView = document.getElementById("eventsDetailView");
+    detailView.classList.add("event-detail-surface", "portal-event-detail-v2");
+    const templateCtx = {
+      event,
+      eventId: eventId2,
+      start,
+      timeStr,
+      tc,
+      cpName,
+      showTime,
+      showLocation,
+      showNotes,
+      isPast,
+      isClosed,
+      deadlinePassed,
+      rsvpEnabled,
+      bannerBg,
+      heroStatusBadgeHtml,
+      pageHeaderActionsHtml,
+      mobileAttendeesHtml,
+      mobileHostedHtml,
+      descHtml,
+      descIsLong,
+      eventContextHtml,
+      attendeePreviewHtml,
+      organizerHtml,
+      waitlistHtml,
+      thresholdHtml: "",
+      costBreakdownHtml,
+      locationReqHtml,
+      graceHtml,
+      raffleHtml: raffleHtml2,
+      mapHtml,
+      competitionHtml,
+      scrapbookHtml,
+      relatedHtml,
+      rsvpButtons,
+      teamHubCardHtml,
+      qrHtml,
+      documentsHtml,
+      shareCardHtml
+    };
+    detailView.innerHTML = window.evtBuildDetailTemplate(templateCtx);
+    document.title = `${event.title} | Events | Justice McNeal LLC`;
+    window.scrollTo({ top: 0, behavior: "instant" });
+    window.evtInitSectionAnimations();
+    window.evtRunDetailPostRenderUi({
+      event,
+      eventId: eventId2,
+      isPast,
+      isClosed,
+      rsvp,
+      myRaffleEntry,
+      entriesClosed,
+      eventIsFull,
+      isHost,
+      canAccessTeamHub,
+      canCreateTeamChat: canCreateTeamChat2
+    });
+    evtInitHeroCollapse();
+    window.evtRunDetailPostRenderBasics({ eventId: eventId2 });
+    setTimeout(() => {
+      window.evtRenderDetailQrCanvases({ event, eventId: eventId2, rsvp, memberGoing });
+      window.evtInitDetailInlineMaps({ event, showLocation });
+    }, 100);
+  }
+  function evtInitHeroCollapse() {
+  }
+  function evtCleanupHeroCollapse() {
+  }
+  globalThis.evtOpenDetail = evtOpenDetail;
+  window.evtOpenDetail = evtOpenDetail;
+  globalThis.evtInitHeroCollapse = evtInitHeroCollapse;
+  globalThis.evtCleanupHeroCollapse = evtCleanupHeroCollapse;
+  window.evtInitHeroCollapse = evtInitHeroCollapse;
+  window.evtCleanupHeroCollapse = evtCleanupHeroCollapse;
+  detail.open = evtOpenDetail;
+  detail.openLightbox = globalThis.evtOpenLightbox;
+  detail.openFullscreenMap = globalThis.evtOpenFullscreenMap;
+  detail.closeFullscreenMap = globalThis.evtCloseFullscreenMap;
+  detail.initBottomNav = globalThis.evtInitBottomNav;
+  detail.cleanupBottomNav = globalThis.evtCleanupBottomNav;
+  detail.openCtaPanel = globalThis.evtOpenCtaPanel;
+  detail.closeCtaPanel = globalThis.evtCloseCtaPanel;
+  detail.openTeamToolsPanel = globalThis.evtOpenTeamToolsPanel;
+  detail.openTeamChat = globalThis.evtOpenTeamChat;
+  detail.startLiveCountdown = globalThis.evtStartLiveCountdown;
+  detail.initSectionAnimations = globalThis.evtInitSectionAnimations;
+  detail.recenterFullscreenMap = globalThis.evtRecenterFullscreenMap;
+  detail.initHeroCollapse = evtInitHeroCollapse;
+  detail.cleanupHeroCollapse = evtCleanupHeroCollapse;
+  detail.miniMarkdown = globalThis.evtMiniMarkdown;
+  detail.raffleConfig = globalThis.evtDetailRaffleConfig;
+  detail.raffleCategories = globalThis.evtDetailRaffleCategories;
+  detail.raffleItems = globalThis.evtDetailRaffleItems;
+  detail.raffleWinnerCount = globalThis.evtDetailRaffleWinnerCount;
+  detail.drawModeLabel = globalThis.evtDetailDrawModeLabel;
+  detail.rafflePrizesHtml = globalThis.evtDetailRafflePrizesHtml;
+  detail.raffleWinnersHtml = globalThis.evtDetailRaffleWinnersHtml;
+  detail.raffleLockedDesktopHtml = globalThis.evtRaffleLockedDesktopHtml;
+  if (PortalEvents12.detail.presentation) {
+    detail.presentation = PortalEvents12.detail.presentation;
+  }
+  if (PortalEvents12.detail.raffleRender) {
+    detail.raffleRender = PortalEvents12.detail.raffleRender;
+  }
+  if (PortalEvents12.detail.mapOverlay) {
+    detail.mapOverlay = PortalEvents12.detail.mapOverlay;
+  }
+  if (PortalEvents12.team) {
+    detail.team = PortalEvents12.team;
+  }
+  if (PortalEvents12.detail.fragments) {
+    detail.fragments = PortalEvents12.detail.fragments;
+  }
+  if (PortalEvents12.detail.data) {
+    detail.data = PortalEvents12.detail.data;
+  }
+  if (PortalEvents12.detail.sections) {
+    detail.sections = PortalEvents12.detail.sections;
+  }
+  if (PortalEvents12.detail.postRender) {
+    detail.postRender = PortalEvents12.detail.postRender;
+  }
+  if (PortalEvents12.detail.template) {
+    detail.template = PortalEvents12.detail.template;
+  }
+  detail.loadContext = globalThis.evtLoadDetailContext;
+  detail.buildTemplate = globalThis.evtBuildDetailTemplate;
+  detail.runPostRenderBasics = globalThis.evtRunDetailPostRenderBasics;
+  detail.renderQrCanvases = globalThis.evtRenderDetailQrCanvases;
+  detail.initInlineMaps = globalThis.evtInitDetailInlineMaps;
+  detail.runPostRenderUi = globalThis.evtRunDetailPostRenderUi;
+  detail.register("rsvp", { handle: () => window.evtHandleRsvp });
+  detail.register("raffle", { handle: () => window.evtHandleRaffleEntry });
+  detail.register("competition", { build: () => window.evtBuildCompetitionHtml });
+  detail.register("comments", { load: () => window.evtLoadComments, post: () => window.evtPostComment });
+  detail.register("documents", { build: () => window.evtBuildDocumentsHtml });
+  detail.register("scrapbook", { build: () => window.evtBuildScrapbookHtml });
+  detail.register("map", { build: () => window.evtBuildMapHtml });
+  detail.register("scanner", { open: () => window.evtOpenScanner });
+  var detailOrchestratorApi = {
+    register: detail.register,
+    get: detail.get,
+    open: globalThis.evtOpenDetail,
+    namespace: detail
+  };
 
   // js/portal/events/detail/comments.js
   function evtTimeAgo(dateStr) {
@@ -7038,3202 +7027,3140 @@
   window.evtCanEnterMemberRaffle = evtCanEnterMemberRaffle;
 
   // js/portal/events/create/geocode.js
-  (function() {
-    "use strict";
-    const STREET_ABBREVS = {
-      "crt": "court",
-      "ct": "court",
-      "dr": "drive",
-      "st": "street",
-      "ave": "avenue",
-      "blvd": "boulevard",
-      "ln": "lane",
-      "rd": "road",
-      "pl": "place",
-      "cir": "circle",
-      "pkwy": "parkway",
-      "hwy": "highway",
-      "trl": "trail",
-      "ter": "terrace",
-      "trce": "trace",
-      "cv": "cove",
-      "pt": "point",
-      "aly": "alley",
-      "way": "way"
-    };
-    const STATE_ABBREVS = {
-      "al": "alabama",
-      "ak": "alaska",
-      "az": "arizona",
-      "ar": "arkansas",
-      "ca": "california",
-      "co": "colorado",
-      "ct": "connecticut",
-      "de": "delaware",
-      "fl": "florida",
-      "ga": "georgia",
-      "hi": "hawaii",
-      "id": "idaho",
-      "il": "illinois",
-      "in": "indiana",
-      "ia": "iowa",
-      "ks": "kansas",
-      "ky": "kentucky",
-      "la": "louisiana",
-      "me": "maine",
-      "md": "maryland",
-      "ma": "massachusetts",
-      "mi": "michigan",
-      "mn": "minnesota",
-      "ms": "mississippi",
-      "mo": "missouri",
-      "mt": "montana",
-      "ne": "nebraska",
-      "nv": "nevada",
-      "nh": "new hampshire",
-      "nj": "new jersey",
-      "nm": "new mexico",
-      "ny": "new york",
-      "nc": "north carolina",
-      "nd": "north dakota",
-      "oh": "ohio",
-      "ok": "oklahoma",
-      "or": "oregon",
-      "pa": "pennsylvania",
-      "ri": "rhode island",
-      "sc": "south carolina",
-      "sd": "south dakota",
-      "tn": "tennessee",
-      "tx": "texas",
-      "ut": "utah",
-      "vt": "vermont",
-      "va": "virginia",
-      "wa": "washington",
-      "wv": "west virginia",
-      "wi": "wisconsin",
-      "wy": "wyoming",
-      "dc": "district of columbia"
-    };
-    function evtExpandAddress(raw) {
-      let words = raw.trim().split(/\s+/);
-      const streetTypes = new Set(Object.values(STREET_ABBREVS));
-      let streetTypeIdx = -1;
-      words = words.map((w, i) => {
-        const lower = w.toLowerCase();
-        if (STREET_ABBREVS[lower]) {
-          streetTypeIdx = i;
-          return STREET_ABBREVS[lower];
-        }
-        if (streetTypes.has(lower)) {
-          streetTypeIdx = i;
-        }
-        return w;
+  var STREET_ABBREVS = {
+    "crt": "court",
+    "ct": "court",
+    "dr": "drive",
+    "st": "street",
+    "ave": "avenue",
+    "blvd": "boulevard",
+    "ln": "lane",
+    "rd": "road",
+    "pl": "place",
+    "cir": "circle",
+    "pkwy": "parkway",
+    "hwy": "highway",
+    "trl": "trail",
+    "ter": "terrace",
+    "trce": "trace",
+    "cv": "cove",
+    "pt": "point",
+    "aly": "alley",
+    "way": "way"
+  };
+  var STATE_ABBREVS = {
+    "al": "alabama",
+    "ak": "alaska",
+    "az": "arizona",
+    "ar": "arkansas",
+    "ca": "california",
+    "co": "colorado",
+    "ct": "connecticut",
+    "de": "delaware",
+    "fl": "florida",
+    "ga": "georgia",
+    "hi": "hawaii",
+    "id": "idaho",
+    "il": "illinois",
+    "in": "indiana",
+    "ia": "iowa",
+    "ks": "kansas",
+    "ky": "kentucky",
+    "la": "louisiana",
+    "me": "maine",
+    "md": "maryland",
+    "ma": "massachusetts",
+    "mi": "michigan",
+    "mn": "minnesota",
+    "ms": "mississippi",
+    "mo": "missouri",
+    "mt": "montana",
+    "ne": "nebraska",
+    "nv": "nevada",
+    "nh": "new hampshire",
+    "nj": "new jersey",
+    "nm": "new mexico",
+    "ny": "new york",
+    "nc": "north carolina",
+    "nd": "north dakota",
+    "oh": "ohio",
+    "ok": "oklahoma",
+    "or": "oregon",
+    "pa": "pennsylvania",
+    "ri": "rhode island",
+    "sc": "south carolina",
+    "sd": "south dakota",
+    "tn": "tennessee",
+    "tx": "texas",
+    "ut": "utah",
+    "vt": "vermont",
+    "va": "virginia",
+    "wa": "washington",
+    "wv": "west virginia",
+    "wi": "wisconsin",
+    "wy": "wyoming",
+    "dc": "district of columbia"
+  };
+  function evtExpandAddress(raw) {
+    let words = raw.trim().split(/\s+/);
+    const streetTypes = new Set(Object.values(STREET_ABBREVS));
+    let streetTypeIdx = -1;
+    words = words.map((w, i) => {
+      const lower = w.toLowerCase();
+      if (STREET_ABBREVS[lower]) {
+        streetTypeIdx = i;
+        return STREET_ABBREVS[lower];
+      }
+      if (streetTypes.has(lower)) {
+        streetTypeIdx = i;
+      }
+      return w;
+    });
+    words = words.map((w) => STATE_ABBREVS[w.toLowerCase()] || w);
+    const expanded = words.join(" ");
+    if (raw.includes(",")) return expanded;
+    const zipMatch = expanded.match(/^(.+?)\s+(\d{5}(?:-\d{4})?)$/);
+    if (!zipMatch) return expanded;
+    const beforeZip = zipMatch[1];
+    const zip = zipMatch[2];
+    const bParts = beforeZip.split(" ");
+    let stateStart = -1;
+    const stateVals = Object.values(STATE_ABBREVS);
+    if (bParts.length >= 3) {
+      const twoWord = (bParts[bParts.length - 2] + " " + bParts[bParts.length - 1]).toLowerCase();
+      if (stateVals.includes(twoWord)) stateStart = bParts.length - 2;
+    }
+    if (stateStart < 0 && bParts.length >= 2) {
+      if (stateVals.includes(bParts[bParts.length - 1].toLowerCase())) stateStart = bParts.length - 1;
+    }
+    if (stateStart < 0) return expanded;
+    const statePart = bParts.slice(stateStart).join(" ");
+    const preState = bParts.slice(0, stateStart);
+    if (streetTypeIdx >= 0 && streetTypeIdx < preState.length - 1) {
+      const street = preState.slice(0, streetTypeIdx + 1).join(" ");
+      const city = preState.slice(streetTypeIdx + 1).join(" ");
+      return `${street}, ${city}, ${statePart} ${zip}`;
+    }
+    return preState.join(" ") + ", " + statePart + " " + zip;
+  }
+  async function evtGeocodeCensus(address) {
+    const url = `${getFunctionUrl("geocode-address")}?address=${encodeURIComponent(address)}`;
+    try {
+      const resp = await fetch(url, {
+        headers: { "apikey": SUPABASE_ANON_KEY }
       });
-      words = words.map((w) => STATE_ABBREVS[w.toLowerCase()] || w);
-      const expanded = words.join(" ");
-      if (raw.includes(",")) return expanded;
-      const zipMatch = expanded.match(/^(.+?)\s+(\d{5}(?:-\d{4})?)$/);
-      if (!zipMatch) return expanded;
-      const beforeZip = zipMatch[1];
-      const zip = zipMatch[2];
-      const bParts = beforeZip.split(" ");
-      let stateStart = -1;
-      const stateVals = Object.values(STATE_ABBREVS);
-      if (bParts.length >= 3) {
-        const twoWord = (bParts[bParts.length - 2] + " " + bParts[bParts.length - 1]).toLowerCase();
-        if (stateVals.includes(twoWord)) stateStart = bParts.length - 2;
+      const data = await resp.json();
+      if (data?.found) {
+        return {
+          lat: data.lat,
+          lng: data.lng,
+          display: data.display
+        };
       }
-      if (stateStart < 0 && bParts.length >= 2) {
-        if (stateVals.includes(bParts[bParts.length - 1].toLowerCase())) stateStart = bParts.length - 1;
-      }
-      if (stateStart < 0) return expanded;
-      const statePart = bParts.slice(stateStart).join(" ");
-      const preState = bParts.slice(0, stateStart);
-      if (streetTypeIdx >= 0 && streetTypeIdx < preState.length - 1) {
-        const street = preState.slice(0, streetTypeIdx + 1).join(" ");
-        const city = preState.slice(streetTypeIdx + 1).join(" ");
-        return `${street}, ${city}, ${statePart} ${zip}`;
-      }
-      return preState.join(" ") + ", " + statePart + " " + zip;
+    } catch (err) {
+      console.warn("Census geocoder failed:", err);
     }
-    async function evtGeocodeCensus(address) {
-      const url = `${getFunctionUrl("geocode-address")}?address=${encodeURIComponent(address)}`;
-      try {
-        const resp = await fetch(url, {
-          headers: { "apikey": SUPABASE_ANON_KEY }
-        });
-        const data = await resp.json();
-        if (data?.found) {
-          return {
-            lat: data.lat,
-            lng: data.lng,
-            display: data.display
-          };
-        }
-      } catch (err) {
-        console.warn("Census geocoder failed:", err);
+    return null;
+  }
+  async function evtGeocodeNominatim(address) {
+    try {
+      const resp = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=us&q=${encodeURIComponent(address)}`,
+        { headers: { "Accept-Language": "en" } }
+      );
+      const results = await resp.json();
+      if (results && results.length > 0) {
+        const best = results.find((r) => r.class === "place" || r.class === "building") || results[0];
+        return { lat: parseFloat(best.lat), lng: parseFloat(best.lon), display: best.display_name };
       }
-      return null;
+    } catch (err) {
+      console.warn("Nominatim geocoder failed:", err);
     }
-    async function evtGeocodeNominatim(address) {
-      try {
-        const resp = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=us&q=${encodeURIComponent(address)}`,
-          { headers: { "Accept-Language": "en" } }
-        );
-        const results = await resp.json();
-        if (results && results.length > 0) {
-          const best = results.find((r) => r.class === "place" || r.class === "building") || results[0];
-          return { lat: parseFloat(best.lat), lng: parseFloat(best.lon), display: best.display_name };
-        }
-      } catch (err) {
-        console.warn("Nominatim geocoder failed:", err);
-      }
-      return null;
-    }
-    async function evtGeocodeAddress(address) {
-      const expanded = evtExpandAddress(address);
-      let result = await evtGeocodeCensus(address);
+    return null;
+  }
+  async function evtGeocodeAddress(address) {
+    const expanded = evtExpandAddress(address);
+    let result = await evtGeocodeCensus(address);
+    if (result) return result;
+    if (expanded !== address) {
+      result = await evtGeocodeCensus(expanded);
       if (result) return result;
-      if (expanded !== address) {
-        result = await evtGeocodeCensus(expanded);
-        if (result) return result;
-      }
-      result = await evtGeocodeNominatim(expanded);
-      if (result) return result;
-      if (expanded !== address) {
-        result = await evtGeocodeNominatim(address);
-        if (result) return result;
-      }
-      return null;
     }
-    window.evtExpandAddress = evtExpandAddress;
-    window.evtGeocodeCensus = evtGeocodeCensus;
-    window.evtGeocodeNominatim = evtGeocodeNominatim;
-    window.evtGeocodeAddress = evtGeocodeAddress;
-  })();
+    result = await evtGeocodeNominatim(expanded);
+    if (result) return result;
+    if (expanded !== address) {
+      result = await evtGeocodeNominatim(address);
+      if (result) return result;
+    }
+    return null;
+  }
+  globalThis.evtExpandAddress = evtExpandAddress;
+  globalThis.evtGeocodeCensus = evtGeocodeCensus;
+  globalThis.evtGeocodeNominatim = evtGeocodeNominatim;
+  globalThis.evtGeocodeAddress = evtGeocodeAddress;
 
   // js/portal/events/create/legacy-costs.js
-  (function() {
-    "use strict";
-    const COST_CATEGORIES = [
-      { value: "lodging", label: "\u{1F3E0} Lodging" },
-      { value: "transportation", label: "\u{1F697} Transportation" },
-      { value: "food", label: "\u{1F355} Food" },
-      { value: "gear", label: "\u{1F3BF} Gear / Rentals" },
-      { value: "entertainment", label: "\u{1F3AD} Entertainment" },
-      { value: "other", label: "\u{1F4E6} Other" }
-    ];
-    window.evtCostItems = window.evtCostItems || [];
-    function evtToggleLlcFields2() {
-      const type = document.getElementById("eventType").value;
-      const isLlc = type === "llc";
-      const isComp = type === "competition";
-      const llcSection = document.getElementById("llcFieldsSection");
-      const compSection = document.getElementById("compFieldsSection");
-      if (llcSection) llcSection.classList.toggle("hidden", !isLlc);
-      if (compSection) compSection.classList.toggle("hidden", !isComp);
-      if (isLlc) {
-        const pm = document.getElementById("pricingMode");
-        pm.value = "paid";
-        pm.dispatchEvent(new Event("change"));
-        const rsvpCostGroup = document.getElementById("rsvpCostGroup");
-        if (rsvpCostGroup) rsvpCostGroup.classList.add("hidden");
-      }
-      if (isComp) {
-        document.getElementById("memberOnly").checked = true;
-      }
+  var COST_CATEGORIES = [
+    { value: "lodging", label: "\u{1F3E0} Lodging" },
+    { value: "transportation", label: "\u{1F697} Transportation" },
+    { value: "food", label: "\u{1F355} Food" },
+    { value: "gear", label: "\u{1F3BF} Gear / Rentals" },
+    { value: "entertainment", label: "\u{1F3AD} Entertainment" },
+    { value: "other", label: "\u{1F4E6} Other" }
+  ];
+  globalThis.evtCostItems = window.evtCostItems || [];
+  function evtToggleLlcFields2() {
+    const type = document.getElementById("eventType").value;
+    const isLlc = type === "llc";
+    const isComp = type === "competition";
+    const llcSection = document.getElementById("llcFieldsSection");
+    const compSection = document.getElementById("compFieldsSection");
+    if (llcSection) llcSection.classList.toggle("hidden", !isLlc);
+    if (compSection) compSection.classList.toggle("hidden", !isComp);
+    if (isLlc) {
+      const pm = document.getElementById("pricingMode");
+      pm.value = "paid";
+      pm.dispatchEvent(new Event("change"));
+      const rsvpCostGroup = document.getElementById("rsvpCostGroup");
+      if (rsvpCostGroup) rsvpCostGroup.classList.add("hidden");
     }
-    function evtAddCostItem2() {
-      const id = crypto.randomUUID();
-      window.evtCostItems.push({ id, name: "", category: "other", total_cost_cents: 0, included_in_buyin: true, avg_per_person_cents: 0, notes: "" });
-      evtRenderCostItems();
+    if (isComp) {
+      document.getElementById("memberOnly").checked = true;
     }
-    function evtRemoveCostItem(itemId) {
-      window.evtCostItems = window.evtCostItems.filter((i) => i.id !== itemId);
-      evtRenderCostItems();
+  }
+  function evtAddCostItem2() {
+    const id = crypto.randomUUID();
+    window.evtCostItems.push({ id, name: "", category: "other", total_cost_cents: 0, included_in_buyin: true, avg_per_person_cents: 0, notes: "" });
+    evtRenderCostItems();
+  }
+  function evtRemoveCostItem(itemId) {
+    globalThis.evtCostItems = window.evtCostItems.filter((i) => i.id !== itemId);
+    evtRenderCostItems();
+    evtRecalcCostSummary2();
+  }
+  function evtRenderCostItems() {
+    const container = document.getElementById("costItemsList");
+    if (!container) return;
+    const items = window.evtCostItems;
+    container.innerHTML = items.map((item, idx) => `
+    <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-2" data-cost-id="${item.id}">
+        <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-400">#${idx + 1}</span>
+            <button type="button" onclick="evtRemoveCostItem('${item.id}')" class="text-red-400 hover:text-red-600 transition p-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+            <input type="text" placeholder="Item name" value="${evtEscapeHtml(item.name)}" onchange="evtUpdateCostItem('${item.id}','name',this.value)"
+                   class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+            <select onchange="evtUpdateCostItem('${item.id}','category',this.value)"
+                    class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+                ${COST_CATEGORIES.map((c) => `<option value="${c.value}" ${item.category === c.value ? "selected" : ""}>${c.label}</option>`).join("")}
+            </select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+                <label class="text-xs text-gray-500">Total Cost ($)</label>
+                <input type="number" min="0" step="1" value="${item.total_cost_cents ? item.total_cost_cents / 100 : ""}" placeholder="0"
+                       onchange="evtUpdateCostItem('${item.id}','total_cost_cents',Math.round(this.value*100))"
+                       class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="text-xs text-gray-500">Type</label>
+                <select onchange="evtUpdateCostItem('${item.id}','included_in_buyin',this.value==='true')"
+                        class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+                    <option value="true" ${item.included_in_buyin ? "selected" : ""}>Included in Buy-In</option>
+                    <option value="false" ${!item.included_in_buyin ? "selected" : ""}>Out of Pocket</option>
+                </select>
+            </div>
+        </div>
+        ${!item.included_in_buyin ? `
+        <div>
+            <label class="text-xs text-gray-500">Avg Per Person ($)</label>
+            <input type="number" min="0" step="1" value="${item.avg_per_person_cents ? item.avg_per_person_cents / 100 : ""}" placeholder="0"
+                   onchange="evtUpdateCostItem('${item.id}','avg_per_person_cents',Math.round(this.value*100))"
+                   class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+        </div>` : ""}
+        <input type="text" placeholder="Notes / source link (optional)" value="${evtEscapeHtml(item.notes || "")}" onchange="evtUpdateCostItem('${item.id}','notes',this.value)"
+               class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+    </div>`).join("");
+  }
+  function evtUpdateCostItem(itemId, field, value) {
+    const item = window.evtCostItems.find((i) => i.id === itemId);
+    if (item) {
+      item[field] = value;
+      if (field === "included_in_buyin") evtRenderCostItems();
       evtRecalcCostSummary2();
     }
-    function evtRenderCostItems() {
-      const container = document.getElementById("costItemsList");
-      if (!container) return;
-      const items = window.evtCostItems;
-      container.innerHTML = items.map((item, idx) => `
-        <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-2" data-cost-id="${item.id}">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-gray-400">#${idx + 1}</span>
-                <button type="button" onclick="evtRemoveCostItem('${item.id}')" class="text-red-400 hover:text-red-600 transition p-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <input type="text" placeholder="Item name" value="${evtEscapeHtml(item.name)}" onchange="evtUpdateCostItem('${item.id}','name',this.value)"
-                       class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-                <select onchange="evtUpdateCostItem('${item.id}','category',this.value)"
-                        class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-                    ${COST_CATEGORIES.map((c) => `<option value="${c.value}" ${item.category === c.value ? "selected" : ""}>${c.label}</option>`).join("")}
-                </select>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="text-xs text-gray-500">Total Cost ($)</label>
-                    <input type="number" min="0" step="1" value="${item.total_cost_cents ? item.total_cost_cents / 100 : ""}" placeholder="0"
-                           onchange="evtUpdateCostItem('${item.id}','total_cost_cents',Math.round(this.value*100))"
-                           class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-500">Type</label>
-                    <select onchange="evtUpdateCostItem('${item.id}','included_in_buyin',this.value==='true')"
-                            class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-                        <option value="true" ${item.included_in_buyin ? "selected" : ""}>Included in Buy-In</option>
-                        <option value="false" ${!item.included_in_buyin ? "selected" : ""}>Out of Pocket</option>
-                    </select>
-                </div>
-            </div>
-            ${!item.included_in_buyin ? `
-            <div>
-                <label class="text-xs text-gray-500">Avg Per Person ($)</label>
-                <input type="number" min="0" step="1" value="${item.avg_per_person_cents ? item.avg_per_person_cents / 100 : ""}" placeholder="0"
-                       onchange="evtUpdateCostItem('${item.id}','avg_per_person_cents',Math.round(this.value*100))"
-                       class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-            </div>` : ""}
-            <input type="text" placeholder="Notes / source link (optional)" value="${evtEscapeHtml(item.notes || "")}" onchange="evtUpdateCostItem('${item.id}','notes',this.value)"
-                   class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-        </div>`).join("");
+  }
+  function evtRecalcCostSummary2() {
+    const summary = document.getElementById("costSummary");
+    if (!summary) return;
+    const minPart = parseInt(document.getElementById("eventMinParticipants")?.value) || 0;
+    const llcCutPct = parseFloat(document.getElementById("eventLlcCut").value) || 0;
+    const items = window.evtCostItems;
+    const totalIncluded = items.filter((i) => i.included_in_buyin).reduce((sum, i) => sum + (i.total_cost_cents || 0), 0);
+    const totalOop = items.filter((i) => !i.included_in_buyin).reduce((sum, i) => sum + (i.avg_per_person_cents || 0), 0);
+    if (items.length === 0) {
+      summary.classList.add("hidden");
+      return;
     }
-    function evtUpdateCostItem(itemId, field, value) {
-      const item = window.evtCostItems.find((i) => i.id === itemId);
-      if (item) {
-        item[field] = value;
-        if (field === "included_in_buyin") evtRenderCostItems();
-        evtRecalcCostSummary2();
-      }
+    summary.classList.remove("hidden");
+    const baseBuyIn = minPart > 0 ? Math.ceil(totalIncluded / minPart) : 0;
+    const llcCutAmount = Math.round(baseBuyIn * llcCutPct / 100);
+    const finalBuyIn = baseBuyIn + llcCutAmount;
+    document.getElementById("costTotalIncluded").textContent = formatCurrency(totalIncluded);
+    document.getElementById("costMaxPart").textContent = minPart > 0 ? minPart : "\u2014";
+    document.getElementById("costBuyIn").textContent = minPart > 0 ? `${formatCurrency(finalBuyIn)}/person` : "Set min participants";
+    document.getElementById("costOop").textContent = `~${formatCurrency(totalOop)}/person`;
+    document.getElementById("costGrandTotal").textContent = minPart > 0 ? `~${formatCurrency(finalBuyIn + totalOop)}` : "\u2014";
+    const llcRow = document.getElementById("costLlcCutRow");
+    if (llcCutPct > 0 && minPart > 0) {
+      llcRow.classList.remove("hidden");
+      document.getElementById("costLlcPct").textContent = llcCutPct;
+      document.getElementById("costLlcAmount").textContent = `+${formatCurrency(llcCutAmount)}`;
+    } else {
+      llcRow.classList.add("hidden");
     }
-    function evtRecalcCostSummary2() {
-      const summary = document.getElementById("costSummary");
-      if (!summary) return;
-      const minPart = parseInt(document.getElementById("eventMinParticipants")?.value) || 0;
-      const llcCutPct = parseFloat(document.getElementById("eventLlcCut").value) || 0;
-      const items = window.evtCostItems;
-      const totalIncluded = items.filter((i) => i.included_in_buyin).reduce((sum, i) => sum + (i.total_cost_cents || 0), 0);
-      const totalOop = items.filter((i) => !i.included_in_buyin).reduce((sum, i) => sum + (i.avg_per_person_cents || 0), 0);
-      if (items.length === 0) {
-        summary.classList.add("hidden");
-        return;
-      }
-      summary.classList.remove("hidden");
-      const baseBuyIn = minPart > 0 ? Math.ceil(totalIncluded / minPart) : 0;
-      const llcCutAmount = Math.round(baseBuyIn * llcCutPct / 100);
-      const finalBuyIn = baseBuyIn + llcCutAmount;
-      document.getElementById("costTotalIncluded").textContent = formatCurrency(totalIncluded);
-      document.getElementById("costMaxPart").textContent = minPart > 0 ? minPart : "\u2014";
-      document.getElementById("costBuyIn").textContent = minPart > 0 ? `${formatCurrency(finalBuyIn)}/person` : "Set min participants";
-      document.getElementById("costOop").textContent = `~${formatCurrency(totalOop)}/person`;
-      document.getElementById("costGrandTotal").textContent = minPart > 0 ? `~${formatCurrency(finalBuyIn + totalOop)}` : "\u2014";
-      const llcRow = document.getElementById("costLlcCutRow");
-      if (llcCutPct > 0 && minPart > 0) {
-        llcRow.classList.remove("hidden");
-        document.getElementById("costLlcPct").textContent = llcCutPct;
-        document.getElementById("costLlcAmount").textContent = `+${formatCurrency(llcCutAmount)}`;
-      } else {
-        llcRow.classList.add("hidden");
-      }
-      const overrideInput = document.getElementById("llcRsvpOverride");
-      if (minPart > 0 && overrideInput && !overrideInput.dataset.userEdited) {
-        overrideInput.value = Math.ceil(finalBuyIn / 100);
-        overrideInput.placeholder = `Suggested: $${Math.ceil(finalBuyIn / 100)}`;
-      }
+    const overrideInput = document.getElementById("llcRsvpOverride");
+    if (minPart > 0 && overrideInput && !overrideInput.dataset.userEdited) {
+      overrideInput.value = Math.ceil(finalBuyIn / 100);
+      overrideInput.placeholder = `Suggested: $${Math.ceil(finalBuyIn / 100)}`;
     }
-    window.evtToggleLlcFields = evtToggleLlcFields2;
-    window.evtAddCostItem = evtAddCostItem2;
-    window.evtRemoveCostItem = evtRemoveCostItem;
-    window.evtRenderCostItems = evtRenderCostItems;
-    window.evtUpdateCostItem = evtUpdateCostItem;
-    window.evtRecalcCostSummary = evtRecalcCostSummary2;
-  })();
+  }
+  globalThis.evtToggleLlcFields = evtToggleLlcFields2;
+  globalThis.evtAddCostItem = evtAddCostItem2;
+  globalThis.evtRemoveCostItem = evtRemoveCostItem;
+  globalThis.evtRenderCostItems = evtRenderCostItems;
+  globalThis.evtUpdateCostItem = evtUpdateCostItem;
+  globalThis.evtRecalcCostSummary = evtRecalcCostSummary2;
 
   // js/portal/events/create/legacy-location.js
-  (function() {
-    "use strict";
-    window._evtLocGeoCache = null;
-    let _evtLocDebounce = null;
-    function evtSetLocationIcon(state) {
-      const wrap = document.getElementById("locationIcon");
-      const spinner = document.getElementById("locIconSpinner");
-      const check = document.getElementById("locIconCheck");
-      const warn = document.getElementById("locIconWarn");
-      if (!wrap) return;
-      spinner.classList.add("hidden");
-      check.classList.add("hidden");
-      warn.classList.add("hidden");
-      if (state === "hide") {
-        wrap.classList.add("hidden");
-        return;
-      }
-      wrap.classList.remove("hidden");
-      if (state === "spin") spinner.classList.remove("hidden");
-      if (state === "check") check.classList.remove("hidden");
-      if (state === "warn") warn.classList.remove("hidden");
+  window._evtLocGeoCache = null;
+  var _evtLocDebounce = null;
+  function evtSetLocationIcon(state) {
+    const wrap = document.getElementById("locationIcon");
+    const spinner = document.getElementById("locIconSpinner");
+    const check = document.getElementById("locIconCheck");
+    const warn = document.getElementById("locIconWarn");
+    if (!wrap) return;
+    spinner.classList.add("hidden");
+    check.classList.add("hidden");
+    warn.classList.add("hidden");
+    if (state === "hide") {
+      wrap.classList.add("hidden");
+      return;
     }
-    function evtSetLocationStatus(text, color) {
-      const el = document.getElementById("locationStatus");
-      if (!el) return;
-      if (!text) {
-        el.classList.add("hidden");
-        el.textContent = "";
-        return;
-      }
-      el.textContent = text;
-      el.className = `text-xs mt-1 ${color}`;
-      el.classList.remove("hidden");
+    wrap.classList.remove("hidden");
+    if (state === "spin") spinner.classList.remove("hidden");
+    if (state === "check") check.classList.remove("hidden");
+    if (state === "warn") warn.classList.remove("hidden");
+  }
+  function evtSetLocationStatus(text, color) {
+    const el = document.getElementById("locationStatus");
+    if (!el) return;
+    if (!text) {
+      el.classList.add("hidden");
+      el.textContent = "";
+      return;
     }
-    async function evtValidateLocation() {
-      const input = document.getElementById("eventLocation");
-      const address = input ? input.value.trim() : "";
-      if (!address) {
-        window._evtLocGeoCache = null;
-        evtSetLocationIcon("hide");
-        evtSetLocationStatus("", "");
-        return;
-      }
-      if (window._evtLocGeoCache && window._evtLocGeoCache.address === address) return;
-      evtSetLocationIcon("spin");
-      evtSetLocationStatus("Validating address\u2026", "text-gray-400");
-      const result = await window.evtGeocodeAddress(address);
-      const current = input.value.trim();
-      if (current !== address) return;
-      window._evtLocGeoCache = { address, result };
-      if (result) {
-        evtSetLocationIcon("check");
-        evtSetLocationStatus(`\u2713 ${result.display}`, "text-green-600");
-      } else {
-        evtSetLocationIcon("warn");
-        evtSetLocationStatus("Address not found \u2014 event will have no map pin", "text-amber-600");
-      }
+    el.textContent = text;
+    el.className = `text-xs mt-1 ${color}`;
+    el.classList.remove("hidden");
+  }
+  async function evtValidateLocation() {
+    const input = document.getElementById("eventLocation");
+    const address = input ? input.value.trim() : "";
+    if (!address) {
+      window._evtLocGeoCache = null;
+      evtSetLocationIcon("hide");
+      evtSetLocationStatus("", "");
+      return;
     }
-    function evtInitLocationValidation2() {
-      const input = document.getElementById("eventLocation");
-      if (!input) return;
-      input.addEventListener("input", () => {
-        clearTimeout(_evtLocDebounce);
-        _evtLocDebounce = setTimeout(evtValidateLocation, 800);
-      });
-      input.addEventListener("blur", () => {
-        clearTimeout(_evtLocDebounce);
-        evtValidateLocation();
-      });
+    if (window._evtLocGeoCache && window._evtLocGeoCache.address === address) return;
+    evtSetLocationIcon("spin");
+    evtSetLocationStatus("Validating address\u2026", "text-gray-400");
+    const result = await window.evtGeocodeAddress(address);
+    const current = input.value.trim();
+    if (current !== address) return;
+    window._evtLocGeoCache = { address, result };
+    if (result) {
+      evtSetLocationIcon("check");
+      evtSetLocationStatus(`\u2713 ${result.display}`, "text-green-600");
+    } else {
+      evtSetLocationIcon("warn");
+      evtSetLocationStatus("Address not found \u2014 event will have no map pin", "text-amber-600");
     }
-    window.evtSetLocationIcon = evtSetLocationIcon;
-    window.evtSetLocationStatus = evtSetLocationStatus;
-    window.evtValidateLocation = evtValidateLocation;
-    window.evtInitLocationValidation = evtInitLocationValidation2;
-  })();
+  }
+  function evtInitLocationValidation2() {
+    const input = document.getElementById("eventLocation");
+    if (!input) return;
+    input.addEventListener("input", () => {
+      clearTimeout(_evtLocDebounce);
+      _evtLocDebounce = setTimeout(evtValidateLocation, 800);
+    });
+    input.addEventListener("blur", () => {
+      clearTimeout(_evtLocDebounce);
+      evtValidateLocation();
+    });
+  }
+  globalThis.evtSetLocationIcon = evtSetLocationIcon;
+  globalThis.evtSetLocationStatus = evtSetLocationStatus;
+  globalThis.evtValidateLocation = evtValidateLocation;
+  globalThis.evtInitLocationValidation = evtInitLocationValidation2;
 
   // js/portal/events/create/legacy-preview.js
-  (function() {
-    "use strict";
-    function evtHandlePreview2() {
-      const title = document.getElementById("eventTitle").value.trim() || "Untitled Event";
-      const desc = document.getElementById("eventDescription").value.trim() || "No description yet.";
-      const start = document.getElementById("eventStart").value;
-      const location2 = document.getElementById("eventLocation").value.trim();
-      const dateStr = start ? new Date(start).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }) : "TBD";
-      const timeStr = start ? new Date(start).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "TBD";
-      const bannerBg = globalThis.evtBannerFile ? `background-image:url('${URL.createObjectURL(globalThis.evtBannerFile)}');background-size:cover;background-position:center;` : `background:linear-gradient(135deg,#6366f1,#8b5cf6);`;
-      const gateTime = document.getElementById("gateTime").checked;
-      const gateLocation = document.getElementById("gateLocation").checked;
-      document.getElementById("eventsDetailView").innerHTML = `
-        <div class="relative" style="${bannerBg} min-height:280px;">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 pointer-events-none"></div>
-            <div class="absolute top-0 left-0" style="padding-top:max(1rem, env(safe-area-inset-top)); padding-left:1rem;">
-                <button onclick="evtClosePreview()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 hover:bg-black/50 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                    Back to Editor
-                </button>
-            </div>
-            <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
-                <div class="mb-2"><span class="type-tag bg-amber-100 text-amber-700">PREVIEW</span></div>
-                <h2 class="text-xl sm:text-2xl font-extrabold text-white drop-shadow-lg">${evtEscapeHtml(title)}</h2>
-            </div>
+  function evtHandlePreview2() {
+    const title = document.getElementById("eventTitle").value.trim() || "Untitled Event";
+    const desc = document.getElementById("eventDescription").value.trim() || "No description yet.";
+    const start = document.getElementById("eventStart").value;
+    const location2 = document.getElementById("eventLocation").value.trim();
+    const dateStr = start ? new Date(start).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }) : "TBD";
+    const timeStr = start ? new Date(start).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "TBD";
+    const bannerBg = globalThis.evtBannerFile ? `background-image:url('${URL.createObjectURL(globalThis.evtBannerFile)}');background-size:cover;background-position:center;` : `background:linear-gradient(135deg,#6366f1,#8b5cf6);`;
+    const gateTime = document.getElementById("gateTime").checked;
+    const gateLocation = document.getElementById("gateLocation").checked;
+    document.getElementById("eventsDetailView").innerHTML = `
+    <div class="relative" style="${bannerBg} min-height:280px;">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 pointer-events-none"></div>
+        <div class="absolute top-0 left-0" style="padding-top:max(1rem, env(safe-area-inset-top)); padding-left:1rem;">
+            <button onclick="evtClosePreview()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 hover:bg-black/50 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                Back to Editor
+            </button>
         </div>
-        <div class="p-5 sm:p-6">
-            <div class="mt-4 space-y-2 text-gray-600">
-                <div class="flex items-center gap-2.5">
-                    <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span class="text-lg font-bold text-gray-900">${dateStr}</span>
-                </div>
-                ${!gateTime ? `<div class="flex items-center gap-2.5 ml-[30px]"><span class="text-base font-semibold text-gray-700">${timeStr}</span></div>` : '<div class="flex items-center gap-2 text-gray-400 italic text-sm"><svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span>Time revealed after RSVP</span></div>'}
-                ${location2 && !gateLocation ? `<div class="flex items-center gap-2.5 mt-1"><svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="text-base font-semibold text-gray-700">${evtEscapeHtml(location2)}</span></div>` : location2 && gateLocation ? '<div class="flex items-center gap-2 text-gray-400 italic text-sm"><svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span>Location revealed after RSVP</span></div>' : ""}
-            </div>
-            <div class="mt-5"><p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">${evtEscapeHtml(desc)}</p></div>
-            <div class="mt-6 p-4 bg-amber-50 rounded-xl text-center">
-                <p class="text-sm text-amber-700 font-semibold">This is a preview \u2014 the event is not published yet.</p>
-            </div>
+        <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+            <div class="mb-2"><span class="type-tag bg-amber-100 text-amber-700">PREVIEW</span></div>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-white drop-shadow-lg">${evtEscapeHtml(title)}</h2>
         </div>
-    `;
-      globalThis.evtToggleModal("createModal", false);
-      document.getElementById("eventsListView")?.classList.add("hidden");
-      document.getElementById("eventsDetailView")?.classList.remove("hidden");
-    }
-    function evtClosePreview() {
-      document.getElementById("eventsDetailView").innerHTML = "";
-      document.getElementById("eventsDetailView")?.classList.add("hidden");
-      document.getElementById("eventsListView")?.classList.remove("hidden");
-      globalThis.evtToggleModal("createModal", true);
-    }
-    window.evtHandlePreview = evtHandlePreview2;
-    window.evtClosePreview = evtClosePreview;
-  })();
+    </div>
+    <div class="p-5 sm:p-6">
+        <div class="mt-4 space-y-2 text-gray-600">
+            <div class="flex items-center gap-2.5">
+                <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="text-lg font-bold text-gray-900">${dateStr}</span>
+            </div>
+            ${!gateTime ? `<div class="flex items-center gap-2.5 ml-[30px]"><span class="text-base font-semibold text-gray-700">${timeStr}</span></div>` : '<div class="flex items-center gap-2 text-gray-400 italic text-sm"><svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span>Time revealed after RSVP</span></div>'}
+            ${location2 && !gateLocation ? `<div class="flex items-center gap-2.5 mt-1"><svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="text-base font-semibold text-gray-700">${evtEscapeHtml(location2)}</span></div>` : location2 && gateLocation ? '<div class="flex items-center gap-2 text-gray-400 italic text-sm"><svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span>Location revealed after RSVP</span></div>' : ""}
+        </div>
+        <div class="mt-5"><p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">${evtEscapeHtml(desc)}</p></div>
+        <div class="mt-6 p-4 bg-amber-50 rounded-xl text-center">
+            <p class="text-sm text-amber-700 font-semibold">This is a preview \u2014 the event is not published yet.</p>
+        </div>
+    </div>
+`;
+    globalThis.evtToggleModal("createModal", false);
+    document.getElementById("eventsListView")?.classList.add("hidden");
+    document.getElementById("eventsDetailView")?.classList.remove("hidden");
+  }
+  function evtClosePreview() {
+    document.getElementById("eventsDetailView").innerHTML = "";
+    document.getElementById("eventsDetailView")?.classList.add("hidden");
+    document.getElementById("eventsListView")?.classList.remove("hidden");
+    globalThis.evtToggleModal("createModal", true);
+  }
+  globalThis.evtHandlePreview = evtHandlePreview2;
+  globalThis.evtClosePreview = evtClosePreview;
 
   // js/portal/events/create/legacy-submit.js
-  (function() {
-    "use strict";
-    async function evtHandleCreate2(e) {
-      e.preventDefault();
-      const publishBtn = document.getElementById("publishEventBtn");
-      publishBtn.disabled = true;
-      publishBtn.textContent = "Publishing\u2026";
-      try {
-        const title = document.getElementById("eventTitle").value.trim();
-        const slug = evtGenerateSlug(title);
-        const checkinMode = document.querySelector('input[name="checkinMode"]:checked').value;
-        const eventType = document.getElementById("eventType").value;
-        const isLlc = eventType === "llc";
-        const checkinEnabled = document.getElementById("checkinEnabled").checked;
-        const rsvpEnabled = document.getElementById("rsvpEnabled").checked;
-        let bannerUrl = null;
-        if (globalThis.evtBannerFile) {
-          const ext = globalThis.evtBannerFile.name.split(".").pop();
-          const path = `${slug}-${Date.now()}.${ext}`;
-          const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, globalThis.evtBannerFile, { contentType: globalThis.evtBannerFile.type });
-          if (upErr) throw upErr;
-          const { data: { publicUrl } } = supabaseClient.storage.from("event-banners").getPublicUrl(path);
-          bannerUrl = publicUrl;
-        }
-        let embedImageUrl = null;
-        if (globalThis.evtEmbedImageFile) {
-          const ext = globalThis.evtEmbedImageFile.name.split(".").pop();
-          const path = `embeds/${slug}-${Date.now()}.${ext}`;
-          const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, globalThis.evtEmbedImageFile, { contentType: globalThis.evtEmbedImageFile.type });
-          if (upErr) throw upErr;
-          const { data: { publicUrl } } = supabaseClient.storage.from("event-banners").getPublicUrl(path);
-          embedImageUrl = publicUrl;
-        }
-        const pricingMode = document.getElementById("pricingMode").value;
-        const raffleEnabled = document.getElementById("raffleEnabled").checked;
-        const raffleEntryCostDollars = parseInt(document.getElementById("raffleEntryCostDollars").value) || 0;
-        const maxPart = document.getElementById("eventMax").value ? parseInt(document.getElementById("eventMax").value) : null;
-        const minPart = document.getElementById("eventMinParticipants")?.value ? parseInt(document.getElementById("eventMinParticipants").value) : null;
-        let rsvpCostCents = 0;
-        let costBreakdownSummary = null;
-        const costItems = window.evtCostItems || [];
-        if (isLlc && costItems.length > 0 && (minPart || maxPart)) {
-          const llcCutPct = parseFloat(document.getElementById("eventLlcCut").value) || 0;
-          const totalIncluded = costItems.filter((i) => i.included_in_buyin).reduce((sum, i) => sum + (i.total_cost_cents || 0), 0);
-          const totalOop = costItems.filter((i) => !i.included_in_buyin).reduce((sum, i) => sum + (i.avg_per_person_cents || 0), 0);
-          const divisor = minPart || maxPart;
-          const baseBuyIn = Math.ceil(totalIncluded / divisor);
-          const llcCut = Math.round(baseBuyIn * llcCutPct / 100);
-          const suggestedCents = baseBuyIn + llcCut;
-          costBreakdownSummary = { total_included_cents: totalIncluded, total_oop_per_person_cents: totalOop, base_buyin_cents: baseBuyIn, llc_cut_cents: llcCut, final_buyin_cents: suggestedCents };
-          const overrideVal = parseInt(document.getElementById("llcRsvpOverride")?.value);
-          rsvpCostCents = overrideVal > 0 ? overrideVal * 100 : suggestedCents;
-        } else if (isLlc) {
-          const overrideVal = parseInt(document.getElementById("llcRsvpOverride")?.value) || 0;
-          rsvpCostCents = overrideVal * 100;
-        } else if (!isLlc) {
-          const rsvpCostDollars = parseInt(document.getElementById("rsvpCostDollars").value) || 0;
-          rsvpCostCents = pricingMode === "paid" ? rsvpCostDollars * 100 : 0;
-        }
-        const record = {
-          created_by: globalThis.evtCurrentUser.id,
-          event_type: eventType,
-          title,
-          slug,
-          category: document.getElementById("eventCategory").value,
-          description: document.getElementById("eventDescription").value.trim(),
-          gated_notes: document.getElementById("eventGatedNotes").value.trim() || null,
-          banner_url: bannerUrl,
-          embed_image_url: embedImageUrl,
-          start_date: new Date(document.getElementById("eventStart").value).toISOString(),
-          end_date: document.getElementById("eventEnd").value ? new Date(document.getElementById("eventEnd").value).toISOString() : null,
-          timezone: document.getElementById("eventTimezone").value,
-          location_nickname: document.getElementById("eventLocationNickname").value.trim() || null,
-          location_text: document.getElementById("eventLocation").value.trim() || null,
-          max_participants: maxPart,
-          rsvp_deadline: document.getElementById("eventRsvpDeadline").value ? new Date(document.getElementById("eventRsvpDeadline").value).toISOString() : null,
-          checkin_mode: checkinEnabled ? checkinMode : null,
-          checkin_enabled: checkinEnabled,
-          rsvp_enabled: rsvpEnabled,
-          member_only: document.getElementById("memberOnly").checked,
-          gate_time: document.getElementById("gateTime").checked,
-          gate_location: document.getElementById("gateLocation").checked,
-          gate_notes: document.getElementById("gateNotes").checked,
-          pricing_mode: pricingMode,
-          rsvp_cost_cents: rsvpCostCents,
-          raffle_entry_cost_cents: raffleEnabled && pricingMode !== "paid" ? raffleEntryCostDollars * 100 : 0,
-          raffle_enabled: raffleEnabled,
-          status: "open"
-        };
-        if (record.location_text) {
-          let geo = null;
-          if (window._evtLocGeoCache && window._evtLocGeoCache.address === record.location_text && window._evtLocGeoCache.result) {
-            geo = window._evtLocGeoCache.result;
-          } else {
-            publishBtn.textContent = "Validating address\u2026";
-            geo = await window.evtGeocodeAddress(record.location_text);
-          }
-          if (geo) {
-            record.location_lat = geo.lat;
-            record.location_lng = geo.lng;
-          } else {
-            if (!confirm("Could not verify that address on the map. The event will be created without a map pin.\n\nPublish anyway?")) {
-              publishBtn.disabled = false;
-              publishBtn.textContent = "Publish Event";
-              return;
-            }
-          }
-          publishBtn.textContent = "Publishing\u2026";
-        }
-        if (isLlc) {
-          record.min_participants = parseInt(document.getElementById("eventMinParticipants").value) || null;
-          record.llc_cut_pct = parseFloat(document.getElementById("eventLlcCut").value) || 0;
-          record.invest_eligible = document.getElementById("investEligible").checked;
-          record.show_cost_breakdown = document.getElementById("showCostBreakdown").checked;
-          record.cost_breakdown = costBreakdownSummary;
-          const transportEnabled = document.getElementById("transportationEnabled").checked;
-          record.transportation_enabled = transportEnabled;
-          record.transportation_mode = transportEnabled ? document.getElementById("eventTransportation").value : null;
-          record.transportation_estimate_cents = transportEnabled && document.getElementById("eventTransportation").value === "self_arranged" ? Math.round((parseFloat(document.getElementById("eventTransportEstimate").value) || 0) * 100) : null;
-          record.location_required = document.getElementById("locationRequired").checked;
-        }
-        const isComp = eventType === "competition";
-        if (isComp) {
-          const tier1 = parseInt(document.getElementById("compTier1Pct").value) || 100;
-          const tier2 = parseInt(document.getElementById("compTier2Pct").value) || 0;
-          const tier3 = parseInt(document.getElementById("compTier3Pct").value) || 0;
-          const entryFeeDollars = parseFloat(document.getElementById("compEntryFee").value) || 0;
-          record.competition_config = {
-            entry_type: document.getElementById("compEntryType").value,
-            entry_fee_cents: Math.round(entryFeeDollars * 100),
-            house_pct: parseFloat(document.getElementById("compHousePct").value) || 0,
-            min_entries: parseInt(document.getElementById("compMinEntries").value) || 2,
-            extension_days: parseInt(document.getElementById("compExtensionDays").value) || 3,
-            entries_visible_before_voting: document.getElementById("compEntriesVisible").checked,
-            voter_eligibility: document.getElementById("compVoterEligibility").value,
-            vote_tally_visible: document.getElementById("compVoteTallyVisible").checked
-          };
-          record.winner_tier_config = [
-            { place: 1, pct: tier1 },
-            ...tier2 > 0 ? [{ place: 2, pct: tier2 }] : [],
-            ...tier3 > 0 ? [{ place: 3, pct: tier3 }] : []
-          ];
-          record.member_only = true;
-          record.pricing_mode = entryFeeDollars > 0 ? "paid" : "free";
-          record.rsvp_cost_cents = 0;
-        }
-        if (checkinEnabled && checkinMode === "venue_scan") {
-          record.venue_qr_token = crypto.randomUUID();
-        }
-        if (raffleEnabled) {
-          record.raffle_type = document.getElementById("raffleType").value;
-          record.raffle_draw_trigger = document.getElementById("raffleDrawTrigger").value;
-          const prizesContainer = document.getElementById("rafflePrizesList");
-          const prizeInputs = prizesContainer ? prizesContainer.querySelectorAll('input[type="text"]') : document.querySelectorAll('input[name="rafflePrize"]');
-          const prizes = [];
-          prizeInputs.forEach((input, i) => {
-            const desc = input.value.trim();
-            if (desc) prizes.push({ place: i + 1, description: desc });
-          });
-          record.raffle_prizes = prizes.length > 0 ? prizes : null;
-        }
-        const { data, error } = await supabaseClient.from("events").insert(record).select().single();
-        if (error) throw error;
-        if (isLlc && costItems.length > 0) {
-          const costRows = costItems.map((item, idx) => ({
-            event_id: data.id,
-            name: item.name,
-            category: item.category,
-            total_cost_cents: item.total_cost_cents || 0,
-            included_in_buyin: item.included_in_buyin,
-            avg_per_person_cents: item.avg_per_person_cents || 0,
-            notes: item.notes || null,
-            sort_order: idx
-          }));
-          const { error: costErr } = await supabaseClient.from("event_cost_items").insert(costRows);
-          if (costErr) console.error("Cost items insert error:", costErr);
-        }
-        if (isComp) {
-          const eventStart = new Date(document.getElementById("eventStart").value);
-          const p1End = document.getElementById("compPhase1End").value ? new Date(document.getElementById("compPhase1End").value) : null;
-          const p2End = document.getElementById("compPhase2End").value ? new Date(document.getElementById("compPhase2End").value) : null;
-          const p3End = document.getElementById("compPhase3End").value ? new Date(document.getElementById("compPhase3End").value) : null;
-          const phases = [
-            { event_id: data.id, phase_num: 1, name: "Registration", description: "Sign up as a competitor and build the prize pool.", starts_at: eventStart.toISOString(), ends_at: p1End ? p1End.toISOString() : eventStart.toISOString(), status: "pending" },
-            { event_id: data.id, phase_num: 2, name: "Active Competition", description: "Submit your entry before the deadline.", starts_at: p1End ? p1End.toISOString() : eventStart.toISOString(), ends_at: p2End ? p2End.toISOString() : eventStart.toISOString(), status: "pending" },
-            { event_id: data.id, phase_num: 3, name: "Voting", description: "Vote for your favorite entry. One vote per person.", starts_at: p2End ? p2End.toISOString() : eventStart.toISOString(), ends_at: p3End ? p3End.toISOString() : eventStart.toISOString(), status: "pending" },
-            { event_id: data.id, phase_num: 4, name: "Results", description: "Winners announced and prizes distributed.", starts_at: p3End ? p3End.toISOString() : eventStart.toISOString(), ends_at: document.getElementById("eventEnd").value ? new Date(document.getElementById("eventEnd").value).toISOString() : p3End ? p3End.toISOString() : eventStart.toISOString(), status: "pending" }
-          ];
-          const { error: phaseErr } = await supabaseClient.from("competition_phases").insert(phases);
-          if (phaseErr) console.error("Competition phases insert error:", phaseErr);
-        }
-        document.getElementById("createEventForm").reset();
-        globalThis.evtBannerFile = null;
-        globalThis.evtEmbedImageFile = null;
-        window.evtCostItems = [];
-        window._evtLocGeoCache = null;
-        window.evtSetLocationIcon("hide");
-        window.evtSetLocationStatus("", "");
-        document.getElementById("bannerPreviewWrap").classList.add("hidden");
-        document.getElementById("bannerUploadHint").classList.remove("hidden");
-        document.getElementById("embedImagePreviewWrap")?.classList.add("hidden");
-        document.getElementById("embedImageUploadHint")?.classList.remove("hidden");
-        document.getElementById("llcFieldsSection")?.classList.add("hidden");
-        document.getElementById("compFieldsSection")?.classList.add("hidden");
-        document.getElementById("costItemsList") && (document.getElementById("costItemsList").innerHTML = "");
-        document.getElementById("costSummary")?.classList.add("hidden");
-        globalThis.evtToggleModal("createModal", false);
-        await globalThis.evtLoadEvents();
-        globalThis.evtNavigateToEvent(data.slug);
-      } catch (err) {
-        console.error("Create event error:", err);
-        alert(`Failed to create event: ${err.message}`);
-      } finally {
-        publishBtn.disabled = false;
-        publishBtn.textContent = "Publish Event";
+  async function evtHandleCreate2(e) {
+    e.preventDefault();
+    const publishBtn = document.getElementById("publishEventBtn");
+    publishBtn.disabled = true;
+    publishBtn.textContent = "Publishing\u2026";
+    try {
+      const title = document.getElementById("eventTitle").value.trim();
+      const slug = evtGenerateSlug(title);
+      const checkinMode = document.querySelector('input[name="checkinMode"]:checked').value;
+      const eventType = document.getElementById("eventType").value;
+      const isLlc = eventType === "llc";
+      const checkinEnabled = document.getElementById("checkinEnabled").checked;
+      const rsvpEnabled = document.getElementById("rsvpEnabled").checked;
+      let bannerUrl = null;
+      if (globalThis.evtBannerFile) {
+        const ext = globalThis.evtBannerFile.name.split(".").pop();
+        const path = `${slug}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, globalThis.evtBannerFile, { contentType: globalThis.evtBannerFile.type });
+        if (upErr) throw upErr;
+        const { data: { publicUrl } } = supabaseClient.storage.from("event-banners").getPublicUrl(path);
+        bannerUrl = publicUrl;
       }
-    }
-    window.evtHandleCreate = evtHandleCreate2;
-  })();
-
-  // js/portal/events/create/step-basics.js
-  (function() {
-    "use strict";
-    function _esc(s) {
-      return window.EventsCreateSteps.esc(s);
-    }
-    function _setImageFile(imageFile, fileKey, previewKey) {
-      const STATE = window.EventsCreateSteps.getState();
-      if (!imageFile) return;
-      if (!imageFile.type.match(/^image\/(png|jpeg|webp)$/)) {
-        alert("Please choose a PNG, JPG, or WebP image.");
-        return;
+      let embedImageUrl = null;
+      if (globalThis.evtEmbedImageFile) {
+        const ext = globalThis.evtEmbedImageFile.name.split(".").pop();
+        const path = `embeds/${slug}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, globalThis.evtEmbedImageFile, { contentType: globalThis.evtEmbedImageFile.type });
+        if (upErr) throw upErr;
+        const { data: { publicUrl } } = supabaseClient.storage.from("event-banners").getPublicUrl(path);
+        embedImageUrl = publicUrl;
       }
-      if (imageFile.size > 5 * 1024 * 1024) {
-        alert("File must be under 5 MB.");
-        return;
+      const pricingMode = document.getElementById("pricingMode").value;
+      const raffleEnabled = document.getElementById("raffleEnabled").checked;
+      const raffleEntryCostDollars = parseInt(document.getElementById("raffleEntryCostDollars").value) || 0;
+      const maxPart = document.getElementById("eventMax").value ? parseInt(document.getElementById("eventMax").value) : null;
+      const minPart = document.getElementById("eventMinParticipants")?.value ? parseInt(document.getElementById("eventMinParticipants").value) : null;
+      let rsvpCostCents = 0;
+      let costBreakdownSummary = null;
+      const costItems = window.evtCostItems || [];
+      if (isLlc && costItems.length > 0 && (minPart || maxPart)) {
+        const llcCutPct = parseFloat(document.getElementById("eventLlcCut").value) || 0;
+        const totalIncluded = costItems.filter((i) => i.included_in_buyin).reduce((sum, i) => sum + (i.total_cost_cents || 0), 0);
+        const totalOop = costItems.filter((i) => !i.included_in_buyin).reduce((sum, i) => sum + (i.avg_per_person_cents || 0), 0);
+        const divisor = minPart || maxPart;
+        const baseBuyIn = Math.ceil(totalIncluded / divisor);
+        const llcCut = Math.round(baseBuyIn * llcCutPct / 100);
+        const suggestedCents = baseBuyIn + llcCut;
+        costBreakdownSummary = { total_included_cents: totalIncluded, total_oop_per_person_cents: totalOop, base_buyin_cents: baseBuyIn, llc_cut_cents: llcCut, final_buyin_cents: suggestedCents };
+        const overrideVal = parseInt(document.getElementById("llcRsvpOverride")?.value);
+        rsvpCostCents = overrideVal > 0 ? overrideVal * 100 : suggestedCents;
+      } else if (isLlc) {
+        const overrideVal = parseInt(document.getElementById("llcRsvpOverride")?.value) || 0;
+        rsvpCostCents = overrideVal * 100;
+      } else if (!isLlc) {
+        const rsvpCostDollars = parseInt(document.getElementById("rsvpCostDollars").value) || 0;
+        rsvpCostCents = pricingMode === "paid" ? rsvpCostDollars * 100 : 0;
       }
-      STATE[fileKey] = imageFile;
-      const reader = new FileReader();
-      reader.onload = () => {
-        STATE[previewKey] = reader.result;
-        window.EventsCreateSteps.render();
+      const record = {
+        created_by: globalThis.evtCurrentUser.id,
+        event_type: eventType,
+        title,
+        slug,
+        category: document.getElementById("eventCategory").value,
+        description: document.getElementById("eventDescription").value.trim(),
+        gated_notes: document.getElementById("eventGatedNotes").value.trim() || null,
+        banner_url: bannerUrl,
+        embed_image_url: embedImageUrl,
+        start_date: new Date(document.getElementById("eventStart").value).toISOString(),
+        end_date: document.getElementById("eventEnd").value ? new Date(document.getElementById("eventEnd").value).toISOString() : null,
+        timezone: document.getElementById("eventTimezone").value,
+        location_nickname: document.getElementById("eventLocationNickname").value.trim() || null,
+        location_text: document.getElementById("eventLocation").value.trim() || null,
+        max_participants: maxPart,
+        rsvp_deadline: document.getElementById("eventRsvpDeadline").value ? new Date(document.getElementById("eventRsvpDeadline").value).toISOString() : null,
+        checkin_mode: checkinEnabled ? checkinMode : null,
+        checkin_enabled: checkinEnabled,
+        rsvp_enabled: rsvpEnabled,
+        member_only: document.getElementById("memberOnly").checked,
+        gate_time: document.getElementById("gateTime").checked,
+        gate_location: document.getElementById("gateLocation").checked,
+        gate_notes: document.getElementById("gateNotes").checked,
+        pricing_mode: pricingMode,
+        rsvp_cost_cents: rsvpCostCents,
+        raffle_entry_cost_cents: raffleEnabled && pricingMode !== "paid" ? raffleEntryCostDollars * 100 : 0,
+        raffle_enabled: raffleEnabled,
+        status: "open"
       };
-      reader.readAsDataURL(imageFile);
-    }
-    function _wireImageUpload(dropId, fileId, clearId, fileKey, previewKey) {
-      const STATE = window.EventsCreateSteps.getState();
-      const drop = document.getElementById(dropId);
-      const file = document.getElementById(fileId);
-      if (drop && window.matchMedia("(hover:hover) and (pointer:fine)").matches) {
-        const dt = drop.querySelector(".ec-drop-hint-desktop");
-        const tt = drop.querySelector(".ec-drop-hint-touch");
-        if (dt) dt.style.display = "";
-        if (tt) tt.style.display = "none";
-      }
-      drop?.addEventListener("click", () => file.click());
-      drop?.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        drop.classList.add("ec-banner-drop--over");
-      });
-      drop?.addEventListener("dragleave", (e) => {
-        if (!drop.contains(e.relatedTarget)) {
-          drop.classList.remove("ec-banner-drop--over");
+      if (record.location_text) {
+        let geo = null;
+        if (window._evtLocGeoCache && window._evtLocGeoCache.address === record.location_text && window._evtLocGeoCache.result) {
+          geo = window._evtLocGeoCache.result;
+        } else {
+          publishBtn.textContent = "Validating address\u2026";
+          geo = await window.evtGeocodeAddress(record.location_text);
         }
-      });
-      drop?.addEventListener("drop", (e) => {
-        e.preventDefault();
-        drop.classList.remove("ec-banner-drop--over");
-        _setImageFile(e.dataTransfer?.files?.[0], fileKey, previewKey);
-      });
-      file?.addEventListener("change", () => _setImageFile(file.files[0], fileKey, previewKey));
-      document.getElementById(clearId)?.addEventListener("click", () => {
-        STATE[fileKey] = null;
-        STATE[previewKey] = null;
-        if (file) file.value = "";
-        window.EventsCreateSteps.render();
-      });
-    }
-    function html() {
-      const STATE = window.EventsCreateSteps.getState();
-      const CATEGORIES = window.EventsCreateSteps.CATEGORIES;
-      const f = STATE.form;
-      const types = [
-        { key: "member", emoji: "\u{1F465}", label: "Member event", sub: "Anyone can RSVP", enabled: true },
-        { key: "llc", emoji: "\u{1F3E2}", label: "LLC event", sub: "Use legacy editor for now", enabled: false },
-        { key: "competition", emoji: "\u{1F3C6}", label: "Competition", sub: "Use legacy editor for now", enabled: false }
-      ];
-      return `
-            <div class="ec-row">
-                <label class="ec-label">Event type</label>
-                <div class="ec-grid-2" style="grid-template-columns:1fr 1fr 1fr">
-                    ${types.map((t) => `
-                        <div class="ec-type-card ${f.event_type === t.key ? "active" : ""} ${!t.enabled ? "disabled" : ""}" data-type="${t.key}" ${!t.enabled ? 'data-disabled="1"' : ""}>
-                            <div class="ec-type-emoji">${t.emoji}</div>
-                            <div class="text-sm font-bold text-gray-800 mt-1">${t.label}</div>
-                            <div class="text-xs text-gray-500">${t.sub}</div>
-                        </div>
-                    `).join("")}
-                </div>
-                <p class="ec-help">LLC &amp; Competition events use the legacy form \u2014 select Member to continue here.</p>
-            </div>
-
-            <div class="ec-row">
-                <label class="ec-label">Title</label>
-                <input id="ecTitle" class="ec-input" type="text" maxlength="120" placeholder="What's the occasion?" value="${_esc(f.title)}">
-            </div>
-
-            <div class="ec-row">
-                <label class="ec-label">Category</label>
-                <div style="display:flex;flex-wrap:wrap;gap:6px">
-                    ${CATEGORIES.map(
-        (c) => `<button type="button" class="ec-pill ${f.category === c.key ? "active" : ""}" data-cat="${c.key}">${c.label}</button>`
-      ).join("")}
-                </div>
-            </div>
-
-            <div class="ec-row">
-                <label class="ec-label">Description</label>
-                <textarea id="ecDesc" class="ec-input ec-textarea" maxlength="2000" placeholder="Tell members what to expect\u2026">${_esc(f.description)}</textarea>
-            </div>
-
-            <div class="ec-row">
-                <label class="ec-label">Banner image (optional)</label>
-                <input id="ecBannerFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
-                ${STATE.bannerPreviewUrl ? `<div><img src="${STATE.bannerPreviewUrl}" class="ec-banner-preview" alt=""><button type="button" id="ecBannerClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>` : `<div id="ecBannerDrop" class="ec-banner-drop">
-                            <div style="font-size:28px">\u{1F5BC}\uFE0F</div>
-                            <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drag &amp; drop or click to upload</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
-                            <div class="text-xs text-gray-400">PNG / JPG / WebP \xB7 max 5 MB</div>
-                       </div>`}
-                <p class="ec-help">Landscape image for event pages and cards.</p>
-            </div>
-
-            <div class="ec-row">
-                <label class="ec-label">Embed image (optional)</label>
-                <input id="ecEmbedImageFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
-                ${STATE.embedImagePreviewUrl ? `<div><img src="${STATE.embedImagePreviewUrl}" class="ec-embed-preview" alt=""><button type="button" id="ecEmbedImageClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>` : `<div id="ecEmbedImageDrop" class="ec-banner-drop">
-                            <div style="font-size:28px">\u25A3</div>
-                            <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drag &amp; drop or click to upload</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
-                            <div class="text-xs text-gray-400">Portrait works best \xB7 PNG / JPG / WebP \xB7 max 5 MB</div>
-                       </div>`}
-                <p class="ec-help">Used only for iMessage, Discord, and other link previews. Falls back to the banner if empty.</p>
-            </div>
-        `;
-    }
-    function wire() {
-      const STATE = window.EventsCreateSteps.getState();
-      document.querySelectorAll("[data-type]").forEach((el) => {
-        el.addEventListener("click", () => {
-          if (el.dataset.disabled) return;
-          STATE.form.event_type = el.dataset.type;
-          window.EventsCreateSteps.render();
-        });
-      });
-      document.querySelectorAll("[data-cat]").forEach((el) => {
-        el.addEventListener("click", () => {
-          STATE.form.category = el.dataset.cat;
-          window.EventsCreateSteps.render();
-        });
-      });
-      document.getElementById("ecTitle")?.addEventListener("input", (e) => STATE.form.title = e.target.value);
-      document.getElementById("ecDesc")?.addEventListener("input", (e) => STATE.form.description = e.target.value);
-      _wireImageUpload("ecBannerDrop", "ecBannerFile", "ecBannerClear", "bannerFile", "bannerPreviewUrl");
-      _wireImageUpload("ecEmbedImageDrop", "ecEmbedImageFile", "ecEmbedImageClear", "embedImageFile", "embedImagePreviewUrl");
-    }
-    window.EventsCreateSteps = window.EventsCreateSteps || {};
-    window.EventsCreateSteps.basics = { html, wire };
-  })();
-
-  // js/portal/events/create/step-when.js
-  (function() {
-    "use strict";
-    let _locDebounce;
-    function _esc(s) {
-      return window.EventsCreateSteps.esc(s);
-    }
-    function html() {
-      const STATE = window.EventsCreateSteps.getState();
-      const TIMEZONES = window.EventsCreateSteps.TIMEZONES;
-      const f = STATE.form;
-      return `
-            <div class="ec-grid-2">
-                <div class="ec-row">
-                    <label class="ec-label">Starts</label>
-                    <input id="ecStart" class="ec-input" type="datetime-local" value="${_esc(f.start_date)}">
-                </div>
-                <div class="ec-row">
-                    <label class="ec-label">Ends (optional)</label>
-                    <input id="ecEnd" class="ec-input" type="datetime-local" value="${_esc(f.end_date)}">
-                </div>
-            </div>
-
-            <div class="ec-row">
-                <label class="ec-label">Timezone</label>
-                <select id="ecTz" class="ec-input">
-                    ${TIMEZONES.map((tz) => `<option value="${tz}" ${tz === f.timezone ? "selected" : ""}>${tz.replace("_", " ")}</option>`).join("")}
-                </select>
-            </div>
-
-            <div class="ec-row">
-                <label class="ec-label">Location nickname</label>
-                <input id="ecLocNick" class="ec-input" type="text" maxlength="60" placeholder="e.g. Mom's house, Cabin in the woods" value="${_esc(f.location_nickname)}">
-                <p class="ec-help">Shown on the banner instead of the full address.</p>
-            </div>
-
-            <div class="ec-row">
-                <label class="ec-label">Address</label>
-                <input id="ecLoc" class="ec-input" type="text" placeholder="123 Main St, City, ST" value="${_esc(f.location_text)}">
-                <div id="ecLocStatus" class="ec-loc-status" style="color:#9ca3af">${STATE.geocode ? `\u{1F4CD} ${_esc(STATE.geocode.display || "Located")}` : "Type an address to geocode (optional)."}</div>
-            </div>
-
-            <div class="ec-grid-2">
-                <div class="ec-row">
-                    <label class="ec-label">Max attendees (optional)</label>
-                    <input id="ecMax" class="ec-input" type="number" min="1" placeholder="No limit" value="${_esc(f.max_participants)}">
-                </div>
-                <div class="ec-row">
-                    <label class="ec-label">RSVP deadline (optional)</label>
-                    <input id="ecDeadline" class="ec-input" type="datetime-local" value="${_esc(f.rsvp_deadline)}">
-                </div>
-            </div>
-        `;
-    }
-    function wire() {
-      const STATE = window.EventsCreateSteps.getState();
-      const get = (id) => document.getElementById(id);
-      get("ecStart")?.addEventListener("input", (e) => STATE.form.start_date = e.target.value);
-      get("ecEnd")?.addEventListener("input", (e) => STATE.form.end_date = e.target.value);
-      get("ecTz")?.addEventListener("change", (e) => STATE.form.timezone = e.target.value);
-      get("ecLocNick")?.addEventListener("input", (e) => STATE.form.location_nickname = e.target.value);
-      get("ecMax")?.addEventListener("input", (e) => STATE.form.max_participants = e.target.value);
-      get("ecDeadline")?.addEventListener("input", (e) => STATE.form.rsvp_deadline = e.target.value);
-      const loc = get("ecLoc");
-      loc?.addEventListener("input", (e) => {
-        STATE.form.location_text = e.target.value;
-        STATE.geocode = null;
-        clearTimeout(_locDebounce);
-        const status = get("ecLocStatus");
-        if (status) {
-          status.textContent = "\u2026";
-          status.style.color = "#9ca3af";
-        }
-        _locDebounce = setTimeout(_doGeocode, 700);
-      });
-    }
-    async function _doGeocode() {
-      const STATE = window.EventsCreateSteps.getState();
-      const status = document.getElementById("ecLocStatus");
-      const addr = (STATE.form.location_text || "").trim();
-      if (!addr || addr.length < 6) {
-        if (status) {
-          status.textContent = "Type an address to geocode (optional).";
-          status.style.color = "#9ca3af";
-        }
-        return;
-      }
-      try {
-        if (typeof window.evtGeocodeAddress === "function") {
-          const r = await window.evtGeocodeAddress(addr);
-          if (r && r.lat && r.lng) {
-            STATE.geocode = { lat: r.lat, lng: r.lng, display: r.display || addr };
-            if (status) {
-              status.textContent = `\u{1F4CD} ${STATE.geocode.display}`;
-              status.style.color = "#059669";
-            }
+        if (geo) {
+          record.location_lat = geo.lat;
+          record.location_lng = geo.lng;
+        } else {
+          if (!confirm("Could not verify that address on the map. The event will be created without a map pin.\n\nPublish anyway?")) {
+            publishBtn.disabled = false;
+            publishBtn.textContent = "Publish Event";
             return;
           }
         }
-        if (status) {
-          status.textContent = "\u26A0\uFE0F Could not locate \u2014 saved as text only.";
-          status.style.color = "#d97706";
-        }
-      } catch (_) {
-        if (status) {
-          status.textContent = "\u26A0\uFE0F Geocoding error \u2014 saved as text only.";
-          status.style.color = "#d97706";
-        }
+        publishBtn.textContent = "Publishing\u2026";
       }
-    }
-    window.EventsCreateSteps = window.EventsCreateSteps || {};
-    window.EventsCreateSteps.when = { html, wire };
-  })();
-
-  // js/portal/events/create/step-pricing.js
-  (function() {
-    "use strict";
-    function _esc(s) {
-      return window.EventsCreateSteps.esc(s);
-    }
-    function html() {
-      const STATE = window.EventsCreateSteps.getState();
-      const f = STATE.form;
-      const modes = [
-        { key: "free", label: "Free", sub: "No payment required" },
-        { key: "paid", label: "Paid RSVP", sub: "Stripe checkout on RSVP" },
-        { key: "free_paid_raffle", label: "Free + paid raffle", sub: "Free entry, paid raffle entries" }
-      ];
-      const showRsvpCost = f.pricing_mode === "paid";
-      const showRaffleConfig = f.raffle_enabled;
-      const raffleBuilderHtml = window.EventsCreateSteps.raffleBuilderHtml;
-      return `
-            <div class="ec-row">
-                <label class="ec-label">Pricing mode</label>
-                <div style="display:flex;flex-direction:column;gap:8px">
-                    ${modes.map((m) => `
-                        <label class="ec-checkbox-row" style="cursor:pointer">
-                            <input type="radio" name="ecMode" value="${m.key}" ${f.pricing_mode === m.key ? "checked" : ""}>
-                            <div class="flex-1">
-                                <div class="text-sm font-bold text-gray-800">${m.label}</div>
-                                <div class="text-xs text-gray-500">${m.sub}</div>
-                            </div>
-                        </label>
-                    `).join("")}
-                </div>
-            </div>
-
-            ${showRsvpCost ? `
-            <div class="ec-row">
-                <label class="ec-label">RSVP price (USD)</label>
-                <input id="ecCost" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc(f.rsvp_cost_dollars)}">
-            </div>
-            ` : ""}
-
-            <div class="ec-row">
-                <label class="ec-checkbox-row">
-                    <input type="checkbox" id="ecRaffleEnabled" ${f.raffle_enabled ? "checked" : ""}>
-                    <div class="flex-1">
-                        <div class="text-sm font-bold text-gray-800">Add a raffle</div>
-                        <div class="text-xs text-gray-500">Members can buy raffle entries for prizes.</div>
-                    </div>
-                </label>
-            </div>
-
-            ${showRaffleConfig && typeof raffleBuilderHtml === "function" ? `
-            ${raffleBuilderHtml()}
-            ` : ""}
-
-            <div class="ec-row">
-                <label class="ec-checkbox-row">
-                    <input type="checkbox" id="ecMemberOnly" ${f.member_only ? "checked" : ""}>
-                    <div class="flex-1">
-                        <div class="text-sm font-bold text-gray-800">Members only</div>
-                        <div class="text-xs text-gray-500">Hide from the public event page; logged-in members only.</div>
-                    </div>
-                </label>
-            </div>
-        `;
-    }
-    function wire() {
-      const STATE = window.EventsCreateSteps.getState();
-      const render = window.EventsCreateSteps.render;
-      const ensureRaffleConfig = window.EventsCreateSteps.ensureRaffleConfig;
-      const wireRaffleBuilder = window.EventsCreateSteps.wireRaffleBuilder;
-      document.querySelectorAll('input[name="ecMode"]').forEach((el) => {
-        el.addEventListener("change", () => {
-          STATE.form.pricing_mode = el.value;
-          render();
+      if (isLlc) {
+        record.min_participants = parseInt(document.getElementById("eventMinParticipants").value) || null;
+        record.llc_cut_pct = parseFloat(document.getElementById("eventLlcCut").value) || 0;
+        record.invest_eligible = document.getElementById("investEligible").checked;
+        record.show_cost_breakdown = document.getElementById("showCostBreakdown").checked;
+        record.cost_breakdown = costBreakdownSummary;
+        const transportEnabled = document.getElementById("transportationEnabled").checked;
+        record.transportation_enabled = transportEnabled;
+        record.transportation_mode = transportEnabled ? document.getElementById("eventTransportation").value : null;
+        record.transportation_estimate_cents = transportEnabled && document.getElementById("eventTransportation").value === "self_arranged" ? Math.round((parseFloat(document.getElementById("eventTransportEstimate").value) || 0) * 100) : null;
+        record.location_required = document.getElementById("locationRequired").checked;
+      }
+      const isComp = eventType === "competition";
+      if (isComp) {
+        const tier1 = parseInt(document.getElementById("compTier1Pct").value) || 100;
+        const tier2 = parseInt(document.getElementById("compTier2Pct").value) || 0;
+        const tier3 = parseInt(document.getElementById("compTier3Pct").value) || 0;
+        const entryFeeDollars = parseFloat(document.getElementById("compEntryFee").value) || 0;
+        record.competition_config = {
+          entry_type: document.getElementById("compEntryType").value,
+          entry_fee_cents: Math.round(entryFeeDollars * 100),
+          house_pct: parseFloat(document.getElementById("compHousePct").value) || 0,
+          min_entries: parseInt(document.getElementById("compMinEntries").value) || 2,
+          extension_days: parseInt(document.getElementById("compExtensionDays").value) || 3,
+          entries_visible_before_voting: document.getElementById("compEntriesVisible").checked,
+          voter_eligibility: document.getElementById("compVoterEligibility").value,
+          vote_tally_visible: document.getElementById("compVoteTallyVisible").checked
+        };
+        record.winner_tier_config = [
+          { place: 1, pct: tier1 },
+          ...tier2 > 0 ? [{ place: 2, pct: tier2 }] : [],
+          ...tier3 > 0 ? [{ place: 3, pct: tier3 }] : []
+        ];
+        record.member_only = true;
+        record.pricing_mode = entryFeeDollars > 0 ? "paid" : "free";
+        record.rsvp_cost_cents = 0;
+      }
+      if (checkinEnabled && checkinMode === "venue_scan") {
+        record.venue_qr_token = crypto.randomUUID();
+      }
+      if (raffleEnabled) {
+        record.raffle_type = document.getElementById("raffleType").value;
+        record.raffle_draw_trigger = document.getElementById("raffleDrawTrigger").value;
+        const prizesContainer = document.getElementById("rafflePrizesList");
+        const prizeInputs = prizesContainer ? prizesContainer.querySelectorAll('input[type="text"]') : document.querySelectorAll('input[name="rafflePrize"]');
+        const prizes = [];
+        prizeInputs.forEach((input, i) => {
+          const desc = input.value.trim();
+          if (desc) prizes.push({ place: i + 1, description: desc });
         });
-      });
-      document.getElementById("ecCost")?.addEventListener("input", (e) => STATE.form.rsvp_cost_dollars = e.target.value);
-      document.getElementById("ecRaffleEnabled")?.addEventListener("change", (e) => {
-        STATE.form.raffle_enabled = e.target.checked;
-        if (STATE.form.raffle_enabled) ensureRaffleConfig();
-        render();
-      });
-      document.getElementById("ecRafflePrice")?.addEventListener("input", (e) => STATE.form.raffle_entry_cost_dollars = e.target.value);
-      if (typeof wireRaffleBuilder === "function") wireRaffleBuilder();
-      document.getElementById("ecMemberOnly")?.addEventListener("change", (e) => STATE.form.member_only = e.target.checked);
+        record.raffle_prizes = prizes.length > 0 ? prizes : null;
+      }
+      const { data, error } = await supabaseClient.from("events").insert(record).select().single();
+      if (error) throw error;
+      if (isLlc && costItems.length > 0) {
+        const costRows = costItems.map((item, idx) => ({
+          event_id: data.id,
+          name: item.name,
+          category: item.category,
+          total_cost_cents: item.total_cost_cents || 0,
+          included_in_buyin: item.included_in_buyin,
+          avg_per_person_cents: item.avg_per_person_cents || 0,
+          notes: item.notes || null,
+          sort_order: idx
+        }));
+        const { error: costErr } = await supabaseClient.from("event_cost_items").insert(costRows);
+        if (costErr) console.error("Cost items insert error:", costErr);
+      }
+      if (isComp) {
+        const eventStart = new Date(document.getElementById("eventStart").value);
+        const p1End = document.getElementById("compPhase1End").value ? new Date(document.getElementById("compPhase1End").value) : null;
+        const p2End = document.getElementById("compPhase2End").value ? new Date(document.getElementById("compPhase2End").value) : null;
+        const p3End = document.getElementById("compPhase3End").value ? new Date(document.getElementById("compPhase3End").value) : null;
+        const phases = [
+          { event_id: data.id, phase_num: 1, name: "Registration", description: "Sign up as a competitor and build the prize pool.", starts_at: eventStart.toISOString(), ends_at: p1End ? p1End.toISOString() : eventStart.toISOString(), status: "pending" },
+          { event_id: data.id, phase_num: 2, name: "Active Competition", description: "Submit your entry before the deadline.", starts_at: p1End ? p1End.toISOString() : eventStart.toISOString(), ends_at: p2End ? p2End.toISOString() : eventStart.toISOString(), status: "pending" },
+          { event_id: data.id, phase_num: 3, name: "Voting", description: "Vote for your favorite entry. One vote per person.", starts_at: p2End ? p2End.toISOString() : eventStart.toISOString(), ends_at: p3End ? p3End.toISOString() : eventStart.toISOString(), status: "pending" },
+          { event_id: data.id, phase_num: 4, name: "Results", description: "Winners announced and prizes distributed.", starts_at: p3End ? p3End.toISOString() : eventStart.toISOString(), ends_at: document.getElementById("eventEnd").value ? new Date(document.getElementById("eventEnd").value).toISOString() : p3End ? p3End.toISOString() : eventStart.toISOString(), status: "pending" }
+        ];
+        const { error: phaseErr } = await supabaseClient.from("competition_phases").insert(phases);
+        if (phaseErr) console.error("Competition phases insert error:", phaseErr);
+      }
+      document.getElementById("createEventForm").reset();
+      globalThis.evtBannerFile = null;
+      globalThis.evtEmbedImageFile = null;
+      globalThis.evtCostItems = [];
+      window._evtLocGeoCache = null;
+      window.evtSetLocationIcon("hide");
+      window.evtSetLocationStatus("", "");
+      document.getElementById("bannerPreviewWrap").classList.add("hidden");
+      document.getElementById("bannerUploadHint").classList.remove("hidden");
+      document.getElementById("embedImagePreviewWrap")?.classList.add("hidden");
+      document.getElementById("embedImageUploadHint")?.classList.remove("hidden");
+      document.getElementById("llcFieldsSection")?.classList.add("hidden");
+      document.getElementById("compFieldsSection")?.classList.add("hidden");
+      document.getElementById("costItemsList") && (document.getElementById("costItemsList").innerHTML = "");
+      document.getElementById("costSummary")?.classList.add("hidden");
+      globalThis.evtToggleModal("createModal", false);
+      await globalThis.evtLoadEvents();
+      globalThis.evtNavigateToEvent(data.slug);
+    } catch (err) {
+      console.error("Create event error:", err);
+      alert(`Failed to create event: ${err.message}`);
+    } finally {
+      publishBtn.disabled = false;
+      publishBtn.textContent = "Publish Event";
     }
-    window.EventsCreateSteps = window.EventsCreateSteps || {};
-    window.EventsCreateSteps.pricing = { html, wire };
-  })();
+  }
+  globalThis.evtHandleCreate = evtHandleCreate2;
 
-  // js/portal/events/create/step-review.js
-  (function() {
-    "use strict";
-    function _esc(s) {
-      return window.EventsCreateSteps.esc(s);
+  // js/portal/events/create/step-basics.js
+  function _esc(s) {
+    return window.EventsCreateSteps.esc(s);
+  }
+  function _setImageFile(imageFile, fileKey, previewKey) {
+    const STATE3 = window.EventsCreateSteps.getState();
+    if (!imageFile) return;
+    if (!imageFile.type.match(/^image\/(png|jpeg|webp)$/)) {
+      alert("Please choose a PNG, JPG, or WebP image.");
+      return;
     }
-    function html() {
-      const STATE = window.EventsCreateSteps.getState();
-      const CATEGORIES = window.EventsCreateSteps.CATEGORIES;
-      const f = STATE.form;
-      const cat = CATEGORIES.find((c) => c.key === f.category)?.label || f.category;
-      const start = f.start_date ? new Date(f.start_date).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "\u2014";
-      const pricingLabel = { free: "Free", paid: `Paid \xB7 $${f.rsvp_cost_dollars || "0.00"}`, free_paid_raffle: "Free + paid raffle" }[f.pricing_mode];
-      const raffleReviewHtml = window.EventsCreateSteps.raffleReviewHtml;
-      return `
-            <div id="ecError"></div>
-
-            ${STATE.bannerPreviewUrl ? `<img src="${STATE.bannerPreviewUrl}" class="ec-banner-preview mb-3" alt="">` : ""}
-
-            <div class="ec-review-card">
-                <h3 class="font-bold text-gray-800 text-sm mb-2">${_esc(f.title || "Untitled event")}</h3>
-                <div class="ec-review-row"><span>Type</span><span>${f.event_type}</span></div>
-                <div class="ec-review-row"><span>Category</span><span>${cat}</span></div>
-                ${f.description ? `<div class="ec-review-row"><span>Description</span><span style="max-width:60%">${_esc(f.description.slice(0, 120))}${f.description.length > 120 ? "\u2026" : ""}</span></div>` : ""}
-            </div>
-
-            <div class="ec-review-card">
-                <h3 class="font-bold text-gray-800 text-sm mb-2">When & Where</h3>
-                <div class="ec-review-row"><span>Starts</span><span>${start}</span></div>
-                <div class="ec-review-row"><span>Timezone</span><span>${f.timezone}</span></div>
-                ${f.location_nickname ? `<div class="ec-review-row"><span>Location</span><span>${_esc(f.location_nickname)}</span></div>` : ""}
-                ${f.location_text ? `<div class="ec-review-row"><span>Address</span><span style="max-width:60%">${_esc(f.location_text)}${STATE.geocode ? " \u{1F4CD}" : ""}</span></div>` : ""}
-                ${f.max_participants ? `<div class="ec-review-row"><span>Max attendees</span><span>${f.max_participants}</span></div>` : ""}
-            </div>
-
-            <div class="ec-review-card">
-                <h3 class="font-bold text-gray-800 text-sm mb-2">Pricing</h3>
-                <div class="ec-review-row"><span>Mode</span><span>${pricingLabel}</span></div>
-                <div class="ec-review-row"><span>Raffle</span><span>${f.raffle_enabled ? `Yes \xB7 $${f.raffle_entry_cost_dollars || "0.00"}/entry` : "No"}</span></div>
-                ${f.raffle_enabled && typeof raffleReviewHtml === "function" ? raffleReviewHtml() : ""}
-                <div class="ec-review-row"><span>Visibility</span><span>${f.member_only ? "Members only" : "Public"}</span></div>
-            </div>
-
-            <p class="text-xs text-gray-400 text-center">Tap <strong>Publish</strong> to go live, or <strong>Save draft</strong> to finish later.</p>
-        `;
+    if (imageFile.size > 5 * 1024 * 1024) {
+      alert("File must be under 5 MB.");
+      return;
     }
-    function wire() {
+    STATE3[fileKey] = imageFile;
+    const reader = new FileReader();
+    reader.onload = () => {
+      STATE3[previewKey] = reader.result;
+      window.EventsCreateSteps.render();
+    };
+    reader.readAsDataURL(imageFile);
+  }
+  function _wireImageUpload(dropId, fileId, clearId, fileKey, previewKey) {
+    const STATE3 = window.EventsCreateSteps.getState();
+    const drop = document.getElementById(dropId);
+    const file = document.getElementById(fileId);
+    if (drop && window.matchMedia("(hover:hover) and (pointer:fine)").matches) {
+      const dt = drop.querySelector(".ec-drop-hint-desktop");
+      const tt = drop.querySelector(".ec-drop-hint-touch");
+      if (dt) dt.style.display = "";
+      if (tt) tt.style.display = "none";
     }
-    window.EventsCreateSteps = window.EventsCreateSteps || {};
-    window.EventsCreateSteps.review = { html, wire };
-  })();
-
-  // js/portal/events/create/raffle-builder.js
-  (function() {
-    "use strict";
-    function _steps() {
-      return window.EventsCreateSteps;
-    }
-    function _state() {
-      return _steps().getState();
-    }
-    function _render() {
-      _steps().render();
-    }
-    function _esc(s) {
-      return _steps().esc(s);
-    }
-    function raffleModel() {
-      if (!window.EventsRaffleModel) throw new Error("Raffle model helper is not loaded.");
-      return window.EventsRaffleModel;
-    }
-    function ensureRaffleConfig() {
-      const STATE = _state();
-      const model = raffleModel();
-      if (!STATE.form.raffle_config) STATE.form.raffle_config = model.createDefaultConfig();
-      STATE.form.raffle_config = model.normalizeConfig(STATE.form.raffle_config);
-      return STATE.form.raffle_config;
-    }
-    function normalizeRaffleConfig() {
-      const STATE = _state();
-      STATE.form.raffle_config = raffleModel().normalizeConfig(STATE.form.raffle_config);
-      return STATE.form.raffle_config;
-    }
-    function _drawModeOptions(selected) {
-      const options = [
-        ["specific_item", "Specific items"],
-        ["random_item", "Random item in category"],
-        ["winner_choice", "Winner chooses later"]
-      ];
-      return options.map(([value, label]) => `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`).join("");
-    }
-    function builderHtml() {
-      const STATE = _state();
-      const model = raffleModel();
-      const config = ensureRaffleConfig();
-      const categories = model.getOrderedCategories(config);
-      const items = config.items || [];
-      const validation = model.validateConfig(config);
-      const totalWinners = model.getTotalWinnerCount(config);
-      return `
-            <div class="ec-row">
-                <label class="ec-label">Raffle entry price (USD)</label>
-                <input id="ecRafflePrice" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc(STATE.form.raffle_entry_cost_dollars)}">
-                <p class="ec-help">Use 0.00 for a free raffle. Prize images come later; emoji fallbacks are available now.</p>
-            </div>
-
-            <div class="ec-row ec-raffle-box">
-                <div class="ec-raffle-head">
-                    <div>
-                        <div class="text-sm font-extrabold text-gray-900">Prize categories</div>
-                        <div class="text-xs text-gray-500">Draw order follows the category order below.</div>
-                    </div>
-                    <button type="button" class="ec-mini-btn" data-ec-raffle-add-category>Add category</button>
-                </div>
-                ${categories.map((category, index) => `
-                    <div class="ec-raffle-section" data-ec-category-row="${index}">
-                        <div class="ec-raffle-grid">
-                            <div>
-                                <label class="ec-label">Category</label>
-                                <input class="ec-input" data-ec-category-field="label" data-ec-category-id="${_esc(category.id)}" value="${_esc(category.label)}" maxlength="80">
-                            </div>
-                            <div>
-                                <label class="ec-label">Draw mode</label>
-                                <select class="ec-input" data-ec-category-field="draw_mode" data-ec-category-id="${_esc(category.id)}">
-                                    ${_drawModeOptions(category.draw_mode)}
-                                </select>
-                            </div>
-                            <div>
-                                <label class="ec-label">Winners</label>
-                                <input class="ec-input" type="number" min="0" step="1" data-ec-category-field="winner_count" data-ec-category-id="${_esc(category.id)}" value="${category.winner_count ?? ""}">
-                            </div>
-                            <div style="display:flex;gap:4px">
-                                <button type="button" class="ec-icon-btn" title="Move up" data-ec-category-move="up" data-ec-category-id="${_esc(category.id)}">\u2191</button>
-                                <button type="button" class="ec-icon-btn" title="Move down" data-ec-category-move="down" data-ec-category-id="${_esc(category.id)}">\u2193</button>
-                                <button type="button" class="ec-icon-btn" title="Remove" data-ec-category-remove="${_esc(category.id)}">\xD7</button>
-                            </div>
-                        </div>
+    drop?.addEventListener("click", () => file.click());
+    drop?.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      drop.classList.add("ec-banner-drop--over");
+    });
+    drop?.addEventListener("dragleave", (e) => {
+      if (!drop.contains(e.relatedTarget)) {
+        drop.classList.remove("ec-banner-drop--over");
+      }
+    });
+    drop?.addEventListener("drop", (e) => {
+      e.preventDefault();
+      drop.classList.remove("ec-banner-drop--over");
+      _setImageFile(e.dataTransfer?.files?.[0], fileKey, previewKey);
+    });
+    file?.addEventListener("change", () => _setImageFile(file.files[0], fileKey, previewKey));
+    document.getElementById(clearId)?.addEventListener("click", () => {
+      STATE3[fileKey] = null;
+      STATE3[previewKey] = null;
+      if (file) file.value = "";
+      window.EventsCreateSteps.render();
+    });
+  }
+  function html() {
+    const STATE3 = window.EventsCreateSteps.getState();
+    const CATEGORIES2 = window.EventsCreateSteps.CATEGORIES;
+    const f = STATE3.form;
+    const types = [
+      { key: "member", emoji: "\u{1F465}", label: "Member event", sub: "Anyone can RSVP", enabled: true },
+      { key: "llc", emoji: "\u{1F3E2}", label: "LLC event", sub: "Use legacy editor for now", enabled: false },
+      { key: "competition", emoji: "\u{1F3C6}", label: "Competition", sub: "Use legacy editor for now", enabled: false }
+    ];
+    return `
+        <div class="ec-row">
+            <label class="ec-label">Event type</label>
+            <div class="ec-grid-2" style="grid-template-columns:1fr 1fr 1fr">
+                ${types.map((t) => `
+                    <div class="ec-type-card ${f.event_type === t.key ? "active" : ""} ${!t.enabled ? "disabled" : ""}" data-type="${t.key}" ${!t.enabled ? 'data-disabled="1"' : ""}>
+                        <div class="ec-type-emoji">${t.emoji}</div>
+                        <div class="text-sm font-bold text-gray-800 mt-1">${t.label}</div>
+                        <div class="text-xs text-gray-500">${t.sub}</div>
                     </div>
                 `).join("")}
             </div>
+            <p class="ec-help">LLC &amp; Competition events use the legacy form \u2014 select Member to continue here.</p>
+        </div>
 
-            <div class="ec-row ec-raffle-box">
-                <div class="ec-raffle-head">
-                    <div>
-                        <div class="text-sm font-extrabold text-gray-900">Prize items</div>
-                        <div class="text-xs text-gray-500">Add the items being given away. Emoji is used when no image is uploaded.</div>
-                    </div>
-                    <button type="button" class="ec-mini-btn" data-ec-raffle-add-item>Add item</button>
-                </div>
-                ${items.length ? items.map((item, index) => {
-        const preview = STATE.prizeImagePreviews[item.id] || item.image_url || null;
-        const fileName = STATE.prizeImageFiles[item.id]?.name || null;
-        return `
-                    <div class="ec-raffle-item-wrap" data-ec-item-row="${index}">
-                        <div class="ec-raffle-item-grid">
-                            <div>
-                                <label class="ec-label">Emoji</label>
-                                <input class="ec-input" data-ec-item-field="emoji" data-ec-item-id="${_esc(item.id)}" value="${_esc(item.emoji || "\u{1F381}")}" maxlength="4">
-                            </div>
-                            <div>
-                                <label class="ec-label">Item name</label>
-                                <input class="ec-input" data-ec-item-field="name" data-ec-item-id="${_esc(item.id)}" value="${_esc(item.name)}" maxlength="120">
-                            </div>
-                            <div>
-                                <label class="ec-label">Category</label>
-                                <select class="ec-input" data-ec-item-field="category_id" data-ec-item-id="${_esc(item.id)}">
-                                    ${categories.map((category) => `<option value="${_esc(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${_esc(category.label)}</option>`).join("")}
-                                </select>
-                            </div>
-                            <div>
-                                <label class="ec-label">Qty</label>
-                                <input class="ec-input" type="number" min="1" step="1" data-ec-item-field="quantity" data-ec-item-id="${_esc(item.id)}" value="${item.quantity || 1}">
-                            </div>
-                            <div style="display:flex;gap:4px">
-                                <button type="button" class="ec-icon-btn" title="Move up" data-ec-item-move="up" data-ec-item-id="${_esc(item.id)}">\u2191</button>
-                                <button type="button" class="ec-icon-btn" title="Move down" data-ec-item-move="down" data-ec-item-id="${_esc(item.id)}">\u2193</button>
-                                <button type="button" class="ec-icon-btn" title="Remove" data-ec-item-remove="${_esc(item.id)}">\xD7</button>
-                            </div>
-                        </div>
-                        <div class="ec-prize-img-row">
-                            <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-ec-prize-file="${_esc(item.id)}">
-                            <div class="ec-prize-img-drop" data-ec-prize-drop="${_esc(item.id)}" title="Click or drag an image here">
-                                ${preview ? `<img src="${_esc(preview)}" alt="Prize image">` : `<span style="font-size:18px">\u{1F4F7}</span>`}
-                            </div>
-                            <div class="ec-prize-img-label">
-                                ${preview ? `<strong>${fileName ? _esc(fileName) : "Image set"}</strong><span>Drag a new image or click the thumbnail to replace</span>` : `<strong>Prize image</strong><span>Click or drag &amp; drop a photo (PNG/JPG/WebP \xB7 max 5 MB)</span>`}
-                            </div>
-                            ${preview ? `<button type="button" class="ec-prize-img-clear" data-ec-prize-clear="${_esc(item.id)}">Remove</button>` : ""}
-                        </div>
-                    </div>`;
-      }).join("") : `<div class="text-xs text-gray-500 bg-white border border-dashed border-gray-300 rounded-xl p-3">No prize items yet. Add at least one item before publishing.</div>`}
+        <div class="ec-row">
+            <label class="ec-label">Title</label>
+            <input id="ecTitle" class="ec-input" type="text" maxlength="120" placeholder="What's the occasion?" value="${_esc(f.title)}">
+        </div>
 
-                <div class="ec-raffle-summary">
-                    <span class="ec-raffle-chip">${categories.length} categories</span>
-                    <span class="ec-raffle-chip">${items.length} items</span>
-                    <span class="ec-raffle-chip">${totalWinners} winners</span>
-                </div>
-                ${validation.valid ? "" : `<div class="ec-error" style="margin-top:10px">${validation.errors.map(_esc).join("<br>")}</div>`}
+        <div class="ec-row">
+            <label class="ec-label">Category</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+                ${CATEGORIES2.map(
+      (c) => `<button type="button" class="ec-pill ${f.category === c.key ? "active" : ""}" data-cat="${c.key}">${c.label}</button>`
+    ).join("")}
             </div>
-        `;
-    }
-    function _setPrizeImage(itemId, file) {
-      const STATE = _state();
-      if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
-        alert("Please use a PNG, JPG, or WebP image.");
-        return;
+        </div>
+
+        <div class="ec-row">
+            <label class="ec-label">Description</label>
+            <textarea id="ecDesc" class="ec-input ec-textarea" maxlength="2000" placeholder="Tell members what to expect\u2026">${_esc(f.description)}</textarea>
+        </div>
+
+        <div class="ec-row">
+            <label class="ec-label">Banner image (optional)</label>
+            <input id="ecBannerFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
+            ${STATE3.bannerPreviewUrl ? `<div><img src="${STATE3.bannerPreviewUrl}" class="ec-banner-preview" alt=""><button type="button" id="ecBannerClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>` : `<div id="ecBannerDrop" class="ec-banner-drop">
+                        <div style="font-size:28px">\u{1F5BC}\uFE0F</div>
+                        <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drag &amp; drop or click to upload</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
+                        <div class="text-xs text-gray-400">PNG / JPG / WebP \xB7 max 5 MB</div>
+                   </div>`}
+            <p class="ec-help">Landscape image for event pages and cards.</p>
+        </div>
+
+        <div class="ec-row">
+            <label class="ec-label">Embed image (optional)</label>
+            <input id="ecEmbedImageFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
+            ${STATE3.embedImagePreviewUrl ? `<div><img src="${STATE3.embedImagePreviewUrl}" class="ec-embed-preview" alt=""><button type="button" id="ecEmbedImageClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>` : `<div id="ecEmbedImageDrop" class="ec-banner-drop">
+                        <div style="font-size:28px">\u25A3</div>
+                        <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drag &amp; drop or click to upload</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
+                        <div class="text-xs text-gray-400">Portrait works best \xB7 PNG / JPG / WebP \xB7 max 5 MB</div>
+                   </div>`}
+            <p class="ec-help">Used only for iMessage, Discord, and other link previews. Falls back to the banner if empty.</p>
+        </div>
+    `;
+  }
+  function wire() {
+    const STATE3 = window.EventsCreateSteps.getState();
+    document.querySelectorAll("[data-type]").forEach((el) => {
+      el.addEventListener("click", () => {
+        if (el.dataset.disabled) return;
+        STATE3.form.event_type = el.dataset.type;
+        window.EventsCreateSteps.render();
+      });
+    });
+    document.querySelectorAll("[data-cat]").forEach((el) => {
+      el.addEventListener("click", () => {
+        STATE3.form.category = el.dataset.cat;
+        window.EventsCreateSteps.render();
+      });
+    });
+    document.getElementById("ecTitle")?.addEventListener("input", (e) => STATE3.form.title = e.target.value);
+    document.getElementById("ecDesc")?.addEventListener("input", (e) => STATE3.form.description = e.target.value);
+    _wireImageUpload("ecBannerDrop", "ecBannerFile", "ecBannerClear", "bannerFile", "bannerPreviewUrl");
+    _wireImageUpload("ecEmbedImageDrop", "ecEmbedImageFile", "ecEmbedImageClear", "embedImageFile", "embedImagePreviewUrl");
+  }
+  var createStepBasicsApi = { html, wire };
+  globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
+  globalThis.EventsCreateSteps.basics = createStepBasicsApi;
+
+  // js/portal/events/create/step-when.js
+  var _locDebounce;
+  function _esc2(s) {
+    return window.EventsCreateSteps.esc(s);
+  }
+  function html2() {
+    const STATE3 = window.EventsCreateSteps.getState();
+    const TIMEZONES2 = window.EventsCreateSteps.TIMEZONES;
+    const f = STATE3.form;
+    return `
+        <div class="ec-grid-2">
+            <div class="ec-row">
+                <label class="ec-label">Starts</label>
+                <input id="ecStart" class="ec-input" type="datetime-local" value="${_esc2(f.start_date)}">
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">Ends (optional)</label>
+                <input id="ecEnd" class="ec-input" type="datetime-local" value="${_esc2(f.end_date)}">
+            </div>
+        </div>
+
+        <div class="ec-row">
+            <label class="ec-label">Timezone</label>
+            <select id="ecTz" class="ec-input">
+                ${TIMEZONES2.map((tz) => `<option value="${tz}" ${tz === f.timezone ? "selected" : ""}>${tz.replace("_", " ")}</option>`).join("")}
+            </select>
+        </div>
+
+        <div class="ec-row">
+            <label class="ec-label">Location nickname</label>
+            <input id="ecLocNick" class="ec-input" type="text" maxlength="60" placeholder="e.g. Mom's house, Cabin in the woods" value="${_esc2(f.location_nickname)}">
+            <p class="ec-help">Shown on the banner instead of the full address.</p>
+        </div>
+
+        <div class="ec-row">
+            <label class="ec-label">Address</label>
+            <input id="ecLoc" class="ec-input" type="text" placeholder="123 Main St, City, ST" value="${_esc2(f.location_text)}">
+            <div id="ecLocStatus" class="ec-loc-status" style="color:#9ca3af">${STATE3.geocode ? `\u{1F4CD} ${_esc2(STATE3.geocode.display || "Located")}` : "Type an address to geocode (optional)."}</div>
+        </div>
+
+        <div class="ec-grid-2">
+            <div class="ec-row">
+                <label class="ec-label">Max attendees (optional)</label>
+                <input id="ecMax" class="ec-input" type="number" min="1" placeholder="No limit" value="${_esc2(f.max_participants)}">
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">RSVP deadline (optional)</label>
+                <input id="ecDeadline" class="ec-input" type="datetime-local" value="${_esc2(f.rsvp_deadline)}">
+            </div>
+        </div>
+    `;
+  }
+  function wire2() {
+    const STATE3 = window.EventsCreateSteps.getState();
+    const get = (id) => document.getElementById(id);
+    get("ecStart")?.addEventListener("input", (e) => STATE3.form.start_date = e.target.value);
+    get("ecEnd")?.addEventListener("input", (e) => STATE3.form.end_date = e.target.value);
+    get("ecTz")?.addEventListener("change", (e) => STATE3.form.timezone = e.target.value);
+    get("ecLocNick")?.addEventListener("input", (e) => STATE3.form.location_nickname = e.target.value);
+    get("ecMax")?.addEventListener("input", (e) => STATE3.form.max_participants = e.target.value);
+    get("ecDeadline")?.addEventListener("input", (e) => STATE3.form.rsvp_deadline = e.target.value);
+    const loc = get("ecLoc");
+    loc?.addEventListener("input", (e) => {
+      STATE3.form.location_text = e.target.value;
+      STATE3.geocode = null;
+      clearTimeout(_locDebounce);
+      const status = get("ecLocStatus");
+      if (status) {
+        status.textContent = "\u2026";
+        status.style.color = "#9ca3af";
       }
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Image must be under 5 MB.");
-        return;
+      _locDebounce = setTimeout(_doGeocode, 700);
+    });
+  }
+  async function _doGeocode() {
+    const STATE3 = window.EventsCreateSteps.getState();
+    const status = document.getElementById("ecLocStatus");
+    const addr = (STATE3.form.location_text || "").trim();
+    if (!addr || addr.length < 6) {
+      if (status) {
+        status.textContent = "Type an address to geocode (optional).";
+        status.style.color = "#9ca3af";
       }
-      STATE.prizeImageFiles[itemId] = file;
-      const reader = new FileReader();
-      reader.onload = () => {
-        STATE.prizeImagePreviews[itemId] = reader.result;
-        _render();
-      };
-      reader.readAsDataURL(file);
+      return;
     }
-    function _updateCategory(categoryId, field, value, rerender = false) {
-      const config = ensureRaffleConfig();
-      const category = config.categories.find((entry) => entry.id === categoryId);
-      if (!category) return;
-      if (field === "winner_count") category[field] = value === "" ? null : Math.max(0, Math.floor(Number(value) || 0));
-      else category[field] = value;
-      normalizeRaffleConfig();
-      if (rerender) _render();
-    }
-    function _updateItem(itemId, field, value, rerender = false) {
-      const config = ensureRaffleConfig();
-      const item = config.items.find((entry) => entry.id === itemId);
-      if (!item) return;
-      if (field === "quantity") item[field] = Math.max(1, Math.floor(Number(value) || 1));
-      else item[field] = value;
-      normalizeRaffleConfig();
-      if (rerender) _render();
-    }
-    function _renumberSortOrders(entries) {
-      entries.forEach((entry, index) => entry.sort_order = (index + 1) * 10);
-    }
-    function _moveEntry(entries, id, direction) {
-      const ordered = [...entries].sort((left, right) => Number(left.sort_order || 0) - Number(right.sort_order || 0));
-      const index = ordered.findIndex((entry) => entry.id === id);
-      if (index < 0) return;
-      const targetIndex = direction === "up" ? index - 1 : index + 1;
-      if (targetIndex < 0 || targetIndex >= ordered.length) return;
-      const moving = ordered[index];
-      ordered[index] = ordered[targetIndex];
-      ordered[targetIndex] = moving;
-      _renumberSortOrders(ordered);
-      entries.splice(0, entries.length, ...ordered);
-    }
-    function _removeCategory(categoryId) {
-      const config = ensureRaffleConfig();
-      if (config.categories.length <= 1) {
-        alert("Keep at least one raffle category.");
-        return;
+    try {
+      if (typeof globalThis.evtGeocodeAddress === "function") {
+        const r = await window.evtGeocodeAddress(addr);
+        if (r && r.lat && r.lng) {
+          STATE3.geocode = { lat: r.lat, lng: r.lng, display: r.display || addr };
+          if (status) {
+            status.textContent = `\u{1F4CD} ${STATE3.geocode.display}`;
+            status.style.color = "#059669";
+          }
+          return;
+        }
       }
-      config.categories = config.categories.filter((category) => category.id !== categoryId);
-      const fallbackCategoryId = config.categories[0]?.id || "general";
-      config.items.forEach((item) => {
-        if (item.category_id === categoryId) item.category_id = fallbackCategoryId;
+      if (status) {
+        status.textContent = "\u26A0\uFE0F Could not locate \u2014 saved as text only.";
+        status.style.color = "#d97706";
+      }
+    } catch (_) {
+      if (status) {
+        status.textContent = "\u26A0\uFE0F Geocoding error \u2014 saved as text only.";
+        status.style.color = "#d97706";
+      }
+    }
+  }
+  var createStepWhenApi = { html: html2, wire: wire2 };
+  globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
+  globalThis.EventsCreateSteps.when = createStepWhenApi;
+
+  // js/portal/events/create/step-pricing.js
+  function _esc3(s) {
+    return window.EventsCreateSteps.esc(s);
+  }
+  function html3() {
+    const STATE3 = window.EventsCreateSteps.getState();
+    const f = STATE3.form;
+    const modes = [
+      { key: "free", label: "Free", sub: "No payment required" },
+      { key: "paid", label: "Paid RSVP", sub: "Stripe checkout on RSVP" },
+      { key: "free_paid_raffle", label: "Free + paid raffle", sub: "Free entry, paid raffle entries" }
+    ];
+    const showRsvpCost = f.pricing_mode === "paid";
+    const showRaffleConfig = f.raffle_enabled;
+    const raffleBuilderHtml = window.EventsCreateSteps.raffleBuilderHtml;
+    return `
+        <div class="ec-row">
+            <label class="ec-label">Pricing mode</label>
+            <div style="display:flex;flex-direction:column;gap:8px">
+                ${modes.map((m) => `
+                    <label class="ec-checkbox-row" style="cursor:pointer">
+                        <input type="radio" name="ecMode" value="${m.key}" ${f.pricing_mode === m.key ? "checked" : ""}>
+                        <div class="flex-1">
+                            <div class="text-sm font-bold text-gray-800">${m.label}</div>
+                            <div class="text-xs text-gray-500">${m.sub}</div>
+                        </div>
+                    </label>
+                `).join("")}
+            </div>
+        </div>
+
+        ${showRsvpCost ? `
+        <div class="ec-row">
+            <label class="ec-label">RSVP price (USD)</label>
+            <input id="ecCost" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc3(f.rsvp_cost_dollars)}">
+        </div>
+        ` : ""}
+
+        <div class="ec-row">
+            <label class="ec-checkbox-row">
+                <input type="checkbox" id="ecRaffleEnabled" ${f.raffle_enabled ? "checked" : ""}>
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-800">Add a raffle</div>
+                    <div class="text-xs text-gray-500">Members can buy raffle entries for prizes.</div>
+                </div>
+            </label>
+        </div>
+
+        ${showRaffleConfig && typeof raffleBuilderHtml === "function" ? `
+        ${raffleBuilderHtml()}
+        ` : ""}
+
+        <div class="ec-row">
+            <label class="ec-checkbox-row">
+                <input type="checkbox" id="ecMemberOnly" ${f.member_only ? "checked" : ""}>
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-800">Members only</div>
+                    <div class="text-xs text-gray-500">Hide from the public event page; logged-in members only.</div>
+                </div>
+            </label>
+        </div>
+    `;
+  }
+  function wire3() {
+    const STATE3 = window.EventsCreateSteps.getState();
+    const render = window.EventsCreateSteps.render;
+    const ensureRaffleConfig2 = window.EventsCreateSteps.ensureRaffleConfig;
+    const wireRaffleBuilder = window.EventsCreateSteps.wireRaffleBuilder;
+    document.querySelectorAll('input[name="ecMode"]').forEach((el) => {
+      el.addEventListener("change", () => {
+        STATE3.form.pricing_mode = el.value;
+        render();
       });
-      _renumberSortOrders(config.categories);
-      normalizeRaffleConfig();
+    });
+    document.getElementById("ecCost")?.addEventListener("input", (e) => STATE3.form.rsvp_cost_dollars = e.target.value);
+    document.getElementById("ecRaffleEnabled")?.addEventListener("change", (e) => {
+      STATE3.form.raffle_enabled = e.target.checked;
+      if (STATE3.form.raffle_enabled) ensureRaffleConfig2();
+      render();
+    });
+    document.getElementById("ecRafflePrice")?.addEventListener("input", (e) => STATE3.form.raffle_entry_cost_dollars = e.target.value);
+    if (typeof wireRaffleBuilder === "function") wireRaffleBuilder();
+    document.getElementById("ecMemberOnly")?.addEventListener("change", (e) => STATE3.form.member_only = e.target.checked);
+  }
+  var createStepPricingApi = { html: html3, wire: wire3 };
+  globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
+  globalThis.EventsCreateSteps.pricing = createStepPricingApi;
+
+  // js/portal/events/create/step-review.js
+  function _esc4(s) {
+    return window.EventsCreateSteps.esc(s);
+  }
+  function html4() {
+    const STATE3 = window.EventsCreateSteps.getState();
+    const CATEGORIES2 = window.EventsCreateSteps.CATEGORIES;
+    const f = STATE3.form;
+    const cat = CATEGORIES2.find((c) => c.key === f.category)?.label || f.category;
+    const start = f.start_date ? new Date(f.start_date).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "\u2014";
+    const pricingLabel = { free: "Free", paid: `Paid \xB7 $${f.rsvp_cost_dollars || "0.00"}`, free_paid_raffle: "Free + paid raffle" }[f.pricing_mode];
+    const raffleReviewHtml = window.EventsCreateSteps.raffleReviewHtml;
+    return `
+        <div id="ecError"></div>
+
+        ${STATE3.bannerPreviewUrl ? `<img src="${STATE3.bannerPreviewUrl}" class="ec-banner-preview mb-3" alt="">` : ""}
+
+        <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">${_esc4(f.title || "Untitled event")}</h3>
+            <div class="ec-review-row"><span>Type</span><span>${f.event_type}</span></div>
+            <div class="ec-review-row"><span>Category</span><span>${cat}</span></div>
+            ${f.description ? `<div class="ec-review-row"><span>Description</span><span style="max-width:60%">${_esc4(f.description.slice(0, 120))}${f.description.length > 120 ? "\u2026" : ""}</span></div>` : ""}
+        </div>
+
+        <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">When & Where</h3>
+            <div class="ec-review-row"><span>Starts</span><span>${start}</span></div>
+            <div class="ec-review-row"><span>Timezone</span><span>${f.timezone}</span></div>
+            ${f.location_nickname ? `<div class="ec-review-row"><span>Location</span><span>${_esc4(f.location_nickname)}</span></div>` : ""}
+            ${f.location_text ? `<div class="ec-review-row"><span>Address</span><span style="max-width:60%">${_esc4(f.location_text)}${STATE3.geocode ? " \u{1F4CD}" : ""}</span></div>` : ""}
+            ${f.max_participants ? `<div class="ec-review-row"><span>Max attendees</span><span>${f.max_participants}</span></div>` : ""}
+        </div>
+
+        <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">Pricing</h3>
+            <div class="ec-review-row"><span>Mode</span><span>${pricingLabel}</span></div>
+            <div class="ec-review-row"><span>Raffle</span><span>${f.raffle_enabled ? `Yes \xB7 $${f.raffle_entry_cost_dollars || "0.00"}/entry` : "No"}</span></div>
+            ${f.raffle_enabled && typeof raffleReviewHtml === "function" ? raffleReviewHtml() : ""}
+            <div class="ec-review-row"><span>Visibility</span><span>${f.member_only ? "Members only" : "Public"}</span></div>
+        </div>
+
+        <p class="text-xs text-gray-400 text-center">Tap <strong>Publish</strong> to go live, or <strong>Save draft</strong> to finish later.</p>
+    `;
+  }
+  function wire4() {
+  }
+  var createStepReviewApi = { html: html4, wire: wire4 };
+  globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
+  globalThis.EventsCreateSteps.review = createStepReviewApi;
+
+  // js/portal/events/create/raffle-builder.js
+  function _steps() {
+    return window.EventsCreateSteps;
+  }
+  function _state() {
+    return _steps().getState();
+  }
+  function _render() {
+    _steps().render();
+  }
+  function _esc5(s) {
+    return _steps().esc(s);
+  }
+  function raffleModel() {
+    if (!window.EventsRaffleModel) throw new Error("Raffle model helper is not loaded.");
+    return window.EventsRaffleModel;
+  }
+  function ensureRaffleConfig() {
+    const STATE3 = _state();
+    const model = raffleModel();
+    if (!STATE3.form.raffle_config) STATE3.form.raffle_config = model.createDefaultConfig();
+    STATE3.form.raffle_config = model.normalizeConfig(STATE3.form.raffle_config);
+    return STATE3.form.raffle_config;
+  }
+  function normalizeRaffleConfig() {
+    const STATE3 = _state();
+    STATE3.form.raffle_config = raffleModel().normalizeConfig(STATE3.form.raffle_config);
+    return STATE3.form.raffle_config;
+  }
+  function _drawModeOptions(selected) {
+    const options = [
+      ["specific_item", "Specific items"],
+      ["random_item", "Random item in category"],
+      ["winner_choice", "Winner chooses later"]
+    ];
+    return options.map(([value, label]) => `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`).join("");
+  }
+  function builderHtml() {
+    const STATE3 = _state();
+    const model = raffleModel();
+    const config = ensureRaffleConfig();
+    const categories = model.getOrderedCategories(config);
+    const items = config.items || [];
+    const validation = model.validateConfig(config);
+    const totalWinners = model.getTotalWinnerCount(config);
+    return `
+        <div class="ec-row">
+            <label class="ec-label">Raffle entry price (USD)</label>
+            <input id="ecRafflePrice" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc5(STATE3.form.raffle_entry_cost_dollars)}">
+            <p class="ec-help">Use 0.00 for a free raffle. Prize images come later; emoji fallbacks are available now.</p>
+        </div>
+
+        <div class="ec-row ec-raffle-box">
+            <div class="ec-raffle-head">
+                <div>
+                    <div class="text-sm font-extrabold text-gray-900">Prize categories</div>
+                    <div class="text-xs text-gray-500">Draw order follows the category order below.</div>
+                </div>
+                <button type="button" class="ec-mini-btn" data-ec-raffle-add-category>Add category</button>
+            </div>
+            ${categories.map((category, index) => `
+                <div class="ec-raffle-section" data-ec-category-row="${index}">
+                    <div class="ec-raffle-grid">
+                        <div>
+                            <label class="ec-label">Category</label>
+                            <input class="ec-input" data-ec-category-field="label" data-ec-category-id="${_esc5(category.id)}" value="${_esc5(category.label)}" maxlength="80">
+                        </div>
+                        <div>
+                            <label class="ec-label">Draw mode</label>
+                            <select class="ec-input" data-ec-category-field="draw_mode" data-ec-category-id="${_esc5(category.id)}">
+                                ${_drawModeOptions(category.draw_mode)}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="ec-label">Winners</label>
+                            <input class="ec-input" type="number" min="0" step="1" data-ec-category-field="winner_count" data-ec-category-id="${_esc5(category.id)}" value="${category.winner_count ?? ""}">
+                        </div>
+                        <div style="display:flex;gap:4px">
+                            <button type="button" class="ec-icon-btn" title="Move up" data-ec-category-move="up" data-ec-category-id="${_esc5(category.id)}">\u2191</button>
+                            <button type="button" class="ec-icon-btn" title="Move down" data-ec-category-move="down" data-ec-category-id="${_esc5(category.id)}">\u2193</button>
+                            <button type="button" class="ec-icon-btn" title="Remove" data-ec-category-remove="${_esc5(category.id)}">\xD7</button>
+                        </div>
+                    </div>
+                </div>
+            `).join("")}
+        </div>
+
+        <div class="ec-row ec-raffle-box">
+            <div class="ec-raffle-head">
+                <div>
+                    <div class="text-sm font-extrabold text-gray-900">Prize items</div>
+                    <div class="text-xs text-gray-500">Add the items being given away. Emoji is used when no image is uploaded.</div>
+                </div>
+                <button type="button" class="ec-mini-btn" data-ec-raffle-add-item>Add item</button>
+            </div>
+            ${items.length ? items.map((item, index) => {
+      const preview = STATE3.prizeImagePreviews[item.id] || item.image_url || null;
+      const fileName = STATE3.prizeImageFiles[item.id]?.name || null;
+      return `
+                <div class="ec-raffle-item-wrap" data-ec-item-row="${index}">
+                    <div class="ec-raffle-item-grid">
+                        <div>
+                            <label class="ec-label">Emoji</label>
+                            <input class="ec-input" data-ec-item-field="emoji" data-ec-item-id="${_esc5(item.id)}" value="${_esc5(item.emoji || "\u{1F381}")}" maxlength="4">
+                        </div>
+                        <div>
+                            <label class="ec-label">Item name</label>
+                            <input class="ec-input" data-ec-item-field="name" data-ec-item-id="${_esc5(item.id)}" value="${_esc5(item.name)}" maxlength="120">
+                        </div>
+                        <div>
+                            <label class="ec-label">Category</label>
+                            <select class="ec-input" data-ec-item-field="category_id" data-ec-item-id="${_esc5(item.id)}">
+                                ${categories.map((category) => `<option value="${_esc5(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${_esc5(category.label)}</option>`).join("")}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="ec-label">Qty</label>
+                            <input class="ec-input" type="number" min="1" step="1" data-ec-item-field="quantity" data-ec-item-id="${_esc5(item.id)}" value="${item.quantity || 1}">
+                        </div>
+                        <div style="display:flex;gap:4px">
+                            <button type="button" class="ec-icon-btn" title="Move up" data-ec-item-move="up" data-ec-item-id="${_esc5(item.id)}">\u2191</button>
+                            <button type="button" class="ec-icon-btn" title="Move down" data-ec-item-move="down" data-ec-item-id="${_esc5(item.id)}">\u2193</button>
+                            <button type="button" class="ec-icon-btn" title="Remove" data-ec-item-remove="${_esc5(item.id)}">\xD7</button>
+                        </div>
+                    </div>
+                    <div class="ec-prize-img-row">
+                        <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-ec-prize-file="${_esc5(item.id)}">
+                        <div class="ec-prize-img-drop" data-ec-prize-drop="${_esc5(item.id)}" title="Click or drag an image here">
+                            ${preview ? `<img src="${_esc5(preview)}" alt="Prize image">` : `<span style="font-size:18px">\u{1F4F7}</span>`}
+                        </div>
+                        <div class="ec-prize-img-label">
+                            ${preview ? `<strong>${fileName ? _esc5(fileName) : "Image set"}</strong><span>Drag a new image or click the thumbnail to replace</span>` : `<strong>Prize image</strong><span>Click or drag &amp; drop a photo (PNG/JPG/WebP \xB7 max 5 MB)</span>`}
+                        </div>
+                        ${preview ? `<button type="button" class="ec-prize-img-clear" data-ec-prize-clear="${_esc5(item.id)}">Remove</button>` : ""}
+                    </div>
+                </div>`;
+    }).join("") : `<div class="text-xs text-gray-500 bg-white border border-dashed border-gray-300 rounded-xl p-3">No prize items yet. Add at least one item before publishing.</div>`}
+
+            <div class="ec-raffle-summary">
+                <span class="ec-raffle-chip">${categories.length} categories</span>
+                <span class="ec-raffle-chip">${items.length} items</span>
+                <span class="ec-raffle-chip">${totalWinners} winners</span>
+            </div>
+            ${validation.valid ? "" : `<div class="ec-error" style="margin-top:10px">${validation.errors.map(_esc5).join("<br>")}</div>`}
+        </div>
+    `;
+  }
+  function _setPrizeImage(itemId, file) {
+    const STATE3 = _state();
+    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+      alert("Please use a PNG, JPG, or WebP image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be under 5 MB.");
+      return;
+    }
+    STATE3.prizeImageFiles[itemId] = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      STATE3.prizeImagePreviews[itemId] = reader.result;
       _render();
+    };
+    reader.readAsDataURL(file);
+  }
+  function _updateCategory(categoryId, field, value, rerender = false) {
+    const config = ensureRaffleConfig();
+    const category = config.categories.find((entry) => entry.id === categoryId);
+    if (!category) return;
+    if (field === "winner_count") category[field] = value === "" ? null : Math.max(0, Math.floor(Number(value) || 0));
+    else category[field] = value;
+    normalizeRaffleConfig();
+    if (rerender) _render();
+  }
+  function _updateItem(itemId, field, value, rerender = false) {
+    const config = ensureRaffleConfig();
+    const item = config.items.find((entry) => entry.id === itemId);
+    if (!item) return;
+    if (field === "quantity") item[field] = Math.max(1, Math.floor(Number(value) || 1));
+    else item[field] = value;
+    normalizeRaffleConfig();
+    if (rerender) _render();
+  }
+  function _renumberSortOrders(entries) {
+    entries.forEach((entry, index) => entry.sort_order = (index + 1) * 10);
+  }
+  function _moveEntry(entries, id, direction) {
+    const ordered = [...entries].sort((left, right) => Number(left.sort_order || 0) - Number(right.sort_order || 0));
+    const index = ordered.findIndex((entry) => entry.id === id);
+    if (index < 0) return;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= ordered.length) return;
+    const moving = ordered[index];
+    ordered[index] = ordered[targetIndex];
+    ordered[targetIndex] = moving;
+    _renumberSortOrders(ordered);
+    entries.splice(0, entries.length, ...ordered);
+  }
+  function _removeCategory(categoryId) {
+    const config = ensureRaffleConfig();
+    if (config.categories.length <= 1) {
+      alert("Keep at least one raffle category.");
+      return;
     }
-    function _removeItem(itemId) {
-      const config = ensureRaffleConfig();
-      config.items = config.items.filter((item) => item.id !== itemId);
-      _renumberSortOrders(config.items);
-      normalizeRaffleConfig();
-      _render();
-    }
-    function _moveCategory(categoryId, direction) {
-      const config = ensureRaffleConfig();
-      _moveEntry(config.categories, categoryId, direction);
-      normalizeRaffleConfig();
-      _render();
-    }
-    function _moveItem(itemId, direction) {
-      const config = ensureRaffleConfig();
-      _moveEntry(config.items, itemId, direction);
-      normalizeRaffleConfig();
-      _render();
-    }
-    function wire() {
-      const STATE = _state();
-      if (!STATE.form.raffle_enabled) return;
-      document.querySelectorAll("[data-ec-category-field]").forEach((input) => {
-        input.addEventListener("input", () => _updateCategory(input.dataset.ecCategoryId, input.dataset.ecCategoryField, input.value));
-        input.addEventListener("change", () => _updateCategory(input.dataset.ecCategoryId, input.dataset.ecCategoryField, input.value, true));
-      });
-      document.querySelectorAll("[data-ec-item-field]").forEach((input) => {
-        input.addEventListener("input", () => _updateItem(input.dataset.ecItemId, input.dataset.ecItemField, input.value));
-        input.addEventListener("change", () => _updateItem(input.dataset.ecItemId, input.dataset.ecItemField, input.value, true));
-      });
-      document.querySelector("[data-ec-raffle-add-category]")?.addEventListener("click", () => {
-        const model = raffleModel();
-        const config = ensureRaffleConfig();
-        const nextOrder = (config.categories.length + 1) * 10;
-        config.categories.push(model.createCategory({ label: "New Tier", sort_order: nextOrder, winner_count: 1 }));
-        normalizeRaffleConfig();
-        _render();
-      });
-      document.querySelector("[data-ec-raffle-add-item]")?.addEventListener("click", () => {
-        const model = raffleModel();
-        const config = ensureRaffleConfig();
-        if (!config.categories.length) config.categories.push(model.createCategory({ id: "general", label: "Raffle Prizes", sort_order: 10 }));
-        const nextOrder = (config.items.length + 1) * 10;
-        config.items.push(model.createItem({ category_id: config.categories[0].id, name: "New prize item", sort_order: nextOrder }));
-        normalizeRaffleConfig();
-        _render();
-      });
-      document.querySelectorAll("[data-ec-category-remove]").forEach((button) => {
-        button.addEventListener("click", () => _removeCategory(button.dataset.ecCategoryRemove));
-      });
-      document.querySelectorAll("[data-ec-item-remove]").forEach((button) => {
-        button.addEventListener("click", () => _removeItem(button.dataset.ecItemRemove));
-      });
-      document.querySelectorAll("[data-ec-category-move]").forEach((button) => {
-        button.addEventListener("click", () => _moveCategory(button.dataset.ecCategoryId, button.dataset.ecCategoryMove));
-      });
-      document.querySelectorAll("[data-ec-item-move]").forEach((button) => {
-        button.addEventListener("click", () => _moveItem(button.dataset.ecItemId, button.dataset.ecItemMove));
-      });
-      document.querySelectorAll("[data-ec-prize-drop]").forEach((zone) => {
-        const itemId = zone.dataset.ecPrizeDrop;
-        const fileInput = document.querySelector(`[data-ec-prize-file="${CSS.escape(itemId)}"]`);
-        if (!fileInput) return;
-        zone.addEventListener("click", () => fileInput.click());
-        zone.addEventListener("dragover", (e) => {
-          e.preventDefault();
-          zone.classList.add("ec-prize-img-drop--over");
-        });
-        zone.addEventListener("dragleave", (e) => {
-          if (!zone.contains(e.relatedTarget)) zone.classList.remove("ec-prize-img-drop--over");
-        });
-        zone.addEventListener("drop", (e) => {
-          e.preventDefault();
-          zone.classList.remove("ec-prize-img-drop--over");
-          const f = e.dataTransfer?.files?.[0];
-          if (!f) return;
-          _setPrizeImage(itemId, f);
-        });
-        fileInput.addEventListener("change", () => {
-          const f = fileInput.files?.[0];
-          if (!f) return;
-          _setPrizeImage(itemId, f);
-        });
-      });
-      document.querySelectorAll("[data-ec-prize-clear]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const itemId = btn.dataset.ecPrizeClear;
-          delete STATE.prizeImageFiles[itemId];
-          delete STATE.prizeImagePreviews[itemId];
-          const config = ensureRaffleConfig();
-          const item = config.items.find((i) => i.id === itemId);
-          if (item) item.image_url = null;
-          _render();
-        });
-      });
-    }
-    function reviewHtml() {
+    config.categories = config.categories.filter((category) => category.id !== categoryId);
+    const fallbackCategoryId = config.categories[0]?.id || "general";
+    config.items.forEach((item) => {
+      if (item.category_id === categoryId) item.category_id = fallbackCategoryId;
+    });
+    _renumberSortOrders(config.categories);
+    normalizeRaffleConfig();
+    _render();
+  }
+  function _removeItem(itemId) {
+    const config = ensureRaffleConfig();
+    config.items = config.items.filter((item) => item.id !== itemId);
+    _renumberSortOrders(config.items);
+    normalizeRaffleConfig();
+    _render();
+  }
+  function _moveCategory(categoryId, direction) {
+    const config = ensureRaffleConfig();
+    _moveEntry(config.categories, categoryId, direction);
+    normalizeRaffleConfig();
+    _render();
+  }
+  function _moveItem(itemId, direction) {
+    const config = ensureRaffleConfig();
+    _moveEntry(config.items, itemId, direction);
+    normalizeRaffleConfig();
+    _render();
+  }
+  function wire5() {
+    const STATE3 = _state();
+    if (!STATE3.form.raffle_enabled) return;
+    document.querySelectorAll("[data-ec-category-field]").forEach((input) => {
+      input.addEventListener("input", () => _updateCategory(input.dataset.ecCategoryId, input.dataset.ecCategoryField, input.value));
+      input.addEventListener("change", () => _updateCategory(input.dataset.ecCategoryId, input.dataset.ecCategoryField, input.value, true));
+    });
+    document.querySelectorAll("[data-ec-item-field]").forEach((input) => {
+      input.addEventListener("input", () => _updateItem(input.dataset.ecItemId, input.dataset.ecItemField, input.value));
+      input.addEventListener("change", () => _updateItem(input.dataset.ecItemId, input.dataset.ecItemField, input.value, true));
+    });
+    document.querySelector("[data-ec-raffle-add-category]")?.addEventListener("click", () => {
       const model = raffleModel();
       const config = ensureRaffleConfig();
-      return model.getOrderedCategories(config).map((category) => {
-        const items = model.getItemsForCategory(config, category.id);
-        const itemText = items.length ? items.map((item) => `${item.emoji || "\u{1F381}"} ${item.name}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "No items yet";
-        return `<div class="ec-review-row"><span>${_esc(category.label)}</span><span style="max-width:60%">${_esc(itemText)}</span></div>`;
-      }).join("");
-    }
-    window.EventsCreateRaffleBuilder = {
-      builderHtml,
-      wire,
-      reviewHtml,
-      ensureRaffleConfig,
-      normalizeRaffleConfig,
-      raffleModel
-    };
-  })();
+      const nextOrder = (config.categories.length + 1) * 10;
+      config.categories.push(model.createCategory({ label: "New Tier", sort_order: nextOrder, winner_count: 1 }));
+      normalizeRaffleConfig();
+      _render();
+    });
+    document.querySelector("[data-ec-raffle-add-item]")?.addEventListener("click", () => {
+      const model = raffleModel();
+      const config = ensureRaffleConfig();
+      if (!config.categories.length) config.categories.push(model.createCategory({ id: "general", label: "Raffle Prizes", sort_order: 10 }));
+      const nextOrder = (config.items.length + 1) * 10;
+      config.items.push(model.createItem({ category_id: config.categories[0].id, name: "New prize item", sort_order: nextOrder }));
+      normalizeRaffleConfig();
+      _render();
+    });
+    document.querySelectorAll("[data-ec-category-remove]").forEach((button) => {
+      button.addEventListener("click", () => _removeCategory(button.dataset.ecCategoryRemove));
+    });
+    document.querySelectorAll("[data-ec-item-remove]").forEach((button) => {
+      button.addEventListener("click", () => _removeItem(button.dataset.ecItemRemove));
+    });
+    document.querySelectorAll("[data-ec-category-move]").forEach((button) => {
+      button.addEventListener("click", () => _moveCategory(button.dataset.ecCategoryId, button.dataset.ecCategoryMove));
+    });
+    document.querySelectorAll("[data-ec-item-move]").forEach((button) => {
+      button.addEventListener("click", () => _moveItem(button.dataset.ecItemId, button.dataset.ecItemMove));
+    });
+    document.querySelectorAll("[data-ec-prize-drop]").forEach((zone) => {
+      const itemId = zone.dataset.ecPrizeDrop;
+      const fileInput = document.querySelector(`[data-ec-prize-file="${CSS.escape(itemId)}"]`);
+      if (!fileInput) return;
+      zone.addEventListener("click", () => fileInput.click());
+      zone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        zone.classList.add("ec-prize-img-drop--over");
+      });
+      zone.addEventListener("dragleave", (e) => {
+        if (!zone.contains(e.relatedTarget)) zone.classList.remove("ec-prize-img-drop--over");
+      });
+      zone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        zone.classList.remove("ec-prize-img-drop--over");
+        const f = e.dataTransfer?.files?.[0];
+        if (!f) return;
+        _setPrizeImage(itemId, f);
+      });
+      fileInput.addEventListener("change", () => {
+        const f = fileInput.files?.[0];
+        if (!f) return;
+        _setPrizeImage(itemId, f);
+      });
+    });
+    document.querySelectorAll("[data-ec-prize-clear]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const itemId = btn.dataset.ecPrizeClear;
+        delete STATE3.prizeImageFiles[itemId];
+        delete STATE3.prizeImagePreviews[itemId];
+        const config = ensureRaffleConfig();
+        const item = config.items.find((i) => i.id === itemId);
+        if (item) item.image_url = null;
+        _render();
+      });
+    });
+  }
+  function reviewHtml() {
+    const model = raffleModel();
+    const config = ensureRaffleConfig();
+    return model.getOrderedCategories(config).map((category) => {
+      const items = model.getItemsForCategory(config, category.id);
+      const itemText = items.length ? items.map((item) => `${item.emoji || "\u{1F381}"} ${item.name}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "No items yet";
+      return `<div class="ec-review-row"><span>${_esc5(category.label)}</span><span style="max-width:60%">${_esc5(itemText)}</span></div>`;
+    }).join("");
+  }
+  var createRaffleBuilderApi = {
+    builderHtml,
+    wire: wire5,
+    reviewHtml,
+    ensureRaffleConfig,
+    normalizeRaffleConfig,
+    raffleModel
+  };
+  globalThis.EventsCreateRaffleBuilder = createRaffleBuilderApi;
 
   // js/portal/events/create/submit.js
-  (function() {
-    "use strict";
-    let _submitting = false;
-    function _steps() {
-      return window.EventsCreateSteps;
+  var _submitting = false;
+  function _steps2() {
+    return window.EventsCreateSteps;
+  }
+  function _raffleApi() {
+    return window.EventsCreateRaffleBuilder;
+  }
+  async function submit(status) {
+    if (_submitting) return;
+    const steps = _steps2();
+    const STATE3 = steps.getState();
+    const validateStep = steps.validateStep;
+    const esc9 = steps.esc;
+    const close3 = steps.close;
+    if (typeof validateStep === "function") {
+      const err = validateStep();
+      if (err && status === "open") return alert(err);
     }
-    function _raffleApi() {
-      return window.EventsCreateRaffleBuilder;
-    }
-    async function submit(status) {
-      if (_submitting) return;
-      const steps = _steps();
-      const STATE = steps.getState();
-      const validateStep = steps.validateStep;
-      const esc = steps.esc;
-      const close = steps.close;
-      if (typeof validateStep === "function") {
-        const err = validateStep();
-        if (err && status === "open") return alert(err);
+    const f = STATE3.form;
+    if (!f.title.trim()) return alert("Title is required to save.");
+    if (status === "open" && !f.start_date) return alert("Start date is required to publish.");
+    const errBox = document.getElementById("ecError");
+    if (errBox) errBox.innerHTML = "";
+    _submitting = true;
+    const nextBtn = document.getElementById("ecNextBtn");
+    const draftBtn = document.getElementById("ecDraftBtn");
+    const origNext = nextBtn?.textContent;
+    const origDraft = draftBtn?.textContent;
+    if (nextBtn) nextBtn.disabled = true;
+    if (draftBtn) draftBtn.disabled = true;
+    if (status === "draft" && draftBtn) draftBtn.textContent = "Saving\u2026";
+    if (status === "open" && nextBtn) nextBtn.textContent = "Publishing\u2026";
+    try {
+      const userId = window.evtCurrentUser && window.evtCurrentUser.id || (await supabaseClient.auth.getUser()).data.user?.id;
+      if (!userId) throw new Error("Not signed in.");
+      const slug = typeof globalThis.evtGenerateSlug === "function" ? window.evtGenerateSlug(f.title.trim()) : f.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60) + "-" + Date.now().toString(36);
+      let bannerUrl = null;
+      if (STATE3.bannerFile) {
+        const ext = STATE3.bannerFile.name.split(".").pop();
+        const path = `${slug}-${Date.now()}.${ext}`;
+        const up = await supabaseClient.storage.from("event-banners").upload(path, STATE3.bannerFile, { contentType: STATE3.bannerFile.type });
+        if (up.error) throw new Error("Banner upload failed: " + up.error.message);
+        bannerUrl = supabaseClient.storage.from("event-banners").getPublicUrl(path).data.publicUrl;
       }
-      const f = STATE.form;
-      if (!f.title.trim()) return alert("Title is required to save.");
-      if (status === "open" && !f.start_date) return alert("Start date is required to publish.");
-      const errBox = document.getElementById("ecError");
-      if (errBox) errBox.innerHTML = "";
-      _submitting = true;
-      const nextBtn = document.getElementById("ecNextBtn");
-      const draftBtn = document.getElementById("ecDraftBtn");
-      const origNext = nextBtn?.textContent;
-      const origDraft = draftBtn?.textContent;
-      if (nextBtn) nextBtn.disabled = true;
-      if (draftBtn) draftBtn.disabled = true;
-      if (status === "draft" && draftBtn) draftBtn.textContent = "Saving\u2026";
-      if (status === "open" && nextBtn) nextBtn.textContent = "Publishing\u2026";
-      try {
-        const userId = window.evtCurrentUser && window.evtCurrentUser.id || (await supabaseClient.auth.getUser()).data.user?.id;
-        if (!userId) throw new Error("Not signed in.");
-        const slug = typeof window.evtGenerateSlug === "function" ? window.evtGenerateSlug(f.title.trim()) : f.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60) + "-" + Date.now().toString(36);
-        let bannerUrl = null;
-        if (STATE.bannerFile) {
-          const ext = STATE.bannerFile.name.split(".").pop();
-          const path = `${slug}-${Date.now()}.${ext}`;
-          const up = await supabaseClient.storage.from("event-banners").upload(path, STATE.bannerFile, { contentType: STATE.bannerFile.type });
-          if (up.error) throw new Error("Banner upload failed: " + up.error.message);
-          bannerUrl = supabaseClient.storage.from("event-banners").getPublicUrl(path).data.publicUrl;
-        }
-        let embedImageUrl = null;
-        if (STATE.embedImageFile) {
-          const ext = STATE.embedImageFile.name.split(".").pop();
-          const path = `embeds/${slug}-${Date.now()}.${ext}`;
-          const up = await supabaseClient.storage.from("event-banners").upload(path, STATE.embedImageFile, { contentType: STATE.embedImageFile.type });
-          if (up.error) throw new Error("Embed image upload failed: " + up.error.message);
-          embedImageUrl = supabaseClient.storage.from("event-banners").getPublicUrl(path).data.publicUrl;
-        }
-        const rb = _raffleApi();
-        const raffleConfig = f.raffle_enabled ? rb.raffleModel().normalizeConfig(rb.ensureRaffleConfig()) : null;
-        if (raffleConfig) {
-          const prizeUploads = Object.entries(STATE.prizeImageFiles);
-          for (const [itemId, imgFile] of prizeUploads) {
-            const item = raffleConfig.items.find((i) => i.id === itemId);
-            if (!item) continue;
-            const ext = imgFile.name.split(".").pop().toLowerCase() || "jpg";
-            const path = `${slug}/${itemId}-${Date.now()}.${ext}`;
-            const up = await supabaseClient.storage.from("event-raffle-prizes").upload(path, imgFile, { contentType: imgFile.type });
-            if (up.error) throw new Error(`Prize image upload failed: ${up.error.message}`);
-            item.image_url = supabaseClient.storage.from("event-raffle-prizes").getPublicUrl(path).data.publicUrl;
-          }
-        }
-        const startISO = f.start_date ? new Date(f.start_date).toISOString() : null;
-        const endISO = f.end_date ? new Date(f.end_date).toISOString() : null;
-        const deadline = f.rsvp_deadline ? new Date(f.rsvp_deadline).toISOString() : null;
-        const rsvpCents = f.pricing_mode === "paid" ? Math.round(Number(f.rsvp_cost_dollars || 0) * 100) : 0;
-        const raffleCents = f.raffle_enabled ? Math.round(Number(f.raffle_entry_cost_dollars || 0) * 100) : 0;
-        const raffleWinnerCount = raffleConfig ? rb.raffleModel().getTotalWinnerCount(raffleConfig) : 0;
-        const record = {
-          created_by: userId,
-          event_type: "member",
-          title: f.title.trim(),
-          slug,
-          category: f.category,
-          description: f.description.trim() || null,
-          banner_url: bannerUrl,
-          embed_image_url: embedImageUrl,
-          start_date: startISO,
-          end_date: endISO,
-          timezone: f.timezone,
-          location_text: f.location_text.trim() || null,
-          location_nickname: f.location_nickname.trim() || null,
-          location_lat: STATE.geocode?.lat || null,
-          location_lng: STATE.geocode?.lng || null,
-          max_participants: f.max_participants ? Number(f.max_participants) : null,
-          rsvp_deadline: deadline,
-          member_only: !!f.member_only,
-          pricing_mode: f.pricing_mode,
-          rsvp_cost_cents: rsvpCents,
-          raffle_enabled: !!f.raffle_enabled,
-          raffle_entry_cost_cents: raffleCents,
-          raffle_prizes: raffleConfig,
-          raffle_winner_count: raffleWinnerCount,
-          status
-        };
-        const { data, error } = await supabaseClient.from("events").insert(record).select().single();
-        if (error) throw error;
-        if (typeof close === "function") close();
-        document.dispatchEvent(new CustomEvent("events:created", { detail: { event: data, status } }));
-        if (status === "open" && data.slug && typeof window.evtNavigateToEvent === "function") {
-          window.evtNavigateToEvent(data.slug);
-        } else if (typeof window.evtLoadEvents === "function") {
-          window.evtLoadEvents();
-        }
-      } catch (e) {
-        const msg = e && e.message ? e.message : String(e);
-        const errBox2 = document.getElementById("ecError");
-        if (errBox2 && typeof esc === "function") {
-          errBox2.innerHTML = `<div class="ec-error">${esc(msg)}</div>`;
-        } else {
-          alert("Save failed: " + msg);
-        }
-      } finally {
-        _submitting = false;
-        if (nextBtn) {
-          nextBtn.disabled = false;
-          if (origNext) nextBtn.textContent = origNext;
-        }
-        if (draftBtn) {
-          draftBtn.disabled = false;
-          if (origDraft) draftBtn.textContent = origDraft;
+      let embedImageUrl = null;
+      if (STATE3.embedImageFile) {
+        const ext = STATE3.embedImageFile.name.split(".").pop();
+        const path = `embeds/${slug}-${Date.now()}.${ext}`;
+        const up = await supabaseClient.storage.from("event-banners").upload(path, STATE3.embedImageFile, { contentType: STATE3.embedImageFile.type });
+        if (up.error) throw new Error("Embed image upload failed: " + up.error.message);
+        embedImageUrl = supabaseClient.storage.from("event-banners").getPublicUrl(path).data.publicUrl;
+      }
+      const rb = _raffleApi();
+      const raffleConfig2 = f.raffle_enabled ? rb.raffleModel().normalizeConfig(rb.ensureRaffleConfig()) : null;
+      if (raffleConfig2) {
+        const prizeUploads = Object.entries(STATE3.prizeImageFiles);
+        for (const [itemId, imgFile] of prizeUploads) {
+          const item = raffleConfig2.items.find((i) => i.id === itemId);
+          if (!item) continue;
+          const ext = imgFile.name.split(".").pop().toLowerCase() || "jpg";
+          const path = `${slug}/${itemId}-${Date.now()}.${ext}`;
+          const up = await supabaseClient.storage.from("event-raffle-prizes").upload(path, imgFile, { contentType: imgFile.type });
+          if (up.error) throw new Error(`Prize image upload failed: ${up.error.message}`);
+          item.image_url = supabaseClient.storage.from("event-raffle-prizes").getPublicUrl(path).data.publicUrl;
         }
       }
+      const startISO = f.start_date ? new Date(f.start_date).toISOString() : null;
+      const endISO = f.end_date ? new Date(f.end_date).toISOString() : null;
+      const deadline = f.rsvp_deadline ? new Date(f.rsvp_deadline).toISOString() : null;
+      const rsvpCents = f.pricing_mode === "paid" ? Math.round(Number(f.rsvp_cost_dollars || 0) * 100) : 0;
+      const raffleCents = f.raffle_enabled ? Math.round(Number(f.raffle_entry_cost_dollars || 0) * 100) : 0;
+      const raffleWinnerCount = raffleConfig2 ? rb.raffleModel().getTotalWinnerCount(raffleConfig2) : 0;
+      const record = {
+        created_by: userId,
+        event_type: "member",
+        title: f.title.trim(),
+        slug,
+        category: f.category,
+        description: f.description.trim() || null,
+        banner_url: bannerUrl,
+        embed_image_url: embedImageUrl,
+        start_date: startISO,
+        end_date: endISO,
+        timezone: f.timezone,
+        location_text: f.location_text.trim() || null,
+        location_nickname: f.location_nickname.trim() || null,
+        location_lat: STATE3.geocode?.lat || null,
+        location_lng: STATE3.geocode?.lng || null,
+        max_participants: f.max_participants ? Number(f.max_participants) : null,
+        rsvp_deadline: deadline,
+        member_only: !!f.member_only,
+        pricing_mode: f.pricing_mode,
+        rsvp_cost_cents: rsvpCents,
+        raffle_enabled: !!f.raffle_enabled,
+        raffle_entry_cost_cents: raffleCents,
+        raffle_prizes: raffleConfig2,
+        raffle_winner_count: raffleWinnerCount,
+        status
+      };
+      const { data, error } = await supabaseClient.from("events").insert(record).select().single();
+      if (error) throw error;
+      if (typeof close3 === "function") close3();
+      document.dispatchEvent(new CustomEvent("events:created", { detail: { event: data, status } }));
+      if (status === "open" && data.slug && typeof globalThis.evtNavigateToEvent === "function") {
+        window.evtNavigateToEvent(data.slug);
+      } else if (typeof globalThis.evtLoadEvents === "function") {
+        window.evtLoadEvents();
+      }
+    } catch (e) {
+      const msg = e && e.message ? e.message : String(e);
+      const errBox2 = document.getElementById("ecError");
+      if (errBox2 && typeof esc9 === "function") {
+        errBox2.innerHTML = `<div class="ec-error">${esc9(msg)}</div>`;
+      } else {
+        alert("Save failed: " + msg);
+      }
+    } finally {
+      _submitting = false;
+      if (nextBtn) {
+        nextBtn.disabled = false;
+        if (origNext) nextBtn.textContent = origNext;
+      }
+      if (draftBtn) {
+        draftBtn.disabled = false;
+        if (origDraft) draftBtn.textContent = origDraft;
+      }
     }
-    window.EventsCreateSubmit = { submit };
-  })();
+  }
+  var createSubmitApi = { submit };
+  globalThis.EventsCreateSubmit = createSubmitApi;
 
   // js/portal/events/create/sheet.js
-  (function() {
-    "use strict";
-    function isFlagOn() {
-      return true;
+  function isFlagOn() {
+    return true;
+  }
+  var STEPS = [
+    { key: "basics", label: "Basics" },
+    { key: "when", label: "When & Where" },
+    { key: "pricing", label: "Pricing" },
+    { key: "review", label: "Review" }
+  ];
+  var STATE = {
+    step: 0,
+    bannerFile: null,
+    bannerPreviewUrl: null,
+    embedImageFile: null,
+    embedImagePreviewUrl: null,
+    geocode: null,
+    // { lat, lng, display } or null
+    prizeImageFiles: {},
+    // item.id → File
+    prizeImagePreviews: {},
+    // item.id → data-URL
+    form: {
+      event_type: "member",
+      title: "",
+      category: "other",
+      description: "",
+      start_date: "",
+      end_date: "",
+      timezone: "America/New_York",
+      location_text: "",
+      location_nickname: "",
+      max_participants: "",
+      rsvp_deadline: "",
+      pricing_mode: "free",
+      rsvp_cost_dollars: "",
+      raffle_enabled: false,
+      raffle_entry_cost_dollars: "",
+      raffle_config: null,
+      member_only: false
     }
-    const STEPS = [
-      { key: "basics", label: "Basics" },
-      { key: "when", label: "When & Where" },
-      { key: "pricing", label: "Pricing" },
-      { key: "review", label: "Review" }
-    ];
-    const STATE = {
-      step: 0,
-      bannerFile: null,
-      bannerPreviewUrl: null,
-      embedImageFile: null,
-      embedImagePreviewUrl: null,
-      geocode: null,
-      // { lat, lng, display } or null
-      prizeImageFiles: {},
-      // item.id → File
-      prizeImagePreviews: {},
-      // item.id → data-URL
-      form: {
-        event_type: "member",
-        title: "",
-        category: "other",
-        description: "",
-        start_date: "",
-        end_date: "",
-        timezone: "America/New_York",
-        location_text: "",
-        location_nickname: "",
-        max_participants: "",
-        rsvp_deadline: "",
-        pricing_mode: "free",
-        rsvp_cost_dollars: "",
-        raffle_enabled: false,
-        raffle_entry_cost_dollars: "",
-        raffle_config: null,
-        member_only: false
-      }
-    };
-    const CATEGORIES = [
-      { key: "party", label: "\u{1F389} Party" },
-      { key: "birthday", label: "\u{1F382} Birthday" },
-      { key: "trip", label: "\u2708\uFE0F Trip" },
-      { key: "cookout", label: "\u{1F354} Cookout" },
-      { key: "game_night", label: "\u{1F3AE} Game Night" },
-      { key: "meeting", label: "\u{1F4CB} Meeting" },
-      { key: "fundraiser", label: "\u{1F4B0} Fundraiser" },
-      { key: "volunteer", label: "\u{1F91D} Volunteer" },
-      { key: "celebration", label: "\u{1F973} Celebration" },
-      { key: "other", label: "\u{1F4CC} Other" }
-    ];
-    const TIMEZONES = [
-      "America/New_York",
-      "America/Chicago",
-      "America/Denver",
-      "America/Los_Angeles",
-      "America/Anchorage",
-      "Pacific/Honolulu"
-    ];
-    function _ensureMounted() {
-      if (document.getElementById("ecSheetRoot")) return;
-      const root2 = document.createElement("div");
-      root2.id = "ecSheetRoot";
-      root2.innerHTML = `
-            <div id="ecSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
-            <div id="ecSheet" class="fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
-                <div id="ecSheetPanel" class="bg-white w-full sm:max-w-2xl sm:max-h-[92vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-auto translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:92vh">
-                    <header class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Create Event <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px]">BETA</span></p>
-                            <h2 id="ecSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">New event</h2>
-                            <p id="ecSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
-                        </div>
-                        <button id="ecSheetClose" class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" aria-label="Close">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                    </header>
-                    <div id="ecSheetSteps" class="flex items-center justify-center gap-2 px-5 py-2 border-b border-gray-100 flex-shrink-0"></div>
-                    <div id="ecSheetContent" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5"></div>
-                    <footer id="ecSheetFooter" class="px-5 sm:px-6 py-3 border-t border-gray-100 flex items-center justify-between gap-3 flex-shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
-                        <button id="ecBackBtn" class="text-sm font-semibold text-gray-600 hover:text-gray-800 px-3 py-2">Back</button>
-                        <div class="flex items-center gap-2">
-                            <button id="ecDraftBtn" class="text-sm font-semibold text-gray-600 hover:text-gray-800 px-3 py-2">Save draft</button>
-                            <button id="ecNextBtn" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-xl text-sm font-bold transition">Next</button>
-                        </div>
-                    </footer>
-                </div>
+  };
+  var CATEGORIES = [
+    { key: "party", label: "\u{1F389} Party" },
+    { key: "birthday", label: "\u{1F382} Birthday" },
+    { key: "trip", label: "\u2708\uFE0F Trip" },
+    { key: "cookout", label: "\u{1F354} Cookout" },
+    { key: "game_night", label: "\u{1F3AE} Game Night" },
+    { key: "meeting", label: "\u{1F4CB} Meeting" },
+    { key: "fundraiser", label: "\u{1F4B0} Fundraiser" },
+    { key: "volunteer", label: "\u{1F91D} Volunteer" },
+    { key: "celebration", label: "\u{1F973} Celebration" },
+    { key: "other", label: "\u{1F4CC} Other" }
+  ];
+  var TIMEZONES = [
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "America/Anchorage",
+    "Pacific/Honolulu"
+  ];
+  function _ensureMounted() {
+    if (document.getElementById("ecSheetRoot")) return;
+    const root2 = document.createElement("div");
+    root2.id = "ecSheetRoot";
+    root2.innerHTML = `
+        <div id="ecSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
+        <div id="ecSheet" class="fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
+            <div id="ecSheetPanel" class="bg-white w-full sm:max-w-2xl sm:max-h-[92vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-auto translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:92vh">
+                <header class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Create Event <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px]">BETA</span></p>
+                        <h2 id="ecSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">New event</h2>
+                        <p id="ecSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
+                    </div>
+                    <button id="ecSheetClose" class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" aria-label="Close">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </header>
+                <div id="ecSheetSteps" class="flex items-center justify-center gap-2 px-5 py-2 border-b border-gray-100 flex-shrink-0"></div>
+                <div id="ecSheetContent" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5"></div>
+                <footer id="ecSheetFooter" class="px-5 sm:px-6 py-3 border-t border-gray-100 flex items-center justify-between gap-3 flex-shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+                    <button id="ecBackBtn" class="text-sm font-semibold text-gray-600 hover:text-gray-800 px-3 py-2">Back</button>
+                    <div class="flex items-center gap-2">
+                        <button id="ecDraftBtn" class="text-sm font-semibold text-gray-600 hover:text-gray-800 px-3 py-2">Save draft</button>
+                        <button id="ecNextBtn" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-xl text-sm font-bold transition">Next</button>
+                    </div>
+                </footer>
             </div>
-            <style>
-                .ec-step-dot { width:8px; height:8px; border-radius:50%; background:#e5e7eb; transition:background .15s,width .15s; }
-                .ec-step-dot.active { background:#4f46e5; width:24px; border-radius:4px; }
-                .ec-step-dot.done { background:#a5b4fc; }
-                .ec-label { display:block; font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
-                .ec-input { width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; font-size:16px; color:#111827; background:#fff; }
-                .ec-input:focus { outline:none; border-color:#4f46e5; box-shadow:0 0 0 3px rgba(79,70,229,.12); }
-                .ec-textarea { min-height:90px; resize:vertical; font-family:inherit; }
-                .ec-help { font-size:11px; color:#9ca3af; margin-top:4px; }
-                .ec-row { margin-bottom:14px; }
-                .ec-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-                @media(max-width:480px) { .ec-grid-2 { grid-template-columns:1fr; } }
-                .ec-type-card { padding:14px; border:2px solid #e5e7eb; border-radius:12px; cursor:pointer; transition:border-color .15s,background .15s; }
-                .ec-type-card.active { border-color:#4f46e5; background:#eef2ff; }
-                .ec-type-card.disabled { opacity:.45; cursor:not-allowed; }
-                .ec-type-emoji { font-size:24px; line-height:1; }
-                .ec-banner-drop { border:2px dashed #d1d5db; border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; }
-                .ec-banner-drop:hover { border-color:#a5b4fc; background:#fafafa; }
-                .ec-banner-drop--over { border-color:#4f46e5; background:#eef2ff; }
-                .ec-banner-preview { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; }
-                .ec-embed-preview { width:100%; max-width:240px; aspect-ratio:4/5; object-fit:cover; border-radius:12px; display:block; }
-                .ec-pill { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; background:#f3f4f6; color:#374151; cursor:pointer; border:1px solid transparent; }
-                .ec-pill.active { background:#4f46e5; color:#fff; }
-                .ec-checkbox-row { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #e5e7eb; border-radius:10px; cursor:pointer; }
-                .ec-checkbox-row input { margin-top:3px; }
-                .ec-review-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:14px; margin-bottom:10px; }
-                .ec-review-row { display:flex; justify-content:space-between; gap:10px; padding:6px 0; font-size:13px; border-bottom:1px solid #f1f5f9; }
-                .ec-review-row:last-child { border-bottom:none; }
-                .ec-review-row span:first-child { color:#6b7280; }
-                .ec-review-row span:last-child { color:#111827; font-weight:600; text-align:right; }
-                .ec-error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; padding:10px 12px; border-radius:10px; font-size:13px; margin-bottom:10px; }
-                .ec-loc-status { font-size:11px; margin-top:4px; }
-                .ec-raffle-box { border:1px solid #e5e7eb; border-radius:14px; padding:12px; background:#fafafa; }
-                .ec-raffle-section { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fff; margin-top:10px; }
-                .ec-raffle-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
-                .ec-raffle-grid { display:grid; grid-template-columns:1.2fr .8fr .65fr auto; gap:8px; align-items:end; }
-                .ec-raffle-item-grid { display:grid; grid-template-columns:.45fr 1.1fr .9fr .55fr auto; gap:8px; align-items:end; margin-top:8px; }
-                .ec-icon-btn { width:34px; height:34px; border-radius:9px; border:1px solid #e5e7eb; background:#fff; color:#4b5563; font-weight:800; display:inline-flex; align-items:center; justify-content:center; }
-                .ec-icon-btn:hover { border-color:#c7d2fe; color:#4f46e5; background:#eef2ff; }
-                .ec-mini-btn { border:1px solid #e5e7eb; background:#fff; color:#374151; border-radius:9px; padding:7px 10px; font-size:12px; font-weight:700; }
-                .ec-mini-btn:hover { border-color:#c7d2fe; color:#4f46e5; background:#eef2ff; }
-                .ec-raffle-summary { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-                .ec-raffle-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#4338ca; font-size:11px; font-weight:700; }
-                .ec-raffle-item-wrap { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fff; margin-top:8px; }
-                .ec-prize-img-row { margin-top:8px; display:flex; align-items:center; gap:8px; }
-                .ec-prize-img-drop { flex:0 0 auto; width:72px; height:72px; border:2px dashed #d1d5db; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer; transition:border-color .15s,background .15s; font-size:11px; color:#9ca3af; text-align:center; overflow:hidden; }
-                .ec-prize-img-drop:hover, .ec-prize-img-drop--over { border-color:#4f46e5; background:#eef2ff; color:#4f46e5; }
-                .ec-prize-img-drop img { width:100%; height:100%; object-fit:cover; border-radius:8px; display:block; }
-                .ec-prize-img-label { flex:1; min-width:0; font-size:11px; color:#6b7280; }
-                .ec-prize-img-label strong { display:block; color:#374151; font-size:12px; margin-bottom:1px; }
-                .ec-prize-img-clear { border:1px solid #fecaca; background:#fef2f2; color:#dc2626; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:700; white-space:nowrap; }
-                .ec-prize-img-clear:hover { background:#fee2e2; }
-                @media(max-width:560px) { .ec-raffle-grid, .ec-raffle-item-grid { grid-template-columns:1fr; } .ec-icon-btn { width:100%; } }
-                @media(max-width:639px){ #ecSheetPanel { max-height: 94vh; } }
-            </style>
-        `;
-      document.body.appendChild(root2);
-      document.getElementById("ecSheetClose").addEventListener("click", _confirmClose);
-      document.getElementById("ecSheetBackdrop").addEventListener("click", _confirmClose);
-      document.getElementById("ecBackBtn").addEventListener("click", _back);
-      document.getElementById("ecNextBtn").addEventListener("click", _next);
-      document.getElementById("ecDraftBtn").addEventListener("click", () => _submit("draft"));
+        </div>
+        <style>
+            .ec-step-dot { width:8px; height:8px; border-radius:50%; background:#e5e7eb; transition:background .15s,width .15s; }
+            .ec-step-dot.active { background:#4f46e5; width:24px; border-radius:4px; }
+            .ec-step-dot.done { background:#a5b4fc; }
+            .ec-label { display:block; font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+            .ec-input { width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; font-size:16px; color:#111827; background:#fff; }
+            .ec-input:focus { outline:none; border-color:#4f46e5; box-shadow:0 0 0 3px rgba(79,70,229,.12); }
+            .ec-textarea { min-height:90px; resize:vertical; font-family:inherit; }
+            .ec-help { font-size:11px; color:#9ca3af; margin-top:4px; }
+            .ec-row { margin-bottom:14px; }
+            .ec-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+            @media(max-width:480px) { .ec-grid-2 { grid-template-columns:1fr; } }
+            .ec-type-card { padding:14px; border:2px solid #e5e7eb; border-radius:12px; cursor:pointer; transition:border-color .15s,background .15s; }
+            .ec-type-card.active { border-color:#4f46e5; background:#eef2ff; }
+            .ec-type-card.disabled { opacity:.45; cursor:not-allowed; }
+            .ec-type-emoji { font-size:24px; line-height:1; }
+            .ec-banner-drop { border:2px dashed #d1d5db; border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; }
+            .ec-banner-drop:hover { border-color:#a5b4fc; background:#fafafa; }
+            .ec-banner-drop--over { border-color:#4f46e5; background:#eef2ff; }
+            .ec-banner-preview { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; }
+            .ec-embed-preview { width:100%; max-width:240px; aspect-ratio:4/5; object-fit:cover; border-radius:12px; display:block; }
+            .ec-pill { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; background:#f3f4f6; color:#374151; cursor:pointer; border:1px solid transparent; }
+            .ec-pill.active { background:#4f46e5; color:#fff; }
+            .ec-checkbox-row { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #e5e7eb; border-radius:10px; cursor:pointer; }
+            .ec-checkbox-row input { margin-top:3px; }
+            .ec-review-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:14px; margin-bottom:10px; }
+            .ec-review-row { display:flex; justify-content:space-between; gap:10px; padding:6px 0; font-size:13px; border-bottom:1px solid #f1f5f9; }
+            .ec-review-row:last-child { border-bottom:none; }
+            .ec-review-row span:first-child { color:#6b7280; }
+            .ec-review-row span:last-child { color:#111827; font-weight:600; text-align:right; }
+            .ec-error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; padding:10px 12px; border-radius:10px; font-size:13px; margin-bottom:10px; }
+            .ec-loc-status { font-size:11px; margin-top:4px; }
+            .ec-raffle-box { border:1px solid #e5e7eb; border-radius:14px; padding:12px; background:#fafafa; }
+            .ec-raffle-section { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fff; margin-top:10px; }
+            .ec-raffle-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+            .ec-raffle-grid { display:grid; grid-template-columns:1.2fr .8fr .65fr auto; gap:8px; align-items:end; }
+            .ec-raffle-item-grid { display:grid; grid-template-columns:.45fr 1.1fr .9fr .55fr auto; gap:8px; align-items:end; margin-top:8px; }
+            .ec-icon-btn { width:34px; height:34px; border-radius:9px; border:1px solid #e5e7eb; background:#fff; color:#4b5563; font-weight:800; display:inline-flex; align-items:center; justify-content:center; }
+            .ec-icon-btn:hover { border-color:#c7d2fe; color:#4f46e5; background:#eef2ff; }
+            .ec-mini-btn { border:1px solid #e5e7eb; background:#fff; color:#374151; border-radius:9px; padding:7px 10px; font-size:12px; font-weight:700; }
+            .ec-mini-btn:hover { border-color:#c7d2fe; color:#4f46e5; background:#eef2ff; }
+            .ec-raffle-summary { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+            .ec-raffle-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#4338ca; font-size:11px; font-weight:700; }
+            .ec-raffle-item-wrap { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fff; margin-top:8px; }
+            .ec-prize-img-row { margin-top:8px; display:flex; align-items:center; gap:8px; }
+            .ec-prize-img-drop { flex:0 0 auto; width:72px; height:72px; border:2px dashed #d1d5db; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer; transition:border-color .15s,background .15s; font-size:11px; color:#9ca3af; text-align:center; overflow:hidden; }
+            .ec-prize-img-drop:hover, .ec-prize-img-drop--over { border-color:#4f46e5; background:#eef2ff; color:#4f46e5; }
+            .ec-prize-img-drop img { width:100%; height:100%; object-fit:cover; border-radius:8px; display:block; }
+            .ec-prize-img-label { flex:1; min-width:0; font-size:11px; color:#6b7280; }
+            .ec-prize-img-label strong { display:block; color:#374151; font-size:12px; margin-bottom:1px; }
+            .ec-prize-img-clear { border:1px solid #fecaca; background:#fef2f2; color:#dc2626; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:700; white-space:nowrap; }
+            .ec-prize-img-clear:hover { background:#fee2e2; }
+            @media(max-width:560px) { .ec-raffle-grid, .ec-raffle-item-grid { grid-template-columns:1fr; } .ec-icon-btn { width:100%; } }
+            @media(max-width:639px){ #ecSheetPanel { max-height: 94vh; } }
+        </style>
+    `;
+    document.body.appendChild(root2);
+    document.getElementById("ecSheetClose").addEventListener("click", _confirmClose);
+    document.getElementById("ecSheetBackdrop").addEventListener("click", _confirmClose);
+    document.getElementById("ecBackBtn").addEventListener("click", _back);
+    document.getElementById("ecNextBtn").addEventListener("click", _next);
+    document.getElementById("ecDraftBtn").addEventListener("click", () => _submit("draft"));
+  }
+  function open2() {
+    _ensureMounted();
+    STATE.step = 0;
+    STATE.bannerFile = null;
+    STATE.bannerPreviewUrl = null;
+    STATE.embedImageFile = null;
+    STATE.embedImagePreviewUrl = null;
+    STATE.geocode = null;
+    STATE.prizeImageFiles = {};
+    STATE.prizeImagePreviews = {};
+    Object.assign(STATE.form, {
+      event_type: "member",
+      title: "",
+      category: "other",
+      description: "",
+      start_date: "",
+      end_date: "",
+      timezone: "America/New_York",
+      location_text: "",
+      location_nickname: "",
+      max_participants: "",
+      rsvp_deadline: "",
+      pricing_mode: "free",
+      rsvp_cost_dollars: "",
+      raffle_enabled: false,
+      raffle_entry_cost_dollars: "",
+      raffle_config: null,
+      member_only: false
+    });
+    _render2();
+    const sheet = document.getElementById("ecSheet");
+    const panel = document.getElementById("ecSheetPanel");
+    const backdrop = document.getElementById("ecSheetBackdrop");
+    sheet.classList.add("ec-open");
+    backdrop.classList.remove("opacity-0", "pointer-events-none");
+    backdrop.classList.add("opacity-100");
+    requestAnimationFrame(() => {
+      panel.classList.remove("translate-y-full", "sm:translate-y-4", "sm:opacity-0");
+      panel.classList.add("translate-y-0", "sm:opacity-100");
+    });
+    document.body.style.overflow = "hidden";
+  }
+  function close() {
+    const sheet = document.getElementById("ecSheet");
+    if (!sheet || !sheet.classList.contains("ec-open")) return;
+    const panel = document.getElementById("ecSheetPanel");
+    const backdrop = document.getElementById("ecSheetBackdrop");
+    panel.classList.add("translate-y-full", "sm:translate-y-4", "sm:opacity-0");
+    panel.classList.remove("translate-y-0", "sm:opacity-100");
+    backdrop.classList.add("opacity-0", "pointer-events-none");
+    backdrop.classList.remove("opacity-100");
+    document.body.style.overflow = "";
+    setTimeout(() => sheet.classList.remove("ec-open"), 250);
+  }
+  function _confirmClose() {
+    if (STATE.form.title || STATE.bannerFile || STATE.embedImageFile) {
+      if (!confirm("Discard this event? Your draft will not be saved.")) return;
     }
-    function open2() {
-      _ensureMounted();
-      STATE.step = 0;
-      STATE.bannerFile = null;
-      STATE.bannerPreviewUrl = null;
-      STATE.embedImageFile = null;
-      STATE.embedImagePreviewUrl = null;
-      STATE.geocode = null;
-      STATE.prizeImageFiles = {};
-      STATE.prizeImagePreviews = {};
-      Object.assign(STATE.form, {
-        event_type: "member",
-        title: "",
-        category: "other",
-        description: "",
-        start_date: "",
-        end_date: "",
-        timezone: "America/New_York",
-        location_text: "",
-        location_nickname: "",
-        max_participants: "",
-        rsvp_deadline: "",
-        pricing_mode: "free",
-        rsvp_cost_dollars: "",
-        raffle_enabled: false,
-        raffle_entry_cost_dollars: "",
-        raffle_config: null,
-        member_only: false
-      });
-      _render();
-      const sheet = document.getElementById("ecSheet");
-      const panel = document.getElementById("ecSheetPanel");
-      const backdrop = document.getElementById("ecSheetBackdrop");
-      sheet.classList.add("ec-open");
-      backdrop.classList.remove("opacity-0", "pointer-events-none");
-      backdrop.classList.add("opacity-100");
-      requestAnimationFrame(() => {
-        panel.classList.remove("translate-y-full", "sm:translate-y-4", "sm:opacity-0");
-        panel.classList.add("translate-y-0", "sm:opacity-100");
-      });
-      document.body.style.overflow = "hidden";
+    close();
+  }
+  function _render2() {
+    const dots = document.getElementById("ecSheetSteps");
+    dots.innerHTML = STEPS.map(
+      (s, i) => `<div class="ec-step-dot ${i === STATE.step ? "active" : i < STATE.step ? "done" : ""}" title="${s.label}"></div>`
+    ).join("");
+    document.getElementById("ecSheetSub").textContent = `Step ${STATE.step + 1} of ${STEPS.length} \xB7 ${STEPS[STATE.step].label}`;
+    document.getElementById("ecBackBtn").style.visibility = STATE.step === 0 ? "hidden" : "visible";
+    document.getElementById("ecNextBtn").textContent = STATE.step === STEPS.length - 1 ? "Publish" : "Next";
+    const key = STEPS[STATE.step].key;
+    const c = document.getElementById("ecSheetContent");
+    const steps = window.EventsCreateSteps || {};
+    if (key === "basics" && steps.basics) {
+      c.innerHTML = steps.basics.html();
+      steps.basics.wire();
     }
-    function close() {
-      const sheet = document.getElementById("ecSheet");
-      if (!sheet || !sheet.classList.contains("ec-open")) return;
-      const panel = document.getElementById("ecSheetPanel");
-      const backdrop = document.getElementById("ecSheetBackdrop");
-      panel.classList.add("translate-y-full", "sm:translate-y-4", "sm:opacity-0");
-      panel.classList.remove("translate-y-0", "sm:opacity-100");
-      backdrop.classList.add("opacity-0", "pointer-events-none");
-      backdrop.classList.remove("opacity-100");
-      document.body.style.overflow = "";
-      setTimeout(() => sheet.classList.remove("ec-open"), 250);
+    if (key === "when" && steps.when) {
+      c.innerHTML = steps.when.html();
+      steps.when.wire();
     }
-    function _confirmClose() {
-      if (STATE.form.title || STATE.bannerFile || STATE.embedImageFile) {
-        if (!confirm("Discard this event? Your draft will not be saved.")) return;
-      }
-      close();
+    if (key === "pricing" && steps.pricing) {
+      c.innerHTML = steps.pricing.html();
+      steps.pricing.wire();
     }
-    function _render() {
-      const dots = document.getElementById("ecSheetSteps");
-      dots.innerHTML = STEPS.map(
-        (s, i) => `<div class="ec-step-dot ${i === STATE.step ? "active" : i < STATE.step ? "done" : ""}" title="${s.label}"></div>`
-      ).join("");
-      document.getElementById("ecSheetSub").textContent = `Step ${STATE.step + 1} of ${STEPS.length} \xB7 ${STEPS[STATE.step].label}`;
-      document.getElementById("ecBackBtn").style.visibility = STATE.step === 0 ? "hidden" : "visible";
-      document.getElementById("ecNextBtn").textContent = STATE.step === STEPS.length - 1 ? "Publish" : "Next";
-      const key = STEPS[STATE.step].key;
-      const c = document.getElementById("ecSheetContent");
-      const steps = window.EventsCreateSteps || {};
-      if (key === "basics" && steps.basics) {
-        c.innerHTML = steps.basics.html();
-        steps.basics.wire();
-      }
-      if (key === "when" && steps.when) {
-        c.innerHTML = steps.when.html();
-        steps.when.wire();
-      }
-      if (key === "pricing" && steps.pricing) {
-        c.innerHTML = steps.pricing.html();
-        steps.pricing.wire();
-      }
-      if (key === "review" && steps.review) {
-        c.innerHTML = steps.review.html();
-        steps.review.wire();
-      }
+    if (key === "review" && steps.review) {
+      c.innerHTML = steps.review.html();
+      steps.review.wire();
     }
-    function _raffleApi() {
-      return window.EventsCreateRaffleBuilder;
+  }
+  function _raffleApi2() {
+    return window.EventsCreateRaffleBuilder;
+  }
+  function _validateStep() {
+    const f = STATE.form;
+    const key = STEPS[STATE.step].key;
+    if (key === "basics") {
+      if (!f.title.trim()) return "Title is required.";
+      if (f.title.trim().length < 3) return "Title must be at least 3 characters.";
+      if (f.event_type !== "member") return 'M4a only supports Member events. Use the legacy "Create Event" button for LLC or Competition.';
     }
-    function _validateStep() {
-      const f = STATE.form;
-      const key = STEPS[STATE.step].key;
-      if (key === "basics") {
-        if (!f.title.trim()) return "Title is required.";
-        if (f.title.trim().length < 3) return "Title must be at least 3 characters.";
-        if (f.event_type !== "member") return 'M4a only supports Member events. Use the legacy "Create Event" button for LLC or Competition.';
-      }
-      if (key === "when") {
-        if (!f.start_date) return "Start date is required.";
-        if (f.end_date && f.end_date < f.start_date) return "End date must be after start date.";
-        if (f.rsvp_deadline && f.rsvp_deadline > f.start_date) return "RSVP deadline must be before the event starts.";
-      }
-      if (key === "pricing") {
-        if (f.pricing_mode === "paid" && (!f.rsvp_cost_dollars || Number(f.rsvp_cost_dollars) <= 0)) return "Paid events need a price greater than zero.";
-        if (f.raffle_enabled && Number(f.raffle_entry_cost_dollars || 0) < 0) return "Raffle entry price cannot be negative.";
-        if (f.raffle_enabled) {
-          const rb = _raffleApi();
-          const result = rb.raffleModel().validateConfig(rb.ensureRaffleConfig());
-          if (!result.valid) return result.errors[0];
-        }
-      }
-      return null;
+    if (key === "when") {
+      if (!f.start_date) return "Start date is required.";
+      if (f.end_date && f.end_date < f.start_date) return "End date must be after start date.";
+      if (f.rsvp_deadline && f.rsvp_deadline > f.start_date) return "RSVP deadline must be before the event starts.";
     }
-    function _back() {
-      if (STATE.step === 0) return;
-      STATE.step--;
-      _render();
-    }
-    function _next() {
-      const err = _validateStep();
-      if (err) return alert(err);
-      if (STATE.step < STEPS.length - 1) {
-        STATE.step++;
-        _render();
-      } else {
-        _submit("open");
+    if (key === "pricing") {
+      if (f.pricing_mode === "paid" && (!f.rsvp_cost_dollars || Number(f.rsvp_cost_dollars) <= 0)) return "Paid events need a price greater than zero.";
+      if (f.raffle_enabled && Number(f.raffle_entry_cost_dollars || 0) < 0) return "Raffle entry price cannot be negative.";
+      if (f.raffle_enabled) {
+        const rb = _raffleApi2();
+        const result = rb.raffleModel().validateConfig(rb.ensureRaffleConfig());
+        if (!result.valid) return result.errors[0];
       }
     }
-    function _submit(status) {
-      window.EventsCreateSubmit.submit(status);
+    return null;
+  }
+  function _back() {
+    if (STATE.step === 0) return;
+    STATE.step--;
+    _render2();
+  }
+  function _next() {
+    const err = _validateStep();
+    if (err) return alert(err);
+    if (STATE.step < STEPS.length - 1) {
+      STATE.step++;
+      _render2();
+    } else {
+      _submit("open");
     }
-    function _esc(s) {
-      const el = document.createElement("span");
-      el.textContent = s == null ? "" : String(s);
-      return el.innerHTML;
-    }
-    function _bindCreateStepsApi() {
-      window.EventsCreateSteps = window.EventsCreateSteps || {};
-      window.EventsCreateSteps.getState = () => STATE;
-      window.EventsCreateSteps.render = _render;
-      window.EventsCreateSteps.validateStep = _validateStep;
-      window.EventsCreateSteps.close = close;
-      window.EventsCreateSteps.esc = _esc;
-      window.EventsCreateSteps.CATEGORIES = CATEGORIES;
-      window.EventsCreateSteps.TIMEZONES = TIMEZONES;
-      const rb = _raffleApi();
-      window.EventsCreateSteps.raffleBuilderHtml = rb.builderHtml;
-      window.EventsCreateSteps.raffleReviewHtml = rb.reviewHtml;
-      window.EventsCreateSteps.ensureRaffleConfig = rb.ensureRaffleConfig;
-      window.EventsCreateSteps.wireRaffleBuilder = rb.wire;
-    }
-    _bindCreateStepsApi();
-    window.EventsCreate = { open: open2, close, isFlagOn };
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.create = window.PortalEvents.create || {};
-    window.PortalEvents.create.open = open2;
-    window.PortalEvents.create.close = close;
-    window.PortalEvents.create.isFlagOn = isFlagOn;
-  })();
+  }
+  function _submit(status) {
+    window.EventsCreateSubmit.submit(status);
+  }
+  function _esc6(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function _bindCreateStepsApi() {
+    window.EventsCreateSteps = window.EventsCreateSteps || {};
+    window.EventsCreateSteps.getState = () => STATE;
+    window.EventsCreateSteps.render = _render2;
+    window.EventsCreateSteps.validateStep = _validateStep;
+    window.EventsCreateSteps.close = close;
+    window.EventsCreateSteps.esc = _esc6;
+    window.EventsCreateSteps.CATEGORIES = CATEGORIES;
+    window.EventsCreateSteps.TIMEZONES = TIMEZONES;
+    const rb = _raffleApi2();
+    window.EventsCreateSteps.raffleBuilderHtml = rb.builderHtml;
+    window.EventsCreateSteps.raffleReviewHtml = rb.reviewHtml;
+    window.EventsCreateSteps.ensureRaffleConfig = rb.ensureRaffleConfig;
+    window.EventsCreateSteps.wireRaffleBuilder = rb.wire;
+  }
+  _bindCreateStepsApi();
+  var eventsCreateApi = { open: open2, close, isFlagOn };
+  globalThis.EventsCreate = eventsCreateApi;
+  var PortalEvents13 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents13.create = PortalEvents13.create || {};
+  PortalEvents13.create.open = eventsCreateApi.open;
+  PortalEvents13.create.close = eventsCreateApi.close;
+  PortalEvents13.create.isFlagOn = eventsCreateApi.isFlagOn;
 
   // js/portal/events/manage/shell.js
-  (function() {
-    "use strict";
-    const M3A_TABS = [
-      { key: "overview", label: "Overview" },
-      { key: "images", label: "Images" },
-      { key: "rsvps", label: "RSVPs" },
-      { key: "money", label: "Money" },
-      { key: "docs", label: "Docs" },
-      { key: "raffle", label: "Raffle" },
-      { key: "comp", label: "Comp" },
-      { key: "danger", label: "Danger Zone" }
-    ];
-    function api7() {
-      return window.EventsManageShellApi || {};
-    }
-    function getState() {
-      return api7().getState?.() || {};
-    }
-    function ensureMounted() {
-      if (document.getElementById("emSheetRoot")) return;
-      const root2 = document.createElement("div");
-      root2.id = "emSheetRoot";
-      root2.innerHTML = `
-            <div id="emSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
-            <div id="emSheet" class="em-sheet-hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
-                <div id="emSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
-                    <header id="emSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Manage Event</p>
-                            <h2 id="emSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">\u2026</h2>
-                            <p id="emSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
-                        </div>
-                        <button id="emSheetClose" class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" aria-label="Close">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                    </header>
-                    <nav id="emSheetTabs" class="flex gap-1 px-3 sm:px-4 border-b border-gray-100 overflow-x-auto flex-shrink-0" style="scrollbar-width:none;-ms-overflow-style:none"></nav>
-                    <div id="emSheetContent" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"></div>
-                </div>
+  var M3A_TABS = [
+    { key: "overview", label: "Overview" },
+    { key: "images", label: "Images" },
+    { key: "rsvps", label: "RSVPs" },
+    { key: "money", label: "Money" },
+    { key: "docs", label: "Docs" },
+    { key: "raffle", label: "Raffle" },
+    { key: "comp", label: "Comp" },
+    { key: "danger", label: "Danger Zone" }
+  ];
+  function api7() {
+    return window.EventsManageShellApi || {};
+  }
+  function getState() {
+    return api7().getState?.() || {};
+  }
+  function ensureMounted() {
+    if (document.getElementById("emSheetRoot")) return;
+    const root2 = document.createElement("div");
+    root2.id = "emSheetRoot";
+    root2.innerHTML = `
+        <div id="emSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
+        <div id="emSheet" class="em-sheet-hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
+            <div id="emSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
+                <header id="emSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Manage Event</p>
+                        <h2 id="emSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">\u2026</h2>
+                        <p id="emSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
+                    </div>
+                    <button id="emSheetClose" class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" aria-label="Close">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </header>
+                <nav id="emSheetTabs" class="flex gap-1 px-3 sm:px-4 border-b border-gray-100 overflow-x-auto flex-shrink-0" style="scrollbar-width:none;-ms-overflow-style:none"></nav>
+                <div id="emSheetContent" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"></div>
             </div>
-            <style>
-                .em-sheet-hidden { display:none !important; }
-                #emSheetTabs::-webkit-scrollbar { display: none; }
-                .em-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; }
-                .em-tab:hover { color:#374151; }
-                .em-tab.active { color:#4f46e5; border-bottom-color:#4f46e5; }
-                .em-tab.placeholder { color:#cbd5e1; }
-                .em-tab.placeholder.active { color:#9ca3af; border-bottom-color:#cbd5e1; }
-                .em-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; }
-                .em-op-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
-                .em-op-card { min-height:150px; display:flex; flex-direction:column; gap:12px; }
-                .em-op-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-                .em-op-kicker { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; margin:0 0 3px; }
-                .em-op-title { font-size:15px; font-weight:800; color:#111827; margin:0; line-height:1.15; }
-                .em-op-icon { width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#f3f4f6; flex-shrink:0; }
-                .em-op-copy { font-size:12px; line-height:1.45; color:#6b7280; margin:0; }
-                .em-op-meta { margin-top:auto; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
-                .em-op-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#f8fafc; color:#475569; font-size:11px; font-weight:700; }
-                .em-op-progress { height:7px; border-radius:999px; overflow:hidden; background:#eef2f7; margin-top:auto; }
-                .em-op-progress span { display:block; height:100%; width:0; border-radius:inherit; background:#4f46e5; }
-                .em-command-card { background:linear-gradient(135deg,#111827,#312e81); color:#fff; border:0; overflow:hidden; position:relative; }
-                .em-command-card:after { content:""; position:absolute; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,.08); right:-70px; top:-80px; }
-                .em-command-eyebrow { font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#c7d2fe; margin:0 0 6px; }
-                .em-command-title { font-size:20px; font-weight:850; margin:0; line-height:1.15; }
-                .em-command-copy { font-size:12px; line-height:1.5; color:#dbeafe; margin:8px 0 0; max-width:560px; }
-                .em-metric-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
-                .em-metric { background:#fff; border:1px solid rgba(15,23,42,.06); border-radius:16px; padding:13px; min-width:0; }
-                .em-metric span { display:block; font-size:10px; font-weight:800; letter-spacing:.08em; color:#94a3b8; text-transform:uppercase; }
-                .em-metric strong { display:block; margin-top:5px; font-size:22px; line-height:1; color:#0f172a; }
-                .em-metric small { display:block; margin-top:5px; color:#64748b; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-                .em-section-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
-                .em-section-title { margin:0; color:#111827; font-size:14px; font-weight:850; }
-                .em-section-sub { margin:3px 0 0; color:#94a3b8; font-size:12px; line-height:1.4; }
-                .em-attendee-card { display:flex; gap:12px; align-items:flex-start; padding:13px 0; border-top:1px solid #f1f5f9; }
-                .em-attendee-card:first-of-type { border-top:0; padding-top:0; }
-                .em-attendee-main { flex:1; min-width:0; }
-                .em-attendee-name { margin:0; font-size:14px; font-weight:800; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-                .em-attendee-sub { margin:2px 0 0; color:#64748b; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-                .em-money-layout { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr); gap:12px; align-items:start; }
-                .em-money-row { display:flex; justify-content:space-between; gap:14px; padding:11px 0; border-top:1px solid #f1f5f9; font-size:13px; }
-                .em-money-row:first-child { border-top:0; padding-top:0; }
-                .em-money-row span { color:#64748b; }
-                .em-money-row strong { color:#111827; }
-                .em-stat { display:flex; flex-direction:column; gap:4px; }
-                .em-stat-label { font-size:11px; text-transform:uppercase; letter-spacing:.04em; font-weight:600; color:#6b7280; }
-                .em-stat-num { font-size:24px; font-weight:800; color:#111827; }
-                .em-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f1f5f9; }
-                .em-row:last-child { border-bottom:none; }
-                .em-avatar { width:32px; height:32px; border-radius:50%; background:#e0e7ff; color:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; overflow:hidden; }
-                .em-avatar img { width:100%; height:100%; object-fit:cover; }
-                .em-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
-                .em-pill-going { background:#d1fae5; color:#065f46; }
-                .em-pill-maybe { background:#fce7f3; color:#9d174d; }
-                .em-pill-not { background:#fee2e2; color:#991b1b; }
-                .em-pill-paid { background:#fef3c7; color:#92400e; }
-                .em-pill-checked { background:#ede9fe; color:#5b21b6; }
-                .em-danger-card { background:#fef2f2; border:1px solid #fecaca; border-radius:14px; padding:14px; margin-bottom:10px; }
-                .em-danger-title { font-weight:700; color:#991b1b; font-size:14px; }
-                .em-danger-sub { font-size:12px; color:#7f1d1d; margin-top:2px; margin-bottom:10px; }
-                .em-btn-danger { background:#dc2626; color:#fff; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
-                .em-btn-danger:hover { background:#b91c1c; }
-                .em-btn-ghost { background:#f3f4f6; color:#374151; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
-                .em-btn-ghost:hover { background:#e5e7eb; }
-                .em-btn-primary { background:#4f46e5; color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; }
-                .em-btn-primary:hover { background:#4338ca; }
-                .em-btn-primary:disabled { opacity:.55; cursor:not-allowed; }
-                .em-input { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; }
-                .em-input:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
-                .em-textarea { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; resize:vertical; min-height:92px; }
-                .em-textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
-                .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
-                .em-placeholder svg { width:48px; height:48px; margin-bottom:12px; opacity:.4; }
-                @media(max-width:639px){
-                    #emSheetPanel { max-height: 92vh; }
-                    .em-op-grid { grid-template-columns:1fr; }
-                    .em-metric-grid { grid-template-columns:1fr 1fr; }
-                    .em-money-layout { grid-template-columns:1fr; }
-                }
-                @media(min-width:640px) and (max-width:900px){ .em-op-grid { grid-template-columns:1fr 1fr; } .em-money-layout { grid-template-columns:1fr; } }
-            </style>
-        `;
-      document.body.appendChild(root2);
-      document.getElementById("emSheetClose").addEventListener("click", () => api7().onClose?.());
-      document.getElementById("emSheetBackdrop").addEventListener("click", () => api7().onClose?.());
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && document.getElementById("emSheet")?.classList.contains("em-open")) api7().onClose?.();
+        </div>
+        <style>
+            .em-sheet-hidden { display:none !important; }
+            #emSheetTabs::-webkit-scrollbar { display: none; }
+            .em-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; }
+            .em-tab:hover { color:#374151; }
+            .em-tab.active { color:#4f46e5; border-bottom-color:#4f46e5; }
+            .em-tab.placeholder { color:#cbd5e1; }
+            .em-tab.placeholder.active { color:#9ca3af; border-bottom-color:#cbd5e1; }
+            .em-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; }
+            .em-op-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
+            .em-op-card { min-height:150px; display:flex; flex-direction:column; gap:12px; }
+            .em-op-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+            .em-op-kicker { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; margin:0 0 3px; }
+            .em-op-title { font-size:15px; font-weight:800; color:#111827; margin:0; line-height:1.15; }
+            .em-op-icon { width:34px; height:34px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#f3f4f6; flex-shrink:0; }
+            .em-op-copy { font-size:12px; line-height:1.45; color:#6b7280; margin:0; }
+            .em-op-meta { margin-top:auto; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+            .em-op-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#f8fafc; color:#475569; font-size:11px; font-weight:700; }
+            .em-op-progress { height:7px; border-radius:999px; overflow:hidden; background:#eef2f7; margin-top:auto; }
+            .em-op-progress span { display:block; height:100%; width:0; border-radius:inherit; background:#4f46e5; }
+            .em-command-card { background:linear-gradient(135deg,#111827,#312e81); color:#fff; border:0; overflow:hidden; position:relative; }
+            .em-command-card:after { content:""; position:absolute; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,.08); right:-70px; top:-80px; }
+            .em-command-eyebrow { font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#c7d2fe; margin:0 0 6px; }
+            .em-command-title { font-size:20px; font-weight:850; margin:0; line-height:1.15; }
+            .em-command-copy { font-size:12px; line-height:1.5; color:#dbeafe; margin:8px 0 0; max-width:560px; }
+            .em-metric-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+            .em-metric { background:#fff; border:1px solid rgba(15,23,42,.06); border-radius:16px; padding:13px; min-width:0; }
+            .em-metric span { display:block; font-size:10px; font-weight:800; letter-spacing:.08em; color:#94a3b8; text-transform:uppercase; }
+            .em-metric strong { display:block; margin-top:5px; font-size:22px; line-height:1; color:#0f172a; }
+            .em-metric small { display:block; margin-top:5px; color:#64748b; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .em-section-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
+            .em-section-title { margin:0; color:#111827; font-size:14px; font-weight:850; }
+            .em-section-sub { margin:3px 0 0; color:#94a3b8; font-size:12px; line-height:1.4; }
+            .em-attendee-card { display:flex; gap:12px; align-items:flex-start; padding:13px 0; border-top:1px solid #f1f5f9; }
+            .em-attendee-card:first-of-type { border-top:0; padding-top:0; }
+            .em-attendee-main { flex:1; min-width:0; }
+            .em-attendee-name { margin:0; font-size:14px; font-weight:800; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .em-attendee-sub { margin:2px 0 0; color:#64748b; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .em-money-layout { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr); gap:12px; align-items:start; }
+            .em-money-row { display:flex; justify-content:space-between; gap:14px; padding:11px 0; border-top:1px solid #f1f5f9; font-size:13px; }
+            .em-money-row:first-child { border-top:0; padding-top:0; }
+            .em-money-row span { color:#64748b; }
+            .em-money-row strong { color:#111827; }
+            .em-stat { display:flex; flex-direction:column; gap:4px; }
+            .em-stat-label { font-size:11px; text-transform:uppercase; letter-spacing:.04em; font-weight:600; color:#6b7280; }
+            .em-stat-num { font-size:24px; font-weight:800; color:#111827; }
+            .em-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f1f5f9; }
+            .em-row:last-child { border-bottom:none; }
+            .em-avatar { width:32px; height:32px; border-radius:50%; background:#e0e7ff; color:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; overflow:hidden; }
+            .em-avatar img { width:100%; height:100%; object-fit:cover; }
+            .em-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+            .em-pill-going { background:#d1fae5; color:#065f46; }
+            .em-pill-maybe { background:#fce7f3; color:#9d174d; }
+            .em-pill-not { background:#fee2e2; color:#991b1b; }
+            .em-pill-paid { background:#fef3c7; color:#92400e; }
+            .em-pill-checked { background:#ede9fe; color:#5b21b6; }
+            .em-danger-card { background:#fef2f2; border:1px solid #fecaca; border-radius:14px; padding:14px; margin-bottom:10px; }
+            .em-danger-title { font-weight:700; color:#991b1b; font-size:14px; }
+            .em-danger-sub { font-size:12px; color:#7f1d1d; margin-top:2px; margin-bottom:10px; }
+            .em-btn-danger { background:#dc2626; color:#fff; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
+            .em-btn-danger:hover { background:#b91c1c; }
+            .em-btn-ghost { background:#f3f4f6; color:#374151; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
+            .em-btn-ghost:hover { background:#e5e7eb; }
+            .em-btn-primary { background:#4f46e5; color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; }
+            .em-btn-primary:hover { background:#4338ca; }
+            .em-btn-primary:disabled { opacity:.55; cursor:not-allowed; }
+            .em-input { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; }
+            .em-input:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
+            .em-textarea { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; resize:vertical; min-height:92px; }
+            .em-textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
+            .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
+            .em-placeholder svg { width:48px; height:48px; margin-bottom:12px; opacity:.4; }
+            @media(max-width:639px){
+                #emSheetPanel { max-height: 92vh; }
+                .em-op-grid { grid-template-columns:1fr; }
+                .em-metric-grid { grid-template-columns:1fr 1fr; }
+                .em-money-layout { grid-template-columns:1fr; }
+            }
+            @media(min-width:640px) and (max-width:900px){ .em-op-grid { grid-template-columns:1fr 1fr; } .em-money-layout { grid-template-columns:1fr; } }
+        </style>
+    `;
+    document.body.appendChild(root2);
+    document.getElementById("emSheetClose").addEventListener("click", () => api7().onClose?.());
+    document.getElementById("emSheetBackdrop").addEventListener("click", () => api7().onClose?.());
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && document.getElementById("emSheet")?.classList.contains("em-open")) api7().onClose?.();
+    });
+  }
+  function renderHeader() {
+    const e = getState().event;
+    if (!e) return;
+    document.getElementById("emSheetTitle").textContent = e.title;
+    const dateStr = new Date(e.start_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+    const typeLabel = { llc: "LLC", member: "Member", competition: "Competition" }[e.event_type] || e.event_type;
+    document.getElementById("emSheetSub").textContent = `${typeLabel} \xB7 ${dateStr} \xB7 ${(e.status || "").toUpperCase()}`;
+  }
+  function renderTabs() {
+    const STATE3 = getState();
+    const bar = document.getElementById("emSheetTabs");
+    bar.innerHTML = M3A_TABS.map(
+      (t) => `<button class="em-tab${t.placeholder ? " placeholder" : ""}${t.key === STATE3.activeTab ? " active" : ""}" data-tab="${t.key}">${t.label}${t.placeholder ? ' <span style="font-size:9px;opacity:.7">soon</span>' : ""}</button>`
+    ).join("");
+    bar.querySelectorAll(".em-tab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const st = getState();
+        st.activeTab = btn.dataset.tab;
+        renderTabs();
+        api7().renderTab?.(st.activeTab);
+        btn.scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" });
       });
-    }
-    function renderHeader() {
-      const e = getState().event;
-      if (!e) return;
-      document.getElementById("emSheetTitle").textContent = e.title;
-      const dateStr = new Date(e.start_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
-      const typeLabel = { llc: "LLC", member: "Member", competition: "Competition" }[e.event_type] || e.event_type;
-      document.getElementById("emSheetSub").textContent = `${typeLabel} \xB7 ${dateStr} \xB7 ${(e.status || "").toUpperCase()}`;
-    }
-    function renderTabs() {
-      const STATE = getState();
-      const bar = document.getElementById("emSheetTabs");
-      bar.innerHTML = M3A_TABS.map(
-        (t) => `<button class="em-tab${t.placeholder ? " placeholder" : ""}${t.key === STATE.activeTab ? " active" : ""}" data-tab="${t.key}">${t.label}${t.placeholder ? ' <span style="font-size:9px;opacity:.7">soon</span>' : ""}</button>`
-      ).join("");
-      bar.querySelectorAll(".em-tab").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const st = getState();
-          st.activeTab = btn.dataset.tab;
-          renderTabs();
-          api7().renderTab?.(st.activeTab);
-          btn.scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" });
-        });
-      });
-    }
-    function renderContent(html) {
-      document.getElementById("emSheetContent").innerHTML = html;
-    }
-    function setLoadingChrome() {
-      document.getElementById("emSheetTitle").textContent = "Loading event\u2026";
-      document.getElementById("emSheetSub").textContent = "";
-      renderTabs();
-      renderContent('<div class="em-placeholder"><div style="font-size:13px">Loading\u2026</div></div>');
-    }
-    function openPanel() {
-      const sheet = document.getElementById("emSheet");
-      const panel = document.getElementById("emSheetPanel");
-      const backdrop = document.getElementById("emSheetBackdrop");
-      sheet.classList.remove("em-sheet-hidden");
-      sheet.classList.add("em-open");
-      backdrop.classList.remove("opacity-0", "pointer-events-none");
-      backdrop.classList.add("opacity-100");
-      requestAnimationFrame(() => {
-        panel.classList.remove("pointer-events-none", "translate-y-full", "sm:translate-y-4", "sm:opacity-0");
-        panel.classList.add("pointer-events-auto", "translate-y-0", "sm:opacity-100");
-      });
-      document.body.style.overflow = "hidden";
-    }
-    function closePanel() {
-      const sheet = document.getElementById("emSheet");
-      const panel = document.getElementById("emSheetPanel");
-      const backdrop = document.getElementById("emSheetBackdrop");
-      if (!sheet || !sheet.classList.contains("em-open")) return;
-      panel.classList.add("pointer-events-none", "translate-y-full", "sm:translate-y-4", "sm:opacity-0");
-      panel.classList.remove("pointer-events-auto", "translate-y-0", "sm:opacity-100");
-      backdrop.classList.add("opacity-0", "pointer-events-none");
-      backdrop.classList.remove("opacity-100");
-      document.body.style.overflow = "";
-      setTimeout(() => {
-        sheet.classList.remove("em-open");
-        sheet.classList.add("em-sheet-hidden");
-      }, 250);
-    }
-    window.EventsManageShell = {
-      ensureMounted,
-      renderHeader,
-      renderTabs,
-      renderContent,
-      setLoadingChrome,
-      openPanel,
-      closePanel,
-      getTabs: () => M3A_TABS
-    };
-  })();
+    });
+  }
+  function renderContent(html5) {
+    document.getElementById("emSheetContent").innerHTML = html5;
+  }
+  function setLoadingChrome() {
+    document.getElementById("emSheetTitle").textContent = "Loading event\u2026";
+    document.getElementById("emSheetSub").textContent = "";
+    renderTabs();
+    renderContent('<div class="em-placeholder"><div style="font-size:13px">Loading\u2026</div></div>');
+  }
+  function openPanel() {
+    const sheet = document.getElementById("emSheet");
+    const panel = document.getElementById("emSheetPanel");
+    const backdrop = document.getElementById("emSheetBackdrop");
+    sheet.classList.remove("em-sheet-hidden");
+    sheet.classList.add("em-open");
+    backdrop.classList.remove("opacity-0", "pointer-events-none");
+    backdrop.classList.add("opacity-100");
+    requestAnimationFrame(() => {
+      panel.classList.remove("pointer-events-none", "translate-y-full", "sm:translate-y-4", "sm:opacity-0");
+      panel.classList.add("pointer-events-auto", "translate-y-0", "sm:opacity-100");
+    });
+    document.body.style.overflow = "hidden";
+  }
+  function closePanel() {
+    const sheet = document.getElementById("emSheet");
+    const panel = document.getElementById("emSheetPanel");
+    const backdrop = document.getElementById("emSheetBackdrop");
+    if (!sheet || !sheet.classList.contains("em-open")) return;
+    panel.classList.add("pointer-events-none", "translate-y-full", "sm:translate-y-4", "sm:opacity-0");
+    panel.classList.remove("pointer-events-auto", "translate-y-0", "sm:opacity-100");
+    backdrop.classList.add("opacity-0", "pointer-events-none");
+    backdrop.classList.remove("opacity-100");
+    document.body.style.overflow = "";
+    setTimeout(() => {
+      sheet.classList.remove("em-open");
+      sheet.classList.add("em-sheet-hidden");
+    }, 250);
+  }
+  var manageShellApi = {
+    ensureMounted,
+    renderHeader,
+    renderTabs,
+    renderContent,
+    setLoadingChrome,
+    openPanel,
+    closePanel,
+    getTabs: () => M3A_TABS
+  };
+  globalThis.EventsManageShell = manageShellApi;
 
   // js/portal/events/manage/overview.js
-  (function() {
-    "use strict";
-    const PUBLIC_SITE_URL = "https://justicemcneal.com";
-    function api7() {
-      return window.EventsManageOverviewApi || {};
-    }
-    function getState() {
-      return api7().getState?.() || {};
-    }
-    function esc(s) {
-      const el = document.createElement("span");
-      el.textContent = s == null ? "" : String(s);
-      return el.innerHTML;
-    }
-    function money(cents) {
-      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
-    }
-    function publicEventUrl(event) {
-      return PUBLIC_SITE_URL + "/events/?e=" + encodeURIComponent(event?.slug || "");
-    }
-    function safeFilename(value) {
-      return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
-    }
-    function downloadCanvasPng(canvasId, filename) {
-      const canvas = document.getElementById(canvasId);
-      if (!canvas) return;
-      const link = document.createElement("a");
-      link.download = filename;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    }
-    async function shareInviteUrl(url, event, btn) {
-      const title = event?.title ? event.title + " | Justice McNeal LLC" : "Justice McNeal LLC Event";
-      const text = event?.rsvp_enabled === false ? "View event details." : "RSVP today.";
-      if (navigator.share) {
-        try {
-          await navigator.share({ title, text, url });
-          return;
-        } catch (_) {
-        }
+  var PUBLIC_SITE_URL = "https://justicemcneal.com";
+  function api8() {
+    return window.EventsManageOverviewApi || {};
+  }
+  function getState2() {
+    return api8().getState?.() || {};
+  }
+  function esc(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function money(cents) {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
+  }
+  function publicEventUrl(event) {
+    return PUBLIC_SITE_URL + "/events/?e=" + encodeURIComponent(event?.slug || "");
+  }
+  function safeFilename(value) {
+    return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
+  }
+  function downloadCanvasPng(canvasId, filename) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const link = document.createElement("a");
+    link.download = filename;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }
+  async function shareInviteUrl(url, event, btn) {
+    const title = event?.title ? event.title + " | Justice McNeal LLC" : "Justice McNeal LLC Event";
+    const text = event?.rsvp_enabled === false ? "View event details." : "RSVP today.";
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch (_) {
       }
-      await navigator.clipboard.writeText(url);
-      if (btn) {
-        btn.textContent = "Link copied \u2713";
+    }
+    await navigator.clipboard.writeText(url);
+    if (btn) {
+      btn.textContent = "Link copied \u2713";
+      setTimeout(() => {
+        btn.textContent = "Share invite";
+      }, 1500);
+    }
+  }
+  function overviewHtml() {
+    const STATE3 = getState2();
+    const e = STATE3.event;
+    const guestGoing = STATE3.guestRsvps.filter((r) => r.status === "going").length;
+    const going = STATE3.rsvps.filter((r) => r.status === "going").length + guestGoing;
+    const maybe = STATE3.rsvps.filter((r) => r.status === "maybe").length;
+    const paid = STATE3.rsvps.filter((r) => r.paid).length + STATE3.guestRsvps.filter((r) => r.paid).length;
+    const checked = STATE3.checkins.length;
+    const revenue = paid * (e.rsvp_cost_cents || 0);
+    const startLocal = new Date(e.start_date).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    const isLlc = e.event_type === "llc";
+    const minNeeded = Number(e.min_participants || 0);
+    const thresholdPct = minNeeded ? Math.min(100, Math.round(going / minNeeded * 100)) : 0;
+    const thresholdMet = minNeeded ? going >= minNeeded : false;
+    const deadline = e.rsvp_deadline ? new Date(e.rsvp_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
+    const transportMode = e.transportation_mode;
+    const transportEstimate = e.transportation_estimate_cents ? money(e.transportation_estimate_cents) : "";
+    const thresholdCopy = thresholdMet ? `${going} confirmed RSVP${going === 1 ? "" : "s"}; minimum was ${minNeeded}${deadline ? ` by ${deadline}` : ""}. This event can stay confirmed.` : `${going} of ${minNeeded} required RSVP${minNeeded === 1 ? "" : "s"}${deadline ? ` by ${deadline}` : ""}. ${Math.max(0, minNeeded - going)} more RSVP${minNeeded - going === 1 ? "" : "s"} needed.`;
+    const inviteUrl = publicEventUrl(e);
+    const portalLink = `<a href="../portal/events.html?event=${encodeURIComponent(e.slug || "")}" class="em-btn-ghost" style="text-decoration:none;display:inline-block">Open in portal \u2192</a>`;
+    const thresholdCard = isLlc && minNeeded ? `
+        <div class="em-card em-op-card">
+            <div class="em-op-head">
+                <div><p class="em-op-kicker">Minimum</p><p class="em-op-title">${thresholdMet ? "Threshold met" : "Needs momentum"}</p></div>
+                <span class="em-op-icon">${thresholdMet ? "\u2705" : "\u26A0\uFE0F"}</span>
+            </div>
+            <p class="em-op-copy">${thresholdCopy}</p>
+            <div class="em-op-progress"><span style="width:${thresholdPct}%"></span></div>
+            <div class="em-op-meta"><span class="em-op-chip">${thresholdPct}% filled</span><button class="em-btn-ghost" data-overview-tab="rsvps">Review RSVPs</button></div>
+        </div>` : "";
+    const transportCard = isLlc && transportMode ? `
+        <div class="em-card em-op-card">
+            <div class="em-op-head">
+                <div><p class="em-op-kicker">Transportation</p><p class="em-op-title">${transportMode === "llc_provides" ? "LLC provided" : "Self-arranged"}</p></div>
+                <span class="em-op-icon">${transportMode === "llc_provides" ? "\u2708\uFE0F" : "\u{1F9F3}"}</span>
+            </div>
+            <p class="em-op-copy">${transportMode === "llc_provides" ? "Upload tickets or travel documents in Docs when they are ready for members." : `Members book travel themselves${transportEstimate ? `, estimated around ${transportEstimate}` : ""}.`}</p>
+            <div class="em-op-meta"><button class="em-btn-ghost" data-overview-tab="docs">Open Docs</button><span class="em-op-chip">${transportMode === "llc_provides" ? "Document handoff" : "Member-owned"}</span></div>
+        </div>` : "";
+    const documentsCard = isLlc ? `
+        <div class="em-card em-op-card">
+            <div class="em-op-head">
+                <div><p class="em-op-kicker">Documents</p><p class="em-op-title">Handoff hub</p></div>
+                <span class="em-op-icon">\u{1F4C4}</span>
+            </div>
+            <p class="em-op-copy">Upload group files or member-specific tickets here. Attendees only see a retrieval button on the event page.</p>
+            <div class="em-op-meta"><button class="em-btn-primary" data-overview-tab="docs">Manage Docs</button></div>
+        </div>` : "";
+    const operationsHtml = [thresholdCard, transportCard, documentsCard].filter(Boolean).join("");
+    const showFeaturedToggle = typeof canManageEventBanners === "function" && canManageEventBanners();
+    return `
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            <div class="em-card em-stat"><span class="em-stat-label">Going</span><span class="em-stat-num">${going}${e.max_participants ? `<span style="font-size:14px;color:#9ca3af;font-weight:500">/${e.max_participants}</span>` : ""}</span></div>
+            <div class="em-card em-stat"><span class="em-stat-label">Interested</span><span class="em-stat-num" style="color:#db2777">${maybe}</span></div>
+            <div class="em-card em-stat"><span class="em-stat-label">Checked In</span><span class="em-stat-num" style="color:#7c3aed">${checked}</span></div>
+            <div class="em-card em-stat"><span class="em-stat-label">Revenue</span><span class="em-stat-num" style="color:#059669">${money(revenue)}</span></div>
+        </div>
+
+        ${operationsHtml ? `<div class="em-op-grid">${operationsHtml}</div>` : ""}
+
+        <div class="em-card mb-3">
+            <h3 class="font-bold text-gray-800 text-sm mb-3">Details</h3>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between gap-3"><span class="text-gray-500">When</span><span class="text-gray-800 font-medium text-right">${startLocal}</span></div>
+                ${e.location_nickname ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Where</span><span class="text-gray-800 font-medium text-right truncate">${esc(e.location_nickname)}</span></div>` : ""}
+                <div class="flex justify-between gap-3"><span class="text-gray-500">Status</span><span class="text-gray-800 font-medium uppercase tracking-wide text-xs">${e.status}</span></div>
+                <div class="flex justify-between gap-3"><span class="text-gray-500">Pricing</span><span class="text-gray-800 font-medium">${e.pricing_mode === "paid" ? `Paid \xB7 ${money(e.rsvp_cost_cents)}` : "Free"}</span></div>
+                ${e.rsvp_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">RSVP deadline</span><span class="text-gray-800 font-medium">${new Date(e.rsvp_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></div>` : ""}
+            </div>
+        </div>
+
+        <div class="em-card mb-3" id="emCopyEditorCard">
+            <div class="em-section-head" style="margin-bottom:12px">
+                <div>
+                    <h3 class="em-section-title">Event copy</h3>
+                    <p class="em-section-sub">Edit the title and description shown across the portal and invite page.</p>
+                </div>
+            </div>
+            <form id="emCopyForm" class="space-y-3">
+                <div>
+                    <label for="emCopyTitle" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Title *</label>
+                    <input id="emCopyTitle" class="em-input" type="text" maxlength="120" required value="${esc(e.title || "")}">
+                </div>
+                <div>
+                    <label for="emCopyDescription" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Description</label>
+                    <textarea id="emCopyDescription" class="em-textarea" rows="4" maxlength="2000">${esc(e.description || "")}</textarea>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="submit" id="emCopySave" class="em-btn-primary">Save changes</button>
+                    <button type="button" id="emCopyCancel" class="em-btn-ghost">Cancel</button>
+                    <span id="emCopyStatus" class="text-xs text-gray-400"></span>
+                </div>
+            </form>
+        </div>
+
+        ${showFeaturedToggle ? `
+        <div class="em-card mb-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="font-bold text-gray-800 text-sm">&#9733; Featured on portal</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Show this event in the hero banner on the portal events page.</p>
+                </div>
+                <button id="emFeaturedToggle"
+                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${STATE3.event.is_featured ? "bg-brand-600" : "bg-gray-200"}"
+                    role="switch" aria-checked="${STATE3.event.is_featured ? "true" : "false"}"
+                    onclick="window._emToggleFeatured()"
+                >
+                    <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${STATE3.event.is_featured ? "translate-x-5" : "translate-x-0"}"></span>
+                </button>
+            </div>
+        </div>` : ""}
+
+        <div class="em-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-3">Quick actions</h3>
+            <div class="flex flex-wrap gap-2">
+                ${portalLink}
+                ${e.slug ? `<button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>` : ""}
+                ${e.checkin_enabled !== false && e.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(e.status) ? `<button class="em-btn-ghost" onclick="window.EventsManage.close();setTimeout(()=>window.evtOpenScanner&&window.evtOpenScanner('${STATE3.eventId}'),150)"><svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>Scan Attendees</button>` : ""}
+            </div>
+            <p class="text-xs text-gray-400 mt-3">Tap any tab above for Money, Docs, Raffle, or Comp details.</p>
+        </div>
+        ${e.slug ? `
+        <div class="em-card mt-3">
+            <div class="em-section-head"><div><h3 class="em-section-title">Invitation QR</h3><p class="em-section-sub">Use this public event link on printed or digital invitations.</p></div></div>
+            <canvas id="emInviteQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
+            <p class="text-xs text-gray-400 text-center mt-2 break-all">${esc(inviteUrl)}</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-3">
+                <button class="em-btn-primary" data-share-invite-url>Share invite</button>
+                <button class="em-btn-primary" data-download-invite-qr>Download QR</button>
+                <button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>
+            </div>
+        </div>` : ""}
+        ${e.checkin_enabled !== false && e.checkin_mode === "venue_scan" && e.venue_qr_token ? `
+        <div class="em-card mt-3">
+            <h3 class="font-bold text-gray-800 text-sm mb-3">\u{1F4CD} Venue QR Code</h3>
+            <canvas id="emVenueQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
+            <p class="text-xs text-gray-400 text-center mt-2">Display this at the entrance for attendees to scan</p>
+        </div>` : ""}
+    `;
+  }
+  function wireOverview() {
+    const STATE3 = getState2();
+    const e = STATE3.event;
+    if (!e) return;
+    const inviteUrl = publicEventUrl(e);
+    renderOverviewQrs(inviteUrl, e);
+    document.getElementById("emSheetContent").querySelectorAll("[data-copy-invite-url]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        navigator.clipboard.writeText(inviteUrl);
+        btn.textContent = "Copied \u2713";
         setTimeout(() => {
-          btn.textContent = "Share invite";
+          btn.textContent = "Copy invite link";
         }, 1500);
-      }
-    }
-    function overviewHtml() {
-      const STATE = getState();
-      const e = STATE.event;
-      const guestGoing = STATE.guestRsvps.filter((r) => r.status === "going").length;
-      const going = STATE.rsvps.filter((r) => r.status === "going").length + guestGoing;
-      const maybe = STATE.rsvps.filter((r) => r.status === "maybe").length;
-      const paid = STATE.rsvps.filter((r) => r.paid).length + STATE.guestRsvps.filter((r) => r.paid).length;
-      const checked = STATE.checkins.length;
-      const revenue = paid * (e.rsvp_cost_cents || 0);
-      const startLocal = new Date(e.start_date).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-      const isLlc = e.event_type === "llc";
-      const minNeeded = Number(e.min_participants || 0);
-      const thresholdPct = minNeeded ? Math.min(100, Math.round(going / minNeeded * 100)) : 0;
-      const thresholdMet = minNeeded ? going >= minNeeded : false;
-      const deadline = e.rsvp_deadline ? new Date(e.rsvp_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
-      const transportMode = e.transportation_mode;
-      const transportEstimate = e.transportation_estimate_cents ? money(e.transportation_estimate_cents) : "";
-      const thresholdCopy = thresholdMet ? `${going} confirmed RSVP${going === 1 ? "" : "s"}; minimum was ${minNeeded}${deadline ? ` by ${deadline}` : ""}. This event can stay confirmed.` : `${going} of ${minNeeded} required RSVP${minNeeded === 1 ? "" : "s"}${deadline ? ` by ${deadline}` : ""}. ${Math.max(0, minNeeded - going)} more RSVP${minNeeded - going === 1 ? "" : "s"} needed.`;
-      const inviteUrl = publicEventUrl(e);
-      const portalLink = `<a href="../portal/events.html?event=${encodeURIComponent(e.slug || "")}" class="em-btn-ghost" style="text-decoration:none;display:inline-block">Open in portal \u2192</a>`;
-      const thresholdCard = isLlc && minNeeded ? `
-            <div class="em-card em-op-card">
-                <div class="em-op-head">
-                    <div><p class="em-op-kicker">Minimum</p><p class="em-op-title">${thresholdMet ? "Threshold met" : "Needs momentum"}</p></div>
-                    <span class="em-op-icon">${thresholdMet ? "\u2705" : "\u26A0\uFE0F"}</span>
-                </div>
-                <p class="em-op-copy">${thresholdCopy}</p>
-                <div class="em-op-progress"><span style="width:${thresholdPct}%"></span></div>
-                <div class="em-op-meta"><span class="em-op-chip">${thresholdPct}% filled</span><button class="em-btn-ghost" data-overview-tab="rsvps">Review RSVPs</button></div>
-            </div>` : "";
-      const transportCard = isLlc && transportMode ? `
-            <div class="em-card em-op-card">
-                <div class="em-op-head">
-                    <div><p class="em-op-kicker">Transportation</p><p class="em-op-title">${transportMode === "llc_provides" ? "LLC provided" : "Self-arranged"}</p></div>
-                    <span class="em-op-icon">${transportMode === "llc_provides" ? "\u2708\uFE0F" : "\u{1F9F3}"}</span>
-                </div>
-                <p class="em-op-copy">${transportMode === "llc_provides" ? "Upload tickets or travel documents in Docs when they are ready for members." : `Members book travel themselves${transportEstimate ? `, estimated around ${transportEstimate}` : ""}.`}</p>
-                <div class="em-op-meta"><button class="em-btn-ghost" data-overview-tab="docs">Open Docs</button><span class="em-op-chip">${transportMode === "llc_provides" ? "Document handoff" : "Member-owned"}</span></div>
-            </div>` : "";
-      const documentsCard = isLlc ? `
-            <div class="em-card em-op-card">
-                <div class="em-op-head">
-                    <div><p class="em-op-kicker">Documents</p><p class="em-op-title">Handoff hub</p></div>
-                    <span class="em-op-icon">\u{1F4C4}</span>
-                </div>
-                <p class="em-op-copy">Upload group files or member-specific tickets here. Attendees only see a retrieval button on the event page.</p>
-                <div class="em-op-meta"><button class="em-btn-primary" data-overview-tab="docs">Manage Docs</button></div>
-            </div>` : "";
-      const operationsHtml = [thresholdCard, transportCard, documentsCard].filter(Boolean).join("");
-      const showFeaturedToggle = typeof canManageEventBanners === "function" && canManageEventBanners();
-      return `
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                <div class="em-card em-stat"><span class="em-stat-label">Going</span><span class="em-stat-num">${going}${e.max_participants ? `<span style="font-size:14px;color:#9ca3af;font-weight:500">/${e.max_participants}</span>` : ""}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Interested</span><span class="em-stat-num" style="color:#db2777">${maybe}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Checked In</span><span class="em-stat-num" style="color:#7c3aed">${checked}</span></div>
-                <div class="em-card em-stat"><span class="em-stat-label">Revenue</span><span class="em-stat-num" style="color:#059669">${money(revenue)}</span></div>
-            </div>
-
-            ${operationsHtml ? `<div class="em-op-grid">${operationsHtml}</div>` : ""}
-
-            <div class="em-card mb-3">
-                <h3 class="font-bold text-gray-800 text-sm mb-3">Details</h3>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between gap-3"><span class="text-gray-500">When</span><span class="text-gray-800 font-medium text-right">${startLocal}</span></div>
-                    ${e.location_nickname ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Where</span><span class="text-gray-800 font-medium text-right truncate">${esc(e.location_nickname)}</span></div>` : ""}
-                    <div class="flex justify-between gap-3"><span class="text-gray-500">Status</span><span class="text-gray-800 font-medium uppercase tracking-wide text-xs">${e.status}</span></div>
-                    <div class="flex justify-between gap-3"><span class="text-gray-500">Pricing</span><span class="text-gray-800 font-medium">${e.pricing_mode === "paid" ? `Paid \xB7 ${money(e.rsvp_cost_cents)}` : "Free"}</span></div>
-                    ${e.rsvp_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">RSVP deadline</span><span class="text-gray-800 font-medium">${new Date(e.rsvp_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></div>` : ""}
-                </div>
-            </div>
-
-            <div class="em-card mb-3" id="emCopyEditorCard">
-                <div class="em-section-head" style="margin-bottom:12px">
-                    <div>
-                        <h3 class="em-section-title">Event copy</h3>
-                        <p class="em-section-sub">Edit the title and description shown across the portal and invite page.</p>
-                    </div>
-                </div>
-                <form id="emCopyForm" class="space-y-3">
-                    <div>
-                        <label for="emCopyTitle" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Title *</label>
-                        <input id="emCopyTitle" class="em-input" type="text" maxlength="120" required value="${esc(e.title || "")}">
-                    </div>
-                    <div>
-                        <label for="emCopyDescription" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Description</label>
-                        <textarea id="emCopyDescription" class="em-textarea" rows="4" maxlength="2000">${esc(e.description || "")}</textarea>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button type="submit" id="emCopySave" class="em-btn-primary">Save changes</button>
-                        <button type="button" id="emCopyCancel" class="em-btn-ghost">Cancel</button>
-                        <span id="emCopyStatus" class="text-xs text-gray-400"></span>
-                    </div>
-                </form>
-            </div>
-
-            ${showFeaturedToggle ? `
-            <div class="em-card mb-3">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="font-bold text-gray-800 text-sm">&#9733; Featured on portal</p>
-                        <p class="text-xs text-gray-500 mt-0.5">Show this event in the hero banner on the portal events page.</p>
-                    </div>
-                    <button id="emFeaturedToggle"
-                        class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${STATE.event.is_featured ? "bg-brand-600" : "bg-gray-200"}"
-                        role="switch" aria-checked="${STATE.event.is_featured ? "true" : "false"}"
-                        onclick="window._emToggleFeatured()"
-                    >
-                        <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${STATE.event.is_featured ? "translate-x-5" : "translate-x-0"}"></span>
-                    </button>
-                </div>
-            </div>` : ""}
-
-            <div class="em-card">
-                <h3 class="font-bold text-gray-800 text-sm mb-3">Quick actions</h3>
-                <div class="flex flex-wrap gap-2">
-                    ${portalLink}
-                    ${e.slug ? `<button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>` : ""}
-                    ${e.checkin_enabled !== false && e.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(e.status) ? `<button class="em-btn-ghost" onclick="window.EventsManage.close();setTimeout(()=>window.evtOpenScanner&&window.evtOpenScanner('${STATE.eventId}'),150)"><svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>Scan Attendees</button>` : ""}
-                </div>
-                <p class="text-xs text-gray-400 mt-3">Tap any tab above for Money, Docs, Raffle, or Comp details.</p>
-            </div>
-            ${e.slug ? `
-            <div class="em-card mt-3">
-                <div class="em-section-head"><div><h3 class="em-section-title">Invitation QR</h3><p class="em-section-sub">Use this public event link on printed or digital invitations.</p></div></div>
-                <canvas id="emInviteQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
-                <p class="text-xs text-gray-400 text-center mt-2 break-all">${esc(inviteUrl)}</p>
-                <div class="flex flex-wrap justify-center gap-2 mt-3">
-                    <button class="em-btn-primary" data-share-invite-url>Share invite</button>
-                    <button class="em-btn-primary" data-download-invite-qr>Download QR</button>
-                    <button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>
-                </div>
-            </div>` : ""}
-            ${e.checkin_enabled !== false && e.checkin_mode === "venue_scan" && e.venue_qr_token ? `
-            <div class="em-card mt-3">
-                <h3 class="font-bold text-gray-800 text-sm mb-3">\u{1F4CD} Venue QR Code</h3>
-                <canvas id="emVenueQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
-                <p class="text-xs text-gray-400 text-center mt-2">Display this at the entrance for attendees to scan</p>
-            </div>` : ""}
-        `;
-    }
-    function wireOverview() {
-      const STATE = getState();
-      const e = STATE.event;
-      if (!e) return;
-      const inviteUrl = publicEventUrl(e);
-      renderOverviewQrs(inviteUrl, e);
-      document.getElementById("emSheetContent").querySelectorAll("[data-copy-invite-url]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          navigator.clipboard.writeText(inviteUrl);
-          btn.textContent = "Copied \u2713";
-          setTimeout(() => {
-            btn.textContent = "Copy invite link";
-          }, 1500);
-        });
       });
-      document.getElementById("emSheetContent").querySelectorAll("[data-share-invite-url]").forEach((btn) => {
-        btn.addEventListener("click", () => shareInviteUrl(inviteUrl, e, btn));
+    });
+    document.getElementById("emSheetContent").querySelectorAll("[data-share-invite-url]").forEach((btn) => {
+      btn.addEventListener("click", () => shareInviteUrl(inviteUrl, e, btn));
+    });
+    document.getElementById("emSheetContent").querySelectorAll("[data-download-invite-qr]").forEach((btn) => {
+      btn.addEventListener("click", () => downloadCanvasPng("emInviteQR", `${safeFilename(e.slug || e.title || "event")}-invite-qr.png`));
+    });
+    document.getElementById("emSheetContent").querySelectorAll("[data-overview-tab]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        STATE3.activeTab = btn.dataset.overviewTab;
+        api8().renderTabs?.();
+        api8().renderTab?.(STATE3.activeTab);
       });
-      document.getElementById("emSheetContent").querySelectorAll("[data-download-invite-qr]").forEach((btn) => {
-        btn.addEventListener("click", () => downloadCanvasPng("emInviteQR", `${safeFilename(e.slug || e.title || "event")}-invite-qr.png`));
-      });
-      document.getElementById("emSheetContent").querySelectorAll("[data-overview-tab]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          STATE.activeTab = btn.dataset.overviewTab;
-          api7().renderTabs?.();
-          api7().renderTab?.(STATE.activeTab);
-        });
-      });
-      const copyForm = document.getElementById("emCopyForm");
-      const copyTitle = document.getElementById("emCopyTitle");
-      const copyDescription = document.getElementById("emCopyDescription");
-      const copyStatus = document.getElementById("emCopyStatus");
-      copyForm?.addEventListener("submit", (ev) => {
-        ev.preventDefault();
-        saveEventCopy(copyForm);
-      });
-      document.getElementById("emCopyCancel")?.addEventListener("click", () => {
-        if (copyTitle) copyTitle.value = STATE.event?.title || "";
-        if (copyDescription) copyDescription.value = STATE.event?.description || "";
-        if (copyStatus) {
-          copyStatus.className = "text-xs text-gray-400";
-          copyStatus.textContent = "Changes discarded";
-          setTimeout(() => {
-            copyStatus.textContent = "";
-          }, 1800);
-        }
-      });
-      if (STATE.editCopyOnOpen) {
-        STATE.editCopyOnOpen = false;
+    });
+    const copyForm = document.getElementById("emCopyForm");
+    const copyTitle = document.getElementById("emCopyTitle");
+    const copyDescription = document.getElementById("emCopyDescription");
+    const copyStatus = document.getElementById("emCopyStatus");
+    copyForm?.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      saveEventCopy(copyForm);
+    });
+    document.getElementById("emCopyCancel")?.addEventListener("click", () => {
+      if (copyTitle) copyTitle.value = STATE3.event?.title || "";
+      if (copyDescription) copyDescription.value = STATE3.event?.description || "";
+      if (copyStatus) {
+        copyStatus.className = "text-xs text-gray-400";
+        copyStatus.textContent = "Changes discarded";
         setTimeout(() => {
-          document.getElementById("emCopyEditorCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
-          copyTitle?.focus();
-          copyTitle?.select();
-        }, 100);
+          copyStatus.textContent = "";
+        }, 1800);
       }
+    });
+    if (STATE3.editCopyOnOpen) {
+      STATE3.editCopyOnOpen = false;
+      setTimeout(() => {
+        document.getElementById("emCopyEditorCard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        copyTitle?.focus();
+        copyTitle?.select();
+      }, 100);
     }
-    async function saveEventCopy(form) {
-      const STATE = getState();
-      const e = STATE.event;
-      if (!e || !form) return;
-      const titleInput = document.getElementById("emCopyTitle");
-      const descriptionInput = document.getElementById("emCopyDescription");
-      const saveBtn = document.getElementById("emCopySave");
-      const status = document.getElementById("emCopyStatus");
-      const title = (titleInput?.value || "").trim();
-      const description = (descriptionInput?.value || "").trim();
-      function setStatus(message, isError) {
-        if (!status) return;
-        status.className = isError ? "text-xs text-red-600" : "text-xs text-gray-400";
-        status.textContent = message;
-      }
-      if (!title) {
-        setStatus("Title is required.", true);
-        titleInput?.focus();
-        return;
-      }
-      if (saveBtn) saveBtn.disabled = true;
-      setStatus("Saving...", false);
-      try {
-        const { data, error } = await supabaseClient.from("events").update({ title, description: description || null }).eq("id", e.id).select("title, description").single();
-        if (error) throw error;
-        STATE.event.title = data?.title || title;
-        STATE.event.description = data?.description || null;
-        api7().renderHeader?.();
-        api7().renderTab?.("overview");
-        setTimeout(() => {
-          const refreshedStatus = document.getElementById("emCopyStatus");
-          if (refreshedStatus) {
-            refreshedStatus.className = "text-xs text-emerald-600";
-            refreshedStatus.textContent = "Saved changes.";
-            setTimeout(() => {
-              refreshedStatus.textContent = "";
-            }, 2500);
-          }
-        }, 0);
-        api7().notifyParent?.("updated", e.id);
-      } catch (err) {
-        setStatus("Update failed: " + (err.message || "unknown error"), true);
-      } finally {
-        if (saveBtn) saveBtn.disabled = false;
-      }
+  }
+  async function saveEventCopy(form) {
+    const STATE3 = getState2();
+    const e = STATE3.event;
+    if (!e || !form) return;
+    const titleInput = document.getElementById("emCopyTitle");
+    const descriptionInput = document.getElementById("emCopyDescription");
+    const saveBtn = document.getElementById("emCopySave");
+    const status = document.getElementById("emCopyStatus");
+    const title = (titleInput?.value || "").trim();
+    const description = (descriptionInput?.value || "").trim();
+    function setStatus(message, isError) {
+      if (!status) return;
+      status.className = isError ? "text-xs text-red-600" : "text-xs text-gray-400";
+      status.textContent = message;
     }
-    async function ensureQrCode() {
-      if (typeof window.evtEnsureQRCode === "function") return window.evtEnsureQRCode();
-      return globalThis.QRCode;
+    if (!title) {
+      setStatus("Title is required.", true);
+      titleInput?.focus();
+      return;
     }
-    async function renderOverviewQrs(inviteUrl, e) {
-      const inviteCanvas = document.getElementById("emInviteQR");
-      const venueCanvas = document.getElementById("emVenueQR");
-      if ((!inviteCanvas || !e.slug) && (!venueCanvas || !e.venue_qr_token)) return;
-      try {
-        const qr = await ensureQrCode();
-        if (inviteCanvas?.isConnected && e.slug) {
-          qr.toCanvas(inviteCanvas, inviteUrl, { width: 220, margin: 2, color: { dark: "#111827", light: "#ffffff" } });
+    if (saveBtn) saveBtn.disabled = true;
+    setStatus("Saving...", false);
+    try {
+      const { data, error } = await supabaseClient.from("events").update({ title, description: description || null }).eq("id", e.id).select("title, description").single();
+      if (error) throw error;
+      STATE3.event.title = data?.title || title;
+      STATE3.event.description = data?.description || null;
+      api8().renderHeader?.();
+      api8().renderTab?.("overview");
+      setTimeout(() => {
+        const refreshedStatus = document.getElementById("emCopyStatus");
+        if (refreshedStatus) {
+          refreshedStatus.className = "text-xs text-emerald-600";
+          refreshedStatus.textContent = "Saved changes.";
+          setTimeout(() => {
+            refreshedStatus.textContent = "";
+          }, 2500);
         }
-        if (venueCanvas?.isConnected && e.venue_qr_token) {
-          qr.toCanvas(venueCanvas, `${window.location.origin}/events/?e=${encodeURIComponent(e.slug || "")}&checkin=1`, { width: 200, margin: 2 });
-        }
-      } catch (err) {
-        console.warn("[events/manage] QR code renderer unavailable", err);
-      }
+      }, 0);
+      api8().notifyParent?.("updated", e.id);
+    } catch (err) {
+      setStatus("Update failed: " + (err.message || "unknown error"), true);
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
     }
-    async function toggleFeatured() {
-      const STATE = getState();
-      const btn = document.getElementById("emFeaturedToggle");
-      if (!btn) return;
-      const newVal = !STATE.event.is_featured;
-      btn.disabled = true;
-      const { error } = await supabaseClient.from("events").update({ is_featured: newVal }).eq("id", STATE.event.id);
-      if (error) {
-        alert("Failed to update: " + error.message);
-        btn.disabled = false;
-        return;
+  }
+  async function ensureQrCode() {
+    if (typeof globalThis.evtEnsureQRCode === "function") return window.evtEnsureQRCode();
+    return globalThis.QRCode;
+  }
+  async function renderOverviewQrs(inviteUrl, e) {
+    const inviteCanvas = document.getElementById("emInviteQR");
+    const venueCanvas = document.getElementById("emVenueQR");
+    if ((!inviteCanvas || !e.slug) && (!venueCanvas || !e.venue_qr_token)) return;
+    try {
+      const qr = await ensureQrCode();
+      if (inviteCanvas?.isConnected && e.slug) {
+        qr.toCanvas(inviteCanvas, inviteUrl, { width: 220, margin: 2, color: { dark: "#111827", light: "#ffffff" } });
       }
-      STATE.event.is_featured = newVal;
-      api7().renderTab?.("overview");
-      document.dispatchEvent(new CustomEvent("events:manage:updated", { detail: { eventId: STATE.event.id } }));
+      if (venueCanvas?.isConnected && e.venue_qr_token) {
+        qr.toCanvas(venueCanvas, `${window.location.origin}/events/?e=${encodeURIComponent(e.slug || "")}&checkin=1`, { width: 200, margin: 2 });
+      }
+    } catch (err) {
+      console.warn("[events/manage] QR code renderer unavailable", err);
     }
-    window.EventsManageOverview = {
-      overviewHtml,
-      wireOverview,
-      saveEventCopy,
-      ensureQrCode,
-      renderOverviewQrs,
-      toggleFeatured
-    };
-    window._emToggleFeatured = toggleFeatured;
-  })();
+  }
+  async function toggleFeatured() {
+    const STATE3 = getState2();
+    const btn = document.getElementById("emFeaturedToggle");
+    if (!btn) return;
+    const newVal = !STATE3.event.is_featured;
+    btn.disabled = true;
+    const { error } = await supabaseClient.from("events").update({ is_featured: newVal }).eq("id", STATE3.event.id);
+    if (error) {
+      alert("Failed to update: " + error.message);
+      btn.disabled = false;
+      return;
+    }
+    STATE3.event.is_featured = newVal;
+    api8().renderTab?.("overview");
+    document.dispatchEvent(new CustomEvent("events:manage:updated", { detail: { eventId: STATE3.event.id } }));
+  }
+  var manageOverviewApi = {
+    overviewHtml,
+    wireOverview,
+    saveEventCopy,
+    ensureQrCode,
+    renderOverviewQrs,
+    toggleFeatured
+  };
+  globalThis._emToggleFeatured = toggleFeatured;
+  globalThis.EventsManageOverview = manageOverviewApi;
 
   // js/portal/events/manage/images.js
-  (function() {
-    "use strict";
-    function api7() {
-      return window.EventsManageImagesApi || {};
-    }
-    function esc(s) {
-      const el = document.createElement("span");
-      el.textContent = s == null ? "" : String(s);
-      return el.innerHTML;
-    }
-    function money(cents) {
-      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
-    }
-    const imgFiles = { banner: null, embed: null };
-    function imgDropZone(id, label, hint, currentUrl) {
-      const STATE = api7().getState?.() || {};
-      const hasImg = !!currentUrl;
-      return `
-            <div id="${id}Zone" class="em-img-zone${hasImg ? " em-img-zone--has" : ""}" data-zone="${id}">
-                <input id="${id}FileInput" type="file" accept="image/*" style="display:none">
-                <img id="${id}Preview" src="${esc(currentUrl)}" alt=""
-                     style="width:100%;border-radius:10px;object-fit:cover;max-height:200px;margin-bottom:10px;${hasImg ? "" : "display:none"}">
-                <div id="${id}Prompt" style="${hasImg ? "display:none" : ""}">
-                    <svg style="width:32px;height:32px;color:#9ca3af;margin-bottom:8px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4-4a3 3 0 014 0l4 4m-4-4l1.5-1.5a3 3 0 014 0L20 16M14 8h.01M4 19h16a1 1 0 001-1V6a1 1 0 00-1-1H4a1 1 0 00-1 1v12a1 1 0 001 1z"/></svg>
-                    <p style="font-size:13px;font-weight:700;color:#374151;margin:0 0 2px">${label}</p>
-                    <p style="font-size:11px;color:#9ca3af;margin:0">${hint}</p>
+  function api9() {
+    return window.EventsManageImagesApi || {};
+  }
+  function esc2(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  var imgFiles = { banner: null, embed: null };
+  function imgDropZone(id, label, hint, currentUrl) {
+    const STATE3 = api9().getState?.() || {};
+    const hasImg = !!currentUrl;
+    return `
+        <div id="${id}Zone" class="em-img-zone${hasImg ? " em-img-zone--has" : ""}" data-zone="${id}">
+            <input id="${id}FileInput" type="file" accept="image/*" style="display:none">
+            <img id="${id}Preview" src="${esc2(currentUrl)}" alt=""
+                 style="width:100%;border-radius:10px;object-fit:cover;max-height:200px;margin-bottom:10px;${hasImg ? "" : "display:none"}">
+            <div id="${id}Prompt" style="${hasImg ? "display:none" : ""}">
+                <svg style="width:32px;height:32px;color:#9ca3af;margin-bottom:8px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4-4a3 3 0 014 0l4 4m-4-4l1.5-1.5a3 3 0 014 0L20 16M14 8h.01M4 19h16a1 1 0 001-1V6a1 1 0 00-1-1H4a1 1 0 00-1 1v12a1 1 0 001 1z"/></svg>
+                <p style="font-size:13px;font-weight:700;color:#374151;margin:0 0 2px">${label}</p>
+                <p style="font-size:11px;color:#9ca3af;margin:0">${hint}</p>
+            </div>
+            ${hasImg ? `<p style="font-size:11px;color:#9ca3af;margin:0 0 8px;text-align:center">Click or drop to replace</p>` : ""}
+            <button type="button" class="em-btn-ghost" style="font-size:12px;padding:6px 12px" data-pick="${id}">Choose file</button>
+        </div>
+        <p style="font-size:11px;color:#9ca3af;margin-top:6px">Or paste a URL:</p>
+        <input id="${id}UrlInput" class="em-input" type="url" placeholder="https://\u2026" value="${esc2(currentUrl)}" style="margin-top:4px">
+    `;
+  }
+  function imagesHtml() {
+    const STATE3 = api9().getState?.() || {};
+    const e = STATE3.event;
+    return `
+        <style>
+            .em-img-zone { border:2px dashed #e5e7eb; border-radius:14px; padding:24px 16px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; display:flex; flex-direction:column; align-items:center; gap:4px; }
+            .em-img-zone:hover, .em-img-zone.em-drag-over { border-color:#818cf8; background:#f5f3ff; }
+            .em-img-zone--has { padding:14px 16px; }
+        </style>
+
+        <div class="em-card em-command-card mb-4">
+            <p class="em-command-eyebrow">Images</p>
+            <h3 class="em-command-title">Banner &amp; embed image</h3>
+            <p class="em-command-copy">The banner is shown at the top of the event detail page. The embed image is used for social media previews \u2014 if none is set, the banner is used as fallback.</p>
+        </div>
+
+        <div class="em-card mb-3">
+            <div class="em-section-head" style="margin-bottom:12px">
+                <div>
+                    <h3 class="em-section-title">Event banner</h3>
+                    <p class="em-section-sub">Hero image on the public event page. Min 1200\xD7400 px recommended.</p>
                 </div>
-                ${hasImg ? `<p style="font-size:11px;color:#9ca3af;margin:0 0 8px;text-align:center">Click or drop to replace</p>` : ""}
-                <button type="button" class="em-btn-ghost" style="font-size:12px;padding:6px 12px" data-pick="${id}">Choose file</button>
             </div>
-            <p style="font-size:11px;color:#9ca3af;margin-top:6px">Or paste a URL:</p>
-            <input id="${id}UrlInput" class="em-input" type="url" placeholder="https://\u2026" value="${esc(currentUrl)}" style="margin-top:4px">
-        `;
-    }
-    function imagesHtml() {
-      const STATE = api7().getState?.() || {};
-      const e = STATE.event;
-      return `
-            <style>
-                .em-img-zone { border:2px dashed #e5e7eb; border-radius:14px; padding:24px 16px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; display:flex; flex-direction:column; align-items:center; gap:4px; }
-                .em-img-zone:hover, .em-img-zone.em-drag-over { border-color:#818cf8; background:#f5f3ff; }
-                .em-img-zone--has { padding:14px 16px; }
-            </style>
+            ${imgDropZone("emBanner", "Drop image here or click to upload", "JPG, PNG, WebP \xB7 max 10 MB", e.banner_url || "")}
+        </div>
 
-            <div class="em-card em-command-card mb-4">
-                <p class="em-command-eyebrow">Images</p>
-                <h3 class="em-command-title">Banner &amp; embed image</h3>
-                <p class="em-command-copy">The banner is shown at the top of the event detail page. The embed image is used for social media previews \u2014 if none is set, the banner is used as fallback.</p>
-            </div>
-
-            <div class="em-card mb-3">
-                <div class="em-section-head" style="margin-bottom:12px">
-                    <div>
-                        <h3 class="em-section-title">Event banner</h3>
-                        <p class="em-section-sub">Hero image on the public event page. Min 1200\xD7400 px recommended.</p>
-                    </div>
+        <div class="em-card mb-4">
+            <div class="em-section-head" style="margin-bottom:12px">
+                <div>
+                    <h3 class="em-section-title">Embed / social preview image</h3>
+                    <p class="em-section-sub">Used when the event link is shared on social media. 1200\xD7630 px recommended. Falls back to the banner.</p>
                 </div>
-                ${imgDropZone("emBanner", "Drop image here or click to upload", "JPG, PNG, WebP \xB7 max 10 MB", e.banner_url || "")}
             </div>
+            ${imgDropZone("emEmbed", "Drop image here or click to upload", "JPG, PNG, WebP \xB7 max 10 MB \xB7 optional", e.embed_image_url || "")}
+        </div>
 
-            <div class="em-card mb-4">
-                <div class="em-section-head" style="margin-bottom:12px">
-                    <div>
-                        <h3 class="em-section-title">Embed / social preview image</h3>
-                        <p class="em-section-sub">Used when the event link is shared on social media. 1200\xD7630 px recommended. Falls back to the banner.</p>
-                    </div>
-                </div>
-                ${imgDropZone("emEmbed", "Drop image here or click to upload", "JPG, PNG, WebP \xB7 max 10 MB \xB7 optional", e.embed_image_url || "")}
-            </div>
-
-            <div style="display:flex;align-items:center;gap:10px">
-                <button id="emImagesSave" class="em-btn-primary">Save images</button>
-                <span id="emImagesSaveStatus" style="font-size:12px;color:#6b7280"></span>
-            </div>
-        `;
-    }
-    function wireImages() {
-      const STATE = api7().getState?.() || {};
-      const e = STATE.event;
-      imgFiles.banner = null;
-      imgFiles.embed = null;
-      ["banner", "embed"].forEach((key) => {
+        <div style="display:flex;align-items:center;gap:10px">
+            <button id="emImagesSave" class="em-btn-primary">Save images</button>
+            <span id="emImagesSaveStatus" style="font-size:12px;color:#6b7280"></span>
+        </div>
+    `;
+  }
+  function wireImages() {
+    const STATE3 = api9().getState?.() || {};
+    const e = STATE3.event;
+    imgFiles.banner = null;
+    imgFiles.embed = null;
+    ["banner", "embed"].forEach((key) => {
+      const zoneId = `em${key.charAt(0).toUpperCase() + key.slice(1)}`;
+      const zone = document.getElementById(`${zoneId}Zone`);
+      const fileInput = document.getElementById(`${zoneId}FileInput`);
+      const urlInput = document.getElementById(`${zoneId}UrlInput`);
+      const preview = document.getElementById(`${zoneId}Preview`);
+      const prompt2 = document.getElementById(`${zoneId}Prompt`);
+      const pickBtn = zone?.querySelector(`[data-pick="${zoneId}"]`);
+      if (!zone || !fileInput || !urlInput) return;
+      function applyFile(file) {
+        if (!file || !file.type.startsWith("image/")) return;
+        imgFiles[key] = file;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          preview.src = ev.target.result;
+          preview.style.display = "";
+          if (prompt2) prompt2.style.display = "none";
+          urlInput.value = "";
+        };
+        reader.readAsDataURL(file);
+      }
+      zone.addEventListener("click", (ev) => {
+        if (ev.target === pickBtn || pickBtn?.contains(ev.target)) return;
+        fileInput.click();
+      });
+      pickBtn?.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        fileInput.click();
+      });
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files[0]) applyFile(fileInput.files[0]);
+      });
+      zone.addEventListener("dragover", (ev) => {
+        ev.preventDefault();
+        zone.classList.add("em-drag-over");
+      });
+      zone.addEventListener("dragleave", () => zone.classList.remove("em-drag-over"));
+      zone.addEventListener("drop", (ev) => {
+        ev.preventDefault();
+        zone.classList.remove("em-drag-over");
+        const file = ev.dataTransfer.files?.[0];
+        if (file) applyFile(file);
+      });
+      urlInput.addEventListener("input", () => {
+        const val = urlInput.value.trim();
+        imgFiles[key] = null;
+        if (val) {
+          preview.src = val;
+          preview.style.display = "";
+          if (prompt2) prompt2.style.display = "none";
+        } else {
+          preview.style.display = "none";
+          if (prompt2) prompt2.style.display = "";
+        }
+      });
+    });
+    document.getElementById("emImagesSave")?.addEventListener("click", async () => {
+      const saveBtn = document.getElementById("emImagesSave");
+      const status = document.getElementById("emImagesSaveStatus");
+      saveBtn.disabled = true;
+      const slug = e.slug || e.id;
+      async function resolveUrl(key, currentUrl) {
+        const file = imgFiles[key];
+        if (file) {
+          status.textContent = `Uploading ${key}\u2026`;
+          const ext = file.name.split(".").pop().toLowerCase() || "jpg";
+          const path = key === "embed" ? `embeds/${slug}-${Date.now()}.${ext}` : `${slug}-${Date.now()}.${ext}`;
+          const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, file, { contentType: file.type, upsert: true });
+          if (upErr) throw new Error(`${key} upload failed: ${upErr.message}`);
+          return supabaseClient.storage.from("event-banners").getPublicUrl(path).data.publicUrl;
+        }
         const zoneId = `em${key.charAt(0).toUpperCase() + key.slice(1)}`;
-        const zone = document.getElementById(`${zoneId}Zone`);
-        const fileInput = document.getElementById(`${zoneId}FileInput`);
-        const urlInput = document.getElementById(`${zoneId}UrlInput`);
-        const preview = document.getElementById(`${zoneId}Preview`);
-        const prompt2 = document.getElementById(`${zoneId}Prompt`);
-        const pickBtn = zone?.querySelector(`[data-pick="${zoneId}"]`);
-        if (!zone || !fileInput || !urlInput) return;
-        function applyFile(file) {
-          if (!file || !file.type.startsWith("image/")) return;
-          imgFiles[key] = file;
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            preview.src = ev.target.result;
-            preview.style.display = "";
-            if (prompt2) prompt2.style.display = "none";
-            urlInput.value = "";
-          };
-          reader.readAsDataURL(file);
-        }
-        zone.addEventListener("click", (ev) => {
-          if (ev.target === pickBtn || pickBtn?.contains(ev.target)) return;
-          fileInput.click();
-        });
-        pickBtn?.addEventListener("click", (ev) => {
-          ev.stopPropagation();
-          fileInput.click();
-        });
-        fileInput.addEventListener("change", () => {
-          if (fileInput.files[0]) applyFile(fileInput.files[0]);
-        });
-        zone.addEventListener("dragover", (ev) => {
-          ev.preventDefault();
-          zone.classList.add("em-drag-over");
-        });
-        zone.addEventListener("dragleave", () => zone.classList.remove("em-drag-over"));
-        zone.addEventListener("drop", (ev) => {
-          ev.preventDefault();
-          zone.classList.remove("em-drag-over");
-          const file = ev.dataTransfer.files?.[0];
-          if (file) applyFile(file);
-        });
-        urlInput.addEventListener("input", () => {
-          const val = urlInput.value.trim();
-          imgFiles[key] = null;
-          if (val) {
-            preview.src = val;
-            preview.style.display = "";
-            if (prompt2) prompt2.style.display = "none";
-          } else {
-            preview.style.display = "none";
-            if (prompt2) prompt2.style.display = "";
-          }
-        });
-      });
-      document.getElementById("emImagesSave")?.addEventListener("click", async () => {
-        const saveBtn = document.getElementById("emImagesSave");
-        const status = document.getElementById("emImagesSaveStatus");
-        saveBtn.disabled = true;
-        const slug = e.slug || e.id;
-        async function resolveUrl(key, currentUrl) {
-          const file = imgFiles[key];
-          if (file) {
-            status.textContent = `Uploading ${key}\u2026`;
-            const ext = file.name.split(".").pop().toLowerCase() || "jpg";
-            const path = key === "embed" ? `embeds/${slug}-${Date.now()}.${ext}` : `${slug}-${Date.now()}.${ext}`;
-            const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, file, { contentType: file.type, upsert: true });
-            if (upErr) throw new Error(`${key} upload failed: ${upErr.message}`);
-            return supabaseClient.storage.from("event-banners").getPublicUrl(path).data.publicUrl;
-          }
-          const zoneId = `em${key.charAt(0).toUpperCase() + key.slice(1)}`;
-          return document.getElementById(`${zoneId}UrlInput`)?.value.trim() || null;
-        }
-        try {
-          status.textContent = "Saving\u2026";
-          const [bannerUrl, embedUrl] = await Promise.all([
-            resolveUrl("banner", e.banner_url),
-            resolveUrl("embed", e.embed_image_url)
-          ]);
-          const { error } = await supabaseClient.from("events").update({ banner_url: bannerUrl, embed_image_url: embedUrl }).eq("id", e.id);
-          if (error) throw error;
-          STATE.event.banner_url = bannerUrl;
-          STATE.event.embed_image_url = embedUrl;
-          imgFiles.banner = null;
-          imgFiles.embed = null;
-          status.textContent = "Saved \u2713";
-          setTimeout(() => {
-            status.textContent = "";
-          }, 2500);
-          api7().notifyParent?.("updated", e.id);
-        } catch (err) {
-          status.textContent = "Error: " + (err.message || "save failed");
-        } finally {
-          saveBtn.disabled = false;
-        }
-      });
-    }
-    window.EventsManageImages = {
-      imagesHtml,
-      wireImages
-    };
-  })();
+        return document.getElementById(`${zoneId}UrlInput`)?.value.trim() || null;
+      }
+      try {
+        status.textContent = "Saving\u2026";
+        const [bannerUrl, embedUrl] = await Promise.all([
+          resolveUrl("banner", e.banner_url),
+          resolveUrl("embed", e.embed_image_url)
+        ]);
+        const { error } = await supabaseClient.from("events").update({ banner_url: bannerUrl, embed_image_url: embedUrl }).eq("id", e.id);
+        if (error) throw error;
+        STATE3.event.banner_url = bannerUrl;
+        STATE3.event.embed_image_url = embedUrl;
+        imgFiles.banner = null;
+        imgFiles.embed = null;
+        status.textContent = "Saved \u2713";
+        setTimeout(() => {
+          status.textContent = "";
+        }, 2500);
+        api9().notifyParent?.("updated", e.id);
+      } catch (err) {
+        status.textContent = "Error: " + (err.message || "save failed");
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+  }
+  var manageImagesApi = {
+    imagesHtml,
+    wireImages
+  };
+  globalThis.EventsManageImages = manageImagesApi;
 
   // js/portal/events/manage/docs.js
-  (function() {
-    "use strict";
-    function api7() {
-      return window.EventsManageDocsApi || {};
-    }
-    function esc(s) {
-      const el = document.createElement("span");
-      el.textContent = s == null ? "" : String(s);
-      return el.innerHTML;
-    }
-    function money(cents) {
-      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
-    }
-    async function loadDocs() {
-      const STATE = api7().getState?.() || {};
-      const { data, error } = await supabaseClient.from("event_documents").select("id, doc_type, label, file_name, file_size_bytes, file_path, distributed, target_user_id, created_at, profiles:target_user_id(first_name, last_name, profile_picture_url)").eq("event_id", STATE.eventId).order("created_at", { ascending: true });
-      if (error) throw error;
-      return { docs: data || [] };
-    }
-    function docTypeIcon(type) {
-      const STATE = api7().getState?.() || {};
+  function api10() {
+    return window.EventsManageDocsApi || {};
+  }
+  function esc3(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  async function loadDocs() {
+    const STATE3 = api10().getState?.() || {};
+    const { data, error } = await supabaseClient.from("event_documents").select("id, doc_type, label, file_name, file_size_bytes, file_path, distributed, target_user_id, created_at, profiles:target_user_id(first_name, last_name, profile_picture_url)").eq("event_id", STATE3.eventId).order("created_at", { ascending: true });
+    if (error) throw error;
+    return { docs: data || [] };
+  }
+  function docTypeIcon(type) {
+    const STATE3 = api10().getState?.() || {};
+    return {
+      plane_ticket: "\u2708\uFE0F",
+      group_ticket: "\u{1F3AB}",
+      itinerary: "\u{1F5FA}\uFE0F",
+      receipt: "\u{1F9FE}",
+      other: "\u{1F4C4}"
+    }[type] || "\u{1F4C4}";
+  }
+  function formatBytes(bytes) {
+    const STATE3 = api10().getState?.() || {};
+    if (!bytes) return "\u2014";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / 1024 / 1024).toFixed(1) + " MB";
+  }
+  function docsHtml() {
+    const STATE3 = api10().getState?.() || {};
+    const docs = STATE3.tabData.docs.docs;
+    const groupDocs = docs.filter((d) => !d.target_user_id);
+    const memberDocs = docs.filter((d) => d.target_user_id);
+    const goingMembers = STATE3.rsvps.filter((r) => r.status === "going").map((r) => {
+      const profile = r.profiles || {};
       return {
-        plane_ticket: "\u2708\uFE0F",
-        group_ticket: "\u{1F3AB}",
-        itinerary: "\u{1F5FA}\uFE0F",
-        receipt: "\u{1F9FE}",
-        other: "\u{1F4C4}"
-      }[type] || "\u{1F4C4}";
-    }
-    function formatBytes(bytes) {
-      const STATE = api7().getState?.() || {};
-      if (!bytes) return "\u2014";
-      if (bytes < 1024) return bytes + " B";
-      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-      return (bytes / 1024 / 1024).toFixed(1) + " MB";
-    }
-    function docsHtml() {
-      const STATE = api7().getState?.() || {};
-      const docs = STATE.tabData.docs.docs;
-      const groupDocs = docs.filter((d) => !d.target_user_id);
-      const memberDocs = docs.filter((d) => d.target_user_id);
-      const goingMembers = STATE.rsvps.filter((r) => r.status === "going").map((r) => {
-        const profile = r.profiles || {};
-        return {
-          id: r.user_id,
-          name: `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Member"
-        };
-      });
-      const distributedCount = docs.filter((d) => d.distributed).length;
-      const pendingCount = docs.length - distributedCount;
-      const distributedPct = docs.length ? Math.round(distributedCount / docs.length * 100) : 0;
-      const totalBytes = docs.reduce((sum, d) => sum + (d.file_size_bytes || 0), 0);
-      function docRow(d) {
-        const distBtn = d.distributed ? `<button class="em-pill em-pill-checked" data-doc-action="undistribute" data-id="${d.id}" style="border:none;cursor:pointer">Distributed \u2713</button>` : `<button class="em-pill em-pill-paid" data-doc-action="distribute" data-id="${d.id}" style="border:none;cursor:pointer">Mark sent</button>`;
-        return `
-                <div class="em-attendee-card">
-                    <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:16px">${docTypeIcon(d.doc_type)}</div>
-                    <div class="em-attendee-main">
-                        <p class="em-attendee-name">${esc(d.label || d.file_name || "Document")}</p>
-                        <p class="em-attendee-sub">${esc(d.file_name || "")} \xB7 ${formatBytes(d.file_size_bytes)}</p>
-                        <div class="flex flex-wrap gap-1 mt-2">${distBtn}<span class="em-pill em-pill-going">${d.target_user_id ? "Member file" : "Group file"}</span></div>
-                    </div>
-                    <button data-doc-action="delete" data-id="${d.id}" class="text-xs text-red-600 font-semibold hover:underline" style="background:none;border:none;cursor:pointer">Delete</button>
-                </div>
-            `;
-      }
-      function memberSection(memberDoc) {
-        const byUser = {};
-        memberDoc.forEach((d) => {
-          const uid = d.target_user_id;
-          (byUser[uid] = byUser[uid] || { user: d.profiles, docs: [] }).docs.push(d);
-        });
-        const userList = Object.values(byUser);
-        if (!userList.length) return `<p class="text-xs text-gray-400 italic py-2">No per-member documents yet.</p>`;
-        return userList.map((u) => {
-          const p = u.user || {};
-          const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
-          return `
-                    <div style="margin-bottom:14px">
-                        <div class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">${esc(name)} <span class="text-gray-400 font-normal">\xB7 ${u.docs.length}</span></div>
-                        ${u.docs.map(docRow).join("")}
-                    </div>
-                `;
-        }).join("");
-      }
-      const memberOptions = goingMembers.map((m) => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join("");
-      const typeOptions = (api7().getDocTypes?.() || []).map((t) => `<option value="${esc(t.value)}">${esc(t.label)}</option>`).join("");
+        id: r.user_id,
+        name: `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Member"
+      };
+    });
+    const distributedCount = docs.filter((d) => d.distributed).length;
+    const pendingCount = docs.length - distributedCount;
+    const distributedPct = docs.length ? Math.round(distributedCount / docs.length * 100) : 0;
+    const totalBytes = docs.reduce((sum, d) => sum + (d.file_size_bytes || 0), 0);
+    function docRow(d) {
+      const distBtn = d.distributed ? `<button class="em-pill em-pill-checked" data-doc-action="undistribute" data-id="${d.id}" style="border:none;cursor:pointer">Distributed \u2713</button>` : `<button class="em-pill em-pill-paid" data-doc-action="distribute" data-id="${d.id}" style="border:none;cursor:pointer">Mark sent</button>`;
       return `
-            <div class="em-card em-command-card mb-4">
-                <p class="em-command-eyebrow">Document handoff</p>
-                <h3 class="em-command-title">${pendingCount ? `${pendingCount} document${pendingCount === 1 ? "" : "s"} pending` : "Documents are caught up"}</h3>
-                <p class="em-command-copy">Upload group files or member-specific travel docs here. Attendees only see a retrieval button on the event page.</p>
-                <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${distributedPct}%;background:#a7f3d0"></span></div>
-            </div>
-
-            <div class="em-metric-grid mb-4">
-                <div class="em-metric"><span>Total files</span><strong>${docs.length}</strong><small>${formatBytes(totalBytes)}</small></div>
-                <div class="em-metric"><span>Distributed</span><strong>${distributedCount}</strong><small>${distributedPct}% complete</small></div>
-                <div class="em-metric"><span>Pending</span><strong>${pendingCount}</strong><small>Need handoff</small></div>
-                <div class="em-metric"><span>Member files</span><strong>${memberDocs.length}</strong><small>${groupDocs.length} group</small></div>
-            </div>
-
-            <div class="em-card mb-4">
-                <div class="em-section-head"><div><h3 class="em-section-title">Upload document</h3><p class="em-section-sub">Choose who can retrieve this file from the attendee-facing document viewer.</p></div></div>
-                <div class="grid sm:grid-cols-2 gap-3">
-                    <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Visible to
-                        <select id="emDocTargetMode" class="em-input mt-1">
-                            <option value="group">Everyone RSVP'd</option>
-                            <option value="member">Specific member</option>
-                        </select>
-                    </label>
-                    <label id="emDocMemberWrap" class="text-xs font-bold uppercase tracking-wide text-gray-500 hidden">Member
-                        <select id="emDocMember" class="em-input mt-1">
-                            ${memberOptions || `<option value="">No RSVP'd members yet</option>`}
-                        </select>
-                    </label>
-                    <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Label
-                        <input id="emDocLabel" type="text" class="em-input mt-1" placeholder="Flight ticket, itinerary, receipt">
-                    </label>
-                    <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Type
-                        <select id="emDocType" class="em-input mt-1">${typeOptions}</select>
-                    </label>
-                    <label class="text-xs font-bold uppercase tracking-wide text-gray-500 sm:col-span-2">File
-                        <input id="emDocFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" class="em-input mt-1">
-                    </label>
+            <div class="em-attendee-card">
+                <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:16px">${docTypeIcon(d.doc_type)}</div>
+                <div class="em-attendee-main">
+                    <p class="em-attendee-name">${esc3(d.label || d.file_name || "Document")}</p>
+                    <p class="em-attendee-sub">${esc3(d.file_name || "")} \xB7 ${formatBytes(d.file_size_bytes)}</p>
+                    <div class="flex flex-wrap gap-1 mt-2">${distBtn}<span class="em-pill em-pill-going">${d.target_user_id ? "Member file" : "Group file"}</span></div>
                 </div>
-                <div class="flex items-center justify-between gap-3 mt-3">
-                    <p class="text-xs text-gray-400">Uploads live here in Manage Event. Members only see a document viewer button on the event page.</p>
-                    <button id="emDocUploadBtn" class="em-btn-primary">Upload</button>
-                </div>
-            </div>
-
-            <div class="em-card mb-3">
-                <div class="em-section-head"><div><h3 class="em-section-title">Group documents <span class="text-gray-400 font-normal">\xB7 ${groupDocs.length}</span></h3><p class="em-section-sub">Visible to everyone with RSVP access.</p></div></div>
-                ${groupDocs.length ? groupDocs.map(docRow).join("") : `<p class="text-xs text-gray-400 italic py-2">No group documents yet.</p>`}
-            </div>
-
-            <div class="em-card">
-                <div class="em-section-head"><div><h3 class="em-section-title">Per-member documents <span class="text-gray-400 font-normal">\xB7 ${memberDocs.length}</span></h3><p class="em-section-sub">Private files for individual attendees, like tickets or receipts.</p></div></div>
-                ${memberSection(memberDocs)}
+                <button data-doc-action="delete" data-id="${d.id}" class="text-xs text-red-600 font-semibold hover:underline" style="background:none;border:none;cursor:pointer">Delete</button>
             </div>
         `;
     }
-    function wireDocs() {
-      const STATE = api7().getState?.() || {};
-      const targetMode = document.getElementById("emDocTargetMode");
-      const memberWrap = document.getElementById("emDocMemberWrap");
-      const type = document.getElementById("emDocType");
-      if (type) type.value = "itinerary";
-      targetMode?.addEventListener("change", () => {
-        memberWrap?.classList.toggle("hidden", targetMode.value !== "member");
-        if (type) type.value = targetMode.value === "member" ? "plane_ticket" : "itinerary";
+    function memberSection(memberDoc) {
+      const byUser = {};
+      memberDoc.forEach((d) => {
+        const uid = d.target_user_id;
+        (byUser[uid] = byUser[uid] || { user: d.profiles, docs: [] }).docs.push(d);
       });
-      document.getElementById("emDocUploadBtn")?.addEventListener("click", uploadDocFromManage);
-      document.getElementById("emSheetContent").querySelectorAll("[data-doc-action]").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const action = btn.dataset.docAction;
-          const id = btn.dataset.id;
-          if (action === "delete") {
-            if (!confirm("Delete this document? This cannot be undone.")) return;
-            const doc = STATE.tabData.docs.docs.find((d) => d.id === id);
-            if (doc?.file_path) await supabaseClient.storage.from("event-documents").remove([doc.file_path]);
-            const { error } = await supabaseClient.from("event_documents").delete().eq("id", id);
-            if (error) return alert("Delete failed: " + error.message);
-          } else {
-            const { error } = await supabaseClient.from("event_documents").update({ distributed: action === "distribute" }).eq("id", id);
-            if (error) return alert("Update failed: " + error.message);
-          }
-          STATE.tabData.docs = null;
-          api7().renderTab?.("docs");
-          api7().notifyParent?.("updated", STATE.eventId);
-        });
+      const userList = Object.values(byUser);
+      if (!userList.length) return `<p class="text-xs text-gray-400 italic py-2">No per-member documents yet.</p>`;
+      return userList.map((u) => {
+        const p = u.user || {};
+        const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
+        return `
+                <div style="margin-bottom:14px">
+                    <div class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">${esc3(name)} <span class="text-gray-400 font-normal">\xB7 ${u.docs.length}</span></div>
+                    ${u.docs.map(docRow).join("")}
+                </div>
+            `;
+      }).join("");
+    }
+    const memberOptions = goingMembers.map((m) => `<option value="${esc3(m.id)}">${esc3(m.name)}</option>`).join("");
+    const typeOptions = (api10().getDocTypes?.() || []).map((t) => `<option value="${esc3(t.value)}">${esc3(t.label)}</option>`).join("");
+    return `
+        <div class="em-card em-command-card mb-4">
+            <p class="em-command-eyebrow">Document handoff</p>
+            <h3 class="em-command-title">${pendingCount ? `${pendingCount} document${pendingCount === 1 ? "" : "s"} pending` : "Documents are caught up"}</h3>
+            <p class="em-command-copy">Upload group files or member-specific travel docs here. Attendees only see a retrieval button on the event page.</p>
+            <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${distributedPct}%;background:#a7f3d0"></span></div>
+        </div>
+
+        <div class="em-metric-grid mb-4">
+            <div class="em-metric"><span>Total files</span><strong>${docs.length}</strong><small>${formatBytes(totalBytes)}</small></div>
+            <div class="em-metric"><span>Distributed</span><strong>${distributedCount}</strong><small>${distributedPct}% complete</small></div>
+            <div class="em-metric"><span>Pending</span><strong>${pendingCount}</strong><small>Need handoff</small></div>
+            <div class="em-metric"><span>Member files</span><strong>${memberDocs.length}</strong><small>${groupDocs.length} group</small></div>
+        </div>
+
+        <div class="em-card mb-4">
+            <div class="em-section-head"><div><h3 class="em-section-title">Upload document</h3><p class="em-section-sub">Choose who can retrieve this file from the attendee-facing document viewer.</p></div></div>
+            <div class="grid sm:grid-cols-2 gap-3">
+                <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Visible to
+                    <select id="emDocTargetMode" class="em-input mt-1">
+                        <option value="group">Everyone RSVP'd</option>
+                        <option value="member">Specific member</option>
+                    </select>
+                </label>
+                <label id="emDocMemberWrap" class="text-xs font-bold uppercase tracking-wide text-gray-500 hidden">Member
+                    <select id="emDocMember" class="em-input mt-1">
+                        ${memberOptions || `<option value="">No RSVP'd members yet</option>`}
+                    </select>
+                </label>
+                <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Label
+                    <input id="emDocLabel" type="text" class="em-input mt-1" placeholder="Flight ticket, itinerary, receipt">
+                </label>
+                <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Type
+                    <select id="emDocType" class="em-input mt-1">${typeOptions}</select>
+                </label>
+                <label class="text-xs font-bold uppercase tracking-wide text-gray-500 sm:col-span-2">File
+                    <input id="emDocFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" class="em-input mt-1">
+                </label>
+            </div>
+            <div class="flex items-center justify-between gap-3 mt-3">
+                <p class="text-xs text-gray-400">Uploads live here in Manage Event. Members only see a document viewer button on the event page.</p>
+                <button id="emDocUploadBtn" class="em-btn-primary">Upload</button>
+            </div>
+        </div>
+
+        <div class="em-card mb-3">
+            <div class="em-section-head"><div><h3 class="em-section-title">Group documents <span class="text-gray-400 font-normal">\xB7 ${groupDocs.length}</span></h3><p class="em-section-sub">Visible to everyone with RSVP access.</p></div></div>
+            ${groupDocs.length ? groupDocs.map(docRow).join("") : `<p class="text-xs text-gray-400 italic py-2">No group documents yet.</p>`}
+        </div>
+
+        <div class="em-card">
+            <div class="em-section-head"><div><h3 class="em-section-title">Per-member documents <span class="text-gray-400 font-normal">\xB7 ${memberDocs.length}</span></h3><p class="em-section-sub">Private files for individual attendees, like tickets or receipts.</p></div></div>
+            ${memberSection(memberDocs)}
+        </div>
+    `;
+  }
+  function wireDocs() {
+    const STATE3 = api10().getState?.() || {};
+    const targetMode = document.getElementById("emDocTargetMode");
+    const memberWrap = document.getElementById("emDocMemberWrap");
+    const type = document.getElementById("emDocType");
+    if (type) type.value = "itinerary";
+    targetMode?.addEventListener("change", () => {
+      memberWrap?.classList.toggle("hidden", targetMode.value !== "member");
+      if (type) type.value = targetMode.value === "member" ? "plane_ticket" : "itinerary";
+    });
+    document.getElementById("emDocUploadBtn")?.addEventListener("click", uploadDocFromManage);
+    document.getElementById("emSheetContent").querySelectorAll("[data-doc-action]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const action = btn.dataset.docAction;
+        const id = btn.dataset.id;
+        if (action === "delete") {
+          if (!confirm("Delete this document? This cannot be undone.")) return;
+          const doc = STATE3.tabData.docs.docs.find((d) => d.id === id);
+          if (doc?.file_path) await supabaseClient.storage.from("event-documents").remove([doc.file_path]);
+          const { error } = await supabaseClient.from("event_documents").delete().eq("id", id);
+          if (error) return alert("Delete failed: " + error.message);
+        } else {
+          const { error } = await supabaseClient.from("event_documents").update({ distributed: action === "distribute" }).eq("id", id);
+          if (error) return alert("Update failed: " + error.message);
+        }
+        STATE3.tabData.docs = null;
+        api10().renderTab?.("docs");
+        api10().notifyParent?.("updated", STATE3.eventId);
       });
+    });
+  }
+  async function uploadDocFromManage() {
+    const STATE3 = api10().getState?.() || {};
+    const btn = document.getElementById("emDocUploadBtn");
+    const mode = document.getElementById("emDocTargetMode")?.value || "group";
+    const targetUserId = mode === "member" ? document.getElementById("emDocMember")?.value || "" : "";
+    const label = (document.getElementById("emDocLabel")?.value || "").trim();
+    const docType = document.getElementById("emDocType")?.value || "other";
+    const file = document.getElementById("emDocFile")?.files?.[0];
+    if (mode === "member" && !targetUserId) return alert("Choose a member for this document.");
+    if (!label) return alert("Add a document label.");
+    if (!file) return alert("Choose a file to upload.");
+    btn.disabled = true;
+    btn.textContent = "Uploading...";
+    try {
+      const ext = (file.name.split(".").pop() || "bin").toLowerCase();
+      const storagePath = `${STATE3.eventId}/${targetUserId || "group"}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+      const { error: uploadErr } = await supabaseClient.storage.from("event-documents").upload(storagePath, file, { contentType: file.type || "application/octet-stream" });
+      if (uploadErr) throw uploadErr;
+      const { error: dbErr } = await supabaseClient.from("event_documents").insert({
+        event_id: STATE3.eventId,
+        uploaded_by: globalThis.evtCurrentUser.id,
+        target_user_id: targetUserId || null,
+        doc_type: docType,
+        label,
+        file_path: storagePath,
+        file_name: file.name,
+        file_size_bytes: file.size,
+        mime_type: file.type
+      });
+      if (dbErr) throw dbErr;
+      STATE3.tabData.docs = null;
+      api10().renderTab?.("docs");
+      api10().notifyParent?.("updated", STATE3.eventId);
+    } catch (err) {
+      alert("Upload failed: " + (err.message || err));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Upload";
     }
-    async function uploadDocFromManage() {
-      const STATE = api7().getState?.() || {};
-      const btn = document.getElementById("emDocUploadBtn");
-      const mode = document.getElementById("emDocTargetMode")?.value || "group";
-      const targetUserId = mode === "member" ? document.getElementById("emDocMember")?.value || "" : "";
-      const label = (document.getElementById("emDocLabel")?.value || "").trim();
-      const docType = document.getElementById("emDocType")?.value || "other";
-      const file = document.getElementById("emDocFile")?.files?.[0];
-      if (mode === "member" && !targetUserId) return alert("Choose a member for this document.");
-      if (!label) return alert("Add a document label.");
-      if (!file) return alert("Choose a file to upload.");
-      btn.disabled = true;
-      btn.textContent = "Uploading...";
-      try {
-        const ext = (file.name.split(".").pop() || "bin").toLowerCase();
-        const storagePath = `${STATE.eventId}/${targetUserId || "group"}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-        const { error: uploadErr } = await supabaseClient.storage.from("event-documents").upload(storagePath, file, { contentType: file.type || "application/octet-stream" });
-        if (uploadErr) throw uploadErr;
-        const { error: dbErr } = await supabaseClient.from("event_documents").insert({
-          event_id: STATE.eventId,
-          uploaded_by: globalThis.evtCurrentUser.id,
-          target_user_id: targetUserId || null,
-          doc_type: docType,
-          label,
-          file_path: storagePath,
-          file_name: file.name,
-          file_size_bytes: file.size,
-          mime_type: file.type
-        });
-        if (dbErr) throw dbErr;
-        STATE.tabData.docs = null;
-        api7().renderTab?.("docs");
-        api7().notifyParent?.("updated", STATE.eventId);
-      } catch (err) {
-        alert("Upload failed: " + (err.message || err));
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Upload";
-      }
-    }
-    window.EventsManageDocs = {
-      loadDocs,
-      docsHtml,
-      wireDocs,
-      uploadDocFromManage
-    };
-  })();
+  }
+  var manageDocsApi = {
+    loadDocs,
+    docsHtml,
+    wireDocs,
+    uploadDocFromManage
+  };
+  globalThis.EventsManageDocs = manageDocsApi;
 
   // js/portal/events/manage/rsvps.js
-  (function() {
-    "use strict";
-    function api7() {
-      return window.EventsManageRsvpsApi || {};
+  function api11() {
+    return window.EventsManageRsvpsApi || {};
+  }
+  function esc4(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function rsvpsHtml() {
+    const STATE3 = api11().getState?.() || {};
+    const e = STATE3.event;
+    const going = STATE3.rsvps.filter((r) => r.status === "going");
+    const maybe = STATE3.rsvps.filter((r) => r.status === "maybe");
+    const not = STATE3.rsvps.filter((r) => r.status === "not_going");
+    const guestGoing = STATE3.guestRsvps.filter((r) => r.status === "going");
+    const checkedSet = new Set(STATE3.checkins.map((c) => c.user_id));
+    const guestCheckedSet = new Set(STATE3.checkins.map((c) => c.guest_token).filter(Boolean));
+    const totalGoing = going.length + guestGoing.length;
+    const checkedTotal = STATE3.checkins.length;
+    const capacity = e.max_participants || 0;
+    const capacityLeft = capacity ? Math.max(0, capacity - totalGoing) : null;
+    const minNeeded = Number(e.min_participants || 0);
+    const thresholdLeft = minNeeded ? Math.max(0, minNeeded - totalGoing) : 0;
+    const checkedPct = totalGoing ? Math.round(checkedTotal / totalGoing * 100) : 0;
+    function memberRow(r) {
+      const p = r.profiles || {};
+      const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
+      const initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?";
+      const avatar = p.profile_picture_url ? `<img src="${esc4(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
+      const pills = [];
+      if (r.status === "going") pills.push('<span class="em-pill em-pill-going">Going</span>');
+      else if (r.status === "maybe") pills.push('<span class="em-pill em-pill-maybe">Maybe</span>');
+      else pills.push('<span class="em-pill em-pill-not">Not going</span>');
+      if (r.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
+      if (checkedSet.has(r.user_id)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
+      return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${esc4(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? " \xB7 ticket ready" : ""}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="member" data-rsvp-id="${esc4(r.id)}" data-user-id="${esc4(r.user_id)}" data-paid="${r.paid ? "1" : "0"}" data-name="${esc4(name)}">Remove</button></div>`;
     }
-    function esc(s) {
-      const el = document.createElement("span");
-      el.textContent = s == null ? "" : String(s);
-      return el.innerHTML;
+    function guestRow(g2) {
+      const initials = (g2.guest_name || "G").slice(0, 1).toUpperCase();
+      const pills = ['<span class="em-pill em-pill-going">Guest</span>'];
+      if (g2.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
+      if (guestCheckedSet.has(g2.guest_token)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
+      const name = g2.guest_name || "Guest";
+      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${esc4(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc4(name)}</p><p class="em-attendee-sub">${esc4(g2.guest_email || "Public guest")}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="guest" data-rsvp-id="${esc4(g2.id)}" data-guest-token="${esc4(g2.guest_token)}" data-paid="${g2.paid ? "1" : "0"}" data-name="${esc4(name)}">Remove</button></div>`;
     }
-    function money(cents) {
-      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
-    }
-    function rsvpsHtml() {
-      const STATE = api7().getState?.() || {};
-      const e = STATE.event;
-      const going = STATE.rsvps.filter((r) => r.status === "going");
-      const maybe = STATE.rsvps.filter((r) => r.status === "maybe");
-      const not = STATE.rsvps.filter((r) => r.status === "not_going");
-      const guestGoing = STATE.guestRsvps.filter((r) => r.status === "going");
-      const checkedSet = new Set(STATE.checkins.map((c) => c.user_id));
-      const guestCheckedSet = new Set(STATE.checkins.map((c) => c.guest_token).filter(Boolean));
-      const totalGoing = going.length + guestGoing.length;
-      const checkedTotal = STATE.checkins.length;
-      const capacity = e.max_participants || 0;
-      const capacityLeft = capacity ? Math.max(0, capacity - totalGoing) : null;
-      const minNeeded = Number(e.min_participants || 0);
-      const thresholdLeft = minNeeded ? Math.max(0, minNeeded - totalGoing) : 0;
-      const checkedPct = totalGoing ? Math.round(checkedTotal / totalGoing * 100) : 0;
-      function memberRow(r) {
-        const p = r.profiles || {};
-        const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
-        const initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?";
-        const avatar = p.profile_picture_url ? `<img src="${esc(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
-        const pills = [];
-        if (r.status === "going") pills.push('<span class="em-pill em-pill-going">Going</span>');
-        else if (r.status === "maybe") pills.push('<span class="em-pill em-pill-maybe">Maybe</span>');
-        else pills.push('<span class="em-pill em-pill-not">Not going</span>');
-        if (r.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
-        if (checkedSet.has(r.user_id)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
-        return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${esc(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? " \xB7 ticket ready" : ""}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="member" data-rsvp-id="${esc(r.id)}" data-user-id="${esc(r.user_id)}" data-paid="${r.paid ? "1" : "0"}" data-name="${esc(name)}">Remove</button></div>`;
-      }
-      function guestRow(g) {
-        const initials = (g.guest_name || "G").slice(0, 1).toUpperCase();
-        const pills = ['<span class="em-pill em-pill-going">Guest</span>'];
-        if (g.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
-        if (guestCheckedSet.has(g.guest_token)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
-        const name = g.guest_name || "Guest";
-        return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${esc(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc(name)}</p><p class="em-attendee-sub">${esc(g.guest_email || "Public guest")}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="guest" data-rsvp-id="${esc(g.id)}" data-guest-token="${esc(g.guest_token)}" data-paid="${g.paid ? "1" : "0"}" data-name="${esc(name)}">Remove</button></div>`;
-      }
-      function section(title, list, emptyText) {
-        return `
-                <div class="em-card mb-3">
-                    <div class="em-section-head"><div><h3 class="em-section-title">${title} <span class="text-gray-400 font-normal">\xB7 ${list.length}</span></h3></div></div>
-                    ${list.length ? list.map(memberRow).join("") : `<p class="text-xs text-gray-400 italic py-2">${emptyText}</p>`}
-                </div>
-            `;
-      }
+    function section(title, list, emptyText) {
       return `
-            <div class="em-card em-command-card mb-4">
-                <p class="em-command-eyebrow">Attendance command</p>
-                <h3 class="em-command-title">${totalGoing ? `${totalGoing} attending` : "No confirmed attendees yet"}</h3>
-                <p class="em-command-copy">${thresholdLeft ? `${thresholdLeft} more RSVP${thresholdLeft === 1 ? "" : "s"} needed to meet the minimum.` : "Minimum and attendance signals are in good shape."} ${capacityLeft !== null ? `${capacityLeft} spot${capacityLeft === 1 ? "" : "s"} still available.` : "Capacity is open-ended."}</p>
-            </div>
-
-            <div class="em-metric-grid mb-4">
-                <div class="em-metric"><span>Total going</span><strong>${totalGoing}</strong><small>${going.length} member \xB7 ${guestGoing.length} guest</small></div>
-                <div class="em-metric"><span>Checked in</span><strong>${checkedTotal}</strong><small>${checkedPct}% of going</small></div>
-                <div class="em-metric"><span>Interested</span><strong>${maybe.length}</strong><small>Member maybes</small></div>
-                <div class="em-metric"><span>Capacity</span><strong>${capacityLeft === null ? "Open" : capacityLeft}</strong><small>${capacity ? `${totalGoing}/${capacity} filled` : "No max set"}</small></div>
-            </div>
-
-            ${section("Going members", going, "No members are going yet.")}
             <div class="em-card mb-3">
-                <div class="em-section-head"><div><h3 class="em-section-title">Public guests <span class="text-gray-400 font-normal">\xB7 ${guestGoing.length}</span></h3><p class="em-section-sub">Guests from the public event link and ticket flow.</p></div></div>
-                ${guestGoing.length ? guestGoing.map(guestRow).join("") : '<p class="text-xs text-gray-400 italic py-2">No public guests yet.</p>'}
+                <div class="em-section-head"><div><h3 class="em-section-title">${title} <span class="text-gray-400 font-normal">\xB7 ${list.length}</span></h3></div></div>
+                ${list.length ? list.map(memberRow).join("") : `<p class="text-xs text-gray-400 italic py-2">${emptyText}</p>`}
             </div>
-            ${section("Interested", maybe, "No interested members.")}
-            ${not.length ? section("Not going", not, "") : ""}
         `;
     }
-    function wireRsvps() {
-      const STATE = api7().getState?.() || {};
-      document.getElementById("emSheetContent")?.querySelectorAll("[data-remove-rsvp]").forEach((btn) => {
-        btn.addEventListener("click", () => api7().removeParticipationPerson?.(btn));
-      });
-    }
-    window.EventsManageRsvps = {
-      rsvpsHtml,
-      wireRsvps
-    };
-  })();
+    return `
+        <div class="em-card em-command-card mb-4">
+            <p class="em-command-eyebrow">Attendance command</p>
+            <h3 class="em-command-title">${totalGoing ? `${totalGoing} attending` : "No confirmed attendees yet"}</h3>
+            <p class="em-command-copy">${thresholdLeft ? `${thresholdLeft} more RSVP${thresholdLeft === 1 ? "" : "s"} needed to meet the minimum.` : "Minimum and attendance signals are in good shape."} ${capacityLeft !== null ? `${capacityLeft} spot${capacityLeft === 1 ? "" : "s"} still available.` : "Capacity is open-ended."}</p>
+        </div>
+
+        <div class="em-metric-grid mb-4">
+            <div class="em-metric"><span>Total going</span><strong>${totalGoing}</strong><small>${going.length} member \xB7 ${guestGoing.length} guest</small></div>
+            <div class="em-metric"><span>Checked in</span><strong>${checkedTotal}</strong><small>${checkedPct}% of going</small></div>
+            <div class="em-metric"><span>Interested</span><strong>${maybe.length}</strong><small>Member maybes</small></div>
+            <div class="em-metric"><span>Capacity</span><strong>${capacityLeft === null ? "Open" : capacityLeft}</strong><small>${capacity ? `${totalGoing}/${capacity} filled` : "No max set"}</small></div>
+        </div>
+
+        ${section("Going members", going, "No members are going yet.")}
+        <div class="em-card mb-3">
+            <div class="em-section-head"><div><h3 class="em-section-title">Public guests <span class="text-gray-400 font-normal">\xB7 ${guestGoing.length}</span></h3><p class="em-section-sub">Guests from the public event link and ticket flow.</p></div></div>
+            ${guestGoing.length ? guestGoing.map(guestRow).join("") : '<p class="text-xs text-gray-400 italic py-2">No public guests yet.</p>'}
+        </div>
+        ${section("Interested", maybe, "No interested members.")}
+        ${not.length ? section("Not going", not, "") : ""}
+    `;
+  }
+  function wireRsvps() {
+    const STATE3 = api11().getState?.() || {};
+    document.getElementById("emSheetContent")?.querySelectorAll("[data-remove-rsvp]").forEach((btn) => {
+      btn.addEventListener("click", () => api11().removeParticipationPerson?.(btn));
+    });
+  }
+  var manageRsvpsApi = {
+    rsvpsHtml,
+    wireRsvps
+  };
+  globalThis.EventsManageRsvps = manageRsvpsApi;
 
   // js/portal/events/manage/money.js
-  (function() {
-    "use strict";
-    function api7() {
-      return window.EventsManageMoneyApi || {};
-    }
-    function esc(s) {
-      const el = document.createElement("span");
-      el.textContent = s == null ? "" : String(s);
-      return el.innerHTML;
-    }
-    function money(cents) {
-      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
-    }
-    async function loadMoney() {
-      const STATE = api7().getState?.() || {};
-      const eventId2 = STATE.eventId;
-      const [rsvpsRes, guestRes, raffleRes, poolRes] = await Promise.all([
-        supabaseClient.from("event_rsvps").select("id, user_id, status, amount_paid_cents, paid, refunded, refund_amount_cents, stripe_payment_intent_id, profiles!event_rsvps_user_id_fkey(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
-        supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, status, paid, amount_paid_cents, stripe_payment_intent_id").eq("event_id", eventId2),
-        supabaseClient.from("event_raffle_entries").select("id, paid, amount_paid_cents").eq("event_id", eventId2),
-        supabaseClient.from("prize_pool_contributions").select("id, amount_cents").eq("event_id", eventId2)
-      ]);
-      return {
-        rsvps: rsvpsRes.data || [],
-        guests: guestRes.data || [],
-        raffle: raffleRes.data || [],
-        poolPays: poolRes.data || []
-      };
-    }
-    function moneyHtml() {
-      const STATE = api7().getState?.() || {};
-      const d = STATE.tabData.money;
-      const isPaidEvent = STATE.event?.pricing_mode === "paid" || Number(STATE.event?.rsvp_cost_cents || 0) > 0;
-      const paidRsvps = d.rsvps.filter((r) => r.paid);
-      const paidGuests = d.guests.filter((g) => g.paid);
-      const refundedRsvps = d.rsvps.filter((r) => r.refunded);
-      const unpaidGoing = isPaidEvent ? STATE.rsvps.filter((r) => r.status === "going" && !r.paid).length + STATE.guestRsvps.filter((g) => g.status === "going" && !g.paid).length : 0;
-      const rsvpRevenue = paidRsvps.reduce((s, r) => s + (r.amount_paid_cents || 0), 0);
-      const guestRevenue = paidGuests.reduce((s, g) => s + (g.amount_paid_cents || 0), 0);
-      const raffleRevenue = d.raffle.filter((e) => e.paid).reduce((s, e) => s + (e.amount_paid_cents || 0), 0);
-      const poolRevenue = d.poolPays.reduce((s, p) => s + (p.amount_cents || 0), 0);
-      const refunded = refundedRsvps.reduce((s, r) => s + (r.refund_amount_cents || 0), 0);
-      const grossRevenue = rsvpRevenue + guestRevenue + raffleRevenue + poolRevenue;
-      const netRevenue = grossRevenue - refunded;
-      const fmt = window.formatCurrency || money;
-      const ticketLabel = isPaidEvent ? "Paid RSVPs" : "Ticketed RSVPs";
-      function paymentRow({ name, sub, amount, refundedAmount, stripeId, avatarHtml, isGuest }) {
-        const refundPill = refundedAmount ? `<span class="em-pill em-pill-not">Refunded ${fmt(refundedAmount)}</span>` : `<span class="em-pill em-pill-paid">${amount > 0 ? `Paid ${fmt(amount)}` : "Ticketed"}</span>`;
-        return `
-                <div class="em-attendee-card">
-                    <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ""}>${avatarHtml}</div>
-                    <div class="em-attendee-main">
-                        <p class="em-attendee-name">${esc(name)}</p>
-                        <p class="em-attendee-sub">${esc(sub)}</p>
-                        <div class="flex flex-wrap gap-1 mt-2">${refundPill}${isGuest ? '<span class="em-pill em-pill-going">Guest</span>' : ""}</div>
-                    </div>
-                    ${stripeId ? `<a href="https://dashboard.stripe.com/payments/${encodeURIComponent(stripeId)}" target="_blank" rel="noopener" class="text-xs text-brand-600 font-semibold hover:underline whitespace-nowrap">Stripe \u2197</a>` : ""}
-                </div>`;
-      }
-      const memberRows = paidRsvps.map((r) => {
-        const p = r.profiles || {};
-        const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
-        const initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?";
-        const avatar = p.profile_picture_url ? `<img src="${esc(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
-        return paymentRow({ name, sub: "Member RSVP payment", amount: r.amount_paid_cents || 0, refundedAmount: r.refund_amount_cents || 0, stripeId: r.stripe_payment_intent_id, avatarHtml: avatar });
-      });
-      const guestRows = paidGuests.map((g) => paymentRow({
-        name: g.guest_name || "Guest",
-        sub: g.guest_email || "Public guest payment",
-        amount: g.amount_paid_cents || 0,
-        refundedAmount: 0,
-        stripeId: g.stripe_payment_intent_id,
-        avatarHtml: `<span>${esc((g.guest_name || "G").slice(0, 1).toUpperCase())}</span>`,
-        isGuest: true
-      }));
-      const paymentRows = [...memberRows, ...guestRows].join("") || `<p class="text-xs text-gray-400 italic py-2">No paid RSVPs yet.</p>`;
-      return `
-            <div class="em-card em-command-card mb-4">
-                <p class="em-command-eyebrow">Money command</p>
-                <h3 class="em-command-title">${fmt(netRevenue)} net collected</h3>
-                <p class="em-command-copy">${grossRevenue ? `${fmt(grossRevenue)} gross across RSVP, guest, raffle, and prize-pool activity.` : isPaidEvent ? "No paid activity has landed yet." : "This free event has no RSVP revenue to collect."} ${unpaidGoing ? `${unpaidGoing} going attendee${unpaidGoing === 1 ? "" : "s"} still show unpaid.` : isPaidEvent ? "No unpaid going attendees are currently flagged." : "Ticketed attendees are tracked for access and check-in."}</p>
-            </div>
-
-            <div class="em-metric-grid mb-4">
-                <div class="em-metric"><span>Gross</span><strong>${fmt(grossRevenue)}</strong><small>All sources</small></div>
-                <div class="em-metric"><span>Net</span><strong>${fmt(netRevenue)}</strong><small>After refunds</small></div>
-                <div class="em-metric"><span>Refunded</span><strong>${fmt(refunded)}</strong><small>${refundedRsvps.length} member RSVP${refundedRsvps.length === 1 ? "" : "s"}</small></div>
-                <div class="em-metric"><span>${ticketLabel}</span><strong>${paidRsvps.length + paidGuests.length}</strong><small>${paidRsvps.length} member \xB7 ${paidGuests.length} guest</small></div>
-            </div>
-
-            <div class="em-money-layout">
-                <div class="em-card">
-                    <div class="em-section-head"><div><h3 class="em-section-title">${isPaidEvent ? "Paid attendees" : "Ticketed attendees"} <span class="text-gray-400 font-normal">\xB7 ${paidRsvps.length + paidGuests.length}</span></h3><p class="em-section-sub">${isPaidEvent ? "Member and public guest RSVP payments." : "Members and public guests with issued event tickets."}</p></div></div>
-                    ${paymentRows}
-                </div>
-
-                <div class="em-card">
-                    <div class="em-section-head"><div><h3 class="em-section-title">Revenue sources</h3><p class="em-section-sub">Quick audit of how money entered this event.</p></div></div>
-                    <div class="em-money-row"><span>Member RSVP payments</span><strong>${fmt(rsvpRevenue)}</strong></div>
-                    <div class="em-money-row"><span>Guest RSVP payments</span><strong>${fmt(guestRevenue)}</strong></div>
-                    <div class="em-money-row"><span>Raffle entries</span><strong>${fmt(raffleRevenue)}</strong></div>
-                    <div class="em-money-row"><span>Prize-pool contributions</span><strong>${fmt(poolRevenue)}</strong></div>
-                    <div class="em-money-row"><span>Refunds recorded</span><strong>${fmt(refunded)}</strong></div>
-                    <p class="text-xs text-gray-400 mt-3">Refunds are still handled through Stripe/dashboard tooling. This panel keeps the host-facing audit trail together.</p>
-                </div>
-            </div>
-        `;
-    }
-    function wireMoney() {
-      const STATE = api7().getState?.() || {};
-    }
-    window.EventsManageMoney = {
-      loadMoney,
-      moneyHtml,
-      wireMoney
+  function api12() {
+    return window.EventsManageMoneyApi || {};
+  }
+  function esc5(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function money2(cents) {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
+  }
+  async function loadMoney() {
+    const STATE3 = api12().getState?.() || {};
+    const eventId2 = STATE3.eventId;
+    const [rsvpsRes, guestRes, raffleRes, poolRes] = await Promise.all([
+      supabaseClient.from("event_rsvps").select("id, user_id, status, amount_paid_cents, paid, refunded, refund_amount_cents, stripe_payment_intent_id, profiles!event_rsvps_user_id_fkey(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
+      supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, status, paid, amount_paid_cents, stripe_payment_intent_id").eq("event_id", eventId2),
+      supabaseClient.from("event_raffle_entries").select("id, paid, amount_paid_cents").eq("event_id", eventId2),
+      supabaseClient.from("prize_pool_contributions").select("id, amount_cents").eq("event_id", eventId2)
+    ]);
+    return {
+      rsvps: rsvpsRes.data || [],
+      guests: guestRes.data || [],
+      raffle: raffleRes.data || [],
+      poolPays: poolRes.data || []
     };
-  })();
-
-  // js/portal/events/manage/competition.js
-  (function() {
-    "use strict";
-    function api7() {
-      return window.EventsManageCompetitionApi || {};
-    }
-    function esc(s) {
-      const el = document.createElement("span");
-      el.textContent = s == null ? "" : String(s);
-      return el.innerHTML;
-    }
-    function money(cents) {
-      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
-    }
-    async function loadComp() {
-      const STATE = api7().getState?.() || {};
-      const eventId2 = STATE.eventId;
-      const [phasesRes, entriesRes, votesRes, winnersRes, contribRes] = await Promise.all([
-        supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true }),
-        supabaseClient.from("competition_entries").select("id, user_id, title, moderated, vote_count, profiles:user_id(first_name, last_name)").eq("event_id", eventId2),
-        supabaseClient.from("competition_votes").select("id", { count: "exact", head: true }).eq("event_id", eventId2),
-        supabaseClient.from("competition_winners").select("*, profiles:user_id(first_name, last_name), competition_entries!competition_winners_entry_id_fkey(title)").eq("event_id", eventId2).order("place", { ascending: true }),
-        supabaseClient.from("prize_pool_contributions").select("amount_cents").eq("event_id", eventId2)
-      ]);
-      return {
-        phases: phasesRes.data || [],
-        entries: entriesRes.data || [],
-        voteCount: votesRes.count || 0,
-        winners: winnersRes.data || [],
-        contribs: contribRes.data || []
-      };
-    }
-    function compHtml() {
-      const STATE = api7().getState?.() || {};
-      const e = STATE.event;
-      if (e.event_type !== "competition") {
-        return api7().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
-      }
-      const d = STATE.tabData.comp;
-      const fmt = window.formatCurrency || money;
-      const cfg = e.competition_config || {};
-      const liveEntries = d.entries.filter((x) => !x.moderated);
-      const moderatedCount = d.entries.length - liveEntries.length;
-      const poolTotal = (e.total_prize_pool_cents || 0) + d.contribs.reduce((s, c) => s + (c.amount_cents || 0), 0);
-      const housePct = Number(cfg.house_pct || 0);
-      const netPool = Math.round(poolTotal * (1 - housePct / 100));
-      const activePhase = d.phases.find((ph) => ph.status === "active") || null;
-      const entryTarget = Number(cfg.min_entries || 0);
-      const entryPct = entryTarget ? Math.min(100, Math.round(liveEntries.length / entryTarget * 100)) : 100;
-      const phaseStatusColor = { pending: "#9ca3af", active: "#4f46e5", completed: "#059669", extended: "#d97706", cancelled: "#dc2626" };
-      const phaseRows = d.phases.length ? d.phases.map((ph) => {
-        const color = phaseStatusColor[ph.status] || "#6b7280";
-        const dates = ph.starts_at || ph.ends_at ? `${ph.starts_at ? new Date(ph.starts_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "\u2014"} \u2192 ${ph.ends_at ? new Date(ph.ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "\u2014"}` : "";
-        return `
-                <div class="em-attendee-card">
-                    <div class="em-avatar" style="background:${color}22;color:${color};font-weight:900">${ph.phase_num}</div>
-                    <div class="em-attendee-main">
-                        <p class="em-attendee-name">${esc(ph.name || "Competition phase")}</p>
-                        <p class="em-attendee-sub">${dates || "Dates not set"}</p>
-                        <div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked" style="background:${color}22;color:${color}">${esc(ph.status || "pending")}</span>${ph.extended_once ? '<span class="em-pill em-pill-paid">Extended</span>' : ""}</div>
-                    </div>
-                </div>
-            `;
-      }).join("") : `<p class="text-xs text-gray-400 italic py-2">No phases configured yet.</p>`;
-      const winnerRows = d.winners.length ? d.winners.map((w) => {
-        const p = w.profiles || {};
-        const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
-        const entry = w.competition_entries || {};
-        const medal = ["\u{1F947}", "\u{1F948}", "\u{1F949}"][w.place - 1] || `#${w.place}`;
-        const payoutBadge = {
-          pending: '<span class="em-pill em-pill-paid">Pending</span>',
-          processing: '<span class="em-pill em-pill-paid">Processing</span>',
-          paid: '<span class="em-pill em-pill-going">Paid</span>',
-          failed: '<span class="em-pill em-pill-not">Failed</span>'
-        }[w.payout_status] || "";
-        return `
-                <div class="em-attendee-card">
-                    <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:18px">${medal}</div>
-                    <div class="em-attendee-main">
-                        <p class="em-attendee-name">${esc(name)}</p>
-                        <p class="em-attendee-sub">${esc(entry.title || "Winning entry")} \xB7 ${fmt(w.prize_amount_cents)}${w.needs_1099 ? " \xB7 1099 needed" : ""}</p>
-                        <div class="flex flex-wrap gap-1 mt-2">${payoutBadge}</div>
-                    </div>
-                </div>
-            `;
-      }).join("") : `<p class="text-xs text-gray-400 italic py-2">No winners finalized yet.</p>`;
+  }
+  function moneyHtml() {
+    const STATE3 = api12().getState?.() || {};
+    const d = STATE3.tabData.money;
+    const isPaidEvent = STATE3.event?.pricing_mode === "paid" || Number(STATE3.event?.rsvp_cost_cents || 0) > 0;
+    const paidRsvps = d.rsvps.filter((r) => r.paid);
+    const paidGuests = d.guests.filter((g2) => g2.paid);
+    const refundedRsvps = d.rsvps.filter((r) => r.refunded);
+    const unpaidGoing = isPaidEvent ? STATE3.rsvps.filter((r) => r.status === "going" && !r.paid).length + STATE3.guestRsvps.filter((g2) => g2.status === "going" && !g2.paid).length : 0;
+    const rsvpRevenue = paidRsvps.reduce((s, r) => s + (r.amount_paid_cents || 0), 0);
+    const guestRevenue = paidGuests.reduce((s, g2) => s + (g2.amount_paid_cents || 0), 0);
+    const raffleRevenue = d.raffle.filter((e) => e.paid).reduce((s, e) => s + (e.amount_paid_cents || 0), 0);
+    const poolRevenue = d.poolPays.reduce((s, p) => s + (p.amount_cents || 0), 0);
+    const refunded = refundedRsvps.reduce((s, r) => s + (r.refund_amount_cents || 0), 0);
+    const grossRevenue = rsvpRevenue + guestRevenue + raffleRevenue + poolRevenue;
+    const netRevenue = grossRevenue - refunded;
+    const fmt = window.formatCurrency || money2;
+    const ticketLabel = isPaidEvent ? "Paid RSVPs" : "Ticketed RSVPs";
+    function paymentRow({ name, sub, amount, refundedAmount, stripeId, avatarHtml, isGuest }) {
+      const refundPill = refundedAmount ? `<span class="em-pill em-pill-not">Refunded ${fmt(refundedAmount)}</span>` : `<span class="em-pill em-pill-paid">${amount > 0 ? `Paid ${fmt(amount)}` : "Ticketed"}</span>`;
       return `
-            <div class="em-card em-command-card mb-4">
-                <p class="em-command-eyebrow">Competition command</p>
-                <h3 class="em-command-title">${activePhase ? `Phase ${activePhase.phase_num}: ${esc(activePhase.name || "Active")}` : "Competition setup"}</h3>
-                <p class="em-command-copy">${liveEntries.length} live entr${liveEntries.length === 1 ? "y" : "ies"}${entryTarget ? ` toward ${entryTarget} minimum` : ""}. ${d.voteCount} vote${d.voteCount === 1 ? "" : "s"} recorded with ${fmt(netPool)} net payout available.</p>
-                <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${entryPct}%;background:#a78bfa"></span></div>
-            </div>
+            <div class="em-attendee-card">
+                <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ""}>${avatarHtml}</div>
+                <div class="em-attendee-main">
+                    <p class="em-attendee-name">${esc5(name)}</p>
+                    <p class="em-attendee-sub">${esc5(sub)}</p>
+                    <div class="flex flex-wrap gap-1 mt-2">${refundPill}${isGuest ? '<span class="em-pill em-pill-going">Guest</span>' : ""}</div>
+                </div>
+                ${stripeId ? `<a href="https://dashboard.stripe.com/payments/${encodeURIComponent(stripeId)}" target="_blank" rel="noopener" class="text-xs text-brand-600 font-semibold hover:underline whitespace-nowrap">Stripe \u2197</a>` : ""}
+            </div>`;
+    }
+    const memberRows = paidRsvps.map((r) => {
+      const p = r.profiles || {};
+      const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
+      const initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?";
+      const avatar = p.profile_picture_url ? `<img src="${esc5(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
+      return paymentRow({ name, sub: "Member RSVP payment", amount: r.amount_paid_cents || 0, refundedAmount: r.refund_amount_cents || 0, stripeId: r.stripe_payment_intent_id, avatarHtml: avatar });
+    });
+    const guestRows = paidGuests.map((g2) => paymentRow({
+      name: g2.guest_name || "Guest",
+      sub: g2.guest_email || "Public guest payment",
+      amount: g2.amount_paid_cents || 0,
+      refundedAmount: 0,
+      stripeId: g2.stripe_payment_intent_id,
+      avatarHtml: `<span>${esc5((g2.guest_name || "G").slice(0, 1).toUpperCase())}</span>`,
+      isGuest: true
+    }));
+    const paymentRows = [...memberRows, ...guestRows].join("") || `<p class="text-xs text-gray-400 italic py-2">No paid RSVPs yet.</p>`;
+    return `
+        <div class="em-card em-command-card mb-4">
+            <p class="em-command-eyebrow">Money command</p>
+            <h3 class="em-command-title">${fmt(netRevenue)} net collected</h3>
+            <p class="em-command-copy">${grossRevenue ? `${fmt(grossRevenue)} gross across RSVP, guest, raffle, and prize-pool activity.` : isPaidEvent ? "No paid activity has landed yet." : "This free event has no RSVP revenue to collect."} ${unpaidGoing ? `${unpaidGoing} going attendee${unpaidGoing === 1 ? "" : "s"} still show unpaid.` : isPaidEvent ? "No unpaid going attendees are currently flagged." : "Ticketed attendees are tracked for access and check-in."}</p>
+        </div>
 
-            <div class="em-metric-grid mb-4">
-                <div class="em-metric"><span>Entries</span><strong>${liveEntries.length}</strong><small>${entryTarget ? `${entryPct}% of minimum` : "No minimum set"}</small></div>
-                <div class="em-metric"><span>Votes</span><strong>${d.voteCount}</strong><small>Submitted votes</small></div>
-                <div class="em-metric"><span>Pool</span><strong>${fmt(poolTotal)}</strong><small>Gross prize pool</small></div>
-                <div class="em-metric"><span>Net payout</span><strong>${fmt(netPool)}</strong><small>${housePct}% house cut</small></div>
-            </div>
+        <div class="em-metric-grid mb-4">
+            <div class="em-metric"><span>Gross</span><strong>${fmt(grossRevenue)}</strong><small>All sources</small></div>
+            <div class="em-metric"><span>Net</span><strong>${fmt(netRevenue)}</strong><small>After refunds</small></div>
+            <div class="em-metric"><span>Refunded</span><strong>${fmt(refunded)}</strong><small>${refundedRsvps.length} member RSVP${refundedRsvps.length === 1 ? "" : "s"}</small></div>
+            <div class="em-metric"><span>${ticketLabel}</span><strong>${paidRsvps.length + paidGuests.length}</strong><small>${paidRsvps.length} member \xB7 ${paidGuests.length} guest</small></div>
+        </div>
 
-            <div class="em-card mb-3">
-                <div class="em-section-head"><div><h3 class="em-section-title">Phases <span class="text-gray-400 font-normal">\xB7 ${d.phases.length}</span></h3><p class="em-section-sub">Timeline and moderation state for the competition.</p></div></div>
-                ${phaseRows}
-            </div>
-
-            <div class="em-card mb-3">
-                <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving entries, voting, and payouts.</p></div></div>
-                <div class="em-money-row"><span>Entry type</span><strong>${esc(cfg.entry_type || "any")}</strong></div>
-                <div class="em-money-row"><span>Entry fee</span><strong>${cfg.entry_fee_cents ? fmt(cfg.entry_fee_cents) : "Free"}</strong></div>
-                <div class="em-money-row"><span>House cut</span><strong>${housePct}%</strong></div>
-                <div class="em-money-row"><span>Voter eligibility</span><strong>${esc(cfg.voter_eligibility || "all_members")}</strong></div>
-                ${moderatedCount ? `<div class="em-money-row"><span>Moderated entries</span><strong style="color:#dc2626">${moderatedCount}</strong></div>` : ""}
+        <div class="em-money-layout">
+            <div class="em-card">
+                <div class="em-section-head"><div><h3 class="em-section-title">${isPaidEvent ? "Paid attendees" : "Ticketed attendees"} <span class="text-gray-400 font-normal">\xB7 ${paidRsvps.length + paidGuests.length}</span></h3><p class="em-section-sub">${isPaidEvent ? "Member and public guest RSVP payments." : "Members and public guests with issued event tickets."}</p></div></div>
+                ${paymentRows}
             </div>
 
             <div class="em-card">
-                <div class="em-section-head"><div><h3 class="em-section-title">Winners <span class="text-gray-400 font-normal">\xB7 ${d.winners.length}</span></h3><p class="em-section-sub">Final results and payout status.</p></div></div>
-                ${winnerRows}
-                <p class="text-xs text-gray-400 mt-3">Phase advancement and winner finalization happen on the portal detail page. Per-tab controls land in M4.</p>
+                <div class="em-section-head"><div><h3 class="em-section-title">Revenue sources</h3><p class="em-section-sub">Quick audit of how money entered this event.</p></div></div>
+                <div class="em-money-row"><span>Member RSVP payments</span><strong>${fmt(rsvpRevenue)}</strong></div>
+                <div class="em-money-row"><span>Guest RSVP payments</span><strong>${fmt(guestRevenue)}</strong></div>
+                <div class="em-money-row"><span>Raffle entries</span><strong>${fmt(raffleRevenue)}</strong></div>
+                <div class="em-money-row"><span>Prize-pool contributions</span><strong>${fmt(poolRevenue)}</strong></div>
+                <div class="em-money-row"><span>Refunds recorded</span><strong>${fmt(refunded)}</strong></div>
+                <p class="text-xs text-gray-400 mt-3">Refunds are still handled through Stripe/dashboard tooling. This panel keeps the host-facing audit trail together.</p>
+            </div>
+        </div>
+    `;
+  }
+  function wireMoney() {
+    const STATE3 = api12().getState?.() || {};
+  }
+  var manageMoneyApi = {
+    loadMoney,
+    moneyHtml,
+    wireMoney
+  };
+  globalThis.EventsManageMoney = manageMoneyApi;
+
+  // js/portal/events/manage/competition.js
+  function api13() {
+    return window.EventsManageCompetitionApi || {};
+  }
+  function esc6(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function money3(cents) {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
+  }
+  async function loadComp() {
+    const STATE3 = api13().getState?.() || {};
+    const eventId2 = STATE3.eventId;
+    const [phasesRes, entriesRes, votesRes, winnersRes, contribRes] = await Promise.all([
+      supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true }),
+      supabaseClient.from("competition_entries").select("id, user_id, title, moderated, vote_count, profiles:user_id(first_name, last_name)").eq("event_id", eventId2),
+      supabaseClient.from("competition_votes").select("id", { count: "exact", head: true }).eq("event_id", eventId2),
+      supabaseClient.from("competition_winners").select("*, profiles:user_id(first_name, last_name), competition_entries!competition_winners_entry_id_fkey(title)").eq("event_id", eventId2).order("place", { ascending: true }),
+      supabaseClient.from("prize_pool_contributions").select("amount_cents").eq("event_id", eventId2)
+    ]);
+    return {
+      phases: phasesRes.data || [],
+      entries: entriesRes.data || [],
+      voteCount: votesRes.count || 0,
+      winners: winnersRes.data || [],
+      contribs: contribRes.data || []
+    };
+  }
+  function compHtml() {
+    const STATE3 = api13().getState?.() || {};
+    const e = STATE3.event;
+    if (e.event_type !== "competition") {
+      return api13().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
+    }
+    const d = STATE3.tabData.comp;
+    const fmt = window.formatCurrency || money3;
+    const cfg = e.competition_config || {};
+    const liveEntries = d.entries.filter((x) => !x.moderated);
+    const moderatedCount = d.entries.length - liveEntries.length;
+    const poolTotal = (e.total_prize_pool_cents || 0) + d.contribs.reduce((s, c) => s + (c.amount_cents || 0), 0);
+    const housePct = Number(cfg.house_pct || 0);
+    const netPool = Math.round(poolTotal * (1 - housePct / 100));
+    const activePhase = d.phases.find((ph) => ph.status === "active") || null;
+    const entryTarget = Number(cfg.min_entries || 0);
+    const entryPct = entryTarget ? Math.min(100, Math.round(liveEntries.length / entryTarget * 100)) : 100;
+    const phaseStatusColor = { pending: "#9ca3af", active: "#4f46e5", completed: "#059669", extended: "#d97706", cancelled: "#dc2626" };
+    const phaseRows = d.phases.length ? d.phases.map((ph) => {
+      const color = phaseStatusColor[ph.status] || "#6b7280";
+      const dates = ph.starts_at || ph.ends_at ? `${ph.starts_at ? new Date(ph.starts_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "\u2014"} \u2192 ${ph.ends_at ? new Date(ph.ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "\u2014"}` : "";
+      return `
+            <div class="em-attendee-card">
+                <div class="em-avatar" style="background:${color}22;color:${color};font-weight:900">${ph.phase_num}</div>
+                <div class="em-attendee-main">
+                    <p class="em-attendee-name">${esc6(ph.name || "Competition phase")}</p>
+                    <p class="em-attendee-sub">${dates || "Dates not set"}</p>
+                    <div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked" style="background:${color}22;color:${color}">${esc6(ph.status || "pending")}</span>${ph.extended_once ? '<span class="em-pill em-pill-paid">Extended</span>' : ""}</div>
+                </div>
             </div>
         `;
-    }
-    function wireComp() {
-      const STATE = api7().getState?.() || {};
-    }
-    window.EventsManageCompetition = {
-      loadComp,
-      compHtml,
-      wireComp
-    };
-  })();
+    }).join("") : `<p class="text-xs text-gray-400 italic py-2">No phases configured yet.</p>`;
+    const winnerRows = d.winners.length ? d.winners.map((w) => {
+      const p = w.profiles || {};
+      const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
+      const entry = w.competition_entries || {};
+      const medal = ["\u{1F947}", "\u{1F948}", "\u{1F949}"][w.place - 1] || `#${w.place}`;
+      const payoutBadge = {
+        pending: '<span class="em-pill em-pill-paid">Pending</span>',
+        processing: '<span class="em-pill em-pill-paid">Processing</span>',
+        paid: '<span class="em-pill em-pill-going">Paid</span>',
+        failed: '<span class="em-pill em-pill-not">Failed</span>'
+      }[w.payout_status] || "";
+      return `
+            <div class="em-attendee-card">
+                <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:18px">${medal}</div>
+                <div class="em-attendee-main">
+                    <p class="em-attendee-name">${esc6(name)}</p>
+                    <p class="em-attendee-sub">${esc6(entry.title || "Winning entry")} \xB7 ${fmt(w.prize_amount_cents)}${w.needs_1099 ? " \xB7 1099 needed" : ""}</p>
+                    <div class="flex flex-wrap gap-1 mt-2">${payoutBadge}</div>
+                </div>
+            </div>
+        `;
+    }).join("") : `<p class="text-xs text-gray-400 italic py-2">No winners finalized yet.</p>`;
+    return `
+        <div class="em-card em-command-card mb-4">
+            <p class="em-command-eyebrow">Competition command</p>
+            <h3 class="em-command-title">${activePhase ? `Phase ${activePhase.phase_num}: ${esc6(activePhase.name || "Active")}` : "Competition setup"}</h3>
+            <p class="em-command-copy">${liveEntries.length} live entr${liveEntries.length === 1 ? "y" : "ies"}${entryTarget ? ` toward ${entryTarget} minimum` : ""}. ${d.voteCount} vote${d.voteCount === 1 ? "" : "s"} recorded with ${fmt(netPool)} net payout available.</p>
+            <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${entryPct}%;background:#a78bfa"></span></div>
+        </div>
+
+        <div class="em-metric-grid mb-4">
+            <div class="em-metric"><span>Entries</span><strong>${liveEntries.length}</strong><small>${entryTarget ? `${entryPct}% of minimum` : "No minimum set"}</small></div>
+            <div class="em-metric"><span>Votes</span><strong>${d.voteCount}</strong><small>Submitted votes</small></div>
+            <div class="em-metric"><span>Pool</span><strong>${fmt(poolTotal)}</strong><small>Gross prize pool</small></div>
+            <div class="em-metric"><span>Net payout</span><strong>${fmt(netPool)}</strong><small>${housePct}% house cut</small></div>
+        </div>
+
+        <div class="em-card mb-3">
+            <div class="em-section-head"><div><h3 class="em-section-title">Phases <span class="text-gray-400 font-normal">\xB7 ${d.phases.length}</span></h3><p class="em-section-sub">Timeline and moderation state for the competition.</p></div></div>
+            ${phaseRows}
+        </div>
+
+        <div class="em-card mb-3">
+            <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving entries, voting, and payouts.</p></div></div>
+            <div class="em-money-row"><span>Entry type</span><strong>${esc6(cfg.entry_type || "any")}</strong></div>
+            <div class="em-money-row"><span>Entry fee</span><strong>${cfg.entry_fee_cents ? fmt(cfg.entry_fee_cents) : "Free"}</strong></div>
+            <div class="em-money-row"><span>House cut</span><strong>${housePct}%</strong></div>
+            <div class="em-money-row"><span>Voter eligibility</span><strong>${esc6(cfg.voter_eligibility || "all_members")}</strong></div>
+            ${moderatedCount ? `<div class="em-money-row"><span>Moderated entries</span><strong style="color:#dc2626">${moderatedCount}</strong></div>` : ""}
+        </div>
+
+        <div class="em-card">
+            <div class="em-section-head"><div><h3 class="em-section-title">Winners <span class="text-gray-400 font-normal">\xB7 ${d.winners.length}</span></h3><p class="em-section-sub">Final results and payout status.</p></div></div>
+            ${winnerRows}
+            <p class="text-xs text-gray-400 mt-3">Phase advancement and winner finalization happen on the portal detail page. Per-tab controls land in M4.</p>
+        </div>
+    `;
+  }
+  function wireComp() {
+    const STATE3 = api13().getState?.() || {};
+  }
+  var manageCompetitionApi = {
+    loadComp,
+    compHtml,
+    wireComp
+  };
+  globalThis.EventsManageCompetition = manageCompetitionApi;
 
   // js/portal/events/manage/participation.js
-  (function() {
-    "use strict";
-    function api7() {
-      return window.EventsManageParticipationApi || {};
+  function api14() {
+    return window.EventsManageParticipationApi || {};
+  }
+  async function getParticipationResetCounts() {
+    const STATE3 = api14().getState?.() || {};
+    const eventId2 = STATE3.eventId;
+    const tables = [
+      ["member RSVPs", "event_rsvps"],
+      ["guest RSVPs", "event_guest_rsvps"],
+      ["check-ins", "event_checkins"],
+      ["raffle entries", "event_raffle_entries"],
+      ["raffle winners", "event_raffle_winners"]
+    ];
+    const results = await Promise.all(tables.map(async ([label, table]) => {
+      const { count, error } = await supabaseClient.from(table).select("id", { count: "exact", head: true }).eq("event_id", eventId2);
+      if (error) throw error;
+      return { label, table, count: count || 0 };
+    }));
+    return results;
+  }
+  async function resetParticipation() {
+    const STATE3 = api14().getState?.() || {};
+    const e = STATE3.event;
+    if (!e) return;
+    let counts = [];
+    try {
+      counts = await getParticipationResetCounts();
+    } catch (err) {
+      alert("Could not load participation counts: " + (err.message || "unknown error"));
+      return;
     }
-    function esc(s) {
-      const el = document.createElement("span");
-      el.textContent = s == null ? "" : String(s);
-      return el.innerHTML;
-    }
-    function money(cents) {
-      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
-    }
-    async function getParticipationResetCounts() {
-      const STATE = api7().getState?.() || {};
-      const eventId2 = STATE.eventId;
-      const tables = [
-        ["member RSVPs", "event_rsvps"],
-        ["guest RSVPs", "event_guest_rsvps"],
-        ["check-ins", "event_checkins"],
-        ["raffle entries", "event_raffle_entries"],
-        ["raffle winners", "event_raffle_winners"]
-      ];
-      const results = await Promise.all(tables.map(async ([label, table]) => {
-        const { count, error } = await supabaseClient.from(table).select("id", { count: "exact", head: true }).eq("event_id", eventId2);
-        if (error) throw error;
-        return { label, table, count: count || 0 };
-      }));
-      return results;
-    }
-    async function resetParticipation() {
-      const STATE = api7().getState?.() || {};
-      const e = STATE.event;
-      if (!e) return;
-      let counts = [];
-      try {
-        counts = await getParticipationResetCounts();
-      } catch (err) {
-        alert("Could not load participation counts: " + (err.message || "unknown error"));
-        return;
-      }
-      const paidTickets = STATE.rsvps.filter((r) => r.paid).length + STATE.guestRsvps.filter((r) => r.paid).length;
-      const summary = counts.map((item) => `${item.count} ${item.label}`).join("\n");
-      const typed = prompt(
-        `Reset participation for "${e.title}"?
+    const paidTickets = STATE3.rsvps.filter((r) => r.paid).length + STATE3.guestRsvps.filter((r) => r.paid).length;
+    const summary = counts.map((item) => `${item.count} ${item.label}`).join("\n");
+    const typed = prompt(
+      `Reset participation for "${e.title}"?
 
 This will delete:
 ${summary}
@@ -10241,1170 +10168,1130 @@ ${summary}
 The event itself, images, links, pricing, and settings stay in place. Stripe payments are NOT refunded${paidTickets ? ` (${paidTickets} paid RSVP record${paidTickets === 1 ? "" : "s"} found)` : ""}.
 
 Type RESET to continue.`
-      );
-      if (!typed || typed.trim().toUpperCase() !== "RESET") {
-        if (typed !== null) alert("Reset cancelled.");
-        return;
-      }
-      try {
+    );
+    if (!typed || typed.trim().toUpperCase() !== "RESET") {
+      if (typed !== null) alert("Reset cancelled.");
+      return;
+    }
+    try {
+      await callEdgeFunction("manage-event-participation", {
+        action: "reset_participation",
+        event_id: e.id
+      });
+      await api14().refreshEventManager?.("danger");
+      alert("Participation reset complete. The event is still intact.");
+    } catch (err) {
+      alert("Reset failed: " + (err.message || "unknown error"));
+    }
+  }
+  async function removeParticipationPerson(btn) {
+    const STATE3 = api14().getState?.() || {};
+    const kind = btn.dataset.removeRsvp;
+    const name = btn.dataset.name || (kind === "guest" ? "this guest" : "this member");
+    const isPaid = btn.dataset.paid === "1";
+    const warning = isPaid ? "\n\nThis was marked paid. Removing the record does not refund Stripe payments." : "";
+    if (!confirm(`Remove ${name} from this event? This also clears their check-in and raffle entry.${warning}`)) return;
+    btn.disabled = true;
+    btn.textContent = "Removing...";
+    try {
+      if (kind === "guest") {
+        const guestToken = btn.dataset.guestToken;
+        const rsvpId = btn.dataset.rsvpId;
+        if (!guestToken || !rsvpId) throw new Error("Missing guest RSVP details.");
         await callEdgeFunction("manage-event-participation", {
-          action: "reset_participation",
-          event_id: e.id
+          action: "remove_rsvp",
+          event_id: STATE3.eventId,
+          kind: "guest",
+          guest_token: guestToken,
+          rsvp_id: rsvpId
         });
-        await api7().refreshEventManager?.("danger");
-        alert("Participation reset complete. The event is still intact.");
-      } catch (err) {
-        alert("Reset failed: " + (err.message || "unknown error"));
+      } else {
+        const userId = btn.dataset.userId;
+        if (!userId) throw new Error("Missing member RSVP details.");
+        await callEdgeFunction("manage-event-participation", {
+          action: "remove_rsvp",
+          event_id: STATE3.eventId,
+          kind: "member",
+          user_id: userId
+        });
       }
+      await api14().refreshEventManager?.("rsvps");
+    } catch (err) {
+      alert("Remove failed: " + (err.message || "unknown error"));
+      api14().renderTab?.("rsvps");
     }
-    async function removeParticipationPerson(btn) {
-      const STATE = api7().getState?.() || {};
-      const kind = btn.dataset.removeRsvp;
-      const name = btn.dataset.name || (kind === "guest" ? "this guest" : "this member");
-      const isPaid = btn.dataset.paid === "1";
-      const warning = isPaid ? "\n\nThis was marked paid. Removing the record does not refund Stripe payments." : "";
-      if (!confirm(`Remove ${name} from this event? This also clears their check-in and raffle entry.${warning}`)) return;
-      btn.disabled = true;
-      btn.textContent = "Removing...";
-      try {
-        if (kind === "guest") {
-          const guestToken = btn.dataset.guestToken;
-          const rsvpId = btn.dataset.rsvpId;
-          if (!guestToken || !rsvpId) throw new Error("Missing guest RSVP details.");
-          await callEdgeFunction("manage-event-participation", {
-            action: "remove_rsvp",
-            event_id: STATE.eventId,
-            kind: "guest",
-            guest_token: guestToken,
-            rsvp_id: rsvpId
-          });
-        } else {
-          const userId = btn.dataset.userId;
-          if (!userId) throw new Error("Missing member RSVP details.");
-          await callEdgeFunction("manage-event-participation", {
-            action: "remove_rsvp",
-            event_id: STATE.eventId,
-            kind: "member",
-            user_id: userId
-          });
-        }
-        await api7().refreshEventManager?.("rsvps");
-      } catch (err) {
-        alert("Remove failed: " + (err.message || "unknown error"));
-        api7().renderTab?.("rsvps");
-      }
-    }
-    window.EventsManageParticipation = {
-      getParticipationResetCounts,
-      resetParticipation,
-      removeParticipationPerson
-    };
-  })();
+  }
+  var manageParticipationApi = {
+    getParticipationResetCounts,
+    resetParticipation,
+    removeParticipationPerson
+  };
+  globalThis.EventsManageParticipation = manageParticipationApi;
 
   // js/portal/events/manage/raffle.js
-  (function() {
-    "use strict";
-    function api7() {
-      return window.EventsManageRaffleApi || {};
+  function api15() {
+    return window.EventsManageRaffleApi || {};
+  }
+  function esc7(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function money4(cents) {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
+  }
+  var prizeImageFiles = {};
+  var prizeImagePreviews = {};
+  function safeFilename2(value) {
+    return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
+  }
+  async function loadRaffle() {
+    const STATE3 = api15().getState?.() || {};
+    const eventId2 = STATE3.eventId;
+    const [entriesRes, winnersRes, guestsRes] = await Promise.all([
+      supabaseClient.from("event_raffle_entries").select("id, user_id, guest_token, paid, amount_paid_cents, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
+      supabaseClient.from("event_raffle_winners").select("*, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).order("place", { ascending: true }),
+      supabaseClient.from("event_guest_rsvps").select("guest_token, guest_name, guest_email").eq("event_id", eventId2)
+    ]);
+    return {
+      entries: entriesRes.data || [],
+      winners: winnersRes.data || [],
+      guests: guestsRes.data || []
+    };
+  }
+  function ord(n) {
+    const s = ["th", "st", "nd", "rd"], v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+  function raffleHtml() {
+    const STATE3 = api15().getState?.() || {};
+    const e = STATE3.event;
+    if (!e.raffle_enabled) {
+      return api15().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
     }
-    function esc(s) {
-      const el = document.createElement("span");
-      el.textContent = s == null ? "" : String(s);
-      return el.innerHTML;
-    }
-    function money(cents) {
-      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
-    }
-    const prizeImageFiles = {};
-    const prizeImagePreviews = {};
-    function safeFilename(value) {
-      return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
-    }
-    async function loadRaffle() {
-      const STATE = api7().getState?.() || {};
-      const eventId2 = STATE.eventId;
-      const [entriesRes, winnersRes, guestsRes] = await Promise.all([
-        supabaseClient.from("event_raffle_entries").select("id, user_id, guest_token, paid, amount_paid_cents, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
-        supabaseClient.from("event_raffle_winners").select("*, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).order("place", { ascending: true }),
-        supabaseClient.from("event_guest_rsvps").select("guest_token, guest_name, guest_email").eq("event_id", eventId2)
-      ]);
-      return {
-        entries: entriesRes.data || [],
-        winners: winnersRes.data || [],
-        guests: guestsRes.data || []
-      };
-    }
-    function ord(n) {
-      const s = ["th", "st", "nd", "rd"], v = n % 100;
-      return n + (s[(v - 20) % 10] || s[v] || s[0]);
-    }
-    function raffleHtml() {
-      const STATE = api7().getState?.() || {};
-      const e = STATE.event;
-      if (!e.raffle_enabled) {
-        return api7().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
-      }
-      const d = STATE.tabData.raffle;
-      const fmt = window.formatCurrency || money;
-      const guestByToken = new Map((d.guests || []).map((g) => [g.guest_token, g]));
-      const eligibleEntries = d.entries.filter((en) => en.paid || !e.raffle_entry_cost_cents);
-      const memberEntries = eligibleEntries.filter((en) => en.user_id);
-      const guestEntries = eligibleEntries.filter((en) => en.guest_token);
-      const config = raffleConfig(e);
-      const categories = raffleCategories(config);
-      const drawQueue = raffleDrawQueue(config, d.winners);
-      const winnersDrawn = d.winners.length;
-      const totalPrizes = raffleTotalWinners(config) || e.raffle_winner_count || winnersDrawn;
-      const remainingDraws = Math.max(0, totalPrizes - winnersDrawn);
-      const allDrawn = totalPrizes > 0 && winnersDrawn >= totalPrizes;
-      const canDraw = typeof window.evtOpenRaffleDraw === "function" && eligibleEntries.length > 0 && !allDrawn;
-      const drawPct = totalPrizes ? Math.round(winnersDrawn / totalPrizes * 100) : 0;
-      const raffleEntryPriceDollars = (Number(e.raffle_entry_cost_cents || 0) / 100).toFixed(2);
-      const paidEventRaffleIncluded = e.pricing_mode === "paid";
-      const prizeSetupHtml = rafflePrizeSetupHtml(config, d.winners);
-      const winnerRows = d.winners.length ? d.winners.map((w) => {
-        const p = w.profiles || {};
-        const guest = w.guest_token ? guestByToken.get(w.guest_token) : null;
-        const name = w.user_id ? `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member" : guest?.guest_name || `Guest \xB7 ${(w.guest_token || "").slice(0, 8)}`;
-        const medal = ["\u{1F947}", "\u{1F948}", "\u{1F949}"][w.place - 1] || `#${w.place}`;
-        const choiceHtml = winnerChoiceHtml(w, config, d.winners);
-        return `
-                <div class="em-attendee-card">
-                    <div class="em-avatar" style="background:#faf5ff;color:#7c3aed;font-size:18px">${medal}</div>
-                    <div class="em-attendee-main">
-                        <p class="em-attendee-name">${esc(name)}</p>
-                        <p class="em-attendee-sub">${ord(w.place)} place \xB7 ${esc(w.prize_description || "Prize pending")}</p>
-                        <div class="flex flex-wrap gap-1 mt-2">
-                            <span class="em-pill em-pill-checked">${w.user_id ? "Member" : "Guest"}</span>
-                            ${w.selection_status === "pending_choice" ? '<span class="em-pill em-pill-paid">Needs prize choice</span>' : '<span class="em-pill em-pill-going">Prize assigned</span>'}
-                        </div>
-                        ${choiceHtml}
-                    </div>
-                </div>
-            `;
-      }).join("") : `<p class="text-xs text-gray-400 italic py-2">No winners drawn yet.</p>`;
-      const entryRevenue = eligibleEntries.reduce((s, en) => s + (en.amount_paid_cents || 0), 0);
-      const categoryHtml = categories.length ? categories.map((cat) => {
-        const items = raffleItems(config, cat.id);
-        const pendingSlots = drawQueue.filter((slot) => slot.category_id === cat.id).length;
-        const drawnCount = Math.max(0, (cat.winner_count || 0) - pendingSlots);
-        const itemPreview = items.length ? items.slice(0, 3).map((item) => `${item.emoji || "\u{1F381}"} ${esc(item.name)}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "Prize details pending";
-        const extraItems = Math.max(0, items.length - 3);
-        return `
-                <div class="em-card em-op-card">
-                    <div class="em-op-head">
-                        <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${esc(cat.label || "Prize category")}</p></div>
-                        <span class="em-op-icon">\u{1F381}</span>
-                    </div>
-                    <p class="em-op-copy">${drawModeLabel(cat.draw_mode)} \xB7 ${drawnCount}/${cat.winner_count || 0} drawn</p>
-                    <div class="em-op-progress"><span style="width:${cat.winner_count ? Math.round(drawnCount / cat.winner_count * 100) : 0}%"></span></div>
-                    <p class="em-op-copy">${itemPreview}${extraItems ? `, +${extraItems} more` : ""}</p>
-                    <div class="em-op-meta"><span class="em-op-chip">${pendingSlots} left</span><span class="em-op-chip">${items.length} item${items.length === 1 ? "" : "s"}</span></div>
-                </div>
-            `;
-      }).join("") : "";
-      const nextSlot = drawQueue[0] || null;
-      const nextDrawHtml = !allDrawn ? `
-            <div class="em-card mb-4" style="border-color:#ddd6fe;background:#faf5ff">
-                <div class="em-section-head">
-                    <div>
-                        <h3 class="em-section-title">Next draw</h3>
-                        <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc(prizeSlotLabel(nextSlot)) : "Next available prize"}${nextSlot?.category_label ? ` \xB7 ${esc(nextSlot.category_label)}` : ""}</p>
-                    </div>
-                    <span class="em-pill em-pill-paid">${remainingDraws} remaining</span>
-                </div>
-                ${canDraw ? `<button id="emRaffleDrawBtn" type="button" class="w-full bg-violet-600 hover:bg-violet-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition">Draw next winner</button>` : `<p class="text-xs text-gray-500">${eligibleEntries.length ? "Draw controls are unavailable on this page." : "No valid raffle entries yet."}</p>`}
-            </div>
-        ` : "";
-      const entryRows = eligibleEntries.length ? eligibleEntries.map((en) => {
-        const p = en.profiles || {};
-        const guest = en.guest_token ? guestByToken.get(en.guest_token) : null;
-        const name = en.user_id ? `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member" : guest?.guest_name || "Guest";
-        const sub = en.user_id ? "Member raffle entry" : guest?.guest_email || "Guest raffle entry";
-        const tokenAttr = en.guest_token ? ` data-guest-token="${esc(en.guest_token)}"` : "";
-        const userAttr = en.user_id ? ` data-user-id="${esc(en.user_id)}"` : "";
-        return `<div class="em-attendee-card"><div class="em-avatar" style="background:#f5f3ff;color:#6d28d9"><span>\u{1F39F}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc(name)}</p><p class="em-attendee-sub">${esc(sub)}</p><div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked">${en.user_id ? "Member" : "Guest"}</span>${en.paid ? '<span class="em-pill em-pill-paid">Paid</span>' : ""}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-raffle-entry="${esc(en.id)}"${userAttr}${tokenAttr} data-paid="${en.paid ? "1" : "0"}" data-name="${esc(name)}">Remove</button></div>`;
-      }).join("") : `<p class="text-xs text-gray-400 italic py-2">No eligible entries yet.</p>`;
+    const d = STATE3.tabData.raffle;
+    const fmt = window.formatCurrency || money4;
+    const guestByToken = new Map((d.guests || []).map((g2) => [g2.guest_token, g2]));
+    const eligibleEntries = d.entries.filter((en) => en.paid || !e.raffle_entry_cost_cents);
+    const memberEntries = eligibleEntries.filter((en) => en.user_id);
+    const guestEntries = eligibleEntries.filter((en) => en.guest_token);
+    const config = raffleConfig(e);
+    const categories = raffleCategories(config);
+    const drawQueue = raffleDrawQueue(config, d.winners);
+    const winnersDrawn = d.winners.length;
+    const totalPrizes = raffleTotalWinners(config) || e.raffle_winner_count || winnersDrawn;
+    const remainingDraws = Math.max(0, totalPrizes - winnersDrawn);
+    const allDrawn = totalPrizes > 0 && winnersDrawn >= totalPrizes;
+    const canDraw = typeof globalThis.evtOpenRaffleDraw === "function" && eligibleEntries.length > 0 && !allDrawn;
+    const drawPct = totalPrizes ? Math.round(winnersDrawn / totalPrizes * 100) : 0;
+    const raffleEntryPriceDollars = (Number(e.raffle_entry_cost_cents || 0) / 100).toFixed(2);
+    const paidEventRaffleIncluded = e.pricing_mode === "paid";
+    const prizeSetupHtml = rafflePrizeSetupHtml(config, d.winners);
+    const winnerRows = d.winners.length ? d.winners.map((w) => {
+      const p = w.profiles || {};
+      const guest = w.guest_token ? guestByToken.get(w.guest_token) : null;
+      const name = w.user_id ? `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member" : guest?.guest_name || `Guest \xB7 ${(w.guest_token || "").slice(0, 8)}`;
+      const medal = ["\u{1F947}", "\u{1F948}", "\u{1F949}"][w.place - 1] || `#${w.place}`;
+      const choiceHtml = winnerChoiceHtml(w, config, d.winners);
       return `
-            <div class="em-card em-command-card mb-4">
-                <p class="em-command-eyebrow">Raffle command</p>
-                <h3 class="em-command-title">${allDrawn ? "All winners drawn" : `${remainingDraws} draw${remainingDraws === 1 ? "" : "s"} remaining`}</h3>
-                <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? "y" : "ies"} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : "No eligible raffle entries yet."} ${nextSlot ? `Next up: ${esc(prizeSlotLabel(nextSlot))}.` : ""}</p>
-                <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${drawPct}%;background:#a78bfa"></span></div>
-            </div>
-
-            <div class="em-metric-grid mb-4">
-                <div class="em-metric"><span>Eligible entries</span><strong>${eligibleEntries.length}</strong><small>${memberEntries.length} member \xB7 ${guestEntries.length} guest</small></div>
-                <div class="em-metric"><span>Revenue</span><strong>${fmt(entryRevenue)}</strong><small>${e.raffle_entry_cost_cents ? "Paid entries" : "Free raffle"}</small></div>
-                <div class="em-metric"><span>Prizes</span><strong>${totalPrizes || "\u2014"}</strong><small>${categories.length} group${categories.length === 1 ? "" : "s"}</small></div>
-                <div class="em-metric"><span>Drawn</span><strong>${winnersDrawn}</strong><small>${drawPct}% complete</small></div>
-            </div>
-
-            ${nextDrawHtml}
-
-            <div class="em-money-layout">
-                <div>
-                    ${categories.length ? `<div class="em-op-grid" style="grid-template-columns:1fr;margin-bottom:12px">${categoryHtml}</div>` : ""}
-                    <div class="em-card">
-                        <div class="em-section-head"><div><h3 class="em-section-title">Winners <span class="text-gray-400 font-normal">\xB7 ${winnersDrawn}${totalPrizes ? "/" + totalPrizes : ""}</span></h3><p class="em-section-sub">Draw results and pending prize choices.</p></div></div>
-                        ${winnerRows}
-                        ${allDrawn ? `<p class="text-xs text-emerald-600 font-semibold mt-3">All winners drawn \u2713</p>` : `<p class="text-xs text-gray-400 mt-3">Draws follow category sort order, starting with the smallest/lower-sort categories.</p>`}
+            <div class="em-attendee-card">
+                <div class="em-avatar" style="background:#faf5ff;color:#7c3aed;font-size:18px">${medal}</div>
+                <div class="em-attendee-main">
+                    <p class="em-attendee-name">${esc7(name)}</p>
+                    <p class="em-attendee-sub">${ord(w.place)} place \xB7 ${esc7(w.prize_description || "Prize pending")}</p>
+                    <div class="flex flex-wrap gap-1 mt-2">
+                        <span class="em-pill em-pill-checked">${w.user_id ? "Member" : "Guest"}</span>
+                        ${w.selection_status === "pending_choice" ? '<span class="em-pill em-pill-paid">Needs prize choice</span>' : '<span class="em-pill em-pill-going">Prize assigned</span>'}
                     </div>
-                </div>
-
-                <div class="em-card">
-                    <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving the draw.</p></div></div>
-                    <div class="em-money-row"><span>Type</span><strong>${esc(e.raffle_type || "digital")}</strong></div>
-                    <div class="em-money-row"><span>Draw trigger</span><strong>${esc(e.raffle_draw_trigger || "manual")}</strong></div>
-                    <div class="em-money-row"><span>Entry cost</span><strong>${e.raffle_entry_cost_cents ? fmt(e.raffle_entry_cost_cents) : "Free"}</strong></div>
-                    <div style="margin:12px 0;padding:12px;border:1px solid #eef2ff;border-radius:12px;background:#f8fafc">
-                        <label for="emRaffleEntryPrice" style="display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Raffle entry price</label>
-                        <div style="display:flex;gap:8px;align-items:center">
-                            <span style="font-size:13px;font-weight:800;color:#475569">$</span>
-                            <input id="emRaffleEntryPrice" class="em-input" type="number" min="0" max="500" step="0.01" value="${esc(raffleEntryPriceDollars)}" ${paidEventRaffleIncluded ? "disabled" : ""} style="flex:1;min-width:0">
-                            <button id="emRafflePriceSave" type="button" class="em-btn-primary" ${paidEventRaffleIncluded ? "disabled" : ""}>Save</button>
-                        </div>
-                        <p id="emRafflePriceStatus" class="text-xs text-gray-400 mt-2">${paidEventRaffleIncluded ? "Paid RSVP events include raffle entry with the RSVP, so separate raffle pricing is not used." : "Set 0 for a free raffle. Changes apply to future raffle checkouts only."}</p>
-                    </div>
-                    <div class="em-money-row"><span>Member entries</span><strong>${memberEntries.length}</strong></div>
-                    <div class="em-money-row"><span>Guest entries</span><strong>${guestEntries.length}</strong></div>
-                </div>
-
-                ${prizeSetupHtml}
-
-                <div class="em-card mt-3">
-                    <div class="em-section-head"><div><h3 class="em-section-title">Entries <span class="text-gray-400 font-normal">\xB7 ${eligibleEntries.length}</span></h3><p class="em-section-sub">Remove accidental or test raffle entries without deleting the event.</p></div></div>
-                    ${entryRows}
+                    ${choiceHtml}
                 </div>
             </div>
         `;
+    }).join("") : `<p class="text-xs text-gray-400 italic py-2">No winners drawn yet.</p>`;
+    const entryRevenue = eligibleEntries.reduce((s, en) => s + (en.amount_paid_cents || 0), 0);
+    const categoryHtml = categories.length ? categories.map((cat) => {
+      const items = raffleItems(config, cat.id);
+      const pendingSlots = drawQueue.filter((slot) => slot.category_id === cat.id).length;
+      const drawnCount = Math.max(0, (cat.winner_count || 0) - pendingSlots);
+      const itemPreview = items.length ? items.slice(0, 3).map((item) => `${item.emoji || "\u{1F381}"} ${esc7(item.name)}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "Prize details pending";
+      const extraItems = Math.max(0, items.length - 3);
+      return `
+            <div class="em-card em-op-card">
+                <div class="em-op-head">
+                    <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${esc7(cat.label || "Prize category")}</p></div>
+                    <span class="em-op-icon">\u{1F381}</span>
+                </div>
+                <p class="em-op-copy">${drawModeLabel(cat.draw_mode)} \xB7 ${drawnCount}/${cat.winner_count || 0} drawn</p>
+                <div class="em-op-progress"><span style="width:${cat.winner_count ? Math.round(drawnCount / cat.winner_count * 100) : 0}%"></span></div>
+                <p class="em-op-copy">${itemPreview}${extraItems ? `, +${extraItems} more` : ""}</p>
+                <div class="em-op-meta"><span class="em-op-chip">${pendingSlots} left</span><span class="em-op-chip">${items.length} item${items.length === 1 ? "" : "s"}</span></div>
+            </div>
+        `;
+    }).join("") : "";
+    const nextSlot = drawQueue[0] || null;
+    const nextDrawHtml = !allDrawn ? `
+        <div class="em-card mb-4" style="border-color:#ddd6fe;background:#faf5ff">
+            <div class="em-section-head">
+                <div>
+                    <h3 class="em-section-title">Next draw</h3>
+                    <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc7(prizeSlotLabel(nextSlot)) : "Next available prize"}${nextSlot?.category_label ? ` \xB7 ${esc7(nextSlot.category_label)}` : ""}</p>
+                </div>
+                <span class="em-pill em-pill-paid">${remainingDraws} remaining</span>
+            </div>
+            ${canDraw ? `<button id="emRaffleDrawBtn" type="button" class="w-full bg-violet-600 hover:bg-violet-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition">Draw next winner</button>` : `<p class="text-xs text-gray-500">${eligibleEntries.length ? "Draw controls are unavailable on this page." : "No valid raffle entries yet."}</p>`}
+        </div>
+    ` : "";
+    const entryRows = eligibleEntries.length ? eligibleEntries.map((en) => {
+      const p = en.profiles || {};
+      const guest = en.guest_token ? guestByToken.get(en.guest_token) : null;
+      const name = en.user_id ? `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member" : guest?.guest_name || "Guest";
+      const sub = en.user_id ? "Member raffle entry" : guest?.guest_email || "Guest raffle entry";
+      const tokenAttr = en.guest_token ? ` data-guest-token="${esc7(en.guest_token)}"` : "";
+      const userAttr = en.user_id ? ` data-user-id="${esc7(en.user_id)}"` : "";
+      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#f5f3ff;color:#6d28d9"><span>\u{1F39F}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc7(name)}</p><p class="em-attendee-sub">${esc7(sub)}</p><div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked">${en.user_id ? "Member" : "Guest"}</span>${en.paid ? '<span class="em-pill em-pill-paid">Paid</span>' : ""}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-raffle-entry="${esc7(en.id)}"${userAttr}${tokenAttr} data-paid="${en.paid ? "1" : "0"}" data-name="${esc7(name)}">Remove</button></div>`;
+    }).join("") : `<p class="text-xs text-gray-400 italic py-2">No eligible entries yet.</p>`;
+    return `
+        <div class="em-card em-command-card mb-4">
+            <p class="em-command-eyebrow">Raffle command</p>
+            <h3 class="em-command-title">${allDrawn ? "All winners drawn" : `${remainingDraws} draw${remainingDraws === 1 ? "" : "s"} remaining`}</h3>
+            <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? "y" : "ies"} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : "No eligible raffle entries yet."} ${nextSlot ? `Next up: ${esc7(prizeSlotLabel(nextSlot))}.` : ""}</p>
+            <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${drawPct}%;background:#a78bfa"></span></div>
+        </div>
+
+        <div class="em-metric-grid mb-4">
+            <div class="em-metric"><span>Eligible entries</span><strong>${eligibleEntries.length}</strong><small>${memberEntries.length} member \xB7 ${guestEntries.length} guest</small></div>
+            <div class="em-metric"><span>Revenue</span><strong>${fmt(entryRevenue)}</strong><small>${e.raffle_entry_cost_cents ? "Paid entries" : "Free raffle"}</small></div>
+            <div class="em-metric"><span>Prizes</span><strong>${totalPrizes || "\u2014"}</strong><small>${categories.length} group${categories.length === 1 ? "" : "s"}</small></div>
+            <div class="em-metric"><span>Drawn</span><strong>${winnersDrawn}</strong><small>${drawPct}% complete</small></div>
+        </div>
+
+        ${nextDrawHtml}
+
+        <div class="em-money-layout">
+            <div>
+                ${categories.length ? `<div class="em-op-grid" style="grid-template-columns:1fr;margin-bottom:12px">${categoryHtml}</div>` : ""}
+                <div class="em-card">
+                    <div class="em-section-head"><div><h3 class="em-section-title">Winners <span class="text-gray-400 font-normal">\xB7 ${winnersDrawn}${totalPrizes ? "/" + totalPrizes : ""}</span></h3><p class="em-section-sub">Draw results and pending prize choices.</p></div></div>
+                    ${winnerRows}
+                    ${allDrawn ? `<p class="text-xs text-emerald-600 font-semibold mt-3">All winners drawn \u2713</p>` : `<p class="text-xs text-gray-400 mt-3">Draws follow category sort order, starting with the smallest/lower-sort categories.</p>`}
+                </div>
+            </div>
+
+            <div class="em-card">
+                <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving the draw.</p></div></div>
+                <div class="em-money-row"><span>Type</span><strong>${esc7(e.raffle_type || "digital")}</strong></div>
+                <div class="em-money-row"><span>Draw trigger</span><strong>${esc7(e.raffle_draw_trigger || "manual")}</strong></div>
+                <div class="em-money-row"><span>Entry cost</span><strong>${e.raffle_entry_cost_cents ? fmt(e.raffle_entry_cost_cents) : "Free"}</strong></div>
+                <div style="margin:12px 0;padding:12px;border:1px solid #eef2ff;border-radius:12px;background:#f8fafc">
+                    <label for="emRaffleEntryPrice" style="display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Raffle entry price</label>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <span style="font-size:13px;font-weight:800;color:#475569">$</span>
+                        <input id="emRaffleEntryPrice" class="em-input" type="number" min="0" max="500" step="0.01" value="${esc7(raffleEntryPriceDollars)}" ${paidEventRaffleIncluded ? "disabled" : ""} style="flex:1;min-width:0">
+                        <button id="emRafflePriceSave" type="button" class="em-btn-primary" ${paidEventRaffleIncluded ? "disabled" : ""}>Save</button>
+                    </div>
+                    <p id="emRafflePriceStatus" class="text-xs text-gray-400 mt-2">${paidEventRaffleIncluded ? "Paid RSVP events include raffle entry with the RSVP, so separate raffle pricing is not used." : "Set 0 for a free raffle. Changes apply to future raffle checkouts only."}</p>
+                </div>
+                <div class="em-money-row"><span>Member entries</span><strong>${memberEntries.length}</strong></div>
+                <div class="em-money-row"><span>Guest entries</span><strong>${guestEntries.length}</strong></div>
+            </div>
+
+            ${prizeSetupHtml}
+
+            <div class="em-card mt-3">
+                <div class="em-section-head"><div><h3 class="em-section-title">Entries <span class="text-gray-400 font-normal">\xB7 ${eligibleEntries.length}</span></h3><p class="em-section-sub">Remove accidental or test raffle entries without deleting the event.</p></div></div>
+                ${entryRows}
+            </div>
+        </div>
+    `;
+  }
+  function wireRaffle() {
+    const STATE3 = api15().getState?.() || {};
+    const drawBtn = document.getElementById("emRaffleDrawBtn");
+    if (drawBtn) {
+      drawBtn.onclick = () => window.evtOpenRaffleDraw?.(STATE3.eventId, STATE3.event);
     }
-    function wireRaffle() {
-      const STATE = api7().getState?.() || {};
-      const drawBtn = document.getElementById("emRaffleDrawBtn");
-      if (drawBtn) {
-        drawBtn.onclick = () => window.evtOpenRaffleDraw?.(STATE.eventId, STATE.event);
-      }
-      document.getElementById("emSheetContent")?.querySelectorAll("[data-raffle-assign-choice]").forEach((btn) => {
-        btn.onclick = () => assignWinnerChoice(btn.dataset.winnerId);
+    document.getElementById("emSheetContent")?.querySelectorAll("[data-raffle-assign-choice]").forEach((btn) => {
+      btn.onclick = () => assignWinnerChoice(btn.dataset.winnerId);
+    });
+    document.getElementById("emSheetContent")?.querySelectorAll("[data-remove-raffle-entry]").forEach((btn) => {
+      btn.onclick = () => removeRaffleEntry(btn);
+    });
+    document.getElementById("emRafflePriceSave")?.addEventListener("click", saveRaffleEntryPrice);
+    document.getElementById("emRafflePrizeSave")?.addEventListener("click", () => saveRafflePrizeSetup());
+    document.querySelector("[data-em-raffle-add-category]")?.addEventListener("click", () => saveRafflePrizeSetup({ addCategory: true }));
+    document.querySelector("[data-em-raffle-add-item]")?.addEventListener("click", () => saveRafflePrizeSetup({ addItem: true }));
+    document.querySelectorAll("[data-em-raffle-remove-category]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const label = btn.dataset.categoryLabel || "this category";
+        if (confirm(`Remove ${label}? Prize items in this category will move to the first remaining category.`)) {
+          saveRafflePrizeSetup({ removeCategoryId: btn.dataset.emRaffleRemoveCategory });
+        }
       });
-      document.getElementById("emSheetContent")?.querySelectorAll("[data-remove-raffle-entry]").forEach((btn) => {
-        btn.onclick = () => removeRaffleEntry(btn);
+    });
+    document.querySelectorAll("[data-em-raffle-remove-item]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const label = btn.dataset.itemLabel || "this prize";
+        if (confirm(`Remove ${label} from the raffle prize setup? Existing drawn winner records are not deleted.`)) {
+          saveRafflePrizeSetup({ removeItemId: btn.dataset.emRaffleRemoveItem });
+        }
       });
-      document.getElementById("emRafflePriceSave")?.addEventListener("click", saveRaffleEntryPrice);
-      document.getElementById("emRafflePrizeSave")?.addEventListener("click", () => saveRafflePrizeSetup());
-      document.querySelector("[data-em-raffle-add-category]")?.addEventListener("click", () => saveRafflePrizeSetup({ addCategory: true }));
-      document.querySelector("[data-em-raffle-add-item]")?.addEventListener("click", () => saveRafflePrizeSetup({ addItem: true }));
-      document.querySelectorAll("[data-em-raffle-remove-category]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const label = btn.dataset.categoryLabel || "this category";
-          if (confirm(`Remove ${label}? Prize items in this category will move to the first remaining category.`)) {
-            saveRafflePrizeSetup({ removeCategoryId: btn.dataset.emRaffleRemoveCategory });
-          }
-        });
-      });
-      document.querySelectorAll("[data-em-raffle-remove-item]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const label = btn.dataset.itemLabel || "this prize";
-          if (confirm(`Remove ${label} from the raffle prize setup? Existing drawn winner records are not deleted.`)) {
-            saveRafflePrizeSetup({ removeItemId: btn.dataset.emRaffleRemoveItem });
-          }
-        });
-      });
-      wireRafflePrizeImages();
+    });
+    wireRafflePrizeImages();
+  }
+  function rafflePrizeSetupHtml(config, winners = []) {
+    const STATE3 = api15().getState?.() || {};
+    const model = window.EventsRaffleModel;
+    if (!model) {
+      return `<div class="em-card mt-3"><div class="em-section-head"><div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Raffle editor unavailable because the raffle model helper did not load.</p></div></div></div>`;
     }
-    function rafflePrizeSetupHtml(config, winners = []) {
-      const STATE = api7().getState?.() || {};
-      const model = window.EventsRaffleModel;
-      if (!model) {
-        return `<div class="em-card mt-3"><div class="em-section-head"><div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Raffle editor unavailable because the raffle model helper did not load.</p></div></div></div>`;
-      }
-      const normalized = model.normalizeConfig(config || []);
-      const categories = model.getOrderedCategories(normalized);
-      const items = normalized.items || [];
-      const validation = model.validateConfig(normalized);
-      const categoryOptions = categories.map((category) => `<option value="${esc(category.id)}">${esc(category.label)}</option>`).join("");
-      const usedPrizeIds = new Set((winners || []).map((winner) => winner.prize_id).filter(Boolean));
-      const drawModeOptions = (selected) => [
-        ["specific_item", "Specific items"],
-        ["random_item", "Random item in category"],
-        ["winner_choice", "Winner chooses later"]
-      ].map(([value, label]) => `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`).join("");
-      const categoryRows = categories.length ? categories.map((category, index) => `
-            <div class="em-raffle-edit-row" data-em-raffle-category-row="${esc(category.id)}" data-sort-order="${(index + 1) * 10}">
+    const normalized = model.normalizeConfig(config || []);
+    const categories = model.getOrderedCategories(normalized);
+    const items = normalized.items || [];
+    const validation = model.validateConfig(normalized);
+    const categoryOptions = categories.map((category) => `<option value="${esc7(category.id)}">${esc7(category.label)}</option>`).join("");
+    const usedPrizeIds = new Set((winners || []).map((winner) => winner.prize_id).filter(Boolean));
+    const drawModeOptions = (selected) => [
+      ["specific_item", "Specific items"],
+      ["random_item", "Random item in category"],
+      ["winner_choice", "Winner chooses later"]
+    ].map(([value, label]) => `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`).join("");
+    const categoryRows = categories.length ? categories.map((category, index) => `
+        <div class="em-raffle-edit-row" data-em-raffle-category-row="${esc7(category.id)}" data-sort-order="${(index + 1) * 10}">
+            <div>
+                <label class="em-raffle-edit-label">Category</label>
+                <input class="em-input" data-em-raffle-category-field="label" value="${esc7(category.label)}" maxlength="80">
+            </div>
+            <div>
+                <label class="em-raffle-edit-label">Draw mode</label>
+                <select class="em-input" data-em-raffle-category-field="draw_mode">${drawModeOptions(category.draw_mode)}</select>
+            </div>
+            <div>
+                <label class="em-raffle-edit-label">Winners</label>
+                <input class="em-input" type="number" min="0" step="1" data-em-raffle-category-field="winner_count" value="${category.winner_count ?? ""}">
+            </div>
+            <button type="button" class="em-btn-ghost" data-em-raffle-remove-category="${esc7(category.id)}" data-category-label="${esc7(category.label)}" ${categories.length <= 1 ? "disabled" : ""}>Remove</button>
+        </div>
+    `).join("") : `<p class="text-xs text-gray-400 italic py-2">No prize categories yet.</p>`;
+    const itemRows = items.length ? items.map((item, index) => {
+      const previewUrl = prizeImagePreviews[item.id] || item.image_url || "";
+      const pendingName = prizeImageFiles[item.id]?.name || "";
+      return `
+        <div class="em-raffle-item-wrap" data-em-raffle-item-row="${esc7(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${esc7(item.image_url || "")}">
+            <div class="em-raffle-edit-row em-raffle-item-row">
+                <div>
+                    <label class="em-raffle-edit-label">Emoji</label>
+                    <input class="em-input" data-em-raffle-item-field="emoji" value="${esc7(item.emoji || "\u{1F381}")}" maxlength="4">
+                </div>
+                <div>
+                    <label class="em-raffle-edit-label">Prize</label>
+                    <input class="em-input" data-em-raffle-item-field="name" value="${esc7(item.name)}" maxlength="120">
+                </div>
                 <div>
                     <label class="em-raffle-edit-label">Category</label>
-                    <input class="em-input" data-em-raffle-category-field="label" value="${esc(category.label)}" maxlength="80">
+                    <select class="em-input" data-em-raffle-item-field="category_id">
+                        ${categories.map((category) => `<option value="${esc7(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${esc7(category.label)}</option>`).join("")}
+                    </select>
                 </div>
                 <div>
-                    <label class="em-raffle-edit-label">Draw mode</label>
-                    <select class="em-input" data-em-raffle-category-field="draw_mode">${drawModeOptions(category.draw_mode)}</select>
+                    <label class="em-raffle-edit-label">Qty</label>
+                    <input class="em-input" type="number" min="1" step="1" data-em-raffle-item-field="quantity" value="${item.quantity || 1}">
                 </div>
-                <div>
-                    <label class="em-raffle-edit-label">Winners</label>
-                    <input class="em-input" type="number" min="0" step="1" data-em-raffle-category-field="winner_count" value="${category.winner_count ?? ""}">
-                </div>
-                <button type="button" class="em-btn-ghost" data-em-raffle-remove-category="${esc(category.id)}" data-category-label="${esc(category.label)}" ${categories.length <= 1 ? "disabled" : ""}>Remove</button>
+                <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${esc7(item.id)}" data-item-label="${esc7(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ""}>Remove</button>
             </div>
-        `).join("") : `<p class="text-xs text-gray-400 italic py-2">No prize categories yet.</p>`;
-      const itemRows = items.length ? items.map((item, index) => {
-        const previewUrl = prizeImagePreviews[item.id] || item.image_url || "";
-        const pendingName = prizeImageFiles[item.id]?.name || "";
-        return `
-            <div class="em-raffle-item-wrap" data-em-raffle-item-row="${esc(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${esc(item.image_url || "")}">
-                <div class="em-raffle-edit-row em-raffle-item-row">
-                    <div>
-                        <label class="em-raffle-edit-label">Emoji</label>
-                        <input class="em-input" data-em-raffle-item-field="emoji" value="${esc(item.emoji || "\u{1F381}")}" maxlength="4">
-                    </div>
-                    <div>
-                        <label class="em-raffle-edit-label">Prize</label>
-                        <input class="em-input" data-em-raffle-item-field="name" value="${esc(item.name)}" maxlength="120">
-                    </div>
-                    <div>
-                        <label class="em-raffle-edit-label">Category</label>
-                        <select class="em-input" data-em-raffle-item-field="category_id">
-                            ${categories.map((category) => `<option value="${esc(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${esc(category.label)}</option>`).join("")}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="em-raffle-edit-label">Qty</label>
-                        <input class="em-input" type="number" min="1" step="1" data-em-raffle-item-field="quantity" value="${item.quantity || 1}">
-                    </div>
-                    <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${esc(item.id)}" data-item-label="${esc(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ""}>Remove</button>
+            <div class="em-prize-img-row">
+                <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-em-prize-file="${esc7(item.id)}">
+                <div class="em-prize-img-drop" data-em-prize-drop="${esc7(item.id)}" title="Click or drag an image here">
+                    ${previewUrl ? `<img src="${esc7(previewUrl)}" alt="Prize image">` : "<span>\u{1F4F7}</span>"}
                 </div>
-                <div class="em-prize-img-row">
-                    <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-em-prize-file="${esc(item.id)}">
-                    <div class="em-prize-img-drop" data-em-prize-drop="${esc(item.id)}" title="Click or drag an image here">
-                        ${previewUrl ? `<img src="${esc(previewUrl)}" alt="Prize image">` : "<span>\u{1F4F7}</span>"}
-                    </div>
-                    <div class="em-prize-img-copy" data-em-prize-copy="${esc(item.id)}">
-                        <strong>${pendingName ? esc(pendingName) : previewUrl ? "Image set" : "Prize image"}</strong>
-                        <span>${previewUrl ? "Click or drop to replace. Save prize setup to keep changes." : "Click or drag a PNG, JPG, or WebP image here."}</span>
-                    </div>
-                    ${previewUrl ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-em-prize-clear="${esc(item.id)}">Remove image</button>` : ""}
+                <div class="em-prize-img-copy" data-em-prize-copy="${esc7(item.id)}">
+                    <strong>${pendingName ? esc7(pendingName) : previewUrl ? "Image set" : "Prize image"}</strong>
+                    <span>${previewUrl ? "Click or drop to replace. Save prize setup to keep changes." : "Click or drag a PNG, JPG, or WebP image here."}</span>
                 </div>
+                ${previewUrl ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-em-prize-clear="${esc7(item.id)}">Remove image</button>` : ""}
             </div>
-        `;
-      }).join("") : `<p class="text-xs text-gray-400 italic py-2">No prize items yet. Add a prize before drawing winners.</p>`;
-      return `
-            <div class="em-card mt-3">
-                <style>
-                    .em-raffle-edit-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 88px auto; gap:8px; align-items:end; padding:10px 0; border-top:1px solid #f1f5f9; }
-                    .em-raffle-edit-row:first-of-type { border-top:0; padding-top:0; }
-                    .em-raffle-item-wrap { padding:10px 0; border-top:1px solid #f1f5f9; }
-                    .em-raffle-item-wrap:first-of-type { border-top:0; padding-top:0; }
-                    .em-raffle-item-wrap .em-raffle-edit-row { border-top:0; padding:0; }
-                    .em-raffle-item-row { grid-template-columns:62px minmax(0,1.2fr) minmax(0,.9fr) 70px auto; }
-                    .em-raffle-edit-label { display:block; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#94a3b8; margin-bottom:5px; }
-                    .em-prize-img-row { margin-top:10px; display:flex; align-items:center; gap:9px; }
-                    .em-prize-img-drop { width:72px; height:72px; border:2px dashed #d1d5db; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer; color:#9ca3af; background:#fff; flex-shrink:0; }
-                    .em-prize-img-drop:hover, .em-prize-img-drop.em-drag-over { border-color:#818cf8; background:#f5f3ff; color:#4f46e5; }
-                    .em-prize-img-drop img { width:100%; height:100%; object-fit:cover; display:block; }
-                    .em-prize-img-drop span { font-size:19px; }
-                    .em-prize-img-copy { flex:1; min-width:0; font-size:11px; color:#6b7280; line-height:1.35; }
-                    .em-prize-img-copy strong { display:block; color:#374151; font-size:12px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-                    @media(max-width:700px){ .em-raffle-edit-row, .em-raffle-item-row { grid-template-columns:1fr; } }
-                    @media(max-width:520px){ .em-prize-img-row { align-items:flex-start; flex-wrap:wrap; } .em-prize-img-copy { flex-basis:calc(100% - 82px); } }
-                </style>
-                <div class="em-section-head">
-                    <div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Add, edit, or remove raffle prizes after event creation. Existing drawn winners stay in the winner history.</p></div>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0">
-                    <p class="em-raffle-edit-label" style="margin:0">Categories</p>
-                    <button type="button" class="em-btn-ghost" data-em-raffle-add-category>Add category</button>
-                </div>
-                ${categoryRows}
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 8px;border-top:1px solid #f1f5f9;padding-top:12px">
-                    <p class="em-raffle-edit-label" style="margin:0">Prize items</p>
-                    <button type="button" class="em-btn-ghost" data-em-raffle-add-item>Add prize</button>
-                </div>
-                ${itemRows}
-                ${validation.valid ? "" : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(esc).join("<br>")}</div>`}
-                <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
-                    <button type="button" id="emRafflePrizeSave" class="em-btn-primary">Save prize setup</button>
-                    <span id="emRafflePrizeStatus" class="text-xs text-gray-400">${categories.length} categor${categories.length === 1 ? "y" : "ies"} \xB7 ${items.length} item${items.length === 1 ? "" : "s"}</span>
-                </div>
+        </div>
+    `;
+    }).join("") : `<p class="text-xs text-gray-400 italic py-2">No prize items yet. Add a prize before drawing winners.</p>`;
+    return `
+        <div class="em-card mt-3">
+            <style>
+                .em-raffle-edit-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 88px auto; gap:8px; align-items:end; padding:10px 0; border-top:1px solid #f1f5f9; }
+                .em-raffle-edit-row:first-of-type { border-top:0; padding-top:0; }
+                .em-raffle-item-wrap { padding:10px 0; border-top:1px solid #f1f5f9; }
+                .em-raffle-item-wrap:first-of-type { border-top:0; padding-top:0; }
+                .em-raffle-item-wrap .em-raffle-edit-row { border-top:0; padding:0; }
+                .em-raffle-item-row { grid-template-columns:62px minmax(0,1.2fr) minmax(0,.9fr) 70px auto; }
+                .em-raffle-edit-label { display:block; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#94a3b8; margin-bottom:5px; }
+                .em-prize-img-row { margin-top:10px; display:flex; align-items:center; gap:9px; }
+                .em-prize-img-drop { width:72px; height:72px; border:2px dashed #d1d5db; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer; color:#9ca3af; background:#fff; flex-shrink:0; }
+                .em-prize-img-drop:hover, .em-prize-img-drop.em-drag-over { border-color:#818cf8; background:#f5f3ff; color:#4f46e5; }
+                .em-prize-img-drop img { width:100%; height:100%; object-fit:cover; display:block; }
+                .em-prize-img-drop span { font-size:19px; }
+                .em-prize-img-copy { flex:1; min-width:0; font-size:11px; color:#6b7280; line-height:1.35; }
+                .em-prize-img-copy strong { display:block; color:#374151; font-size:12px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+                @media(max-width:700px){ .em-raffle-edit-row, .em-raffle-item-row { grid-template-columns:1fr; } }
+                @media(max-width:520px){ .em-prize-img-row { align-items:flex-start; flex-wrap:wrap; } .em-prize-img-copy { flex-basis:calc(100% - 82px); } }
+            </style>
+            <div class="em-section-head">
+                <div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Add, edit, or remove raffle prizes after event creation. Existing drawn winners stay in the winner history.</p></div>
             </div>
-        `;
-    }
-    function collectRafflePrizeConfigFromDom() {
-      const STATE = api7().getState?.() || {};
-      const model = window.EventsRaffleModel;
-      if (!model) throw new Error("Raffle model helper is not loaded.");
-      const categoryRows = Array.from(document.querySelectorAll("[data-em-raffle-category-row]"));
-      const itemRows = Array.from(document.querySelectorAll("[data-em-raffle-item-row]"));
-      if (!categoryRows.length && !itemRows.length) return model.normalizeConfig(STATE.event?.raffle_prizes || []);
-      const categories = categoryRows.map((row, index) => {
-        const field = (name) => row.querySelector(`[data-em-raffle-category-field="${name}"]`)?.value;
-        return model.createCategory({
-          id: row.dataset.emRaffleCategoryRow,
-          label: field("label") || "Prize Tier",
-          draw_mode: field("draw_mode") || "specific_item",
-          winner_count: Math.max(0, Math.floor(Number(field("winner_count")) || 0)),
-          sort_order: (index + 1) * 10
-        });
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0">
+                <p class="em-raffle-edit-label" style="margin:0">Categories</p>
+                <button type="button" class="em-btn-ghost" data-em-raffle-add-category>Add category</button>
+            </div>
+            ${categoryRows}
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 8px;border-top:1px solid #f1f5f9;padding-top:12px">
+                <p class="em-raffle-edit-label" style="margin:0">Prize items</p>
+                <button type="button" class="em-btn-ghost" data-em-raffle-add-item>Add prize</button>
+            </div>
+            ${itemRows}
+            ${validation.valid ? "" : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(esc7).join("<br>")}</div>`}
+            <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+                <button type="button" id="emRafflePrizeSave" class="em-btn-primary">Save prize setup</button>
+                <span id="emRafflePrizeStatus" class="text-xs text-gray-400">${categories.length} categor${categories.length === 1 ? "y" : "ies"} \xB7 ${items.length} item${items.length === 1 ? "" : "s"}</span>
+            </div>
+        </div>
+    `;
+  }
+  function collectRafflePrizeConfigFromDom() {
+    const STATE3 = api15().getState?.() || {};
+    const model = window.EventsRaffleModel;
+    if (!model) throw new Error("Raffle model helper is not loaded.");
+    const categoryRows = Array.from(document.querySelectorAll("[data-em-raffle-category-row]"));
+    const itemRows = Array.from(document.querySelectorAll("[data-em-raffle-item-row]"));
+    if (!categoryRows.length && !itemRows.length) return model.normalizeConfig(STATE3.event?.raffle_prizes || []);
+    const categories = categoryRows.map((row, index) => {
+      const field = (name) => row.querySelector(`[data-em-raffle-category-field="${name}"]`)?.value;
+      return model.createCategory({
+        id: row.dataset.emRaffleCategoryRow,
+        label: field("label") || "Prize Tier",
+        draw_mode: field("draw_mode") || "specific_item",
+        winner_count: Math.max(0, Math.floor(Number(field("winner_count")) || 0)),
+        sort_order: (index + 1) * 10
       });
-      const fallbackCategory = categories[0]?.id || "general";
-      const categoryIds = new Set(categories.map((category) => category.id));
-      const items = itemRows.map((row, index) => {
-        const field = (name) => row.querySelector(`[data-em-raffle-item-field="${name}"]`)?.value;
-        const categoryId = categoryIds.has(field("category_id")) ? field("category_id") : fallbackCategory;
-        return model.createItem({
-          id: row.dataset.emRaffleItemRow,
-          emoji: field("emoji") || model.DEFAULT_EMOJI || "\u{1F381}",
-          name: field("name") || "Prize item",
-          category_id: categoryId,
-          quantity: Math.max(1, Math.floor(Number(field("quantity")) || 1)),
-          image_url: row.dataset.imageUrl || null,
-          sort_order: (index + 1) * 10
-        });
+    });
+    const fallbackCategory = categories[0]?.id || "general";
+    const categoryIds = new Set(categories.map((category) => category.id));
+    const items = itemRows.map((row, index) => {
+      const field = (name) => row.querySelector(`[data-em-raffle-item-field="${name}"]`)?.value;
+      const categoryId = categoryIds.has(field("category_id")) ? field("category_id") : fallbackCategory;
+      return model.createItem({
+        id: row.dataset.emRaffleItemRow,
+        emoji: field("emoji") || model.DEFAULT_EMOJI || "\u{1F381}",
+        name: field("name") || "Prize item",
+        category_id: categoryId,
+        quantity: Math.max(1, Math.floor(Number(field("quantity")) || 1)),
+        image_url: row.dataset.imageUrl || null,
+        sort_order: (index + 1) * 10
       });
-      return model.normalizeConfig({ version: 2, categories, items });
-    }
-    function wireRafflePrizeImages() {
-      const STATE = api7().getState?.() || {};
-      document.querySelectorAll("[data-em-prize-drop]").forEach((zone) => {
-        const itemId = zone.dataset.emPrizeDrop;
-        const fileInput = document.querySelector(`[data-em-prize-file="${CSS.escape(itemId)}"]`);
-        if (!itemId || !fileInput) return;
-        zone.addEventListener("click", () => fileInput.click());
-        zone.addEventListener("dragover", (event) => {
-          event.preventDefault();
-          zone.classList.add("em-drag-over");
-        });
-        zone.addEventListener("dragleave", (event) => {
-          if (!zone.contains(event.relatedTarget)) zone.classList.remove("em-drag-over");
-        });
-        zone.addEventListener("drop", (event) => {
-          event.preventDefault();
-          zone.classList.remove("em-drag-over");
-          const file = event.dataTransfer?.files?.[0];
-          if (file) setRafflePrizeImage(itemId, file);
-        });
-        fileInput.addEventListener("change", () => {
-          const file = fileInput.files?.[0];
-          if (file) setRafflePrizeImage(itemId, file);
-        });
+    });
+    return model.normalizeConfig({ version: 2, categories, items });
+  }
+  function wireRafflePrizeImages() {
+    const STATE3 = api15().getState?.() || {};
+    document.querySelectorAll("[data-em-prize-drop]").forEach((zone) => {
+      const itemId = zone.dataset.emPrizeDrop;
+      const fileInput = document.querySelector(`[data-em-prize-file="${CSS.escape(itemId)}"]`);
+      if (!itemId || !fileInput) return;
+      zone.addEventListener("click", () => fileInput.click());
+      zone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        zone.classList.add("em-drag-over");
       });
-      document.querySelectorAll("[data-em-prize-clear]").forEach((btn) => {
-        btn.addEventListener("click", () => clearRafflePrizeImage(btn.dataset.emPrizeClear));
+      zone.addEventListener("dragleave", (event) => {
+        if (!zone.contains(event.relatedTarget)) zone.classList.remove("em-drag-over");
       });
+      zone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        zone.classList.remove("em-drag-over");
+        const file = event.dataTransfer?.files?.[0];
+        if (file) setRafflePrizeImage(itemId, file);
+      });
+      fileInput.addEventListener("change", () => {
+        const file = fileInput.files?.[0];
+        if (file) setRafflePrizeImage(itemId, file);
+      });
+    });
+    document.querySelectorAll("[data-em-prize-clear]").forEach((btn) => {
+      btn.addEventListener("click", () => clearRafflePrizeImage(btn.dataset.emPrizeClear));
+    });
+  }
+  function setRafflePrizeImage(itemId, file) {
+    const STATE3 = api15().getState?.() || {};
+    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+      alert("Please use a PNG, JPG, or WebP image.");
+      return;
     }
-    function setRafflePrizeImage(itemId, file) {
-      const STATE = api7().getState?.() || {};
-      if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
-        alert("Please use a PNG, JPG, or WebP image.");
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Image must be under 5 MB.");
-        return;
-      }
-      prizeImageFiles[itemId] = file;
-      const reader = new FileReader();
-      reader.onload = () => {
-        prizeImagePreviews[itemId] = reader.result;
-        const zone = document.querySelector(`[data-em-prize-drop="${CSS.escape(itemId)}"]`);
-        if (zone) zone.innerHTML = `<img src="${esc(reader.result)}" alt="Prize image">`;
-        const copy = document.querySelector(`[data-em-prize-copy="${CSS.escape(itemId)}"]`);
-        if (copy) copy.innerHTML = `<strong>${esc(file.name)}</strong><span>Ready to upload. Save prize setup to keep this image.</span>`;
-        const status = document.getElementById("emRafflePrizeStatus");
-        if (status) status.textContent = "Image selected. Save prize setup to upload it.";
-      };
-      reader.readAsDataURL(file);
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be under 5 MB.");
+      return;
     }
-    function clearRafflePrizeImage(itemId) {
-      const STATE = api7().getState?.() || {};
-      if (!itemId) return;
-      delete prizeImageFiles[itemId];
-      delete prizeImagePreviews[itemId];
-      const row = document.querySelector(`[data-em-raffle-item-row="${CSS.escape(itemId)}"]`);
-      if (row) row.dataset.imageUrl = "";
+    prizeImageFiles[itemId] = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      prizeImagePreviews[itemId] = reader.result;
       const zone = document.querySelector(`[data-em-prize-drop="${CSS.escape(itemId)}"]`);
-      if (zone) zone.innerHTML = "<span>\u{1F4F7}</span>";
+      if (zone) zone.innerHTML = `<img src="${esc7(reader.result)}" alt="Prize image">`;
       const copy = document.querySelector(`[data-em-prize-copy="${CSS.escape(itemId)}"]`);
-      if (copy) copy.innerHTML = "<strong>Prize image</strong><span>Image removed. Save prize setup to keep this change.</span>";
-      const btn = document.querySelector(`[data-em-prize-clear="${CSS.escape(itemId)}"]`);
-      if (btn) btn.remove();
+      if (copy) copy.innerHTML = `<strong>${esc7(file.name)}</strong><span>Ready to upload. Save prize setup to keep this image.</span>`;
       const status = document.getElementById("emRafflePrizeStatus");
-      if (status) status.textContent = "Image removed. Save prize setup to keep this change.";
-    }
-    async function uploadPendingRafflePrizeImages(config) {
-      const STATE = api7().getState?.() || {};
-      const uploads = Object.entries(prizeImageFiles);
-      if (!uploads.length) return config;
-      const slug = safeFilename(STATE.event?.slug || STATE.event?.title || STATE.eventId || "event");
-      for (const [itemId, file] of uploads) {
-        const item = (config.items || []).find((entry) => entry.id === itemId);
-        if (!item) continue;
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-        const path = `${slug}/${itemId}-${Date.now()}.${ext}`;
-        const up = await supabaseClient.storage.from("event-raffle-prizes").upload(path, file, { contentType: file.type || "image/jpeg" });
-        if (up.error) throw new Error(`Prize image upload failed: ${up.error.message}`);
-        item.image_url = supabaseClient.storage.from("event-raffle-prizes").getPublicUrl(path).data.publicUrl;
-      }
-      clearPrizeImageState();
-      return config;
-    }
-    async function saveRafflePrizeSetup(action = {}) {
-      const STATE = api7().getState?.() || {};
-      const model = window.EventsRaffleModel;
-      const status = document.getElementById("emRafflePrizeStatus");
-      const saveBtn = document.getElementById("emRafflePrizeSave");
-      try {
-        if (!model) throw new Error("Raffle model helper is not loaded.");
-        if (saveBtn) {
-          saveBtn.disabled = true;
-          saveBtn.textContent = "Saving...";
-        }
-        if (status) status.textContent = Object.keys(prizeImageFiles).length ? "Uploading prize images..." : "Saving prize setup...";
-        let config = collectRafflePrizeConfigFromDom();
-        if (action.addCategory) {
-          config.categories.push(model.createCategory({ label: "New Tier", sort_order: (config.categories.length + 1) * 10, winner_count: 1 }));
-        }
-        if (action.addItem) {
-          if (!config.categories.length) config.categories.push(model.createCategory({ id: "general", label: "Raffle Prizes", sort_order: 10, winner_count: 1 }));
-          const category = config.categories[0];
-          config.items.push(model.createItem({ category_id: category.id, name: "New prize item", sort_order: (config.items.length + 1) * 10 }));
-          category.winner_count = Math.max(Number(category.winner_count || 0), categoryPrizeQuantity(config, category.id));
-        }
-        if (action.removeCategoryId) {
-          if (config.categories.length <= 1) throw new Error("Keep at least one prize category.");
-          config.categories = config.categories.filter((category) => category.id !== action.removeCategoryId);
-          const fallbackCategoryId = config.categories[0]?.id || "general";
-          config.items.forEach((item) => {
-            if (item.category_id === action.removeCategoryId) item.category_id = fallbackCategoryId;
-          });
-        }
-        if (action.removeItemId) {
-          const alreadyDrawn = (STATE.tabData.raffle?.winners || []).some((winner) => winner.prize_id === action.removeItemId);
-          if (alreadyDrawn) throw new Error("This prize is already assigned to a winner and cannot be removed from setup.");
-          config.items = config.items.filter((item) => item.id !== action.removeItemId);
-          delete prizeImageFiles[action.removeItemId];
-          delete prizeImagePreviews[action.removeItemId];
-          capRaffleWinnerCounts(config);
-        }
-        config = model.normalizeConfig(config);
-        config = await uploadPendingRafflePrizeImages(config);
-        const winnerCount = model.getTotalWinnerCount(config);
-        if (status) status.textContent = "Saving prize setup...";
-        const { error } = await supabaseClient.from("events").update({ raffle_prizes: config, raffle_winner_count: winnerCount }).eq("id", STATE.eventId);
-        if (error) throw error;
-        STATE.event.raffle_prizes = config;
-        STATE.event.raffle_winner_count = winnerCount;
-        await api7().refreshEventManager?.("raffle");
-      } catch (err) {
-        if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
-        else alert("Prize setup save failed: " + (err.message || "unknown error"));
-        if (saveBtn) {
-          saveBtn.disabled = false;
-          saveBtn.textContent = "Save prize setup";
-        }
-      }
-    }
-    function categoryPrizeQuantity(config, categoryId) {
-      const STATE = api7().getState?.() || {};
-      return (config.items || []).filter((item) => item.category_id === categoryId).reduce((sum, item) => sum + Math.max(1, Number(item.quantity || 1)), 0);
-    }
-    function capRaffleWinnerCounts(config) {
-      const STATE = api7().getState?.() || {};
-      (config.categories || []).forEach((category) => {
-        const quantity = categoryPrizeQuantity(config, category.id);
-        category.winner_count = Math.min(Number(category.winner_count || 0), quantity);
-      });
-    }
-    async function saveRaffleEntryPrice() {
-      const STATE = api7().getState?.() || {};
-      const input = document.getElementById("emRaffleEntryPrice");
-      const btn = document.getElementById("emRafflePriceSave");
-      const status = document.getElementById("emRafflePriceStatus");
-      const dollars = Number(input?.value || 0);
-      if (!Number.isFinite(dollars) || dollars < 0) {
-        if (status) status.textContent = "Enter a price of 0 or higher.";
-        input?.focus();
-        return;
-      }
-      if (dollars > 500) {
-        if (status) status.textContent = "Raffle entry price cannot be more than $500.";
-        input?.focus();
-        return;
-      }
-      const cents = Math.round(dollars * 100);
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = "Saving...";
-      }
-      if (status) status.textContent = "Saving raffle price...";
-      try {
-        const { error } = await supabaseClient.from("events").update({ raffle_entry_cost_cents: cents }).eq("id", STATE.eventId);
-        if (error) throw error;
-        STATE.event.raffle_entry_cost_cents = cents;
-        await api7().refreshEventManager?.("raffle");
-      } catch (err) {
-        if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = "Save";
-        }
-      }
-    }
-    async function removeRaffleEntry(btn) {
-      const STATE = api7().getState?.() || {};
-      const name = btn.dataset.name || "this entry";
-      const isPaid = btn.dataset.paid === "1";
-      const warning = isPaid ? "\n\nThis was marked paid. Removing the record does not refund Stripe payments." : "";
-      if (!confirm(`Remove raffle entry for ${name}? Any winner record for this entry will also be removed.${warning}`)) return;
-      btn.disabled = true;
-      btn.textContent = "Removing...";
-      try {
-        await callEdgeFunction("manage-event-participation", {
-          action: "remove_raffle_entry",
-          event_id: STATE.eventId,
-          entry_id: btn.dataset.removeRaffleEntry
-        });
-        STATE.tabData.raffle = null;
-        await api7().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
-        api7().notifyParent?.("updated", STATE.eventId);
-      } catch (err) {
-        alert("Raffle entry remove failed: " + (err.message || "unknown error"));
-        STATE.tabData.raffle = null;
-        await api7().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
-      }
-    }
-    function winnerChoiceHtml(winner, config, winners) {
-      const STATE = api7().getState?.() || {};
-      if (winner.selection_status !== "pending_choice") return "";
-      const items = availableChoiceItems(config, winners, winner);
-      if (!items.length) {
-        return `<div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">No unassigned items are available in this category.</div>`;
-      }
-      const options = items.map((item) => `<option value="${esc(item.id)}">${esc(item.emoji || "\u{1F381}")} ${esc(item.name)}${item.quantity > 1 ? ` (${item.quantity} total)` : ""}</option>`).join("");
-      return `
-            <div class="mt-3 flex flex-col sm:flex-row gap-2">
-                <select id="emWinnerChoice_${esc(winner.id)}" class="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-200">
-                    ${options}
-                </select>
-                <button type="button" data-raffle-assign-choice="1" data-winner-id="${esc(winner.id)}" class="rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition">Assign prize</button>
-            </div>
-        `;
-    }
-    function availableChoiceItems(config, winners, currentWinner) {
-      const STATE = api7().getState?.() || {};
-      const items = raffleItems(config, currentWinner.category_id);
-      const used = /* @__PURE__ */ new Map();
-      (winners || []).forEach((winner) => {
-        if (!winner.prize_id || winner.id === currentWinner.id) return;
-        if (winner.selection_status === "pending_choice") return;
-        used.set(winner.prize_id, (used.get(winner.prize_id) || 0) + 1);
-      });
-      return items.filter((item) => (used.get(item.id) || 0) < item.quantity);
-    }
-    async function assignWinnerChoice(winnerId) {
-      const STATE = api7().getState?.() || {};
-      const winner = (STATE.tabData.raffle?.winners || []).find((row) => row.id === winnerId);
-      if (!winner) return;
-      const select = document.getElementById(`emWinnerChoice_${winnerId}`);
-      const itemId = select?.value;
-      if (!itemId) return alert("Choose a prize item first.");
-      const config = raffleConfig(STATE.event);
-      const item = raffleItems(config, winner.category_id).find((row) => row.id === itemId);
-      if (!item) return alert("Prize item is no longer available. Refresh and try again.");
-      const { error } = await supabaseClient.from("event_raffle_winners").update({
-        prize_id: item.id,
-        prize_description: item.name,
-        prize_image_url: item.image_url || null,
-        prize_emoji: item.emoji || window.EventsRaffleModel?.DEFAULT_EMOJI || "\u{1F381}",
-        selection_status: "assigned"
-      }).eq("id", winnerId).eq("event_id", STATE.eventId).eq("selection_status", "pending_choice");
-      if (error) return alert("Prize assignment failed: " + error.message);
-      STATE.tabData.raffle = null;
-      await api7().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
-      document.dispatchEvent(new CustomEvent("events:raffle:drawn", { detail: { eventId: STATE.eventId } }));
-    }
-    function raffleConfig(event) {
-      const STATE = api7().getState?.() || {};
-      if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
-      return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
-    }
-    function raffleCategories(config) {
-      const STATE = api7().getState?.() || {};
-      if (!window.EventsRaffleModel) return [];
-      return window.EventsRaffleModel.getOrderedCategories(config);
-    }
-    function raffleItems(config, categoryId) {
-      const STATE = api7().getState?.() || {};
-      if (!window.EventsRaffleModel) return [];
-      return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
-    }
-    function raffleTotalWinners(config) {
-      const STATE = api7().getState?.() || {};
-      if (!window.EventsRaffleModel) return 0;
-      return window.EventsRaffleModel.getTotalWinnerCount(config);
-    }
-    function raffleDrawQueue(config, winners) {
-      const STATE = api7().getState?.() || {};
-      if (!window.EventsRaffleModel) return [];
-      return window.EventsRaffleModel.getDrawQueue(config, winners || []);
-    }
-    function drawModeLabel(drawMode) {
-      const STATE = api7().getState?.() || {};
-      if (drawMode === "random_item") return "Random prize assigned";
-      if (drawMode === "winner_choice") return "Winner chooses later";
-      return "Specific prize";
-    }
-    function prizeSlotLabel(slot) {
-      const STATE = api7().getState?.() || {};
-      if (!slot) return "";
-      if (slot.prize_name) return slot.prize_name;
-      if (slot.draw_mode === "winner_choice") return `${slot.category_label || "Prize tier"} choice`;
-      return slot.category_label || "Prize";
-    }
-    function winnerBelongsToCategory(winner, category, config) {
-      const STATE = api7().getState?.() || {};
-      if (!winner || !category) return false;
-      if (winner.category_id) return winner.category_id === category.id;
-      if (winner.category_label) return winner.category_label === category.label;
-      const slot = raffleSlotByPlace(config, winner.place);
-      return slot?.category_id === category.id;
-    }
-    function raffleSlotByPlace(config, place) {
-      const STATE = api7().getState?.() || {};
-      if (!window.EventsRaffleModel || place == null) return null;
-      return window.EventsRaffleModel.getDrawQueue(config, []).find((slot) => Number(slot.place) === Number(place)) || null;
-    }
-    function clearPrizeImageState() {
-      Object.keys(prizeImageFiles).forEach((key) => delete prizeImageFiles[key]);
-      Object.keys(prizeImagePreviews).forEach((key) => delete prizeImagePreviews[key]);
-    }
-    function refreshRaffle(eventId2) {
-      const STATE = api7().getState?.() || {};
-      if (eventId2 && eventId2 !== STATE.eventId) return;
-      STATE.tabData.raffle = null;
-      if (STATE.activeTab === "raffle") api7().renderTab?.("raffle");
-    }
-    document.addEventListener("events:raffle:drawn", (evt) => refreshRaffle(evt.detail?.eventId));
-    window.EventsManageRaffle = {
-      loadRaffle,
-      raffleHtml,
-      wireRaffle,
-      clearPrizeImageState,
-      refreshRaffle
+      if (status) status.textContent = "Image selected. Save prize setup to upload it.";
     };
-  })();
+    reader.readAsDataURL(file);
+  }
+  function clearRafflePrizeImage(itemId) {
+    const STATE3 = api15().getState?.() || {};
+    if (!itemId) return;
+    delete prizeImageFiles[itemId];
+    delete prizeImagePreviews[itemId];
+    const row = document.querySelector(`[data-em-raffle-item-row="${CSS.escape(itemId)}"]`);
+    if (row) row.dataset.imageUrl = "";
+    const zone = document.querySelector(`[data-em-prize-drop="${CSS.escape(itemId)}"]`);
+    if (zone) zone.innerHTML = "<span>\u{1F4F7}</span>";
+    const copy = document.querySelector(`[data-em-prize-copy="${CSS.escape(itemId)}"]`);
+    if (copy) copy.innerHTML = "<strong>Prize image</strong><span>Image removed. Save prize setup to keep this change.</span>";
+    const btn = document.querySelector(`[data-em-prize-clear="${CSS.escape(itemId)}"]`);
+    if (btn) btn.remove();
+    const status = document.getElementById("emRafflePrizeStatus");
+    if (status) status.textContent = "Image removed. Save prize setup to keep this change.";
+  }
+  async function uploadPendingRafflePrizeImages(config) {
+    const STATE3 = api15().getState?.() || {};
+    const uploads = Object.entries(prizeImageFiles);
+    if (!uploads.length) return config;
+    const slug = safeFilename2(STATE3.event?.slug || STATE3.event?.title || STATE3.eventId || "event");
+    for (const [itemId, file] of uploads) {
+      const item = (config.items || []).find((entry) => entry.id === itemId);
+      if (!item) continue;
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${slug}/${itemId}-${Date.now()}.${ext}`;
+      const up = await supabaseClient.storage.from("event-raffle-prizes").upload(path, file, { contentType: file.type || "image/jpeg" });
+      if (up.error) throw new Error(`Prize image upload failed: ${up.error.message}`);
+      item.image_url = supabaseClient.storage.from("event-raffle-prizes").getPublicUrl(path).data.publicUrl;
+    }
+    clearPrizeImageState();
+    return config;
+  }
+  async function saveRafflePrizeSetup(action = {}) {
+    const STATE3 = api15().getState?.() || {};
+    const model = window.EventsRaffleModel;
+    const status = document.getElementById("emRafflePrizeStatus");
+    const saveBtn = document.getElementById("emRafflePrizeSave");
+    try {
+      if (!model) throw new Error("Raffle model helper is not loaded.");
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Saving...";
+      }
+      if (status) status.textContent = Object.keys(prizeImageFiles).length ? "Uploading prize images..." : "Saving prize setup...";
+      let config = collectRafflePrizeConfigFromDom();
+      if (action.addCategory) {
+        config.categories.push(model.createCategory({ label: "New Tier", sort_order: (config.categories.length + 1) * 10, winner_count: 1 }));
+      }
+      if (action.addItem) {
+        if (!config.categories.length) config.categories.push(model.createCategory({ id: "general", label: "Raffle Prizes", sort_order: 10, winner_count: 1 }));
+        const category = config.categories[0];
+        config.items.push(model.createItem({ category_id: category.id, name: "New prize item", sort_order: (config.items.length + 1) * 10 }));
+        category.winner_count = Math.max(Number(category.winner_count || 0), categoryPrizeQuantity(config, category.id));
+      }
+      if (action.removeCategoryId) {
+        if (config.categories.length <= 1) throw new Error("Keep at least one prize category.");
+        config.categories = config.categories.filter((category) => category.id !== action.removeCategoryId);
+        const fallbackCategoryId = config.categories[0]?.id || "general";
+        config.items.forEach((item) => {
+          if (item.category_id === action.removeCategoryId) item.category_id = fallbackCategoryId;
+        });
+      }
+      if (action.removeItemId) {
+        const alreadyDrawn = (STATE3.tabData.raffle?.winners || []).some((winner) => winner.prize_id === action.removeItemId);
+        if (alreadyDrawn) throw new Error("This prize is already assigned to a winner and cannot be removed from setup.");
+        config.items = config.items.filter((item) => item.id !== action.removeItemId);
+        delete prizeImageFiles[action.removeItemId];
+        delete prizeImagePreviews[action.removeItemId];
+        capRaffleWinnerCounts(config);
+      }
+      config = model.normalizeConfig(config);
+      config = await uploadPendingRafflePrizeImages(config);
+      const winnerCount = model.getTotalWinnerCount(config);
+      if (status) status.textContent = "Saving prize setup...";
+      const { error } = await supabaseClient.from("events").update({ raffle_prizes: config, raffle_winner_count: winnerCount }).eq("id", STATE3.eventId);
+      if (error) throw error;
+      STATE3.event.raffle_prizes = config;
+      STATE3.event.raffle_winner_count = winnerCount;
+      await api15().refreshEventManager?.("raffle");
+    } catch (err) {
+      if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
+      else alert("Prize setup save failed: " + (err.message || "unknown error"));
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save prize setup";
+      }
+    }
+  }
+  function categoryPrizeQuantity(config, categoryId) {
+    const STATE3 = api15().getState?.() || {};
+    return (config.items || []).filter((item) => item.category_id === categoryId).reduce((sum, item) => sum + Math.max(1, Number(item.quantity || 1)), 0);
+  }
+  function capRaffleWinnerCounts(config) {
+    const STATE3 = api15().getState?.() || {};
+    (config.categories || []).forEach((category) => {
+      const quantity = categoryPrizeQuantity(config, category.id);
+      category.winner_count = Math.min(Number(category.winner_count || 0), quantity);
+    });
+  }
+  async function saveRaffleEntryPrice() {
+    const STATE3 = api15().getState?.() || {};
+    const input = document.getElementById("emRaffleEntryPrice");
+    const btn = document.getElementById("emRafflePriceSave");
+    const status = document.getElementById("emRafflePriceStatus");
+    const dollars = Number(input?.value || 0);
+    if (!Number.isFinite(dollars) || dollars < 0) {
+      if (status) status.textContent = "Enter a price of 0 or higher.";
+      input?.focus();
+      return;
+    }
+    if (dollars > 500) {
+      if (status) status.textContent = "Raffle entry price cannot be more than $500.";
+      input?.focus();
+      return;
+    }
+    const cents = Math.round(dollars * 100);
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+    }
+    if (status) status.textContent = "Saving raffle price...";
+    try {
+      const { error } = await supabaseClient.from("events").update({ raffle_entry_cost_cents: cents }).eq("id", STATE3.eventId);
+      if (error) throw error;
+      STATE3.event.raffle_entry_cost_cents = cents;
+      await api15().refreshEventManager?.("raffle");
+    } catch (err) {
+      if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Save";
+      }
+    }
+  }
+  async function removeRaffleEntry(btn) {
+    const STATE3 = api15().getState?.() || {};
+    const name = btn.dataset.name || "this entry";
+    const isPaid = btn.dataset.paid === "1";
+    const warning = isPaid ? "\n\nThis was marked paid. Removing the record does not refund Stripe payments." : "";
+    if (!confirm(`Remove raffle entry for ${name}? Any winner record for this entry will also be removed.${warning}`)) return;
+    btn.disabled = true;
+    btn.textContent = "Removing...";
+    try {
+      await callEdgeFunction("manage-event-participation", {
+        action: "remove_raffle_entry",
+        event_id: STATE3.eventId,
+        entry_id: btn.dataset.removeRaffleEntry
+      });
+      STATE3.tabData.raffle = null;
+      await api15().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
+      api15().notifyParent?.("updated", STATE3.eventId);
+    } catch (err) {
+      alert("Raffle entry remove failed: " + (err.message || "unknown error"));
+      STATE3.tabData.raffle = null;
+      await api15().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
+    }
+  }
+  function winnerChoiceHtml(winner, config, winners) {
+    const STATE3 = api15().getState?.() || {};
+    if (winner.selection_status !== "pending_choice") return "";
+    const items = availableChoiceItems(config, winners, winner);
+    if (!items.length) {
+      return `<div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">No unassigned items are available in this category.</div>`;
+    }
+    const options = items.map((item) => `<option value="${esc7(item.id)}">${esc7(item.emoji || "\u{1F381}")} ${esc7(item.name)}${item.quantity > 1 ? ` (${item.quantity} total)` : ""}</option>`).join("");
+    return `
+        <div class="mt-3 flex flex-col sm:flex-row gap-2">
+            <select id="emWinnerChoice_${esc7(winner.id)}" class="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-200">
+                ${options}
+            </select>
+            <button type="button" data-raffle-assign-choice="1" data-winner-id="${esc7(winner.id)}" class="rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition">Assign prize</button>
+        </div>
+    `;
+  }
+  function availableChoiceItems(config, winners, currentWinner) {
+    const STATE3 = api15().getState?.() || {};
+    const items = raffleItems(config, currentWinner.category_id);
+    const used = /* @__PURE__ */ new Map();
+    (winners || []).forEach((winner) => {
+      if (!winner.prize_id || winner.id === currentWinner.id) return;
+      if (winner.selection_status === "pending_choice") return;
+      used.set(winner.prize_id, (used.get(winner.prize_id) || 0) + 1);
+    });
+    return items.filter((item) => (used.get(item.id) || 0) < item.quantity);
+  }
+  async function assignWinnerChoice(winnerId) {
+    const STATE3 = api15().getState?.() || {};
+    const winner = (STATE3.tabData.raffle?.winners || []).find((row) => row.id === winnerId);
+    if (!winner) return;
+    const select = document.getElementById(`emWinnerChoice_${winnerId}`);
+    const itemId = select?.value;
+    if (!itemId) return alert("Choose a prize item first.");
+    const config = raffleConfig(STATE3.event);
+    const item = raffleItems(config, winner.category_id).find((row) => row.id === itemId);
+    if (!item) return alert("Prize item is no longer available. Refresh and try again.");
+    const { error } = await supabaseClient.from("event_raffle_winners").update({
+      prize_id: item.id,
+      prize_description: item.name,
+      prize_image_url: item.image_url || null,
+      prize_emoji: item.emoji || window.EventsRaffleModel?.DEFAULT_EMOJI || "\u{1F381}",
+      selection_status: "assigned"
+    }).eq("id", winnerId).eq("event_id", STATE3.eventId).eq("selection_status", "pending_choice");
+    if (error) return alert("Prize assignment failed: " + error.message);
+    STATE3.tabData.raffle = null;
+    await api15().renderTabAsync?.("raffle", loadRaffle, raffleHtml, wireRaffle);
+    document.dispatchEvent(new CustomEvent("events:raffle:drawn", { detail: { eventId: STATE3.eventId } }));
+  }
+  function raffleConfig(event) {
+    const STATE3 = api15().getState?.() || {};
+    if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
+    return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
+  }
+  function raffleCategories(config) {
+    const STATE3 = api15().getState?.() || {};
+    if (!window.EventsRaffleModel) return [];
+    return window.EventsRaffleModel.getOrderedCategories(config);
+  }
+  function raffleItems(config, categoryId) {
+    const STATE3 = api15().getState?.() || {};
+    if (!window.EventsRaffleModel) return [];
+    return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
+  }
+  function raffleTotalWinners(config) {
+    const STATE3 = api15().getState?.() || {};
+    if (!window.EventsRaffleModel) return 0;
+    return window.EventsRaffleModel.getTotalWinnerCount(config);
+  }
+  function raffleDrawQueue(config, winners) {
+    const STATE3 = api15().getState?.() || {};
+    if (!window.EventsRaffleModel) return [];
+    return window.EventsRaffleModel.getDrawQueue(config, winners || []);
+  }
+  function drawModeLabel(drawMode) {
+    const STATE3 = api15().getState?.() || {};
+    if (drawMode === "random_item") return "Random prize assigned";
+    if (drawMode === "winner_choice") return "Winner chooses later";
+    return "Specific prize";
+  }
+  function prizeSlotLabel(slot) {
+    const STATE3 = api15().getState?.() || {};
+    if (!slot) return "";
+    if (slot.prize_name) return slot.prize_name;
+    if (slot.draw_mode === "winner_choice") return `${slot.category_label || "Prize tier"} choice`;
+    return slot.category_label || "Prize";
+  }
+  function clearPrizeImageState() {
+    Object.keys(prizeImageFiles).forEach((key) => delete prizeImageFiles[key]);
+    Object.keys(prizeImagePreviews).forEach((key) => delete prizeImagePreviews[key]);
+  }
+  function refreshRaffle(eventId2) {
+    const STATE3 = api15().getState?.() || {};
+    if (eventId2 && eventId2 !== STATE3.eventId) return;
+    STATE3.tabData.raffle = null;
+    if (STATE3.activeTab === "raffle") api15().renderTab?.("raffle");
+  }
+  document.addEventListener("events:raffle:drawn", (evt) => refreshRaffle(evt.detail?.eventId));
+  var manageRaffleApi = {
+    loadRaffle,
+    raffleHtml,
+    wireRaffle,
+    clearPrizeImageState,
+    refreshRaffle
+  };
+  globalThis.EventsManageRaffle = manageRaffleApi;
 
   // js/portal/events/manage/danger.js
-  (function() {
-    "use strict";
-    function api7() {
-      return window.EventsManageDangerApi || {};
-    }
-    function esc(s) {
-      const el = document.createElement("span");
-      el.textContent = s == null ? "" : String(s);
-      return el.innerHTML;
-    }
-    function money(cents) {
-      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
-    }
-    function dangerHtml() {
-      const STATE = api7().getState?.() || {};
-      const e = STATE.event;
-      const isCancelled = e.status === "cancelled";
-      const isCompleted = e.status === "completed";
-      const totalRsvps = STATE.rsvps.length + STATE.guestRsvps.length;
-      const paidTickets = STATE.rsvps.filter((r) => r.paid).length + STATE.guestRsvps.filter((r) => r.paid).length;
-      const checkins = STATE.checkins.length;
-      const statusLabel = (e.status || "draft").toUpperCase();
-      return `
-            <div class="em-card em-command-card mb-4" style="background:linear-gradient(135deg,#7f1d1d,#111827)">
-                <p class="em-command-eyebrow">Danger zone</p>
-                <h3 class="em-command-title">High-impact event controls</h3>
-                <p class="em-command-copy">These actions change availability, visibility, or stored event records. Review attendance and money before making a destructive change.</p>
-            </div>
+  function api16() {
+    return window.EventsManageDangerApi || {};
+  }
+  function esc8(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function dangerHtml() {
+    const STATE3 = api16().getState?.() || {};
+    const e = STATE3.event;
+    const isCancelled = e.status === "cancelled";
+    const isCompleted = e.status === "completed";
+    const totalRsvps = STATE3.rsvps.length + STATE3.guestRsvps.length;
+    const paidTickets = STATE3.rsvps.filter((r) => r.paid).length + STATE3.guestRsvps.filter((r) => r.paid).length;
+    const checkins = STATE3.checkins.length;
+    const statusLabel = (e.status || "draft").toUpperCase();
+    return `
+        <div class="em-card em-command-card mb-4" style="background:linear-gradient(135deg,#7f1d1d,#111827)">
+            <p class="em-command-eyebrow">Danger zone</p>
+            <h3 class="em-command-title">High-impact event controls</h3>
+            <p class="em-command-copy">These actions change availability, visibility, or stored event records. Review attendance and money before making a destructive change.</p>
+        </div>
 
-            <div class="em-metric-grid mb-4">
-                <div class="em-metric"><span>Status</span><strong style="font-size:18px">${esc(statusLabel)}</strong><small>Current lifecycle</small></div>
-                <div class="em-metric"><span>RSVP records</span><strong>${totalRsvps}</strong><small>Member + guest</small></div>
-                <div class="em-metric"><span>Paid tickets</span><strong>${paidTickets}</strong><small>Refund review</small></div>
-                <div class="em-metric"><span>Check-ins</span><strong>${checkins}</strong><small>Attendance history</small></div>
-            </div>
+        <div class="em-metric-grid mb-4">
+            <div class="em-metric"><span>Status</span><strong style="font-size:18px">${esc8(statusLabel)}</strong><small>Current lifecycle</small></div>
+            <div class="em-metric"><span>RSVP records</span><strong>${totalRsvps}</strong><small>Member + guest</small></div>
+            <div class="em-metric"><span>Paid tickets</span><strong>${paidTickets}</strong><small>Refund review</small></div>
+            <div class="em-metric"><span>Check-ins</span><strong>${checkins}</strong><small>Attendance history</small></div>
+        </div>
 
-            ${!isCancelled && !isCompleted ? `
-            <div class="em-danger-card">
-                <p class="em-danger-title">Cancel event</p>
-                <p class="em-danger-sub">Marks the event as cancelled. Paid RSVPs are NOT auto-refunded \u2014 handle refunds in M3b's Money tab or Stripe dashboard.</p>
-                <button class="em-btn-danger" data-action="cancel">Cancel event</button>
-            </div>` : ""}
+        ${!isCancelled && !isCompleted ? `
+        <div class="em-danger-card">
+            <p class="em-danger-title">Cancel event</p>
+            <p class="em-danger-sub">Marks the event as cancelled. Paid RSVPs are NOT auto-refunded \u2014 handle refunds in M3b's Money tab or Stripe dashboard.</p>
+            <button class="em-btn-danger" data-action="cancel">Cancel event</button>
+        </div>` : ""}
 
-            ${!isCompleted ? `
-            <div class="em-danger-card" style="background:#fffbeb;border-color:#fde68a">
-                <p class="em-danger-title" style="color:#92400e">Mark completed</p>
-                <p class="em-danger-sub" style="color:#78350f">Closes RSVPs and locks the event. Use this after the event has ended.</p>
-                <button class="em-btn-ghost" data-action="complete" style="background:#fde68a;color:#78350f">Mark completed</button>
-            </div>` : ""}
+        ${!isCompleted ? `
+        <div class="em-danger-card" style="background:#fffbeb;border-color:#fde68a">
+            <p class="em-danger-title" style="color:#92400e">Mark completed</p>
+            <p class="em-danger-sub" style="color:#78350f">Closes RSVPs and locks the event. Use this after the event has ended.</p>
+            <button class="em-btn-ghost" data-action="complete" style="background:#fde68a;color:#78350f">Mark completed</button>
+        </div>` : ""}
 
-            ${isCancelled ? `<div class="em-card mb-3"><div class="em-section-head"><div><h3 class="em-section-title">Event already cancelled</h3><p class="em-section-sub">Cancellation controls are hidden because this event is no longer open.</p></div></div></div>` : ""}
-            ${isCompleted ? `<div class="em-card mb-3"><div class="em-section-head"><div><h3 class="em-section-title">Event completed</h3><p class="em-section-sub">Completion controls are hidden because this event has already been closed.</p></div></div></div>` : ""}
+        ${isCancelled ? `<div class="em-card mb-3"><div class="em-section-head"><div><h3 class="em-section-title">Event already cancelled</h3><p class="em-section-sub">Cancellation controls are hidden because this event is no longer open.</p></div></div></div>` : ""}
+        ${isCompleted ? `<div class="em-card mb-3"><div class="em-section-head"><div><h3 class="em-section-title">Event completed</h3><p class="em-section-sub">Completion controls are hidden because this event has already been closed.</p></div></div></div>` : ""}
 
-            <div class="em-danger-card" style="background:#fff7ed;border-color:#fed7aa">
-                <p class="em-danger-title" style="color:#9a3412">Reset test participation</p>
-                <p class="em-danger-sub" style="color:#7c2d12">Keeps the event, images, date, pricing, location, and public URL. Removes RSVPs, guest RSVPs, check-ins, raffle entries, and drawn raffle winners. This does not refund Stripe payments.</p>
-                <button class="em-btn-danger" data-action="reset-participation" style="background:#ea580c">Reset participation</button>
-            </div>
+        <div class="em-danger-card" style="background:#fff7ed;border-color:#fed7aa">
+            <p class="em-danger-title" style="color:#9a3412">Reset test participation</p>
+            <p class="em-danger-sub" style="color:#7c2d12">Keeps the event, images, date, pricing, location, and public URL. Removes RSVPs, guest RSVPs, check-ins, raffle entries, and drawn raffle winners. This does not refund Stripe payments.</p>
+            <button class="em-btn-danger" data-action="reset-participation" style="background:#ea580c">Reset participation</button>
+        </div>
 
-            <div class="em-danger-card">
-                <p class="em-danger-title">Delete event permanently</p>
-                <p class="em-danger-sub">Removes the event and ALL associated data: RSVPs, check-ins, raffle entries, documents, photos. You will be asked to type the event title to confirm.</p>
-                <button class="em-btn-danger" data-action="delete">Delete event</button>
-            </div>
-        `;
-    }
-    function wireDanger() {
-      const STATE = api7().getState?.() || {};
-      document.getElementById("emSheetContent").querySelectorAll("[data-action]").forEach((btn) => {
-        btn.addEventListener("click", () => runDangerAction(btn.dataset.action));
-      });
-    }
-    async function runDangerAction(action) {
-      const STATE = api7().getState?.() || {};
-      const e = STATE.event;
-      if (!e) return;
-      if (action === "delete") {
-        const typed = prompt(`Type the event title to permanently delete:
+        <div class="em-danger-card">
+            <p class="em-danger-title">Delete event permanently</p>
+            <p class="em-danger-sub">Removes the event and ALL associated data: RSVPs, check-ins, raffle entries, documents, photos. You will be asked to type the event title to confirm.</p>
+            <button class="em-btn-danger" data-action="delete">Delete event</button>
+        </div>
+    `;
+  }
+  function wireDanger() {
+    const STATE3 = api16().getState?.() || {};
+    document.getElementById("emSheetContent").querySelectorAll("[data-action]").forEach((btn) => {
+      btn.addEventListener("click", () => runDangerAction(btn.dataset.action));
+    });
+  }
+  async function runDangerAction(action) {
+    const STATE3 = api16().getState?.() || {};
+    const e = STATE3.event;
+    if (!e) return;
+    if (action === "delete") {
+      const typed = prompt(`Type the event title to permanently delete:
 
 "${e.title}"`);
-        if (!typed || typed.trim() !== e.title.trim()) {
-          if (typed !== null) alert("Title did not match. Deletion cancelled.");
-          return;
-        }
-        try {
-          const { error } = await supabaseClient.from("events").delete().eq("id", e.id);
-          if (error) throw error;
-          alert("Event deleted.");
-          api7().close?.();
-          api7().notifyParent?.("deleted", e.id);
-        } catch (err) {
-          alert("Delete failed: " + (err.message || "unknown error"));
-        }
+      if (!typed || typed.trim() !== e.title.trim()) {
+        if (typed !== null) alert("Title did not match. Deletion cancelled.");
         return;
       }
-      if (action === "cancel") {
-        if (!confirm(`Mark "${e.title}" as cancelled?`)) return;
-        try {
-          const { error } = await supabaseClient.from("events").update({ status: "cancelled" }).eq("id", e.id);
-          if (error) throw error;
-          STATE.event.status = "cancelled";
-          api7().renderHeader?.();
-          api7().renderTab?.("danger");
-          api7().notifyParent?.("updated", e.id);
-        } catch (err) {
-          alert("Cancel failed: " + (err.message || "unknown error"));
-        }
-        return;
+      try {
+        const { error } = await supabaseClient.from("events").delete().eq("id", e.id);
+        if (error) throw error;
+        alert("Event deleted.");
+        api16().close?.();
+        api16().notifyParent?.("deleted", e.id);
+      } catch (err) {
+        alert("Delete failed: " + (err.message || "unknown error"));
       }
-      if (action === "reset-participation") {
-        await api7().resetParticipation?.();
-        return;
+      return;
+    }
+    if (action === "cancel") {
+      if (!confirm(`Mark "${e.title}" as cancelled?`)) return;
+      try {
+        const { error } = await supabaseClient.from("events").update({ status: "cancelled" }).eq("id", e.id);
+        if (error) throw error;
+        STATE3.event.status = "cancelled";
+        api16().renderHeader?.();
+        api16().renderTab?.("danger");
+        api16().notifyParent?.("updated", e.id);
+      } catch (err) {
+        alert("Cancel failed: " + (err.message || "unknown error"));
       }
-      if (action === "complete") {
-        if (!confirm(`Mark "${e.title}" as completed?`)) return;
-        try {
-          const { error } = await supabaseClient.from("events").update({ status: "completed" }).eq("id", e.id);
-          if (error) throw error;
-          STATE.event.status = "completed";
-          api7().renderHeader?.();
-          api7().renderTab?.("danger");
-          api7().notifyParent?.("updated", e.id);
-        } catch (err) {
-          alert("Complete failed: " + (err.message || "unknown error"));
-        }
+      return;
+    }
+    if (action === "reset-participation") {
+      await api16().resetParticipation?.();
+      return;
+    }
+    if (action === "complete") {
+      if (!confirm(`Mark "${e.title}" as completed?`)) return;
+      try {
+        const { error } = await supabaseClient.from("events").update({ status: "completed" }).eq("id", e.id);
+        if (error) throw error;
+        STATE3.event.status = "completed";
+        api16().renderHeader?.();
+        api16().renderTab?.("danger");
+        api16().notifyParent?.("updated", e.id);
+      } catch (err) {
+        alert("Complete failed: " + (err.message || "unknown error"));
       }
     }
-    window.EventsManageDanger = {
-      dangerHtml,
-      wireDanger,
-      runDangerAction
-    };
-  })();
+  }
+  var manageDangerApi = {
+    dangerHtml,
+    wireDanger,
+    runDangerAction
+  };
+  globalThis.EventsManageDanger = manageDangerApi;
 
   // js/portal/events/compat/global-reexports.js
-  (function() {
-    "use strict";
-    function exp(name, fn) {
-      if (typeof fn !== "undefined") window[name] = fn;
-    }
-    function g(name) {
-      return globalThis[name];
-    }
-    exp("evtHandleRsvp", typeof g("evtHandleRsvp") === "function" ? g("evtHandleRsvp") : void 0);
-    exp("evtHandleRaffleEntry", typeof g("evtHandleRaffleEntry") === "function" ? g("evtHandleRaffleEntry") : void 0);
-    exp("evtOpenScanner", typeof g("evtOpenScanner") === "function" ? g("evtOpenScanner") : void 0);
-    exp("evtOpenRaffleDraw", typeof g("evtOpenRaffleDraw") === "function" ? g("evtOpenRaffleDraw") : void 0);
-    exp("evtDrawWinner", typeof g("evtDrawWinner") === "function" ? g("evtDrawWinner") : void 0);
-    exp("evtToggleModal", typeof g("evtToggleModal") === "function" ? g("evtToggleModal") : void 0);
-    exp("evtUpdateStatus", typeof g("evtUpdateStatus") === "function" ? g("evtUpdateStatus") : void 0);
-    exp("evtCopyShareUrl", typeof g("evtCopyShareUrl") === "function" ? g("evtCopyShareUrl") : void 0);
-    exp("evtCloseScanner", typeof g("evtCloseScanner") === "function" ? g("evtCloseScanner") : void 0);
-    exp("evtCloseRaffleDraw", typeof g("evtCloseRaffleDraw") === "function" ? g("evtCloseRaffleDraw") : void 0);
-    exp("evtAddCostItem", typeof g("evtAddCostItem") === "function" ? g("evtAddCostItem") : void 0);
-    exp("evtRemoveCostItem", typeof g("evtRemoveCostItem") === "function" ? g("evtRemoveCostItem") : void 0);
-    exp("evtUpdateCostItem", typeof g("evtUpdateCostItem") === "function" ? g("evtUpdateCostItem") : void 0);
-    exp("evtJoinWaitlist", typeof g("evtJoinWaitlist") === "function" ? g("evtJoinWaitlist") : void 0);
-    exp("evtLeaveWaitlist", typeof g("evtLeaveWaitlist") === "function" ? g("evtLeaveWaitlist") : void 0);
-    exp("evtDuplicateEvent", typeof g("evtDuplicateEvent") === "function" ? g("evtDuplicateEvent") : void 0);
-    exp("evtCancelEvent", typeof g("evtCancelEvent") === "function" ? g("evtCancelEvent") : void 0);
-    exp("evtRescheduleEvent", typeof g("evtRescheduleEvent") === "function" ? g("evtRescheduleEvent") : void 0);
-    exp("evtDeleteEvent", typeof g("evtDeleteEvent") === "function" ? g("evtDeleteEvent") : void 0);
-    exp("evtClaimWaitlistSpot", typeof g("evtClaimWaitlistSpot") === "function" ? g("evtClaimWaitlistSpot") : void 0);
-    exp("evtShowUploadForm", typeof g("evtShowUploadForm") === "function" ? g("evtShowUploadForm") : void 0);
-    exp("evtUploadDocument", typeof g("evtUploadDocument") === "function" ? g("evtUploadDocument") : void 0);
-    exp("evtDownloadDocument", typeof g("evtDownloadDocument") === "function" ? g("evtDownloadDocument") : void 0);
-    exp("evtMarkDistributed", typeof g("evtMarkDistributed") === "function" ? g("evtMarkDistributed") : void 0);
-    exp("evtDeleteDocument", typeof g("evtDeleteDocument") === "function" ? g("evtDeleteDocument") : void 0);
-    exp("evtOpenDocumentsPanel", typeof g("evtOpenDocumentsPanel") === "function" ? g("evtOpenDocumentsPanel") : void 0);
-    exp("evtCloseDocumentsPanel", typeof g("evtCloseDocumentsPanel") === "function" ? g("evtCloseDocumentsPanel") : void 0);
-    exp("evtInitMap", typeof g("evtInitMap") === "function" ? g("evtInitMap") : void 0);
-    exp("evtToggleLocationSharing", typeof g("evtToggleLocationSharing") === "function" ? g("evtToggleLocationSharing") : void 0);
-    exp("evtJoinCompetition", typeof g("evtJoinCompetition") === "function" ? g("evtJoinCompetition") : void 0);
-    exp("evtSubmitEntry", typeof g("evtSubmitEntry") === "function" ? g("evtSubmitEntry") : void 0);
-    exp("evtCastVote", typeof g("evtCastVote") === "function" ? g("evtCastVote") : void 0);
-    exp("evtModerateEntry", typeof g("evtModerateEntry") === "function" ? g("evtModerateEntry") : void 0);
-    exp("evtContributeToPrizePool", typeof g("evtContributeToPrizePool") === "function" ? g("evtContributeToPrizePool") : void 0);
-    exp("evtStartPhase", typeof g("evtStartPhase") === "function" ? g("evtStartPhase") : void 0);
-    exp("evtAdvancePhase", typeof g("evtAdvancePhase") === "function" ? g("evtAdvancePhase") : void 0);
-    exp("evtExtendPhase", typeof g("evtExtendPhase") === "function" ? g("evtExtendPhase") : void 0);
-    exp("evtFinalizeCompetition", typeof g("evtFinalizeCompetition") === "function" ? g("evtFinalizeCompetition") : void 0);
-    exp("evtRecalcCompTiers", typeof g("evtRecalcCompTiers") === "function" ? g("evtRecalcCompTiers") : void 0);
-    exp("evtUploadPhoto", typeof g("evtHandlePhotoSelect") === "function" ? g("evtHandlePhotoSelect") : void 0);
-    exp("evtDeletePhoto", typeof g("evtDeletePhoto") === "function" ? g("evtDeletePhoto") : void 0);
-    exp("evtViewPhoto", typeof g("evtViewPhoto") === "function" ? g("evtViewPhoto") : void 0);
-    exp("evtNavigateToEvent", typeof g("evtNavigateToEvent") === "function" ? g("evtNavigateToEvent") : void 0);
-    exp("evtNavigateToList", typeof g("evtNavigateToList") === "function" ? g("evtNavigateToList") : void 0);
-  })();
+  function exp(name, fn) {
+    if (typeof fn !== "undefined") window[name] = fn;
+  }
+  function g(name) {
+    return globalThis[name];
+  }
+  exp("evtHandleRsvp", typeof g("evtHandleRsvp") === "function" ? g("evtHandleRsvp") : void 0);
+  exp("evtHandleRaffleEntry", typeof g("evtHandleRaffleEntry") === "function" ? g("evtHandleRaffleEntry") : void 0);
+  exp("evtOpenScanner", typeof g("evtOpenScanner") === "function" ? g("evtOpenScanner") : void 0);
+  exp("evtOpenRaffleDraw", typeof g("evtOpenRaffleDraw") === "function" ? g("evtOpenRaffleDraw") : void 0);
+  exp("evtDrawWinner", typeof g("evtDrawWinner") === "function" ? g("evtDrawWinner") : void 0);
+  exp("evtToggleModal", typeof g("evtToggleModal") === "function" ? g("evtToggleModal") : void 0);
+  exp("evtUpdateStatus", typeof g("evtUpdateStatus") === "function" ? g("evtUpdateStatus") : void 0);
+  exp("evtCopyShareUrl", typeof g("evtCopyShareUrl") === "function" ? g("evtCopyShareUrl") : void 0);
+  exp("evtCloseScanner", typeof g("evtCloseScanner") === "function" ? g("evtCloseScanner") : void 0);
+  exp("evtCloseRaffleDraw", typeof g("evtCloseRaffleDraw") === "function" ? g("evtCloseRaffleDraw") : void 0);
+  exp("evtAddCostItem", typeof g("evtAddCostItem") === "function" ? g("evtAddCostItem") : void 0);
+  exp("evtRemoveCostItem", typeof g("evtRemoveCostItem") === "function" ? g("evtRemoveCostItem") : void 0);
+  exp("evtUpdateCostItem", typeof g("evtUpdateCostItem") === "function" ? g("evtUpdateCostItem") : void 0);
+  exp("evtJoinWaitlist", typeof g("evtJoinWaitlist") === "function" ? g("evtJoinWaitlist") : void 0);
+  exp("evtLeaveWaitlist", typeof g("evtLeaveWaitlist") === "function" ? g("evtLeaveWaitlist") : void 0);
+  exp("evtDuplicateEvent", typeof g("evtDuplicateEvent") === "function" ? g("evtDuplicateEvent") : void 0);
+  exp("evtCancelEvent", typeof g("evtCancelEvent") === "function" ? g("evtCancelEvent") : void 0);
+  exp("evtRescheduleEvent", typeof g("evtRescheduleEvent") === "function" ? g("evtRescheduleEvent") : void 0);
+  exp("evtDeleteEvent", typeof g("evtDeleteEvent") === "function" ? g("evtDeleteEvent") : void 0);
+  exp("evtClaimWaitlistSpot", typeof g("evtClaimWaitlistSpot") === "function" ? g("evtClaimWaitlistSpot") : void 0);
+  exp("evtShowUploadForm", typeof g("evtShowUploadForm") === "function" ? g("evtShowUploadForm") : void 0);
+  exp("evtUploadDocument", typeof g("evtUploadDocument") === "function" ? g("evtUploadDocument") : void 0);
+  exp("evtDownloadDocument", typeof g("evtDownloadDocument") === "function" ? g("evtDownloadDocument") : void 0);
+  exp("evtMarkDistributed", typeof g("evtMarkDistributed") === "function" ? g("evtMarkDistributed") : void 0);
+  exp("evtDeleteDocument", typeof g("evtDeleteDocument") === "function" ? g("evtDeleteDocument") : void 0);
+  exp("evtOpenDocumentsPanel", typeof g("evtOpenDocumentsPanel") === "function" ? g("evtOpenDocumentsPanel") : void 0);
+  exp("evtCloseDocumentsPanel", typeof g("evtCloseDocumentsPanel") === "function" ? g("evtCloseDocumentsPanel") : void 0);
+  exp("evtInitMap", typeof g("evtInitMap") === "function" ? g("evtInitMap") : void 0);
+  exp("evtToggleLocationSharing", typeof g("evtToggleLocationSharing") === "function" ? g("evtToggleLocationSharing") : void 0);
+  exp("evtJoinCompetition", typeof g("evtJoinCompetition") === "function" ? g("evtJoinCompetition") : void 0);
+  exp("evtSubmitEntry", typeof g("evtSubmitEntry") === "function" ? g("evtSubmitEntry") : void 0);
+  exp("evtCastVote", typeof g("evtCastVote") === "function" ? g("evtCastVote") : void 0);
+  exp("evtModerateEntry", typeof g("evtModerateEntry") === "function" ? g("evtModerateEntry") : void 0);
+  exp("evtContributeToPrizePool", typeof g("evtContributeToPrizePool") === "function" ? g("evtContributeToPrizePool") : void 0);
+  exp("evtStartPhase", typeof g("evtStartPhase") === "function" ? g("evtStartPhase") : void 0);
+  exp("evtAdvancePhase", typeof g("evtAdvancePhase") === "function" ? g("evtAdvancePhase") : void 0);
+  exp("evtExtendPhase", typeof g("evtExtendPhase") === "function" ? g("evtExtendPhase") : void 0);
+  exp("evtFinalizeCompetition", typeof g("evtFinalizeCompetition") === "function" ? g("evtFinalizeCompetition") : void 0);
+  exp("evtRecalcCompTiers", typeof g("evtRecalcCompTiers") === "function" ? g("evtRecalcCompTiers") : void 0);
+  exp("evtUploadPhoto", typeof g("evtHandlePhotoSelect") === "function" ? g("evtHandlePhotoSelect") : void 0);
+  exp("evtDeletePhoto", typeof g("evtDeletePhoto") === "function" ? g("evtDeletePhoto") : void 0);
+  exp("evtViewPhoto", typeof g("evtViewPhoto") === "function" ? g("evtViewPhoto") : void 0);
+  exp("evtNavigateToEvent", typeof g("evtNavigateToEvent") === "function" ? g("evtNavigateToEvent") : void 0);
+  exp("evtNavigateToList", typeof g("evtNavigateToList") === "function" ? g("evtNavigateToList") : void 0);
 
   // js/portal/events/manage/sheet.js
-  (function() {
-    "use strict";
-    const STATE = {
-      eventId: null,
-      event: null,
-      rsvps: [],
-      guestRsvps: [],
-      checkins: [],
-      activeTab: "overview",
-      source: "admin",
-      // 'admin' | 'portal'
-      editCopyOnOpen: false,
-      tabData: {}
-      // lazy per-tab cache: { money, docs, raffle, comp }
-    };
-    const RAFFLE_PRIZE_IMAGE_FILES = {};
-    const RAFFLE_PRIZE_IMAGE_PREVIEWS = {};
-    function getDocTypes() {
-      const types = window.EventsConstants && window.EventsConstants.EVENT_DOC_TYPES;
-      return types && types.length ? types : [];
+  var STATE2 = {
+    eventId: null,
+    event: null,
+    rsvps: [],
+    guestRsvps: [],
+    checkins: [],
+    activeTab: "overview",
+    source: "admin",
+    // 'admin' | 'portal'
+    editCopyOnOpen: false,
+    tabData: {}
+    // lazy per-tab cache: { money, docs, raffle, comp }
+  };
+  function getDocTypes() {
+    const types = window.EventsConstants && window.EventsConstants.EVENT_DOC_TYPES;
+    return types && types.length ? types : [];
+  }
+  var Shell = window.EventsManageShell;
+  var Overview = window.EventsManageOverview;
+  var Images = window.EventsManageImages;
+  var Rsvps = window.EventsManageRsvps;
+  var Danger = window.EventsManageDanger;
+  var Money = window.EventsManageMoney;
+  var Docs = window.EventsManageDocs;
+  var Raffle = window.EventsManageRaffle;
+  var Comp = window.EventsManageCompetition;
+  var Participation = window.EventsManageParticipation;
+  function _renderHeader() {
+    return Shell.renderHeader();
+  }
+  function _renderTabs() {
+    return Shell.renderTabs();
+  }
+  function _renderContent(html5) {
+    return Shell.renderContent(html5);
+  }
+  async function _loadEventData(eventId2) {
+    const { data: event } = await supabaseClient.from("events").select("*").eq("id", eventId2).single();
+    STATE2.event = event;
+    const { data: rsvps } = await supabaseClient.from("event_rsvps").select("id, user_id, status, paid, qr_token, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)").eq("event_id", eventId2);
+    STATE2.rsvps = rsvps || [];
+    const { data: guestRsvps } = await supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at").eq("event_id", eventId2);
+    STATE2.guestRsvps = guestRsvps || [];
+    const { data: checkins } = await supabaseClient.from("event_checkins").select("user_id, guest_token, checked_in_at").eq("event_id", eventId2);
+    STATE2.checkins = checkins || [];
+  }
+  async function open3(eventId2, opts = {}) {
+    if (!eventId2) return;
+    Shell.ensureMounted();
+    STATE2.eventId = eventId2;
+    STATE2.source = opts.source || "admin";
+    STATE2.activeTab = Shell.getTabs().some((t) => t.key === opts.tab) ? opts.tab : "overview";
+    STATE2.editCopyOnOpen = !!opts.editCopy;
+    STATE2.tabData = {};
+    Raffle?.clearPrizeImageState?.();
+    Shell.setLoadingChrome();
+    Shell.openPanel();
+    await _loadEventData(eventId2);
+    Shell.renderHeader();
+    _renderTab(STATE2.activeTab);
+  }
+  function close2() {
+    Shell.closePanel();
+  }
+  function _renderTab(tab) {
+    if (tab === "overview") {
+      _renderContent(Overview.overviewHtml());
+      Overview.wireOverview();
+      return;
     }
-    const Shell = window.EventsManageShell;
-    const Overview = window.EventsManageOverview;
-    const Images = window.EventsManageImages;
-    const Rsvps = window.EventsManageRsvps;
-    const Danger = window.EventsManageDanger;
-    const Money = window.EventsManageMoney;
-    const Docs = window.EventsManageDocs;
-    const Raffle = window.EventsManageRaffle;
-    const Comp = window.EventsManageCompetition;
-    const Participation = window.EventsManageParticipation;
-    function _ensureMounted() {
-      return Shell.ensureMounted();
+    if (tab === "images") {
+      _renderContent(Images.imagesHtml());
+      Images.wireImages();
+      return;
     }
-    function _renderHeader() {
-      return Shell.renderHeader();
+    if (tab === "rsvps") {
+      _renderContent(Rsvps.rsvpsHtml());
+      Rsvps.wireRsvps();
+      return;
     }
-    function _renderTabs() {
-      return Shell.renderTabs();
+    if (tab === "danger") {
+      _renderContent(Danger.dangerHtml());
+      Danger.wireDanger();
+      return;
     }
-    function _renderContent(html) {
-      return Shell.renderContent(html);
-    }
-    async function _loadEventData(eventId2) {
-      const { data: event } = await supabaseClient.from("events").select("*").eq("id", eventId2).single();
-      STATE.event = event;
-      const { data: rsvps } = await supabaseClient.from("event_rsvps").select("id, user_id, status, paid, qr_token, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)").eq("event_id", eventId2);
-      STATE.rsvps = rsvps || [];
-      const { data: guestRsvps } = await supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at").eq("event_id", eventId2);
-      STATE.guestRsvps = guestRsvps || [];
-      const { data: checkins } = await supabaseClient.from("event_checkins").select("user_id, guest_token, checked_in_at").eq("event_id", eventId2);
-      STATE.checkins = checkins || [];
-    }
-    async function open2(eventId2, opts = {}) {
-      if (!eventId2) return;
-      Shell.ensureMounted();
-      STATE.eventId = eventId2;
-      STATE.source = opts.source || "admin";
-      STATE.activeTab = Shell.getTabs().some((t) => t.key === opts.tab) ? opts.tab : "overview";
-      STATE.editCopyOnOpen = !!opts.editCopy;
-      STATE.tabData = {};
-      Raffle?.clearPrizeImageState?.();
-      Shell.setLoadingChrome();
-      Shell.openPanel();
-      await _loadEventData(eventId2);
-      Shell.renderHeader();
-      _renderTab(STATE.activeTab);
-    }
-    function close() {
-      Shell.closePanel();
-    }
-    function _renderTab(tab) {
-      if (tab === "overview") {
-        _renderContent(Overview.overviewHtml());
-        Overview.wireOverview();
+    if (tab === "money") return _renderTabAsync("money", Money.loadMoney, Money.moneyHtml, Money.wireMoney);
+    if (tab === "docs") return _renderTabAsync("docs", Docs.loadDocs, Docs.docsHtml, Docs.wireDocs);
+    if (tab === "raffle") return _renderTabAsync("raffle", Raffle.loadRaffle, Raffle.raffleHtml, Raffle.wireRaffle);
+    if (tab === "comp") {
+      if (STATE2.event?.event_type !== "competition") {
+        _renderContent(Comp.compHtml());
+        Comp.wireComp();
         return;
       }
-      if (tab === "images") {
-        _renderContent(Images.imagesHtml());
-        Images.wireImages();
+      return _renderTabAsync("comp", Comp.loadComp, Comp.compHtml, Comp.wireComp);
+    }
+  }
+  async function _renderTabAsync(key, loader, render, wire6) {
+    if (!STATE2.tabData[key]) {
+      _renderContent(`<div class="em-placeholder"><div style="font-size:13px">Loading\u2026</div></div>`);
+      try {
+        STATE2.tabData[key] = await loader();
+      } catch (err) {
+        _renderContent(`<div class="em-placeholder"><p class="text-sm text-red-600">Failed to load: ${_esc7(err.message || err)}</p></div>`);
         return;
       }
-      if (tab === "rsvps") {
-        _renderContent(Rsvps.rsvpsHtml());
-        Rsvps.wireRsvps();
-        return;
-      }
-      if (tab === "danger") {
-        _renderContent(Danger.dangerHtml());
-        Danger.wireDanger();
-        return;
-      }
-      if (tab === "money") return _renderTabAsync("money", Money.loadMoney, Money.moneyHtml, Money.wireMoney);
-      if (tab === "docs") return _renderTabAsync("docs", Docs.loadDocs, Docs.docsHtml, Docs.wireDocs);
-      if (tab === "raffle") return _renderTabAsync("raffle", Raffle.loadRaffle, Raffle.raffleHtml, Raffle.wireRaffle);
-      if (tab === "comp") {
-        if (STATE.event?.event_type !== "competition") {
-          _renderContent(Comp.compHtml());
-          Comp.wireComp();
-          return;
-        }
-        return _renderTabAsync("comp", Comp.loadComp, Comp.compHtml, Comp.wireComp);
-      }
     }
-    async function _renderTabAsync(key, loader, render, wire) {
-      if (!STATE.tabData[key]) {
-        _renderContent(`<div class="em-placeholder"><div style="font-size:13px">Loading\u2026</div></div>`);
-        try {
-          STATE.tabData[key] = await loader();
-        } catch (err) {
-          _renderContent(`<div class="em-placeholder"><p class="text-sm text-red-600">Failed to load: ${_esc(err.message || err)}</p></div>`);
-          return;
-        }
-      }
-      if (STATE.activeTab !== key) return;
-      _renderContent(render());
-      if (wire) wire();
-    }
-    function _overviewHtml() {
-      return Overview.overviewHtml();
-    }
-    function _wireOverview() {
-      return Overview.wireOverview();
-    }
-    async function _refreshEventManager(tab) {
-      await _loadEventData(STATE.eventId);
-      STATE.tabData = {};
-      if (tab) STATE.activeTab = tab;
-      _renderHeader();
-      _renderTabs();
-      _renderTab(STATE.activeTab);
-      _notifyParent("updated", STATE.eventId);
-    }
-    function _notifyParent(type, eventId2) {
-      document.dispatchEvent(new CustomEvent("events:manage:" + type, { detail: { eventId: eventId2 } }));
-    }
-    function _emptyHtml(title, sub) {
-      return `
-            <div class="em-placeholder">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <p class="text-sm font-semibold text-gray-500">${_esc(title)}</p>
-                ${sub ? `<p class="text-xs text-gray-400 mt-1">${_esc(sub)}</p>` : ""}
-            </div>
-        `;
-    }
-    function _esc(s) {
-      const el = document.createElement("span");
-      el.textContent = s == null ? "" : String(s);
-      return el.innerHTML;
-    }
-    function _money(cents) {
-      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
-    }
-    function refreshRaffle(eventId2) {
-      return Raffle.refreshRaffle(eventId2);
-    }
-    window.EventsManageParticipationApi = {
-      getState: () => STATE,
-      refreshEventManager: _refreshEventManager,
-      renderTab: _renderTab
-    };
-    window.EventsManageDangerApi = {
-      getState: () => STATE,
-      notifyParent: _notifyParent,
-      close,
-      renderHeader: () => Shell.renderHeader(),
-      renderTab: _renderTab,
-      resetParticipation: () => Participation.resetParticipation()
-    };
-    window.EventsManageRaffleApi = {
-      getState: () => STATE,
-      emptyHtml: _emptyHtml,
-      notifyParent: _notifyParent,
-      refreshEventManager: _refreshEventManager,
-      renderTab: _renderTab,
-      renderTabAsync: _renderTabAsync
-    };
-    window.EventsManageRsvpsApi = {
-      getState: () => STATE,
-      removeParticipationPerson: (btn) => Participation.removeParticipationPerson(btn)
-    };
-    window.EventsManageImagesApi = {
-      getState: () => STATE,
-      notifyParent: _notifyParent
-    };
-    window.EventsManageMoneyApi = {
-      getState: () => STATE
-    };
-    window.EventsManageDocsApi = {
-      getState: () => STATE,
-      getDocTypes,
-      renderTab: _renderTab,
-      notifyParent: _notifyParent
-    };
-    window.EventsManageCompetitionApi = {
-      getState: () => STATE,
-      emptyHtml: _emptyHtml
-    };
-    window.EventsManageShellApi = {
-      getState: () => STATE,
-      onClose: close,
-      renderTab: _renderTab
-    };
-    window.EventsManageOverviewApi = {
-      getState: () => STATE,
-      renderHeader: () => Shell.renderHeader(),
-      renderTabs: () => Shell.renderTabs(),
-      renderTab: _renderTab,
-      notifyParent: _notifyParent
-    };
-    window.EventsManage = { open: open2, close, refreshRaffle };
-    if (window.PortalEvents) {
-      window.PortalEvents.manage = window.PortalEvents.manage || {};
-      window.PortalEvents.manage.open = open2;
-      window.PortalEvents.manage.close = close;
-      window.PortalEvents.manage.refreshRaffle = refreshRaffle;
-    }
-    if (window.PortalEvents && window.PortalEvents.detail && typeof window.PortalEvents.detail.register === "function") {
-      window.PortalEvents.detail.register("manage", { open: open2, close });
-    }
-  })();
+    if (STATE2.activeTab !== key) return;
+    _renderContent(render());
+    if (wire6) wire6();
+  }
+  async function _refreshEventManager(tab) {
+    await _loadEventData(STATE2.eventId);
+    STATE2.tabData = {};
+    if (tab) STATE2.activeTab = tab;
+    _renderHeader();
+    _renderTabs();
+    _renderTab(STATE2.activeTab);
+    _notifyParent("updated", STATE2.eventId);
+  }
+  function _notifyParent(type, eventId2) {
+    document.dispatchEvent(new CustomEvent("events:manage:" + type, { detail: { eventId: eventId2 } }));
+  }
+  function _emptyHtml(title, sub) {
+    return `
+        <div class="em-placeholder">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p class="text-sm font-semibold text-gray-500">${_esc7(title)}</p>
+            ${sub ? `<p class="text-xs text-gray-400 mt-1">${_esc7(sub)}</p>` : ""}
+        </div>
+    `;
+  }
+  function _esc7(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function refreshRaffle2(eventId2) {
+    return Raffle.refreshRaffle(eventId2);
+  }
+  globalThis.EventsManageParticipationApi = {
+    getState: () => STATE2,
+    refreshEventManager: _refreshEventManager,
+    renderTab: _renderTab
+  };
+  globalThis.EventsManageDangerApi = {
+    getState: () => STATE2,
+    notifyParent: _notifyParent,
+    close: close2,
+    renderHeader: () => Shell.renderHeader(),
+    renderTab: _renderTab,
+    resetParticipation: () => Participation.resetParticipation()
+  };
+  globalThis.EventsManageRaffleApi = {
+    getState: () => STATE2,
+    emptyHtml: _emptyHtml,
+    notifyParent: _notifyParent,
+    refreshEventManager: _refreshEventManager,
+    renderTab: _renderTab,
+    renderTabAsync: _renderTabAsync
+  };
+  globalThis.EventsManageRsvpsApi = {
+    getState: () => STATE2,
+    removeParticipationPerson: (btn) => Participation.removeParticipationPerson(btn)
+  };
+  globalThis.EventsManageImagesApi = {
+    getState: () => STATE2,
+    notifyParent: _notifyParent
+  };
+  globalThis.EventsManageMoneyApi = {
+    getState: () => STATE2
+  };
+  globalThis.EventsManageDocsApi = {
+    getState: () => STATE2,
+    getDocTypes,
+    renderTab: _renderTab,
+    notifyParent: _notifyParent
+  };
+  globalThis.EventsManageCompetitionApi = {
+    getState: () => STATE2,
+    emptyHtml: _emptyHtml
+  };
+  globalThis.EventsManageShellApi = {
+    getState: () => STATE2,
+    onClose: close2,
+    renderTab: _renderTab
+  };
+  globalThis.EventsManageOverviewApi = {
+    getState: () => STATE2,
+    renderHeader: () => Shell.renderHeader(),
+    renderTabs: () => Shell.renderTabs(),
+    renderTab: _renderTab,
+    notifyParent: _notifyParent
+  };
+  var eventsManageApi = { open: open3, close: close2, refreshRaffle: refreshRaffle2 };
+  globalThis.EventsManage = eventsManageApi;
+  var PortalEvents14 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents14.manage = PortalEvents14.manage || {};
+  PortalEvents14.manage.open = eventsManageApi.open;
+  PortalEvents14.manage.close = eventsManageApi.close;
+  PortalEvents14.manage.refreshRaffle = eventsManageApi.refreshRaffle;
+  if (PortalEvents14.detail && typeof PortalEvents14.detail.register === "function") {
+    PortalEvents14.detail.register("manage", { open: open3, close: close2 });
+  }
 
   // js/portal/events/init.js
   var _eventsPageInitialized = false;

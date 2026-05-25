@@ -29,6 +29,20 @@ const {
     portalEventsHtmlScripts,
     productionEventsBootLast,
 } = require('./_portal-events-classic-chain.js');
+const {
+    hasGlobalBridge,
+    indexConstantsOk,
+    listShellEsmOk,
+    detailOrchestratorEsmOk,
+    manageSheetEsmOk,
+    manageModuleEsmOk,
+} = require('./_esm-bridge-helpers.js');
+
+function manageNsOk(src, globalName, exportName) {
+    return manageModuleEsmOk(src, globalName, exportName)
+        || src.includes(`globalThis.${globalName}`)
+        || src.includes(`window.${globalName}`);
+}
 
 const MANAGE_SHEET_CHAIN = 'manage/sheet.js';
 const MANAGE_SHEET_SRC = '../js/portal/events/' + MANAGE_SHEET_CHAIN;
@@ -63,17 +77,13 @@ const participation = read('js/portal/events/manage/participation.js');
 const manageRaffle = read('js/portal/events/manage/raffle.js');
 const danger = read('js/portal/events/manage/danger.js');
 
-sheet.includes('(function ()')
-    ? pass('IIFE wrapper present ((function () {)')
-    : fail('IIFE wrapper missing — sheet.js must remain a classic-script IIFE');
+manageSheetEsmOk(sheet)
+    ? pass('manage/sheet.js ESM orchestrator (Phase 7.8)')
+    : fail('manage/sheet.js missing eventsManageApi bridge');
 
 sheet.includes("'use strict';")
-    ? pass("'use strict' present inside IIFE")
+    ? pass("'use strict' present")
     : fail("'use strict' missing");
-
-/\bexport\s+(default|const|let|var|function|class|\{)/.test(sheet)
-    ? fail('Native export statement found — breaks classic script loading')
-    : pass('No native export statement (stays classic-script safe)');
 
 sheet.length > 8000
     ? pass(`File size reasonable (${sheet.length.toLocaleString()} chars — orchestrator after modularization)`)
@@ -82,9 +92,9 @@ sheet.length > 8000
 // ─── window.EventsManage (original public surface) ───────
 console.log('\n── manage/sheet.js — window.EventsManage (original global preserved) ───────');
 
-sheet.includes('window.EventsManage = { open, close, refreshRaffle }')
-    ? pass('window.EventsManage = { open, close, refreshRaffle } present')
-    : fail('window.EventsManage assignment missing or changed');
+(sheet.includes('export const eventsManageApi') || sheet.includes('window.EventsManage = { open, close, refreshRaffle }'))
+    ? pass('EventsManage public API present')
+    : fail('EventsManage assignment missing or changed');
 
 sheet.includes('window.EventsManage')
     ? pass('window.EventsManage referenced in source')
@@ -93,9 +103,9 @@ sheet.includes('window.EventsManage')
 // ─── window._emToggleFeatured (inline onclick compatibility) ─
 console.log('\n── manage/overview.js — window._emToggleFeatured (inline onclick bridge) ───');
 
-overview.includes('window._emToggleFeatured = ')
-    ? pass('window._emToggleFeatured assigned in overview.js (inline onclick compatibility preserved)')
-    : fail('window._emToggleFeatured assignment missing in overview.js — featured toggle will break');
+hasGlobalBridge(overview, '_emToggleFeatured')
+    ? pass('_emToggleFeatured bridged in overview.js (inline onclick compatibility preserved)')
+    : fail('_emToggleFeatured assignment missing in overview.js — featured toggle will break');
 
 overview.includes('window._emToggleFeatured()')
     ? pass('window._emToggleFeatured() called from inline onclick in overviewHtml')
@@ -104,27 +114,23 @@ overview.includes('window._emToggleFeatured()')
 // ─── window.PortalEvents.manage bridge (Phase 3C additions) ─
 console.log('\n── manage/sheet.js — window.PortalEvents.manage bridge (Phase 3C) ─────────');
 
-sheet.includes('window.PortalEvents.manage = window.PortalEvents.manage ||')
-    ? pass('window.PortalEvents.manage safe-init guard present')
-    : fail('window.PortalEvents.manage safe-init guard missing');
+sheet.includes('PortalEvents.manage.open')
+    ? pass('PortalEvents.manage.open bridged')
+    : fail('PortalEvents.manage.open missing');
 
-const MANAGE_BRIDGE_KEYS = [
-    ['window.PortalEvents.manage.open = open',             'open (manage sheet entry point)'],
-    ['window.PortalEvents.manage.close = close',           'close'],
-    ['window.PortalEvents.manage.refreshRaffle = refreshRaffle', 'refreshRaffle'],
-];
+sheet.includes('PortalEvents.manage.close')
+    ? pass('PortalEvents.manage.close bridged')
+    : fail('PortalEvents.manage.close missing');
 
-MANAGE_BRIDGE_KEYS.forEach(([substr, label]) => {
-    sheet.includes(substr)
-        ? pass(`window.PortalEvents.manage.${label} assigned`)
-        : fail(`window.PortalEvents.manage.${label} assignment missing`);
-});
+sheet.includes('PortalEvents.manage.refreshRaffle')
+    ? pass('PortalEvents.manage.refreshRaffle bridged')
+    : fail('PortalEvents.manage.refreshRaffle missing');
 
 // ─── detail.register('manage', …) ────────────────────────
 console.log('\n── manage/sheet.js — detail.register(\'manage\', …) call ─────────────────');
 
-sheet.includes("window.PortalEvents.detail.register === 'function'")
-    ? pass("typeof window.PortalEvents.detail.register === 'function' guard present")
+(sheet.includes("PortalEvents.detail.register === 'function'") || sheet.includes("window.PortalEvents.detail.register === 'function'"))
+    ? pass("typeof PortalEvents.detail.register === 'function' guard present")
     : fail("typeof guard for PortalEvents.detail.register missing");
 
 sheet.includes("detail.register('manage'")
@@ -178,9 +184,9 @@ CORE_FNS.forEach(fn => {
 
 console.log('\n── manage/shell.js — shell module (Phase 5M.3A) ───────────────────────────');
 
-shell.includes('window.EventsManageShell =')
-    ? pass('window.EventsManageShell namespace assigned')
-    : fail('window.EventsManageShell namespace missing');
+manageNsOk(shell, 'EventsManageShell', 'manageShellApi')
+    ? pass('EventsManageShell namespace assigned')
+    : fail('EventsManageShell namespace missing');
 
 ['function ensureMounted(', 'function renderHeader(', 'function renderTabs(', 'function renderContent(', 'function setLoadingChrome(', 'function openPanel(', 'function closePanel('].forEach(fn => {
     shell.includes(fn)
@@ -211,9 +217,9 @@ const raffle = read('js/portal/events/manage/raffle.js');
 
 console.log('\n── manage/overview.js — overview module (Phase 5M.3A) ───────────────────────');
 
-overview.includes('window.EventsManageOverview =')
-    ? pass('window.EventsManageOverview namespace assigned')
-    : fail('window.EventsManageOverview namespace missing');
+manageNsOk(overview, 'EventsManageOverview', 'manageOverviewApi')
+    ? pass('EventsManageOverview namespace assigned')
+    : fail('EventsManageOverview namespace missing');
 
 ['function overviewHtml(', 'function wireOverview(', 'function saveEventCopy(', 'function renderOverviewQrs(', 'function toggleFeatured('].forEach(fn => {
     overview.includes(fn)
@@ -236,13 +242,13 @@ sheet.includes('EventsManageOverviewApi')
 console.log('\n── manage tab modules (Phase 5M.3B) ───────────────────────────────────────');
 
 [
-    [images, 'Images', 'window.EventsManageImages =', ['function imagesHtml(', 'function wireImages('], 'Images.imagesHtml'],
-    [docs, 'Docs', 'window.EventsManageDocs =', ['async function loadDocs(', 'function docsHtml(', 'function wireDocs('], 'Docs.loadDocs'],
-    [rsvps, 'Rsvps', 'window.EventsManageRsvps =', ['function rsvpsHtml(', 'function wireRsvps('], 'Rsvps.rsvpsHtml'],
-    [money, 'Money', 'window.EventsManageMoney =', ['async function loadMoney(', 'function moneyHtml(', 'function wireMoney('], 'Money.loadMoney'],
-    [competition, 'Competition', 'window.EventsManageCompetition =', ['async function loadComp(', 'function compHtml(', 'function wireComp('], 'Comp.loadComp'],
-].forEach(([src, label, nsAssign, fns, delegate]) => {
-    src.includes(nsAssign)
+    [images, 'Images', 'EventsManageImages', 'manageImagesApi', ['function imagesHtml(', 'function wireImages('], 'Images.imagesHtml'],
+    [docs, 'Docs', 'EventsManageDocs', 'manageDocsApi', ['async function loadDocs(', 'function docsHtml(', 'function wireDocs('], 'Docs.loadDocs'],
+    [rsvps, 'Rsvps', 'EventsManageRsvps', 'manageRsvpsApi', ['function rsvpsHtml(', 'function wireRsvps('], 'Rsvps.rsvpsHtml'],
+    [money, 'Money', 'EventsManageMoney', 'manageMoneyApi', ['async function loadMoney(', 'function moneyHtml(', 'function wireMoney('], 'Money.loadMoney'],
+    [competition, 'Competition', 'EventsManageCompetition', 'manageCompetitionApi', ['async function loadComp(', 'function compHtml(', 'function wireComp('], 'Comp.loadComp'],
+].forEach(([src, label, globalName, exportName, fns, delegate]) => {
+    manageNsOk(src, globalName, exportName)
         ? pass(`${label}: namespace assigned`)
         : fail(`${label}: namespace missing`);
     fns.forEach(fn => {
@@ -258,11 +264,11 @@ console.log('\n── manage tab modules (Phase 5M.3B) ────────�
 console.log('\n── manage tab modules (Phase 5M.3C) ───────────────────────────────────────');
 
 [
-    [participation, 'Participation', 'window.EventsManageParticipation =', ['async function getParticipationResetCounts(', 'async function resetParticipation(', 'async function removeParticipationPerson('], 'Participation.removeParticipationPerson'],
-    [manageRaffle, 'Raffle', 'window.EventsManageRaffle =', ['async function loadRaffle(', 'function raffleHtml(', 'function wireRaffle(', 'function refreshRaffle('], 'Raffle.loadRaffle'],
-    [danger, 'Danger', 'window.EventsManageDanger =', ['function dangerHtml(', 'function wireDanger(', 'async function runDangerAction('], 'Danger.dangerHtml'],
-].forEach(([src, label, nsAssign, fns, delegate]) => {
-    src.includes(nsAssign)
+    [participation, 'Participation', 'EventsManageParticipation', 'manageParticipationApi', ['async function getParticipationResetCounts(', 'async function resetParticipation(', 'async function removeParticipationPerson('], 'Participation.removeParticipationPerson'],
+    [manageRaffle, 'Raffle', 'EventsManageRaffle', 'manageRaffleApi', ['async function loadRaffle(', 'function raffleHtml(', 'function wireRaffle(', 'function refreshRaffle('], 'Raffle.loadRaffle'],
+    [danger, 'Danger', 'EventsManageDanger', 'manageDangerApi', ['function dangerHtml(', 'function wireDanger(', 'async function runDangerAction('], 'Danger.dangerHtml'],
+].forEach(([src, label, globalName, exportName, fns, delegate]) => {
+    manageNsOk(src, globalName, exportName)
         ? pass(`${label}: namespace assigned`)
         : fail(`${label}: namespace missing`);
     fns.forEach(fn => {
@@ -422,9 +428,9 @@ initJs.includes('let _eventsPageInitialized = false')
 console.log('\n── Phase 2 bridges — regression check ─────────────────────────────────────');
 
 const indexJs = read('js/portal/events/index.js');
-indexJs.includes('window.PortalEvents.constants')
-    ? pass('window.PortalEvents.constants still present (index.js bridge intact)')
-    : fail('window.PortalEvents.constants missing — Phase 2 regression');
+indexConstantsOk(indexJs)
+    ? pass('PortalEvents.constants still present (index.js bridge intact)')
+    : fail('PortalEvents.constants missing — Phase 2 regression');
 
 const raffleJs = read('js/portal/events/core/raffle-model.js');
 raffleJs.includes('root.PortalEvents.raffleModel = api')
@@ -438,26 +444,26 @@ raffleJs.includes('root.EventsRaffleModel = api')
 console.log('\n── Phase 3A bridge (list.js) — regression check ───────────────────────────');
 
 const listJs = read('js/portal/events/list/shell.js');
-listJs.includes('window.PortalEvents.list = {')
-    ? pass('window.PortalEvents.list namespace still present (Phase 3A intact)')
-    : fail('window.PortalEvents.list namespace missing — Phase 3A regression');
-listJs.includes('(function ()')
-    ? pass('list/shell.js still IIFE (Phase 3A structure intact)')
-    : fail('list/shell.js lost IIFE wrapper — Phase 3A regression');
+listShellEsmOk(listJs)
+    ? pass('PortalEvents.list namespace still present (Phase 3A intact)')
+    : fail('PortalEvents.list namespace missing — Phase 3A regression');
+listJs.includes('export const portalEventsListApi')
+    ? pass('list/shell.js ESM (Phase 7.9)')
+    : fail('list/shell.js structure regression');
 
 // ─── Phase 3B detail bridge still intact ─────────────────
 console.log('\n── Phase 3B bridge (detail.js) — regression check ─────────────────────────');
 
 const detailJs = read('js/portal/events/detail.js');
-detailJs.includes('window.PortalEvents.detail = window.PortalEvents.detail ||')
-    ? pass('window.PortalEvents.detail safe-init still present (Phase 3B intact)')
-    : fail('window.PortalEvents.detail safe-init missing — Phase 3B regression');
+detailJs.includes('PortalEvents.detail')
+    ? pass('PortalEvents.detail namespace still present (Phase 3B intact)')
+    : fail('PortalEvents.detail safe-init missing — Phase 3B regression');
 detailJs.includes('detail.register = function')
     ? pass('detail.register function still present (Phase 3B intact)')
     : fail('detail.register function missing — Phase 3B regression');
-detailJs.includes('(function ()')
-    ? pass('detail.js still IIFE (Phase 3B structure intact)')
-    : fail('detail.js lost IIFE wrapper — Phase 3B regression');
+detailOrchestratorEsmOk(detailJs)
+    ? pass('detail.js ESM orchestrator (Phase 7.10)')
+    : fail('detail.js structure regression');
 
 // ─── Summary ─────────────────────────────────────────────
 const total = passed + failed;

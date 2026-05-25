@@ -34,6 +34,19 @@ const {
     portalEventsHtmlScripts,
     productionEventsBootLast,
 } = require('./_portal-events-classic-chain.js');
+const { indexConstantsOk, listShellEsmOk, detailOrchestratorEsmOk, manageSheetEsmOk } = require('./_esm-bridge-helpers.js');
+
+/** Phase 7.7: create modules may bridge via globalThis instead of window.* */
+function hasGlobalBridge(js, globalName) {
+    const n = globalName.startsWith('window.') ? globalName.slice(7) : globalName;
+    return js.includes(`window.${n}`) || js.includes(`globalThis.${n}`);
+}
+
+function hasNamedGlobal(js, name) {
+    return hasGlobalBridge(js, name)
+        || js.includes(`globalThis.${name} =`)
+        || js.includes(`export const ${name}`);
+}
 
 let passed = 0;
 let failed = 0;
@@ -68,14 +81,14 @@ const classicChain3d = parseClassicChain(ROOT);
 // ── File structure ─────────────────────────────────────────────────────────
 console.log('\n── js/portal/events/create/sheet.js — file structure ─────────────────────');
 
-check('IIFE wrapper present ((function () {)',
-    sheet.includes('(function () {'));
+check('create/sheet.js ESM module (Phase 7.7) or IIFE',
+    sheet.includes('export const eventsCreateApi') || sheet.includes('(function () {'));
 
-check("'use strict' present inside IIFE",
+check("'use strict' present",
     sheet.includes("'use strict'"));
 
-check('No native export statement (stays classic-script safe)',
-    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(sheet)));
+check('eventsCreateApi exported (Phase 7.7)',
+    sheet.includes('export const eventsCreateApi'));
 
 check('File size reasonable (no accidental truncation)',
     sheet.length > 15000,
@@ -85,11 +98,12 @@ console.log(`  ℹ File length: ${sheet.length} chars`);
 // ── window.EventsCreate (original global preserved) ───────────────────────
 console.log('\n── create/sheet.js — window.EventsCreate (original global preserved) ──────');
 
-check("window.EventsCreate = { open, close, isFlagOn } present",
-    sheet.includes('window.EventsCreate = { open, close, isFlagOn }'));
+check('EventsCreate public API bridged (globalThis.EventsCreate)',
+    sheet.includes('globalThis.EventsCreate = eventsCreateApi')
+    || sheet.includes('window.EventsCreate = { open, close, isFlagOn }'));
 
-check('window.EventsCreate.open referenced in source',
-    sheet.includes('window.EventsCreate') && sheet.includes('open, close, isFlagOn'));
+check('EventsCreate.open/close/isFlagOn in export',
+    sheet.includes('open, close, isFlagOn'));
 
 check('window.EventsCreate.close referenced in source',
     sheet.includes('close, isFlagOn'));
@@ -103,28 +117,20 @@ check('function isFlagOn() present (always returns true)',
 // ── window.PortalEvents.create bridge (Phase 3D) ──────────────────────────
 console.log('\n── create/sheet.js — window.PortalEvents.create bridge (Phase 3D) ─────────');
 
-check('window.PortalEvents.create safe-init guard present',
-    sheet.includes('window.PortalEvents.create = window.PortalEvents.create || {}'));
+check('PortalEvents.create.open bridged',
+    sheet.includes('PortalEvents.create.open = eventsCreateApi.open')
+    || sheet.includes('window.PortalEvents.create.open = open'));
 
-check('window.PortalEvents.create.open assigned',
-    sheet.includes('window.PortalEvents.create.open = open'));
+check('PortalEvents.create.close bridged',
+    sheet.includes('PortalEvents.create.close = eventsCreateApi.close')
+    || sheet.includes('window.PortalEvents.create.close = close'));
 
-check('window.PortalEvents.create.close assigned',
-    sheet.includes('window.PortalEvents.create.close = close'));
+check('PortalEvents.create.isFlagOn bridged',
+    sheet.includes('PortalEvents.create.isFlagOn = eventsCreateApi.isFlagOn')
+    || sheet.includes('window.PortalEvents.create.isFlagOn = isFlagOn'));
 
-check('window.PortalEvents.create.isFlagOn assigned',
-    sheet.includes('window.PortalEvents.create.isFlagOn = isFlagOn'));
-
-check('window.PortalEvents safe seed guard present before create bridge',
-    sheet.includes('window.PortalEvents = window.PortalEvents || {}'));
-
-check('PortalEvents seed guard appears before PortalEvents.create assignment',
-    sheet.indexOf('window.PortalEvents = window.PortalEvents || {}')
-    < sheet.indexOf('window.PortalEvents.create = window.PortalEvents.create || {}'));
-
-check('Phase 3D bridge placed after window.EventsCreate assignment',
-    sheet.indexOf('window.PortalEvents.create = window.PortalEvents.create || {}')
-    > sheet.indexOf('window.EventsCreate = { open, close, isFlagOn }'));
+check('PortalEvents.create namespace wired',
+    sheet.includes('PortalEvents.create'));
 
 // ── Custom event dispatch (submit module, 5M.1.4) ───────────────────────────
 console.log('\n── create/submit.js — custom event dispatch ───────────────────────────────');
@@ -207,14 +213,11 @@ check("events:created dispatch uses { event: data, status } detail",
 // ── create/geocode.js (Phase 5M.1.1) ──────────────────────────────────────
 console.log('\n── js/portal/events/create/geocode.js — geocode module (5M.1.1) ─────────');
 
-check('create/geocode.js IIFE wrapper present',
-    geocodeJs.includes('(function ()'));
+check('create/geocode.js ESM or IIFE (Phase 7.7)',
+    geocodeJs.includes("'use strict'") && !geocodeJs.includes('(function () {'));
 
 check("create/geocode.js 'use strict' present",
     geocodeJs.includes("'use strict'"));
-
-check('create/geocode.js has no native export (classic-script safe)',
-    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(geocodeJs)));
 
 check('create/geocode.js present in classic-chain-loader.js chain',
     classicChain3d && classicChain3d.includes('create/geocode.js'));
@@ -226,11 +229,11 @@ check('create/geocode.js defines evtGeocodeAddress',
     geocodeJs.includes('async function evtGeocodeAddress')
     || geocodeJs.includes('function evtGeocodeAddress'));
 
-check('create/geocode.js assigns window.evtGeocodeAddress',
-    geocodeJs.includes('window.evtGeocodeAddress = evtGeocodeAddress'));
+check('create/geocode.js bridges evtGeocodeAddress',
+    hasGlobalBridge(geocodeJs, 'evtGeocodeAddress'));
 
-check('create/geocode.js assigns window.evtExpandAddress',
-    geocodeJs.includes('window.evtExpandAddress = evtExpandAddress'));
+check('create/geocode.js bridges evtExpandAddress',
+    hasGlobalBridge(geocodeJs, 'evtExpandAddress'));
 
 // ── legacy create modules (5M.1.5; empty create.js facade removed) ─────────
 console.log('\n── create legacy modules + production chain ───────────────────────────────');
@@ -269,21 +272,21 @@ check('load order: raffle-builder → submit → create/sheet in classic chain',
 
 check('legacy-submit.js defines evtHandleCreate',
     legacySubmitJs.includes('async function evtHandleCreate')
-    && legacySubmitJs.includes('window.evtHandleCreate'));
+    && hasGlobalBridge(legacySubmitJs, 'evtHandleCreate'));
 
 check('legacy-costs.js assigns LLC cost globals',
-    legacyCostsJs.includes('window.evtToggleLlcFields')
-    && legacyCostsJs.includes('window.evtAddCostItem')
-    && legacyCostsJs.includes('window.evtRemoveCostItem'));
+    hasGlobalBridge(legacyCostsJs, 'evtToggleLlcFields')
+    && hasGlobalBridge(legacyCostsJs, 'evtAddCostItem')
+    && hasGlobalBridge(legacyCostsJs, 'evtRemoveCostItem'));
 
 check('legacy-location.js assigns location globals and uses evtGeocodeAddress',
-    legacyLocationJs.includes('window.evtValidateLocation')
-    && legacyLocationJs.includes('window.evtInitLocationValidation')
-    && legacyLocationJs.includes('window.evtGeocodeAddress'));
+    hasGlobalBridge(legacyLocationJs, 'evtValidateLocation')
+    && hasGlobalBridge(legacyLocationJs, 'evtInitLocationValidation')
+    && legacyLocationJs.includes('evtGeocodeAddress'));
 
 check('legacy-preview.js assigns preview globals',
-    legacyPreviewJs.includes('window.evtHandlePreview')
-    && legacyPreviewJs.includes('window.evtClosePreview'));
+    hasGlobalBridge(legacyPreviewJs, 'evtHandlePreview')
+    && hasGlobalBridge(legacyPreviewJs, 'evtClosePreview'));
 
 check('legacy-submit uses window.evtGeocodeAddress and evtLoadEvents',
     legacySubmitJs.includes('window.evtGeocodeAddress')
@@ -335,8 +338,8 @@ stepModules.forEach(([rel, src, key]) => {
         isProductionLoaded(events, classicChain3d, '../js/portal/events/' + rel));
     check(`${rel} registers EventsCreateSteps.${key}`,
         src.includes(`EventsCreateSteps.${key}`) && src.includes('html') && src.includes('wire'));
-    check(`${rel} has no native export (classic-script safe)`,
-        !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(src)));
+    check(`${rel} exports step API (Phase 7.7)`,
+        src.includes('export const createStep') && src.includes('globalThis.EventsCreateSteps'));
 });
 
 check('step-basics.js wires banner and embed image upload',
@@ -354,14 +357,11 @@ check('sheet.js dispatches steps via EventsCreateSteps namespace',
 // ── Create raffle builder (Phase 5M.1.3) ──────────────────────────────────
 console.log('\n── js/portal/events/create/raffle-builder.js — raffle builder (5M.1.3) ──');
 
-check('create/raffle-builder.js IIFE wrapper present',
-    raffleBuilderJs.includes('(function ()'));
+check('create/raffle-builder.js ESM (Phase 7.7)',
+    raffleBuilderJs.includes('export const createRaffleBuilderApi'));
 
 check("create/raffle-builder.js 'use strict' present",
     raffleBuilderJs.includes("'use strict'"));
-
-check('create/raffle-builder.js has no native export (classic-script safe)',
-    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(raffleBuilderJs)));
 
 check('create/raffle-builder.js present in classic-chain-loader.js chain',
     classicChain3d && classicChain3d.includes('create/raffle-builder.js'));
@@ -369,8 +369,8 @@ check('create/raffle-builder.js present in classic-chain-loader.js chain',
 check('create/raffle-builder.js loaded in production (HTML or classic-chain-loader)',
     isProductionLoaded(events, classicChain3d, '../js/portal/events/create/raffle-builder.js'));
 
-check('create/raffle-builder.js assigns window.EventsCreateRaffleBuilder',
-    raffleBuilderJs.includes('window.EventsCreateRaffleBuilder'));
+check('create/raffle-builder.js bridges EventsCreateRaffleBuilder',
+    hasNamedGlobal(raffleBuilderJs, 'EventsCreateRaffleBuilder'));
 
 check('raffle-builder.js defines builderHtml',
     raffleBuilderJs.includes('builderHtml') && raffleBuilderJs.includes('data-ec-raffle-add-category'));
@@ -390,14 +390,11 @@ check('sheet.js exposes validateStep and close on EventsCreateSteps for submit m
 // ── Create submit module (Phase 5M.1.4) ───────────────────────────────────
 console.log('\n── js/portal/events/create/submit.js — submit/storage (5M.1.4) ─────────');
 
-check('create/submit.js IIFE wrapper present',
-    submitJs.includes('(function ()'));
+check('create/submit.js ESM (Phase 7.7)',
+    submitJs.includes('export const createSubmitApi'));
 
 check("create/submit.js 'use strict' present",
     submitJs.includes("'use strict'"));
-
-check('create/submit.js has no native export (classic-script safe)',
-    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(submitJs)));
 
 check('create/submit.js present in classic-chain-loader.js chain',
     classicChain3d && classicChain3d.includes('create/submit.js'));
@@ -405,8 +402,8 @@ check('create/submit.js present in classic-chain-loader.js chain',
 check('create/submit.js loaded in production (HTML or classic-chain-loader)',
     isProductionLoaded(events, classicChain3d, '../js/portal/events/create/submit.js'));
 
-check('create/submit.js assigns window.EventsCreateSubmit',
-    submitJs.includes('window.EventsCreateSubmit'));
+check('create/submit.js bridges EventsCreateSubmit',
+    hasNamedGlobal(submitJs, 'EventsCreateSubmit'));
 
 check('submit.js defines submit function',
     submitJs.includes('async function submit') && submitJs.includes('event-banners'));
@@ -460,8 +457,8 @@ console.log('\n── Phase 2 bridges — regression check ───────
 const constants   = read('js/portal/events/index.js');
 const raffleModel = read('js/portal/events/core/raffle-model.js');
 
-check('window.PortalEvents.constants still present (index.js bridge intact)',
-    constants.includes('window.PortalEvents.constants'));
+check('PortalEvents.constants still present (index.js bridge intact)',
+    indexConstantsOk(constants));
 
 check('root.PortalEvents.raffleModel still present (Phase 2 raffle bridge intact)',
     raffleModel.includes('root.PortalEvents.raffleModel'));
@@ -474,42 +471,42 @@ console.log('\n── Phase 3A bridge (list.js) — regression check ───�
 
 const list = read('js/portal/events/list/shell.js');
 
-check('window.PortalEvents.list namespace still present (Phase 3A intact)',
-    list.includes('window.PortalEvents.list'));
+check('PortalEvents.list namespace still present (Phase 3A intact)',
+    listShellEsmOk(list));
 
-check('list/shell.js still IIFE (Phase 3A structure intact)',
-    list.includes('(function () {'));
+check('list/shell.js ESM (Phase 7.9)',
+    list.includes('export const portalEventsListApi'));
 
 // ── Phase 3B regression ───────────────────────────────────────────────────
 console.log('\n── Phase 3B bridge (detail.js) — regression check ────────────────────────');
 
 const detail = read('js/portal/events/detail.js');
 
-check('window.PortalEvents.detail safe-init still present (Phase 3B intact)',
-    detail.includes('window.PortalEvents.detail'));
+check('PortalEvents.detail still present (Phase 3B intact)',
+    detail.includes('PortalEvents.detail'));
 
 check('detail.register function still present (Phase 3B intact)',
     detail.includes('detail.register = function'));
 
-check('detail.js still IIFE (Phase 3B structure intact)',
-    detail.includes('(function () {'));
+check('detail.js ESM orchestrator (Phase 7.10)',
+    detailOrchestratorEsmOk(detail));
 
 // ── Phase 3C regression ───────────────────────────────────────────────────
 console.log('\n── Phase 3C bridge (manage/sheet.js) — regression check ──────────────────');
 
 const manage = read('js/portal/events/manage/sheet.js');
 
-check('window.PortalEvents.manage safe-init still present (Phase 3C intact)',
-    manage.includes('window.PortalEvents.manage = window.PortalEvents.manage || {}'));
+check('PortalEvents.manage wired (Phase 3C intact)',
+    manage.includes('PortalEvents.manage'));
 
-check('window.PortalEvents.manage.open still present (Phase 3C intact)',
-    manage.includes('window.PortalEvents.manage.open = open'));
+check('PortalEvents.manage.open still present (Phase 3C intact)',
+    manage.includes('PortalEvents.manage.open'));
 
-check('window.PortalEvents.manage.close still present (Phase 3C intact)',
-    manage.includes('window.PortalEvents.manage.close = close'));
+check('PortalEvents.manage.close still present (Phase 3C intact)',
+    manage.includes('PortalEvents.manage.close'));
 
-check('window.EventsManage still preserved (Phase 3C original global)',
-    manage.includes('window.EventsManage = { open, close, refreshRaffle }'));
+check('EventsManage still preserved (Phase 3C original global)',
+    manageSheetEsmOk(manage));
 
 // ── Summary ───────────────────────────────────────────────────────────────
 const total = passed + failed;

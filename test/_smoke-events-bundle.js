@@ -27,7 +27,7 @@ check('build uses esbuild', fs.readFileSync(path.join(root, 'scripts/build-event
 const bundle = fs.readFileSync(bundlePath, 'utf8');
 check('bundle includes init boot', bundle.includes('PortalEvents.initEventsPage = initEventsPage'));
 check('bundle includes vendor loader', bundle.includes('evtEnsureLeaflet'));
-check('bundle includes list shell', bundle.includes('window.evtLoadEvents = loadEvents'));
+check('bundle includes list shell', bundle.includes('globalThis.evtLoadEvents = loadEvents') || bundle.includes('portalEventsListApi'));
 check('bundle from esbuild banner', bundle.includes('production bundle from main.js'));
 
 const mainSrc = fs.readFileSync(mainPath, 'utf8');
