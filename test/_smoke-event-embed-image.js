@@ -4,7 +4,7 @@ const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
 const createSheet = fs.readFileSync(path.join(root, 'js/portal/events/create/sheet.js'), 'utf8');
-const legacyCreate = fs.readFileSync(path.join(root, 'js/portal/events/create.js'), 'utf8');
+const legacyCreate = fs.readFileSync(path.join(root, 'js/portal/events/create/legacy-submit.js'), 'utf8');
 const eventsHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
 const eventOg = fs.readFileSync(path.join(root, 'supabase/functions/event-og/index.ts'), 'utf8');
 const migration = fs.readFileSync(path.join(root, 'supabase/migrations/089_event_embed_image_url.sql'), 'utf8');

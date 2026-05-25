@@ -229,7 +229,7 @@
                     <div class="ed-card ed-summary-card event-detail-card-tight portal-summary-card">
                         <p class="ed-summary-heading">Event Summary</p>
                         <div class="ed-summary-header-row">
-                            ${event.banner_url ? `<img src="${event.banner_url}" class="ed-summary-thumb" alt="">` : `<div class="ed-summary-thumb ed-summary-thumb-placeholder"></div>`}
+                            ${event.banner_url ? `<img src="${event.banner_url}" class="ed-summary-thumb" alt="" loading="eager" decoding="async">` : `<div class="ed-summary-thumb ed-summary-thumb-placeholder"></div>`}
                             <div class="ed-summary-header-text">
                                 <p class="ed-summary-title">${evtEscapeHtml(event.title)}</p>
                                 <p class="ed-summary-sub">${cpName ? `Hosted by ${evtEscapeHtml(cpName)}` : evtEscapeHtml(tc.label)}</p>

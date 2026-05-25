@@ -73,7 +73,7 @@
     function wireDanger() {
         const STATE = api().getState?.() || {};
         document.getElementById('emSheetContent').querySelectorAll('[data-action]').forEach(btn => {
-            btn.addEventListener('click', () => _runDangerAction(btn.dataset.action));
+            btn.addEventListener('click', () => runDangerAction(btn.dataset.action));
         });
     }
 

@@ -17,6 +17,10 @@
         return window.EventsManageShellApi || {};
     }
 
+    function getState() {
+        return api().getState?.() || {};
+    }
+
         function ensureMounted() {
         if (document.getElementById('emSheetRoot')) return;
         const root = document.createElement('div');
@@ -129,8 +133,8 @@
         });
     }
 
-        function renderHeader() {
-        const e = STATE.event;
+    function renderHeader() {
+        const e = getState().event;
         if (!e) return;
         document.getElementById('emSheetTitle').textContent = e.title;
         const dateStr = new Date(e.start_date).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
@@ -140,15 +144,17 @@
 
     // ─── Tab bar ────────────────────────────────────────────────────
     function renderTabs() {
+        const STATE = getState();
         const bar = document.getElementById('emSheetTabs');
         bar.innerHTML = M3A_TABS.map(t =>
             `<button class="em-tab${t.placeholder ? ' placeholder' : ''}${t.key === STATE.activeTab ? ' active' : ''}" data-tab="${t.key}">${t.label}${t.placeholder ? ' <span style="font-size:9px;opacity:.7">soon</span>' : ''}</button>`
         ).join('');
         bar.querySelectorAll('.em-tab').forEach(btn => {
             btn.addEventListener('click', () => {
-                STATE.activeTab = btn.dataset.tab;
-                _renderTabs();
-                _renderTab(STATE.activeTab);
+                const st = getState();
+                st.activeTab = btn.dataset.tab;
+                renderTabs();
+                api().renderTab?.(st.activeTab);
                 btn.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
             });
         });

@@ -27,11 +27,13 @@ function check(label, ok, detail) {
     }
 }
 
-const competition = read('js/portal/events/competition.js');
+const competition = read('js/portal/events/detail/competition.js');
 const events = read('portal/events.html');
+const loader = read('js/portal/events/classic-chain-loader.js');
 
-console.log('\n── js/portal/events/competition.js — file structure ─────────────────────');
-check('competition.js exists', exists('js/portal/events/competition.js'));
+console.log('\n── js/portal/events/detail/competition.js — file structure ──────────────');
+check('detail/competition.js exists', exists('js/portal/events/detail/competition.js'));
+check('root competition.js removed', !exists('js/portal/events/competition.js'));
 check('Loose classic script: no IIFE wrapper introduced', !competition.includes('(function () {'));
 check('No native export statement (stays classic-script safe)', !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(competition)));
 check('File size reasonable (no accidental truncation)', competition.length > 30000, `${competition.length} chars`);
@@ -110,15 +112,13 @@ const tablePatterns = [
 ];
 tablePatterns.forEach(([pattern, label]) => check(label, competition.includes(pattern)));
 
-console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
-check('competition.js still loaded as classic script in events.html', events.includes('js/portal/events/competition.js'));
-check('competition.js does NOT have type="module" in events.html', !events.match(/competition\.js[^\"]*\"[^>]*type="module"/));
+console.log('\n── production load (classic-chain-loader) ───────────────────────────────');
+check('detail/competition.js in classic-chain-loader chain', loader.includes("'detail/competition.js'"));
 check('No portal/events/* scripts use type="module" yet (correct)', !events.match(/<script[^>]+js\/portal\/events\/[^>]+type="module"/));
 
 console.log('\n── File split safety — no orphaned new competition/ subfiles ─────────────');
 const competitionDir = path.join(ROOT, 'js/portal/events/competition');
 check('js/portal/events/competition/ directory does not exist (no premature split)', !fs.existsSync(competitionDir));
-check('competition.js referenced in events.html (not orphaned)', events.includes('competition.js'));
 
 console.log('\n── Phase 1 bridge (init.js) — regression check ───────────────────────────');
 const init = read('js/portal/events/init.js');
@@ -126,16 +126,17 @@ check('window.PortalEvents.initEventsPage still present', init.includes('window.
 check('Phase 1 duplicate-init guard still present', init.includes('_eventsPageInitialized'));
 
 console.log('\n── Phase 2 bridges — regression check ────────────────────────────────────');
-const constants = read('js/portal/events/constants.js');
-const raffleModel = read('js/portal/events/raffle-model.js');
-check('window.PortalEvents.constants still present', constants.includes('window.PortalEvents.constants'));
+const indexJs = read('js/portal/events/index.js');
+const raffleModel = read('js/portal/events/core/raffle-model.js');
+check('window.PortalEvents.constants bridged in index.js', indexJs.includes('window.PortalEvents.constants'));
+check('portal events/constants.js removed', !exists('js/portal/events/constants.js'));
 check('root.PortalEvents.raffleModel still present', raffleModel.includes('root.PortalEvents.raffleModel'));
 check('root.EventsRaffleModel still present', raffleModel.includes('root.EventsRaffleModel'));
 
 console.log('\n── Phase 3A bridge (list.js) — regression check ──────────────────────────');
-const list = read('js/portal/events/list.js');
+const list = read('js/portal/events/list/shell.js');
 check('window.PortalEvents.list namespace still present', list.includes('window.PortalEvents.list'));
-check('list.js still IIFE', list.includes('(function () {'));
+check('list/shell.js still IIFE', list.includes('(function () {'));
 
 console.log('\n── Phase 3B bridge (detail.js) — regression check ────────────────────────');
 const detail = read('js/portal/events/detail.js');

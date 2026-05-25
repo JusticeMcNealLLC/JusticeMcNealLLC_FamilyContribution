@@ -16,24 +16,7 @@
     <meta name="twitter:title" content="You're Invited!">
     <meta name="twitter:description" content="You've been invited to an event by Justice McNeal LLC. Tap to view details, RSVP, and more.">
     <meta name="twitter:image" content="https://justicemcneal.com/assets/icons/icon-512.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
-                            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
-                            800: '#3730a3', 900: '#312e81', 950: '#1e1b4b',
-                        },
-                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0' }
-                    },
-                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="../css/tailwind.portal.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -307,7 +290,7 @@
     <script src="../js/components/events/helpers.js"></script>
     <script src="../js/components/events/pills.js"></script>
     <script src="../js/components/events/card.js"></script>
-    <script src="../js/portal/events/raffle-model.js"></script>
+    <script src="../js/portal/events/core/raffle-model.js"></script>
     <script src="../js/events/index.js"></script>
     <script src="../js/events/hero.js"></script>
     <script src="../js/events/body.js"></script>

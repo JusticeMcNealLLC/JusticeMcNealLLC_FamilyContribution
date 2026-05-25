@@ -64,7 +64,7 @@
         const grossRevenue  = rsvpRevenue + guestRevenue + raffleRevenue + poolRevenue;
         const netRevenue    = grossRevenue - refunded;
 
-        const fmt = window.formatCurrency || _money;
+        const fmt = window.formatCurrency || money;
         const ticketLabel = isPaidEvent ? 'Paid RSVPs' : 'Ticketed RSVPs';
 
         function paymentRow({ name, sub, amount, refundedAmount, stripeId, avatarHtml, isGuest }) {

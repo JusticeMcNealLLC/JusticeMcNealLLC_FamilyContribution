@@ -29,7 +29,7 @@ const {
     portalEventsHtmlScripts,
 } = require('./_portal-events-classic-chain.js');
 
-const MANAGE_SHEET_CHAIN = 'manage/sheet.js?v=112';
+const MANAGE_SHEET_CHAIN = 'manage/sheet.js?v=113';
 const MANAGE_SHEET_SRC = '../js/portal/events/' + MANAGE_SHEET_CHAIN;
 
 let passed = 0;
@@ -191,6 +191,23 @@ sheet.includes('Shell.ensureMounted')
     ? pass('sheet.js delegates to Shell.ensureMounted')
     : fail('sheet.js must delegate mount to EventsManageShell');
 
+shell.includes('function getState()') && shell.includes('api().getState')
+    ? pass('shell.js reads shared state via EventsManageShellApi.getState')
+    : fail('shell.js must not reference bare STATE from sheet.js closure');
+
+!shell.includes('STATE.activeTab = btn.dataset.tab') || shell.includes('getState()')
+    ? pass('shell.js tab clicks use shared getState()')
+    : fail('shell.js renderTabs must use getState(), not bare STATE');
+
+overview.includes('function getState()')
+    ? pass('overview.js reads shared state via getState()')
+    : fail('overview.js must use getState() after 5M.3A split');
+
+const raffle = read('js/portal/events/manage/raffle.js');
+!raffle.includes('_raffleConfig(') && raffle.includes('const config = raffleConfig(e)')
+    ? pass('raffle.js uses local helpers (not sheet-private _raffle* names)')
+    : fail('raffle.js must call raffleConfig/raffleCategories helpers without underscore prefixes');
+
 console.log('\n── manage/overview.js — overview module (Phase 5M.3A) ───────────────────────');
 
 overview.includes('window.EventsManageOverview =')
@@ -320,11 +337,11 @@ classicChain3c && classicChain3c.includes('manage/overview.js')
     : fail('manage/overview.js missing from classic-chain-loader.js chain');
 
 classicChain3c && classicChain3c.includes(MANAGE_SHEET_CHAIN)
-    ? pass('manage/sheet.js?v=112 present in classic-chain-loader.js chain')
-    : fail('manage/sheet.js?v=112 missing from classic-chain-loader.js chain');
+    ? pass('manage/sheet.js?v=113 present in classic-chain-loader.js chain')
+    : fail('manage/sheet.js?v=113 missing from classic-chain-loader.js chain');
 
 (() => {
-    const iScrap = classicChain3c.indexOf('scrapbook.js');
+    const iScrap = classicChain3c.indexOf('detail/scrapbook.js');
     const iShell = classicChain3c.indexOf('manage/shell.js');
     const iOverview = classicChain3c.indexOf('manage/overview.js');
     const iImages = classicChain3c.indexOf('manage/images.js');
@@ -335,13 +352,15 @@ classicChain3c && classicChain3c.includes(MANAGE_SHEET_CHAIN)
     const iPart = classicChain3c.indexOf('manage/participation.js');
     const iRaffle = classicChain3c.indexOf('manage/raffle.js');
     const iDanger = classicChain3c.indexOf('manage/danger.js');
+    const iReexports = classicChain3c.indexOf('compat/global-reexports.js');
     const iSheet = classicChain3c.indexOf(MANAGE_SHEET_CHAIN);
     const ok = iScrap >= 0 && iShell > iScrap && iOverview > iShell
         && iImages > iOverview && iDocs > iImages && iRsvps > iDocs
         && iMoney > iRsvps && iComp > iMoney
-        && iPart > iComp && iRaffle > iPart && iDanger > iRaffle && iSheet > iDanger;
+        && iPart > iComp && iRaffle > iPart && iDanger > iRaffle
+        && iReexports > iDanger && iSheet > iReexports;
     ok
-        ? pass('loader order: … → competition → participation → raffle → danger → sheet')
+        ? pass('loader order: … → danger → global-reexports → sheet')
         : fail('manage module loader order incorrect');
 })();
 
@@ -401,12 +420,12 @@ initJs.includes('let _eventsPageInitialized = false')
 // ─── Phase 2 bridges still intact ────────────────────────
 console.log('\n── Phase 2 bridges — regression check ─────────────────────────────────────');
 
-const constantsJs = read('js/portal/events/constants.js');
-constantsJs.includes('window.PortalEvents.constants')
-    ? pass('window.PortalEvents.constants still present (Phase 2 constants bridge intact)')
+const indexJs = read('js/portal/events/index.js');
+indexJs.includes('window.PortalEvents.constants')
+    ? pass('window.PortalEvents.constants still present (index.js bridge intact)')
     : fail('window.PortalEvents.constants missing — Phase 2 regression');
 
-const raffleJs = read('js/portal/events/raffle-model.js');
+const raffleJs = read('js/portal/events/core/raffle-model.js');
 raffleJs.includes('root.PortalEvents.raffleModel = api')
     ? pass('root.PortalEvents.raffleModel still present (Phase 2 raffle bridge intact)')
     : fail('root.PortalEvents.raffleModel missing — Phase 2 regression');
@@ -417,13 +436,13 @@ raffleJs.includes('root.EventsRaffleModel = api')
 // ─── Phase 3A list bridge still intact ───────────────────
 console.log('\n── Phase 3A bridge (list.js) — regression check ───────────────────────────');
 
-const listJs = read('js/portal/events/list.js');
+const listJs = read('js/portal/events/list/shell.js');
 listJs.includes('window.PortalEvents.list = {')
     ? pass('window.PortalEvents.list namespace still present (Phase 3A intact)')
     : fail('window.PortalEvents.list namespace missing — Phase 3A regression');
 listJs.includes('(function ()')
-    ? pass('list.js still IIFE (Phase 3A structure intact)')
-    : fail('list.js lost IIFE wrapper — Phase 3A regression');
+    ? pass('list/shell.js still IIFE (Phase 3A structure intact)')
+    : fail('list/shell.js lost IIFE wrapper — Phase 3A regression');
 
 // ─── Phase 3B detail bridge still intact ─────────────────
 console.log('\n── Phase 3B bridge (detail.js) — regression check ─────────────────────────');

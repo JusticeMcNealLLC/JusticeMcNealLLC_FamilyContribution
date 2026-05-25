@@ -10,6 +10,10 @@
         return window.EventsManageOverviewApi || {};
     }
 
+    function getState() {
+        return api().getState?.() || {};
+    }
+
     function esc(s) {
         const el = document.createElement('span');
         el.textContent = s == null ? '' : String(s);
@@ -48,7 +52,8 @@
         }
     }
 
-        function overviewHtml() {
+    function overviewHtml() {
+        const STATE = getState();
         const e = STATE.event;
         const guestGoing = STATE.guestRsvps.filter(r => r.status === 'going').length;
         const going = STATE.rsvps.filter(r => r.status === 'going').length + guestGoing;
@@ -193,6 +198,7 @@
     }
 
     function wireOverview() {
+        const STATE = getState();
         const e = STATE.event;
         if (!e) return;
         const inviteUrl = publicEventUrl(e);
@@ -223,7 +229,7 @@
         const copyStatus = document.getElementById('emCopyStatus');
         copyForm?.addEventListener('submit', (ev) => {
             ev.preventDefault();
-            _saveEventCopy(copyForm);
+            saveEventCopy(copyForm);
         });
         document.getElementById('emCopyCancel')?.addEventListener('click', () => {
             if (copyTitle) copyTitle.value = STATE.event?.title || '';
@@ -245,6 +251,7 @@
     }
 
     async function saveEventCopy(form) {
+        const STATE = getState();
         const e = STATE.event;
         if (!e || !form) return;
         const titleInput = document.getElementById('emCopyTitle');
@@ -319,7 +326,7 @@
         const venueCanvas = document.getElementById('emVenueQR');
         if ((!inviteCanvas || !e.slug) && (!venueCanvas || !e.venue_qr_token)) return;
         try {
-            const qr = await _ensureQrCode();
+            const qr = await ensureQrCode();
             if (inviteCanvas?.isConnected && e.slug) {
                 qr.toCanvas(inviteCanvas, inviteUrl, { width: 220, margin: 2, color: { dark: '#111827', light: '#ffffff' } });
             }
@@ -332,7 +339,7 @@
     }
 
     async function toggleFeatured() {
-        const STATE = api().getState?.() || {};
+        const STATE = getState();
         const btn = document.getElementById('emFeaturedToggle');
         if (!btn) return;
         const newVal = !(STATE.event.is_featured);

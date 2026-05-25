@@ -44,7 +44,7 @@
             return api().emptyHtml?.('Not a competition', 'This is not a competition event. Set event type to "Competition" to use this tab.');
         }
         const d = STATE.tabData.comp;
-        const fmt = window.formatCurrency || _money;
+        const fmt = window.formatCurrency || money;
         const cfg = e.competition_config || {};
         const liveEntries = d.entries.filter(x => !x.moderated);
         const moderatedCount = d.entries.length - liveEntries.length;

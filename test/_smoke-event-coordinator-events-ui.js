@@ -10,10 +10,10 @@ const root = path.resolve(__dirname, '..');
 
 const portalFiles = {
     init: 'js/portal/events/init.js',
-    list: 'js/portal/events/list.js',
+    list: 'js/portal/events/list/shell.js',
     detail: 'js/portal/events/detail.js',
     rsvp: 'js/portal/events/rsvp.js',
-    scrapbook: 'js/portal/events/scrapbook.js',
+    scrapbook: 'js/portal/events/detail/scrapbook.js',
     manageSheet: 'js/portal/events/manage/sheet.js',
 };
 
@@ -31,8 +31,8 @@ assert(/canCreateEvents\(\)/.test(sources.init), 'init.js should gate create but
 assert(!/evtCurrentUserRole === 'admin'/.test(sources.init), 'init.js should not use evtCurrentUserRole for create');
 
 const listCreateCount = (sources.list.match(/canCreateEvents\(\)/g) || []).length;
-assert(listCreateCount >= 3, `list.js should use canCreateEvents() for create UI (found ${listCreateCount})`);
-assert(!/evtCurrentUserRole === 'admin'/.test(sources.list), 'list.js should not use evtCurrentUserRole === admin');
+assert(listCreateCount >= 3, `list/shell.js should use canCreateEvents() for create UI (found ${listCreateCount})`);
+assert(!/evtCurrentUserRole === 'admin'/.test(sources.list), 'list/shell.js should not use evtCurrentUserRole === admin');
 
 // ── canManageEvents on manage/host/delete/drafts/scrapbook ──
 assert(/canManageEvents\(\)/.test(sources.detail), 'detail.js should use canManageEvents() for isHost/delete');

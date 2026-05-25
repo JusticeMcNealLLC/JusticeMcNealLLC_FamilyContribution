@@ -33,16 +33,21 @@
     const RAFFLE_PRIZE_IMAGE_FILES = {};
     const RAFFLE_PRIZE_IMAGE_PREVIEWS = {};
 
-    const DOC_TYPES = [
-        { value: 'plane_ticket', label: 'Plane Ticket', perMember: true },
-        { value: 'group_ticket', label: 'Group Ticket / Pass', perMember: false },
-        { value: 'itinerary', label: 'Itinerary', perMember: false },
-        { value: 'receipt', label: 'Receipt', perMember: false },
-        { value: 'other', label: 'Other', perMember: false },
-    ];
+    function getDocTypes() {
+        const types = window.EventsConstants && window.EventsConstants.EVENT_DOC_TYPES;
+        return types && types.length ? types : [];
+    }
 
     const Shell = window.EventsManageShell;
     const Overview = window.EventsManageOverview;
+    const Images = window.EventsManageImages;
+    const Rsvps = window.EventsManageRsvps;
+    const Danger = window.EventsManageDanger;
+    const Money = window.EventsManageMoney;
+    const Docs = window.EventsManageDocs;
+    const Raffle = window.EventsManageRaffle;
+    const Comp = window.EventsManageCompetition;
+    const Participation = window.EventsManageParticipation;
 
     function _ensureMounted() { return Shell.ensureMounted(); }
     function _renderHeader() { return Shell.renderHeader(); }
@@ -86,7 +91,7 @@
         STATE.activeTab = Shell.getTabs().some(t => t.key === opts.tab) ? opts.tab : 'overview';
         STATE.editCopyOnOpen = !!opts.editCopy;
         STATE.tabData = {};
-        Raffle.clearPrizeImageState();
+        Raffle?.clearPrizeImageState?.();
 
         Shell.setLoadingChrome();
         Shell.openPanel();
@@ -213,7 +218,7 @@
 
     window.EventsManageDocsApi = {
         getState: () => STATE,
-        getDocTypes: () => DOC_TYPES,
+        getDocTypes,
         renderTab: _renderTab,
         notifyParent: _notifyParent,
     };

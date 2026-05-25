@@ -6,7 +6,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 
-const list = read('js/portal/events/list.js');
+const list = read('js/portal/events/list/shell.js');
 const css  = require('./_events-css');
 const sw   = read('sw.js');
 const mig  = read('supabase/migrations/063_events_tables.sql');

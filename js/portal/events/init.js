@@ -262,61 +262,8 @@ function evtSetupListeners() {
     });
 }
 
-// ─── Global Exports (for onclick handlers in HTML) ──────
-
-window.evtHandleRsvp = evtHandleRsvp;
-window.evtHandleRaffleEntry = evtHandleRaffleEntry;
-window.evtOpenScanner = evtOpenScanner;
-window.evtOpenRaffleDraw = evtOpenRaffleDraw;
-window.evtDrawWinner = evtDrawWinner;
-window.evtToggleModal = evtToggleModal;
-window.evtUpdateStatus = evtUpdateStatus;
-window.evtCopyShareUrl = evtCopyShareUrl;
-window.evtCloseScanner = evtCloseScanner;
-
 // ── Bridge exposure ──────────────────────────────────────
-// Makes initEventsPage callable from the PortalEvents namespace.
-// In Phase 5, index.js will import/call this directly once the HTML
-// is switched to a single module entry. Until then it is unused.
+// Classic evt* onclick globals are assigned in compat/global-reexports.js
+// (loaded at end of classic-chain-loader, before manage/sheet.js).
 window.PortalEvents = window.PortalEvents || {};
 window.PortalEvents.initEventsPage = initEventsPage;
-window.evtCloseRaffleDraw = evtCloseRaffleDraw;
-window.evtAddCostItem = evtAddCostItem;
-window.evtRemoveCostItem = evtRemoveCostItem;
-window.evtUpdateCostItem = evtUpdateCostItem;
-window.evtJoinWaitlist = evtJoinWaitlist;
-window.evtLeaveWaitlist = evtLeaveWaitlist;
-window.evtDuplicateEvent = evtDuplicateEvent;
-window.evtCancelEvent = evtCancelEvent;
-window.evtRescheduleEvent = evtRescheduleEvent;
-window.evtDeleteEvent = evtDeleteEvent;
-window.evtClaimWaitlistSpot = evtClaimWaitlistSpot;
-// Document management exports
-window.evtShowUploadForm = evtShowUploadForm;
-window.evtUploadDocument = evtUploadDocument;
-window.evtDownloadDocument = evtDownloadDocument;
-window.evtMarkDistributed = evtMarkDistributed;
-window.evtDeleteDocument = evtDeleteDocument;
-window.evtOpenDocumentsPanel = evtOpenDocumentsPanel;
-window.evtCloseDocumentsPanel = evtCloseDocumentsPanel;
-// Live map exports
-window.evtInitMap = evtInitMap;
-window.evtToggleLocationSharing = evtToggleLocationSharing;
-// Competition exports
-window.evtJoinCompetition = evtJoinCompetition;
-window.evtSubmitEntry = evtSubmitEntry;
-window.evtCastVote = evtCastVote;
-window.evtModerateEntry = evtModerateEntry;
-window.evtContributeToPrizePool = evtContributeToPrizePool;
-window.evtStartPhase = evtStartPhase;
-window.evtAdvancePhase = evtAdvancePhase;
-window.evtExtendPhase = evtExtendPhase;
-window.evtFinalizeCompetition = evtFinalizeCompetition;
-window.evtRecalcCompTiers = evtRecalcCompTiers;
-// Scrapbook exports
-window.evtUploadPhoto = evtHandlePhotoSelect;
-window.evtDeletePhoto = evtDeletePhoto;
-window.evtViewPhoto = evtViewPhoto;
-// Navigation exports
-window.evtNavigateToEvent = evtNavigateToEvent;
-window.evtNavigateToList = evtNavigateToList;

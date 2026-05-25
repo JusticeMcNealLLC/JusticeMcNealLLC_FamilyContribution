@@ -41,9 +41,9 @@ function read(relPath) {
 }
 
 // ─── list.js file structure ──────────────────────────────
-console.log('\n── js/portal/events/list.js — file structure ─────────────────────────────');
+console.log('\n── js/portal/events/list/shell.js — file structure ─────────────────────────────');
 
-const list = read('js/portal/events/list.js');
+const list = read('js/portal/events/list/shell.js');
 const listSearchJs = read('js/portal/events/list/search.js');
 const listRightRailJs = read('js/portal/events/list/right-rail.js');
 const listHeaderJs = read('js/portal/events/list/header.js');
@@ -56,7 +56,7 @@ const classicChain3a = parseClassicChain(root);
 // Must be an IIFE (classic-script pattern)
 list.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
-    : fail('IIFE wrapper missing — list.js must remain a classic-script IIFE');
+    : fail('IIFE wrapper missing — list/shell.js must remain a classic-script IIFE');
 
 list.includes("'use strict';")
     ? pass("'use strict' present inside IIFE")
@@ -70,10 +70,10 @@ list.includes("'use strict';")
 // File must be substantial (>2000 lines worth of content)
 list.length > 40000
     ? pass(`File size reasonable (${list.length.toLocaleString()} chars — no accidental truncation)`)
-    : fail('list.js appears truncated (< 40k chars)', `actual: ${list.length}`);
+    : fail('list/shell.js appears truncated (< 40k chars)', `actual: ${list.length}`);
 
 // ─── Public globals assigned in source ───────────────────
-console.log('\n── list.js — public globals (window.evt*) ─────────────────────────────────');
+console.log('\n── list/shell.js — public globals (window.evt*) ─────────────────────────────────');
 
 const REQUIRED_GLOBALS = [
     ['window.evtLoadEvents',       'loadEvents',       'init.js calls evtLoadEvents()'],
@@ -99,7 +99,7 @@ REQUIRED_GLOBALS.forEach(([globalAssign, fnName, note]) => {
 });
 
 // Bare identifier assignments (init.js accesses these without window. prefix)
-console.log('\n── list.js — bare identifier compatibility (init.js callers) ───────────────');
+console.log('\n── list/shell.js — bare identifier compatibility (init.js callers) ───────────────');
 
 // init.js calls evtLoadEvents, evtInitFilterChips, evtSetupSearch as bare identifiers.
 // In classic scripts, window.evtLoadEvents === evtLoadEvents, so these checks verify
@@ -111,7 +111,7 @@ console.log('\n── list.js — bare identifier compatibility (init.js callers
 });
 
 // ─── Internal functions referenced by init.js indirectly ─
-console.log('\n── list.js — internal functions ─────────────────────────────────────────────');
+console.log('\n── list/shell.js — internal functions ─────────────────────────────────────────────');
 
 const INTERNAL_FNS = [
     'function loadEvents',
@@ -156,8 +156,8 @@ const movedFromList = [
 ];
 movedFromList.forEach(([pattern, label]) => {
     !list.includes(pattern)
-        ? pass(`${label} removed from list.js (moved to list module)`)
-        : fail(`${label} still in list.js body`);
+        ? pass(`${label} removed from list/shell.js (moved to list module)`)
+        : fail(`${label} still in list/shell.js body`);
 });
 
 // ─── List modules (Phase 5M.2A / 5M.2B / 5M.2C) ──────────
@@ -169,14 +169,14 @@ console.log('\n── js/portal/events/list/*.js — list modules (5M.2A–5M.2C
         : fail(`${rel} missing from classic-chain-loader.js chain`);
 });
 
-chainOrderOk(classicChain3a, 'raffle-model.js', 'list/search.js', 'list/right-rail.js')
+chainOrderOk(classicChain3a, 'core/raffle-model.js', 'list/search.js', 'list/right-rail.js')
     && chainOrderOk(classicChain3a, 'list/right-rail.js', 'list/header.js')
     && chainOrderOk(classicChain3a, 'list/header.js', 'list/filters.js')
     && chainOrderOk(classicChain3a, 'list/filters.js', 'list/calendar.js')
     && chainOrderOk(classicChain3a, 'list/calendar.js', 'list/hero-rails.js')
     && chainOrderOk(classicChain3a, 'list/hero-rails.js', 'list/buckets.js')
-    && chainOrderOk(classicChain3a, 'list/buckets.js', 'list.js')
-    ? pass('loader order: raffle-model → list/* → list.js')
+    && chainOrderOk(classicChain3a, 'list/buckets.js', 'list/shell.js')
+    ? pass('loader order: raffle-model → list/* → list/shell.js')
     : fail('loader list module order');
 
 listSearchJs.includes('window.PortalEventsListSearch')
@@ -205,8 +205,8 @@ listHeaderJs.includes('window.PortalEventsListHeader')
     : fail('header.js missing header helpers');
 
 list.includes('PortalEventsListSearch.setupSearch')
-    ? pass('list.js delegates setupSearch to PortalEventsListSearch')
-    : fail('list.js missing setupSearch delegate');
+    ? pass('list/shell.js delegates setupSearch to PortalEventsListSearch')
+    : fail('list/shell.js missing setupSearch delegate');
 
 listFiltersJs.includes('window.PortalEventsListFilters')
     && listFiltersJs.includes('function initFilterChips')
@@ -222,8 +222,8 @@ listCalendarJs.includes('window.PortalEventsListCalendar')
 
 list.includes('PortalEventsListFilters.initFilterChips')
     && list.includes('PortalEventsListCalendar.renderCalendar')
-    ? pass('list.js delegates filters and calendar to list modules')
-    : fail('list.js missing filter/calendar delegates');
+    ? pass('list/shell.js delegates filters and calendar to list modules')
+    : fail('list/shell.js missing filter/calendar delegates');
 
 listHeroRailsJs.includes('window.PortalEventsListHeroRails')
     && listHeroRailsJs.includes('function renderHero')
@@ -238,24 +238,24 @@ listBucketsJs.includes('window.PortalEventsListBuckets')
 
 list.includes('PortalEventsListHeroRails.renderHero')
     && list.includes('PortalEventsListBuckets.renderBucket')
-    ? pass('list.js delegates hero-rails and buckets to list modules')
-    : fail('list.js missing hero-rails/buckets delegates');
+    ? pass('list/shell.js delegates hero-rails and buckets to list modules')
+    : fail('list/shell.js missing hero-rails/buckets delegates');
 
 list.includes('function loadEvents')
     && list.includes('function renderEvents')
-    ? pass('list.js still owns loadEvents and renderEvents orchestrator')
-    : fail('list.js missing core orchestrator functions');
+    ? pass('list/shell.js still owns loadEvents and renderEvents orchestrator')
+    : fail('list/shell.js missing core orchestrator functions');
 
 // ─── window.PortalEvents.list namespace ──────────────────
-console.log('\n── list.js — window.PortalEvents.list namespace ─────────────────────────────');
+console.log('\n── list/shell.js — window.PortalEvents.list namespace ─────────────────────────────');
 
 list.includes('window.PortalEvents.list = {')
     ? pass('window.PortalEvents.list namespace assigned')
     : fail('window.PortalEvents.list namespace missing');
 
 list.includes('window.PortalEvents = window.PortalEvents ||')
-    ? pass('window.PortalEvents safe-init guard present in list.js')
-    : fail('window.PortalEvents safe-init guard missing in list.js');
+    ? pass('window.PortalEvents safe-init guard present in list/shell.js')
+    : fail('window.PortalEvents safe-init guard missing in list/shell.js');
 
 // Phase 3A: verify new namespace keys are present
 const NAMESPACE_KEYS = [
@@ -296,13 +296,13 @@ console.log('\n── portal/events.html invariants ─────────�
 
 const html = read('portal/events.html');
 
-classicChain3a && classicChain3a.includes('list.js')
-    ? pass('list.js present in classic-chain-loader.js chain')
-    : fail('list.js missing from classic-chain-loader.js chain');
+classicChain3a && classicChain3a.includes('list/shell.js')
+    ? pass('list/shell.js present in classic-chain-loader.js chain')
+    : fail('list/shell.js missing from classic-chain-loader.js chain');
 
-isProductionLoaded(html, classicChain3a, '../js/portal/events/list.js')
-    ? pass('list.js still loaded in production (HTML or classic-chain-loader)')
-    : fail('list.js not in production load model');
+isProductionLoaded(html, classicChain3a, '../js/portal/events/list/shell.js')
+    ? pass('list/shell.js still loaded in production (HTML or classic-chain-loader)')
+    : fail('list/shell.js not in production load model');
 
 html.includes('classic-chain-loader.js')
     ? pass('portal/events.html uses classic-chain-loader.js (3-tag production model)')
@@ -310,7 +310,7 @@ html.includes('classic-chain-loader.js')
 
 /src="\.\.\/js\/portal\/events\/list\.js"[^>]*type="module"/.test(html)
     ? fail('list.js loaded with type="module" — premature, Phase 5 only')
-    : pass('list.js does NOT have type="module" in HTML (Phase 5 deferred — correct)');
+    : pass('list/shell.js does NOT have type="module" in HTML (Phase 5 deferred — correct)');
 
 // No portal/events/* scripts with type="module"
 /<script[^>]+type="module"[^>]+src="\.\.\/js\/portal\/events\//.test(html)
@@ -359,12 +359,12 @@ initJs.includes('let _eventsPageInitialized = false')
 // ─── Phase 2 bridges still intact ────────────────────────
 console.log('\n── Phase 2 bridges — regression check ─────────────────────────────────────');
 
-const constantsJs = read('js/portal/events/constants.js');
-constantsJs.includes('window.PortalEvents.constants')
-    ? pass('window.PortalEvents.constants still present (Phase 2 constants bridge intact)')
+const indexJs = read('js/portal/events/index.js');
+indexJs.includes('window.PortalEvents.constants')
+    ? pass('window.PortalEvents.constants still present (index.js bridge intact)')
     : fail('window.PortalEvents.constants missing — Phase 2 regression');
 
-const raffleJs = read('js/portal/events/raffle-model.js');
+const raffleJs = read('js/portal/events/core/raffle-model.js');
 raffleJs.includes('root.PortalEvents.raffleModel = api')
     ? pass('root.PortalEvents.raffleModel still present (Phase 2 raffle bridge intact)')
     : fail('root.PortalEvents.raffleModel missing — Phase 2 regression');

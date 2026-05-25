@@ -46,8 +46,8 @@ assert(/https:\/\/justicemcneal\.com/.test(manageSheet), 'invitation QR should u
 assert(/em-sheet-hidden/.test(manageSheet), 'manage sheet should use a dedicated hidden class so responsive display utilities cannot keep it mounted');
 assert(/panel\.classList\.add\('pointer-events-auto'/.test(manageSheet), 'manage sheet panel should restore pointer events on open');
 assert(/panel\.classList\.add\('pointer-events-none'/.test(manageSheet), 'manage sheet panel should disable pointer events on close');
-assert(/manage\/sheet\.js\?v=112/.test(adminEventsHtml), 'admin events should request a versioned manage sheet to bypass stale SW caches');
-assert(/manage\/sheet\.js\?v=112/.test(portalEventsHtml), 'portal events should request a versioned manage sheet to bypass stale SW caches');
+assert(/manage\/sheet\.js\?v=113/.test(adminEventsHtml), 'admin events should request a versioned manage sheet to bypass stale SW caches');
+assert(/manage\/sheet\.js\?v=113/.test(portalEventsHtml), 'portal events should request a versioned manage sheet to bypass stale SW caches');
 assert(/Reset test participation/.test(manageSheet), 'danger zone should expose participation reset');
 assert(/_resetParticipation/.test(manageSheet), 'manage sheet should implement participation reset action');
 assert(participationFn.indexOf("deleteByEvent(supabase, 'event_raffle_winners', eventId)") < participationFn.indexOf("deleteByEvent(supabase, 'event_rsvps', eventId)"), 'participation reset should delete dependent records before RSVPs');

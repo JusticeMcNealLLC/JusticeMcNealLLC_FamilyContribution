@@ -178,13 +178,13 @@ console.log('\n── Phase 1-3E bridge files still exist ───────�
 [
     'js/portal/events/index.js',
     'js/portal/events/init.js',
-    'js/portal/events/constants.js',
-    'js/portal/events/raffle-model.js',
-    'js/portal/events/list.js',
+    'js/components/events/constants.js',
+    'js/portal/events/core/raffle-model.js',
+    'js/portal/events/list/shell.js',
     'js/portal/events/detail.js',
     'js/portal/events/manage/sheet.js',
     'js/portal/events/create/sheet.js',
-    'js/portal/events/competition.js'
+    'js/portal/events/detail/competition.js'
 ].forEach((rel) => check(`${rel} exists`, exists(rel)));
 
 console.log('\n── Phase 4 docs remain intact ─────────────────────────────────────────');

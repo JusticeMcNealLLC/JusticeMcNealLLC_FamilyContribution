@@ -907,12 +907,12 @@ initJs.includes('let _eventsPageInitialized = false')
 // ─── Phase 2 bridges still intact ────────────────────────
 console.log('\n── Phase 2 bridges — regression check ─────────────────────────────────────');
 
-const constantsJs = read('js/portal/events/constants.js');
-constantsJs.includes('window.PortalEvents.constants')
-    ? pass('window.PortalEvents.constants still present (Phase 2 constants bridge intact)')
+const indexJs = read('js/portal/events/index.js');
+indexJs.includes('window.PortalEvents.constants')
+    ? pass('window.PortalEvents.constants still present (index.js bridge intact)')
     : fail('window.PortalEvents.constants missing — Phase 2 regression');
 
-const raffleJs = read('js/portal/events/raffle-model.js');
+const raffleJs = read('js/portal/events/core/raffle-model.js');
 raffleJs.includes('root.PortalEvents.raffleModel = api')
     ? pass('root.PortalEvents.raffleModel still present (Phase 2 raffle bridge intact)')
     : fail('root.PortalEvents.raffleModel missing — Phase 2 regression');
@@ -923,13 +923,13 @@ raffleJs.includes('root.EventsRaffleModel = api')
 // ─── Phase 3A list bridge still intact ───────────────────
 console.log('\n── Phase 3A bridge (list.js) — regression check ───────────────────────────');
 
-const listJs = read('js/portal/events/list.js');
+const listJs = read('js/portal/events/list/shell.js');
 listJs.includes('window.PortalEvents.list = {')
     ? pass('window.PortalEvents.list namespace still present (Phase 3A intact)')
     : fail('window.PortalEvents.list namespace missing — Phase 3A regression');
 listJs.includes('(function ()')
-    ? pass('list.js still IIFE (Phase 3A structure intact)')
-    : fail('list.js lost IIFE wrapper — Phase 3A regression');
+    ? pass('list/shell.js still IIFE (Phase 3A structure intact)')
+    : fail('list/shell.js lost IIFE wrapper — Phase 3A regression');
 
 // ─── Summary ─────────────────────────────────────────────
 const total = passed + failed;

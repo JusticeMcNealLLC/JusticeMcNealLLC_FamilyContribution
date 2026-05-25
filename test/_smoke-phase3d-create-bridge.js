@@ -26,6 +26,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+const exists = (rel) => fs.existsSync(path.join(ROOT, rel));
 const {
     parseClassicChain,
     isProductionLoaded,
@@ -49,7 +50,6 @@ function check(label, ok, detail) {
 }
 
 const sheet  = read('js/portal/events/create/sheet.js');
-const createJs = read('js/portal/events/create.js');
 const geocodeJs = read('js/portal/events/create/geocode.js');
 const stepBasicsJs = read('js/portal/events/create/step-basics.js');
 const stepWhenJs = read('js/portal/events/create/step-when.js');
@@ -231,27 +231,23 @@ check('create/geocode.js assigns window.evtGeocodeAddress',
 check('create/geocode.js assigns window.evtExpandAddress',
     geocodeJs.includes('window.evtExpandAddress = evtExpandAddress'));
 
-// ── create.js facade + legacy modules (5M.1.5) ─────────────────────────────
-console.log('\n── js/portal/events/create.js — legacy facade + production chain ───────────');
+// ── legacy create modules (5M.1.5; empty create.js facade removed) ─────────
+console.log('\n── create legacy modules + production chain ───────────────────────────────');
 
-check('create.js present in classic-chain-loader.js chain',
-    classicChain3d && classicChain3d.includes('create.js'));
+check('empty create.js facade removed from repo',
+    !exists('js/portal/events/create.js'));
 
-check('create.js loaded in production (HTML or classic-chain-loader)',
-    isProductionLoaded(events, classicChain3d, '../js/portal/events/create.js'));
+check('create.js not in classic-chain-loader.js chain',
+    !classicChain3d || !classicChain3d.includes("'create.js'"));
 
-check('create.js is thin facade (no evtHandleCreate body)',
-    !createJs.includes('async function evtHandleCreate')
-    && createJs.includes('legacy-submit.js'));
+check('evtHandleCreate lives in create/legacy-submit.js',
+    legacySubmitJs.includes('async function evtHandleCreate')
+    || legacySubmitJs.includes('function evtHandleCreate'));
 
-check('create.js does not define evtGeocodeAddress (geocode module)',
-    !createJs.includes('async function evtGeocodeAddress')
-    && !createJs.match(/function evtGeocodeAddress\s*\(/));
+check('legacy-submit.js has no native export (classic-script safe)',
+    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(legacySubmitJs)));
 
-check('create.js has no native export (classic-script safe)',
-    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(createJs)));
-
-check('load order: geocode → legacy modules → create.js → step-basics',
+check('load order: geocode → legacy modules → step-basics',
     chainOrderOk(
         classicChain3d,
         'create/geocode.js',
@@ -259,7 +255,6 @@ check('load order: geocode → legacy modules → create.js → step-basics',
         'create/legacy-location.js',
         'create/legacy-preview.js',
         'create/legacy-submit.js',
-        'create.js',
         'create/step-basics.js'
     ));
 
@@ -462,10 +457,10 @@ check('Phase 1 duplicate-init guard still present in init.js',
 // ── Phase 2 bridges regression ────────────────────────────────────────────
 console.log('\n── Phase 2 bridges — regression check ─────────────────────────────────────');
 
-const constants   = read('js/portal/events/constants.js');
-const raffleModel = read('js/portal/events/raffle-model.js');
+const constants   = read('js/portal/events/index.js');
+const raffleModel = read('js/portal/events/core/raffle-model.js');
 
-check('window.PortalEvents.constants still present (Phase 2 constants bridge intact)',
+check('window.PortalEvents.constants still present (index.js bridge intact)',
     constants.includes('window.PortalEvents.constants'));
 
 check('root.PortalEvents.raffleModel still present (Phase 2 raffle bridge intact)',
@@ -477,12 +472,12 @@ check('root.EventsRaffleModel still present (primary classic global preserved)',
 // ── Phase 3A regression ───────────────────────────────────────────────────
 console.log('\n── Phase 3A bridge (list.js) — regression check ──────────────────────────');
 
-const list = read('js/portal/events/list.js');
+const list = read('js/portal/events/list/shell.js');
 
 check('window.PortalEvents.list namespace still present (Phase 3A intact)',
     list.includes('window.PortalEvents.list'));
 
-check('list.js still IIFE (Phase 3A structure intact)',
+check('list/shell.js still IIFE (Phase 3A structure intact)',
     list.includes('(function () {'));
 
 // ── Phase 3B regression ───────────────────────────────────────────────────

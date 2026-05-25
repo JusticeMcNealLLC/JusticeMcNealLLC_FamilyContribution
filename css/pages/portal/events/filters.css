@@ -286,13 +286,19 @@ body.evt-vlift #evtLifecycleSeg .evt-seg__btn--active {
 /* Padding-bottom + negative-margin trick: overflow-x:auto forces overflow-y:auto,
    which would clip absolute dropdown menus. The padding extends the container
    downward so menus land within its scroll area; negative margin collapses the
-   layout gap so the chip rail still sits tight below the buttons. */
+   layout gap so the chip rail still sits tight below the buttons.
+   pointer-events: none on the row so this invisible padding does not block the
+   featured hero (#evtHero) underneath; direct children stay interactive. */
 #evtFilterRow2 {
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 250px;
     margin-bottom: -250px;
+    pointer-events: none;
+}
+#evtFilterRow2 > * {
+    pointer-events: auto;
 }
 #evtFilterRow2::-webkit-scrollbar { display: none; }
 

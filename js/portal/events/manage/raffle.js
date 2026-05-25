@@ -48,7 +48,6 @@
     }
 
     function ord(n) {
-        const STATE = api().getState?.() || {};
         const s = ['th','st','nd','rd'], v = n % 100;
         return n + (s[(v-20)%10] || s[v] || s[0]);
     }
@@ -60,36 +59,36 @@
             return api().emptyHtml?.('Raffle not enabled', 'Enable the raffle on the portal detail page (Edit event → Raffle).');
         }
         const d = STATE.tabData.raffle;
-        const fmt = window.formatCurrency || _money;
+        const fmt = window.formatCurrency || money;
         const guestByToken = new Map((d.guests || []).map(g => [g.guest_token, g]));
         const eligibleEntries = d.entries.filter(en => en.paid || !e.raffle_entry_cost_cents);
         const memberEntries = eligibleEntries.filter(en => en.user_id);
         const guestEntries = eligibleEntries.filter(en => en.guest_token);
-        const raffleConfig = _raffleConfig(e);
-        const categories = _raffleCategories(raffleConfig);
-        const drawQueue = _raffleDrawQueue(raffleConfig, d.winners);
+        const config = raffleConfig(e);
+        const categories = raffleCategories(config);
+        const drawQueue = raffleDrawQueue(config, d.winners);
         const winnersDrawn = d.winners.length;
-        const totalPrizes = _raffleTotalWinners(raffleConfig) || e.raffle_winner_count || winnersDrawn;
+        const totalPrizes = raffleTotalWinners(config) || e.raffle_winner_count || winnersDrawn;
         const remainingDraws = Math.max(0, totalPrizes - winnersDrawn);
         const allDrawn = totalPrizes > 0 && winnersDrawn >= totalPrizes;
         const canDraw = typeof window.evtOpenRaffleDraw === 'function' && eligibleEntries.length > 0 && !allDrawn;
         const drawPct = totalPrizes ? Math.round((winnersDrawn / totalPrizes) * 100) : 0;
         const raffleEntryPriceDollars = (Number(e.raffle_entry_cost_cents || 0) / 100).toFixed(2);
         const paidEventRaffleIncluded = e.pricing_mode === 'paid';
-        const prizeSetupHtml = _rafflePrizeSetupHtml(raffleConfig, d.winners);
+        const prizeSetupHtml = rafflePrizeSetupHtml(config, d.winners);
 
         const winnerRows = d.winners.length ? d.winners.map(w => {
             const p = w.profiles || {};
             const guest = w.guest_token ? guestByToken.get(w.guest_token) : null;
             const name = w.user_id ? (`${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Member') : (guest?.guest_name || `Guest · ${(w.guest_token || '').slice(0,8)}`);
             const medal = ['🥇','🥈','🥉'][w.place - 1] || `#${w.place}`;
-            const choiceHtml = _winnerChoiceHtml(w, raffleConfig, d.winners);
+            const choiceHtml = winnerChoiceHtml(w, config, d.winners);
             return `
                 <div class="em-attendee-card">
                     <div class="em-avatar" style="background:#faf5ff;color:#7c3aed;font-size:18px">${medal}</div>
                     <div class="em-attendee-main">
                         <p class="em-attendee-name">${esc(name)}</p>
-                        <p class="em-attendee-sub">${_ord(w.place)} place · ${esc(w.prize_description || 'Prize pending')}</p>
+                        <p class="em-attendee-sub">${ord(w.place)} place · ${esc(w.prize_description || 'Prize pending')}</p>
                         <div class="flex flex-wrap gap-1 mt-2">
                             <span class="em-pill em-pill-checked">${w.user_id ? 'Member' : 'Guest'}</span>
                             ${w.selection_status === 'pending_choice' ? '<span class="em-pill em-pill-paid">Needs prize choice</span>' : '<span class="em-pill em-pill-going">Prize assigned</span>'}
@@ -102,7 +101,7 @@
 
         const entryRevenue = eligibleEntries.reduce((s, en) => s + (en.amount_paid_cents || 0), 0);
         const categoryHtml = categories.length ? categories.map(cat => {
-            const items = _raffleItems(raffleConfig, cat.id);
+            const items = raffleItems(config, cat.id);
             const pendingSlots = drawQueue.filter(slot => slot.category_id === cat.id).length;
             const drawnCount = Math.max(0, (cat.winner_count || 0) - pendingSlots);
             const itemPreview = items.length ? items.slice(0, 3).map(item => `${item.emoji || '🎁'} ${esc(item.name)}${item.quantity > 1 ? ` ×${item.quantity}` : ''}`).join(', ') : 'Prize details pending';
@@ -113,7 +112,7 @@
                         <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${esc(cat.label || 'Prize category')}</p></div>
                         <span class="em-op-icon">🎁</span>
                     </div>
-                    <p class="em-op-copy">${_drawModeLabel(cat.draw_mode)} · ${drawnCount}/${cat.winner_count || 0} drawn</p>
+                    <p class="em-op-copy">${drawModeLabel(cat.draw_mode)} · ${drawnCount}/${cat.winner_count || 0} drawn</p>
                     <div class="em-op-progress"><span style="width:${cat.winner_count ? Math.round((drawnCount / cat.winner_count) * 100) : 0}%"></span></div>
                     <p class="em-op-copy">${itemPreview}${extraItems ? `, +${extraItems} more` : ''}</p>
                     <div class="em-op-meta"><span class="em-op-chip">${pendingSlots} left</span><span class="em-op-chip">${items.length} item${items.length === 1 ? '' : 's'}</span></div>
@@ -127,7 +126,7 @@
                 <div class="em-section-head">
                     <div>
                         <h3 class="em-section-title">Next draw</h3>
-                        <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc(_prizeSlotLabel(nextSlot)) : 'Next available prize'}${nextSlot?.category_label ? ` · ${esc(nextSlot.category_label)}` : ''}</p>
+                        <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc(prizeSlotLabel(nextSlot)) : 'Next available prize'}${nextSlot?.category_label ? ` · ${esc(nextSlot.category_label)}` : ''}</p>
                     </div>
                     <span class="em-pill em-pill-paid">${remainingDraws} remaining</span>
                 </div>
@@ -149,7 +148,7 @@
             <div class="em-card em-command-card mb-4">
                 <p class="em-command-eyebrow">Raffle command</p>
                 <h3 class="em-command-title">${allDrawn ? 'All winners drawn' : `${remainingDraws} draw${remainingDraws === 1 ? '' : 's'} remaining`}</h3>
-                <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? 'y' : 'ies'} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : 'No eligible raffle entries yet.'} ${nextSlot ? `Next up: ${esc(_prizeSlotLabel(nextSlot))}.` : ''}</p>
+                <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? 'y' : 'ies'} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : 'No eligible raffle entries yet.'} ${nextSlot ? `Next up: ${esc(prizeSlotLabel(nextSlot))}.` : ''}</p>
                 <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${drawPct}%;background:#a78bfa"></span></div>
             </div>
 
@@ -207,20 +206,20 @@
             drawBtn.onclick = () => window.evtOpenRaffleDraw?.(STATE.eventId, STATE.event);
         }
         document.getElementById('emSheetContent')?.querySelectorAll('[data-raffle-assign-choice]').forEach(btn => {
-            btn.onclick = () => _assignWinnerChoice(btn.dataset.winnerId);
+            btn.onclick = () => assignWinnerChoice(btn.dataset.winnerId);
         });
         document.getElementById('emSheetContent')?.querySelectorAll('[data-remove-raffle-entry]').forEach(btn => {
-            btn.onclick = () => _removeRaffleEntry(btn);
+            btn.onclick = () => removeRaffleEntry(btn);
         });
-        document.getElementById('emRafflePriceSave')?.addEventListener('click', _saveRaffleEntryPrice);
-        document.getElementById('emRafflePrizeSave')?.addEventListener('click', () => _saveRafflePrizeSetup());
-        document.querySelector('[data-em-raffle-add-category]')?.addEventListener('click', () => _saveRafflePrizeSetup({ addCategory: true }));
-        document.querySelector('[data-em-raffle-add-item]')?.addEventListener('click', () => _saveRafflePrizeSetup({ addItem: true }));
+        document.getElementById('emRafflePriceSave')?.addEventListener('click', saveRaffleEntryPrice);
+        document.getElementById('emRafflePrizeSave')?.addEventListener('click', () => saveRafflePrizeSetup());
+        document.querySelector('[data-em-raffle-add-category]')?.addEventListener('click', () => saveRafflePrizeSetup({ addCategory: true }));
+        document.querySelector('[data-em-raffle-add-item]')?.addEventListener('click', () => saveRafflePrizeSetup({ addItem: true }));
         document.querySelectorAll('[data-em-raffle-remove-category]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const label = btn.dataset.categoryLabel || 'this category';
                 if (confirm(`Remove ${label}? Prize items in this category will move to the first remaining category.`)) {
-                    _saveRafflePrizeSetup({ removeCategoryId: btn.dataset.emRaffleRemoveCategory });
+                    saveRafflePrizeSetup({ removeCategoryId: btn.dataset.emRaffleRemoveCategory });
                 }
             });
         });
@@ -228,11 +227,11 @@
             btn.addEventListener('click', () => {
                 const label = btn.dataset.itemLabel || 'this prize';
                 if (confirm(`Remove ${label} from the raffle prize setup? Existing drawn winner records are not deleted.`)) {
-                    _saveRafflePrizeSetup({ removeItemId: btn.dataset.emRaffleRemoveItem });
+                    saveRafflePrizeSetup({ removeItemId: btn.dataset.emRaffleRemoveItem });
                 }
             });
         });
-        _wireRafflePrizeImages();
+        wireRafflePrizeImages();
     }
 
     function rafflePrizeSetupHtml(config, winners = []) {
@@ -345,7 +344,7 @@
                     <button type="button" class="em-btn-ghost" data-em-raffle-add-item>Add prize</button>
                 </div>
                 ${itemRows}
-                ${validation.valid ? '' : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(_esc).join('<br>')}</div>`}
+                ${validation.valid ? '' : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(esc).join('<br>')}</div>`}
                 <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
                     <button type="button" id="emRafflePrizeSave" class="em-btn-primary">Save prize setup</button>
                     <span id="emRafflePrizeStatus" class="text-xs text-gray-400">${categories.length} categor${categories.length === 1 ? 'y' : 'ies'} · ${items.length} item${items.length === 1 ? '' : 's'}</span>
@@ -407,15 +406,15 @@
                 event.preventDefault();
                 zone.classList.remove('em-drag-over');
                 const file = event.dataTransfer?.files?.[0];
-                if (file) _setRafflePrizeImage(itemId, file);
+                if (file) setRafflePrizeImage(itemId, file);
             });
             fileInput.addEventListener('change', () => {
                 const file = fileInput.files?.[0];
-                if (file) _setRafflePrizeImage(itemId, file);
+                if (file) setRafflePrizeImage(itemId, file);
             });
         });
         document.querySelectorAll('[data-em-prize-clear]').forEach(btn => {
-            btn.addEventListener('click', () => _clearRafflePrizeImage(btn.dataset.emPrizeClear));
+            btn.addEventListener('click', () => clearRafflePrizeImage(btn.dataset.emPrizeClear));
         });
     }
 
@@ -454,12 +453,6 @@
         if (status) status.textContent = 'Image removed. Save prize setup to keep this change.';
     }
 
-    function clearRafflePrizeImageState() {
-        const STATE = api().getState?.() || {};
-        Object.keys(prizeImageFiles).forEach(key => delete prizeImageFiles[key]);
-        Object.keys(prizeImagePreviews).forEach(key => delete prizeImagePreviews[key]);
-    }
-
     async function uploadPendingRafflePrizeImages(config) {
         const STATE = api().getState?.() || {};
         const uploads = Object.entries(prizeImageFiles);
@@ -476,7 +469,7 @@
             if (up.error) throw new Error(`Prize image upload failed: ${up.error.message}`);
             item.image_url = supabaseClient.storage.from('event-raffle-prizes').getPublicUrl(path).data.publicUrl;
         }
-        _clearRafflePrizeImageState();
+        clearPrizeImageState();
         return config;
     }
 
@@ -489,7 +482,7 @@
             if (!model) throw new Error('Raffle model helper is not loaded.');
             if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
             if (status) status.textContent = Object.keys(prizeImageFiles).length ? 'Uploading prize images...' : 'Saving prize setup...';
-            let config = _collectRafflePrizeConfigFromDom();
+            let config = collectRafflePrizeConfigFromDom();
             if (action.addCategory) {
                 config.categories.push(model.createCategory({ label: 'New Tier', sort_order: (config.categories.length + 1) * 10, winner_count: 1 }));
             }
@@ -497,7 +490,7 @@
                 if (!config.categories.length) config.categories.push(model.createCategory({ id: 'general', label: 'Raffle Prizes', sort_order: 10, winner_count: 1 }));
                 const category = config.categories[0];
                 config.items.push(model.createItem({ category_id: category.id, name: 'New prize item', sort_order: (config.items.length + 1) * 10 }));
-                category.winner_count = Math.max(Number(category.winner_count || 0), _categoryPrizeQuantity(config, category.id));
+                category.winner_count = Math.max(Number(category.winner_count || 0), categoryPrizeQuantity(config, category.id));
             }
             if (action.removeCategoryId) {
                 if (config.categories.length <= 1) throw new Error('Keep at least one prize category.');
@@ -511,10 +504,10 @@
                 config.items = config.items.filter(item => item.id !== action.removeItemId);
                 delete prizeImageFiles[action.removeItemId];
                 delete prizeImagePreviews[action.removeItemId];
-                _capRaffleWinnerCounts(config);
+                capRaffleWinnerCounts(config);
             }
             config = model.normalizeConfig(config);
-            config = await _uploadPendingRafflePrizeImages(config);
+            config = await uploadPendingRafflePrizeImages(config);
             const winnerCount = model.getTotalWinnerCount(config);
             if (status) status.textContent = 'Saving prize setup...';
             const { error } = await supabaseClient
@@ -542,7 +535,7 @@
     function capRaffleWinnerCounts(config) {
         const STATE = api().getState?.() || {};
         (config.categories || []).forEach(category => {
-            const quantity = _categoryPrizeQuantity(config, category.id);
+            const quantity = categoryPrizeQuantity(config, category.id);
             category.winner_count = Math.min(Number(category.winner_count || 0), quantity);
         });
     }
@@ -613,7 +606,7 @@
     function winnerChoiceHtml(winner, config, winners) {
         const STATE = api().getState?.() || {};
         if (winner.selection_status !== 'pending_choice') return '';
-        const items = _availableChoiceItems(config, winners, winner);
+        const items = availableChoiceItems(config, winners, winner);
         if (!items.length) {
             return `<div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">No unassigned items are available in this category.</div>`;
         }
@@ -630,7 +623,7 @@
 
     function availableChoiceItems(config, winners, currentWinner) {
         const STATE = api().getState?.() || {};
-        const items = _raffleItems(config, currentWinner.category_id);
+        const items = raffleItems(config, currentWinner.category_id);
         const used = new Map();
         (winners || []).forEach(winner => {
             if (!winner.prize_id || winner.id === currentWinner.id) return;
@@ -648,8 +641,8 @@
         const itemId = select?.value;
         if (!itemId) return alert('Choose a prize item first.');
 
-        const config = _raffleConfig(STATE.event);
-        const item = _raffleItems(config, winner.category_id).find(row => row.id === itemId);
+        const config = raffleConfig(STATE.event);
+        const item = raffleItems(config, winner.category_id).find(row => row.id === itemId);
         if (!item) return alert('Prize item is no longer available. Refresh and try again.');
 
         const { error } = await supabaseClient
@@ -721,7 +714,7 @@
         if (!winner || !category) return false;
         if (winner.category_id) return winner.category_id === category.id;
         if (winner.category_label) return winner.category_label === category.label;
-        const slot = _raffleSlotByPlace(config, winner.place);
+        const slot = raffleSlotByPlace(config, winner.place);
         return slot?.category_id === category.id;
     }
 

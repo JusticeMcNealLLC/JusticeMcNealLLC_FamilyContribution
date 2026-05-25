@@ -95,6 +95,15 @@
         cancelled: 'bg-red-100 text-red-600',
     };
 
+    // ─── LLC event document types (portal detail + manage) ─
+    const EVENT_DOC_TYPES = [
+        { value: 'plane_ticket', label: '✈️ Plane Ticket', perMember: true },
+        { value: 'group_ticket', label: '🎫 Group Ticket / Pass', perMember: false },
+        { value: 'itinerary', label: '📋 Itinerary', perMember: false },
+        { value: 'receipt', label: '🧾 Receipt', perMember: false },
+        { value: 'other', label: '📎 Other', perMember: false },
+    ];
+
     // ─── Pricing modes (from events_001.md) ───────────────
     const PRICING_MODES = {
         fully_paid:           { label: 'Fully Paid' },
@@ -112,6 +121,7 @@
         TYPE_COLORS_PORTAL,
         TYPE_COLORS_PUBLIC,
         STATUS_COLORS,
+        EVENT_DOC_TYPES,
         PRICING_MODES,
     };
 

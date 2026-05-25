@@ -89,11 +89,11 @@ const REQUIRED_BRIDGE_FUNCTIONS = [
 
 const REQUIRED_ASSETS = [
     '/js/portal/events/init.js',
-    '/js/portal/events/list.js',
+    '/js/portal/events/list/shell.js',
     '/js/portal/events/detail.js',
-    '/js/portal/events/manage/sheet.js?v=112',
+    '/js/portal/events/manage/sheet.js?v=113',
     '/js/portal/events/create/sheet.js',
-    '/js/portal/events/competition.js'
+    '/js/portal/events/detail/competition.js'
 ];
 
 let passed = 0;

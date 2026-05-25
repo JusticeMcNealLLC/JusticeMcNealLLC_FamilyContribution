@@ -21,7 +21,8 @@
         const dateStr = start.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
         const timeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
         const endTimeStr = end ? end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
-        const tc = TYPE_COLORS[event.event_type] || TYPE_COLORS.member;
+        const typeColors = (window.EventsConstants && window.EventsConstants.TYPE_COLORS_PORTAL) || {};
+        const tc = typeColors[event.event_type] || typeColors.member;
         const isLlc = event.event_type === 'llc';
         const isComp = event.event_type === 'competition';
 

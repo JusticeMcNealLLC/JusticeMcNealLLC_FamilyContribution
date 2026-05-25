@@ -104,10 +104,10 @@ if (!chainMatch) {
     fail('loader must define chain array');
 } else {
     const chainEntries = [...chainMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]);
-    const scrapbookIdx = chainEntries.indexOf('scrapbook.js');
+    const scrapbookIdx = chainEntries.indexOf('detail/scrapbook.js');
     const manageShellIdx = chainEntries.indexOf('manage/shell.js');
     const manageOverviewIdx = chainEntries.indexOf('manage/overview.js');
-    const manageSheetIdx = chainEntries.indexOf('manage/sheet.js?v=112');
+    const manageSheetIdx = chainEntries.indexOf('manage/sheet.js?v=113');
     const manageImagesIdx = chainEntries.indexOf('manage/images.js');
     const manageDocsIdx = chainEntries.indexOf('manage/docs.js');
     const manageRsvpsIdx = chainEntries.indexOf('manage/rsvps.js');
@@ -116,10 +116,11 @@ if (!chainMatch) {
     const managePartIdx = chainEntries.indexOf('manage/participation.js');
     const manageRaffleIdx = chainEntries.indexOf('manage/raffle.js');
     const manageDangerIdx = chainEntries.indexOf('manage/danger.js');
-    chainEntries.length === 55
+    const globalReexportsIdx = chainEntries.indexOf('compat/global-reexports.js');
+    chainEntries.length === 54
         ? pass(`loader chain has ${chainEntries.length} middle scripts (production order)`)
-        : fail('loader chain must have 55 entries', `found ${chainEntries.length}`);
-    const raffleModelIdx = chainEntries.indexOf('raffle-model.js');
+        : fail('loader chain must have 54 entries', `found ${chainEntries.length}`);
+    const raffleModelIdx = chainEntries.indexOf('core/raffle-model.js');
     const listSearchIdx = chainEntries.indexOf('list/search.js');
     const listRightRailIdx = chainEntries.indexOf('list/right-rail.js');
     const listHeaderIdx = chainEntries.indexOf('list/header.js');
@@ -127,13 +128,13 @@ if (!chainMatch) {
     const listCalendarIdx = chainEntries.indexOf('list/calendar.js');
     const listHeroRailsIdx = chainEntries.indexOf('list/hero-rails.js');
     const listBucketsIdx = chainEntries.indexOf('list/buckets.js');
-    const listIdx = chainEntries.indexOf('list.js');
+    const listIdx = chainEntries.indexOf('list/shell.js');
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
         && listFiltersIdx > listHeaderIdx && listCalendarIdx > listFiltersIdx
         && listHeroRailsIdx > listCalendarIdx && listBucketsIdx > listHeroRailsIdx
         && listIdx > listBucketsIdx
-        ? pass('loader order: raffle-model → list/search → … → hero-rails → buckets → list.js')
+        ? pass('loader order: raffle-model → list/search → … → hero-rails → buckets → list/shell.js')
         : fail('loader list module order');
     scrapbookIdx >= 0 && manageShellIdx > scrapbookIdx
         && manageOverviewIdx > manageShellIdx
@@ -141,15 +142,15 @@ if (!chainMatch) {
         && manageRsvpsIdx > manageDocsIdx && manageMoneyIdx > manageRsvpsIdx
         && manageCompIdx > manageMoneyIdx
         && managePartIdx > manageCompIdx && manageRaffleIdx > managePartIdx
-        && manageDangerIdx > manageRaffleIdx && manageSheetIdx > manageDangerIdx
-        ? pass('loader order: … → competition → participation → raffle → danger → sheet')
+        && manageDangerIdx > manageRaffleIdx && globalReexportsIdx > manageDangerIdx
+        && manageSheetIdx > globalReexportsIdx
+        ? pass('loader order: … → danger → global-reexports → sheet')
         : fail('loader manage module order');
     const geoIdx = chainEntries.indexOf('create/geocode.js');
     const legacyCostsIdx = chainEntries.indexOf('create/legacy-costs.js');
     const legacyLocationIdx = chainEntries.indexOf('create/legacy-location.js');
     const legacyPreviewIdx = chainEntries.indexOf('create/legacy-preview.js');
     const legacySubmitIdx = chainEntries.indexOf('create/legacy-submit.js');
-    const createIdx = chainEntries.indexOf('create.js');
     const stepBasicsIdx = chainEntries.indexOf('create/step-basics.js');
     const stepWhenIdx = chainEntries.indexOf('create/step-when.js');
     const stepPricingIdx = chainEntries.indexOf('create/step-pricing.js');
@@ -159,13 +160,13 @@ if (!chainMatch) {
     const sheetIdx = chainEntries.indexOf('create/sheet.js');
     geoIdx >= 0 && legacyCostsIdx > geoIdx
         && legacyLocationIdx > legacyCostsIdx && legacyPreviewIdx > legacyLocationIdx
-        && legacySubmitIdx > legacyPreviewIdx && createIdx > legacySubmitIdx
-        && stepBasicsIdx > createIdx && stepWhenIdx > stepBasicsIdx
+        && legacySubmitIdx > legacyPreviewIdx && stepBasicsIdx > legacySubmitIdx
+        && stepWhenIdx > stepBasicsIdx
         && stepPricingIdx > stepWhenIdx && stepReviewIdx > stepPricingIdx
         && raffleBuilderIdx > stepReviewIdx && submitIdx > raffleBuilderIdx
         && sheetIdx > submitIdx
-        ? pass('loader order: geocode → legacy-* → create → steps → raffle-builder → submit → sheet')
-        : fail('loader geocode → legacy → create → steps → raffle-builder → submit → sheet order');
+        ? pass('loader order: geocode → legacy-* → steps → raffle-builder → submit → sheet')
+        : fail('loader geocode → legacy → steps → raffle-builder → submit → sheet order');
 }
 
 loaderJs.includes('document.write') && !loaderJs.includes('type="module"')

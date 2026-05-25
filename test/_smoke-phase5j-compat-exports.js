@@ -41,6 +41,7 @@ function fileExists(relPath) {
 const html = read('portal/events.html');
 const detail = read('js/portal/events/detail.js');
 const initJs = read('js/portal/events/init.js');
+const globalReexportsJs = read('js/portal/events/compat/global-reexports.js');
 const dataJs = read('js/portal/events/detail/data.js');
 const sectionsJs = read('js/portal/events/detail/sections.js');
 const templateJs = read('js/portal/events/detail/template.js');
@@ -216,18 +217,25 @@ console.log('\n── Phase 5J.1 — team exports ──────────
     src.includes(needle) ? pass(label) : fail(label);
 });
 
-console.log('\n── Phase 5J.1 — init.js barrel ───────────────────────────────────────────');
+console.log('\n── Phase 5J.1 — global-reexports + init.js ───────────────────────────────');
 
 [
-    ['window.evtHandleRsvp = evtHandleRsvp', 'init.js evtHandleRsvp'],
-    ['window.evtHandleRaffleEntry = evtHandleRaffleEntry', 'init.js evtHandleRaffleEntry'],
-    ['window.evtOpenScanner = evtOpenScanner', 'init.js evtOpenScanner'],
-    ['window.evtNavigateToEvent = evtNavigateToEvent', 'init.js evtNavigateToEvent'],
-    ['window.evtNavigateToList = evtNavigateToList', 'init.js evtNavigateToList'],
-    ['window.PortalEvents.initEventsPage = initEventsPage', 'PortalEvents.initEventsPage'],
+    ["exp('evtHandleRsvp'", 'global-reexports evtHandleRsvp'],
+    ["exp('evtHandleRaffleEntry'", 'global-reexports evtHandleRaffleEntry'],
+    ["exp('evtOpenScanner'", 'global-reexports evtOpenScanner'],
+    ["exp('evtNavigateToEvent'", 'global-reexports evtNavigateToEvent'],
+    ["exp('evtNavigateToList'", 'global-reexports evtNavigateToList'],
 ].forEach(([needle, label]) => {
-    initJs.includes(needle) ? pass(label) : fail(label);
+    globalReexportsJs.includes(needle) ? pass(label) : fail(label);
 });
+
+initJs.includes('window.PortalEvents.initEventsPage = initEventsPage')
+    ? pass('PortalEvents.initEventsPage in init.js')
+    : fail('PortalEvents.initEventsPage missing from init.js');
+
+initJs.includes('compat/global-reexports.js')
+    ? pass('init.js documents global-reexports for evt* onclick globals')
+    : fail('init.js should reference compat/global-reexports.js');
 
 console.log('\n── Phase 5J.1 — hard-required inline handler strings ─────────────────────');
 

@@ -1,22 +1,66 @@
 /* ════════════════════════════════════════════════════════════
+
    Portal Events — Namespace shell  (M1)
+
    Establishes `window.PortalEvents` so feature modules
+
    (list, detail, create, etc.) can register themselves
+
    without polluting the global scope further.
 
-   Loaded BEFORE state.js so subsequent modules can attach.
+
+
+   Loaded BEFORE core/state.js (via classic-chain-loader) so
+
+   subsequent modules can attach. Requires
+
+   `js/components/events/constants.js` in the page first.
+
+
+
    Existing legacy `evt*` globals are preserved unchanged
+
    for backward compat with not-yet-refactored modules
-   (rsvp.js, comments.js, raffle.js, competition.js, etc.).
+
+   (rsvp.js, detail/comments.js, detail/map-live.js, detail/competition.js, etc.).
+
    ════════════════════════════════════════════════════════════ */
+
 (function () {
+
     'use strict';
+
     window.PortalEvents = window.PortalEvents || {};
+
+
+
+    var C = window.EventsConstants || {};
+
+    window.PortalEvents.constants = {
+
+        CATEGORY_EMOJI: C.CATEGORY_EMOJI,
+
+        TYPE_COLORS: C.TYPE_COLORS_PORTAL,
+
+        STATUS_COLORS: C.STATUS_COLORS,
+
+    };
+
+
+
     // Sub-namespaces are created lazily by their owners:
+
     //   PortalEvents.list   ← list.js   (M1)
+
     //   PortalEvents.detail ← detail.js (M2)
-    //   PortalEvents.create ← create.js (M4)
+
+    //   PortalEvents.create ← create/sheet.js (M4)
+
     //   PortalEvents.manage ← manage/   (M3)
+
     // Future (Phase 5): call window.PortalEvents.initEventsPage() here
+
     //   once the HTML is switched to a single module entry.
+
 })();
+

@@ -1,18 +1,21 @@
 /**
  * Phase 5L.3 Option B — rehearsal-only classic script chain loader.
- * NOT referenced by production portal/events.html (see portal/events.rehearsal.html).
- *
- * Injects the middle 27 portal Events modules (between index.js and init.js) via
- * synchronous document.write so load order matches production's 29-tag block.
+ * Mirrors production classic-chain-loader.js (54 middle modules).
  */
 (function () {
     var base = '../js/portal/events/';
     var chain = [
-        'constants.js',
-        'state.js',
-        'utils.js',
-        'raffle-model.js',
-        'list.js',
+        'core/state.js',
+        'core/utils.js',
+        'core/raffle-model.js',
+        'list/search.js',
+        'list/right-rail.js',
+        'list/header.js',
+        'list/filters.js',
+        'list/calendar.js',
+        'list/hero-rails.js',
+        'list/buckets.js',
+        'list/shell.js',
         'team/chat.js',
         'team/tools.js',
         'detail/presentation.js',
@@ -24,17 +27,38 @@
         'detail/post-render.js',
         'detail/template.js',
         'detail.js',
-        'comments.js',
+        'detail/comments.js',
+        'detail/documents.js',
+        'detail/map-live.js',
+        'detail/competition.js',
+        'detail/scrapbook.js',
+        'detail/scanner.js',
         'rsvp.js',
-        'create.js',
+        'create/geocode.js',
+        'create/legacy-costs.js',
+        'create/legacy-location.js',
+        'create/legacy-preview.js',
+        'create/legacy-submit.js',
+        'create/step-basics.js',
+        'create/step-when.js',
+        'create/step-pricing.js',
+        'create/step-review.js',
+        'create/raffle-builder.js',
+        'create/submit.js',
         'create/sheet.js',
-        'documents.js',
-        'map.js',
-        'scanner.js',
         'raffle.js',
-        'competition.js',
-        'scrapbook.js',
-        'manage/sheet.js?v=112',
+        'manage/shell.js',
+        'manage/overview.js',
+        'manage/images.js',
+        'manage/docs.js',
+        'manage/rsvps.js',
+        'manage/money.js',
+        'manage/competition.js',
+        'manage/participation.js',
+        'manage/raffle.js',
+        'manage/danger.js',
+        'compat/global-reexports.js',
+        'manage/sheet.js?v=113',
     ];
     for (var i = 0; i < chain.length; i++) {
         document.write('<script src="' + base + chain[i] + '"><\/script>');

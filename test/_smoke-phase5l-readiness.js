@@ -87,7 +87,7 @@ const COMPAT_SCRIPTS = [
 ];
 
 const MONOLITHS = [
-    'js/portal/events/list.js',
+    'js/portal/events/list/shell.js',
     'js/portal/events/manage/sheet.js',
     'js/portal/events/create/sheet.js',
 ];
@@ -158,7 +158,6 @@ if (!chainMatch) {
     const legacyLocationIdx = chainPaths.indexOf('create/legacy-location.js');
     const legacyPreviewIdx = chainPaths.indexOf('create/legacy-preview.js');
     const legacySubmitIdx = chainPaths.indexOf('create/legacy-submit.js');
-    const createIdx = chainPaths.indexOf('create.js');
     const stepBasicsIdx = chainPaths.indexOf('create/step-basics.js');
     const stepWhenIdx = chainPaths.indexOf('create/step-when.js');
     const stepPricingIdx = chainPaths.indexOf('create/step-pricing.js');
@@ -166,19 +165,20 @@ if (!chainMatch) {
     const raffleBuilderIdx = chainPaths.indexOf('create/raffle-builder.js');
     const submitIdx = chainPaths.indexOf('create/submit.js');
     const createSheetIdx = chainPaths.indexOf('create/sheet.js');
-    const raffleModelIdx = chainPaths.indexOf('raffle-model.js');
+    const raffleModelIdx = chainPaths.indexOf('core/raffle-model.js');
+    const globalReexportsIdx = chainPaths.indexOf('compat/global-reexports.js');
     const listSearchIdx = chainPaths.indexOf('list/search.js');
     const listRightRailIdx = chainPaths.indexOf('list/right-rail.js');
     const listHeaderIdx = chainPaths.indexOf('list/header.js');
-    const listIdx = chainPaths.indexOf('list.js');
+    const listIdx = chainPaths.indexOf('list/shell.js');
     const listFiltersIdx = chainPaths.indexOf('list/filters.js');
     const listCalendarIdx = chainPaths.indexOf('list/calendar.js');
     const listHeroRailsIdx = chainPaths.indexOf('list/hero-rails.js');
     const listBucketsIdx = chainPaths.indexOf('list/buckets.js');
-    const scrapbookIdx = chainPaths.indexOf('scrapbook.js');
+    const scrapbookIdx = chainPaths.indexOf('detail/scrapbook.js');
     const manageShellIdx = chainPaths.indexOf('manage/shell.js');
     const manageOverviewIdx = chainPaths.indexOf('manage/overview.js');
-    const manageSheetIdx = chainPaths.indexOf('manage/sheet.js?v=112');
+    const manageSheetIdx = chainPaths.indexOf('manage/sheet.js?v=113');
     const manageImagesIdx = chainPaths.indexOf('manage/images.js');
     const manageDocsIdx = chainPaths.indexOf('manage/docs.js');
     const manageRsvpsIdx = chainPaths.indexOf('manage/rsvps.js');
@@ -187,34 +187,38 @@ if (!chainMatch) {
     const managePartIdx = chainPaths.indexOf('manage/participation.js');
     const manageRaffleIdx = chainPaths.indexOf('manage/raffle.js');
     const manageDangerIdx = chainPaths.indexOf('manage/danger.js');
-    chainPaths.length === 55
-        ? pass('classic-chain-loader injects 55 middle scripts')
-        : fail('loader chain must have 55 entries', `found ${chainPaths.length}`);
+    chainPaths.length === 54
+        ? pass('classic-chain-loader injects 54 middle scripts')
+        : fail('loader chain must have 54 entries', `found ${chainPaths.length}`);
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
         && listFiltersIdx > listHeaderIdx && listCalendarIdx > listFiltersIdx
         && listHeroRailsIdx > listCalendarIdx && listBucketsIdx > listHeroRailsIdx
         && listIdx > listBucketsIdx
-        ? pass('loader order: raffle-model → list/search → … → hero-rails → buckets → list.js')
+        ? pass('loader order: core/raffle-model → list/search → … → hero-rails → buckets → list/shell.js')
         : fail('loader list module order');
+    globalReexportsIdx >= 0 && manageSheetIdx > globalReexportsIdx
+        ? pass('loader order: global-reexports → manage/sheet.js')
+        : fail('global-reexports must load immediately before manage/sheet.js');
     scrapbookIdx >= 0 && manageShellIdx > scrapbookIdx
         && manageOverviewIdx > manageShellIdx
         && manageImagesIdx > manageOverviewIdx && manageDocsIdx > manageImagesIdx
         && manageRsvpsIdx > manageDocsIdx && manageMoneyIdx > manageRsvpsIdx
         && manageCompIdx > manageMoneyIdx
         && managePartIdx > manageCompIdx && manageRaffleIdx > managePartIdx
-        && manageDangerIdx > manageRaffleIdx && manageSheetIdx > manageDangerIdx
-        ? pass('loader order: … → competition → participation → raffle → danger → sheet')
+        && manageDangerIdx > manageRaffleIdx && globalReexportsIdx > manageDangerIdx
+        && manageSheetIdx > globalReexportsIdx
+        ? pass('loader order: … → danger → global-reexports → sheet')
         : fail('loader manage module order');
     createGeoIdx >= 0 && legacyCostsIdx > createGeoIdx
         && legacyLocationIdx > legacyCostsIdx && legacyPreviewIdx > legacyLocationIdx
-        && legacySubmitIdx > legacyPreviewIdx && createIdx > legacySubmitIdx
-        && stepBasicsIdx > createIdx && stepWhenIdx > stepBasicsIdx
+        && legacySubmitIdx > legacyPreviewIdx && stepBasicsIdx > legacySubmitIdx
+        && stepWhenIdx > stepBasicsIdx
         && stepPricingIdx > stepWhenIdx && stepReviewIdx > stepPricingIdx
         && raffleBuilderIdx > stepReviewIdx && submitIdx > raffleBuilderIdx
         && createSheetIdx > submitIdx
-        ? pass('loader order: geocode → legacy-* → create → steps → raffle-builder → submit → sheet')
-        : fail('loader geocode → legacy → create → steps → raffle-builder → submit → sheet order');
+        ? pass('loader order: geocode → legacy-* → steps → raffle-builder → submit → sheet')
+        : fail('loader geocode → legacy → steps → raffle-builder → submit → sheet order');
     teamChatIdx >= 0 && presentationIdx > teamChatIdx
         ? pass('loader order: team before detail/presentation')
         : fail('loader team → detail pipeline order');

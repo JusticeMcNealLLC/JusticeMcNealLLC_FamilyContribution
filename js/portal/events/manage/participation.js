@@ -42,7 +42,7 @@
         if (!e) return;
         let counts = [];
         try {
-            counts = await _getParticipationResetCounts();
+            counts = await getParticipationResetCounts();
         } catch (err) {
             alert('Could not load participation counts: ' + (err.message || 'unknown error'));
             return;

@@ -36,7 +36,7 @@ const h2 = EventsCard.render(birthday, {});
 const h3 = EventsCard.render(noCat, {});
 
 // Read list.js + portal-events.css to verify integration points
-const listJs  = fs.readFileSync(path + '/js/portal/events/list.js', 'utf8');
+const listJs  = fs.readFileSync(path + '/js/portal/events/list/shell.js', 'utf8');
 const cssText = require('./_events-css');
 const swText  = fs.readFileSync(path + '/sw.js', 'utf8');
 
@@ -46,7 +46,7 @@ const results = {
     c2_cookout_has_chip_class:          h1.includes('evt-cat-chip'),
     c2_birthday_has_data_evt_cat:       h2.includes('data-evt-cat="birthday"'),
     c2_no_category_has_no_chip:         !h3.includes('data-evt-cat'),
-    // C2 list.js integration
+    // C2 list/shell.js integration
     c2_active_category_state:           listJs.includes("let _activeCategory = ''"),
     c2_matches_category_fn:             /function\s+_matchesCategory/.test(listJs),
     c2_wire_intercepts_button:          listJs.includes("button[data-evt-cat]"),
