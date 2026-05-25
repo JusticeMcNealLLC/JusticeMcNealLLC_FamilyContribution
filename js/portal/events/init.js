@@ -3,15 +3,17 @@
 // This file must load LAST — it depends on all other modules.
 // ═══════════════════════════════════════════════════════════
 
-// ── One-time init guard ──────────────────────────────────
-// Prevents duplicate initialization if initEventsPage() is called
-// more than once (e.g. when index.js takes over as orchestrator in
-// Phase 5 and the DOMContentLoaded listener fires at the same time).
+// ── One-time init guard (Phase 5L.2) ─────────────────────
+// Prevents duplicate boot if initEventsPage() runs more than once
+// (DOMContentLoaded + manual PortalEvents.initEventsPage(), or future module entry).
 let _eventsPageInitialized = false;
+let _eventsPopstateListenerBound = false;
+let _eventsListenersBound = false;
 
 async function initEventsPage() {
     if (_eventsPageInitialized) return;
     _eventsPageInitialized = true;
+    window._eventsPageInitialized = true;
 
     evtCurrentUser = await checkAuth();
     if (!evtCurrentUser) return;
@@ -48,8 +50,11 @@ async function initEventsPage() {
     // ── URL Routing: check for ?event={slug} on initial load ──
     evtRouteByUrl();
 
-    // ── Browser back/forward support ──
-    window.addEventListener('popstate', () => evtRouteByUrl());
+    // ── Browser back/forward support (bind once) ──
+    if (!_eventsPopstateListenerBound) {
+        _eventsPopstateListenerBound = true;
+        window.addEventListener('popstate', () => evtRouteByUrl());
+    }
 }
 
 // Classic script bootstrap — preserved so the page initializes exactly
@@ -80,6 +85,9 @@ function evtUpdateRaffleCostHint() {
 // ─── Event Listeners ────────────────────────────────────
 
 function evtSetupListeners() {
+    if (_eventsListenersBound) return;
+    _eventsListenersBound = true;
+
     // Filter chips (replaces old tab-btn listeners)
     evtInitFilterChips();
 

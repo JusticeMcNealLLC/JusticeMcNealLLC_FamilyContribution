@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-// Phase 5L.1 static smoke — module-entry readiness
+// Phase 5L.1 / 5L.2 static smoke — module-entry readiness + boot guard
 //
 // Freezes classic-script load model before any Phase 5L implementation.
 // No runtime wiring; portal/events.html must stay classic-only.
@@ -158,29 +158,52 @@ postRenderIdx >= 0 && templateIdx > postRenderIdx && detailIdx > templateIdx
     ? pass('post-render.js → template.js → detail.js sub-order')
     : fail('post-render → template → detail.js order incorrect');
 
-console.log('\n── Phase 5L.1 — init.js boot guard ───────────────────────────────────────');
+console.log('\n── Phase 5L.2 — init.js boot guard (idempotent) ──────────────────────────');
 
 initJs.includes('async function initEventsPage')
     ? pass('init.js defines initEventsPage')
     : fail('init.js must define initEventsPage');
 
-initJs.includes('_eventsPageInitialized')
-    ? pass('init.js has _eventsPageInitialized guard')
-    : fail('init.js must guard duplicate init');
+initJs.includes('let _eventsPageInitialized = false')
+    ? pass('init.js has module _eventsPageInitialized guard flag')
+    : fail('init.js must declare _eventsPageInitialized');
 
-/initEventsPage[\s\S]*_eventsPageInitialized\s*=\s*true/.test(initJs)
-    || /if\s*\(\s*_eventsPageInitialized\s*\)\s*return[\s\S]*_eventsPageInitialized\s*=\s*true/.test(initJs)
-    ? pass('guard set before async work in initEventsPage')
-    : fail('init guard must be set early in initEventsPage');
+/if\s*\(\s*_eventsPageInitialized\s*\)\s*return/.test(initJs)
+    ? pass('initEventsPage returns early when already initialized')
+    : fail('initEventsPage must guard on _eventsPageInitialized');
+
+/initEventsPage[\s\S]*_eventsPageInitialized\s*=\s*true[\s\S]*window\._eventsPageInitialized\s*=\s*true/.test(initJs)
+    ? pass('guard flags set before await checkAuth (sync gate)')
+    : fail('_eventsPageInitialized must be set before first await');
+
+/initEventsPage[\s\S]*_eventsPageInitialized\s*=\s*true[\s\S]*evtSetupListeners/.test(initJs)
+    && !/evtSetupListeners[\s\S]*_eventsPageInitialized\s*=\s*true/.test(initJs)
+    ? pass('duplicate guard runs before evtSetupListeners / heavy boot')
+    : fail('init guard must precede evtSetupListeners');
+
+initJs.includes('window.PortalEvents.initEventsPage = initEventsPage')
+    ? pass('PortalEvents.initEventsPage points to initEventsPage')
+    : fail('PortalEvents.initEventsPage assignment missing');
 
 initJs.includes('document.addEventListener(\'DOMContentLoaded\', initEventsPage)')
     || initJs.includes('document.addEventListener("DOMContentLoaded", initEventsPage)')
-    ? pass('init.js registers DOMContentLoaded → initEventsPage')
+    ? pass('DOMContentLoaded → initEventsPage (same guarded function)')
     : fail('DOMContentLoaded boot path missing');
 
-initJs.includes('window.PortalEvents.initEventsPage = initEventsPage')
-    ? pass('PortalEvents.initEventsPage bridge on init.js')
-    : fail('PortalEvents.initEventsPage assignment missing');
+initJs.includes('_eventsListenersBound')
+    && /function evtSetupListeners[\s\S]*if\s*\(\s*_eventsListenersBound\s*\)\s*return/.test(initJs)
+    ? pass('evtSetupListeners binds DOM listeners once')
+    : fail('evtSetupListeners must guard duplicate listener registration');
+
+initJs.includes('_eventsPopstateListenerBound')
+    && /_eventsPopstateListenerBound/.test(initJs)
+    && /addEventListener\(\s*['"]popstate['"]/.test(initJs)
+    ? pass('popstate listener bound once')
+    : fail('popstate must not register on duplicate init');
+
+!/document\.addEventListener\(\s*['"]DOMContentLoaded['"]\s*,\s*async/.test(initJs)
+    ? pass('no duplicate anonymous DOMContentLoaded boot handler')
+    : fail('avoid anonymous DOMContentLoaded handlers');
 
 console.log('\n── Phase 5L.1 — Phase 5J export smoke prerequisite ───────────────────────');
 
@@ -229,9 +252,9 @@ fs.existsSync(path.join(root, 'js/portal/events/compat/window-exports.js'))
 
 console.log('\n═══════════════════════════════════════════════════════════');
 if (failed === 0) {
-    console.log(`Phase 5L.1 smoke: ALL ${passed} CHECKS PASSED${noted ? ` (${noted} noted)` : ''}`);
+    console.log(`Phase 5L readiness smoke: ALL ${passed} CHECKS PASSED${noted ? ` (${noted} noted)` : ''}`);
     process.exit(0);
 }
-console.log(`Phase 5L.1 smoke: ${failed} FAIL(S), ${passed} pass${noted ? `, ${noted} noted` : ''}`);
+console.log(`Phase 5L readiness smoke: ${failed} FAIL(S), ${passed} pass${noted ? `, ${noted} noted` : ''}`);
 failures.forEach((f) => console.log(`  - ${f}`));
 process.exit(1);
