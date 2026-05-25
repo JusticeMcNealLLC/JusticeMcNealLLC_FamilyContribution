@@ -179,9 +179,14 @@ if (!chainMatch) {
     const manageShellIdx = chainPaths.indexOf('manage/shell.js');
     const manageOverviewIdx = chainPaths.indexOf('manage/overview.js');
     const manageSheetIdx = chainPaths.indexOf('manage/sheet.js?v=112');
-    chainPaths.length === 47
-        ? pass('classic-chain-loader injects 47 middle scripts')
-        : fail('loader chain must have 47 entries', `found ${chainPaths.length}`);
+    const manageImagesIdx = chainPaths.indexOf('manage/images.js');
+    const manageDocsIdx = chainPaths.indexOf('manage/docs.js');
+    const manageRsvpsIdx = chainPaths.indexOf('manage/rsvps.js');
+    const manageMoneyIdx = chainPaths.indexOf('manage/money.js');
+    const manageCompIdx = chainPaths.indexOf('manage/competition.js');
+    chainPaths.length === 52
+        ? pass('classic-chain-loader injects 52 middle scripts')
+        : fail('loader chain must have 52 entries', `found ${chainPaths.length}`);
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
         && listFiltersIdx > listHeaderIdx && listCalendarIdx > listFiltersIdx
@@ -190,8 +195,11 @@ if (!chainMatch) {
         ? pass('loader order: raffle-model → list/search → … → hero-rails → buckets → list.js')
         : fail('loader list module order');
     scrapbookIdx >= 0 && manageShellIdx > scrapbookIdx
-        && manageOverviewIdx > manageShellIdx && manageSheetIdx > manageOverviewIdx
-        ? pass('loader order: scrapbook → manage/shell → manage/overview → manage/sheet')
+        && manageOverviewIdx > manageShellIdx
+        && manageImagesIdx > manageOverviewIdx && manageDocsIdx > manageImagesIdx
+        && manageRsvpsIdx > manageDocsIdx && manageMoneyIdx > manageRsvpsIdx
+        && manageCompIdx > manageMoneyIdx && manageSheetIdx > manageCompIdx
+        ? pass('loader order: scrapbook → manage/shell → overview → images → docs → rsvps → money → competition → sheet')
         : fail('loader manage module order');
     createGeoIdx >= 0 && legacyCostsIdx > createGeoIdx
         && legacyLocationIdx > legacyCostsIdx && legacyPreviewIdx > legacyLocationIdx

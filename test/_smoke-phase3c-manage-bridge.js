@@ -53,6 +53,11 @@ console.log('\n── js/portal/events/manage/sheet.js — file structure ──
 const sheet = read('js/portal/events/manage/sheet.js');
 const shell = read('js/portal/events/manage/shell.js');
 const overview = read('js/portal/events/manage/overview.js');
+const images = read('js/portal/events/manage/images.js');
+const docs = read('js/portal/events/manage/docs.js');
+const rsvps = read('js/portal/events/manage/rsvps.js');
+const money = read('js/portal/events/manage/money.js');
+const competition = read('js/portal/events/manage/competition.js');
 
 sheet.includes('(function ()')
     ? pass('IIFE wrapper present ((function () {)')
@@ -155,25 +160,12 @@ const CORE_FNS = [
     'function _renderTab(',
     'async function _renderTabAsync(',
     'function _overviewHtml(',
-    'function _rsvpsHtml(',
     'function _dangerHtml(',
     'function _wireOverview(',
-    'function _wireRsvps(',
     'function _wireDanger(',
-    'function _imagesHtml(',
-    'function _wireImages(',
-    'async function _loadMoney(',
-    'function _moneyHtml(',
-    'function _wireMoney(',
-    'async function _loadDocs(',
-    'function _docsHtml(',
-    'function _wireDocs(',
     'async function _loadRaffle(',
     'function _raffleHtml(',
     'function _wireRaffle(',
-    'async function _loadComp(',
-    'function _compHtml(',
-    'function _wireComp(',
     'function refreshRaffle(',
 ];
 
@@ -223,6 +215,44 @@ sheet.includes('EventsManageOverviewApi')
     ? pass('EventsManageOverviewApi bridge bound in sheet.js')
     : fail('EventsManageOverviewApi bridge missing in sheet.js');
 
+console.log('\n── manage tab modules (Phase 5M.3B) ───────────────────────────────────────');
+
+[
+    [images, 'Images', 'window.EventsManageImages =', ['function imagesHtml(', 'function wireImages('], 'Images.imagesHtml'],
+    [docs, 'Docs', 'window.EventsManageDocs =', ['async function loadDocs(', 'function docsHtml(', 'function wireDocs('], 'Docs.loadDocs'],
+    [rsvps, 'Rsvps', 'window.EventsManageRsvps =', ['function rsvpsHtml(', 'function wireRsvps('], 'Rsvps.rsvpsHtml'],
+    [money, 'Money', 'window.EventsManageMoney =', ['async function loadMoney(', 'function moneyHtml(', 'function wireMoney('], 'Money.loadMoney'],
+    [competition, 'Competition', 'window.EventsManageCompetition =', ['async function loadComp(', 'function compHtml(', 'function wireComp('], 'Comp.loadComp'],
+].forEach(([src, label, nsAssign, fns, delegate]) => {
+    src.includes(nsAssign)
+        ? pass(`${label}: namespace assigned`)
+        : fail(`${label}: namespace missing`);
+    fns.forEach(fn => {
+        src.includes(fn)
+            ? pass(`${label}: owns ${fn.trim()}`)
+            : fail(`${label}: missing ${fn.trim()}`);
+    });
+    sheet.includes(delegate)
+        ? pass(`sheet.js delegates to ${delegate}`)
+        : fail(`sheet.js must delegate to ${delegate}`);
+});
+
+sheet.includes('function _loadRaffle(')
+    ? pass('sheet.js still owns _loadRaffle (5M.3C deferred)')
+    : fail('sheet.js must keep raffle tab until 5M.3C');
+
+sheet.includes('function _dangerHtml(')
+    ? pass('sheet.js still owns _dangerHtml (5M.3C deferred)')
+    : fail('sheet.js must keep danger tab until 5M.3C');
+
+sheet.includes('EventsManageRsvpsApi')
+    ? pass('EventsManageRsvpsApi bridge bound in sheet.js')
+    : fail('EventsManageRsvpsApi bridge missing');
+
+sheet.includes('EventsManageDocsApi')
+    ? pass('EventsManageDocsApi bridge bound in sheet.js')
+    : fail('EventsManageDocsApi bridge missing');
+
 // ─── portal/events.html invariants ───────────────────────
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
 
@@ -242,12 +272,20 @@ classicChain3c && classicChain3c.includes(MANAGE_SHEET_CHAIN)
     : fail('manage/sheet.js?v=112 missing from classic-chain-loader.js chain');
 
 (() => {
+    const iScrap = classicChain3c.indexOf('scrapbook.js');
     const iShell = classicChain3c.indexOf('manage/shell.js');
     const iOverview = classicChain3c.indexOf('manage/overview.js');
+    const iImages = classicChain3c.indexOf('manage/images.js');
+    const iDocs = classicChain3c.indexOf('manage/docs.js');
+    const iRsvps = classicChain3c.indexOf('manage/rsvps.js');
+    const iMoney = classicChain3c.indexOf('manage/money.js');
+    const iComp = classicChain3c.indexOf('manage/competition.js');
     const iSheet = classicChain3c.indexOf(MANAGE_SHEET_CHAIN);
-    const iScrap = classicChain3c.indexOf('scrapbook.js');
-    iScrap >= 0 && iShell > iScrap && iOverview > iShell && iSheet > iOverview
-        ? pass('loader order: scrapbook → manage/shell → manage/overview → manage/sheet')
+    const ok = iScrap >= 0 && iShell > iScrap && iOverview > iShell
+        && iImages > iOverview && iDocs > iImages && iRsvps > iDocs
+        && iMoney > iRsvps && iComp > iMoney && iSheet > iComp;
+    ok
+        ? pass('loader order: scrapbook → shell → overview → images → docs → rsvps → money → competition → sheet')
         : fail('manage module loader order incorrect');
 })();
 
