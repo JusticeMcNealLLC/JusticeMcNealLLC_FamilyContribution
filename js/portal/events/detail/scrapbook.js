@@ -1,3 +1,4 @@
+import { evtDataAction } from '../core/actions.js';
 // ═══════════════════════════════════════════════════════════
 // Portal Events — Detail scrapbook (photo upload & gallery)
 // Past events allow RSVPed members to upload photos.
@@ -29,7 +30,7 @@ async function evtBuildScrapbookHtml(event, hasRsvp) {
                     const canDelete = p.user_id === globalThis.evtCurrentUser.id || (typeof canManageEvents === 'function' && canManageEvents());
                     return `
                         <div class="relative group rounded-xl overflow-hidden bg-gray-100 aspect-square">
-                            <img src="${p.file_url}" alt="${evtEscapeHtml(p.caption || '')}" class="w-full h-full object-cover cursor-pointer" onclick="evtViewPhoto('${p.file_url}', '${evtEscapeHtml(p.caption || '')}', '${evtEscapeHtml(name)}')">
+                            <img src="${p.file_url}" alt="${evtEscapeHtml(p.caption || '')}" class="w-full h-full object-cover cursor-pointer" ${evtDataAction('evtViewPhoto', p.file_url, evtEscapeHtml(p.caption || ''), evtEscapeHtml(name))}>
                             ${p.caption ? `<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
                                 <p class="text-white text-[10px] leading-tight truncate">${evtEscapeHtml(p.caption)}</p>
                             </div>` : ''}
@@ -37,7 +38,7 @@ async function evtBuildScrapbookHtml(event, hasRsvp) {
                                 <span class="text-white text-[9px] font-medium">${evtEscapeHtml(name)}</span>
                             </div>
                             ${canDelete ? `
-                            <button onclick="evtDeletePhoto('${event.id}', '${p.id}', '${p.file_url}')" class="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-xs">&times;</button>
+                            <button ${evtDataAction('evtDeletePhoto', event.id, p.id, p.file_url)} class="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-xs">&times;</button>
                             ` : ''}
                         </div>`;
                 }).join('')}
@@ -208,3 +209,11 @@ function evtViewPhoto(url, caption, name) {
     });
     document.body.appendChild(overlay);
 }
+
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({
+    evtBuildScrapbookHtml,
+    evtHandlePhotoSelect,
+    evtDeletePhoto,
+    evtViewPhoto,
+});

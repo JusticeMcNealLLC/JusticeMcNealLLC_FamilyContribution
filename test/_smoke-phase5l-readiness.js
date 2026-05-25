@@ -128,6 +128,7 @@ portalScripts[0].includes('events.bundle.js')
     : fail('index.js must not boot initEventsPage yet');
 
 indexJs.includes('window.PortalEvents = window.PortalEvents || {}')
+    || indexJs.includes('globalThis.PortalEvents = globalThis.PortalEvents || {}')
     ? pass('index.js remains namespace shell only')
     : fail('index.js must seed PortalEvents');
 
@@ -211,9 +212,9 @@ if (!chainPaths.length) {
     const managePartIdx = chainPaths.indexOf('manage/participation.js');
     const manageRaffleIdx = chainPaths.indexOf('manage/raffle.js');
     const manageDangerIdx = chainPaths.indexOf('manage/danger.js');
-    chainPaths.length === 55
-        ? pass('main.js lists 55 middle module imports')
-        : fail('loader chain must have 55 entries', `found ${chainPaths.length}`);
+    chainPaths.length === 57
+        ? pass('main.js lists 57 middle module imports')
+        : fail('loader chain must have 57 entries', `found ${chainPaths.length}`);
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
         && listFiltersIdx > listHeaderIdx && listCalendarIdx > listFiltersIdx

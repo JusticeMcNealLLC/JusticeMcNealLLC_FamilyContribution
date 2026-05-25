@@ -5,6 +5,9 @@
 
 'use strict';
 
+import { evtDataAction } from '../core/actions.js';
+
+
 function _raffleSectionHead(title) {
     return `<div class="ed-section-head"><h3>${title}</h3></div>`;
 }
@@ -76,7 +79,7 @@ function evtDetailRaffleWinnersHtml(winners) {
 
 function evtRaffleLockedDesktopHtml(eventId, showTeamHint) {
     const mobileHint = showTeamHint
-        ? `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the bar below, or open <button type="button" class="ed-link-btn" onclick="evtOpenTeamToolsPanel('${eventId}')">Team</button> to RSVP as yourself.</p>`
+        ? `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the bar below, or open <button type="button" class="ed-link-btn" ${evtDataAction('evtOpenTeamToolsPanel', eventId)}>Team</button> to RSVP as yourself.</p>`
         : `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the sticky bar below, then enter the raffle.</p>`;
     return `<div class="ed-raffle-desktop-action ed-raffle-locked-block">
     <button type="button" class="ed-raffle-btn ed-raffle-btn-locked" disabled aria-disabled="true">🎟️ Enter Raffle</button>

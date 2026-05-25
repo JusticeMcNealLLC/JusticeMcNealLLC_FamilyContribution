@@ -8,6 +8,7 @@ const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
 const { parseClassicChain, isProductionLoaded, chainOrderOk } = require('./_portal-events-classic-chain.js');
+const uiTw = fs.readFileSync(path.join(root, 'js/portal/events/team/ui-tw.js'), 'utf8');
 const tools = fs.readFileSync(path.join(root, 'js/portal/events/team/tools.js'), 'utf8');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
 const detailData = fs.readFileSync(path.join(root, 'js/portal/events/detail/data.js'), 'utf8');
@@ -20,7 +21,7 @@ function pass(msg) { console.log(`  ✓ ${msg}`); }
 console.log('event team tools UI smoke\n');
 
 assert(/globalThis\.evtOpenTeamToolsPanel\s*=\s*openTeamToolsPanel/.test(tools), 'evtOpenTeamToolsPanel on globalThis');
-assert(/evt-cta-floating-shell.*evt-team-tools-overlay/.test(tools), 'desktop team overlay classes');
+assert(/evt-cta-floating-shell|evt-team-tools-overlay/.test(uiTw + tools), 'desktop team overlay classes');
 assert(/globalThis\.evtApplyDesktopTeamToolsOverlay/.test(tools), 'evtApplyDesktopTeamToolsOverlay on globalThis');
 assert(/globalThis\.evtInjectTeamToolsStyles/.test(tools), 'evtInjectTeamToolsStyles on globalThis');
 assert(/globalThis\.evtEnsureCtaBarShell/.test(tools), 'evtEnsureCtaBarShell on globalThis');

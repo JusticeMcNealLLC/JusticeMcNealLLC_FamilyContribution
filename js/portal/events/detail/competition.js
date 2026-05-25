@@ -1,3 +1,4 @@
+import { evtDataAction } from '../core/actions.js';
 // ═══════════════════════════════════════════════════════════
 // Portal Events — Detail competition module
 // Handles registration, entry submission, voting, phase
@@ -136,7 +137,7 @@ async function evtBuildCompetitionHtml(event, isHost) {
             ${housePct > 0 ? `<p class="text-xs text-gray-500 mb-1">${housePct}% house fee → Net payout: <strong>${formatCurrency(netPool)}</strong></p>` : ''}
             ${entryFee > 0 ? `<p class="text-xs text-gray-400">${formatCurrency(entryFee)} entry fee × ${entryList.length} entries = ${formatCurrency(entryFee * entryList.length)} from fees</p>` : ''}
             <p class="text-xs text-gray-400">${contributionCount || 0} community contributions</p>
-            <button onclick="evtContributeToPrizePool('${eventId}')" class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+            <button ${evtDataAction('evtContributeToPrizePool', eventId)} class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
                 💸 Contribute to Prize Pool
             </button>
         </div>`;
@@ -167,7 +168,7 @@ async function evtBuildCompetitionHtml(event, isHost) {
         } else {
             registrationHtml = `
                 <div class="mt-4">
-                    <button onclick="evtJoinCompetition('${eventId}')" class="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+                    <button ${evtDataAction('evtJoinCompetition', eventId)} class="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
                         🏆 Join as Competitor${entryFee > 0 ? ` — ${formatCurrency(entryFee)}` : ''}
                     </button>
                     <p class="text-xs text-gray-400 text-center mt-1">${entryList.length} competitor${entryList.length !== 1 ? 's' : ''} registered</p>
@@ -222,7 +223,7 @@ async function evtBuildCompetitionHtml(event, isHost) {
             // Vote button (Phase 3 only)
             let voteBtn = '';
             if (displayPhaseNum === 3 && !myVote && entry.user_id !== globalThis.evtCurrentUser.id) {
-                voteBtn = `<button onclick="evtCastVote('${eventId}','${entry.id}')" class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Vote</button>`;
+                voteBtn = `<button ${evtDataAction('evtCastVote', eventId, entry.id)} class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Vote</button>`;
             } else if (isVoted) {
                 voteBtn = `<div class="mt-2 text-center text-xs font-bold text-blue-600">✓ Your Vote</div>`;
             }
@@ -230,7 +231,7 @@ async function evtBuildCompetitionHtml(event, isHost) {
             // Moderation button (host only, before voting)
             let modBtn = '';
             if (isHost && displayPhaseNum < 3) {
-                modBtn = `<button onclick="evtModerateEntry('${eventId}','${entry.id}')" class="mt-1 text-xs text-red-400 hover:text-red-600">Remove Entry</button>`;
+                modBtn = `<button ${evtDataAction('evtModerateEntry', eventId, entry.id)} class="mt-1 text-xs text-red-400 hover:text-red-600">Remove Entry</button>`;
             }
 
             // Winner badge
@@ -335,7 +336,7 @@ async function evtBuildCompetitionHtml(event, isHost) {
             // Host can finalize results
             resultsHtml = `
                 <div class="mt-4">
-                    <button onclick="evtFinalizeCompetition('${eventId}')" class="w-full bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+                    <button ${evtDataAction('evtFinalizeCompetition', eventId)} class="w-full bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
                         🏆 Finalize Results & Announce Winners
                     </button>
                 </div>`;
@@ -353,13 +354,13 @@ async function evtBuildCompetitionHtml(event, isHost) {
             // All phases done or only active remaining
         }
         if (activeP) {
-            buttons += `<button onclick="evtAdvancePhase('${eventId}', ${activeP.phase_num})" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-blue-700 transition">Complete Phase ${activeP.phase_num} → Next</button>`;
+            buttons += `<button ${evtDataAction('evtAdvancePhase', eventId, activeP.phase_num)} class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-blue-700 transition">Complete Phase ${activeP.phase_num} → Next</button>`;
             if (activeP.phase_num === 2 && !activeP.extended_once) {
-                buttons += `<button onclick="evtExtendPhase('${eventId}', ${activeP.phase_num})" class="bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-amber-600 transition">Extend ${config.extension_days || 3} Days</button>`;
+                buttons += `<button ${evtDataAction('evtExtendPhase', eventId, activeP.phase_num)} class="bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-amber-600 transition">Extend ${config.extension_days || 3} Days</button>`;
             }
         }
         if (!activeP && nextPhase) {
-            buttons += `<button onclick="evtStartPhase('${eventId}', ${nextPhase.phase_num})" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition">Start Phase ${nextPhase.phase_num}: ${nextPhase.name}</button>`;
+            buttons += `<button ${evtDataAction('evtStartPhase', eventId, nextPhase.phase_num)} class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition">Start Phase ${nextPhase.phase_num}: ${nextPhase.name}</button>`;
         }
 
         if (buttons) {
@@ -431,7 +432,7 @@ function evtBuildSubmitFormHtml(eventId, config) {
             </div>
             ${fileInput}
             ${linkInput}
-            <button onclick="evtSubmitEntry('${eventId}')" class="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
+            <button ${evtDataAction('evtSubmitEntry', eventId)} class="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
                 Submit Entry
             </button>
         </div>`;
@@ -849,3 +850,21 @@ window.PortalEvents.competition.advancePhase = evtAdvancePhase;
 window.PortalEvents.competition.extendPhase = evtExtendPhase;
 window.PortalEvents.competition.finalize = evtFinalizeCompetition;
 window.PortalEvents.competition.recalcTiers = evtRecalcCompTiers;
+
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({
+    evtBuildCompetitionHtml,
+    evtBuildSubmitFormHtml,
+    evtJoinCompetition,
+    evtSubmitEntry,
+    evtCastVote,
+    evtModerateEntry,
+    evtContributeToPrizePool,
+    evtStartPhase,
+    evtAdvancePhase,
+    evtExtendPhase,
+    evtFinalizeCompetition,
+    evtRecalcCompTiers,
+});
+
+export { evtRecalcCompTiers };

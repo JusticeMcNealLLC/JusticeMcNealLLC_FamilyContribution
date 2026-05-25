@@ -1,9 +1,47 @@
 /* ════════════════════════════════════════════════════════════
    Portal Events — Team Tools & CTA bar (Phase 5C)
-   Classic IIFE; loads after team/chat.js, before detail.js.
+   Tailwind-first; minimal CSS hooks in base.css for safe-area.
    ════════════════════════════════════════════════════════════ */
 
 'use strict';
+
+import { evtDataAction } from '../core/actions.js';
+import {
+    TW_CTA_BTN,
+    TW_CTA_BAR,
+    TW_CTA_ACTIONS,
+    TW_CTA_RSVP,
+    TW_CTA_RSVP_DONE,
+    TW_CTA_MANAGE,
+    TW_CTA_TEAM,
+    TW_CTA_RAFFLE,
+    TW_CTA_RAFFLE_OUTLINE,
+    TW_CTA_RAFFLE_DONE,
+    TW_CTA_DISABLED,
+    TW_CTA_RAFFLE_LOCKED,
+    TW_CTA_FOOTNOTE,
+    TW_FLOATING_SHELL,
+    TW_DESKTOP_OVERLAY,
+    TW_PANEL_BASE,
+    TW_PANEL_TOOLS,
+    TW_CLOSE_BTN,
+    TW_PANEL_HEAD,
+    TW_PANEL_HEAD_TITLE,
+    TW_PANEL_HEAD_SUB,
+    TW_TOOL_BTN,
+    TW_TOOL_MAIN,
+    TW_TOOL_SUB,
+    TW_TOOL_LIST,
+    TW_RAFFLE_BUY,
+    TW_TICKET_CARD,
+    twPanelClasses,
+    twAdd,
+    twRemove,
+    expandCtaSheet,
+    collapseCtaSheet,
+    unlockCtaSheetScroll,
+} from './ui-tw.js';
+
 
 const EVT_CTA_ICONS = {
     check:  '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
@@ -12,63 +50,11 @@ const EVT_CTA_ICONS = {
     manage: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
 };
 
-function injectTeamToolsStyles() {
-    if (document.getElementById('evtTeamToolsStyles')) return;
-    const style = document.createElement('style');
-    style.id = 'evtTeamToolsStyles';
-    style.textContent = `
-    .evt-team-tool-list { display: flex; flex-direction: column; gap: 8px; }
-    .evt-team-tool-btn {
-        display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-        width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #e5e7eb;
-        background: #fff; color: #111827; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer;
-    }
-    .evt-team-tool-btn:disabled { opacity: .55; cursor: not-allowed; }
-    .evt-team-tool-main { line-height: 1.25; }
-    .evt-team-tool-sub { font-size: 12px; font-weight: 500; color: #6b7280; line-height: 1.35; }
-    .evt-cta-btn.evt-cta-team { background: #fff; color: #4f46e5; border: 2px solid #c7d2fe; }
-    .evt-cta-btn.evt-cta-raffle-locked { background: #f3f4f6; color: #9ca3af; border: 1.5px solid #e5e7eb; box-shadow: none; cursor: not-allowed; }
-    .evt-cta-footnote { margin: 0; padding: 0 4px 2px; text-align: center; font-size: 11px; line-height: 1.35; color: #6b7280; font-weight: 600; }
-    .ed-raffle-locked-block { text-align: center; }
-    .ed-raffle-locked-hint { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: #6b7280; font-weight: 600; font-style: normal; }
-    .ed-raffle-btn.ed-raffle-btn-locked { background: #ebebeb; color: #999; border: none; cursor: not-allowed; width: 100%; }
-    @media (min-width: 1024px) {
-        .evt-cta-bar.evt-cta-floating-shell.evt-team-tools-overlay {
-            display: flex !important; position: fixed; inset: 0; z-index: 60;
-            align-items: center; justify-content: center; padding: 24px;
-            background: rgba(15, 23, 42, .45);
-        }
-        .evt-cta-bar.evt-cta-floating-shell.evt-team-tools-overlay .evt-cta-actions { display: none !important; }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel {
-            position: relative; width: min(420px, 100%); max-height: 80vh;
-            overflow: auto; border: 1px solid #e5e7eb; border-radius: 16px;
-            background: #fff; box-shadow: 0 12px 38px rgba(15, 23, 42, .16); padding: 16px;
-        }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel.hidden { display: none; }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-close {
-            position: absolute; top: 10px; right: 10px; width: 30px; height: 30px;
-            border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; color: #374151;
-            font-size: 20px; line-height: 1; font-weight: 700; cursor: pointer;
-        }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head {
-            padding-right: 34px; margin-bottom: 12px;
-        }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head strong {
-            display: block; color: #111827; font-size: 15px; line-height: 1.25;
-        }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head span {
-            display: block; margin-top: 3px; color: #6b7280; font-size: 12px; line-height: 1.35;
-        }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel.evt-team-chat-panel {
-            width: min(480px, 100%);
-        }
-    }
-    `;
-    document.head.appendChild(style);
-}
+/** Legacy global hook — styles live in Tailwind (ui-tw.js). */
+function injectTeamToolsStyles() { /* noop */ }
 
 function raffleLockedCtaBtnHtml() {
-    return `<button type="button" class="evt-cta-btn evt-cta-raffle-locked" disabled aria-disabled="true">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
+    return `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_RAFFLE_LOCKED}" disabled aria-disabled="true">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
 }
 
 function canUseEventScanner(event, canManageEvent) {
@@ -79,11 +65,11 @@ function canUseEventScanner(event, canManageEvent) {
 }
 
 function teamToolsRow(label, sub, onClick, disabled) {
-    const subHtml = sub ? `<span class="evt-team-tool-sub">${sub}</span>` : '';
+    const subHtml = sub ? `<span class="${TW_TOOL_SUB}">${sub}</span>` : '';
     if (disabled) {
-        return `<button type="button" class="evt-team-tool-btn" disabled aria-disabled="true"><span class="evt-team-tool-main">${label}</span>${subHtml}</button>`;
+        return `<button type="button" class="${TW_TOOL_BTN}" disabled aria-disabled="true"><span class="${TW_TOOL_MAIN}">${label}</span>${subHtml}</button>`;
     }
-    return `<button type="button" class="evt-team-tool-btn" onclick="${onClick}"><span class="evt-team-tool-main">${label}</span>${subHtml}</button>`;
+    return `<button type="button" class="${TW_TOOL_BTN}" onclick="${onClick}"><span class="${TW_TOOL_MAIN}">${label}</span>${subHtml}</button>`;
 }
 
 function buildTeamToolsPanelHtml(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, opts) {
@@ -142,7 +128,7 @@ function buildTeamToolsPanelHtml(event, eventId, rsvp, myRaffleEntry, entriesClo
         rows.push(teamToolsRow('Manage Event', 'Hosts, RSVP, raffle, settings', manageClick, false));
     }
 
-    return `<div class="evt-team-tool-list">${rows.join('')}</div>`;
+    return `<div class="${TW_TOOL_LIST}">${rows.join('')}</div>`;
 }
 
 function ensureCtaBarShell() {
@@ -150,9 +136,11 @@ function ensureCtaBarShell() {
     if (!bar) {
         bar = document.createElement('div');
         bar.id = 'evtCtaBar';
-        bar.className = 'evt-cta-bar evt-cta-floating-shell';
+        bar.className = window.matchMedia('(min-width: 1024px)').matches
+            ? `${TW_FLOATING_SHELL} ${TW_DESKTOP_OVERLAY}`
+            : TW_CTA_BAR;
         bar.dataset.evtFloatingShell = '1';
-        bar.innerHTML = '<div id="evtCtaPanel" class="evt-cta-panel"></div><div class="evt-cta-actions" hidden aria-hidden="true"></div>';
+        bar.innerHTML = `<div id="evtCtaPanel" class="${TW_PANEL_BASE} ${TW_PANEL_TOOLS} hidden"></div><div class="${TW_CTA_ACTIONS} lg:hidden" hidden aria-hidden="true"></div>`;
         document.body.appendChild(bar);
         document.body.classList.add('evt-cta-active');
     }
@@ -161,8 +149,9 @@ function ensureCtaBarShell() {
 
 function applyDesktopTeamToolsOverlay(bar) {
     if (!bar || !window.matchMedia('(min-width: 1024px)').matches) return;
-    bar.classList.add('evt-cta-floating-shell', 'evt-team-tools-overlay');
-    bar.dataset.evtFloatingShell = '1';
+    twAdd(bar, TW_FLOATING_SHELL, TW_DESKTOP_OVERLAY);
+    const actions = bar.querySelector('.evt-cta-actions');
+    if (actions) actions.classList.add('lg:hidden');
     if (!bar.dataset.evtOverlayCloseBound) {
         bar.dataset.evtOverlayCloseBound = '1';
         bar.addEventListener('click', (e) => {
@@ -171,24 +160,32 @@ function applyDesktopTeamToolsOverlay(bar) {
     }
 }
 
+function setPanelLayout(panel, mode, { expanded = false, visible = true } = {}) {
+    panel.className = twPanelClasses(mode, { expanded });
+    panel.classList.toggle('hidden', !visible);
+}
+
 function closeCtaPanel() {
     if (typeof globalThis.evtCleanupTeamChat === 'function') window.evtCleanupTeamChat();
     const panel = document.getElementById('evtCtaPanel');
     const bar = document.getElementById('evtCtaBar');
     if (panel) {
         panel.classList.add('hidden');
-        panel.classList.remove('evt-team-chat-panel');
         panel.innerHTML = '';
     }
     if (bar) {
-        bar.classList.remove('evt-cta-bar-expanded', 'evt-team-tools-overlay');
+        collapseCtaSheet(bar);
+        twRemove(bar, TW_FLOATING_SHELL, TW_DESKTOP_OVERLAY);
         if (bar.dataset.evtFloatingShell === '1') {
-            bar.classList.remove('evt-cta-floating-shell');
             delete bar.dataset.evtFloatingShell;
             cleanupBottomNav();
             return;
         }
     }
+}
+
+function panelHead(title, sub) {
+    return `<div class="${TW_PANEL_HEAD}"><strong class="${TW_PANEL_HEAD_TITLE}">${title}</strong><span class="${TW_PANEL_HEAD_SUB}">${sub}</span></div>`;
 }
 
 function openCtaPanel(kind, eventId) {
@@ -197,12 +194,12 @@ function openCtaPanel(kind, eventId) {
     const bar = ensureCtaBarShell();
     const panel = document.getElementById('evtCtaPanel');
     if (!panel) return;
-    if (bar.dataset.evtFloatingShell === '1') bar.classList.add('evt-team-tools-overlay');
+    if (bar.dataset.evtFloatingShell === '1') applyDesktopTeamToolsOverlay(bar);
 
     const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId];
-    const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">×</button>';
-    bar.classList.add('evt-cta-bar-expanded');
-    panel.classList.remove('hidden');
+    const closeBtn = `<button type="button" class="${TW_CLOSE_BTN}" ${evtDataAction('evtCloseCtaPanel')} aria-label="Close">×</button>`;
+    expandCtaSheet(bar);
+    setPanelLayout(panel, 'tools', { expanded: true, visible: true });
 
     const memberGoing = typeof globalThis.evtIsGoingRsvp === 'function'
         ? window.evtIsGoingRsvp(rsvp)
@@ -212,8 +209,8 @@ function openCtaPanel(kind, eventId) {
         const hasQr = memberGoing && rsvp?.qr_token && event.checkin_mode === 'attendee_ticket';
         panel.innerHTML = `
         ${closeBtn}
-        <div class="evt-cta-panel-head"><strong>You're going</strong><span>${evtEscapeHtml(event.title || 'Event')}</span></div>
-        <div class="evt-cta-ticket-card">
+        ${panelHead("You're going", evtEscapeHtml(event.title || 'Event'))}
+        <div class="${TW_TICKET_CARD}">
             ${hasQr ? '<canvas id="evtCtaTicketQR"></canvas><p>Show this QR code at check-in</p>' : '<div class="ed-notice"><span class="ed-notice-emoji">✅</span><div><p class="ed-notice-title">You are on the RSVP list</p><p class="ed-notice-sub">No QR ticket is required for this event.</p></div></div>'}
         </div>`;
         if (hasQr) {
@@ -241,27 +238,26 @@ function openCtaPanel(kind, eventId) {
     if (raffleBundled) {
         panel.innerHTML = `
         ${closeBtn}
-        <div class="evt-cta-panel-head"><strong>Raffle included</strong><span>Raffle entry is included when you complete your paid RSVP for this event.</span></div>`;
+        ${panelHead('Raffle included', 'Raffle entry is included when you complete your paid RSVP for this event.')}`;
         return;
     }
 
     if (!memberGoing) {
         panel.innerHTML = `
         ${closeBtn}
-        <div class="evt-cta-panel-head"><strong>RSVP first</strong><span>Once you are going, this same member RSVP will be used for the raffle entry.</span></div>
-        <button type="button" onclick="globalThis.evtCtaRaffleIntent ='${eventId}';evtHandleRsvp('${eventId}','going')" class="evt-raffle-buy">RSVP to Enter Raffle</button>`;
+        ${panelHead('RSVP first', 'Once you are going, this same member RSVP will be used for the raffle entry.')}
+        <button type="button" onclick="globalThis.evtCtaRaffleIntent ='${eventId}';evtHandleRsvp('${eventId}','going')" class="${TW_RAFFLE_BUY}">RSVP to Enter Raffle</button>`;
         return;
     }
 
     const cost = event.raffle_entry_cost_cents || 0;
     panel.innerHTML = `
     ${closeBtn}
-    <div class="evt-cta-panel-head"><strong>Enter the raffle</strong><span>${cost > 0 ? 'Confirm to start checkout. Raffle tickets are non-refundable.' : 'One tap and you are in the draw.'}</span></div>
-    <button type="button" onclick="${cost > 0 ? `evtHandleRaffleEntry('${eventId}')` : `evtHandleFreeRaffleEntry('${eventId}')`}" class="evt-raffle-buy">${cost > 0 ? `Buy Raffle Entry — ${formatCurrency(cost)}` : 'Enter Raffle — Free'}</button>`;
+    ${panelHead('Enter the raffle', cost > 0 ? 'Confirm to start checkout. Raffle tickets are non-refundable.' : 'One tap and you are in the draw.')}
+    <button type="button" onclick="${cost > 0 ? `evtHandleRaffleEntry('${eventId}')` : `evtHandleFreeRaffleEntry('${eventId}')`}" class="${TW_RAFFLE_BUY}">${cost > 0 ? `Buy Raffle Entry — ${formatCurrency(cost)}` : 'Enter Raffle — Free'}</button>`;
 }
 
 function openTeamToolsPanel(eventId) {
-    injectTeamToolsStyles();
     if (typeof globalThis.evtCleanupTeamChat === 'function') window.evtCleanupTeamChat();
     const event = (window.evtAllEvents || globalThis.evtAllEvents).find(e => e.id === eventId);
     if (!event) return;
@@ -279,14 +275,14 @@ function openTeamToolsPanel(eventId) {
     const panel = document.getElementById('evtCtaPanel');
     if (!panel) return;
 
-    const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">×</button>';
+    const closeBtn = `<button type="button" class="${TW_CLOSE_BTN}" ${evtDataAction('evtCloseCtaPanel')} aria-label="Close">×</button>`;
     const actionsHtml = buildTeamToolsPanelHtml(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, { canManageEvent });
 
-    bar.classList.add('evt-cta-bar-expanded');
-    panel.classList.remove('hidden');
+    expandCtaSheet(bar);
+    setPanelLayout(panel, 'tools', { expanded: true, visible: true });
     panel.innerHTML = `
     ${closeBtn}
-    <div class="evt-cta-panel-head"><strong>Event Tools</strong><span>Team coordination and your personal RSVP, raffle, and ticket.</span></div>
+    ${panelHead('Event Tools', 'Team coordination and your personal RSVP, raffle, and ticket.')}
     ${actionsHtml}`;
 
     if (!window.__evtTeamToolsEscBound) {
@@ -301,6 +297,7 @@ function openTeamToolsPanel(eventId) {
 
 function cleanupBottomNav() {
     if (typeof globalThis.evtCleanupTeamChat === 'function') window.evtCleanupTeamChat();
+    unlockCtaSheetScroll();
     const el = document.getElementById('evtCtaBar');
     if (el) el.remove();
     const hint = document.querySelector('.bottom-tab-bar .swipe-hint');
@@ -311,7 +308,9 @@ function cleanupBottomNav() {
 
 function initBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub) {
     cleanupBottomNav();
-    injectTeamToolsStyles();
+
+    // Desktop uses inline header actions (detail/sections.js); sticky bar is mobile-only.
+    if (window.matchMedia('(min-width: 1024px)').matches) return;
 
     const rsvpEnabled  = event.rsvp_enabled !== false;
     const raffleEnabled = !!event.raffle_enabled;
@@ -327,27 +326,27 @@ function initBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, event
     let secondaryBtn = '';
     let ctaFootnote  = '';
 
-    const teamBtn = `<button type="button" class="evt-cta-btn evt-cta-team" onclick="evtOpenTeamToolsPanel('${eventId}')" aria-label="Open event team tools">Team</button>`;
+    const teamBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_TEAM}" ${evtDataAction('evtOpenTeamToolsPanel', eventId)} aria-label="Open event team tools">Team</button>`;
 
     if (isHost) {
-        primaryBtn = `<button type="button" class="evt-cta-btn evt-cta-manage" onclick="window.EventsManage ? window.EventsManage.open('${eventId}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId}')">${EVT_CTA_ICONS.manage} Manage Event</button>`;
+        primaryBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_MANAGE}" onclick="window.EventsManage ? window.EventsManage.open('${eventId}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId}')">${EVT_CTA_ICONS.manage} Manage Event</button>`;
         if (teamHubAccess) secondaryBtn = teamBtn;
     } else if (teamHubAccess) {
         primaryBtn = teamBtn;
     } else {
         if (rsvpEnabled) {
             if (rsvp?.paid) {
-                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="evtOpenCtaPanel('ticket','${eventId}')">${EVT_CTA_ICONS.ticket} RSVP'd · Ticket</button>`;
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP_DONE}" ${evtDataAction('evtOpenCtaPanel', 'ticket', eventId)}>${EVT_CTA_ICONS.ticket} RSVP'd · Ticket</button>`;
             } else if (rsvp?.status === 'going') {
-                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="evtOpenCtaPanel('ticket','${eventId}')">${EVT_CTA_ICONS.ticket} Going · Ticket</button>`;
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP_DONE}" ${evtDataAction('evtOpenCtaPanel', 'ticket', eventId)}>${EVT_CTA_ICONS.ticket} Going · Ticket</button>`;
             } else if (canRsvp && !eventIsFull && event.pricing_mode === 'paid') {
-                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId}','going')">RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>`;
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction('evtHandleRsvp', eventId, 'going')}>RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>`;
             } else if (canRsvp && !eventIsFull) {
-                primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId}','going')">RSVP</button>`;
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction('evtHandleRsvp', eventId, 'going')}>RSVP</button>`;
             } else if (eventIsFull) {
-                primaryBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Full</button>`;
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_DISABLED}" disabled>${EVT_CTA_ICONS.lock} Full</button>`;
             } else {
-                primaryBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} ${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_DISABLED}" disabled>${EVT_CTA_ICONS.lock} ${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
             }
         }
 
@@ -360,19 +359,19 @@ function initBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, event
                 : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
             if (!raffleIncluded) {
                 const hasPrimary = !!primaryBtn;
-                const activeCls = hasPrimary ? 'evt-cta-raffle-outline' : 'evt-cta-raffle';
+                const activeCls = hasPrimary ? TW_CTA_RAFFLE_OUTLINE : TW_CTA_RAFFLE;
                 let raffleSlot = '';
                 if (myRaffleEntry) {
-                    raffleSlot = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${EVT_CTA_ICONS.check} Entered</button>`;
+                    raffleSlot = `<button class="${TW_CTA_BTN} ${TW_CTA_RAFFLE_DONE}" disabled>${EVT_CTA_ICONS.check} Entered</button>`;
                 } else if (entriesClosed) {
-                    raffleSlot = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Entries Closed</button>`;
+                    raffleSlot = `<button class="${TW_CTA_BTN} ${TW_CTA_DISABLED}" disabled>${EVT_CTA_ICONS.lock} Entries Closed</button>`;
                 } else if (!memberGoingNav) {
                     raffleSlot = raffleLockedCtaBtnHtml();
-                    ctaFootnote = '<p class="evt-cta-footnote">RSVP first to enter the raffle</p>';
+                    ctaFootnote = `<p class="${TW_CTA_FOOTNOTE}">RSVP first to enter the raffle</p>`;
                 } else if (event.raffle_entry_cost_cents > 0) {
-                    raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId}')">${EVT_CTA_ICONS.ticket} Raffle — ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
+                    raffleSlot = `<button class="${TW_CTA_BTN} ${activeCls}" ${evtDataAction('evtOpenCtaPanel', 'raffle', eventId)}>${EVT_CTA_ICONS.ticket} Raffle — ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
                 } else {
-                    raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId}')">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
+                    raffleSlot = `<button class="${TW_CTA_BTN} ${activeCls}" ${evtDataAction('evtOpenCtaPanel', 'raffle', eventId)}>${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
                 }
                 if (hasPrimary) {
                     secondaryBtn = raffleSlot;
@@ -387,8 +386,8 @@ function initBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, event
 
     const bar = document.createElement('div');
     bar.id = 'evtCtaBar';
-    bar.className = 'evt-cta-bar' + (ctaFootnote ? ' evt-cta-bar-has-footnote' : '');
-    bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${primaryBtn + secondaryBtn}</div>${ctaFootnote}`;
+    bar.className = TW_CTA_BAR + (ctaFootnote ? ' evt-cta-bar-has-footnote' : '');
+    bar.innerHTML = `<div id="evtCtaPanel" class="${TW_PANEL_BASE} ${TW_PANEL_TOOLS} hidden"></div><div class="${TW_CTA_ACTIONS}">${primaryBtn + secondaryBtn}</div>${ctaFootnote}`;
     document.body.appendChild(bar);
     document.body.classList.add('evt-cta-active');
 

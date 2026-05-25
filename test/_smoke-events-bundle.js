@@ -32,7 +32,7 @@ check('bundle from esbuild banner', bundle.includes('production bundle from main
 
 const mainSrc = fs.readFileSync(mainPath, 'utf8');
 const chain = [...mainSrc.matchAll(/import\s+['"]\.\/([^'"]+)['"]/g)].map((m) => m[1]).filter((p) => p !== 'index.js' && p !== 'init.js');
-check('chain length 55', chain.length === 55);
+check('chain length 57', chain.length === 57);
 
 const main = fs.readFileSync(mainPath, 'utf8');
 check('main imports list/shell', main.includes("import './list/shell.js'"));

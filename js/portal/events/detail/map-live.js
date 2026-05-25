@@ -1,3 +1,4 @@
+import { evtDataAction } from '../core/actions.js';
 // ═══════════════════════════════════════════════════════════
 // Portal Events — Detail live map (Leaflet.js + Supabase Realtime)
 // Opt-in location sharing during event window + 24h
@@ -57,7 +58,7 @@ function evtBuildMapHtml(event, hasRsvp, isHost) {
             <!-- Map Container -->
             <div id="eventMapContainer" class="w-full h-64 sm:h-80 rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
                 <div class="flex items-center justify-center h-full text-sm text-gray-400">
-                    <button onclick="evtInitMap('${event.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+                    <button ${evtDataAction('evtInitMap', event.id)} class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
                         Open Map
                     </button>
@@ -330,3 +331,11 @@ function evtCleanupMap() {
     evtMapMarkers = {};
     evtMapSharingActive = false;
 }
+
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({
+    evtBuildMapHtml,
+    evtInitMap,
+    evtToggleLocationSharing,
+    evtCleanupMap,
+});

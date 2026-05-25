@@ -13,6 +13,7 @@ import '../../components/events/card.js'; // EventsCard (shared)
 import './index.js'; // PortalEvents namespace shell
 import './core/state.js';
 import './core/utils.js';
+import './core/actions.js';
 import './core/vendor-loader.js';
 import './core/raffle-model.js';
 import './list/search.js';
@@ -23,6 +24,7 @@ import './list/calendar.js';
 import './list/hero-rails.js';
 import './list/buckets.js';
 import './list/shell.js';
+import './list/manage-sync.js';
 import './team/chat.js';
 import './team/tools.js';
 import './detail/presentation.js';

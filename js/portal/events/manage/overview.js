@@ -21,7 +21,11 @@ function money(cents) {
     return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', minimumFractionDigits:0, maximumFractionDigits:2 }).format((cents || 0) / 100);
 }
 function publicEventUrl(event) {
-    return PUBLIC_SITE_URL + '/events/?e=' + encodeURIComponent(event?.slug || '');
+    const slug = event?.slug || '';
+    if (typeof globalThis.evtPublicEventInviteUrl === 'function') {
+        return globalThis.evtPublicEventInviteUrl(slug);
+    }
+    return PUBLIC_SITE_URL + '/events/?e=' + encodeURIComponent(slug);
 }
 function safeFilename(value) {
     return String(value || 'event').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'event';

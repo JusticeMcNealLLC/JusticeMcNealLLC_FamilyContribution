@@ -256,4 +256,6 @@ async function evtHandleCreate(e) {
     }
 }
 
-globalThis.evtHandleCreate = evtHandleCreate;
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({ evtHandleCreate });
+export { evtHandleCreate };

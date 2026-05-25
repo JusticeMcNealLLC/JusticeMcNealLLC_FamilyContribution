@@ -617,3 +617,23 @@ export {
     evtDeleteEvent,
     evtDuplicateEvent,
 };
+
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({
+    evtIsGoingRsvp,
+    evtIsRaffleEntriesOpen,
+    evtIsRaffleBundledWithPaidRsvp,
+    evtCanEnterMemberRaffle,
+    evtHandleRsvp,
+    evtHandleRaffleEntry,
+    evtHandleFreeRaffleEntry,
+    evtUpdateStatus,
+    evtJoinWaitlist,
+    evtLeaveWaitlist,
+    evtClaimWaitlistSpot,
+    evtCancelEvent,
+    evtRescheduleEvent,
+    evtRequestGraceRefund,
+    evtDeleteEvent,
+    evtDuplicateEvent,
+});

@@ -2,6 +2,9 @@
 
 'use strict';
 
+import { evtDataAction } from '../core/actions.js';
+
+
 const COST_CATEGORIES = [
     { value: 'lodging', label: '🏠 Lodging' },
     { value: 'transportation', label: '🚗 Transportation' },
@@ -53,7 +56,7 @@ function evtRenderCostItems() {
     <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-2" data-cost-id="${item.id}">
         <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-gray-400">#${idx + 1}</span>
-            <button type="button" onclick="evtRemoveCostItem('${item.id}')" class="text-red-400 hover:text-red-600 transition p-1">
+            <button type="button" ${evtDataAction('evtRemoveCostItem', item.id)} class="text-red-400 hover:text-red-600 transition p-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -142,9 +145,18 @@ function evtRecalcCostSummary() {
     }
 }
 
-globalThis.evtToggleLlcFields = evtToggleLlcFields;
-globalThis.evtAddCostItem = evtAddCostItem;
-globalThis.evtRemoveCostItem = evtRemoveCostItem;
-globalThis.evtRenderCostItems = evtRenderCostItems;
-globalThis.evtUpdateCostItem = evtUpdateCostItem;
-globalThis.evtRecalcCostSummary = evtRecalcCostSummary;
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({
+    evtToggleLlcFields,
+    evtAddCostItem,
+    evtRemoveCostItem,
+    evtRenderCostItems,
+    evtUpdateCostItem,
+    evtRecalcCostSummary,
+});
+export {
+    evtToggleLlcFields,
+    evtAddCostItem,
+    evtRemoveCostItem,
+    evtRecalcCostSummary,
+};

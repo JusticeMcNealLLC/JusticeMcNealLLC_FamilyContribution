@@ -2,12 +2,15 @@
 
 | File | Status |
 |------|--------|
-| `global-reexports.js` | **Active** — loaded at end of `classic-chain-loader.js`; assigns `window.evt*` for inline handlers |
-| `inline-handlers.js` | Dormant — Phase 4H grouped handler installer (not in production chain) |
-| `window-exports.js` | Dormant — Phase 5L.4 `installWindowExports` API (not in production chain) |
-| `external-globals.js` | Dormant — test / future module entry helpers |
+| `publish-globals.js` | **Active** — assign `globalThis` + `window` for HTML-facing handlers |
+| `global-reexports.js` | **Active** — mirrors key `globalThis.evt*` → `window` at end of bundle |
+| `inline-handlers.js` | Archive — Phase 4F inventory; not in production bundle |
+| `window-exports.js` | Archive — Phase 5L.4 API; not in production bundle |
+| `external-globals.js` | Archive — test / future helpers; not in production bundle |
 
 Production boot: `events.bundle.js` (esbuild IIFE from `main.js`).
+
+UI clicks use **`core/actions.js`** delegated `data-evt-action` (see `CONTRIBUTING.md`).
 
 | Command | Purpose |
 |---------|---------|

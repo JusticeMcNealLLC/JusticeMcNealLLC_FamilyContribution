@@ -247,3 +247,14 @@ function evtCloseScanner() {
     }
     globalThis.evtToggleModal('scannerModal', false);
 }
+
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({
+    evtParseQrData,
+    evtOpenScanner,
+    evtProcessCheckin,
+    evtResumeScanner,
+    evtCloseScanner,
+});
+
+export { evtCloseScanner, evtOpenScanner, evtProcessCheckin, evtResumeScanner, evtParseQrData };

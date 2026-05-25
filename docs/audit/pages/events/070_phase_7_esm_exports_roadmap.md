@@ -60,7 +60,9 @@ node test/_smoke-phase3d-create-bridge.js
 
 ## Optional follow-ups (not required for Phase 7)
 
-- Replace `window.*` onclick handlers with `data-action` + delegated listeners.
-- `import` between modules instead of `globalThis` bridges.
+- ~~Replace `window.*` onclick handlers with `data-action` + delegated listeners.~~ **Done — Phase 8**
+- `import` between modules instead of `globalThis` bridges (ongoing; see `CONTRIBUTING.md`).
 - ESM `export` on `js/components/events/*` shared components.
 - Convert `core/raffle-model.js` UMD to ESM if bundle-only.
+
+See also: `071_phase_8_actions_delegate.md`

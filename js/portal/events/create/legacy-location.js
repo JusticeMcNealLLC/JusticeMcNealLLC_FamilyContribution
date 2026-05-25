@@ -79,7 +79,11 @@ function evtInitLocationValidation() {
     });
 }
 
-globalThis.evtSetLocationIcon = evtSetLocationIcon;
-globalThis.evtSetLocationStatus = evtSetLocationStatus;
-globalThis.evtValidateLocation = evtValidateLocation;
-globalThis.evtInitLocationValidation = evtInitLocationValidation;
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({
+    evtSetLocationIcon,
+    evtSetLocationStatus,
+    evtValidateLocation,
+    evtInitLocationValidation,
+});
+export { evtInitLocationValidation, evtValidateLocation, evtSetLocationIcon, evtSetLocationStatus };

@@ -1,3 +1,4 @@
+import { evtDataAction } from '../core/actions.js';
 // ═══════════════════════════════════════════════════════════
 // Portal Events — Raffle Draw & Winner Display
 // Digital raffle draw using crypto-random selection,
@@ -114,7 +115,7 @@ function evtRenderDrawUI(eventId, eligible, raffleConfig, drawQueue, alreadyDraw
         <div id="raffleWinnerResult" class="mt-4 hidden"></div>
 
         ${eligible.length > 0 ? `
-        <button id="drawWinnerBtn" onclick="evtDrawWinner('${eventId}', ${nextPlace})" class="w-full mt-4 bg-violet-600 hover:bg-violet-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+        <button id="drawWinnerBtn" ${evtDataAction('evtDrawWinner', eventId, nextPlace)} class="w-full mt-4 bg-violet-600 hover:bg-violet-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
             🎲 Draw Winner #${nextPlace}
         </button>` : `
         <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-center">
@@ -449,3 +450,23 @@ export {
     evtCelebrate,
     evtCloseRaffleDraw,
 };
+
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({
+    evtOpenRaffleDraw,
+    evtRenderDrawUI,
+    evtGetRaffleConfig,
+    evtGetRaffleDrawQueue,
+    evtResolvePrizeSlot,
+    evtAssignRandomPrizeSlot,
+    evtPrizeSlotLabel,
+    evtLegacyPrizeLabel,
+    evtDrawModeLabel,
+    evtInsertRaffleWinner,
+    evtLoadRaffleWinnersForDraw,
+    evtDrawWinner,
+    evtCryptoRandomInt,
+    evtOrdinalSuffix,
+    evtCelebrate,
+    evtCloseRaffleDraw,
+});

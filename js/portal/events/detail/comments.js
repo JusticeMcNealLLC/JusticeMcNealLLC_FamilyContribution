@@ -96,4 +96,5 @@ document.addEventListener('keydown', e => {
     }
 });
 
-window.evtPostComment = evtPostComment;
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({ evtLoadComments, evtPostComment });

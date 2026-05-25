@@ -9,10 +9,16 @@
 [] borrow money feature
 [] event exspenses report feature
 [x] fix public events page to show full amount of attendees
-[] share button on event details should share the same link as the share invite link from manage event
+[x] share button on event details should share the same link as the share invite link from manage event
 [x] incrtease visual of the team module pop up 
 [] sms notifications via twilio, so this would be a major update. currently we do have a notigication system in place using the swa or aka the mobile app thing where you can set the webpage on your phone home and it can also send push notification pwa i tihnk some like. so my idea is that we have seperate notifications for the sms system and the push notification system. the sms system will mainly be utilized for more important matters while the push notification will be more for broader notifications. Some instances is that for the public events page during rsvp we can have a option to have people leave their phone number and some text saying by leaving your phone number you agree to recieve updates about this event. And this will allow us to contact those people just incase event changes happen. So upon rsvping with their number they recieve a text saying thank for rsvping for event, starts at time and will be held at location. Further more there will be a tab in the manage event module to send text messages out to those who have opted in for this. This will be for event changes or anything deemed worth of doing so. Another text message will go out x days before the event starts as like a reminder like hey event starting in 2 days hope to see you there. And then finaically another message maybe a couple of hours before the event starts for a final reminder and a thank you for participating and joining the event? Then maybe a notification if an event has been canceled would be smart. 
 But besides events this can also be a feature for notificatiosn for anything accross the website. For example if your past due on your subscription maybe a notification saying, you are past due on your subscription, your account will deactivate in 14 days if no payment is made (or whatever rules we make for that) and then anotehr one when it is actually deactivated. But yeah either way theres a bunch of things we can utilize this for along with the push notifications. before implimenting we need to make sure the foundation for this is strong and good and is setup correctly to support adding on to it. Along with giving members the control to turn this on and off for every type of notification or specific ones for like events, feeds, profile, ect. 
 [] organize md files
 [] mobile update tracker and force users to update their apps 
 [] events page top nav combine for mobile
+[] change login page to a image instead of the video situation
+[] better bottom nav for admin pages
+[] better admin hub for mobile devices
+[] bottom nav for mobile swipe over fix
+[] fix next bill date not showing on index page
+[x] event tools ui height increase, just take up the whole screen on mobile

@@ -158,19 +158,16 @@ async function evtLoadDetailBySlug(slug) {
     globalThis.evtOpenDetail(data.id);
 }
 
+function evtPublicEventInviteUrl(slug) {
+    if (!slug) return '';
+    return `https://justicemcneal.com/events/?e=${encodeURIComponent(slug)}`;
+}
+
 function evtCopyShareUrl(slug) {
-    let url;
-    if (slug) {
-        url = `https://justicemcneal.com/events/?e=${slug}`;
-        if (typeof globalThis.evtCurrentUser !== 'undefined' && globalThis.evtCurrentUser?.id) {
-            url += `&ref=${globalThis.evtCurrentUser.id.slice(0, 8)}`;
-        }
-    } else {
-        url = document.getElementById('shareUrl')?.value;
-    }
+    const url = slug ? evtPublicEventInviteUrl(slug) : document.getElementById('shareUrl')?.value;
     if (!url) return;
 
-    // Prefer native share sheet, fallback to clipboard
+    // Same URL as manage → Share invite / Copy invite link
     if (navigator.share) {
         navigator.share({ title: 'Check out this event', url }).catch(() => {});
     } else {
@@ -236,6 +233,7 @@ export {
     evtNavigateToList,
     evtRouteByUrl,
     evtLoadDetailBySlug,
+    evtPublicEventInviteUrl,
     evtCopyShareUrl,
     evtDownloadIcs,
 };
@@ -251,6 +249,7 @@ const _utilsGlobal = {
     evtNavigateToList,
     evtRouteByUrl,
     evtLoadDetailBySlug,
+    evtPublicEventInviteUrl,
     evtCopyShareUrl,
     evtDownloadIcs,
 };

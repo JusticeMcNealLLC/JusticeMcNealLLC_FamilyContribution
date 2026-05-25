@@ -1,11 +1,17 @@
-// ═══════════════════════════════════════════════════════════
 // Portal Events — Init (Bootstrap + Event Listeners)
 // This file must load LAST — it depends on all other modules.
 // ═══════════════════════════════════════════════════════════
 
+import { evtCloseScanner } from './detail/scanner.js';
+import { evtToggleModal, evtHandleBannerSelect, evtHandleEmbedImageSelect } from './core/utils.js';
+import { loadEvents, renderEvents, setupSearch, initFilterChips } from './list/shell.js';
+import { evtHandleCreate } from './create/legacy-submit.js';
+import { evtInitLocationValidation } from './create/legacy-location.js';
+import { evtHandlePreview } from './create/legacy-preview.js';
+import { evtToggleLlcFields, evtAddCostItem, evtRecalcCostSummary } from './create/legacy-costs.js';
+import { evtRecalcCompTiers } from './detail/competition.js';
+
 // ── One-time init guard (Phase 5L.2) ─────────────────────
-// Prevents duplicate boot if initEventsPage() runs more than once
-// (DOMContentLoaded + manual PortalEvents.initEventsPage(), or future module entry).
 let _eventsPageInitialized = false;
 let _eventsPopstateListenerBound = false;
 let _eventsListenersBound = false;
@@ -18,14 +24,12 @@ async function initEventsPage() {
     globalThis.evtCurrentUser = await checkAuth();
     if (!globalThis.evtCurrentUser) return;
 
-    // Get role for backward compat, show "Create" button based on permission
     const { data: profile } = await supabaseClient
         .from('profiles')
         .select('role, first_name, last_name, profile_picture_url')
         .eq('id', globalThis.evtCurrentUser.id)
         .maybeSingle();
     globalThis.evtCurrentUserRole = profile?.role;
-    // Expose first name for personalized greeting (events_003 §8.1 / B5)
     window.evtCurrentUserName = profile?.first_name || '';
     window.evtCurrentUserPic = profile?.profile_picture_url || null;
     window.evtCurrentUserInitials = ((profile?.first_name?.[0] || '') + (profile?.last_name?.[0] || '')).toUpperCase() || '?';
@@ -35,7 +39,6 @@ async function initEventsPage() {
         document.getElementById('createEventBtn')?.classList.add('flex');
     }
 
-    // Auto-detect timezone
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const tzSel = document.getElementById('eventTimezone');
     if (tzSel) {
@@ -44,24 +47,18 @@ async function initEventsPage() {
         }
     }
 
-    globalThis.evtSetupListeners();
-    await globalThis.evtLoadEvents();
+    evtSetupListeners();
+    await loadEvents();
 
-    // ── URL Routing: check for ?event={slug} on initial load ──
     globalThis.evtRouteByUrl();
 
-    // ── Browser back/forward support (bind once) ──
     if (!_eventsPopstateListenerBound) {
         _eventsPopstateListenerBound = true;
         window.addEventListener('popstate', () => globalThis.evtRouteByUrl());
     }
 }
 
-// Classic script bootstrap — preserved so the page initializes exactly
-// as before under the current HTML script-list loading order.
 document.addEventListener('DOMContentLoaded', initEventsPage);
-
-// ─── Raffle Cost Hint Helper ────────────────────────────
 
 function evtUpdateRaffleCostHint() {
     const costGroup = document.getElementById('raffleEntryCostGroup');
@@ -72,55 +69,39 @@ function evtUpdateRaffleCostHint() {
     if (!costGroup) return;
 
     if (mode === 'paid') {
-        // Paid RSVP → raffle included, hide cost input
         costGroup.classList.add('hidden');
         if (hint) hint.textContent = 'Raffle entry is included free with paid RSVP.';
     } else {
-        // Free or RSVP-disabled → show cost input for standalone raffle ticket
         costGroup.classList.remove('hidden');
         if (hint) hint.textContent = 'This is the price for a standalone raffle ticket.';
     }
 }
 
-// ─── Event Listeners ────────────────────────────────────
-
 function evtSetupListeners() {
     if (_eventsListenersBound) return;
     _eventsListenersBound = true;
 
-    // Filter chips (replaces old tab-btn listeners)
-    evtInitFilterChips();
+    initFilterChips();
+    setupSearch();
+    document.getElementById('typeFilter')?.addEventListener('change', renderEvents);
 
-    // Search
-    evtSetupSearch();
-
-    // Type filter
-    document.getElementById('typeFilter').addEventListener('change', evtRenderEvents);
-
-    // Create modal  — multi-step EventsCreate sheet is now the default.
-    // Falls back to legacy #createModal only if sheet module failed to load.
     function _openCreate() {
         if (window.EventsCreate && window.EventsCreate.open) {
             window.EventsCreate.open();
         } else {
-            globalThis.evtToggleModal('createModal', true);
+            evtToggleModal('createModal', true);
         }
     }
     document.getElementById('createEventBtn')?.addEventListener('click', _openCreate);
     document.getElementById('emptyCreateBtn')?.addEventListener('click', _openCreate);
-    document.getElementById('closeCreateModal')?.addEventListener('click', () => globalThis.evtToggleModal('createModal', false));
-    document.getElementById('createModalOverlay')?.addEventListener('click', () => globalThis.evtToggleModal('createModal', false));
+    document.getElementById('closeCreateModal')?.addEventListener('click', () => evtToggleModal('createModal', false));
+    document.getElementById('createModalOverlay')?.addEventListener('click', () => evtToggleModal('createModal', false));
 
-    // New-create-flow reload events
-    document.addEventListener('events:created', () => {
-        if (typeof globalThis.evtLoadEvents === 'function') globalThis.evtLoadEvents();
-    });
+    document.addEventListener('events:created', () => loadEvents());
 
-    // Scanner modal
     document.getElementById('closeScannerModal')?.addEventListener('click', evtCloseScanner);
     document.getElementById('scannerModalOverlay')?.addEventListener('click', evtCloseScanner);
 
-    // Banner upload
     const dropzone = document.getElementById('bannerDropzone');
     const fileInput = document.getElementById('bannerFile');
     dropzone?.addEventListener('click', () => fileInput?.click());
@@ -151,29 +132,18 @@ function evtSetupListeners() {
         }
     });
 
-    // Create form
     document.getElementById('createEventForm')?.addEventListener('submit', evtHandleCreate);
-
-    // Live address validation (debounced input + blur)
     evtInitLocationValidation();
-
-    // Preview button
     document.getElementById('previewEventBtn')?.addEventListener('click', evtHandlePreview);
 
-    // ── Pricing Mode Toggle ──────────────────────────────
     const pricingModeEl = document.getElementById('pricingMode');
     pricingModeEl?.addEventListener('change', () => {
         const mode = pricingModeEl.value;
         const rsvpCostGroup = document.getElementById('rsvpCostGroup');
-
-        // Show RSVP cost only for 'paid' mode
         if (rsvpCostGroup) rsvpCostGroup.classList.toggle('hidden', mode !== 'paid');
-
-        // Update raffle entry cost hint / visibility based on pricing mode
         evtUpdateRaffleCostHint();
     });
 
-    // ── Raffle Toggle ────────────────────────────────────
     const raffleToggle = document.getElementById('raffleEnabled');
     raffleToggle?.addEventListener('change', () => {
         const config = document.getElementById('raffleConfig');
@@ -181,7 +151,6 @@ function evtSetupListeners() {
         evtUpdateRaffleCostHint();
     });
 
-    // ── Winner Count → Prize Inputs ──────────────────────
     const winnerCountEl = document.getElementById('raffleWinnerCount');
     winnerCountEl?.addEventListener('change', () => {
         const count = parseInt(winnerCountEl.value) || 1;
@@ -190,27 +159,24 @@ function evtSetupListeners() {
 
         let html = '';
         for (let i = 1; i <= count; i++) {
+            const suffix = typeof globalThis.evtOrdinalSuffix === 'function'
+                ? globalThis.evtOrdinalSuffix(i) : 'th';
             html += `<div class="flex items-center gap-2">
                 <span class="text-xs font-bold text-gray-500 w-6">#${i}</span>
-                <input type="text" name="rafflePrize" data-raffle-prize placeholder="Prize for ${i}${evtOrdinalSuffix ? evtOrdinalSuffix(i) : 'th'} place" class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500">
+                <input type="text" name="rafflePrize" data-raffle-prize placeholder="Prize for ${i}${suffix} place" class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500">
             </div>`;
         }
         container.innerHTML = html;
     });
 
-    // ── Raffle Draw Modal Close ──────────────────────────
-    document.getElementById('closeRaffleDrawModal')?.addEventListener('click', () => globalThis.evtToggleModal('raffleDrawModal', false));
-    document.getElementById('raffleDrawOverlay')?.addEventListener('click', () => globalThis.evtToggleModal('raffleDrawModal', false));
+    document.getElementById('closeRaffleDrawModal')?.addEventListener('click', () => evtToggleModal('raffleDrawModal', false));
+    document.getElementById('raffleDrawOverlay')?.addEventListener('click', () => evtToggleModal('raffleDrawModal', false));
 
-    // ── LLC Event Type Toggle ────────────────────────────
     document.getElementById('eventType')?.addEventListener('change', evtToggleLlcFields);
-
-    // ── Competition Tier Calculator ──────────────────────
     document.getElementById('compTier1Pct')?.addEventListener('input', evtRecalcCompTiers);
     document.getElementById('compTier2Pct')?.addEventListener('input', evtRecalcCompTiers);
     document.getElementById('compTier3Pct')?.addEventListener('input', evtRecalcCompTiers);
 
-    // ── LLC Cost Builder ─────────────────────────────────
     document.getElementById('addCostItemBtn')?.addEventListener('click', evtAddCostItem);
     document.getElementById('eventMax')?.addEventListener('change', evtRecalcCostSummary);
     document.getElementById('eventMax')?.addEventListener('input', evtRecalcCostSummary);
@@ -219,31 +185,26 @@ function evtSetupListeners() {
     document.getElementById('eventLlcCut')?.addEventListener('change', evtRecalcCostSummary);
     document.getElementById('eventLlcCut')?.addEventListener('input', evtRecalcCostSummary);
 
-    // Track manual edits to LLC RSVP override so auto-fill doesn't overwrite user input
     const llcOverride = document.getElementById('llcRsvpOverride');
     llcOverride?.addEventListener('input', () => { llcOverride.dataset.userEdited = 'true'; });
     llcOverride?.addEventListener('change', () => { llcOverride.dataset.userEdited = 'true'; });
 
-    // ── Transportation Mode Toggle ───────────────────────
     const transportEl = document.getElementById('eventTransportation');
     transportEl?.addEventListener('change', () => {
         const group = document.getElementById('transportEstimateGroup');
         if (group) group.classList.toggle('hidden', transportEl.value !== 'self_arranged');
     });
 
-    // ── Transportation Enable Toggle ─────────────────────
     const transportToggle = document.getElementById('transportationEnabled');
     transportToggle?.addEventListener('change', () => {
         const section = document.getElementById('transportationSection');
         if (section) section.classList.toggle('hidden', !transportToggle.checked);
     });
 
-    // ── RSVP Enable Toggle ───────────────────────────────
     const rsvpToggle = document.getElementById('rsvpEnabled');
     rsvpToggle?.addEventListener('change', () => {
         const settings = document.getElementById('rsvpSettingsGroup');
         if (settings) settings.classList.toggle('hidden', !rsvpToggle.checked);
-        // Clear gated details when RSVP is off (they depend on RSVP)
         if (!rsvpToggle.checked) {
             ['gateTime', 'gateLocation', 'gateNotes'].forEach(id => {
                 const el = document.getElementById(id);
@@ -254,7 +215,6 @@ function evtSetupListeners() {
         }
     });
 
-    // ── QR Check-In Enable Toggle ────────────────────────
     const checkinToggle = document.getElementById('checkinEnabled');
     checkinToggle?.addEventListener('change', () => {
         const section = document.getElementById('checkinModeSection');
@@ -262,8 +222,7 @@ function evtSetupListeners() {
     });
 }
 
-// ── Bridge exposure ──────────────────────────────────────
-// Classic evt* onclick globals are assigned in compat/global-reexports.js
-// (loaded before manage/sheet.js in main.js import order).
+import { publishGlobals } from './compat/publish-globals.js';
+publishGlobals({ evtSetupListeners, evtUpdateRaffleCostHint });
 window.PortalEvents = window.PortalEvents || {};
 window.PortalEvents.initEventsPage = initEventsPage;

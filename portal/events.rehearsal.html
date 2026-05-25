@@ -833,10 +833,10 @@
         <div class="absolute inset-0" style="z-index:9999; pointer-events:none;">
             <!-- Close + Re-center buttons stacked top-right -->
             <div class="absolute top-0 right-0 flex flex-col gap-2" style="pointer-events:auto; margin-top:max(1rem, env(safe-area-inset-top)); margin-right:1rem;">
-                <button onclick="evtCloseFullscreenMap()" class="w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg" aria-label="Close map">
+                <button type="button" data-evt-action="evtCloseFullscreenMap" class="w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg" aria-label="Close map">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
-                <button onclick="evtRecenterFullscreenMap()" class="w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg" aria-label="Re-center map">
+                <button type="button" data-evt-action="evtRecenterFullscreenMap" class="w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg" aria-label="Re-center map">
                     <svg class="w-5 h-5" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="22" y2="12"/></svg>
                 </button>
             </div>

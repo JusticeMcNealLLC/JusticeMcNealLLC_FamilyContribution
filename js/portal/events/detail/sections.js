@@ -5,6 +5,9 @@
 
 'use strict';
 
+import { evtDataAction } from '../core/actions.js';
+
+
 const _edPill = window.evtEdPill;
 const _edNotice = window.evtEdNotice;
 const _edSectionHead = window.evtEdSectionHead;
@@ -30,7 +33,7 @@ function evtBuildDetailRsvpSectionHtml(ctx) {
         rsvpButtons = _edNotice('ℹ️', 'Informational Event', 'RSVP is not required for this event');
     } else if (isHost) {
         const teamBtnHtml = canAccessTeamHub
-            ? `<button type="button" onclick="evtOpenTeamToolsPanel('${eventId}')" class="ed-outline-btn" aria-label="Open event team tools">Team</button>`
+            ? `<button type="button" ${evtDataAction('evtOpenTeamToolsPanel', eventId)} class="ed-outline-btn" aria-label="Open event team tools">Team</button>`
             : '';
         rsvpButtons = `
         <div class="ed-rsvp-confirmed">
@@ -55,8 +58,8 @@ function evtBuildDetailRsvpSectionHtml(ctx) {
             </div>`;
         } else {
             rsvpButtons = `
-            <button onclick="evtHandleRsvp('${eventId}','going')" class="ed-primary-btn">RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>
-            <button onclick="evtMessageHost('${eventId}')" class="ed-outline-btn">Message Host</button>
+            <button ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-primary-btn">RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>
+            <button ${evtDataAction('evtMessageHost', eventId)} class="ed-outline-btn">Message Host</button>
             <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' · Includes raffle entry' : ''}</p>`;
         }
     } else if (canRsvp && !eventIsFull) {
@@ -68,14 +71,14 @@ function evtBuildDetailRsvpSectionHtml(ctx) {
                     <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">We'll see you there.</span></div>
                 </div>
             </div>
-            <button onclick="evtHandleRsvp('${eventId}','going')" class="ed-outline-btn">Update RSVP</button>`;
+            <button ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-outline-btn">Update RSVP</button>`;
         } else {
             const interestedActive = rsvp?.status === 'maybe' ? ' active' : '';
             rsvpButtons = `
-            <button onclick="evtHandleRsvp('${eventId}','going')" class="ed-primary-btn">RSVP</button>
-            <button onclick="evtMessageHost('${eventId}')" class="ed-outline-btn">Message Host</button>
+            <button ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-primary-btn">RSVP</button>
+            <button ${evtDataAction('evtMessageHost', eventId)} class="ed-outline-btn">Message Host</button>
             <div class="ed-rsvp-secondary">
-                <button onclick="evtHandleRsvp('${eventId}','maybe')" class="ed-rsvp-sm${interestedActive ? ' active' : ''}">❤️ Interested</button>
+                <button ${evtDataAction('evtHandleRsvp', eventId, 'maybe')} class="ed-rsvp-sm${interestedActive ? ' active' : ''}">❤️ Interested</button>
             </div>`;
         }
     }
@@ -137,9 +140,9 @@ function evtBuildDetailRaffleSectionHtml(ctx) {
     } else if (!hasRaffleRsvp) {
         entryStatusHtml = window.evtRaffleLockedDesktopHtml(eventId, isHost && canAccessTeamHub);
     } else if (event.raffle_entry_cost_cents > 0 && !entriesClosed) {
-        entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
+        entryStatusHtml = `<div class="ed-raffle-desktop-action"><button ${evtDataAction('evtHandleRaffleEntry', eventId)} class="ed-raffle-btn">🎟️ Buy Raffle Entry — ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
     } else if ((!event.raffle_entry_cost_cents || event.raffle_entry_cost_cents === 0) && !entriesClosed) {
-        entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleFreeRaffleEntry('${eventId}')" class="ed-raffle-btn">🎟️ Enter Raffle — Free</button></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
+        entryStatusHtml = `<div class="ed-raffle-desktop-action"><button ${evtDataAction('evtHandleFreeRaffleEntry', eventId)} class="ed-raffle-btn">🎟️ Enter Raffle — Free</button></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
     }
 
     let winnersHtml = '';
@@ -172,15 +175,15 @@ function evtBuildDetailHostControlsHtml(ctx) {
 
     let primaryBtn = '';
     let dropdownItems = '';
-    if (event.status === 'draft') primaryBtn = `<button onclick="evtUpdateStatus('${eventId}','open')" class="evt-host-btn primary">Publish Event</button>`;
+    if (event.status === 'draft') primaryBtn = `<button ${evtDataAction('evtUpdateStatus', eventId, 'open')} class="evt-host-btn primary">Publish Event</button>`;
     if (['open', 'confirmed', 'active'].includes(event.status)) {
-        if (!primaryBtn) primaryBtn = `<button onclick="evtUpdateStatus('${eventId}','completed')" class="evt-host-btn primary">Mark Completed</button>`;
-        else dropdownItems += `<button onclick="evtUpdateStatus('${eventId}','completed')">✓ Mark Completed</button>`;
-        dropdownItems += `<button onclick="evtCancelEvent('${eventId}')" class="danger">✕ Cancel Event</button>`;
-        if (isLlc) dropdownItems += `<button onclick="evtRescheduleEvent('${eventId}')">📅 Reschedule</button>`;
+        if (!primaryBtn) primaryBtn = `<button ${evtDataAction('evtUpdateStatus', eventId, 'completed')} class="evt-host-btn primary">Mark Completed</button>`;
+        else dropdownItems += `<button ${evtDataAction('evtUpdateStatus', eventId, 'completed')}>✓ Mark Completed</button>`;
+        dropdownItems += `<button ${evtDataAction('evtCancelEvent', eventId)} class="danger">✕ Cancel Event</button>`;
+        if (isLlc) dropdownItems += `<button ${evtDataAction('evtRescheduleEvent', eventId)}>📅 Reschedule</button>`;
     }
-    dropdownItems += `<button onclick="evtDuplicateEvent('${eventId}')">📋 Duplicate Event</button>`;
-    if (typeof canManageEvents === 'function' && canManageEvents()) dropdownItems += `<button onclick="evtDeleteEvent('${eventId}')" class="danger">🗑 Delete Event</button>`;
+    dropdownItems += `<button ${evtDataAction('evtDuplicateEvent', eventId)}>📋 Duplicate Event</button>`;
+    if (typeof canManageEvents === 'function' && canManageEvents()) dropdownItems += `<button ${evtDataAction('evtDeleteEvent', eventId)} class="danger">🗑 Delete Event</button>`;
     const manageOnClick = `if(window.EventsManage){window.EventsManage.open('${eventId}',{source:'portal'})}else{this.nextElementSibling.classList.toggle('open')}`;
     return `
         ${_edSectionHead('Host Controls')}
@@ -216,7 +219,7 @@ function evtBuildDetailWaitlistHtml(ctx) {
                     <div style="flex:1">
                         <p class="ed-notice-title">A spot opened up for you!</p>
                         <p class="ed-notice-sub">Complete your RSVP by ${expiresStr}</p>
-                        <button onclick="evtClaimWaitlistSpot('${eventId}')" class="ed-primary-btn" style="margin-top:10px">Claim Spot — ${formatCurrency(event.rsvp_cost_cents)}</button>
+                        <button ${evtDataAction('evtClaimWaitlistSpot', eventId)} class="ed-primary-btn" style="margin-top:10px">Claim Spot — ${formatCurrency(event.rsvp_cost_cents)}</button>
                     </div>
                 </div>`;
     } else if (isWaiting) {
@@ -224,10 +227,10 @@ function evtBuildDetailWaitlistHtml(ctx) {
         waitlistAction = `
                 <div class="ed-notice" style="justify-content:space-between">
                     <div><p class="ed-notice-title">You're #${pos} on the waitlist</p><p class="ed-notice-sub">We'll notify you if a spot opens</p></div>
-                    <button onclick="evtLeaveWaitlist('${eventId}')" class="ed-link-btn danger">Leave</button>
+                    <button ${evtDataAction('evtLeaveWaitlist', eventId)} class="ed-link-btn danger">Leave</button>
                 </div>`;
     } else if (!rsvp?.paid) {
-        waitlistAction = `<button onclick="evtJoinWaitlist('${eventId}')" class="ed-action-btn">Join Waitlist</button>
+        waitlistAction = `<button ${evtDataAction('evtJoinWaitlist', eventId)} class="ed-action-btn">Join Waitlist</button>
                 <p class="ed-hint">No payment required to join the waitlist</p>`;
     }
     return `${_edSectionHead('Waitlist')}<p class="ed-sub-count">${activeWaitlist.length} waiting</p>${waitlistAction}`;
@@ -244,7 +247,7 @@ function evtBuildDetailGraceNoticeHtml(ctx) {
         <div>
             <p class="ed-notice-title">This event was rescheduled</p>
             <p class="ed-notice-sub">Request a full refund until <strong>${graceEnd}</strong> if the new date doesn't work.</p>
-            ${rsvp?.paid ? `<button onclick="evtRequestGraceRefund('${eventId}')" class="ed-link-btn danger" style="margin-top:8px">Request Full Refund</button>` : ''}
+            ${rsvp?.paid ? `<button ${evtDataAction('evtRequestGraceRefund', eventId)} class="ed-link-btn danger" style="margin-top:8px">Request Full Refund</button>` : ''}
         </div>
     </div>`;
 }
@@ -442,7 +445,7 @@ function evtBuildDetailTeamHubHtml(ctx) {
         <div class="ed-card ed-card-rsvp event-detail-card-tight portal-action-card">
             <p class="ed-summary-heading">Event Team</p>
             <p class="ed-hint">Staff tools for coordination and your own attendance.</p>
-            <button type="button" onclick="evtOpenTeamToolsPanel('${eventId}')" class="ed-outline-btn" aria-label="Open event team tools">Team</button>
+            <button type="button" ${evtDataAction('evtOpenTeamToolsPanel', eventId)} class="ed-outline-btn" aria-label="Open event team tools">Team</button>
         </div>`;
 }
 
@@ -496,7 +499,7 @@ function evtBuildDetailMobileHostedHtml(ctx) {
 function evtBuildDetailPageHeaderActionsHtml(ctx) {
     const { eventId, event } = ctx;
     return `
-                <button onclick="globalThis.evtCopyShareUrl('${event.slug}')" class="ed-page-header-btn" aria-label="Share event">
+                <button type="button" ${evtDataAction('evtCopyShareUrl', event.slug)} class="ed-page-header-btn" aria-label="Share event">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                     <span class="ed-page-header-btn-label">Share</span>
                 </button>

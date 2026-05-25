@@ -1428,11 +1428,8 @@ function _onReady() {
 if (document.readyState !== 'loading') _onReady();
 else document.addEventListener('DOMContentLoaded', _onReady, { once: true });
 
-// events_006 — Re-render hero when admin toggles featured status via manage sheet
-document.addEventListener('events:manage:updated', function () {
-    if (typeof globalThis.evtLoadEvents === 'function') window.evtLoadEvents();
-});
-
 globalThis.PortalEvents = globalThis.PortalEvents || {};
 globalThis.PortalEvents.list = portalEventsListApi;
 if (typeof window !== 'undefined') window.PortalEvents = globalThis.PortalEvents;
+
+export { loadEvents, renderEvents, setupSearch, initFilterChips };

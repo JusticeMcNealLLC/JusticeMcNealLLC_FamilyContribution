@@ -1022,7 +1022,7 @@
     div.textContent = str;
     return div.innerHTML;
   }
-  function evtHandleBannerSelect2() {
+  function evtHandleBannerSelect() {
     const file = document.getElementById("bannerFile").files[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
@@ -1038,7 +1038,7 @@
     };
     reader.readAsDataURL(file);
   }
-  function evtHandleEmbedImageSelect2() {
+  function evtHandleEmbedImageSelect() {
     const file = document.getElementById("embedImageFile").files[0];
     if (!file) return;
     if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
@@ -1122,16 +1122,12 @@
     }
     globalThis.evtOpenDetail(data.id);
   }
+  function evtPublicEventInviteUrl(slug) {
+    if (!slug) return "";
+    return `https://justicemcneal.com/events/?e=${encodeURIComponent(slug)}`;
+  }
   function evtCopyShareUrl(slug) {
-    let url;
-    if (slug) {
-      url = `https://justicemcneal.com/events/?e=${slug}`;
-      if (typeof globalThis.evtCurrentUser !== "undefined" && globalThis.evtCurrentUser?.id) {
-        url += `&ref=${globalThis.evtCurrentUser.id.slice(0, 8)}`;
-      }
-    } else {
-      url = document.getElementById("shareUrl")?.value;
-    }
+    const url = slug ? evtPublicEventInviteUrl(slug) : document.getElementById("shareUrl")?.value;
     if (!url) return;
     if (navigator.share) {
       navigator.share({ title: "Check out this event", url }).catch(() => {
@@ -1189,18 +1185,59 @@
     evtToggleModal,
     evtGenerateSlug: evtGenerateSlug2,
     evtEscapeHtml: evtEscapeHtml2,
-    evtHandleBannerSelect: evtHandleBannerSelect2,
-    evtHandleEmbedImageSelect: evtHandleEmbedImageSelect2,
+    evtHandleBannerSelect,
+    evtHandleEmbedImageSelect,
     evtNavigateToEvent,
     evtNavigateToList,
     evtRouteByUrl,
     evtLoadDetailBySlug,
+    evtPublicEventInviteUrl,
     evtCopyShareUrl,
     evtDownloadIcs
   };
   for (const [name, fn] of Object.entries(_utilsGlobal)) {
     globalThis[name] = fn;
   }
+
+  // js/portal/events/core/actions.js
+  function evtDataAction(action, ...args) {
+    if (!action) return "";
+    let attrs = `data-evt-action="${String(action).replace(/"/g, "&quot;")}"`;
+    if (args.length) {
+      const json = JSON.stringify(args);
+      attrs += ` data-evt-args="${json.replace(/"/g, "&quot;")}"`;
+    }
+    return attrs;
+  }
+  var _delegateInstalled = false;
+  function installEvtActionDelegate() {
+    if (_delegateInstalled) return;
+    _delegateInstalled = true;
+    document.addEventListener("click", (e) => {
+      const el = e.target.closest("[data-evt-action]");
+      if (!el) return;
+      const action = el.getAttribute("data-evt-action");
+      if (!action) return;
+      const fn = globalThis[action];
+      if (typeof fn !== "function") {
+        console.warn(`[events actions] ${action} is not a function`);
+        return;
+      }
+      let args = [];
+      const raw = el.getAttribute("data-evt-args");
+      if (raw) {
+        try {
+          args = JSON.parse(raw);
+        } catch (_) {
+          console.warn("[events actions] invalid data-evt-args on", el);
+          return;
+        }
+      }
+      fn(...args);
+    });
+  }
+  globalThis.evtDataAction = evtDataAction;
+  installEvtActionDelegate();
 
   // js/portal/events/core/vendor-loader.js
   var SRC = {
@@ -3907,55 +3944,154 @@
   }
   if (document.readyState !== "loading") _onReady();
   else document.addEventListener("DOMContentLoaded", _onReady, { once: true });
-  document.addEventListener("events:manage:updated", function() {
-    if (typeof globalThis.evtLoadEvents === "function") window.evtLoadEvents();
-  });
   globalThis.PortalEvents = globalThis.PortalEvents || {};
   globalThis.PortalEvents.list = portalEventsListApi;
   if (typeof window !== "undefined") window.PortalEvents = globalThis.PortalEvents;
 
+  // js/portal/events/list/manage-sync.js
+  document.addEventListener("events:manage:updated", () => {
+    if (typeof globalThis.evtLoadEvents === "function") {
+      globalThis.evtLoadEvents();
+    }
+  });
+
+  // js/portal/events/team/ui-tw.js
+  var TW_CTA_BTN = "evt-cta-btn flex flex-1 items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-[15px] font-bold tracking-wide border-0 cursor-pointer whitespace-nowrap transition active:scale-[0.97] disabled:cursor-not-allowed [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:shrink-0 [&_svg]:fill-none [&_svg]:stroke-current [&_svg]:stroke-[2.5]";
+  var TW_CTA_BAR = [
+    "evt-cta-bar",
+    "hidden max-lg:flex max-lg:flex-col max-lg:gap-2",
+    "max-lg:fixed max-lg:inset-x-0 max-lg:z-[49]",
+    "max-lg:bg-white max-lg:border-t max-lg:border-gray-100",
+    "max-lg:bottom-[calc(56px+env(safe-area-inset-bottom))]",
+    "max-lg:backdrop-blur-sm"
+  ].join(" ");
+  var TW_CTA_BAR_EXPANDED = "evt-cta-bar-expanded max-lg:top-[max(6px,env(safe-area-inset-top))] max-lg:bottom-[calc(56px+env(safe-area-inset-bottom))] max-lg:justify-end max-lg:gap-2.5 max-lg:overflow-hidden max-lg:overscroll-none max-lg:bg-white/95 max-lg:backdrop-blur-xl max-lg:shadow-[0_-6px_28px_rgba(15,23,42,0.1)] max-lg:border-t max-lg:border-black/5";
+  var TW_CTA_BAR_CHAT_MOBILE = [
+    "evt-cta-bar-chat",
+    "max-lg:!top-0 max-lg:inset-x-0 max-lg:rounded-none",
+    "max-lg:!p-0 max-lg:gap-0",
+    "max-lg:border-0 max-lg:shadow-none max-lg:backdrop-blur-none max-lg:bg-white",
+    "max-lg:pt-[env(safe-area-inset-top,0px)]"
+  ].join(" ");
+  var TW_DESKTOP_OVERLAY = [
+    "evt-team-tools-overlay",
+    "lg:fixed lg:inset-0 lg:z-[60] lg:flex lg:items-center lg:justify-center",
+    "lg:bg-slate-900/45 lg:p-6"
+  ].join(" ");
+  var TW_PANEL_BASE = "evt-cta-panel relative flex w-full flex-col min-h-0 overflow-hidden max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none max-lg:rounded-none lg:rounded-2xl lg:border lg:border-gray-200 lg:bg-white lg:shadow-lg";
+  var TW_PANEL_TOOLS = "max-lg:p-0 max-lg:max-h-none lg:p-5 lg:max-h-[80vh] lg:w-full lg:max-w-md lg:overflow-auto lg:shadow-2xl";
+  var TW_PANEL_CHAT = "p-0 max-lg:border-0 max-lg:shadow-none lg:min-h-[28rem] lg:max-w-lg lg:overflow-hidden lg:rounded-2xl lg:shadow-2xl";
+  var TW_PANEL_EXPANDED = "flex-1 max-h-none min-h-0 max-lg:overflow-hidden max-lg:overscroll-none";
+  var TW_CLOSE_BTN = "evt-cta-panel-close absolute top-0 right-0 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-lg font-bold leading-none text-gray-700 hover:bg-gray-50 max-lg:border-0 max-lg:bg-gray-100 lg:top-2.5 lg:right-2.5";
+  var TW_PANEL_HEAD = "evt-cta-panel-head mb-2 pr-9 max-lg:mb-2.5 max-lg:px-3 max-lg:pr-8";
+  var TW_PANEL_HEAD_TITLE = "block text-[15px] font-semibold leading-tight text-gray-900";
+  var TW_PANEL_HEAD_SUB = "mt-0.5 block text-xs leading-snug text-gray-500";
+  var TW_TOOL_BTN = "evt-team-tool-btn flex w-full flex-col items-start gap-0.5 rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-left text-sm font-semibold text-gray-900 transition hover:bg-gray-50 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55";
+  var TW_TOOL_MAIN = "evt-team-tool-main leading-tight";
+  var TW_TOOL_SUB = "evt-team-tool-sub text-xs font-medium leading-snug text-gray-500";
+  var TW_CHAT_ROOT = "flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white max-lg:rounded-none lg:rounded-2xl";
+  var TW_CHAT_NAV = "grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-gray-200/80 bg-gray-50/95 px-3 py-2.5 backdrop-blur-xl max-lg:rounded-none max-lg:border-x-0 max-lg:border-t-0";
+  var TW_CHAT_BACK = "justify-self-start border-0 bg-transparent py-1 text-[17px] font-normal text-[#007AFF] cursor-pointer";
+  var TW_CHAT_NAV_CENTER = "min-w-0 text-center";
+  var TW_CHAT_NAV_TITLE = "block truncate text-base font-semibold text-gray-900";
+  var TW_CHAT_NAV_SUB = "mt-0.5 block truncate text-[11px] text-gray-500";
+  var TW_CHAT_THREAD = "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain bg-white px-3.5 py-3";
+  var TW_CHAT_EMPTY = "m-auto px-4 py-6 text-center text-[15px] leading-snug text-gray-400";
+  var TW_CHAT_ALERT = "mx-4 my-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3.5 text-center text-sm leading-snug text-amber-900";
+  var TW_CHAT_ROW_SENT = "mb-0.5 flex max-w-[78%] flex-col items-end self-end";
+  var TW_CHAT_ROW_RECV = "mb-1 flex max-w-[88%] items-end gap-1.5 self-start";
+  var TW_CHAT_RECV_COL = "flex min-w-0 flex-1 flex-col items-start";
+  var TW_CHAT_AVATAR = "evt-chat-avatar flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+  var TW_CHAT_AVATAR_HIDDEN = "invisible pointer-events-none";
+  var TW_CHAT_SENDER = "mb-0.5 px-3 text-[11px] font-semibold leading-tight text-gray-400";
+  var TW_CHAT_BUBBLE = "break-words whitespace-pre-wrap px-3 py-2 text-base leading-snug rounded-[18px]";
+  var TW_CHAT_BUBBLE_SENT = "rounded-br-md bg-[#007AFF] text-white";
+  var TW_CHAT_BUBBLE_RECV = "rounded-bl-md bg-[#E9E9EB] text-gray-900";
+  var TW_CHAT_TIME = "mt-0.5 px-1 text-[11px] leading-tight text-gray-400";
+  var TW_CHAT_COMPOSER = "flex shrink-0 items-end gap-2 border-t border-gray-200/80 bg-gray-50/95 px-2.5 py-2 backdrop-blur-xl pb-[max(8px,env(safe-area-inset-bottom))] max-lg:rounded-none max-lg:border-x-0";
+  var TW_CHAT_INPUT_WRAP = "flex min-h-9 flex-1 items-end rounded-full border border-gray-300/80 bg-white px-3 py-1.5";
+  var TW_CHAT_TEXTAREA = "max-h-[100px] min-h-[22px] w-full resize-none border-0 bg-transparent text-base leading-snug outline-none placeholder:text-gray-400 disabled:opacity-55";
+  var TW_CHAT_SEND = "flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-0 bg-[#007AFF] p-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:stroke-[2.5] [&_svg]:fill-none [&_svg]:stroke-current";
+  var OVERLAY_DESKTOP_CLASSES = TW_DESKTOP_OVERLAY.split(/\s+/).filter(Boolean);
+  var TW_FLOATING_SHELL = "evt-cta-floating-shell hidden lg:flex lg:flex-col lg:gap-4";
+  var TW_CTA_ACTIONS = "evt-cta-actions max-lg:flex max-lg:shrink-0 max-lg:items-center max-lg:justify-center max-lg:gap-2.5 max-lg:px-4 max-lg:py-3 max-lg:pb-[max(12px,env(safe-area-inset-bottom))] hidden";
+  var TW_CTA_RSVP = "bg-indigo-600 text-white";
+  var TW_CTA_RSVP_DONE = "bg-green-600 text-white";
+  var TW_CTA_MANAGE = "bg-indigo-600 text-white";
+  var TW_CTA_TEAM = "bg-white text-indigo-600 border-2 border-indigo-200";
+  var TW_CTA_RAFFLE = "bg-gradient-to-br from-amber-500 to-amber-600 text-white";
+  var TW_CTA_RAFFLE_OUTLINE = "bg-white text-amber-600 border-2 border-amber-300";
+  var TW_CTA_RAFFLE_DONE = "bg-green-600 text-white";
+  var TW_CTA_DISABLED = "bg-gray-200 text-gray-400";
+  var TW_CTA_RAFFLE_LOCKED = "bg-gray-100 text-gray-400 border border-gray-200 shadow-none cursor-not-allowed";
+  var TW_CTA_FOOTNOTE = "evt-cta-footnote m-0 px-4 pb-0.5 text-center text-[11px] font-semibold leading-snug text-gray-500";
+  var TW_TOOL_LIST = "flex flex-col gap-2 max-lg:min-h-0 max-lg:flex-1 max-lg:overflow-y-auto max-lg:overscroll-y-contain max-lg:px-3 max-lg:pb-1";
+  var TW_RAFFLE_BUY = "evt-raffle-buy flex w-full items-center justify-center gap-2 rounded-xl border-0 bg-gradient-to-br from-amber-500 to-amber-600 px-4 py-4 text-base font-bold text-white shadow-md shadow-amber-500/30 transition hover:opacity-90";
+  var TW_TICKET_CARD = "evt-cta-ticket-card text-center [&_canvas]:mx-auto [&_canvas]:mb-2 [&_canvas]:block [&_canvas]:rounded-xl [&_p]:m-0 [&_p]:text-xs [&_p]:text-gray-500";
+  function twPanelClasses(mode, { expanded = false } = {}) {
+    const parts = [TW_PANEL_BASE, mode === "chat" ? TW_PANEL_CHAT : TW_PANEL_TOOLS];
+    if (mode === "chat") parts.push("evt-team-chat-panel");
+    else if (mode === "tools") parts.push("evt-team-tools-panel");
+    if (expanded) parts.push(TW_PANEL_EXPANDED);
+    return parts.join(" ");
+  }
+  function twAdd(el, ...classStrings) {
+    if (!el) return;
+    for (const s of classStrings) {
+      for (const c of String(s).split(/\s+/)) {
+        if (c) el.classList.add(c);
+      }
+    }
+  }
+  function twRemove(el, ...classStrings) {
+    if (!el) return;
+    for (const s of classStrings) {
+      for (const c of String(s).split(/\s+/)) {
+        if (c) el.classList.remove(c);
+      }
+    }
+  }
+  var _ctaSheetScrollY = 0;
+  function lockCtaSheetScroll() {
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+    if (document.body.dataset.evtCtaSheetLocked === "1") return;
+    _ctaSheetScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.dataset.evtCtaSheetLocked = "1";
+    document.documentElement.classList.add("evt-cta-sheet-open");
+    document.body.classList.add("evt-cta-sheet-open");
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${_ctaSheetScrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+  }
+  function unlockCtaSheetScroll() {
+    if (document.body.dataset.evtCtaSheetLocked !== "1") return;
+    delete document.body.dataset.evtCtaSheetLocked;
+    document.documentElement.classList.remove("evt-cta-sheet-open");
+    document.body.classList.remove("evt-cta-sheet-open");
+    const y = _ctaSheetScrollY;
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+    window.scrollTo(0, y);
+  }
+  function expandCtaSheet(bar, { chat = false } = {}) {
+    if (!bar) return;
+    twAdd(bar, TW_CTA_BAR_EXPANDED);
+    if (chat) twAdd(bar, TW_CTA_BAR_CHAT_MOBILE);
+    lockCtaSheetScroll();
+  }
+  function collapseCtaSheet(bar) {
+    if (bar) twRemove(bar, TW_CTA_BAR_EXPANDED, TW_CTA_BAR_CHAT_MOBILE);
+    unlockCtaSheetScroll();
+  }
+
   // js/portal/events/team/chat.js
   var EVT_TEAM_CHAT_MAX_LEN = 4e3;
-  function injectTeamChatStyles() {
-    if (document.getElementById("evtTeamChatStyles")) return;
-    const style = document.createElement("style");
-    style.id = "evtTeamChatStyles";
-    style.textContent = `
-    .evt-team-chat { display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
-    .evt-team-chat-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-    .evt-team-chat-back {
-        border: 1px solid #e5e7eb; background: #fff; color: #374151; border-radius: 8px;
-        padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
-    }
-    .evt-team-chat-head strong { display: block; font-size: 15px; color: #111827; line-height: 1.25; }
-    .evt-team-chat-head span { display: block; font-size: 12px; color: #6b7280; margin-top: 2px; }
-    .evt-team-chat-messages {
-        display: flex; flex-direction: column; gap: 10px; max-height: min(42vh, 320px);
-        overflow-y: auto; padding: 8px 4px; border: 1px solid #f3f4f6; border-radius: 12px; background: #f9fafb;
-    }
-    .evt-team-chat-empty, .evt-team-chat-status, .evt-team-chat-unavailable {
-        font-size: 13px; color: #6b7280; text-align: center; padding: 16px 8px; line-height: 1.4;
-    }
-    .evt-team-chat-unavailable { color: #b45309; background: #fffbeb; border-radius: 10px; border: 1px solid #fde68a; }
-    .evt-team-chat-msg { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; }
-    .evt-team-chat-msg-meta { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
-    .evt-team-chat-msg-name { font-size: 12px; font-weight: 700; color: #111827; }
-    .evt-team-chat-msg-time { font-size: 11px; color: #9ca3af; white-space: nowrap; }
-    .evt-team-chat-msg-body { font-size: 14px; color: #374151; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
-    .evt-team-chat-composer { display: flex; flex-direction: column; gap: 8px; }
-    .evt-team-chat-composer textarea {
-        width: 100%; resize: vertical; min-height: 56px; max-height: 120px; padding: 10px 12px;
-        border: 1px solid #d1d5db; border-radius: 10px; font-size: 14px; font-family: inherit;
-    }
-    .evt-team-chat-composer textarea:disabled { background: #f3f4f6; }
-    .evt-team-chat-send {
-        align-self: flex-end; padding: 10px 16px; border-radius: 10px; border: none;
-        background: #4f46e5; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
-    }
-    .evt-team-chat-send:disabled { opacity: .55; cursor: not-allowed; }
-    `;
-    document.head.appendChild(style);
-  }
+  var EVT_TEAM_CHAT_TIME_GAP_MS = 60 * 60 * 1e3;
   function canCreateTeamChat(event) {
     if (!event || !globalThis.evtCurrentUser?.id) return false;
     if (event.created_by === globalThis.evtCurrentUser.id) return true;
@@ -3975,13 +4111,33 @@
     const name = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
     return name || "Member";
   }
-  function formatTime(iso) {
+  function profileInitials(profile) {
+    const f = (profile?.first_name || "").trim();
+    const l = (profile?.last_name || "").trim();
+    const letters = `${f.charAt(0) || ""}${l.charAt(0) || ""}`.toUpperCase();
+    return letters || "M";
+  }
+  function avatarHtml(profile, { spacer = false } = {}) {
+    const name = evtEscapeHtml(displayName(profile));
+    const initials = evtEscapeHtml(profileInitials(profile));
+    const url = profile?.profile_picture_url;
+    const inner = url ? `<img src="${evtEscapeHtml(url)}" alt="" loading="lazy">` : `<span class="text-[11px] font-bold leading-none text-indigo-600">${initials}</span>`;
+    const spacerCls = spacer ? ` ${TW_CHAT_AVATAR_HIDDEN}` : "";
+    return `<div class="${TW_CHAT_AVATAR}${spacerCls}" aria-hidden="${spacer ? "true" : "false"}" title="${name}">${inner}</div>`;
+  }
+  function formatBubbleTime(iso) {
     if (!iso) return "";
     try {
-      return new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+      return new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
     } catch (_) {
       return "";
     }
+  }
+  function shouldShowMessageTime(prevCreatedAt, createdAt) {
+    if (!prevCreatedAt || !createdAt) return true;
+    const gap = new Date(createdAt).getTime() - new Date(prevCreatedAt).getTime();
+    if (!Number.isFinite(gap)) return true;
+    return gap >= EVT_TEAM_CHAT_TIME_GAP_MS;
   }
   function cleanup() {
     const state = window.__evtTeamChatState;
@@ -4018,7 +4174,7 @@
     const senderIds = [...new Set(messages.map((m) => m.sender_id).filter(Boolean))];
     const profilesById = {};
     if (senderIds.length) {
-      const { data: profiles } = await supabaseClient.from("profiles").select("id, first_name, last_name").in("id", senderIds);
+      const { data: profiles } = await supabaseClient.from("profiles").select("id, first_name, last_name, profile_picture_url").in("id", senderIds);
       (profiles || []).forEach((p) => {
         profilesById[p.id] = p;
       });
@@ -4027,20 +4183,37 @@
   }
   function messagesHtml(state) {
     if (!state?.messages?.length) {
-      return '<p class="evt-team-chat-empty">No messages yet. Start the team conversation.</p>';
+      return `<p class="${TW_CHAT_EMPTY}">No messages yet.<br>Send the first message to the team.</p>`;
     }
-    return state.messages.map((m) => {
+    const myId = globalThis.evtCurrentUser?.id;
+    let prevSenderId = null;
+    return state.messages.map((m, i) => {
+      const isMine = myId && m.sender_id === myId;
       const profile = state.profilesById[m.sender_id];
       const name = evtEscapeHtml(displayName(profile));
-      const time = evtEscapeHtml(formatTime(m.created_at));
+      const prevMsg = i > 0 ? state.messages[i - 1] : null;
+      const showTime = shouldShowMessageTime(prevMsg?.created_at, m.created_at);
+      const timeHtml = showTime ? `<time class="${TW_CHAT_TIME}">${evtEscapeHtml(formatBubbleTime(m.created_at))}</time>` : "";
       const body = evtEscapeHtml(m.body || "");
-      return `<article class="evt-team-chat-msg" data-msg-id="${m.id}">
-        <div class="evt-team-chat-msg-meta">
-            <span class="evt-team-chat-msg-name">${name}</span>
-            <time class="evt-team-chat-msg-time">${time}</time>
+      if (isMine) {
+        prevSenderId = m.sender_id;
+        const bubbleCls2 = `${TW_CHAT_BUBBLE} ${TW_CHAT_BUBBLE_SENT}`;
+        return `<div class="${TW_CHAT_ROW_SENT}" data-msg-id="${m.id}">
+        <div class="${bubbleCls2}">${body}</div>
+        ${timeHtml}
+    </div>`;
+      }
+      const showAvatar = m.sender_id !== prevSenderId;
+      prevSenderId = m.sender_id;
+      const bubbleCls = `${TW_CHAT_BUBBLE} ${TW_CHAT_BUBBLE_RECV}`;
+      return `<div class="${TW_CHAT_ROW_RECV}" data-msg-id="${m.id}">
+        ${avatarHtml(profile, { spacer: !showAvatar })}
+        <div class="${TW_CHAT_RECV_COL}">
+            ${showAvatar ? `<span class="${TW_CHAT_SENDER}">${name}</span>` : ""}
+            <div class="${bubbleCls}">${body}</div>
+            ${timeHtml}
         </div>
-        <div class="evt-team-chat-msg-body">${body}</div>
-    </article>`;
+    </div>`;
     }).join("");
   }
   function refreshMessageList() {
@@ -4062,7 +4235,7 @@
       state.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
       refreshMessageList();
       if (row.sender_id && !state.profilesById[row.sender_id]) {
-        supabaseClient.from("profiles").select("id, first_name, last_name").eq("id", row.sender_id).maybeSingle().then(({ data }) => {
+        supabaseClient.from("profiles").select("id, first_name, last_name, profile_picture_url").eq("id", row.sender_id).maybeSingle().then(({ data }) => {
           if (data && window.__evtTeamChatState?.eventId === state.eventId) {
             window.__evtTeamChatState.profilesById[data.id] = data;
             refreshMessageList();
@@ -4108,44 +4281,47 @@
       filter: `event_id=eq.${eventId2}`
     }, (payload) => handleRealtime({ eventType: "UPDATE", new: payload.new })).subscribe();
   }
-  function renderPanel(eventId2, opts) {
+  var IM_SEND_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>';
+  function renderPanel(eventId2, event, opts) {
     const { loading, unavailable, notStarted, canCompose } = opts;
-    const backClick = `evtOpenTeamToolsPanel('${eventId2}')`;
+    const eventTitle = evtEscapeHtml(event?.title || "Event");
+    const backBtn = `<button type="button" class="${TW_CHAT_BACK}" ${evtDataAction("evtOpenTeamToolsPanel", eventId2)} aria-label="Back to Event Tools">\u2039 Tools</button>`;
+    const nav = `
+    <header class="${TW_CHAT_NAV}">
+        ${backBtn}
+        <div class="${TW_CHAT_NAV_CENTER}">
+            <strong class="${TW_CHAT_NAV_TITLE}">Team Chat</strong>
+            <span class="${TW_CHAT_NAV_SUB}">${eventTitle}</span>
+        </div>
+        <div aria-hidden="true"></div>
+    </header>`;
     let body = "";
     if (loading) {
-      body = '<p class="evt-team-chat-status">Loading team chat\u2026</p>';
+      body = `<p class="${TW_CHAT_EMPTY}">Loading\u2026</p>`;
     } else if (unavailable) {
-      body = `<p class="evt-team-chat-unavailable">${evtEscapeHtml(unavailable)}</p>
-        <button type="button" class="evt-team-chat-back" onclick="${backClick}">\u2190 Back to Team tools</button>`;
+      body = `<p class="${TW_CHAT_ALERT}">${evtEscapeHtml(unavailable)}</p>`;
     } else if (notStarted) {
-      body = `<p class="evt-team-chat-unavailable">Team chat has not been started yet. Ask the event creator or a coordinator to open Team Chat first.</p>
-        <button type="button" class="evt-team-chat-back" onclick="${backClick}">\u2190 Back to Team tools</button>`;
+      body = `<p class="${TW_CHAT_ALERT}">Team chat has not been started yet. Ask the event creator or a coordinator to open Team Chat first.</p>`;
     } else {
       const state = window.__evtTeamChatState;
       body = `
-        <div id="evtTeamChatMessages" class="evt-team-chat-messages">${messagesHtml(state)}</div>
-        <div id="evtTeamChatStatus" class="evt-team-chat-status" aria-live="polite"></div>
+        <div id="evtTeamChatMessages" class="${TW_CHAT_THREAD}" role="log" aria-live="polite">${messagesHtml(state)}</div>
+        <div id="evtTeamChatStatus" class="${TW_CHAT_EMPTY} px-2 pb-1" aria-live="polite"></div>
         ${canCompose ? `
-        <div class="evt-team-chat-composer">
-            <textarea id="evtTeamChatInput" maxlength="${EVT_TEAM_CHAT_MAX_LEN}" rows="3" placeholder="Message the team\u2026" aria-label="Team chat message"></textarea>
-            <button type="button" id="evtTeamChatSendBtn" class="evt-team-chat-send" onclick="evtSendTeamChatMessage('${eventId2}')">Send</button>
+        <div class="${TW_CHAT_COMPOSER}">
+            <div class="${TW_CHAT_INPUT_WRAP}">
+                <textarea id="evtTeamChatInput" class="${TW_CHAT_TEXTAREA}" maxlength="${EVT_TEAM_CHAT_MAX_LEN}" rows="1" placeholder="Message" aria-label="Team chat message"></textarea>
+            </div>
+            <button type="button" id="evtTeamChatSendBtn" class="${TW_CHAT_SEND}" ${evtDataAction("evtSendTeamChatMessage", eventId2)} aria-label="Send message">${IM_SEND_SVG}</button>
         </div>` : ""}`;
     }
-    return `
-    <div class="evt-team-chat">
-        <div class="evt-team-chat-toolbar">
-            <button type="button" class="evt-team-chat-back" onclick="${backClick}">\u2190 Tools</button>
-        </div>
-        <div class="evt-team-chat-head">
-            <strong>Team Chat</strong>
-            <span>Private chat for this event team</span>
-        </div>
-        ${body}
-    </div>`;
+    return `<div class="${TW_CHAT_ROOT}">${nav}${body}</div>`;
+  }
+  function configureChatPanel(panel, visible) {
+    panel.className = twPanelClasses("chat", { expanded: true });
+    panel.classList.toggle("hidden", !visible);
   }
   async function open(eventId2) {
-    if (typeof globalThis.evtInjectTeamToolsStyles === "function") window.evtInjectTeamToolsStyles();
-    injectTeamChatStyles();
     cleanup();
     const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
     if (!event) return;
@@ -4159,26 +4335,25 @@
     }
     const panel = document.getElementById("evtCtaPanel");
     if (!panel) return;
-    const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">\xD7</button>';
-    bar.classList.add("evt-cta-bar-expanded");
-    panel.classList.remove("hidden");
-    panel.classList.add("evt-team-chat-panel");
-    panel.innerHTML = `${closeBtn}${renderPanel(eventId2, { loading: true })}`;
+    const closeBtn = `<button type="button" class="${TW_CLOSE_BTN} max-lg:hidden" ${evtDataAction("evtCloseCtaPanel")} aria-label="Close">\xD7</button>`;
+    expandCtaSheet(bar, { chat: true });
+    configureChatPanel(panel, true);
+    panel.innerHTML = `${closeBtn}${renderPanel(eventId2, event, { loading: true })}`;
     const ensure = await ensureChat(event, eventId2);
     if (ensure.error) {
-      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, {
+      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, event, {
         unavailable: friendlyError(ensure.error)
       })}`;
       return;
     }
     if (ensure.notStarted || !ensure.chat) {
-      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, { notStarted: true })}`;
+      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, event, { notStarted: true })}`;
       return;
     }
     const chatId = ensure.chat.id;
     const loaded = await loadMessages(chatId, eventId2);
     if (loaded.error) {
-      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, {
+      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, event, {
         unavailable: friendlyError(loaded.error)
       })}`;
       return;
@@ -4190,7 +4365,7 @@
       profilesById: loaded.profilesById,
       channel: null
     };
-    panel.innerHTML = `${closeBtn}${renderPanel(eventId2, { canCompose: true })}`;
+    panel.innerHTML = `${closeBtn}${renderPanel(eventId2, event, { canCompose: true })}`;
     refreshMessageList();
     subscribe(chatId, eventId2);
     const input = document.getElementById("evtTeamChatInput");
@@ -4240,7 +4415,8 @@
         state.profilesById[globalThis.evtCurrentUser.id] = {
           id: globalThis.evtCurrentUser.id,
           first_name: globalThis.evtCurrentUser.first_name,
-          last_name: globalThis.evtCurrentUser.last_name
+          last_name: globalThis.evtCurrentUser.last_name,
+          profile_picture_url: globalThis.evtCurrentUser.profile_picture_url || null
         };
       }
       state.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -4271,72 +4447,20 @@
     manage: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>'
   };
   function injectTeamToolsStyles() {
-    if (document.getElementById("evtTeamToolsStyles")) return;
-    const style = document.createElement("style");
-    style.id = "evtTeamToolsStyles";
-    style.textContent = `
-    .evt-team-tool-list { display: flex; flex-direction: column; gap: 8px; }
-    .evt-team-tool-btn {
-        display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-        width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #e5e7eb;
-        background: #fff; color: #111827; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer;
-    }
-    .evt-team-tool-btn:disabled { opacity: .55; cursor: not-allowed; }
-    .evt-team-tool-main { line-height: 1.25; }
-    .evt-team-tool-sub { font-size: 12px; font-weight: 500; color: #6b7280; line-height: 1.35; }
-    .evt-cta-btn.evt-cta-team { background: #fff; color: #4f46e5; border: 2px solid #c7d2fe; }
-    .evt-cta-btn.evt-cta-raffle-locked { background: #f3f4f6; color: #9ca3af; border: 1.5px solid #e5e7eb; box-shadow: none; cursor: not-allowed; }
-    .evt-cta-footnote { margin: 0; padding: 0 4px 2px; text-align: center; font-size: 11px; line-height: 1.35; color: #6b7280; font-weight: 600; }
-    .ed-raffle-locked-block { text-align: center; }
-    .ed-raffle-locked-hint { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: #6b7280; font-weight: 600; font-style: normal; }
-    .ed-raffle-btn.ed-raffle-btn-locked { background: #ebebeb; color: #999; border: none; cursor: not-allowed; width: 100%; }
-    @media (min-width: 1024px) {
-        .evt-cta-bar.evt-cta-floating-shell.evt-team-tools-overlay {
-            display: flex !important; position: fixed; inset: 0; z-index: 60;
-            align-items: center; justify-content: center; padding: 24px;
-            background: rgba(15, 23, 42, .45);
-        }
-        .evt-cta-bar.evt-cta-floating-shell.evt-team-tools-overlay .evt-cta-actions { display: none !important; }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel {
-            position: relative; width: min(420px, 100%); max-height: 80vh;
-            overflow: auto; border: 1px solid #e5e7eb; border-radius: 16px;
-            background: #fff; box-shadow: 0 12px 38px rgba(15, 23, 42, .16); padding: 16px;
-        }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel.hidden { display: none; }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-close {
-            position: absolute; top: 10px; right: 10px; width: 30px; height: 30px;
-            border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; color: #374151;
-            font-size: 20px; line-height: 1; font-weight: 700; cursor: pointer;
-        }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head {
-            padding-right: 34px; margin-bottom: 12px;
-        }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head strong {
-            display: block; color: #111827; font-size: 15px; line-height: 1.25;
-        }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head span {
-            display: block; margin-top: 3px; color: #6b7280; font-size: 12px; line-height: 1.35;
-        }
-        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel.evt-team-chat-panel {
-            width: min(480px, 100%);
-        }
-    }
-    `;
-    document.head.appendChild(style);
   }
   function raffleLockedCtaBtnHtml() {
-    return `<button type="button" class="evt-cta-btn evt-cta-raffle-locked" disabled aria-disabled="true">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
+    return `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_RAFFLE_LOCKED}" disabled aria-disabled="true">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
   }
   function canUseEventScanner(event, canManageEvent) {
     const checkinEnabled = event.checkin_enabled !== false;
     return checkinEnabled && canManageEvent && event.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(event.status);
   }
   function teamToolsRow(label, sub, onClick, disabled) {
-    const subHtml = sub ? `<span class="evt-team-tool-sub">${sub}</span>` : "";
+    const subHtml = sub ? `<span class="${TW_TOOL_SUB}">${sub}</span>` : "";
     if (disabled) {
-      return `<button type="button" class="evt-team-tool-btn" disabled aria-disabled="true"><span class="evt-team-tool-main">${label}</span>${subHtml}</button>`;
+      return `<button type="button" class="${TW_TOOL_BTN}" disabled aria-disabled="true"><span class="${TW_TOOL_MAIN}">${label}</span>${subHtml}</button>`;
     }
-    return `<button type="button" class="evt-team-tool-btn" onclick="${onClick}"><span class="evt-team-tool-main">${label}</span>${subHtml}</button>`;
+    return `<button type="button" class="${TW_TOOL_BTN}" onclick="${onClick}"><span class="${TW_TOOL_MAIN}">${label}</span>${subHtml}</button>`;
   }
   function buildTeamToolsPanelHtml(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, opts) {
     const { canManageEvent } = opts;
@@ -4383,16 +4507,16 @@
       const manageClick = `evtCloseCtaPanel();(window.EventsManage?window.EventsManage.open('${eventId2}',{source:'portal'}):(window.location='../admin/events.html?id=${eventId2}'))`;
       rows.push(teamToolsRow("Manage Event", "Hosts, RSVP, raffle, settings", manageClick, false));
     }
-    return `<div class="evt-team-tool-list">${rows.join("")}</div>`;
+    return `<div class="${TW_TOOL_LIST}">${rows.join("")}</div>`;
   }
   function ensureCtaBarShell() {
     let bar = document.getElementById("evtCtaBar");
     if (!bar) {
       bar = document.createElement("div");
       bar.id = "evtCtaBar";
-      bar.className = "evt-cta-bar evt-cta-floating-shell";
+      bar.className = window.matchMedia("(min-width: 1024px)").matches ? `${TW_FLOATING_SHELL} ${TW_DESKTOP_OVERLAY}` : TW_CTA_BAR;
       bar.dataset.evtFloatingShell = "1";
-      bar.innerHTML = '<div id="evtCtaPanel" class="evt-cta-panel"></div><div class="evt-cta-actions" hidden aria-hidden="true"></div>';
+      bar.innerHTML = `<div id="evtCtaPanel" class="${TW_PANEL_BASE} ${TW_PANEL_TOOLS} hidden"></div><div class="${TW_CTA_ACTIONS} lg:hidden" hidden aria-hidden="true"></div>`;
       document.body.appendChild(bar);
       document.body.classList.add("evt-cta-active");
     }
@@ -4400,8 +4524,9 @@
   }
   function applyDesktopTeamToolsOverlay(bar) {
     if (!bar || !window.matchMedia("(min-width: 1024px)").matches) return;
-    bar.classList.add("evt-cta-floating-shell", "evt-team-tools-overlay");
-    bar.dataset.evtFloatingShell = "1";
+    twAdd(bar, TW_FLOATING_SHELL, TW_DESKTOP_OVERLAY);
+    const actions = bar.querySelector(".evt-cta-actions");
+    if (actions) actions.classList.add("lg:hidden");
     if (!bar.dataset.evtOverlayCloseBound) {
       bar.dataset.evtOverlayCloseBound = "1";
       bar.addEventListener("click", (e) => {
@@ -4409,24 +4534,30 @@
       });
     }
   }
+  function setPanelLayout(panel, mode, { expanded = false, visible = true } = {}) {
+    panel.className = twPanelClasses(mode, { expanded });
+    panel.classList.toggle("hidden", !visible);
+  }
   function closeCtaPanel() {
     if (typeof globalThis.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
     const panel = document.getElementById("evtCtaPanel");
     const bar = document.getElementById("evtCtaBar");
     if (panel) {
       panel.classList.add("hidden");
-      panel.classList.remove("evt-team-chat-panel");
       panel.innerHTML = "";
     }
     if (bar) {
-      bar.classList.remove("evt-cta-bar-expanded", "evt-team-tools-overlay");
+      collapseCtaSheet(bar);
+      twRemove(bar, TW_FLOATING_SHELL, TW_DESKTOP_OVERLAY);
       if (bar.dataset.evtFloatingShell === "1") {
-        bar.classList.remove("evt-cta-floating-shell");
         delete bar.dataset.evtFloatingShell;
         cleanupBottomNav();
         return;
       }
     }
+  }
+  function panelHead(title, sub) {
+    return `<div class="${TW_PANEL_HEAD}"><strong class="${TW_PANEL_HEAD_TITLE}">${title}</strong><span class="${TW_PANEL_HEAD_SUB}">${sub}</span></div>`;
   }
   function openCtaPanel(kind, eventId2) {
     const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
@@ -4434,18 +4565,18 @@
     const bar = ensureCtaBarShell();
     const panel = document.getElementById("evtCtaPanel");
     if (!panel) return;
-    if (bar.dataset.evtFloatingShell === "1") bar.classList.add("evt-team-tools-overlay");
+    if (bar.dataset.evtFloatingShell === "1") applyDesktopTeamToolsOverlay(bar);
     const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
-    const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">\xD7</button>';
-    bar.classList.add("evt-cta-bar-expanded");
-    panel.classList.remove("hidden");
+    const closeBtn = `<button type="button" class="${TW_CLOSE_BTN}" ${evtDataAction("evtCloseCtaPanel")} aria-label="Close">\xD7</button>`;
+    expandCtaSheet(bar);
+    setPanelLayout(panel, "tools", { expanded: true, visible: true });
     const memberGoing = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
     if (kind === "ticket") {
       const hasQr = memberGoing && rsvp?.qr_token && event.checkin_mode === "attendee_ticket";
       panel.innerHTML = `
         ${closeBtn}
-        <div class="evt-cta-panel-head"><strong>You're going</strong><span>${evtEscapeHtml(event.title || "Event")}</span></div>
-        <div class="evt-cta-ticket-card">
+        ${panelHead("You're going", evtEscapeHtml(event.title || "Event"))}
+        <div class="${TW_TICKET_CARD}">
             ${hasQr ? '<canvas id="evtCtaTicketQR"></canvas><p>Show this QR code at check-in</p>' : '<div class="ed-notice"><span class="ed-notice-emoji">\u2705</span><div><p class="ed-notice-title">You are on the RSVP list</p><p class="ed-notice-sub">No QR ticket is required for this event.</p></div></div>'}
         </div>`;
       if (hasQr) {
@@ -4468,24 +4599,23 @@
     if (raffleBundled) {
       panel.innerHTML = `
         ${closeBtn}
-        <div class="evt-cta-panel-head"><strong>Raffle included</strong><span>Raffle entry is included when you complete your paid RSVP for this event.</span></div>`;
+        ${panelHead("Raffle included", "Raffle entry is included when you complete your paid RSVP for this event.")}`;
       return;
     }
     if (!memberGoing) {
       panel.innerHTML = `
         ${closeBtn}
-        <div class="evt-cta-panel-head"><strong>RSVP first</strong><span>Once you are going, this same member RSVP will be used for the raffle entry.</span></div>
-        <button type="button" onclick="globalThis.evtCtaRaffleIntent ='${eventId2}';evtHandleRsvp('${eventId2}','going')" class="evt-raffle-buy">RSVP to Enter Raffle</button>`;
+        ${panelHead("RSVP first", "Once you are going, this same member RSVP will be used for the raffle entry.")}
+        <button type="button" onclick="globalThis.evtCtaRaffleIntent ='${eventId2}';evtHandleRsvp('${eventId2}','going')" class="${TW_RAFFLE_BUY}">RSVP to Enter Raffle</button>`;
       return;
     }
     const cost = event.raffle_entry_cost_cents || 0;
     panel.innerHTML = `
     ${closeBtn}
-    <div class="evt-cta-panel-head"><strong>Enter the raffle</strong><span>${cost > 0 ? "Confirm to start checkout. Raffle tickets are non-refundable." : "One tap and you are in the draw."}</span></div>
-    <button type="button" onclick="${cost > 0 ? `evtHandleRaffleEntry('${eventId2}')` : `evtHandleFreeRaffleEntry('${eventId2}')`}" class="evt-raffle-buy">${cost > 0 ? `Buy Raffle Entry \u2014 ${formatCurrency(cost)}` : "Enter Raffle \u2014 Free"}</button>`;
+    ${panelHead("Enter the raffle", cost > 0 ? "Confirm to start checkout. Raffle tickets are non-refundable." : "One tap and you are in the draw.")}
+    <button type="button" onclick="${cost > 0 ? `evtHandleRaffleEntry('${eventId2}')` : `evtHandleFreeRaffleEntry('${eventId2}')`}" class="${TW_RAFFLE_BUY}">${cost > 0 ? `Buy Raffle Entry \u2014 ${formatCurrency(cost)}` : "Enter Raffle \u2014 Free"}</button>`;
   }
   function openTeamToolsPanel(eventId2) {
-    injectTeamToolsStyles();
     if (typeof globalThis.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
     const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
     if (!event) return;
@@ -4500,13 +4630,13 @@
     applyDesktopTeamToolsOverlay(bar);
     const panel = document.getElementById("evtCtaPanel");
     if (!panel) return;
-    const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">\xD7</button>';
+    const closeBtn = `<button type="button" class="${TW_CLOSE_BTN}" ${evtDataAction("evtCloseCtaPanel")} aria-label="Close">\xD7</button>`;
     const actionsHtml = buildTeamToolsPanelHtml(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, { canManageEvent });
-    bar.classList.add("evt-cta-bar-expanded");
-    panel.classList.remove("hidden");
+    expandCtaSheet(bar);
+    setPanelLayout(panel, "tools", { expanded: true, visible: true });
     panel.innerHTML = `
     ${closeBtn}
-    <div class="evt-cta-panel-head"><strong>Event Tools</strong><span>Team coordination and your personal RSVP, raffle, and ticket.</span></div>
+    ${panelHead("Event Tools", "Team coordination and your personal RSVP, raffle, and ticket.")}
     ${actionsHtml}`;
     if (!window.__evtTeamToolsEscBound) {
       window.__evtTeamToolsEscBound = true;
@@ -4519,6 +4649,7 @@
   }
   function cleanupBottomNav() {
     if (typeof globalThis.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
+    unlockCtaSheetScroll();
     const el = document.getElementById("evtCtaBar");
     if (el) el.remove();
     const hint = document.querySelector(".bottom-tab-bar .swipe-hint");
@@ -4528,7 +4659,7 @@
   }
   function initBottomNav(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub) {
     cleanupBottomNav();
-    injectTeamToolsStyles();
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
     const rsvpEnabled = event.rsvp_enabled !== false;
     const raffleEnabled = !!event.raffle_enabled;
     const teamHubAccess = !!canAccessTeamHub || isHost || typeof canAccessAdminDashboard === "function" && canAccessAdminDashboard();
@@ -4538,26 +4669,26 @@
     let primaryBtn = "";
     let secondaryBtn = "";
     let ctaFootnote = "";
-    const teamBtn = `<button type="button" class="evt-cta-btn evt-cta-team" onclick="evtOpenTeamToolsPanel('${eventId2}')" aria-label="Open event team tools">Team</button>`;
+    const teamBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_TEAM}" ${evtDataAction("evtOpenTeamToolsPanel", eventId2)} aria-label="Open event team tools">Team</button>`;
     if (isHost) {
-      primaryBtn = `<button type="button" class="evt-cta-btn evt-cta-manage" onclick="window.EventsManage ? window.EventsManage.open('${eventId2}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId2}')">${EVT_CTA_ICONS.manage} Manage Event</button>`;
+      primaryBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_MANAGE}" onclick="window.EventsManage ? window.EventsManage.open('${eventId2}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId2}')">${EVT_CTA_ICONS.manage} Manage Event</button>`;
       if (teamHubAccess) secondaryBtn = teamBtn;
     } else if (teamHubAccess) {
       primaryBtn = teamBtn;
     } else {
       if (rsvpEnabled) {
         if (rsvp?.paid) {
-          primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="evtOpenCtaPanel('ticket','${eventId2}')">${EVT_CTA_ICONS.ticket} RSVP'd \xB7 Ticket</button>`;
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP_DONE}" ${evtDataAction("evtOpenCtaPanel", "ticket", eventId2)}>${EVT_CTA_ICONS.ticket} RSVP'd \xB7 Ticket</button>`;
         } else if (rsvp?.status === "going") {
-          primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="evtOpenCtaPanel('ticket','${eventId2}')">${EVT_CTA_ICONS.ticket} Going \xB7 Ticket</button>`;
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP_DONE}" ${evtDataAction("evtOpenCtaPanel", "ticket", eventId2)}>${EVT_CTA_ICONS.ticket} Going \xB7 Ticket</button>`;
         } else if (canRsvp && !eventIsFull && event.pricing_mode === "paid") {
-          primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId2}','going')">RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>`;
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction("evtHandleRsvp", eventId2, "going")}>RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>`;
         } else if (canRsvp && !eventIsFull) {
-          primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId2}','going')">RSVP</button>`;
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction("evtHandleRsvp", eventId2, "going")}>RSVP</button>`;
         } else if (eventIsFull) {
-          primaryBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Full</button>`;
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_DISABLED}" disabled>${EVT_CTA_ICONS.lock} Full</button>`;
         } else {
-          primaryBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} ${isClosed ? "Closed" : "RSVP Closed"}</button>`;
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_DISABLED}" disabled>${EVT_CTA_ICONS.lock} ${isClosed ? "Closed" : "RSVP Closed"}</button>`;
         }
       }
       if (raffleEnabled) {
@@ -4565,19 +4696,19 @@
         const memberGoingNav = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
         if (!raffleIncluded) {
           const hasPrimary = !!primaryBtn;
-          const activeCls = hasPrimary ? "evt-cta-raffle-outline" : "evt-cta-raffle";
+          const activeCls = hasPrimary ? TW_CTA_RAFFLE_OUTLINE : TW_CTA_RAFFLE;
           let raffleSlot = "";
           if (myRaffleEntry) {
-            raffleSlot = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${EVT_CTA_ICONS.check} Entered</button>`;
+            raffleSlot = `<button class="${TW_CTA_BTN} ${TW_CTA_RAFFLE_DONE}" disabled>${EVT_CTA_ICONS.check} Entered</button>`;
           } else if (entriesClosed) {
-            raffleSlot = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Entries Closed</button>`;
+            raffleSlot = `<button class="${TW_CTA_BTN} ${TW_CTA_DISABLED}" disabled>${EVT_CTA_ICONS.lock} Entries Closed</button>`;
           } else if (!memberGoingNav) {
             raffleSlot = raffleLockedCtaBtnHtml();
-            ctaFootnote = '<p class="evt-cta-footnote">RSVP first to enter the raffle</p>';
+            ctaFootnote = `<p class="${TW_CTA_FOOTNOTE}">RSVP first to enter the raffle</p>`;
           } else if (event.raffle_entry_cost_cents > 0) {
-            raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId2}')">${EVT_CTA_ICONS.ticket} Raffle \u2014 ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
+            raffleSlot = `<button class="${TW_CTA_BTN} ${activeCls}" ${evtDataAction("evtOpenCtaPanel", "raffle", eventId2)}>${EVT_CTA_ICONS.ticket} Raffle \u2014 ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
           } else {
-            raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId2}')">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
+            raffleSlot = `<button class="${TW_CTA_BTN} ${activeCls}" ${evtDataAction("evtOpenCtaPanel", "raffle", eventId2)}>${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
           }
           if (hasPrimary) {
             secondaryBtn = raffleSlot;
@@ -4590,8 +4721,8 @@
     if (!primaryBtn && !secondaryBtn) return;
     const bar = document.createElement("div");
     bar.id = "evtCtaBar";
-    bar.className = "evt-cta-bar" + (ctaFootnote ? " evt-cta-bar-has-footnote" : "");
-    bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${primaryBtn + secondaryBtn}</div>${ctaFootnote}`;
+    bar.className = TW_CTA_BAR + (ctaFootnote ? " evt-cta-bar-has-footnote" : "");
+    bar.innerHTML = `<div id="evtCtaPanel" class="${TW_PANEL_BASE} ${TW_PANEL_TOOLS} hidden"></div><div class="${TW_CTA_ACTIONS}">${primaryBtn + secondaryBtn}</div>${ctaFootnote}`;
     document.body.appendChild(bar);
     document.body.classList.add("evt-cta-active");
     const hint = document.querySelector(".bottom-tab-bar .swipe-hint");
@@ -4768,7 +4899,7 @@
     return `<div class="ed-winners ed-winners-compact">${_raffleSectionHead("Winners")}<div class="ed-winner-rail">${rows}</div></div>`;
   }
   function evtRaffleLockedDesktopHtml(eventId2, showTeamHint) {
-    const mobileHint = showTeamHint ? `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the bar below, or open <button type="button" class="ed-link-btn" onclick="evtOpenTeamToolsPanel('${eventId2}')">Team</button> to RSVP as yourself.</p>` : `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the sticky bar below, then enter the raffle.</p>`;
+    const mobileHint = showTeamHint ? `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the bar below, or open <button type="button" class="ed-link-btn" ${evtDataAction("evtOpenTeamToolsPanel", eventId2)}>Team</button> to RSVP as yourself.</p>` : `<p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the RSVP button in the sticky bar below, then enter the raffle.</p>`;
     return `<div class="ed-raffle-desktop-action ed-raffle-locked-block">
     <button type="button" class="ed-raffle-btn ed-raffle-btn-locked" disabled aria-disabled="true">\u{1F39F}\uFE0F Enter Raffle</button>
     <p class="ed-raffle-locked-hint">RSVP first to enter the raffle</p>
@@ -5074,7 +5205,7 @@
     if (!rsvpEnabled) {
       rsvpButtons = _edNotice("\u2139\uFE0F", "Informational Event", "RSVP is not required for this event");
     } else if (isHost) {
-      const teamBtnHtml = canAccessTeamHub ? `<button type="button" onclick="evtOpenTeamToolsPanel('${eventId2}')" class="ed-outline-btn" aria-label="Open event team tools">Team</button>` : "";
+      const teamBtnHtml = canAccessTeamHub ? `<button type="button" ${evtDataAction("evtOpenTeamToolsPanel", eventId2)} class="ed-outline-btn" aria-label="Open event team tools">Team</button>` : "";
       rsvpButtons = `
         <div class="ed-rsvp-confirmed">
             <div class="ed-rsvp-confirmed-row">
@@ -5098,8 +5229,8 @@
             </div>`;
       } else {
         rsvpButtons = `
-            <button onclick="evtHandleRsvp('${eventId2}','going')" class="ed-primary-btn">RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>
-            <button onclick="evtMessageHost('${eventId2}')" class="ed-outline-btn">Message Host</button>
+            <button ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-primary-btn">RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>
+            <button ${evtDataAction("evtMessageHost", eventId2)} class="ed-outline-btn">Message Host</button>
             <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? " \xB7 Includes raffle entry" : ""}</p>`;
       }
     } else if (canRsvp && !eventIsFull) {
@@ -5111,14 +5242,14 @@
                     <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">We'll see you there.</span></div>
                 </div>
             </div>
-            <button onclick="evtHandleRsvp('${eventId2}','going')" class="ed-outline-btn">Update RSVP</button>`;
+            <button ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-outline-btn">Update RSVP</button>`;
       } else {
         const interestedActive = rsvp?.status === "maybe" ? " active" : "";
         rsvpButtons = `
-            <button onclick="evtHandleRsvp('${eventId2}','going')" class="ed-primary-btn">RSVP</button>
-            <button onclick="evtMessageHost('${eventId2}')" class="ed-outline-btn">Message Host</button>
+            <button ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-primary-btn">RSVP</button>
+            <button ${evtDataAction("evtMessageHost", eventId2)} class="ed-outline-btn">Message Host</button>
             <div class="ed-rsvp-secondary">
-                <button onclick="evtHandleRsvp('${eventId2}','maybe')" class="ed-rsvp-sm${interestedActive ? " active" : ""}">\u2764\uFE0F Interested</button>
+                <button ${evtDataAction("evtHandleRsvp", eventId2, "maybe")} class="ed-rsvp-sm${interestedActive ? " active" : ""}">\u2764\uFE0F Interested</button>
             </div>`;
       }
     }
@@ -5174,9 +5305,9 @@
     } else if (!hasRaffleRsvp) {
       entryStatusHtml = window.evtRaffleLockedDesktopHtml(eventId2, isHost && canAccessTeamHub);
     } else if (event.raffle_entry_cost_cents > 0 && !entriesClosed) {
-      entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleRaffleEntry('${eventId2}')" class="ed-raffle-btn">\u{1F39F}\uFE0F Buy Raffle Entry \u2014 ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
+      entryStatusHtml = `<div class="ed-raffle-desktop-action"><button ${evtDataAction("evtHandleRaffleEntry", eventId2)} class="ed-raffle-btn">\u{1F39F}\uFE0F Buy Raffle Entry \u2014 ${formatCurrency(event.raffle_entry_cost_cents)}</button><p class="ed-hint">Non-refundable raffle ticket</p></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
     } else if ((!event.raffle_entry_cost_cents || event.raffle_entry_cost_cents === 0) && !entriesClosed) {
-      entryStatusHtml = `<div class="ed-raffle-desktop-action"><button onclick="evtHandleFreeRaffleEntry('${eventId2}')" class="ed-raffle-btn">\u{1F39F}\uFE0F Enter Raffle \u2014 Free</button></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
+      entryStatusHtml = `<div class="ed-raffle-desktop-action"><button ${evtDataAction("evtHandleFreeRaffleEntry", eventId2)} class="ed-raffle-btn">\u{1F39F}\uFE0F Enter Raffle \u2014 Free</button></div><p class="ed-hint ed-raffle-mobile-hint" style="font-style:italic">Use the sticky CTA below to enter the raffle.</p>`;
     }
     let winnersHtml = "";
     if (raffleWinners.length > 0) {
@@ -5204,15 +5335,15 @@
     if (!isHost) return "";
     let primaryBtn = "";
     let dropdownItems = "";
-    if (event.status === "draft") primaryBtn = `<button onclick="evtUpdateStatus('${eventId2}','open')" class="evt-host-btn primary">Publish Event</button>`;
+    if (event.status === "draft") primaryBtn = `<button ${evtDataAction("evtUpdateStatus", eventId2, "open")} class="evt-host-btn primary">Publish Event</button>`;
     if (["open", "confirmed", "active"].includes(event.status)) {
-      if (!primaryBtn) primaryBtn = `<button onclick="evtUpdateStatus('${eventId2}','completed')" class="evt-host-btn primary">Mark Completed</button>`;
-      else dropdownItems += `<button onclick="evtUpdateStatus('${eventId2}','completed')">\u2713 Mark Completed</button>`;
-      dropdownItems += `<button onclick="evtCancelEvent('${eventId2}')" class="danger">\u2715 Cancel Event</button>`;
-      if (isLlc) dropdownItems += `<button onclick="evtRescheduleEvent('${eventId2}')">\u{1F4C5} Reschedule</button>`;
+      if (!primaryBtn) primaryBtn = `<button ${evtDataAction("evtUpdateStatus", eventId2, "completed")} class="evt-host-btn primary">Mark Completed</button>`;
+      else dropdownItems += `<button ${evtDataAction("evtUpdateStatus", eventId2, "completed")}>\u2713 Mark Completed</button>`;
+      dropdownItems += `<button ${evtDataAction("evtCancelEvent", eventId2)} class="danger">\u2715 Cancel Event</button>`;
+      if (isLlc) dropdownItems += `<button ${evtDataAction("evtRescheduleEvent", eventId2)}>\u{1F4C5} Reschedule</button>`;
     }
-    dropdownItems += `<button onclick="evtDuplicateEvent('${eventId2}')">\u{1F4CB} Duplicate Event</button>`;
-    if (typeof canManageEvents === "function" && canManageEvents()) dropdownItems += `<button onclick="evtDeleteEvent('${eventId2}')" class="danger">\u{1F5D1} Delete Event</button>`;
+    dropdownItems += `<button ${evtDataAction("evtDuplicateEvent", eventId2)}>\u{1F4CB} Duplicate Event</button>`;
+    if (typeof canManageEvents === "function" && canManageEvents()) dropdownItems += `<button ${evtDataAction("evtDeleteEvent", eventId2)} class="danger">\u{1F5D1} Delete Event</button>`;
     const manageOnClick = `if(window.EventsManage){window.EventsManage.open('${eventId2}',{source:'portal'})}else{this.nextElementSibling.classList.toggle('open')}`;
     return `
         ${_edSectionHead("Host Controls")}
@@ -5244,7 +5375,7 @@
                     <div style="flex:1">
                         <p class="ed-notice-title">A spot opened up for you!</p>
                         <p class="ed-notice-sub">Complete your RSVP by ${expiresStr}</p>
-                        <button onclick="evtClaimWaitlistSpot('${eventId2}')" class="ed-primary-btn" style="margin-top:10px">Claim Spot \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>
+                        <button ${evtDataAction("evtClaimWaitlistSpot", eventId2)} class="ed-primary-btn" style="margin-top:10px">Claim Spot \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>
                     </div>
                 </div>`;
     } else if (isWaiting) {
@@ -5252,10 +5383,10 @@
       waitlistAction = `
                 <div class="ed-notice" style="justify-content:space-between">
                     <div><p class="ed-notice-title">You're #${pos} on the waitlist</p><p class="ed-notice-sub">We'll notify you if a spot opens</p></div>
-                    <button onclick="evtLeaveWaitlist('${eventId2}')" class="ed-link-btn danger">Leave</button>
+                    <button ${evtDataAction("evtLeaveWaitlist", eventId2)} class="ed-link-btn danger">Leave</button>
                 </div>`;
     } else if (!rsvp?.paid) {
-      waitlistAction = `<button onclick="evtJoinWaitlist('${eventId2}')" class="ed-action-btn">Join Waitlist</button>
+      waitlistAction = `<button ${evtDataAction("evtJoinWaitlist", eventId2)} class="ed-action-btn">Join Waitlist</button>
                 <p class="ed-hint">No payment required to join the waitlist</p>`;
     }
     return `${_edSectionHead("Waitlist")}<p class="ed-sub-count">${activeWaitlist.length} waiting</p>${waitlistAction}`;
@@ -5271,7 +5402,7 @@
         <div>
             <p class="ed-notice-title">This event was rescheduled</p>
             <p class="ed-notice-sub">Request a full refund until <strong>${graceEnd}</strong> if the new date doesn't work.</p>
-            ${rsvp?.paid ? `<button onclick="evtRequestGraceRefund('${eventId2}')" class="ed-link-btn danger" style="margin-top:8px">Request Full Refund</button>` : ""}
+            ${rsvp?.paid ? `<button ${evtDataAction("evtRequestGraceRefund", eventId2)} class="ed-link-btn danger" style="margin-top:8px">Request Full Refund</button>` : ""}
         </div>
     </div>`;
   }
@@ -5458,7 +5589,7 @@
         <div class="ed-card ed-card-rsvp event-detail-card-tight portal-action-card">
             <p class="ed-summary-heading">Event Team</p>
             <p class="ed-hint">Staff tools for coordination and your own attendance.</p>
-            <button type="button" onclick="evtOpenTeamToolsPanel('${eventId2}')" class="ed-outline-btn" aria-label="Open event team tools">Team</button>
+            <button type="button" ${evtDataAction("evtOpenTeamToolsPanel", eventId2)} class="ed-outline-btn" aria-label="Open event team tools">Team</button>
         </div>`;
   }
   function evtBuildDetailRelatedEventsHtml(ctx) {
@@ -5505,7 +5636,7 @@
   function evtBuildDetailPageHeaderActionsHtml(ctx) {
     const { eventId: eventId2, event } = ctx;
     return `
-                <button onclick="globalThis.evtCopyShareUrl('${event.slug}')" class="ed-page-header-btn" aria-label="Share event">
+                <button type="button" ${evtDataAction("evtCopyShareUrl", event.slug)} class="ed-page-header-btn" aria-label="Share event">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                     <span class="ed-page-header-btn-label">Share</span>
                 </button>
@@ -5831,7 +5962,7 @@
             <div class="ed-main event-detail-main portal-event-story">
 
             <!-- \u2500\u2500\u2500 Immersive Hero \u2500\u2500\u2500 -->
-            <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `onclick="evtOpenLightbox('${event.banner_url}')"` : ""} role="img" aria-label="Event banner">
+            <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `${evtDataAction("evtOpenLightbox", event.banner_url)}` : ""} role="img" aria-label="Event banner">
                 <div class="ed-hero-scrim"></div>
                 <div class="ed-hero-nav">
                     ${heroStatusBadgeHtml}
@@ -5883,7 +6014,7 @@
                         <span class="ed-qi-main">${timeStr}</span>
                         <span class="ed-qi-sub">Start time</span>
                     </div>` : ""}
-                    ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-qi-col${event.location_lat && event.location_lng ? " ed-qi-col-loc" : ""}"${event.location_lat && event.location_lng ? ` onclick="evtOpenFullscreenMap(${event.location_lat},${event.location_lng})"` : ""}>
+                    ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-qi-col${event.location_lat && event.location_lng ? " ed-qi-col-loc" : ""}"${event.location_lat && event.location_lng ? ` ${evtDataAction("evtOpenFullscreenMap", event.location_lat, event.location_lng)}` : ""}>
                         <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         <span class="ed-qi-main">${evtEscapeHtml3(event.location_nickname || event.location_text || "")}</span>
                         <span class="ed-qi-sub">${event.location_nickname && event.location_text ? evtEscapeHtml3(event.location_text) : "Location"}</span>
@@ -5961,7 +6092,7 @@
                 <div class="ed-comment-self-avatar" id="portalCommentSelfAvatar"></div>
                 <div class="ed-comment-input-wrap">
                     <input type="text" id="portalCommentInput" placeholder="Add a comment\u2026" class="ed-comment-input" aria-label="Write a comment">
-                    <button onclick="evtPostComment('${eventId2}')" class="ed-comment-post" aria-label="Post comment">Post</button>
+                    <button ${evtDataAction("evtPostComment", eventId2)} class="ed-comment-post" aria-label="Post comment">Post</button>
                 </div>
             </div>
         </div>
@@ -6316,6 +6447,16 @@
     namespace: detail
   };
 
+  // js/portal/events/compat/publish-globals.js
+  function publishGlobals(map) {
+    for (const [name, fn] of Object.entries(map)) {
+      if (typeof fn === "function") {
+        globalThis[name] = fn;
+        if (typeof window !== "undefined") window[name] = fn;
+      }
+    }
+  }
+
   // js/portal/events/detail/comments.js
   function evtTimeAgo(dateStr) {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -6387,7 +6528,427 @@
       btn?.click();
     }
   });
-  window.evtPostComment = evtPostComment;
+  publishGlobals({ evtLoadComments, evtPostComment });
+
+  // js/portal/events/detail/documents.js
+  async function evtBuildDocumentsHtml2(event, isHost, hasRsvp) {
+    const eventId2 = event.id;
+    const isLlc = event.event_type === "llc";
+    if (!isLlc) return "";
+    const { data: docs } = await supabaseClient.from("event_documents").select("*, profiles:target_user_id(first_name, last_name)").eq("event_id", eventId2).order("created_at", { ascending: true });
+    const allDocs = docs || [];
+    const groupDocs = allDocs.filter((d) => !d.target_user_id);
+    const myDocs = allDocs.filter((d) => d.target_user_id === globalThis.evtCurrentUser.id);
+    if (isHost) return "";
+    if (!hasRsvp) return "";
+    const visibleDocs = [...myDocs, ...groupDocs];
+    if (visibleDocs.length === 0) return "";
+    window._evtVisibleDocuments = window._evtVisibleDocuments || {};
+    window._evtVisibleDocuments[eventId2] = visibleDocs.map((d) => ({
+      id: d.id,
+      doc_type: d.doc_type,
+      label: d.label,
+      file_name: d.file_name,
+      file_path: d.file_path,
+      target_user_id: d.target_user_id
+    }));
+    return `
+        <div class="ed-docs-launch">
+            <div class="ed-docs-launch-copy">
+                <span class="ed-docs-launch-icon">\u{1F4C4}</span>
+                <div>
+                    <p class="ed-docs-launch-title">Documents available</p>
+                    <p class="ed-docs-launch-sub">${visibleDocs.length} file${visibleDocs.length !== 1 ? "s" : ""} ready for this event</p>
+                </div>
+            </div>
+            <button type="button" ${evtDataAction("evtOpenDocumentsPanel", eventId2)} class="ed-action-btn ed-docs-launch-btn">View Documents</button>
+        </div>`;
+  }
+  function evtOpenDocumentsPanel(eventId2) {
+    const docs = window._evtVisibleDocuments?.[eventId2] || [];
+    if (!docs.length) return;
+    const existing = document.getElementById("evtDocsPanelRoot");
+    if (existing) existing.remove();
+    const rows = docs.map((d) => {
+      const isPersonal = !!d.target_user_id;
+      return `
+            <div class="evt-doc-row">
+                <span class="evt-doc-icon">${evtDocTypeIcon(d.doc_type)}</span>
+                <div class="evt-doc-copy">
+                    <p>${evtEscapeHtml(d.label || d.file_name || "Document")}</p>
+                    <span>${isPersonal ? "Personal" : "Group"} \xB7 ${evtEscapeHtml(d.file_name || "")}</span>
+                </div>
+                <button ${evtDataAction("evtDownloadDocument", d.id, d.file_path, evtEscapeHtml(d.file_name || "document"))} class="evt-doc-download">Download</button>
+            </div>`;
+    }).join("");
+    const root2 = document.createElement("div");
+    root2.id = "evtDocsPanelRoot";
+    root2.className = "evt-docs-panel-root";
+    root2.innerHTML = `
+        <div class="evt-docs-panel-backdrop" ${evtDataAction("evtCloseDocumentsPanel")}></div>
+        <section class="evt-docs-panel" role="dialog" aria-modal="true" aria-label="Event documents">
+            <header class="evt-docs-panel-head">
+                <div>
+                    <p>Event Documents</p>
+                    <h3>Your files</h3>
+                </div>
+                <button ${evtDataAction("evtCloseDocumentsPanel")} aria-label="Close documents">\xD7</button>
+            </header>
+            <div class="evt-docs-list">${rows}</div>
+        </section>`;
+    document.body.appendChild(root2);
+    requestAnimationFrame(() => root2.classList.add("open"));
+  }
+  function evtCloseDocumentsPanel() {
+    const root2 = document.getElementById("evtDocsPanelRoot");
+    if (!root2) return;
+    root2.classList.remove("open");
+    setTimeout(() => root2.remove(), 180);
+  }
+  function evtDocTypeIcon(type) {
+    const icons = { plane_ticket: "\u2708\uFE0F", group_ticket: "\u{1F3AB}", itinerary: "\u{1F4CB}", receipt: "\u{1F9FE}", other: "\u{1F4CE}" };
+    return icons[type] || "\u{1F4CE}";
+  }
+  function evtShowUploadForm(eventId2, targetUserId, targetName) {
+    const form = document.getElementById("docUploadForm");
+    if (!form) return;
+    form.classList.remove("hidden");
+    document.getElementById("docTargetUserId").value = targetUserId || "";
+    document.getElementById("docEventId").value = eventId2;
+    document.getElementById("docUploadTarget").textContent = targetUserId ? `Uploading for: ${targetName}` : "Uploading group document (visible to all RSVPed members)";
+    const typeSelect = document.getElementById("docType");
+    if (targetUserId) {
+      typeSelect.value = "plane_ticket";
+    } else {
+      typeSelect.value = "itinerary";
+    }
+  }
+  async function evtUploadDocument() {
+    const btn = document.getElementById("docUploadBtn");
+    btn.disabled = true;
+    btn.textContent = "Uploading\u2026";
+    try {
+      const eventId2 = document.getElementById("docEventId").value;
+      const targetUserId = document.getElementById("docTargetUserId").value || null;
+      const label = document.getElementById("docLabel").value.trim();
+      const docType = document.getElementById("docType").value;
+      const fileInput = document.getElementById("docFileInput");
+      const file = fileInput.files[0];
+      if (!label) throw new Error("Please enter a document label");
+      if (!file) throw new Error("Please select a file");
+      const ext = file.name.split(".").pop();
+      const storagePath = `${eventId2}/${targetUserId || "group"}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+      const { error: uploadErr } = await supabaseClient.storage.from("event-documents").upload(storagePath, file, { contentType: file.type });
+      if (uploadErr) throw uploadErr;
+      const { error: dbErr } = await supabaseClient.from("event_documents").insert({
+        event_id: eventId2,
+        uploaded_by: globalThis.evtCurrentUser.id,
+        target_user_id: targetUserId,
+        doc_type: docType,
+        label,
+        file_path: storagePath,
+        file_name: file.name,
+        file_size_bytes: file.size,
+        mime_type: file.type
+      });
+      if (dbErr) throw dbErr;
+      document.getElementById("docUploadForm").classList.add("hidden");
+      document.getElementById("docLabel").value = "";
+      fileInput.value = "";
+      globalThis.evtOpenDetail(eventId2);
+    } catch (err) {
+      console.error("Document upload error:", err);
+      alert(`Upload failed: ${err.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Upload";
+    }
+  }
+  async function evtDownloadDocument(docId, filePath, fileName) {
+    try {
+      const { data, error } = await supabaseClient.storage.from("event-documents").download(filePath);
+      if (error) throw error;
+      const url = URL.createObjectURL(data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download error:", err);
+      alert(`Download failed: ${err.message}`);
+    }
+  }
+  async function evtMarkDistributed(docId, eventId2) {
+    try {
+      const { error } = await supabaseClient.from("event_documents").update({ distributed: true }).eq("id", docId);
+      if (error) throw error;
+      globalThis.evtOpenDetail(eventId2);
+    } catch (err) {
+      console.error("Mark distributed error:", err);
+      alert(`Failed: ${err.message}`);
+    }
+  }
+  async function evtDeleteDocument(docId, eventId2) {
+    if (!confirm("Delete this document?")) return;
+    try {
+      const { data: doc } = await supabaseClient.from("event_documents").select("file_path").eq("id", docId).single();
+      if (doc?.file_path) {
+        await supabaseClient.storage.from("event-documents").remove([doc.file_path]);
+      }
+      const { error } = await supabaseClient.from("event_documents").delete().eq("id", docId);
+      if (error) throw error;
+      globalThis.evtOpenDetail(eventId2);
+    } catch (err) {
+      console.error("Delete document error:", err);
+      alert(`Delete failed: ${err.message}`);
+    }
+  }
+  publishGlobals({
+    evtBuildDocumentsHtml: evtBuildDocumentsHtml2,
+    evtOpenDocumentsPanel,
+    evtCloseDocumentsPanel,
+    evtShowUploadForm,
+    evtUploadDocument,
+    evtDownloadDocument,
+    evtMarkDistributed,
+    evtDeleteDocument
+  });
+
+  // js/portal/events/detail/map-live.js
+  var evtMapInstance = null;
+  var evtMapMarkers = {};
+  var evtMapRealtimeSub = null;
+  var evtMapSharingActive = false;
+  var evtMapWatchId = null;
+  function evtIsMapAvailable(event) {
+    if (!event) return false;
+    const now = /* @__PURE__ */ new Date();
+    const start = new Date(event.start_date);
+    const end = event.end_date ? new Date(event.end_date) : new Date(start.getTime() + 4 * 60 * 60 * 1e3);
+    const mapEnd = new Date(end.getTime() + 24 * 60 * 60 * 1e3);
+    return now >= start && now <= mapEnd;
+  }
+  function evtBuildMapHtml2(event, hasRsvp, isHost) {
+    if (event.event_type !== "llc") return "";
+    if (!hasRsvp && !isHost) return "";
+    if (!evtIsMapAvailable(event)) return "";
+    return `
+        <div class="mt-6 p-4 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-lg">\u{1F4CD}</span>
+                <h4 class="text-sm font-bold text-gray-800">Live Event Map</h4>
+            </div>
+
+            <!-- Privacy Banner -->
+            <div class="mb-3 p-2.5 bg-white/60 border border-emerald-200 rounded-lg flex items-start gap-2">
+                <svg class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <p class="text-xs text-emerald-700">Location sharing is <strong>opt-in only</strong>. Your position is only visible to other RSVPed members during the event. You can stop sharing at any time.</p>
+            </div>
+
+            <!-- Sharing Toggle -->
+            <div class="flex items-center justify-between bg-white rounded-xl p-3 mb-3 border border-gray-100">
+                <div>
+                    <div class="text-sm font-semibold text-gray-800" id="mapSharingLabel">Share My Location</div>
+                    <div class="text-xs text-gray-500 mt-0.5" id="mapSharingStatus">Not sharing</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="mapSharingToggle" onchange="evtToggleLocationSharing('${event.id}')" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+            </div>
+
+            <!-- Map Container -->
+            <div id="eventMapContainer" class="w-full h-64 sm:h-80 rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
+                <div class="flex items-center justify-center h-full text-sm text-gray-400">
+                    <button ${evtDataAction("evtInitMap", event.id)} class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                        Open Map
+                    </button>
+                </div>
+            </div>
+        </div>`;
+  }
+  async function evtInitMap(eventId2) {
+    const container = document.getElementById("eventMapContainer");
+    if (!container) return;
+    container.innerHTML = '<div id="eventMap" class="w-full h-full"></div>';
+    try {
+      if (typeof window.evtEnsureLeaflet === "function") await window.evtEnsureLeaflet();
+    } catch (err) {
+      console.error("Leaflet load error:", err);
+      container.innerHTML = '<div class="flex items-center justify-center h-full text-sm text-red-500">Map library failed to load. Please refresh.</div>';
+      return;
+    }
+    if (typeof L === "undefined") {
+      container.innerHTML = '<div class="flex items-center justify-center h-full text-sm text-red-500">Map library failed to load. Please refresh.</div>';
+      return;
+    }
+    const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+    const defaultCenter = [39.8283, -98.5795];
+    const defaultZoom = 4;
+    evtMapInstance = L.map("eventMap", {
+      center: defaultCenter,
+      zoom: defaultZoom,
+      zoomControl: true
+    });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '\xA9 <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
+    }).addTo(evtMapInstance);
+    const { data: locations } = await supabaseClient.from("event_locations").select("*, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).eq("sharing_active", true);
+    if (locations && locations.length > 0) {
+      const bounds = [];
+      for (const loc of locations) {
+        evtAddMapMarker(loc);
+        bounds.push([loc.latitude, loc.longitude]);
+      }
+      if (bounds.length > 0) {
+        evtMapInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+      }
+    }
+    evtMapRealtimeSub = supabaseClient.channel(`event-locations-${eventId2}`).on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "event_locations", filter: `event_id=eq.${eventId2}` },
+      (payload) => evtHandleLocationChange(payload)
+    ).subscribe();
+  }
+  function evtAddMapMarker(loc) {
+    if (!evtMapInstance) return;
+    const name = loc.profiles ? `${loc.profiles.first_name || ""} ${loc.profiles.last_name || ""}`.trim() : "Member";
+    const isMe = loc.user_id === globalThis.evtCurrentUser?.id;
+    const initial = (name[0] || "?").toUpperCase();
+    const iconHtml = `<div style="
+        width:32px;height:32px;border-radius:50%;
+        background:${isMe ? "#10b981" : "#6366f1"};
+        color:white;display:flex;align-items:center;justify-content:center;
+        font-weight:700;font-size:13px;border:2px solid white;
+        box-shadow:0 2px 8px rgba(0,0,0,.2);
+    ">${initial}</div>`;
+    const icon = L.divIcon({
+      html: iconHtml,
+      className: "event-map-marker",
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+    if (evtMapMarkers[loc.user_id]) {
+      evtMapInstance.removeLayer(evtMapMarkers[loc.user_id]);
+    }
+    const marker = L.marker([loc.latitude, loc.longitude], { icon }).addTo(evtMapInstance).bindPopup(`<strong>${evtEscapeHtml(name)}</strong>${isMe ? " (you)" : ""}<br><span style="font-size:11px;color:#888">Updated ${new Date(loc.updated_at).toLocaleTimeString()}</span>`);
+    evtMapMarkers[loc.user_id] = marker;
+  }
+  async function evtHandleLocationChange(payload) {
+    if (payload.eventType === "DELETE" || payload.new && !payload.new.sharing_active) {
+      const userId = payload.old?.user_id || payload.new?.user_id;
+      if (userId && evtMapMarkers[userId]) {
+        evtMapInstance?.removeLayer(evtMapMarkers[userId]);
+        delete evtMapMarkers[userId];
+      }
+      return;
+    }
+    const loc = payload.new;
+    if (!loc || !loc.sharing_active) return;
+    const { data: profile } = await supabaseClient.from("profiles").select("first_name, last_name, profile_picture_url").eq("id", loc.user_id).maybeSingle();
+    evtAddMapMarker({ ...loc, profiles: profile });
+  }
+  async function evtToggleLocationSharing(eventId2) {
+    const toggle = document.getElementById("mapSharingToggle");
+    const statusEl = document.getElementById("mapSharingStatus");
+    if (toggle.checked) {
+      if (!("geolocation" in navigator)) {
+        alert("Geolocation is not supported by your browser.");
+        toggle.checked = false;
+        return;
+      }
+      try {
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 1e4,
+            maximumAge: 0
+          });
+        });
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const { error } = await supabaseClient.from("event_locations").upsert({
+          event_id: eventId2,
+          user_id: globalThis.evtCurrentUser.id,
+          latitude: lat,
+          longitude: lng,
+          sharing_active: true,
+          updated_at: (/* @__PURE__ */ new Date()).toISOString()
+        }, { onConflict: "event_id,user_id" });
+        if (error) throw error;
+        evtMapSharingActive = true;
+        statusEl.textContent = "Sharing your location";
+        statusEl.classList.add("text-emerald-600");
+        statusEl.classList.remove("text-gray-500");
+        if (evtMapInstance) {
+          evtMapInstance.setView([lat, lng], 15);
+        }
+        evtMapWatchId = navigator.geolocation.watchPosition(
+          (newPos) => evtUpdateMyLocation(eventId2, newPos),
+          (err) => console.warn("Watch error:", err),
+          { enableHighAccuracy: true, maximumAge: 15e3, timeout: 2e4 }
+        );
+      } catch (err) {
+        console.error("Location sharing error:", err);
+        toggle.checked = false;
+        if (err.code === 1) {
+          alert("Location permission denied. Please allow location access in your browser settings.");
+        } else {
+          alert(`Could not get your location: ${err.message}`);
+        }
+      }
+    } else {
+      evtMapSharingActive = false;
+      if (evtMapWatchId !== null) {
+        navigator.geolocation.clearWatch(evtMapWatchId);
+        evtMapWatchId = null;
+      }
+      await supabaseClient.from("event_locations").update({ sharing_active: false, updated_at: (/* @__PURE__ */ new Date()).toISOString() }).eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id);
+      statusEl.textContent = "Not sharing";
+      statusEl.classList.remove("text-emerald-600");
+      statusEl.classList.add("text-gray-500");
+    }
+  }
+  async function evtUpdateMyLocation(eventId2, pos) {
+    if (!evtMapSharingActive) return;
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    await supabaseClient.from("event_locations").upsert({
+      event_id: eventId2,
+      user_id: globalThis.evtCurrentUser.id,
+      latitude: lat,
+      longitude: lng,
+      sharing_active: true,
+      updated_at: (/* @__PURE__ */ new Date()).toISOString()
+    }, { onConflict: "event_id,user_id" });
+  }
+  function evtCleanupMap2() {
+    if (evtMapWatchId !== null) {
+      navigator.geolocation.clearWatch(evtMapWatchId);
+      evtMapWatchId = null;
+    }
+    if (evtMapRealtimeSub) {
+      supabaseClient.removeChannel(evtMapRealtimeSub);
+      evtMapRealtimeSub = null;
+    }
+    if (evtMapInstance) {
+      evtMapInstance.remove();
+      evtMapInstance = null;
+    }
+    evtMapMarkers = {};
+    evtMapSharingActive = false;
+  }
+  publishGlobals({
+    evtBuildMapHtml: evtBuildMapHtml2,
+    evtInitMap,
+    evtToggleLocationSharing,
+    evtCleanupMap: evtCleanupMap2
+  });
 
   // js/portal/events/detail/competition.js
   async function evtBuildCompetitionHtml2(event, isHost) {
@@ -6464,7 +7025,7 @@
             ${housePct > 0 ? `<p class="text-xs text-gray-500 mb-1">${housePct}% house fee \u2192 Net payout: <strong>${formatCurrency(netPool)}</strong></p>` : ""}
             ${entryFee > 0 ? `<p class="text-xs text-gray-400">${formatCurrency(entryFee)} entry fee \xD7 ${entryList.length} entries = ${formatCurrency(entryFee * entryList.length)} from fees</p>` : ""}
             <p class="text-xs text-gray-400">${contributionCount || 0} community contributions</p>
-            <button onclick="evtContributeToPrizePool('${eventId2}')" class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+            <button ${evtDataAction("evtContributeToPrizePool", eventId2)} class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
                 \u{1F4B8} Contribute to Prize Pool
             </button>
         </div>`;
@@ -6491,7 +7052,7 @@
       } else {
         registrationHtml = `
                 <div class="mt-4">
-                    <button onclick="evtJoinCompetition('${eventId2}')" class="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+                    <button ${evtDataAction("evtJoinCompetition", eventId2)} class="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
                         \u{1F3C6} Join as Competitor${entryFee > 0 ? ` \u2014 ${formatCurrency(entryFee)}` : ""}
                     </button>
                     <p class="text-xs text-gray-400 text-center mt-1">${entryList.length} competitor${entryList.length !== 1 ? "s" : ""} registered</p>
@@ -6532,13 +7093,13 @@
         }
         let voteBtn = "";
         if (displayPhaseNum === 3 && !myVote && entry.user_id !== globalThis.evtCurrentUser.id) {
-          voteBtn = `<button onclick="evtCastVote('${eventId2}','${entry.id}')" class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Vote</button>`;
+          voteBtn = `<button ${evtDataAction("evtCastVote", eventId2, entry.id)} class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Vote</button>`;
         } else if (isVoted) {
           voteBtn = `<div class="mt-2 text-center text-xs font-bold text-blue-600">\u2713 Your Vote</div>`;
         }
         let modBtn = "";
         if (isHost && displayPhaseNum < 3) {
-          modBtn = `<button onclick="evtModerateEntry('${eventId2}','${entry.id}')" class="mt-1 text-xs text-red-400 hover:text-red-600">Remove Entry</button>`;
+          modBtn = `<button ${evtDataAction("evtModerateEntry", eventId2, entry.id)} class="mt-1 text-xs text-red-400 hover:text-red-600">Remove Entry</button>`;
         }
         const winnerEntry = winnerList.find((w) => w.entry_id === entry.id);
         const winnerBadge = winnerEntry ? `<span class="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">${["\u{1F947}", "\u{1F948}", "\u{1F949}"][winnerEntry.place - 1] || ""} ${winnerEntry.place === 1 ? "1st" : winnerEntry.place === 2 ? "2nd" : "3rd"} Place</span>` : "";
@@ -6630,7 +7191,7 @@
       } else if (displayPhaseNum >= 4 && isHost) {
         resultsHtml = `
                 <div class="mt-4">
-                    <button onclick="evtFinalizeCompetition('${eventId2}')" class="w-full bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+                    <button ${evtDataAction("evtFinalizeCompetition", eventId2)} class="w-full bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
                         \u{1F3C6} Finalize Results & Announce Winners
                     </button>
                 </div>`;
@@ -6644,13 +7205,13 @@
       if (activeP && !nextPhase) {
       }
       if (activeP) {
-        buttons += `<button onclick="evtAdvancePhase('${eventId2}', ${activeP.phase_num})" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-blue-700 transition">Complete Phase ${activeP.phase_num} \u2192 Next</button>`;
+        buttons += `<button ${evtDataAction("evtAdvancePhase", eventId2, activeP.phase_num)} class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-blue-700 transition">Complete Phase ${activeP.phase_num} \u2192 Next</button>`;
         if (activeP.phase_num === 2 && !activeP.extended_once) {
-          buttons += `<button onclick="evtExtendPhase('${eventId2}', ${activeP.phase_num})" class="bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-amber-600 transition">Extend ${config.extension_days || 3} Days</button>`;
+          buttons += `<button ${evtDataAction("evtExtendPhase", eventId2, activeP.phase_num)} class="bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-amber-600 transition">Extend ${config.extension_days || 3} Days</button>`;
         }
       }
       if (!activeP && nextPhase) {
-        buttons += `<button onclick="evtStartPhase('${eventId2}', ${nextPhase.phase_num})" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition">Start Phase ${nextPhase.phase_num}: ${nextPhase.name}</button>`;
+        buttons += `<button ${evtDataAction("evtStartPhase", eventId2, nextPhase.phase_num)} class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition">Start Phase ${nextPhase.phase_num}: ${nextPhase.name}</button>`;
       }
       if (buttons) {
         phaseControlHtml = `
@@ -6713,7 +7274,7 @@
             </div>
             ${fileInput}
             ${linkInput}
-            <button onclick="evtSubmitEntry('${eventId2}')" class="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
+            <button ${evtDataAction("evtSubmitEntry", eventId2)} class="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
                 Submit Entry
             </button>
         </div>`;
@@ -6974,7 +7535,7 @@
       alert(`Failed: ${err.message}`);
     }
   }
-  function evtRecalcCompTiers2() {
+  function evtRecalcCompTiers() {
     const t1 = parseInt(document.getElementById("compTier1Pct")?.value) || 0;
     const t2 = parseInt(document.getElementById("compTier2Pct")?.value) || 0;
     const t3 = parseInt(document.getElementById("compTier3Pct")?.value) || 0;
@@ -6999,7 +7560,353 @@
   window.PortalEvents.competition.advancePhase = evtAdvancePhase;
   window.PortalEvents.competition.extendPhase = evtExtendPhase;
   window.PortalEvents.competition.finalize = evtFinalizeCompetition;
-  window.PortalEvents.competition.recalcTiers = evtRecalcCompTiers2;
+  window.PortalEvents.competition.recalcTiers = evtRecalcCompTiers;
+  publishGlobals({
+    evtBuildCompetitionHtml: evtBuildCompetitionHtml2,
+    evtBuildSubmitFormHtml,
+    evtJoinCompetition,
+    evtSubmitEntry,
+    evtCastVote,
+    evtModerateEntry,
+    evtContributeToPrizePool,
+    evtStartPhase,
+    evtAdvancePhase,
+    evtExtendPhase,
+    evtFinalizeCompetition,
+    evtRecalcCompTiers
+  });
+
+  // js/portal/events/detail/scrapbook.js
+  async function evtBuildScrapbookHtml2(event, hasRsvp) {
+    if (event.status !== "completed") return "";
+    const { data: photos } = await supabaseClient.from("event_photos").select("*, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", event.id).order("uploaded_at", { ascending: false });
+    const photoList = photos || [];
+    const canUpload = hasRsvp || typeof canManageEvents === "function" && canManageEvents();
+    let galleryHtml = "";
+    if (photoList.length) {
+      galleryHtml = `
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
+                ${photoList.map((p) => {
+        const name = p.profiles ? `${p.profiles.first_name || ""} ${p.profiles.last_name || ""}`.trim() : "Member";
+        const canDelete = p.user_id === globalThis.evtCurrentUser.id || typeof canManageEvents === "function" && canManageEvents();
+        return `
+                        <div class="relative group rounded-xl overflow-hidden bg-gray-100 aspect-square">
+                            <img src="${p.file_url}" alt="${evtEscapeHtml(p.caption || "")}" class="w-full h-full object-cover cursor-pointer" ${evtDataAction("evtViewPhoto", p.file_url, evtEscapeHtml(p.caption || ""), evtEscapeHtml(name))}>
+                            ${p.caption ? `<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                                <p class="text-white text-[10px] leading-tight truncate">${evtEscapeHtml(p.caption)}</p>
+                            </div>` : ""}
+                            <div class="absolute top-1 left-1 bg-black/40 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+                                <span class="text-white text-[9px] font-medium">${evtEscapeHtml(name)}</span>
+                            </div>
+                            ${canDelete ? `
+                            <button ${evtDataAction("evtDeletePhoto", event.id, p.id, p.file_url)} class="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-xs">&times;</button>
+                            ` : ""}
+                        </div>`;
+      }).join("")}
+            </div>`;
+    } else {
+      galleryHtml = `<p class="text-xs text-gray-400 mt-2">No photos yet. Be the first to share a memory!</p>`;
+    }
+    const uploadHtml = canUpload ? `
+        <div class="mt-3 p-3 border-2 border-dashed border-gray-200 rounded-xl text-center cursor-pointer hover:border-brand-400 hover:bg-brand-50/30 transition" id="scrapbookDropzone" onclick="document.getElementById('scrapbookFileInput').click()">
+            <input type="file" id="scrapbookFileInput" accept="image/*" multiple class="hidden" onchange="evtHandlePhotoSelect('${event.id}')">
+            <svg class="w-6 h-6 text-gray-300 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <p class="text-xs text-gray-400">Drop photos or tap to upload</p>
+            <p class="text-[10px] text-gray-300 mt-0.5">JPG, PNG, WebP \u2022 Max 10MB per photo</p>
+        </div>
+        <div id="scrapbookUploadProgress" class="hidden mt-2">
+            <div class="flex items-center gap-2">
+                <svg class="animate-spin h-4 w-4 text-brand-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                <span class="text-xs text-brand-600" id="scrapbookUploadText">Uploading...</span>
+            </div>
+        </div>
+    ` : "";
+    return `
+        <div class="mt-6 p-4 bg-white rounded-xl border border-gray-200/80">
+            <div class="flex items-center justify-between">
+                <h4 class="text-sm font-bold text-gray-700 flex items-center gap-1.5">
+                    \u{1F4F8} Scrapbook
+                    <span class="text-xs font-normal text-gray-400">(${photoList.length} photo${photoList.length !== 1 ? "s" : ""})</span>
+                </h4>
+            </div>
+            ${galleryHtml}
+            ${uploadHtml}
+        </div>
+    `;
+  }
+  async function evtHandlePhotoSelect(eventId2) {
+    const input = document.getElementById("scrapbookFileInput");
+    const files = Array.from(input?.files || []);
+    if (!files.length) return;
+    const progress = document.getElementById("scrapbookUploadProgress");
+    const progressText = document.getElementById("scrapbookUploadText");
+    if (progress) progress.classList.remove("hidden");
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    let uploaded = 0;
+    for (const file of files) {
+      if (!allowed.includes(file.type)) {
+        alert(`Skipped "${file.name}" \u2014 only JPG, PNG, WebP, GIF allowed.`);
+        continue;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`Skipped "${file.name}" \u2014 max 10MB per photo.`);
+        continue;
+      }
+      if (progressText) progressText.textContent = `Uploading ${uploaded + 1} of ${files.length}...`;
+      try {
+        const ext = file.name.split(".").pop();
+        const filePath = `${globalThis.evtCurrentUser.id}/${eventId2}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error: uploadErr } = await supabaseClient.storage.from("event-photos").upload(filePath, file, { upsert: false });
+        if (uploadErr) throw uploadErr;
+        const { data: urlData } = supabaseClient.storage.from("event-photos").getPublicUrl(filePath);
+        let caption = null;
+        if (files.length === 1) {
+          caption = prompt("Add a caption? (optional)");
+        }
+        const { error: insertErr } = await supabaseClient.from("event_photos").insert({
+          event_id: eventId2,
+          user_id: globalThis.evtCurrentUser.id,
+          file_url: urlData.publicUrl,
+          caption: caption || null
+        });
+        if (insertErr) throw insertErr;
+        uploaded++;
+      } catch (err) {
+        console.error("Photo upload error:", err);
+        alert("Failed to upload photo: " + (err.message || "Unknown error"));
+      }
+    }
+    if (progress) progress.classList.add("hidden");
+    if (input) input.value = "";
+    if (uploaded > 0) {
+      alert(`\u2705 ${uploaded} photo${uploaded > 1 ? "s" : ""} uploaded!`);
+      globalThis.evtOpenDetail(eventId2);
+    }
+  }
+  async function evtDeletePhoto(eventId2, photoId, fileUrl) {
+    if (!confirm("Delete this photo?")) return;
+    try {
+      const { error } = await supabaseClient.from("event_photos").delete().eq("id", photoId);
+      if (error) throw error;
+      try {
+        const url = new URL(fileUrl);
+        const path = url.pathname.split("/event-photos/")[1];
+        if (path) {
+          await supabaseClient.storage.from("event-photos").remove([decodeURIComponent(path)]);
+        }
+      } catch (e) {
+        console.warn("Storage cleanup failed (non-critical):", e);
+      }
+      globalThis.evtOpenDetail(eventId2);
+    } catch (err) {
+      console.error("Delete photo error:", err);
+      alert("Failed to delete photo.");
+    }
+  }
+  function evtViewPhoto(url, caption, name) {
+    const existing = document.getElementById("photoLightbox");
+    if (existing) existing.remove();
+    const overlay = document.createElement("div");
+    overlay.id = "photoLightbox";
+    overlay.className = "fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4";
+    overlay.innerHTML = `
+        <div class="max-w-3xl w-full max-h-[90vh] flex flex-col items-center">
+            <img src="${url}" alt="${caption}" class="max-w-full max-h-[80vh] rounded-lg object-contain shadow-2xl">
+            ${caption || name ? `
+            <div class="mt-3 text-center">
+                ${caption ? `<p class="text-white text-sm">${evtEscapeHtml(caption)}</p>` : ""}
+                ${name ? `<p class="text-gray-400 text-xs mt-1">\u{1F4F7} ${evtEscapeHtml(name)}</p>` : ""}
+            </div>` : ""}
+        </div>
+        <button class="absolute top-4 right-4 text-white/80 hover:text-white text-3xl font-light transition" onclick="document.getElementById('photoLightbox').remove()">&times;</button>
+    `;
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+    document.body.appendChild(overlay);
+  }
+  publishGlobals({
+    evtBuildScrapbookHtml: evtBuildScrapbookHtml2,
+    evtHandlePhotoSelect,
+    evtDeletePhoto,
+    evtViewPhoto
+  });
+
+  // js/portal/events/detail/scanner.js
+  function evtParseQrData(raw) {
+    try {
+      const url = new URL(raw);
+      const ticket = url.searchParams.get("ticket");
+      const slug = url.searchParams.get("e");
+      if (ticket && slug) {
+        const evt = globalThis.evtAllEvents.find((ev) => ev.slug === slug);
+        if (evt) return { e: evt.id, t: ticket };
+        return { slug, t: ticket };
+      }
+    } catch (_) {
+    }
+    try {
+      const obj = JSON.parse(raw);
+      if (obj.e && obj.t) return obj;
+    } catch (_) {
+    }
+    return null;
+  }
+  async function evtOpenScanner(eventId2) {
+    try {
+      if (typeof window.evtEnsureJsQR === "function") await window.evtEnsureJsQR();
+    } catch (err) {
+      console.error("jsQR load error:", err);
+      const result2 = document.getElementById("scanResult");
+      if (result2) result2.innerHTML = '<span class="text-red-500">Scanner library failed to load. Please refresh.</span>';
+      return;
+    }
+    globalThis.evtToggleModal("scannerModal", true);
+    const video = document.getElementById("scannerVideo");
+    const canvas = document.getElementById("scannerCanvas");
+    const result = document.getElementById("scanResult");
+    result.innerHTML = `<span class="text-gray-400">Point camera at attendee's QR code\u2026</span>`;
+    try {
+      let tick = function() {
+        if (!globalThis.evtScannerStream) return;
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          if (typeof jsQR !== "undefined") {
+            const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+            if (code) {
+              const qrData = evtParseQrData(code.data);
+              if (qrData && qrData.t) {
+                evtProcessCheckin(qrData.e || eventId2, qrData.t, result);
+                return;
+              }
+            }
+          }
+        }
+        globalThis.evtScannerAnimFrame = requestAnimationFrame(tick);
+      };
+      globalThis.evtScannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      video.srcObject = globalThis.evtScannerStream;
+      video.play();
+      const ctx = canvas.getContext("2d");
+      globalThis.evtScannerAnimFrame = requestAnimationFrame(tick);
+    } catch (err) {
+      console.error("Camera error:", err);
+      result.innerHTML = '<span class="text-red-500">Camera access denied or unavailable.</span>';
+    }
+  }
+  async function evtProcessCheckin(eventId2, qrToken, resultEl) {
+    if (globalThis.evtScannerAnimFrame) cancelAnimationFrame(globalThis.evtScannerAnimFrame);
+    resultEl.innerHTML = '<span class="text-gray-500">Checking in\u2026</span>';
+    try {
+      const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+      if (event?.location_required) {
+        const { data: locRecord } = await supabaseClient.from("event_locations").select("sharing_active").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
+      }
+      const { data: rsvp, error: findErr } = await supabaseClient.from("event_rsvps").select("id, user_id, status, profiles!event_rsvps_user_id_fkey(first_name, last_name)").eq("event_id", eventId2).eq("qr_token", qrToken).maybeSingle();
+      if (findErr) throw findErr;
+      if (rsvp) {
+        const { data: existing } = await supabaseClient.from("event_checkins").select("id").eq("event_id", eventId2).eq("user_id", rsvp.user_id).maybeSingle();
+        if (existing) {
+          const name2 = `${rsvp.profiles?.first_name || ""} ${rsvp.profiles?.last_name || ""}`.trim();
+          resultEl.innerHTML = `<span class="text-amber-600">\u2705 Already checked in \u2014 ${evtEscapeHtml(name2)}</span>`;
+          evtResumeScanner(3e3);
+          return;
+        }
+        const { error: ciErr } = await supabaseClient.from("event_checkins").insert({
+          event_id: eventId2,
+          user_id: rsvp.user_id,
+          checked_in_by: globalThis.evtCurrentUser.id,
+          checkin_mode: "attendee_ticket"
+        });
+        if (ciErr) throw ciErr;
+        const name = `${rsvp.profiles?.first_name || ""} ${rsvp.profiles?.last_name || ""}`.trim();
+        resultEl.innerHTML = `<span class="text-emerald-600 text-base">\u2705 Checked in \u2014 ${evtEscapeHtml(name)}</span>`;
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        evtResumeScanner(3e3);
+        return;
+      }
+      const { data: guestRsvp, error: gErr } = await supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, guest_token, paid").eq("event_id", eventId2).eq("guest_token", qrToken).maybeSingle();
+      if (gErr) throw gErr;
+      if (!guestRsvp || !guestRsvp.paid) {
+        resultEl.innerHTML = '<span class="text-red-500">\u274C Invalid ticket \u2014 no matching RSVP found.</span>';
+        evtResumeScanner(3e3);
+        return;
+      }
+      const { data: gExisting } = await supabaseClient.from("event_checkins").select("id").eq("event_id", eventId2).eq("guest_token", guestRsvp.guest_token).maybeSingle();
+      if (gExisting) {
+        resultEl.innerHTML = `<span class="text-amber-600">\u2705 Already checked in \u2014 ${evtEscapeHtml(guestRsvp.guest_name)} (Guest)</span>`;
+        evtResumeScanner(3e3);
+        return;
+      }
+      const { error: gciErr } = await supabaseClient.from("event_checkins").insert({
+        event_id: eventId2,
+        guest_token: guestRsvp.guest_token,
+        checked_in_by: globalThis.evtCurrentUser.id,
+        checkin_mode: "attendee_ticket"
+      });
+      if (gciErr) throw gciErr;
+      resultEl.innerHTML = `<span class="text-emerald-600 text-base">\u2705 Checked in \u2014 ${evtEscapeHtml(guestRsvp.guest_name)} (Guest)</span>`;
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      evtResumeScanner(3e3);
+    } catch (err) {
+      console.error("Check-in error:", err);
+      resultEl.innerHTML = `<span class="text-red-500">Check-in failed: ${err.message}</span>`;
+      evtResumeScanner(3e3);
+    }
+  }
+  function evtResumeScanner(delay) {
+    setTimeout(() => {
+      if (globalThis.evtScannerStream) {
+        let tick = function() {
+          if (!globalThis.evtScannerStream) return;
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            if (typeof jsQR !== "undefined") {
+              const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+              if (code) {
+                const qrData = evtParseQrData(code.data);
+                if (qrData && qrData.t) {
+                  evtProcessCheckin(qrData.e || eventId, qrData.t, result);
+                  return;
+                }
+              }
+            }
+          }
+          globalThis.evtScannerAnimFrame = requestAnimationFrame(tick);
+        };
+        const video = document.getElementById("scannerVideo");
+        const canvas = document.getElementById("scannerCanvas");
+        const ctx = canvas.getContext("2d");
+        const result = document.getElementById("scanResult");
+        result.innerHTML = '<span class="text-gray-400">Point camera at next QR code\u2026</span>';
+        globalThis.evtScannerAnimFrame = requestAnimationFrame(tick);
+      }
+    }, delay);
+  }
+  function evtCloseScanner() {
+    if (globalThis.evtScannerStream) {
+      globalThis.evtScannerStream.getTracks().forEach((t) => t.stop());
+      globalThis.evtScannerStream = null;
+    }
+    if (globalThis.evtScannerAnimFrame) {
+      cancelAnimationFrame(globalThis.evtScannerAnimFrame);
+      globalThis.evtScannerAnimFrame = null;
+    }
+    globalThis.evtToggleModal("scannerModal", false);
+  }
+  publishGlobals({
+    evtParseQrData,
+    evtOpenScanner,
+    evtProcessCheckin,
+    evtResumeScanner,
+    evtCloseScanner
+  });
 
   // js/portal/events/engagement/rsvp.js
   function evtIsGoingRsvp(rsvp) {
@@ -7025,6 +7932,433 @@
   window.evtIsRaffleEntriesOpen = evtIsRaffleEntriesOpen;
   window.evtIsRaffleBundledWithPaidRsvp = evtIsRaffleBundledWithPaidRsvp;
   window.evtCanEnterMemberRaffle = evtCanEnterMemberRaffle;
+  async function evtHandleRsvp(eventId2, status) {
+    try {
+      const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
+      if (!event) return;
+      const now = /* @__PURE__ */ new Date();
+      const isClosed = event.status === "completed" || event.status === "cancelled";
+      const isPast = new Date(event.start_date) < now && event.status !== "active";
+      const deadlined = event.rsvp_deadline && new Date(event.rsvp_deadline) < now;
+      if (isClosed || isPast || deadlined) {
+        alert("RSVPs are closed for this event.");
+        return;
+      }
+      const isPaid = event.pricing_mode === "paid" && event.rsvp_cost_cents > 0;
+      const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps;
+      const existing = rsvpMap[eventId2];
+      if (isPaid && status === "going") {
+        if (existing?.paid) {
+          alert("You have already paid for this RSVP.");
+          return;
+        }
+        const confirmPay = confirm(
+          `RSVP costs ${formatCurrency(event.rsvp_cost_cents)}.
+
+By completing your RSVP, you agree that your payment is non-refundable unless this event is cancelled or rescheduled by LLC staff.
+
+Proceed to checkout?`
+        );
+        if (!confirmPay) return;
+        const { url } = await callEdgeFunction("create-event-checkout", {
+          event_id: eventId2,
+          type: "rsvp"
+        });
+        if (url) {
+          window.location.href = url;
+        }
+        return;
+      }
+      if (existing) {
+        if (existing.paid) {
+          alert("Paid RSVPs cannot be cancelled. Contact an admin for assistance.");
+          return;
+        }
+        if (existing.status === status) {
+          const { error } = await supabaseClient.from("event_rsvps").delete().eq("id", existing.id);
+          if (error) throw error;
+          delete globalThis.evtAllRsvps[eventId2];
+          if (window.evtAllRsvps) delete window.evtAllRsvps[eventId2];
+        } else {
+          const { error } = await supabaseClient.from("event_rsvps").update({ status }).eq("id", existing.id);
+          if (error) throw error;
+          if (globalThis.evtAllRsvps[eventId2]) globalThis.evtAllRsvps[eventId2].status = status;
+          if (window.evtAllRsvps?.[eventId2]) window.evtAllRsvps[eventId2].status = status;
+        }
+      } else {
+        const { data, error } = await supabaseClient.from("event_rsvps").upsert({ event_id: eventId2, user_id: globalThis.evtCurrentUser.id, status }, { onConflict: "event_id,user_id" }).select().single();
+        if (error) throw error;
+        globalThis.evtAllRsvps[eventId2] = data;
+        window.evtAllRsvps = window.evtAllRsvps || {};
+        window.evtAllRsvps[eventId2] = data;
+      }
+      evtRenderEvents();
+      await globalThis.evtOpenDetail(eventId2);
+      if (status === "going" && window.evtCtaRaffleIntent === eventId2) {
+        window.evtCtaRaffleIntent = null;
+        evtOpenCtaPanel("raffle", eventId2);
+      }
+    } catch (err) {
+      console.error("RSVP error:", err);
+      alert("Failed to update RSVP. Please try again.");
+    }
+  }
+  async function evtHandleRaffleEntry(eventId2) {
+    try {
+      const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+      if (!event || !event.raffle_enabled) return;
+      const now = /* @__PURE__ */ new Date();
+      const isClosed = event.status === "completed" || event.status === "cancelled";
+      const isPast = new Date(event.start_date) < now && event.status !== "active";
+      const deadlined = event.rsvp_deadline && new Date(event.rsvp_deadline) < now;
+      if (isClosed || isPast || deadlined) {
+        alert("Raffle entries are closed for this event.");
+        return;
+      }
+      if (!event.raffle_entry_cost_cents) {
+        alert("Use Enter Raffle \u2014 Free for no-cost raffle entries.");
+        return;
+      }
+      const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
+      if (evtIsRaffleBundledWithPaidRsvp(event)) {
+        alert("Raffle entry is included with your paid RSVP for this event.");
+        return;
+      }
+      if (!evtIsGoingRsvp(rsvp)) {
+        alert("Please RSVP before entering the raffle.");
+        return;
+      }
+      const confirmPay = confirm(
+        `Raffle entry costs ${formatCurrency(event.raffle_entry_cost_cents)}.
+
+Raffle entry is non-refundable. Proceed to checkout?`
+      );
+      if (!confirmPay) return;
+      const { url } = await callEdgeFunction("create-event-checkout", {
+        event_id: eventId2,
+        type: "raffle_entry"
+      });
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (err) {
+      console.error("Raffle entry error:", err);
+      alert("Failed to start raffle entry checkout. Please try again.");
+    }
+  }
+  async function evtHandleFreeRaffleEntry(eventId2) {
+    try {
+      const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+      if (!event || !event.raffle_enabled) return;
+      const now = /* @__PURE__ */ new Date();
+      const isClosed = event.status === "completed" || event.status === "cancelled";
+      const isPast = new Date(event.start_date) < now && event.status !== "active";
+      const deadlined = event.rsvp_deadline && new Date(event.rsvp_deadline) < now;
+      if (isClosed || isPast || deadlined) {
+        alert("Raffle entries are closed for this event.");
+        return;
+      }
+      const { data: session } = await supabaseClient.auth.getSession();
+      if (!session?.session?.user) {
+        alert("Please sign in to enter.");
+        return;
+      }
+      const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
+      if (evtIsRaffleBundledWithPaidRsvp(event)) {
+        alert("Raffle entry is included with your paid RSVP for this event.");
+        return;
+      }
+      if (!evtIsGoingRsvp(rsvp)) {
+        alert("Please RSVP before entering the raffle.");
+        return;
+      }
+      const { error } = await supabaseClient.from("event_raffle_entries").upsert({ event_id: eventId2, user_id: session.session.user.id, paid: true }, { onConflict: "event_id,user_id" });
+      if (error) throw error;
+      alert("You're entered into the raffle! Good luck! \u{1F39F}\uFE0F");
+      globalThis.evtOpenDetail(eventId2);
+    } catch (err) {
+      console.error("Free raffle entry error:", err);
+      alert(err.message || "Failed to enter raffle. Please try again.");
+    }
+  }
+  async function evtUpdateStatus(eventId2, newStatus) {
+    if (newStatus === "cancelled" && !confirm("Are you sure you want to cancel this event?")) return;
+    if (newStatus === "completed" && !confirm("Mark this event as completed?")) return;
+    try {
+      const { error } = await supabaseClient.from("events").update({ status: newStatus }).eq("id", eventId2);
+      if (error) throw error;
+      await globalThis.evtLoadEvents();
+      globalThis.evtNavigateToList();
+    } catch (err) {
+      console.error("Status update error:", err);
+      alert("Failed to update event status.");
+    }
+  }
+  async function evtJoinWaitlist(eventId2) {
+    try {
+      const { data: maxPos } = await supabaseClient.from("event_waitlist").select("position").eq("event_id", eventId2).order("position", { ascending: false }).limit(1).maybeSingle();
+      const nextPos = (maxPos?.position || 0) + 1;
+      const { error } = await supabaseClient.from("event_waitlist").insert({
+        event_id: eventId2,
+        user_id: globalThis.evtCurrentUser.id,
+        position: nextPos,
+        status: "waiting"
+      });
+      if (error) throw error;
+      alert(`You're #${nextPos} on the waitlist! We'll notify you if a spot opens.`);
+      await globalThis.evtOpenDetail(eventId2);
+    } catch (err) {
+      console.error("Join waitlist error:", err);
+      alert(err.message?.includes("duplicate") ? "You are already on the waitlist." : "Failed to join waitlist.");
+    }
+  }
+  async function evtLeaveWaitlist(eventId2) {
+    if (!confirm("Leave the waitlist for this event?")) return;
+    try {
+      const { error } = await supabaseClient.from("event_waitlist").delete().eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id);
+      if (error) throw error;
+      await globalThis.evtOpenDetail(eventId2);
+    } catch (err) {
+      console.error("Leave waitlist error:", err);
+      alert("Failed to leave waitlist.");
+    }
+  }
+  async function evtClaimWaitlistSpot(eventId2) {
+    try {
+      const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+      if (!event) return;
+      const confirmPay = confirm(
+        `A spot has opened up!
+
+RSVP costs ${formatCurrency(event.rsvp_cost_cents)}.
+
+By completing your RSVP, you agree that your payment is non-refundable unless this event is cancelled or rescheduled by LLC staff.
+
+Proceed to checkout?`
+      );
+      if (!confirmPay) return;
+      await supabaseClient.from("event_waitlist").update({ status: "claimed" }).eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id);
+      const { url } = await callEdgeFunction("create-event-checkout", {
+        event_id: eventId2,
+        type: "rsvp",
+        from_waitlist: true
+      });
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (err) {
+      console.error("Claim waitlist error:", err);
+      alert("Failed to claim waitlist spot. Please try again.");
+    }
+  }
+  async function evtCancelEvent(eventId2) {
+    const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+    if (!event) return;
+    const isLlc = event.event_type === "llc";
+    let nonRefundableCents = 0;
+    let cancellationNote = "";
+    if (isLlc) {
+      cancellationNote = prompt("Cancellation reason (visible to attendees):");
+      if (cancellationNote === null) return;
+      const nonRefundableStr = prompt(
+        "Enter the total non-refundable expenses already incurred (in dollars).\nThis amount will be deducted from each refund proportionally.\nEnter 0 if fully refundable.",
+        "0"
+      );
+      if (nonRefundableStr === null) return;
+      nonRefundableCents = Math.round(parseFloat(nonRefundableStr || "0") * 100);
+      if (isNaN(nonRefundableCents) || nonRefundableCents < 0) nonRefundableCents = 0;
+      const msg = nonRefundableCents > 0 ? `Cancel this event?
+
+Non-refundable expenses: ${formatCurrency(nonRefundableCents)}
+This will be deducted proportionally from each attendee's refund.` : "Cancel this event? All paid attendees will receive a full refund.";
+      if (!confirm(msg)) return;
+    } else {
+      if (!confirm("Are you sure you want to cancel this event?")) return;
+    }
+    try {
+      const result = await callEdgeFunction("process-event-cancellation", {
+        event_id: eventId2,
+        reason: "event_cancelled",
+        cancellation_note: cancellationNote || "Event cancelled by host",
+        non_refundable_expenses_cents: nonRefundableCents
+      });
+      alert(result.message || "Event cancelled successfully.");
+      await globalThis.evtLoadEvents();
+      globalThis.evtNavigateToList();
+    } catch (err) {
+      console.error("Cancel event error:", err);
+      alert("Failed to cancel event: " + (err.message || "Unknown error"));
+    }
+  }
+  async function evtRescheduleEvent(eventId2) {
+    const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+    if (!event) return;
+    const newDate = prompt("Enter new start date & time (YYYY-MM-DD HH:MM):", "");
+    if (!newDate) return;
+    const parsed = new Date(newDate.replace(" ", "T"));
+    if (isNaN(parsed.getTime())) {
+      alert("Invalid date format. Use YYYY-MM-DD HH:MM");
+      return;
+    }
+    if (parsed <= /* @__PURE__ */ new Date()) {
+      alert("New date must be in the future.");
+      return;
+    }
+    const confirmMsg = `Reschedule this event to ${parsed.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })} at ${parsed.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}?
+
+All attendees will receive a 72-hour grace window to request a full refund if the new date doesn't work for them.`;
+    if (!confirm(confirmMsg)) return;
+    try {
+      const now = /* @__PURE__ */ new Date();
+      const graceEnd = new Date(now.getTime() + 72 * 60 * 60 * 1e3);
+      const { error } = await supabaseClient.from("events").update({
+        original_start_date: event.original_start_date || event.start_date,
+        start_date: parsed.toISOString(),
+        rescheduled_at: now.toISOString(),
+        grace_window_end: graceEnd.toISOString()
+      }).eq("id", eventId2);
+      if (error) throw error;
+      await supabaseClient.from("event_rsvps").update({ grace_refund_eligible: true }).eq("event_id", eventId2).eq("paid", true);
+      alert("Event rescheduled! Attendees have been notified and have 72 hours to request a refund.");
+      await globalThis.evtLoadEvents();
+      await globalThis.evtOpenDetail(eventId2);
+    } catch (err) {
+      console.error("Reschedule error:", err);
+      alert("Failed to reschedule event.");
+    }
+  }
+  async function evtRequestGraceRefund(eventId2) {
+    if (!confirm("Request a full refund because the rescheduled date doesn't work for you?\n\nThis action cannot be undone.")) return;
+    try {
+      const result = await callEdgeFunction("process-event-cancellation", {
+        event_id: eventId2,
+        reason: "reschedule_grace",
+        user_id: globalThis.evtCurrentUser.id,
+        single_user_refund: true
+      });
+      alert(result.message || "Refund processed. You will receive it within 5-10 business days.");
+      await globalThis.evtLoadEvents();
+      await globalThis.evtOpenDetail(eventId2);
+    } catch (err) {
+      console.error("Grace refund error:", err);
+      alert("Failed to process refund: " + (err.message || "Unknown error"));
+    }
+  }
+  async function evtDeleteEvent(eventId2) {
+    const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+    if (!event) return;
+    if (typeof canManageEvents !== "function" || !canManageEvents()) {
+      alert("Only users with event management permission can delete events.");
+      return;
+    }
+    const typed = prompt(`This will permanently delete "${event.title}" and all associated RSVPs, check-ins, raffle entries, documents, and photos.
+
+Type the event title to confirm:`);
+    if (!typed || typed.trim() !== event.title.trim()) {
+      if (typed !== null) alert("Event title did not match. Deletion cancelled.");
+      return;
+    }
+    try {
+      const { error } = await supabaseClient.from("events").delete().eq("id", eventId2);
+      if (error) throw error;
+      alert("Event deleted successfully.");
+      globalThis.evtNavigateToList();
+      await globalThis.evtLoadEvents();
+    } catch (err) {
+      console.error("Delete event error:", err);
+      alert("Failed to delete event: " + (err.message || "Unknown error"));
+    }
+  }
+  async function evtDuplicateEvent(eventId2) {
+    const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+    if (!event) return;
+    if (!confirm("Create a duplicate of this event? It will open in draft mode for editing.")) return;
+    try {
+      const newSlug = evtGenerateSlug(event.title + " copy");
+      const record = {
+        title: event.title + " (Copy)",
+        slug: newSlug,
+        description: event.description,
+        event_type: event.event_type,
+        category: event.category,
+        member_only: event.member_only,
+        banner_url: event.banner_url,
+        location_text: event.location_text,
+        location_url: event.location_url,
+        gate_time: event.gate_time,
+        gate_location: event.gate_location,
+        gate_notes: event.gate_notes,
+        gated_notes: event.gated_notes,
+        max_participants: event.max_participants,
+        pricing_mode: event.pricing_mode,
+        rsvp_cost_cents: event.rsvp_cost_cents,
+        raffle_enabled: event.raffle_enabled,
+        raffle_prizes: event.raffle_prizes,
+        raffle_entry_cost_cents: event.raffle_entry_cost_cents,
+        checkin_mode: event.checkin_mode,
+        created_by: globalThis.evtCurrentUser.id,
+        status: "draft",
+        // LLC fields
+        llc_cut_pct: event.llc_cut_pct,
+        invest_eligible: event.invest_eligible,
+        min_participants: event.min_participants,
+        cost_breakdown: event.cost_breakdown,
+        transportation_mode: event.transportation_mode,
+        transportation_estimate_cents: event.transportation_estimate_cents,
+        location_required: event.location_required
+      };
+      Object.keys(record).forEach((k) => {
+        if (record[k] == null) delete record[k];
+      });
+      const { data: newEvent, error } = await supabaseClient.from("events").insert(record).select().single();
+      if (error) throw error;
+      if (event.event_type === "llc") {
+        const { data: origItems } = await supabaseClient.from("event_cost_items").select("*").eq("event_id", eventId2).order("sort_order");
+        if (origItems && origItems.length > 0) {
+          const newItems = origItems.map((item) => ({
+            event_id: newEvent.id,
+            name: item.name,
+            category: item.category,
+            total_cost_cents: item.total_cost_cents,
+            included_in_buyin: item.included_in_buyin,
+            avg_per_person_cents: item.avg_per_person_cents,
+            notes: item.notes,
+            sort_order: item.sort_order
+          }));
+          await supabaseClient.from("event_cost_items").insert(newItems);
+        }
+      }
+      alert("Event duplicated! Opening the copy in draft mode.");
+      await globalThis.evtLoadEvents();
+      const dupEvent = globalThis.evtAllEvents.find((e) => e.id === newEvent.id);
+      if (dupEvent && dupEvent.slug) {
+        globalThis.evtNavigateToEvent(dupEvent.slug);
+      } else {
+        await globalThis.evtOpenDetail(newEvent.id);
+      }
+    } catch (err) {
+      console.error("Duplicate event error:", err);
+      alert("Failed to duplicate event: " + (err.message || "Unknown error"));
+    }
+  }
+  publishGlobals({
+    evtIsGoingRsvp,
+    evtIsRaffleEntriesOpen,
+    evtIsRaffleBundledWithPaidRsvp,
+    evtCanEnterMemberRaffle,
+    evtHandleRsvp,
+    evtHandleRaffleEntry,
+    evtHandleFreeRaffleEntry,
+    evtUpdateStatus,
+    evtJoinWaitlist,
+    evtLeaveWaitlist,
+    evtClaimWaitlistSpot,
+    evtCancelEvent,
+    evtRescheduleEvent,
+    evtRequestGraceRefund,
+    evtDeleteEvent,
+    evtDuplicateEvent
+  });
 
   // js/portal/events/create/geocode.js
   var STREET_ABBREVS = {
@@ -7209,7 +8543,7 @@
     { value: "other", label: "\u{1F4E6} Other" }
   ];
   globalThis.evtCostItems = window.evtCostItems || [];
-  function evtToggleLlcFields2() {
+  function evtToggleLlcFields() {
     const type = document.getElementById("eventType").value;
     const isLlc = type === "llc";
     const isComp = type === "competition";
@@ -7228,7 +8562,7 @@
       document.getElementById("memberOnly").checked = true;
     }
   }
-  function evtAddCostItem2() {
+  function evtAddCostItem() {
     const id = crypto.randomUUID();
     window.evtCostItems.push({ id, name: "", category: "other", total_cost_cents: 0, included_in_buyin: true, avg_per_person_cents: 0, notes: "" });
     evtRenderCostItems();
@@ -7236,7 +8570,7 @@
   function evtRemoveCostItem(itemId) {
     globalThis.evtCostItems = window.evtCostItems.filter((i) => i.id !== itemId);
     evtRenderCostItems();
-    evtRecalcCostSummary2();
+    evtRecalcCostSummary();
   }
   function evtRenderCostItems() {
     const container = document.getElementById("costItemsList");
@@ -7246,7 +8580,7 @@
     <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-2" data-cost-id="${item.id}">
         <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-gray-400">#${idx + 1}</span>
-            <button type="button" onclick="evtRemoveCostItem('${item.id}')" class="text-red-400 hover:text-red-600 transition p-1">
+            <button type="button" ${evtDataAction("evtRemoveCostItem", item.id)} class="text-red-400 hover:text-red-600 transition p-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -7290,10 +8624,10 @@
     if (item) {
       item[field] = value;
       if (field === "included_in_buyin") evtRenderCostItems();
-      evtRecalcCostSummary2();
+      evtRecalcCostSummary();
     }
   }
-  function evtRecalcCostSummary2() {
+  function evtRecalcCostSummary() {
     const summary = document.getElementById("costSummary");
     if (!summary) return;
     const minPart = parseInt(document.getElementById("eventMinParticipants")?.value) || 0;
@@ -7328,12 +8662,14 @@
       overrideInput.placeholder = `Suggested: $${Math.ceil(finalBuyIn / 100)}`;
     }
   }
-  globalThis.evtToggleLlcFields = evtToggleLlcFields2;
-  globalThis.evtAddCostItem = evtAddCostItem2;
-  globalThis.evtRemoveCostItem = evtRemoveCostItem;
-  globalThis.evtRenderCostItems = evtRenderCostItems;
-  globalThis.evtUpdateCostItem = evtUpdateCostItem;
-  globalThis.evtRecalcCostSummary = evtRecalcCostSummary2;
+  publishGlobals({
+    evtToggleLlcFields,
+    evtAddCostItem,
+    evtRemoveCostItem,
+    evtRenderCostItems,
+    evtUpdateCostItem,
+    evtRecalcCostSummary
+  });
 
   // js/portal/events/create/legacy-location.js
   window._evtLocGeoCache = null;
@@ -7392,7 +8728,7 @@
       evtSetLocationStatus("Address not found \u2014 event will have no map pin", "text-amber-600");
     }
   }
-  function evtInitLocationValidation2() {
+  function evtInitLocationValidation() {
     const input = document.getElementById("eventLocation");
     if (!input) return;
     input.addEventListener("input", () => {
@@ -7404,13 +8740,15 @@
       evtValidateLocation();
     });
   }
-  globalThis.evtSetLocationIcon = evtSetLocationIcon;
-  globalThis.evtSetLocationStatus = evtSetLocationStatus;
-  globalThis.evtValidateLocation = evtValidateLocation;
-  globalThis.evtInitLocationValidation = evtInitLocationValidation2;
+  publishGlobals({
+    evtSetLocationIcon,
+    evtSetLocationStatus,
+    evtValidateLocation,
+    evtInitLocationValidation
+  });
 
   // js/portal/events/create/legacy-preview.js
-  function evtHandlePreview2() {
+  function evtHandlePreview() {
     const title = document.getElementById("eventTitle").value.trim() || "Untitled Event";
     const desc = document.getElementById("eventDescription").value.trim() || "No description yet.";
     const start = document.getElementById("eventStart").value;
@@ -7424,7 +8762,7 @@
     <div class="relative" style="${bannerBg} min-height:280px;">
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 pointer-events-none"></div>
         <div class="absolute top-0 left-0" style="padding-top:max(1rem, env(safe-area-inset-top)); padding-left:1rem;">
-            <button onclick="evtClosePreview()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 hover:bg-black/50 transition">
+            <button ${evtDataAction("evtClosePreview")} class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 hover:bg-black/50 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 Back to Editor
             </button>
@@ -7459,11 +8797,10 @@
     document.getElementById("eventsListView")?.classList.remove("hidden");
     globalThis.evtToggleModal("createModal", true);
   }
-  globalThis.evtHandlePreview = evtHandlePreview2;
-  globalThis.evtClosePreview = evtClosePreview;
+  publishGlobals({ evtHandlePreview, evtClosePreview });
 
   // js/portal/events/create/legacy-submit.js
-  async function evtHandleCreate2(e) {
+  async function evtHandleCreate(e) {
     e.preventDefault();
     const publishBtn = document.getElementById("publishEventBtn");
     publishBtn.disabled = true;
@@ -7678,7 +9015,7 @@
       publishBtn.textContent = "Publish Event";
     }
   }
-  globalThis.evtHandleCreate = evtHandleCreate2;
+  publishGlobals({ evtHandleCreate });
 
   // js/portal/events/create/step-basics.js
   function _esc(s) {
@@ -8852,6 +10189,355 @@
   PortalEvents13.create.close = eventsCreateApi.close;
   PortalEvents13.create.isFlagOn = eventsCreateApi.isFlagOn;
 
+  // js/portal/events/engagement/raffle.js
+  async function evtOpenRaffleDraw(eventId2, eventOverride) {
+    const eventList = typeof globalThis.evtAllEvents !== "undefined" ? globalThis.evtAllEvents : [];
+    const event = eventOverride || eventList.find((e) => e.id === eventId2);
+    if (!event || !event.raffle_enabled) return;
+    window.__evtRaffleEventCache = window.__evtRaffleEventCache || {};
+    window.__evtRaffleEventCache[eventId2] = event;
+    const modal = document.getElementById("raffleDrawModal");
+    const content = document.getElementById("raffleDrawContent");
+    if (!modal || !content) return;
+    content.innerHTML = `<div class="text-center py-8"><div class="animate-spin w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full mx-auto"></div><p class="text-sm text-gray-500 mt-3">Loading raffle pool\u2026</p></div>`;
+    globalThis.evtToggleModal("raffleDrawModal", true);
+    try {
+      const { data: entries, error } = await supabaseClient.from("event_raffle_entries").select("id, user_id, guest_token, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).eq("paid", true);
+      if (error) throw error;
+      const pool = entries || [];
+      const existingWinners = await evtLoadRaffleWinnersForDraw(eventId2);
+      const wonUserIds = new Set((existingWinners || []).map((w) => w.user_id).filter(Boolean));
+      const wonGuestTokens = new Set((existingWinners || []).map((w) => w.guest_token).filter(Boolean));
+      const alreadyDrawnCount = (existingWinners || []).length;
+      const eligible = pool.filter(
+        (e) => !(e.user_id && wonUserIds.has(e.user_id)) && !(e.guest_token && wonGuestTokens.has(e.guest_token))
+      );
+      const raffleConfig2 = evtGetRaffleConfig(event);
+      const drawQueue = evtGetRaffleDrawQueue(event, existingWinners || []);
+      const winnerCount = event.raffle_winner_count || window.EventsRaffleModel?.getTotalWinnerCount(raffleConfig2) || drawQueue.length || 1;
+      const remainingDraws = Math.max(0, drawQueue.length || winnerCount - alreadyDrawnCount);
+      content.innerHTML = evtRenderDrawUI(eventId2, eligible, raffleConfig2, drawQueue, alreadyDrawnCount, remainingDraws, existingWinners || []);
+    } catch (err) {
+      console.error("Raffle draw error:", err);
+      content.innerHTML = `<div class="text-center py-8"><p class="text-sm text-red-600">Failed to load raffle pool. Please try again.</p></div>`;
+    }
+  }
+  function evtRenderDrawUI(eventId2, eligible, raffleConfig2, drawQueue, alreadyDrawnCount, remainingDraws, existingWinners) {
+    let winnersHtml = "";
+    if (existingWinners.length > 0) {
+      winnersHtml = `
+        <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <h4 class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">Already Drawn</h4>
+            ${existingWinners.map((w) => `
+                <div class="flex items-center gap-2 text-sm py-1">
+                    <span class="w-5 h-5 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center text-xs font-bold">${w.place}</span>
+                    <span class="text-gray-700">${w.user_id ? "Member" : "Guest"}</span>
+                </div>
+            `).join("")}
+        </div>`;
+    }
+    if (remainingDraws <= 0) {
+      return `
+            <div class="text-center py-4">
+                <span class="text-4xl">\u{1F3C6}</span>
+                <h3 class="text-lg font-bold text-gray-900 mt-2">All Winners Drawn!</h3>
+                <p class="text-sm text-gray-500 mt-1">The raffle is complete.</p>
+            </div>
+            ${winnersHtml}
+            <button onclick="globalThis.evtToggleModal('raffleDrawModal',false)" class="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition">Close</button>`;
+    }
+    const nextPlace = alreadyDrawnCount + 1;
+    const nextSlot = drawQueue[0] || null;
+    const nextPrizeLabel = evtPrizeSlotLabel(nextSlot) || evtLegacyPrizeLabel(raffleConfig2, nextPlace);
+    return `
+        <div class="text-center">
+            <span class="text-4xl">\u{1F3B0}</span>
+            <h3 class="text-lg font-bold text-gray-900 mt-2">Raffle Draw</h3>
+            <p class="text-sm text-gray-500 mt-1">${eligible.length} eligible entries \u2022 ${remainingDraws} draw${remainingDraws > 1 ? "s" : ""} remaining</p>
+        </div>
+
+        ${winnersHtml}
+
+        <div class="mt-4 p-4 bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200 rounded-xl text-center">
+            <p class="text-xs font-bold text-violet-600 uppercase tracking-wide">Drawing for Place #${nextPlace}</p>
+            ${nextPrizeLabel ? `<p class="text-sm font-semibold text-gray-800 mt-1">${evtEscapeHtml(nextPrizeLabel)}</p>` : ""}
+            ${nextSlot?.category_label ? `<p class="text-xs text-violet-500 mt-1">${evtEscapeHtml(nextSlot.category_label)} \xB7 ${evtDrawModeLabel(nextSlot.draw_mode)}</p>` : ""}
+        </div>
+
+        <div id="raffleAnimation" class="mt-4 h-20 flex items-center justify-center hidden">
+            <div class="text-center">
+                <div class="text-3xl animate-bounce" id="raffleEmoji">\u{1F3B2}</div>
+                <p class="text-sm text-gray-500 mt-1 animate-pulse">Drawing\u2026</p>
+            </div>
+        </div>
+        <div id="raffleWinnerResult" class="mt-4 hidden"></div>
+
+        ${eligible.length > 0 ? `
+        <button id="drawWinnerBtn" ${evtDataAction("evtDrawWinner", eventId2, nextPlace)} class="w-full mt-4 bg-violet-600 hover:bg-violet-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
+            \u{1F3B2} Draw Winner #${nextPlace}
+        </button>` : `
+        <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-center">
+            <p class="text-sm text-red-600 font-semibold">No eligible entries remaining</p>
+        </div>`}
+
+        <button onclick="globalThis.evtToggleModal('raffleDrawModal',false)" class="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition">Close</button>`;
+  }
+  function evtGetRaffleConfig(event) {
+    if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
+    return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
+  }
+  function evtGetRaffleDrawQueue(event, existingWinners) {
+    if (!window.EventsRaffleModel) return [];
+    return window.EventsRaffleModel.getDrawQueue(evtGetRaffleConfig(event), existingWinners || []);
+  }
+  function evtResolvePrizeSlot(event, existingWinners, place) {
+    const queue = evtGetRaffleDrawQueue(event, existingWinners);
+    let slot = queue.find((entry) => entry.place === place) || queue[0] || null;
+    if (!slot) return null;
+    if (slot.draw_mode === "random_item") {
+      slot = evtAssignRandomPrizeSlot(event, existingWinners, slot);
+    }
+    return slot;
+  }
+  function evtAssignRandomPrizeSlot(event, existingWinners, slot) {
+    const model = window.EventsRaffleModel;
+    if (!model) return slot;
+    const config = evtGetRaffleConfig(event);
+    const items = model.getItemsForCategory(config, slot.category_id);
+    const usedByPrize = /* @__PURE__ */ new Map();
+    (existingWinners || []).forEach((winner) => {
+      if (!winner.prize_id) return;
+      usedByPrize.set(winner.prize_id, (usedByPrize.get(winner.prize_id) || 0) + 1);
+    });
+    const availableItems = items.filter((item2) => (usedByPrize.get(item2.id) || 0) < item2.quantity);
+    if (!availableItems.length) return slot;
+    const item = availableItems[evtCryptoRandomInt(availableItems.length)];
+    return {
+      ...slot,
+      prize_id: item.id,
+      prize_name: item.name,
+      prize_image_url: item.image_url || null,
+      prize_emoji: item.emoji || model.DEFAULT_EMOJI || "\u{1F381}",
+      selection_status: "assigned"
+    };
+  }
+  function evtPrizeSlotLabel(slot) {
+    if (!slot) return "";
+    if (slot.prize_name) return slot.prize_name;
+    if (slot.draw_mode === "winner_choice") return `${slot.category_label || "Prize tier"} choice`;
+    if (slot.category_label) return slot.category_label;
+    return "";
+  }
+  function evtLegacyPrizeLabel(raffleConfig2, place) {
+    if (Array.isArray(raffleConfig2)) return raffleConfig2[place - 1]?.label || raffleConfig2[place - 1] || "";
+    if (!window.EventsRaffleModel || !raffleConfig2) return "";
+    const queue = window.EventsRaffleModel.getDrawQueue(raffleConfig2, []);
+    return evtPrizeSlotLabel(queue.find((slot) => slot.place === place));
+  }
+  function evtDrawModeLabel(drawMode) {
+    if (drawMode === "random_item") return "Random prize assigned";
+    if (drawMode === "winner_choice") return "Winner chooses later";
+    return "Specific prize";
+  }
+  async function evtInsertRaffleWinner(winnerRecord) {
+    const result = await supabaseClient.from("event_raffle_winners").insert(winnerRecord);
+    if (!result.error) return result;
+    const message = result.error.message || "";
+    const canRetryLegacy = /prize_id|category_id|category_label|draw_mode|prize_image_url|prize_emoji|selection_status|schema cache|column/i.test(message);
+    if (!canRetryLegacy) return result;
+    const legacyRecord = {
+      event_id: winnerRecord.event_id,
+      place: winnerRecord.place,
+      user_id: winnerRecord.user_id,
+      guest_token: winnerRecord.guest_token,
+      prize_description: winnerRecord.prize_description
+    };
+    return supabaseClient.from("event_raffle_winners").insert(legacyRecord);
+  }
+  async function evtLoadRaffleWinnersForDraw(eventId2) {
+    const fullSelect = "user_id, guest_token, place, prize_id, category_id, category_label, draw_mode, prize_description, prize_image_url, prize_emoji, selection_status";
+    const full = await supabaseClient.from("event_raffle_winners").select(fullSelect).eq("event_id", eventId2);
+    if (!full.error) return full.data || [];
+    const message = full.error.message || "";
+    if (!/prize_id|category_id|category_label|draw_mode|prize_image_url|prize_emoji|selection_status|schema cache|column/i.test(message)) {
+      throw full.error;
+    }
+    const legacy = await supabaseClient.from("event_raffle_winners").select("user_id, guest_token, place, prize_description").eq("event_id", eventId2);
+    if (legacy.error) throw legacy.error;
+    return legacy.data || [];
+  }
+  async function evtDrawWinner(eventId2, place) {
+    const btn = document.getElementById("drawWinnerBtn");
+    const animEl = document.getElementById("raffleAnimation");
+    const resultEl = document.getElementById("raffleWinnerResult");
+    if (btn) btn.disabled = true;
+    if (animEl) animEl.classList.remove("hidden");
+    try {
+      const { data: entries } = await supabaseClient.from("event_raffle_entries").select("id, user_id, guest_token, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).eq("paid", true);
+      const existingWinners = await evtLoadRaffleWinnersForDraw(eventId2);
+      const wonUserIds = new Set((existingWinners || []).map((w) => w.user_id).filter(Boolean));
+      const wonGuestTokens = new Set((existingWinners || []).map((w) => w.guest_token).filter(Boolean));
+      const eligible = (entries || []).filter(
+        (e) => !(e.user_id && wonUserIds.has(e.user_id)) && !(e.guest_token && wonGuestTokens.has(e.guest_token))
+      );
+      if (eligible.length === 0) {
+        if (resultEl) resultEl.innerHTML = `<p class="text-sm text-red-600 text-center font-semibold">No eligible entries!</p>`;
+        resultEl?.classList.remove("hidden");
+        if (animEl) animEl.classList.add("hidden");
+        return;
+      }
+      const randomIndex = evtCryptoRandomInt(eligible.length);
+      const winner = eligible[randomIndex];
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const eventList = typeof globalThis.evtAllEvents !== "undefined" ? globalThis.evtAllEvents : [];
+      const event = window.__evtRaffleEventCache?.[eventId2] || eventList.find((e) => e.id === eventId2);
+      const slot = evtResolvePrizeSlot(event, existingWinners || [], place);
+      const prizeDesc = evtPrizeSlotLabel(slot) || evtLegacyPrizeLabel(evtGetRaffleConfig(event), place) || null;
+      const winnerRecord = {
+        event_id: eventId2,
+        place,
+        prize_description: prizeDesc,
+        prize_id: slot?.prize_id || null,
+        category_id: slot?.category_id || null,
+        category_label: slot?.category_label || null,
+        draw_mode: slot?.draw_mode || null,
+        prize_image_url: slot?.prize_image_url || null,
+        prize_emoji: slot?.prize_emoji || null,
+        selection_status: slot?.selection_status || "assigned"
+      };
+      if (winner.user_id) {
+        winnerRecord.user_id = winner.user_id;
+      } else {
+        winnerRecord.guest_token = winner.guest_token;
+      }
+      const { error } = await evtInsertRaffleWinner(winnerRecord);
+      if (error) throw error;
+      const p = winner.profiles;
+      let name = "";
+      let initials = "?";
+      let avatar = "";
+      if (p) {
+        name = `${p.first_name || ""} ${p.last_name || ""}`.trim();
+        initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase();
+        avatar = p.profile_picture_url ? `<img src="${p.profile_picture_url}" class="w-16 h-16 rounded-full object-cover border-4 border-amber-300 shadow-lg" alt="">` : `<div class="w-16 h-16 rounded-full bg-amber-100 border-4 border-amber-300 shadow-lg flex items-center justify-center text-amber-700 text-xl font-bold">${initials}</div>`;
+      } else if (winner.guest_token) {
+        const { data: guestInfo } = await supabaseClient.from("event_guest_rsvps").select("guest_name").eq("guest_token", winner.guest_token).maybeSingle();
+        name = guestInfo?.guest_name || "Guest";
+        initials = name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "?";
+        avatar = `<div class="w-16 h-16 rounded-full bg-amber-100 border-4 border-amber-300 shadow-lg flex items-center justify-center text-amber-700 text-xl font-bold">${initials}</div>`;
+      } else {
+        name = "Unknown";
+        avatar = `<div class="w-16 h-16 rounded-full bg-amber-100 border-4 border-amber-300 shadow-lg flex items-center justify-center text-amber-700 text-xl font-bold">?</div>`;
+      }
+      if (animEl) animEl.classList.add("hidden");
+      if (resultEl) {
+        resultEl.innerHTML = `
+                <div class="text-center p-4 bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-300 rounded-2xl shadow-lg animate-in">
+                    <div class="text-3xl mb-2">\u{1F389}\u{1F3C6}\u{1F389}</div>
+                    ${avatar}
+                    <h4 class="text-lg font-extrabold text-gray-900 mt-3">${evtEscapeHtml(name)}</h4>
+                    <p class="text-sm text-amber-700 font-semibold mt-1">${place}${evtOrdinalSuffix(place)} Place Winner!</p>
+                    ${prizeDesc ? `<p class="text-sm text-gray-600 mt-1">\u{1F381} ${evtEscapeHtml(prizeDesc)}</p>` : ""}
+                </div>`;
+        resultEl.classList.remove("hidden");
+      }
+      evtCelebrate();
+      document.dispatchEvent(new CustomEvent("events:raffle:drawn", { detail: { eventId: eventId2 } }));
+      if (btn) {
+        const nextPlace = place + 1;
+        const totalWinners = event?.raffle_winner_count || window.EventsRaffleModel?.getTotalWinnerCount(evtGetRaffleConfig(event)) || 1;
+        if (nextPlace <= totalWinners) {
+          btn.textContent = `\u{1F3B2} Draw Winner #${nextPlace}`;
+          btn.onclick = () => evtDrawWinner(eventId2, nextPlace);
+          btn.disabled = false;
+        } else {
+          btn.textContent = "\u{1F3C6} All Winners Drawn!";
+          btn.classList.replace("bg-violet-600", "bg-emerald-600");
+          btn.classList.replace("hover:bg-violet-700", "hover:bg-emerald-700");
+          btn.onclick = () => {
+            globalThis.evtToggleModal("raffleDrawModal", false);
+            globalThis.evtOpenDetail(eventId2);
+          };
+          btn.disabled = false;
+        }
+      }
+    } catch (err) {
+      console.error("Draw error:", err);
+      if (animEl) animEl.classList.add("hidden");
+      if (resultEl) {
+        resultEl.innerHTML = `<p class="text-sm text-red-600 text-center font-semibold">Draw failed: ${err.message}</p>`;
+        resultEl.classList.remove("hidden");
+      }
+      if (btn) btn.disabled = false;
+    }
+  }
+  function evtCryptoRandomInt(max) {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return array[0] % max;
+  }
+  function evtOrdinalSuffix(n) {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return s[(v - 20) % 10] || s[v] || s[0];
+  }
+  function evtCelebrate() {
+    const container = document.getElementById("raffleDrawContent") || document.body;
+    const colors = ["#f59e0b", "#8b5cf6", "#ef4444", "#10b981", "#3b82f6", "#ec4899"];
+    for (let i = 0; i < 60; i++) {
+      const confetti = document.createElement("div");
+      confetti.style.cssText = `
+            position: absolute;
+            width: ${4 + Math.random() * 6}px;
+            height: ${4 + Math.random() * 6}px;
+            background: ${colors[Math.floor(Math.random() * colors.length)]};
+            border-radius: ${Math.random() > 0.5 ? "50%" : "2px"};
+            top: 50%;
+            left: ${10 + Math.random() * 80}%;
+            opacity: 1;
+            pointer-events: none;
+            z-index: 100;
+            animation: evtConfettiFall ${1 + Math.random() * 1.5}s ease-out forwards;
+        `;
+      container.style.position = "relative";
+      container.style.overflow = "hidden";
+      container.appendChild(confetti);
+      setTimeout(() => confetti.remove(), 3e3);
+    }
+    if (!document.getElementById("evtConfettiStyle")) {
+      const style = document.createElement("style");
+      style.id = "evtConfettiStyle";
+      style.textContent = `
+            @keyframes evtConfettiFall {
+                0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+                100% { transform: translateY(${150 + Math.random() * 100}px) rotate(${360 + Math.random() * 360}deg) scale(0.5); opacity: 0; }
+            }
+        `;
+      document.head.appendChild(style);
+    }
+  }
+  function evtCloseRaffleDraw() {
+    globalThis.evtToggleModal("raffleDrawModal", false);
+  }
+  publishGlobals({
+    evtOpenRaffleDraw,
+    evtRenderDrawUI,
+    evtGetRaffleConfig,
+    evtGetRaffleDrawQueue,
+    evtResolvePrizeSlot,
+    evtAssignRandomPrizeSlot,
+    evtPrizeSlotLabel,
+    evtLegacyPrizeLabel,
+    evtDrawModeLabel,
+    evtInsertRaffleWinner,
+    evtLoadRaffleWinnersForDraw,
+    evtDrawWinner,
+    evtCryptoRandomInt,
+    evtOrdinalSuffix,
+    evtCelebrate,
+    evtCloseRaffleDraw
+  });
+
   // js/portal/events/manage/shell.js
   var M3A_TABS = [
     { key: "overview", label: "Overview" },
@@ -9070,7 +10756,11 @@
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
   }
   function publicEventUrl(event) {
-    return PUBLIC_SITE_URL + "/events/?e=" + encodeURIComponent(event?.slug || "");
+    const slug = event?.slug || "";
+    if (typeof globalThis.evtPublicEventInviteUrl === "function") {
+      return globalThis.evtPublicEventInviteUrl(slug);
+    }
+    return PUBLIC_SITE_URL + "/events/?e=" + encodeURIComponent(slug);
   }
   function safeFilename(value) {
     return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
@@ -9923,11 +11613,11 @@
     const netRevenue = grossRevenue - refunded;
     const fmt = window.formatCurrency || money2;
     const ticketLabel = isPaidEvent ? "Paid RSVPs" : "Ticketed RSVPs";
-    function paymentRow({ name, sub, amount, refundedAmount, stripeId, avatarHtml, isGuest }) {
+    function paymentRow({ name, sub, amount, refundedAmount, stripeId, avatarHtml: avatarHtml2, isGuest }) {
       const refundPill = refundedAmount ? `<span class="em-pill em-pill-not">Refunded ${fmt(refundedAmount)}</span>` : `<span class="em-pill em-pill-paid">${amount > 0 ? `Paid ${fmt(amount)}` : "Ticketed"}</span>`;
       return `
             <div class="em-attendee-card">
-                <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ""}>${avatarHtml}</div>
+                <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ""}>${avatarHtml2}</div>
                 <div class="em-attendee-main">
                     <p class="em-attendee-name">${esc5(name)}</p>
                     <p class="em-attendee-sub">${esc5(sub)}</p>
@@ -11296,6 +12986,7 @@ Type RESET to continue.`
   // js/portal/events/init.js
   var _eventsPageInitialized = false;
   var _eventsPopstateListenerBound = false;
+  var _eventsListenersBound = false;
   async function initEventsPage() {
     if (_eventsPageInitialized) return;
     _eventsPageInitialized = true;
@@ -11321,8 +13012,8 @@ Type RESET to continue.`
         }
       }
     }
-    globalThis.evtSetupListeners();
-    await globalThis.evtLoadEvents();
+    evtSetupListeners();
+    await loadEvents();
     globalThis.evtRouteByUrl();
     if (!_eventsPopstateListenerBound) {
       _eventsPopstateListenerBound = true;
@@ -11330,6 +13021,155 @@ Type RESET to continue.`
     }
   }
   document.addEventListener("DOMContentLoaded", initEventsPage);
+  function evtUpdateRaffleCostHint() {
+    const costGroup = document.getElementById("raffleEntryCostGroup");
+    const hint = document.getElementById("raffleCostHint");
+    const mode = document.getElementById("pricingMode")?.value || "free";
+    const raffleOn = document.getElementById("raffleEnabled")?.checked;
+    if (!costGroup) return;
+    if (mode === "paid") {
+      costGroup.classList.add("hidden");
+      if (hint) hint.textContent = "Raffle entry is included free with paid RSVP.";
+    } else {
+      costGroup.classList.remove("hidden");
+      if (hint) hint.textContent = "This is the price for a standalone raffle ticket.";
+    }
+  }
+  function evtSetupListeners() {
+    if (_eventsListenersBound) return;
+    _eventsListenersBound = true;
+    initFilterChips2();
+    setupSearch2();
+    document.getElementById("typeFilter")?.addEventListener("change", renderEvents);
+    function _openCreate() {
+      if (window.EventsCreate && window.EventsCreate.open) {
+        window.EventsCreate.open();
+      } else {
+        evtToggleModal("createModal", true);
+      }
+    }
+    document.getElementById("createEventBtn")?.addEventListener("click", _openCreate);
+    document.getElementById("emptyCreateBtn")?.addEventListener("click", _openCreate);
+    document.getElementById("closeCreateModal")?.addEventListener("click", () => evtToggleModal("createModal", false));
+    document.getElementById("createModalOverlay")?.addEventListener("click", () => evtToggleModal("createModal", false));
+    document.addEventListener("events:created", () => loadEvents());
+    document.getElementById("closeScannerModal")?.addEventListener("click", evtCloseScanner);
+    document.getElementById("scannerModalOverlay")?.addEventListener("click", evtCloseScanner);
+    const dropzone = document.getElementById("bannerDropzone");
+    const fileInput = document.getElementById("bannerFile");
+    dropzone?.addEventListener("click", () => fileInput?.click());
+    fileInput?.addEventListener("change", evtHandleBannerSelect);
+    dropzone?.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("border-brand-400");
+    });
+    dropzone?.addEventListener("dragleave", () => dropzone.classList.remove("border-brand-400"));
+    dropzone?.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("border-brand-400");
+      if (e.dataTransfer.files[0]) {
+        fileInput.files = e.dataTransfer.files;
+        evtHandleBannerSelect();
+      }
+    });
+    const embedDropzone = document.getElementById("embedImageDropzone");
+    const embedFileInput = document.getElementById("embedImageFile");
+    embedDropzone?.addEventListener("click", () => embedFileInput?.click());
+    embedFileInput?.addEventListener("change", evtHandleEmbedImageSelect);
+    embedDropzone?.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      embedDropzone.classList.add("border-brand-400");
+    });
+    embedDropzone?.addEventListener("dragleave", () => embedDropzone.classList.remove("border-brand-400"));
+    embedDropzone?.addEventListener("drop", (e) => {
+      e.preventDefault();
+      embedDropzone.classList.remove("border-brand-400");
+      if (e.dataTransfer.files[0]) {
+        embedFileInput.files = e.dataTransfer.files;
+        evtHandleEmbedImageSelect();
+      }
+    });
+    document.getElementById("createEventForm")?.addEventListener("submit", evtHandleCreate);
+    evtInitLocationValidation();
+    document.getElementById("previewEventBtn")?.addEventListener("click", evtHandlePreview);
+    const pricingModeEl = document.getElementById("pricingMode");
+    pricingModeEl?.addEventListener("change", () => {
+      const mode = pricingModeEl.value;
+      const rsvpCostGroup = document.getElementById("rsvpCostGroup");
+      if (rsvpCostGroup) rsvpCostGroup.classList.toggle("hidden", mode !== "paid");
+      evtUpdateRaffleCostHint();
+    });
+    const raffleToggle = document.getElementById("raffleEnabled");
+    raffleToggle?.addEventListener("change", () => {
+      const config = document.getElementById("raffleConfig");
+      if (config) config.classList.toggle("hidden", !raffleToggle.checked);
+      evtUpdateRaffleCostHint();
+    });
+    const winnerCountEl = document.getElementById("raffleWinnerCount");
+    winnerCountEl?.addEventListener("change", () => {
+      const count = parseInt(winnerCountEl.value) || 1;
+      const container = document.getElementById("rafflePrizesList");
+      if (!container) return;
+      let html5 = "";
+      for (let i = 1; i <= count; i++) {
+        const suffix = typeof globalThis.evtOrdinalSuffix === "function" ? globalThis.evtOrdinalSuffix(i) : "th";
+        html5 += `<div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-500 w-6">#${i}</span>
+                <input type="text" name="rafflePrize" data-raffle-prize placeholder="Prize for ${i}${suffix} place" class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500">
+            </div>`;
+      }
+      container.innerHTML = html5;
+    });
+    document.getElementById("closeRaffleDrawModal")?.addEventListener("click", () => evtToggleModal("raffleDrawModal", false));
+    document.getElementById("raffleDrawOverlay")?.addEventListener("click", () => evtToggleModal("raffleDrawModal", false));
+    document.getElementById("eventType")?.addEventListener("change", evtToggleLlcFields);
+    document.getElementById("compTier1Pct")?.addEventListener("input", evtRecalcCompTiers);
+    document.getElementById("compTier2Pct")?.addEventListener("input", evtRecalcCompTiers);
+    document.getElementById("compTier3Pct")?.addEventListener("input", evtRecalcCompTiers);
+    document.getElementById("addCostItemBtn")?.addEventListener("click", evtAddCostItem);
+    document.getElementById("eventMax")?.addEventListener("change", evtRecalcCostSummary);
+    document.getElementById("eventMax")?.addEventListener("input", evtRecalcCostSummary);
+    document.getElementById("eventMinParticipants")?.addEventListener("change", evtRecalcCostSummary);
+    document.getElementById("eventMinParticipants")?.addEventListener("input", evtRecalcCostSummary);
+    document.getElementById("eventLlcCut")?.addEventListener("change", evtRecalcCostSummary);
+    document.getElementById("eventLlcCut")?.addEventListener("input", evtRecalcCostSummary);
+    const llcOverride = document.getElementById("llcRsvpOverride");
+    llcOverride?.addEventListener("input", () => {
+      llcOverride.dataset.userEdited = "true";
+    });
+    llcOverride?.addEventListener("change", () => {
+      llcOverride.dataset.userEdited = "true";
+    });
+    const transportEl = document.getElementById("eventTransportation");
+    transportEl?.addEventListener("change", () => {
+      const group = document.getElementById("transportEstimateGroup");
+      if (group) group.classList.toggle("hidden", transportEl.value !== "self_arranged");
+    });
+    const transportToggle = document.getElementById("transportationEnabled");
+    transportToggle?.addEventListener("change", () => {
+      const section = document.getElementById("transportationSection");
+      if (section) section.classList.toggle("hidden", !transportToggle.checked);
+    });
+    const rsvpToggle = document.getElementById("rsvpEnabled");
+    rsvpToggle?.addEventListener("change", () => {
+      const settings = document.getElementById("rsvpSettingsGroup");
+      if (settings) settings.classList.toggle("hidden", !rsvpToggle.checked);
+      if (!rsvpToggle.checked) {
+        ["gateTime", "gateLocation", "gateNotes"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.checked = false;
+        });
+        const notes = document.getElementById("eventGatedNotes");
+        if (notes) notes.value = "";
+      }
+    });
+    const checkinToggle = document.getElementById("checkinEnabled");
+    checkinToggle?.addEventListener("change", () => {
+      const section = document.getElementById("checkinModeSection");
+      if (section) section.classList.toggle("hidden", !checkinToggle.checked);
+    });
+  }
+  publishGlobals({ evtSetupListeners, evtUpdateRaffleCostHint });
   window.PortalEvents = window.PortalEvents || {};
   window.PortalEvents.initEventsPage = initEventsPage;
 })();

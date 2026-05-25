@@ -1,3 +1,4 @@
+import { evtDataAction } from '../core/actions.js';
 // ═══════════════════════════════════════════════════════════
 // Portal Events — Detail documents (upload & download)
 // Host: upload per-member & group docs
@@ -54,7 +55,7 @@ async function evtBuildDocumentsHtml(event, isHost, hasRsvp) {
                     <p class="ed-docs-launch-sub">${visibleDocs.length} file${visibleDocs.length !== 1 ? 's' : ''} ready for this event</p>
                 </div>
             </div>
-            <button type="button" onclick="evtOpenDocumentsPanel('${eventId}')" class="ed-action-btn ed-docs-launch-btn">View Documents</button>
+            <button type="button" ${evtDataAction('evtOpenDocumentsPanel', eventId)} class="ed-action-btn ed-docs-launch-btn">View Documents</button>
         </div>`;
 }
 
@@ -73,7 +74,7 @@ function evtOpenDocumentsPanel(eventId) {
                     <p>${evtEscapeHtml(d.label || d.file_name || 'Document')}</p>
                     <span>${isPersonal ? 'Personal' : 'Group'} · ${evtEscapeHtml(d.file_name || '')}</span>
                 </div>
-                <button onclick="evtDownloadDocument('${d.id}','${d.file_path}','${evtEscapeHtml(d.file_name || 'document')}')" class="evt-doc-download">Download</button>
+                <button ${evtDataAction('evtDownloadDocument', d.id, d.file_path, evtEscapeHtml(d.file_name || 'document'))} class="evt-doc-download">Download</button>
             </div>`;
     }).join('');
 
@@ -81,14 +82,14 @@ function evtOpenDocumentsPanel(eventId) {
     root.id = 'evtDocsPanelRoot';
     root.className = 'evt-docs-panel-root';
     root.innerHTML = `
-        <div class="evt-docs-panel-backdrop" onclick="evtCloseDocumentsPanel()"></div>
+        <div class="evt-docs-panel-backdrop" ${evtDataAction('evtCloseDocumentsPanel')}></div>
         <section class="evt-docs-panel" role="dialog" aria-modal="true" aria-label="Event documents">
             <header class="evt-docs-panel-head">
                 <div>
                     <p>Event Documents</p>
                     <h3>Your files</h3>
                 </div>
-                <button onclick="evtCloseDocumentsPanel()" aria-label="Close documents">×</button>
+                <button ${evtDataAction('evtCloseDocumentsPanel')} aria-label="Close documents">×</button>
             </header>
             <div class="evt-docs-list">${rows}</div>
         </section>`;
@@ -261,3 +262,15 @@ async function evtDeleteDocument(docId, eventId) {
         alert(`Delete failed: ${err.message}`);
     }
 }
+
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({
+    evtBuildDocumentsHtml,
+    evtOpenDocumentsPanel,
+    evtCloseDocumentsPanel,
+    evtShowUploadForm,
+    evtUploadDocument,
+    evtDownloadDocument,
+    evtMarkDistributed,
+    evtDeleteDocument,
+});

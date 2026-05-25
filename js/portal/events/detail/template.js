@@ -5,6 +5,9 @@
 
 'use strict';
 
+import { evtDataAction } from '../core/actions.js';
+
+
 function evtBuildDetailTemplate(templateCtx) {
     const _edCard = window.evtEdCard;
     const _edSectionHead = window.evtEdSectionHead;
@@ -74,7 +77,7 @@ function evtBuildDetailTemplate(templateCtx) {
             <div class="ed-main event-detail-main portal-event-story">
 
             <!-- ─── Immersive Hero ─── -->
-            <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `onclick="evtOpenLightbox('${event.banner_url}')"` : ''} role="img" aria-label="Event banner">
+            <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `${evtDataAction('evtOpenLightbox', event.banner_url)}` : ''} role="img" aria-label="Event banner">
                 <div class="ed-hero-scrim"></div>
                 <div class="ed-hero-nav">
                     ${heroStatusBadgeHtml}
@@ -126,7 +129,7 @@ function evtBuildDetailTemplate(templateCtx) {
                         <span class="ed-qi-main">${timeStr}</span>
                         <span class="ed-qi-sub">Start time</span>
                     </div>` : ''}
-                    ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-qi-col${event.location_lat && event.location_lng ? ' ed-qi-col-loc' : ''}"${event.location_lat && event.location_lng ? ` onclick="evtOpenFullscreenMap(${event.location_lat},${event.location_lng})"` : ''}>
+                    ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-qi-col${event.location_lat && event.location_lng ? ' ed-qi-col-loc' : ''}"${event.location_lat && event.location_lng ? ` ${evtDataAction('evtOpenFullscreenMap', event.location_lat, event.location_lng)}` : ''}>
                         <svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         <span class="ed-qi-main">${evtEscapeHtml(event.location_nickname || event.location_text || '')}</span>
                         <span class="ed-qi-sub">${event.location_nickname && event.location_text ? evtEscapeHtml(event.location_text) : 'Location'}</span>
@@ -204,7 +207,7 @@ function evtBuildDetailTemplate(templateCtx) {
                 <div class="ed-comment-self-avatar" id="portalCommentSelfAvatar"></div>
                 <div class="ed-comment-input-wrap">
                     <input type="text" id="portalCommentInput" placeholder="Add a comment…" class="ed-comment-input" aria-label="Write a comment">
-                    <button onclick="evtPostComment('${eventId}')" class="ed-comment-post" aria-label="Post comment">Post</button>
+                    <button ${evtDataAction('evtPostComment', eventId)} class="ed-comment-post" aria-label="Post comment">Post</button>
                 </div>
             </div>
         </div>

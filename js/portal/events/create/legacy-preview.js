@@ -2,6 +2,9 @@
 
 'use strict';
 
+import { evtDataAction } from '../core/actions.js';
+
+
 function evtHandlePreview() {
     const title = document.getElementById('eventTitle').value.trim() || 'Untitled Event';
     const desc = document.getElementById('eventDescription').value.trim() || 'No description yet.';
@@ -21,7 +24,7 @@ function evtHandlePreview() {
     <div class="relative" style="${bannerBg} min-height:280px;">
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 pointer-events-none"></div>
         <div class="absolute top-0 left-0" style="padding-top:max(1rem, env(safe-area-inset-top)); padding-left:1rem;">
-            <button onclick="evtClosePreview()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 hover:bg-black/50 transition">
+            <button ${evtDataAction('evtClosePreview')} class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 hover:bg-black/50 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 Back to Editor
             </button>
@@ -58,5 +61,6 @@ function evtClosePreview() {
     globalThis.evtToggleModal('createModal', true);
 }
 
-globalThis.evtHandlePreview = evtHandlePreview;
-globalThis.evtClosePreview = evtClosePreview;
+import { publishGlobals } from '../compat/publish-globals.js';
+publishGlobals({ evtHandlePreview, evtClosePreview });
+export { evtHandlePreview, evtClosePreview };
