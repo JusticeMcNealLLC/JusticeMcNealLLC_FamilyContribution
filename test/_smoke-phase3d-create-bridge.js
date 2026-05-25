@@ -51,6 +51,10 @@ function check(label, ok, detail) {
 const sheet  = read('js/portal/events/create/sheet.js');
 const createJs = read('js/portal/events/create.js');
 const geocodeJs = read('js/portal/events/create/geocode.js');
+const stepBasicsJs = read('js/portal/events/create/step-basics.js');
+const stepWhenJs = read('js/portal/events/create/step-when.js');
+const stepPricingJs = read('js/portal/events/create/step-pricing.js');
+const stepReviewJs = read('js/portal/events/create/step-review.js');
 const events = read('portal/events.html');
 const classicChain3d = parseClassicChain(ROOT);
 
@@ -67,7 +71,7 @@ check('No native export statement (stays classic-script safe)',
     !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(sheet)));
 
 check('File size reasonable (no accidental truncation)',
-    sheet.length > 50000,
+    sheet.length > 35000,
     `${sheet.length} chars`);
 console.log(`  ℹ File length: ${sheet.length} chars`);
 
@@ -132,27 +136,35 @@ const coreFns = [
     ['function close(',          'close'],
     ['function _ensureMounted(', '_ensureMounted (DOM injection)'],
     ['function _render(',        '_render (step renderer)'],
-    ['function _basicsHtml(',    '_basicsHtml (step 1 HTML)'],
-    ['function _whenHtml(',      '_whenHtml (step 2 HTML)'],
-    ['function _pricingHtml(',   '_pricingHtml (step 3 HTML)'],
-    ['function _reviewHtml(',    '_reviewHtml (step 4 HTML)'],
-    ['function _wireBasics(',    '_wireBasics'],
-    ['function _wireWhen(',      '_wireWhen'],
-    ['function _wirePricing(',   '_wirePricing'],
     ['function _validateStep(',  '_validateStep'],
     ['function _back(',          '_back'],
     ['function _next(',          '_next'],
     ['function _submit(',        '_submit (async Supabase insert)'],
     ['function _esc(',           '_esc (HTML escape helper)'],
+    ['function _bindCreateStepsApi(', '_bindCreateStepsApi'],
     ['function _raffleModel(',   '_raffleModel'],
     ['function _ensureRaffleConfig(', '_ensureRaffleConfig'],
-    ['function _doGeocode(',     '_doGeocode (geocoding)'],
     ['function _raffleBuilderHtml(', '_raffleBuilderHtml'],
     ['function _wireRaffleBuilder(', '_wireRaffleBuilder'],
-    ['function _wireImageUpload(', '_wireImageUpload'],
+    ['function _raffleReviewHtml(', '_raffleReviewHtml'],
 ];
 coreFns.forEach(([pattern, label]) => {
-    check(`${label} present in source`, sheet.includes(pattern));
+    check(`${label} present in sheet.js`, sheet.includes(pattern));
+});
+
+const movedFromSheet = [
+    ['function _basicsHtml(', '_basicsHtml'],
+    ['function _whenHtml(', '_whenHtml'],
+    ['function _pricingHtml(', '_pricingHtml'],
+    ['function _reviewHtml(', '_reviewHtml'],
+    ['function _wireBasics(', '_wireBasics'],
+    ['function _wireWhen(', '_wireWhen'],
+    ['function _wirePricing(', '_wirePricing'],
+    ['function _doGeocode(', '_doGeocode'],
+    ['function _wireImageUpload(', '_wireImageUpload'],
+];
+movedFromSheet.forEach(([pattern, label]) => {
+    check(`${label} removed from sheet.js (moved to step modules)`, !sheet.includes(pattern));
 });
 
 // ── External dependency references ─────────────────────────────────────────
@@ -167,8 +179,8 @@ check("window.EventsRaffleModel accessed lazily via _raffleModel()",
 check("window.evtCurrentUser used for creator ID",
     sheet.includes('window.evtCurrentUser'));
 
-check("window.evtGeocodeAddress optional call present",
-    sheet.includes('window.evtGeocodeAddress'));
+check('when step uses window.evtGeocodeAddress (step-when.js)',
+    stepWhenJs.includes('window.evtGeocodeAddress'));
 
 check("events:created dispatch uses { event: data, status } detail",
     sheet.includes('{ event: data, status }'));
@@ -210,8 +222,17 @@ check('create.js present in classic-chain-loader.js chain',
 check('create.js loaded in production (HTML or classic-chain-loader)',
     isProductionLoaded(events, classicChain3d, '../js/portal/events/create.js'));
 
-check('load order: create/geocode.js → create.js → create/sheet.js in classic chain',
-    chainOrderOk(classicChain3d, 'create/geocode.js', 'create.js', 'create/sheet.js'));
+check('load order: create/geocode → create → step modules → create/sheet in classic chain',
+    chainOrderOk(
+        classicChain3d,
+        'create/geocode.js',
+        'create.js',
+        'create/step-basics.js',
+        'create/step-when.js',
+        'create/step-pricing.js',
+        'create/step-review.js',
+        'create/sheet.js'
+    ));
 
 check('create.js does not define evtGeocodeAddress (moved to create/geocode.js)',
     !createJs.includes('async function evtGeocodeAddress')
@@ -249,17 +270,55 @@ check('init.js remains last among portal Events HTML script tags',
     portalScripts3d.length > 0
     && portalScripts3d[portalScripts3d.length - 1] === '../js/portal/events/init.js');
 
-// ── File split safety ─────────────────────────────────────────────────────
-console.log('\n── File split safety — no orphaned new create/ sub-files loaded ───────────');
+// ── Create step modules (Phase 5M.1.2) ────────────────────────────────────
+console.log('\n── js/portal/events/create/step-*.js — sheet step modules (5M.1.2) ───────');
 
-// Expected under create/: geocode.js (5M.1.1) + sheet.js
+const stepModules = [
+    ['create/step-basics.js', stepBasicsJs, 'basics'],
+    ['create/step-when.js', stepWhenJs, 'when'],
+    ['create/step-pricing.js', stepPricingJs, 'pricing'],
+    ['create/step-review.js', stepReviewJs, 'review'],
+];
+
+stepModules.forEach(([rel, src, key]) => {
+    check(`${rel} present in classic-chain-loader.js chain`,
+        classicChain3d && classicChain3d.includes(rel));
+    check(`${rel} loaded in production (HTML or classic-chain-loader)`,
+        isProductionLoaded(events, classicChain3d, '../js/portal/events/' + rel));
+    check(`${rel} registers EventsCreateSteps.${key}`,
+        src.includes(`EventsCreateSteps.${key}`) && src.includes('html') && src.includes('wire'));
+    check(`${rel} has no native export (classic-script safe)`,
+        !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(src)));
+});
+
+check('step-basics.js wires banner and embed image upload',
+    stepBasicsJs.includes('_wireImageUpload') && stepBasicsJs.includes('ecBannerDrop'));
+
+check('step-pricing.js delegates raffle builder HTML to EventsCreateSteps',
+    stepPricingJs.includes('raffleBuilderHtml'));
+
+check('step-review.js delegates raffle review HTML to EventsCreateSteps',
+    stepReviewJs.includes('raffleReviewHtml'));
+
+check('sheet.js dispatches steps via EventsCreateSteps namespace',
+    sheet.includes('EventsCreateSteps') && sheet.includes('steps.basics.html()'));
+
+// ── File split safety ─────────────────────────────────────────────────────
+console.log('\n── File split safety — create/ sub-files in production chain ─────────────');
+
 const createDir = path.join(ROOT, 'js/portal/events/create');
-const EXPECTED_CREATE_FILES = ['geocode.js', 'sheet.js'];
+const EXPECTED_CREATE_FILES = [
+    'geocode.js',
+    'step-basics.js',
+    'step-when.js',
+    'step-pricing.js',
+    'step-review.js',
+    'sheet.js',
+];
 const createFiles = fs.readdirSync(createDir).filter(f => f.endsWith('.js'));
 
-check('create/ contains geocode.js and sheet.js only',
-    createFiles.length === EXPECTED_CREATE_FILES.length
-    && EXPECTED_CREATE_FILES.every(f => createFiles.includes(f)),
+check('create/ contains expected step + geocode + sheet files',
+    EXPECTED_CREATE_FILES.every(f => createFiles.includes(f)),
     `found: ${createFiles.join(', ')}`);
 
 EXPECTED_CREATE_FILES.forEach(f => {

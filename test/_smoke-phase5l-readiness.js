@@ -155,13 +155,20 @@ if (!chainMatch) {
     const detailIdx = chainPaths.indexOf('detail.js');
     const createGeoIdx = chainPaths.indexOf('create/geocode.js');
     const createIdx = chainPaths.indexOf('create.js');
+    const stepBasicsIdx = chainPaths.indexOf('create/step-basics.js');
+    const stepWhenIdx = chainPaths.indexOf('create/step-when.js');
+    const stepPricingIdx = chainPaths.indexOf('create/step-pricing.js');
+    const stepReviewIdx = chainPaths.indexOf('create/step-review.js');
     const createSheetIdx = chainPaths.indexOf('create/sheet.js');
-    chainPaths.length === 28
-        ? pass('classic-chain-loader injects 28 middle scripts')
-        : fail('loader chain must have 28 entries', `found ${chainPaths.length}`);
-    createGeoIdx >= 0 && createIdx > createGeoIdx && createSheetIdx > createIdx
-        ? pass('loader order: create/geocode.js → create.js → create/sheet.js')
-        : fail('loader create geocode → create → sheet order');
+    chainPaths.length === 32
+        ? pass('classic-chain-loader injects 32 middle scripts')
+        : fail('loader chain must have 32 entries', `found ${chainPaths.length}`);
+    createGeoIdx >= 0 && createIdx > createGeoIdx
+        && stepBasicsIdx > createIdx && stepWhenIdx > stepBasicsIdx
+        && stepPricingIdx > stepWhenIdx && stepReviewIdx > stepPricingIdx
+        && createSheetIdx > stepReviewIdx
+        ? pass('loader order: create/geocode → create → step modules → create/sheet')
+        : fail('loader create geocode → create → steps → sheet order');
     teamChatIdx >= 0 && presentationIdx > teamChatIdx
         ? pass('loader order: team before detail/presentation')
         : fail('loader team → detail pipeline order');
