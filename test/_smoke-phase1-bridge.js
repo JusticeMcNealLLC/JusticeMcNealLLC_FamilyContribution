@@ -54,10 +54,10 @@ check(
     /async function initEventsPage\s*\(\s*\)\s*\{[\s\n\r]*if\s*\(\s*_eventsPageInitialized\s*\)\s*return/.test(initJs)
 );
 
-// Guard set to true before any await
+// Guard set to true (and window mirror) before any await — Phase 5L.2 sync gate
 check(
-    'Guard is set to true before the first await inside initEventsPage',
-    /if\s*\(\s*_eventsPageInitialized\s*\)\s*return;\s*[\s\n\r]*_eventsPageInitialized\s*=\s*true;\s*[\s\n\r]*[\s\n\r]*evtCurrentUser\s*=\s*await/.test(initJs)
+    'Guard flags set before await checkAuth inside initEventsPage',
+    /if\s*\(\s*_eventsPageInitialized\s*\)\s*return;\s*[\s\n\r]*_eventsPageInitialized\s*=\s*true;\s*[\s\n\r]*window\._eventsPageInitialized\s*=\s*true;\s*[\s\n\r]*evtCurrentUser\s*=\s*await/.test(initJs)
 );
 
 // DOMContentLoaded still registered with named function (not anonymous arrow)
