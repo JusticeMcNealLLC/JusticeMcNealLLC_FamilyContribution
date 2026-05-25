@@ -19,11 +19,11 @@ function pass(msg) { console.log(`  ✓ ${msg}`); }
 
 console.log('event team tools UI smoke\n');
 
-assert(/window\.evtOpenTeamToolsPanel\s*=\s*openTeamToolsPanel/.test(tools), 'evtOpenTeamToolsPanel on window');
+assert(/globalThis\.evtOpenTeamToolsPanel\s*=\s*openTeamToolsPanel/.test(tools), 'evtOpenTeamToolsPanel on globalThis');
 assert(/evt-cta-floating-shell.*evt-team-tools-overlay/.test(tools), 'desktop team overlay classes');
-assert(/window\.evtApplyDesktopTeamToolsOverlay/.test(tools), 'evtApplyDesktopTeamToolsOverlay on window');
-assert(/window\.evtInjectTeamToolsStyles/.test(tools), 'evtInjectTeamToolsStyles on window');
-assert(/window\.evtEnsureCtaBarShell/.test(tools), 'evtEnsureCtaBarShell on window');
+assert(/globalThis\.evtApplyDesktopTeamToolsOverlay/.test(tools), 'evtApplyDesktopTeamToolsOverlay on globalThis');
+assert(/globalThis\.evtInjectTeamToolsStyles/.test(tools), 'evtInjectTeamToolsStyles on globalThis');
+assert(/globalThis\.evtEnsureCtaBarShell/.test(tools), 'evtEnsureCtaBarShell on globalThis');
 assert(/evt-cta-team|Open event team tools/.test(tools), 'Team button with accessible label');
 assert(/Team Chat/.test(tools) && /evtOpenTeamChat/.test(tools), 'Team Chat opens real chat UI');
 assert(/RSVP as Myself/.test(tools), 'RSVP as Myself in team tools');
@@ -31,8 +31,9 @@ assert(/Enter Raffle/.test(tools), 'Enter Raffle in team tools');
 assert(!/RSVP for Raffle/.test(tools), 'no legacy RSVP for Raffle sticky CTA');
 assert(/View Ticket/.test(tools), 'View Ticket in team tools');
 assert(/Manage Event/.test(tools), 'Manage Event remains available');
-assert(/PortalEvents\.team\.tools/.test(tools), 'PortalEvents.team.tools namespace');
-assert(/function initBottomNav/.test(tools) && /window\.evtInitBottomNav/.test(tools), 'bottom nav in tools.js');
+assert(/export const teamToolsApi/.test(tools) && /PortalEvents\.team\.tools\s*=\s*teamToolsApi/.test(tools),
+    'PortalEvents.team.tools namespace via teamToolsApi');
+assert(/function initBottomNav/.test(tools) && /globalThis\.evtInitBottomNav/.test(tools), 'bottom nav in tools.js');
 
 assert(/canManageEvent/.test(detail), 'canManageEvent in detail render path');
 assert(/canAccessTeamHub/.test(detail), 'canAccessTeamHub for team tools access');
@@ -40,8 +41,12 @@ assert(/isHost = canManageEvent/.test(detail) || /isHost = canManageEvent/.test(
     'isHost still maps to canManageEvent (detail.js or detail/data.js)');
 assert(/evtOpenTeamToolsPanel/.test(detailRender),
     'detail render still calls evtOpenTeamToolsPanel (detail.js or detail/sections.js after 5H.2)');
-assert(/detail\.openTeamToolsPanel\s*=\s*window\.evtOpenTeamToolsPanel/.test(detail), 'detail bridges openTeamToolsPanel');
-assert(/detail\.initBottomNav\s*=\s*window\.evtInitBottomNav/.test(detail), 'detail bridges initBottomNav');
+assert(/detail\.openTeamToolsPanel\s*=\s*globalThis\.evtOpenTeamToolsPanel/.test(detail)
+    || /detail\.openTeamToolsPanel\s*=\s*window\.evtOpenTeamToolsPanel/.test(detail),
+    'detail bridges openTeamToolsPanel');
+assert(/detail\.initBottomNav\s*=\s*globalThis\.evtInitBottomNav/.test(detail)
+    || /detail\.initBottomNav\s*=\s*window\.evtInitBottomNav/.test(detail),
+    'detail bridges initBottomNav');
 assert(!/function evtOpenTeamToolsPanel/.test(detail), 'implementation not in detail.js');
 assert(!/function evtBuildTeamToolsPanelHtml/.test(detail), 'panel builder not in detail.js');
 

@@ -31,15 +31,17 @@ assert(/\.is\('deleted_at', null\)/.test(chat), 'must filter deleted_at on load'
 assert(/function subscribe/.test(chat), 'realtime subscribe required');
 assert(/function cleanup/.test(chat), 'realtime cleanup required');
 assert(/async function open/.test(chat), 'open entry required');
-assert(/window\.evtOpenTeamChat\s*=\s*open/.test(chat), 'evtOpenTeamChat exported on window');
-assert(/window\.evtSendTeamChatMessage\s*=\s*send/.test(chat), 'evtSendTeamChatMessage exported on window');
-assert(/window\.evtCleanupTeamChat\s*=\s*cleanup/.test(chat), 'evtCleanupTeamChat exported on window');
-assert(/PortalEvents\.team\.chat/.test(chat), 'PortalEvents.team.chat namespace required');
+assert(/globalThis\.evtOpenTeamChat\s*=\s*open/.test(chat), 'evtOpenTeamChat exported on globalThis');
+assert(/globalThis\.evtSendTeamChatMessage\s*=\s*send/.test(chat), 'evtSendTeamChatMessage exported on globalThis');
+assert(/globalThis\.evtCleanupTeamChat\s*=\s*cleanup/.test(chat), 'evtCleanupTeamChat exported on globalThis');
+assert(/export const teamChatApi/.test(chat) && /PortalEvents\.team\.chat\s*=\s*teamChatApi/.test(chat),
+    'PortalEvents.team.chat namespace via teamChatApi');
 
 assert(/evtOpenTeamChat/.test(detail) && !/Team Chat', 'Coming soon'/.test(detail),
     'Team Chat must not be Coming soon placeholder only');
 assert(/not been started yet/i.test(chat), 'host-only not-started message');
-assert(/detail\.openTeamChat\s*=\s*window\.evtOpenTeamChat/.test(detail),
+assert(/detail\.openTeamChat\s*=\s*globalThis\.evtOpenTeamChat/.test(detail)
+    || /detail\.openTeamChat\s*=\s*window\.evtOpenTeamChat/.test(detail),
     'detail.js must bridge openTeamChat to team/chat.js');
 assert(/evtOpenTeamChat\('/.test(tools), 'team/tools.js Team Tools row still calls evtOpenTeamChat');
 

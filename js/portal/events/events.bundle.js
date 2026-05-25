@@ -3916,715 +3916,711 @@
   })();
 
   // js/portal/events/team/chat.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.team = window.PortalEvents.team || {};
-    const EVT_TEAM_CHAT_MAX_LEN = 4e3;
-    function injectTeamChatStyles() {
-      if (document.getElementById("evtTeamChatStyles")) return;
-      const style = document.createElement("style");
-      style.id = "evtTeamChatStyles";
-      style.textContent = `
-        .evt-team-chat { display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
-        .evt-team-chat-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-        .evt-team-chat-back {
-            border: 1px solid #e5e7eb; background: #fff; color: #374151; border-radius: 8px;
-            padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
-        }
-        .evt-team-chat-head strong { display: block; font-size: 15px; color: #111827; line-height: 1.25; }
-        .evt-team-chat-head span { display: block; font-size: 12px; color: #6b7280; margin-top: 2px; }
-        .evt-team-chat-messages {
-            display: flex; flex-direction: column; gap: 10px; max-height: min(42vh, 320px);
-            overflow-y: auto; padding: 8px 4px; border: 1px solid #f3f4f6; border-radius: 12px; background: #f9fafb;
-        }
-        .evt-team-chat-empty, .evt-team-chat-status, .evt-team-chat-unavailable {
-            font-size: 13px; color: #6b7280; text-align: center; padding: 16px 8px; line-height: 1.4;
-        }
-        .evt-team-chat-unavailable { color: #b45309; background: #fffbeb; border-radius: 10px; border: 1px solid #fde68a; }
-        .evt-team-chat-msg { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; }
-        .evt-team-chat-msg-meta { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
-        .evt-team-chat-msg-name { font-size: 12px; font-weight: 700; color: #111827; }
-        .evt-team-chat-msg-time { font-size: 11px; color: #9ca3af; white-space: nowrap; }
-        .evt-team-chat-msg-body { font-size: 14px; color: #374151; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
-        .evt-team-chat-composer { display: flex; flex-direction: column; gap: 8px; }
-        .evt-team-chat-composer textarea {
-            width: 100%; resize: vertical; min-height: 56px; max-height: 120px; padding: 10px 12px;
-            border: 1px solid #d1d5db; border-radius: 10px; font-size: 14px; font-family: inherit;
-        }
-        .evt-team-chat-composer textarea:disabled { background: #f3f4f6; }
-        .evt-team-chat-send {
-            align-self: flex-end; padding: 10px 16px; border-radius: 10px; border: none;
-            background: #4f46e5; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
-        }
-        .evt-team-chat-send:disabled { opacity: .55; cursor: not-allowed; }
-        `;
-      document.head.appendChild(style);
+  var EVT_TEAM_CHAT_MAX_LEN = 4e3;
+  function injectTeamChatStyles() {
+    if (document.getElementById("evtTeamChatStyles")) return;
+    const style = document.createElement("style");
+    style.id = "evtTeamChatStyles";
+    style.textContent = `
+    .evt-team-chat { display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
+    .evt-team-chat-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .evt-team-chat-back {
+        border: 1px solid #e5e7eb; background: #fff; color: #374151; border-radius: 8px;
+        padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
     }
-    function canCreateTeamChat(event) {
-      if (!event || !globalThis.evtCurrentUser?.id) return false;
-      if (event.created_by === globalThis.evtCurrentUser.id) return true;
-      return typeof canManageEvents === "function" && canManageEvents();
+    .evt-team-chat-head strong { display: block; font-size: 15px; color: #111827; line-height: 1.25; }
+    .evt-team-chat-head span { display: block; font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .evt-team-chat-messages {
+        display: flex; flex-direction: column; gap: 10px; max-height: min(42vh, 320px);
+        overflow-y: auto; padding: 8px 4px; border: 1px solid #f3f4f6; border-radius: 12px; background: #f9fafb;
     }
-    function friendlyError(err) {
-      if (!err) return "Something went wrong. Please try again.";
-      const msg = (err.message || "").toLowerCase();
-      if (err.code === "42501" || msg.includes("permission") || msg.includes("row-level security") || msg.includes("policy")) {
-        return "Team chat is not available for your account on this event.";
-      }
-      if (msg.includes("jwt") || msg.includes("not authenticated")) return "Please sign in again to use team chat.";
-      return err.message || "Unable to complete this action.";
+    .evt-team-chat-empty, .evt-team-chat-status, .evt-team-chat-unavailable {
+        font-size: 13px; color: #6b7280; text-align: center; padding: 16px 8px; line-height: 1.4;
     }
-    function displayName(profile) {
-      if (!profile) return "Member";
-      const name = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
-      return name || "Member";
+    .evt-team-chat-unavailable { color: #b45309; background: #fffbeb; border-radius: 10px; border: 1px solid #fde68a; }
+    .evt-team-chat-msg { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; }
+    .evt-team-chat-msg-meta { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+    .evt-team-chat-msg-name { font-size: 12px; font-weight: 700; color: #111827; }
+    .evt-team-chat-msg-time { font-size: 11px; color: #9ca3af; white-space: nowrap; }
+    .evt-team-chat-msg-body { font-size: 14px; color: #374151; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+    .evt-team-chat-composer { display: flex; flex-direction: column; gap: 8px; }
+    .evt-team-chat-composer textarea {
+        width: 100%; resize: vertical; min-height: 56px; max-height: 120px; padding: 10px 12px;
+        border: 1px solid #d1d5db; border-radius: 10px; font-size: 14px; font-family: inherit;
     }
-    function formatTime(iso) {
-      if (!iso) return "";
+    .evt-team-chat-composer textarea:disabled { background: #f3f4f6; }
+    .evt-team-chat-send {
+        align-self: flex-end; padding: 10px 16px; border-radius: 10px; border: none;
+        background: #4f46e5; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .evt-team-chat-send:disabled { opacity: .55; cursor: not-allowed; }
+    `;
+    document.head.appendChild(style);
+  }
+  function canCreateTeamChat(event) {
+    if (!event || !globalThis.evtCurrentUser?.id) return false;
+    if (event.created_by === globalThis.evtCurrentUser.id) return true;
+    return typeof canManageEvents === "function" && canManageEvents();
+  }
+  function friendlyError(err) {
+    if (!err) return "Something went wrong. Please try again.";
+    const msg = (err.message || "").toLowerCase();
+    if (err.code === "42501" || msg.includes("permission") || msg.includes("row-level security") || msg.includes("policy")) {
+      return "Team chat is not available for your account on this event.";
+    }
+    if (msg.includes("jwt") || msg.includes("not authenticated")) return "Please sign in again to use team chat.";
+    return err.message || "Unable to complete this action.";
+  }
+  function displayName(profile) {
+    if (!profile) return "Member";
+    const name = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
+    return name || "Member";
+  }
+  function formatTime(iso) {
+    if (!iso) return "";
+    try {
+      return new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    } catch (_) {
+      return "";
+    }
+  }
+  function cleanup() {
+    const state = window.__evtTeamChatState;
+    if (state?.channel) {
       try {
-        return new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+        supabaseClient.removeChannel(state.channel);
       } catch (_) {
-        return "";
       }
     }
-    function cleanup() {
-      const state = window.__evtTeamChatState;
-      if (state?.channel) {
-        try {
-          supabaseClient.removeChannel(state.channel);
-        } catch (_) {
-        }
-      }
-      window.__evtTeamChatState = null;
+    window.__evtTeamChatState = null;
+  }
+  async function ensureChat(event, eventId2) {
+    const { data: existing, error: selErr } = await supabaseClient.from("event_chats").select("id, event_id, chat_type, created_at").eq("event_id", eventId2).eq("chat_type", "team").maybeSingle();
+    if (selErr) return { chat: null, error: selErr };
+    if (existing) return { chat: existing, error: null };
+    if (!canCreateTeamChat(event)) {
+      return { chat: null, error: null, notStarted: true };
     }
-    async function ensureChat(event, eventId2) {
-      const { data: existing, error: selErr } = await supabaseClient.from("event_chats").select("id, event_id, chat_type, created_at").eq("event_id", eventId2).eq("chat_type", "team").maybeSingle();
-      if (selErr) return { chat: null, error: selErr };
-      if (existing) return { chat: existing, error: null };
-      if (!canCreateTeamChat(event)) {
-        return { chat: null, error: null, notStarted: true };
-      }
-      const { data: created, error: insErr } = await supabaseClient.from("event_chats").insert({
-        event_id: eventId2,
-        chat_type: "team",
-        created_by: globalThis.evtCurrentUser.id
-      }).select("id, event_id, chat_type, created_at").single();
-      if (insErr?.code === "23505") {
-        const { data: again, error: againErr } = await supabaseClient.from("event_chats").select("id, event_id, chat_type, created_at").eq("event_id", eventId2).eq("chat_type", "team").maybeSingle();
-        return { chat: again, error: againErr };
-      }
-      return { chat: created, error: insErr };
+    const { data: created, error: insErr } = await supabaseClient.from("event_chats").insert({
+      event_id: eventId2,
+      chat_type: "team",
+      created_by: globalThis.evtCurrentUser.id
+    }).select("id, event_id, chat_type, created_at").single();
+    if (insErr?.code === "23505") {
+      const { data: again, error: againErr } = await supabaseClient.from("event_chats").select("id, event_id, chat_type, created_at").eq("event_id", eventId2).eq("chat_type", "team").maybeSingle();
+      return { chat: again, error: againErr };
     }
-    async function loadMessages(chatId, eventId2) {
-      const { data: rows, error } = await supabaseClient.from("event_chat_messages").select("id, chat_id, event_id, sender_id, body, created_at, updated_at, deleted_at").eq("chat_id", chatId).eq("event_id", eventId2).is("deleted_at", null).order("created_at", { ascending: true }).limit(200);
-      if (error) return { messages: [], profilesById: {}, error };
-      const messages = rows || [];
-      const senderIds = [...new Set(messages.map((m) => m.sender_id).filter(Boolean))];
-      const profilesById = {};
-      if (senderIds.length) {
-        const { data: profiles } = await supabaseClient.from("profiles").select("id, first_name, last_name").in("id", senderIds);
-        (profiles || []).forEach((p) => {
-          profilesById[p.id] = p;
-        });
-      }
-      return { messages, profilesById, error: null };
+    return { chat: created, error: insErr };
+  }
+  async function loadMessages(chatId, eventId2) {
+    const { data: rows, error } = await supabaseClient.from("event_chat_messages").select("id, chat_id, event_id, sender_id, body, created_at, updated_at, deleted_at").eq("chat_id", chatId).eq("event_id", eventId2).is("deleted_at", null).order("created_at", { ascending: true }).limit(200);
+    if (error) return { messages: [], profilesById: {}, error };
+    const messages = rows || [];
+    const senderIds = [...new Set(messages.map((m) => m.sender_id).filter(Boolean))];
+    const profilesById = {};
+    if (senderIds.length) {
+      const { data: profiles } = await supabaseClient.from("profiles").select("id, first_name, last_name").in("id", senderIds);
+      (profiles || []).forEach((p) => {
+        profilesById[p.id] = p;
+      });
     }
-    function messagesHtml(state) {
-      if (!state?.messages?.length) {
-        return '<p class="evt-team-chat-empty">No messages yet. Start the team conversation.</p>';
-      }
-      return state.messages.map((m) => {
-        const profile = state.profilesById[m.sender_id];
-        const name = evtEscapeHtml(displayName(profile));
-        const time = evtEscapeHtml(formatTime(m.created_at));
-        const body = evtEscapeHtml(m.body || "");
-        return `<article class="evt-team-chat-msg" data-msg-id="${m.id}">
-            <div class="evt-team-chat-msg-meta">
-                <span class="evt-team-chat-msg-name">${name}</span>
-                <time class="evt-team-chat-msg-time">${time}</time>
-            </div>
-            <div class="evt-team-chat-msg-body">${body}</div>
-        </article>`;
-      }).join("");
+    return { messages, profilesById, error: null };
+  }
+  function messagesHtml(state) {
+    if (!state?.messages?.length) {
+      return '<p class="evt-team-chat-empty">No messages yet. Start the team conversation.</p>';
     }
-    function refreshMessageList() {
-      const state = window.__evtTeamChatState;
-      const el = document.getElementById("evtTeamChatMessages");
-      if (!state || !el) return;
-      el.innerHTML = messagesHtml(state);
-      el.scrollTop = el.scrollHeight;
-    }
-    function handleRealtime(payload) {
-      const state = window.__evtTeamChatState;
-      if (!state || !payload?.new) return;
-      const row = payload.new;
-      if (row.event_id !== state.eventId || row.chat_id !== state.chatId) return;
-      if (payload.eventType === "INSERT") {
-        if (row.deleted_at) return;
-        if (state.messages.some((m) => m.id === row.id)) return;
-        state.messages.push(row);
-        state.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        refreshMessageList();
-        if (row.sender_id && !state.profilesById[row.sender_id]) {
-          supabaseClient.from("profiles").select("id, first_name, last_name").eq("id", row.sender_id).maybeSingle().then(({ data }) => {
-            if (data && window.__evtTeamChatState?.eventId === state.eventId) {
-              window.__evtTeamChatState.profilesById[data.id] = data;
-              refreshMessageList();
-            }
-          });
-        }
-        return;
-      }
-      if (payload.eventType === "UPDATE") {
-        const idx = state.messages.findIndex((m) => m.id === row.id);
-        if (row.deleted_at) {
-          if (idx >= 0) {
-            state.messages.splice(idx, 1);
+    return state.messages.map((m) => {
+      const profile = state.profilesById[m.sender_id];
+      const name = evtEscapeHtml(displayName(profile));
+      const time = evtEscapeHtml(formatTime(m.created_at));
+      const body = evtEscapeHtml(m.body || "");
+      return `<article class="evt-team-chat-msg" data-msg-id="${m.id}">
+        <div class="evt-team-chat-msg-meta">
+            <span class="evt-team-chat-msg-name">${name}</span>
+            <time class="evt-team-chat-msg-time">${time}</time>
+        </div>
+        <div class="evt-team-chat-msg-body">${body}</div>
+    </article>`;
+    }).join("");
+  }
+  function refreshMessageList() {
+    const state = window.__evtTeamChatState;
+    const el = document.getElementById("evtTeamChatMessages");
+    if (!state || !el) return;
+    el.innerHTML = messagesHtml(state);
+    el.scrollTop = el.scrollHeight;
+  }
+  function handleRealtime(payload) {
+    const state = window.__evtTeamChatState;
+    if (!state || !payload?.new) return;
+    const row = payload.new;
+    if (row.event_id !== state.eventId || row.chat_id !== state.chatId) return;
+    if (payload.eventType === "INSERT") {
+      if (row.deleted_at) return;
+      if (state.messages.some((m) => m.id === row.id)) return;
+      state.messages.push(row);
+      state.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      refreshMessageList();
+      if (row.sender_id && !state.profilesById[row.sender_id]) {
+        supabaseClient.from("profiles").select("id, first_name, last_name").eq("id", row.sender_id).maybeSingle().then(({ data }) => {
+          if (data && window.__evtTeamChatState?.eventId === state.eventId) {
+            window.__evtTeamChatState.profilesById[data.id] = data;
             refreshMessageList();
           }
-          return;
-        }
-        if (idx >= 0) state.messages[idx] = row;
-        else state.messages.push(row);
-        state.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        refreshMessageList();
-      }
-    }
-    function subscribe(chatId, eventId2) {
-      const state = window.__evtTeamChatState;
-      if (!state) return;
-      if (state.channel) {
-        try {
-          supabaseClient.removeChannel(state.channel);
-        } catch (_) {
-        }
-        state.channel = null;
-      }
-      state.channel = supabaseClient.channel(`evt-team-chat-${eventId2}`).on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "event_chat_messages",
-        filter: `event_id=eq.${eventId2}`
-      }, (payload) => handleRealtime({ eventType: "INSERT", new: payload.new })).on("postgres_changes", {
-        event: "UPDATE",
-        schema: "public",
-        table: "event_chat_messages",
-        filter: `event_id=eq.${eventId2}`
-      }, (payload) => handleRealtime({ eventType: "UPDATE", new: payload.new })).subscribe();
-    }
-    function renderPanel(eventId2, opts) {
-      const { loading, unavailable, notStarted, canCompose } = opts;
-      const backClick = `evtOpenTeamToolsPanel('${eventId2}')`;
-      let body = "";
-      if (loading) {
-        body = '<p class="evt-team-chat-status">Loading team chat\u2026</p>';
-      } else if (unavailable) {
-        body = `<p class="evt-team-chat-unavailable">${evtEscapeHtml(unavailable)}</p>
-            <button type="button" class="evt-team-chat-back" onclick="${backClick}">\u2190 Back to Team tools</button>`;
-      } else if (notStarted) {
-        body = `<p class="evt-team-chat-unavailable">Team chat has not been started yet. Ask the event creator or a coordinator to open Team Chat first.</p>
-            <button type="button" class="evt-team-chat-back" onclick="${backClick}">\u2190 Back to Team tools</button>`;
-      } else {
-        const state = window.__evtTeamChatState;
-        body = `
-            <div id="evtTeamChatMessages" class="evt-team-chat-messages">${messagesHtml(state)}</div>
-            <div id="evtTeamChatStatus" class="evt-team-chat-status" aria-live="polite"></div>
-            ${canCompose ? `
-            <div class="evt-team-chat-composer">
-                <textarea id="evtTeamChatInput" maxlength="${EVT_TEAM_CHAT_MAX_LEN}" rows="3" placeholder="Message the team\u2026" aria-label="Team chat message"></textarea>
-                <button type="button" id="evtTeamChatSendBtn" class="evt-team-chat-send" onclick="evtSendTeamChatMessage('${eventId2}')">Send</button>
-            </div>` : ""}`;
-      }
-      return `
-        <div class="evt-team-chat">
-            <div class="evt-team-chat-toolbar">
-                <button type="button" class="evt-team-chat-back" onclick="${backClick}">\u2190 Tools</button>
-            </div>
-            <div class="evt-team-chat-head">
-                <strong>Team Chat</strong>
-                <span>Private chat for this event team</span>
-            </div>
-            ${body}
-        </div>`;
-    }
-    async function open(eventId2) {
-      if (typeof window.evtInjectTeamToolsStyles === "function") window.evtInjectTeamToolsStyles();
-      injectTeamChatStyles();
-      cleanup();
-      const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
-      if (!event) return;
-      let bar = document.getElementById("evtCtaBar");
-      if (!bar && typeof window.evtEnsureCtaBarShell === "function") {
-        bar = window.evtEnsureCtaBarShell();
-      }
-      if (!bar) return;
-      if (typeof window.evtApplyDesktopTeamToolsOverlay === "function") {
-        window.evtApplyDesktopTeamToolsOverlay(bar);
-      }
-      const panel = document.getElementById("evtCtaPanel");
-      if (!panel) return;
-      const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">\xD7</button>';
-      bar.classList.add("evt-cta-bar-expanded");
-      panel.classList.remove("hidden");
-      panel.classList.add("evt-team-chat-panel");
-      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, { loading: true })}`;
-      const ensure = await ensureChat(event, eventId2);
-      if (ensure.error) {
-        panel.innerHTML = `${closeBtn}${renderPanel(eventId2, {
-          unavailable: friendlyError(ensure.error)
-        })}`;
-        return;
-      }
-      if (ensure.notStarted || !ensure.chat) {
-        panel.innerHTML = `${closeBtn}${renderPanel(eventId2, { notStarted: true })}`;
-        return;
-      }
-      const chatId = ensure.chat.id;
-      const loaded = await loadMessages(chatId, eventId2);
-      if (loaded.error) {
-        panel.innerHTML = `${closeBtn}${renderPanel(eventId2, {
-          unavailable: friendlyError(loaded.error)
-        })}`;
-        return;
-      }
-      window.__evtTeamChatState = {
-        eventId: eventId2,
-        chatId,
-        messages: loaded.messages,
-        profilesById: loaded.profilesById,
-        channel: null
-      };
-      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, { canCompose: true })}`;
-      refreshMessageList();
-      subscribe(chatId, eventId2);
-      const input = document.getElementById("evtTeamChatInput");
-      if (input) {
-        input.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            send(eventId2);
-          }
         });
       }
+      return;
     }
-    async function send(eventId2) {
-      const state = window.__evtTeamChatState;
-      if (!state || state.eventId !== eventId2 || !state.chatId) return;
-      const input = document.getElementById("evtTeamChatInput");
-      const sendBtn = document.getElementById("evtTeamChatSendBtn");
-      const statusEl = document.getElementById("evtTeamChatStatus");
-      if (!input) return;
-      const body = (input.value || "").trim();
-      if (!body) {
-        if (statusEl) statusEl.textContent = "Enter a message to send.";
-        return;
-      }
-      if (body.length > EVT_TEAM_CHAT_MAX_LEN) {
-        if (statusEl) statusEl.textContent = `Message must be ${EVT_TEAM_CHAT_MAX_LEN} characters or fewer.`;
-        return;
-      }
-      if (sendBtn) sendBtn.disabled = true;
-      if (statusEl) statusEl.textContent = "Sending\u2026";
-      const { data, error } = await supabaseClient.from("event_chat_messages").insert({
-        chat_id: state.chatId,
-        event_id: eventId2,
-        sender_id: globalThis.evtCurrentUser.id,
-        body
-      }).select("id, chat_id, event_id, sender_id, body, created_at, updated_at, deleted_at").single();
-      if (sendBtn) sendBtn.disabled = false;
-      if (error) {
-        if (statusEl) statusEl.textContent = friendlyError(error);
-        return;
-      }
-      input.value = "";
-      if (statusEl) statusEl.textContent = "";
-      if (data && !data.deleted_at && !state.messages.some((m) => m.id === data.id)) {
-        state.messages.push(data);
-        if (!state.profilesById[globalThis.evtCurrentUser.id] && globalThis.evtCurrentUser) {
-          state.profilesById[globalThis.evtCurrentUser.id] = {
-            id: globalThis.evtCurrentUser.id,
-            first_name: globalThis.evtCurrentUser.first_name,
-            last_name: globalThis.evtCurrentUser.last_name
-          };
+    if (payload.eventType === "UPDATE") {
+      const idx = state.messages.findIndex((m) => m.id === row.id);
+      if (row.deleted_at) {
+        if (idx >= 0) {
+          state.messages.splice(idx, 1);
+          refreshMessageList();
         }
-        state.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        refreshMessageList();
+        return;
       }
+      if (idx >= 0) state.messages[idx] = row;
+      else state.messages.push(row);
+      state.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      refreshMessageList();
     }
-    window.PortalEvents.team.chat = {
-      open,
-      send,
-      cleanup,
-      ensureChat,
-      loadMessages,
-      subscribe,
-      maxLength: EVT_TEAM_CHAT_MAX_LEN
+  }
+  function subscribe(chatId, eventId2) {
+    const state = window.__evtTeamChatState;
+    if (!state) return;
+    if (state.channel) {
+      try {
+        supabaseClient.removeChannel(state.channel);
+      } catch (_) {
+      }
+      state.channel = null;
+    }
+    state.channel = supabaseClient.channel(`evt-team-chat-${eventId2}`).on("postgres_changes", {
+      event: "INSERT",
+      schema: "public",
+      table: "event_chat_messages",
+      filter: `event_id=eq.${eventId2}`
+    }, (payload) => handleRealtime({ eventType: "INSERT", new: payload.new })).on("postgres_changes", {
+      event: "UPDATE",
+      schema: "public",
+      table: "event_chat_messages",
+      filter: `event_id=eq.${eventId2}`
+    }, (payload) => handleRealtime({ eventType: "UPDATE", new: payload.new })).subscribe();
+  }
+  function renderPanel(eventId2, opts) {
+    const { loading, unavailable, notStarted, canCompose } = opts;
+    const backClick = `evtOpenTeamToolsPanel('${eventId2}')`;
+    let body = "";
+    if (loading) {
+      body = '<p class="evt-team-chat-status">Loading team chat\u2026</p>';
+    } else if (unavailable) {
+      body = `<p class="evt-team-chat-unavailable">${evtEscapeHtml(unavailable)}</p>
+        <button type="button" class="evt-team-chat-back" onclick="${backClick}">\u2190 Back to Team tools</button>`;
+    } else if (notStarted) {
+      body = `<p class="evt-team-chat-unavailable">Team chat has not been started yet. Ask the event creator or a coordinator to open Team Chat first.</p>
+        <button type="button" class="evt-team-chat-back" onclick="${backClick}">\u2190 Back to Team tools</button>`;
+    } else {
+      const state = window.__evtTeamChatState;
+      body = `
+        <div id="evtTeamChatMessages" class="evt-team-chat-messages">${messagesHtml(state)}</div>
+        <div id="evtTeamChatStatus" class="evt-team-chat-status" aria-live="polite"></div>
+        ${canCompose ? `
+        <div class="evt-team-chat-composer">
+            <textarea id="evtTeamChatInput" maxlength="${EVT_TEAM_CHAT_MAX_LEN}" rows="3" placeholder="Message the team\u2026" aria-label="Team chat message"></textarea>
+            <button type="button" id="evtTeamChatSendBtn" class="evt-team-chat-send" onclick="evtSendTeamChatMessage('${eventId2}')">Send</button>
+        </div>` : ""}`;
+    }
+    return `
+    <div class="evt-team-chat">
+        <div class="evt-team-chat-toolbar">
+            <button type="button" class="evt-team-chat-back" onclick="${backClick}">\u2190 Tools</button>
+        </div>
+        <div class="evt-team-chat-head">
+            <strong>Team Chat</strong>
+            <span>Private chat for this event team</span>
+        </div>
+        ${body}
+    </div>`;
+  }
+  async function open(eventId2) {
+    if (typeof globalThis.evtInjectTeamToolsStyles === "function") window.evtInjectTeamToolsStyles();
+    injectTeamChatStyles();
+    cleanup();
+    const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
+    if (!event) return;
+    let bar = document.getElementById("evtCtaBar");
+    if (!bar && typeof globalThis.evtEnsureCtaBarShell === "function") {
+      bar = window.evtEnsureCtaBarShell();
+    }
+    if (!bar) return;
+    if (typeof globalThis.evtApplyDesktopTeamToolsOverlay === "function") {
+      window.evtApplyDesktopTeamToolsOverlay(bar);
+    }
+    const panel = document.getElementById("evtCtaPanel");
+    if (!panel) return;
+    const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">\xD7</button>';
+    bar.classList.add("evt-cta-bar-expanded");
+    panel.classList.remove("hidden");
+    panel.classList.add("evt-team-chat-panel");
+    panel.innerHTML = `${closeBtn}${renderPanel(eventId2, { loading: true })}`;
+    const ensure = await ensureChat(event, eventId2);
+    if (ensure.error) {
+      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, {
+        unavailable: friendlyError(ensure.error)
+      })}`;
+      return;
+    }
+    if (ensure.notStarted || !ensure.chat) {
+      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, { notStarted: true })}`;
+      return;
+    }
+    const chatId = ensure.chat.id;
+    const loaded = await loadMessages(chatId, eventId2);
+    if (loaded.error) {
+      panel.innerHTML = `${closeBtn}${renderPanel(eventId2, {
+        unavailable: friendlyError(loaded.error)
+      })}`;
+      return;
+    }
+    window.__evtTeamChatState = {
+      eventId: eventId2,
+      chatId,
+      messages: loaded.messages,
+      profilesById: loaded.profilesById,
+      channel: null
     };
-    window.evtOpenTeamChat = open;
-    window.evtSendTeamChatMessage = send;
-    window.evtCleanupTeamChat = cleanup;
-  })();
+    panel.innerHTML = `${closeBtn}${renderPanel(eventId2, { canCompose: true })}`;
+    refreshMessageList();
+    subscribe(chatId, eventId2);
+    const input = document.getElementById("evtTeamChatInput");
+    if (input) {
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          send(eventId2);
+        }
+      });
+    }
+  }
+  async function send(eventId2) {
+    const state = window.__evtTeamChatState;
+    if (!state || state.eventId !== eventId2 || !state.chatId) return;
+    const input = document.getElementById("evtTeamChatInput");
+    const sendBtn = document.getElementById("evtTeamChatSendBtn");
+    const statusEl = document.getElementById("evtTeamChatStatus");
+    if (!input) return;
+    const body = (input.value || "").trim();
+    if (!body) {
+      if (statusEl) statusEl.textContent = "Enter a message to send.";
+      return;
+    }
+    if (body.length > EVT_TEAM_CHAT_MAX_LEN) {
+      if (statusEl) statusEl.textContent = `Message must be ${EVT_TEAM_CHAT_MAX_LEN} characters or fewer.`;
+      return;
+    }
+    if (sendBtn) sendBtn.disabled = true;
+    if (statusEl) statusEl.textContent = "Sending\u2026";
+    const { data, error } = await supabaseClient.from("event_chat_messages").insert({
+      chat_id: state.chatId,
+      event_id: eventId2,
+      sender_id: globalThis.evtCurrentUser.id,
+      body
+    }).select("id, chat_id, event_id, sender_id, body, created_at, updated_at, deleted_at").single();
+    if (sendBtn) sendBtn.disabled = false;
+    if (error) {
+      if (statusEl) statusEl.textContent = friendlyError(error);
+      return;
+    }
+    input.value = "";
+    if (statusEl) statusEl.textContent = "";
+    if (data && !data.deleted_at && !state.messages.some((m) => m.id === data.id)) {
+      state.messages.push(data);
+      if (!state.profilesById[globalThis.evtCurrentUser.id] && globalThis.evtCurrentUser) {
+        state.profilesById[globalThis.evtCurrentUser.id] = {
+          id: globalThis.evtCurrentUser.id,
+          first_name: globalThis.evtCurrentUser.first_name,
+          last_name: globalThis.evtCurrentUser.last_name
+        };
+      }
+      state.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      refreshMessageList();
+    }
+  }
+  var teamChatApi = {
+    open,
+    send,
+    cleanup,
+    ensureChat,
+    loadMessages,
+    subscribe,
+    maxLength: EVT_TEAM_CHAT_MAX_LEN
+  };
+  globalThis.evtOpenTeamChat = open;
+  globalThis.evtSendTeamChatMessage = send;
+  globalThis.evtCleanupTeamChat = cleanup;
+  var PortalEvents = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents.team = PortalEvents.team || {};
+  PortalEvents.team.chat = teamChatApi;
 
   // js/portal/events/team/tools.js
-  (function() {
-    "use strict";
-    window.PortalEvents = window.PortalEvents || {};
-    window.PortalEvents.team = window.PortalEvents.team || {};
-    const EVT_CTA_ICONS = {
-      check: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
-      ticket: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>',
-      lock: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
-      manage: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>'
-    };
-    function injectTeamToolsStyles() {
-      if (document.getElementById("evtTeamToolsStyles")) return;
-      const style = document.createElement("style");
-      style.id = "evtTeamToolsStyles";
-      style.textContent = `
-        .evt-team-tool-list { display: flex; flex-direction: column; gap: 8px; }
-        .evt-team-tool-btn {
-            display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-            width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #e5e7eb;
-            background: #fff; color: #111827; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer;
+  var EVT_CTA_ICONS = {
+    check: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
+    ticket: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>',
+    lock: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
+    manage: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>'
+  };
+  function injectTeamToolsStyles() {
+    if (document.getElementById("evtTeamToolsStyles")) return;
+    const style = document.createElement("style");
+    style.id = "evtTeamToolsStyles";
+    style.textContent = `
+    .evt-team-tool-list { display: flex; flex-direction: column; gap: 8px; }
+    .evt-team-tool-btn {
+        display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+        width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #e5e7eb;
+        background: #fff; color: #111827; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer;
+    }
+    .evt-team-tool-btn:disabled { opacity: .55; cursor: not-allowed; }
+    .evt-team-tool-main { line-height: 1.25; }
+    .evt-team-tool-sub { font-size: 12px; font-weight: 500; color: #6b7280; line-height: 1.35; }
+    .evt-cta-btn.evt-cta-team { background: #fff; color: #4f46e5; border: 2px solid #c7d2fe; }
+    .evt-cta-btn.evt-cta-raffle-locked { background: #f3f4f6; color: #9ca3af; border: 1.5px solid #e5e7eb; box-shadow: none; cursor: not-allowed; }
+    .evt-cta-footnote { margin: 0; padding: 0 4px 2px; text-align: center; font-size: 11px; line-height: 1.35; color: #6b7280; font-weight: 600; }
+    .ed-raffle-locked-block { text-align: center; }
+    .ed-raffle-locked-hint { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: #6b7280; font-weight: 600; font-style: normal; }
+    .ed-raffle-btn.ed-raffle-btn-locked { background: #ebebeb; color: #999; border: none; cursor: not-allowed; width: 100%; }
+    @media (min-width: 1024px) {
+        .evt-cta-bar.evt-cta-floating-shell.evt-team-tools-overlay {
+            display: flex !important; position: fixed; inset: 0; z-index: 60;
+            align-items: center; justify-content: center; padding: 24px;
+            background: rgba(15, 23, 42, .45);
         }
-        .evt-team-tool-btn:disabled { opacity: .55; cursor: not-allowed; }
-        .evt-team-tool-main { line-height: 1.25; }
-        .evt-team-tool-sub { font-size: 12px; font-weight: 500; color: #6b7280; line-height: 1.35; }
-        .evt-cta-btn.evt-cta-team { background: #fff; color: #4f46e5; border: 2px solid #c7d2fe; }
-        .evt-cta-btn.evt-cta-raffle-locked { background: #f3f4f6; color: #9ca3af; border: 1.5px solid #e5e7eb; box-shadow: none; cursor: not-allowed; }
-        .evt-cta-footnote { margin: 0; padding: 0 4px 2px; text-align: center; font-size: 11px; line-height: 1.35; color: #6b7280; font-weight: 600; }
-        .ed-raffle-locked-block { text-align: center; }
-        .ed-raffle-locked-hint { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: #6b7280; font-weight: 600; font-style: normal; }
-        .ed-raffle-btn.ed-raffle-btn-locked { background: #ebebeb; color: #999; border: none; cursor: not-allowed; width: 100%; }
-        @media (min-width: 1024px) {
-            .evt-cta-bar.evt-cta-floating-shell.evt-team-tools-overlay {
-                display: flex !important; position: fixed; inset: 0; z-index: 60;
-                align-items: center; justify-content: center; padding: 24px;
-                background: rgba(15, 23, 42, .45);
-            }
-            .evt-cta-bar.evt-cta-floating-shell.evt-team-tools-overlay .evt-cta-actions { display: none !important; }
-            .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel {
-                position: relative; width: min(420px, 100%); max-height: 80vh;
-                overflow: auto; border: 1px solid #e5e7eb; border-radius: 16px;
-                background: #fff; box-shadow: 0 12px 38px rgba(15, 23, 42, .16); padding: 16px;
-            }
-            .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel.hidden { display: none; }
-            .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-close {
-                position: absolute; top: 10px; right: 10px; width: 30px; height: 30px;
-                border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; color: #374151;
-                font-size: 20px; line-height: 1; font-weight: 700; cursor: pointer;
-            }
-            .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head {
-                padding-right: 34px; margin-bottom: 12px;
-            }
-            .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head strong {
-                display: block; color: #111827; font-size: 15px; line-height: 1.25;
-            }
-            .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head span {
-                display: block; margin-top: 3px; color: #6b7280; font-size: 12px; line-height: 1.35;
-            }
-            .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel.evt-team-chat-panel {
-                width: min(480px, 100%);
-            }
+        .evt-cta-bar.evt-cta-floating-shell.evt-team-tools-overlay .evt-cta-actions { display: none !important; }
+        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel {
+            position: relative; width: min(420px, 100%); max-height: 80vh;
+            overflow: auto; border: 1px solid #e5e7eb; border-radius: 16px;
+            background: #fff; box-shadow: 0 12px 38px rgba(15, 23, 42, .16); padding: 16px;
         }
-        `;
-      document.head.appendChild(style);
+        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel.hidden { display: none; }
+        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-close {
+            position: absolute; top: 10px; right: 10px; width: 30px; height: 30px;
+            border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; color: #374151;
+            font-size: 20px; line-height: 1; font-weight: 700; cursor: pointer;
+        }
+        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head {
+            padding-right: 34px; margin-bottom: 12px;
+        }
+        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head strong {
+            display: block; color: #111827; font-size: 15px; line-height: 1.25;
+        }
+        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel-head span {
+            display: block; margin-top: 3px; color: #6b7280; font-size: 12px; line-height: 1.35;
+        }
+        .evt-cta-bar.evt-cta-floating-shell .evt-cta-panel.evt-team-chat-panel {
+            width: min(480px, 100%);
+        }
     }
-    function raffleLockedCtaBtnHtml() {
-      return `<button type="button" class="evt-cta-btn evt-cta-raffle-locked" disabled aria-disabled="true">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
+    `;
+    document.head.appendChild(style);
+  }
+  function raffleLockedCtaBtnHtml() {
+    return `<button type="button" class="evt-cta-btn evt-cta-raffle-locked" disabled aria-disabled="true">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
+  }
+  function canUseEventScanner(event, canManageEvent) {
+    const checkinEnabled = event.checkin_enabled !== false;
+    return checkinEnabled && canManageEvent && event.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(event.status);
+  }
+  function teamToolsRow(label, sub, onClick, disabled) {
+    const subHtml = sub ? `<span class="evt-team-tool-sub">${sub}</span>` : "";
+    if (disabled) {
+      return `<button type="button" class="evt-team-tool-btn" disabled aria-disabled="true"><span class="evt-team-tool-main">${label}</span>${subHtml}</button>`;
     }
-    function canUseEventScanner(event, canManageEvent) {
-      const checkinEnabled = event.checkin_enabled !== false;
-      return checkinEnabled && canManageEvent && event.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(event.status);
-    }
-    function teamToolsRow(label, sub, onClick, disabled) {
-      const subHtml = sub ? `<span class="evt-team-tool-sub">${sub}</span>` : "";
-      if (disabled) {
-        return `<button type="button" class="evt-team-tool-btn" disabled aria-disabled="true"><span class="evt-team-tool-main">${label}</span>${subHtml}</button>`;
+    return `<button type="button" class="evt-team-tool-btn" onclick="${onClick}"><span class="evt-team-tool-main">${label}</span>${subHtml}</button>`;
+  }
+  function buildTeamToolsPanelHtml(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, opts) {
+    const { canManageEvent } = opts;
+    const rsvpEnabled = event.rsvp_enabled !== false;
+    const raffleEnabled = !!event.raffle_enabled;
+    const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
+    const hasGoingRsvp = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+    const rows = [];
+    rows.push(teamToolsRow("Team Chat", "Private team coordination", `evtCloseCtaPanel();evtOpenTeamChat('${eventId2}')`, false));
+    if (rsvpEnabled) {
+      if (!canRsvp) {
+        rows.push(teamToolsRow("RSVP as Myself", "RSVP is closed for this event", "", true));
+      } else if (eventIsFull && !hasGoingRsvp) {
+        rows.push(teamToolsRow("RSVP as Myself", "Event is full", "", true));
+      } else if (hasGoingRsvp) {
+        rows.push(teamToolsRow("RSVP as Myself", "You're RSVP'd \u2014 tap to update", `evtCloseCtaPanel();evtHandleRsvp('${eventId2}','going')`, false));
+      } else if (event.pricing_mode === "paid") {
+        rows.push(teamToolsRow("RSVP as Myself", `Paid RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}`, `evtCloseCtaPanel();evtHandleRsvp('${eventId2}','going')`, false));
+      } else {
+        rows.push(teamToolsRow("RSVP as Myself", "Count yourself as going", `evtCloseCtaPanel();evtHandleRsvp('${eventId2}','going')`, false));
       }
-      return `<button type="button" class="evt-team-tool-btn" onclick="${onClick}"><span class="evt-team-tool-main">${label}</span>${subHtml}</button>`;
     }
-    function buildTeamToolsPanelHtml(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, opts) {
-      const { canManageEvent } = opts;
-      const rsvpEnabled = event.rsvp_enabled !== false;
-      const raffleEnabled = !!event.raffle_enabled;
-      const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
-      const hasGoingRsvp = typeof window.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
-      const rows = [];
-      rows.push(teamToolsRow("Team Chat", "Private team coordination", `evtCloseCtaPanel();evtOpenTeamChat('${eventId2}')`, false));
+    if (raffleEnabled) {
+      const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
+      if (raffleBundled) {
+        rows.push(teamToolsRow("Enter Raffle", rsvp?.paid ? "Included with your paid RSVP" : "Included with paid RSVP", "", true));
+      } else if (myRaffleEntry) {
+        rows.push(teamToolsRow("Enter Raffle", "Already entered", "", true));
+      } else if (entriesClosed) {
+        rows.push(teamToolsRow("Enter Raffle", "Entries are closed", "", true));
+      } else if (!hasGoingRsvp) {
+        rows.push(teamToolsRow("Enter Raffle", "RSVP first to enter the raffle", "", true));
+      } else {
+        rows.push(teamToolsRow("Enter Raffle", event.raffle_entry_cost_cents > 0 ? formatCurrency(event.raffle_entry_cost_cents) : "Free entry", `evtOpenCtaPanel('raffle','${eventId2}')`, false));
+      }
+    }
+    if (hasGoingRsvp) {
+      rows.push(teamToolsRow("View Ticket", "Your RSVP confirmation", `evtOpenCtaPanel('ticket','${eventId2}')`, false));
+    }
+    if (canUseEventScanner(event, canManageEvent)) {
+      rows.push(teamToolsRow("Scanner", "Scan attendee QR codes", `evtCloseCtaPanel();evtOpenScanner('${eventId2}')`, false));
+    }
+    if (canManageEvent) {
+      const manageClick = `evtCloseCtaPanel();(window.EventsManage?window.EventsManage.open('${eventId2}',{source:'portal'}):(window.location='../admin/events.html?id=${eventId2}'))`;
+      rows.push(teamToolsRow("Manage Event", "Hosts, RSVP, raffle, settings", manageClick, false));
+    }
+    return `<div class="evt-team-tool-list">${rows.join("")}</div>`;
+  }
+  function ensureCtaBarShell() {
+    let bar = document.getElementById("evtCtaBar");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.id = "evtCtaBar";
+      bar.className = "evt-cta-bar evt-cta-floating-shell";
+      bar.dataset.evtFloatingShell = "1";
+      bar.innerHTML = '<div id="evtCtaPanel" class="evt-cta-panel"></div><div class="evt-cta-actions" hidden aria-hidden="true"></div>';
+      document.body.appendChild(bar);
+      document.body.classList.add("evt-cta-active");
+    }
+    return bar;
+  }
+  function applyDesktopTeamToolsOverlay(bar) {
+    if (!bar || !window.matchMedia("(min-width: 1024px)").matches) return;
+    bar.classList.add("evt-cta-floating-shell", "evt-team-tools-overlay");
+    bar.dataset.evtFloatingShell = "1";
+    if (!bar.dataset.evtOverlayCloseBound) {
+      bar.dataset.evtOverlayCloseBound = "1";
+      bar.addEventListener("click", (e) => {
+        if (e.target === bar) closeCtaPanel();
+      });
+    }
+  }
+  function closeCtaPanel() {
+    if (typeof globalThis.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
+    const panel = document.getElementById("evtCtaPanel");
+    const bar = document.getElementById("evtCtaBar");
+    if (panel) {
+      panel.classList.add("hidden");
+      panel.classList.remove("evt-team-chat-panel");
+      panel.innerHTML = "";
+    }
+    if (bar) {
+      bar.classList.remove("evt-cta-bar-expanded", "evt-team-tools-overlay");
+      if (bar.dataset.evtFloatingShell === "1") {
+        bar.classList.remove("evt-cta-floating-shell");
+        delete bar.dataset.evtFloatingShell;
+        cleanupBottomNav();
+        return;
+      }
+    }
+  }
+  function openCtaPanel(kind, eventId2) {
+    const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
+    if (!event) return;
+    const bar = ensureCtaBarShell();
+    const panel = document.getElementById("evtCtaPanel");
+    if (!panel) return;
+    if (bar.dataset.evtFloatingShell === "1") bar.classList.add("evt-team-tools-overlay");
+    const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
+    const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">\xD7</button>';
+    bar.classList.add("evt-cta-bar-expanded");
+    panel.classList.remove("hidden");
+    const memberGoing = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+    if (kind === "ticket") {
+      const hasQr = memberGoing && rsvp?.qr_token && event.checkin_mode === "attendee_ticket";
+      panel.innerHTML = `
+        ${closeBtn}
+        <div class="evt-cta-panel-head"><strong>You're going</strong><span>${evtEscapeHtml(event.title || "Event")}</span></div>
+        <div class="evt-cta-ticket-card">
+            ${hasQr ? '<canvas id="evtCtaTicketQR"></canvas><p>Show this QR code at check-in</p>' : '<div class="ed-notice"><span class="ed-notice-emoji">\u2705</span><div><p class="ed-notice-title">You are on the RSVP list</p><p class="ed-notice-sub">No QR ticket is required for this event.</p></div></div>'}
+        </div>`;
+      if (hasQr) {
+        const canvas = document.getElementById("evtCtaTicketQR");
+        const qrUrl = `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`;
+        (async () => {
+          try {
+            const QRCode = typeof globalThis.evtEnsureQRCode === "function" ? await window.evtEnsureQRCode() : window.QRCode;
+            if (QRCode && canvas?.isConnected) {
+              QRCode.toCanvas(canvas, qrUrl, { width: 172, margin: 2 });
+            }
+          } catch (err) {
+            console.warn("CTA ticket QR failed:", err);
+          }
+        })();
+      }
+      return;
+    }
+    const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && event.rsvp_enabled !== false;
+    if (raffleBundled) {
+      panel.innerHTML = `
+        ${closeBtn}
+        <div class="evt-cta-panel-head"><strong>Raffle included</strong><span>Raffle entry is included when you complete your paid RSVP for this event.</span></div>`;
+      return;
+    }
+    if (!memberGoing) {
+      panel.innerHTML = `
+        ${closeBtn}
+        <div class="evt-cta-panel-head"><strong>RSVP first</strong><span>Once you are going, this same member RSVP will be used for the raffle entry.</span></div>
+        <button type="button" onclick="globalThis.evtCtaRaffleIntent ='${eventId2}';evtHandleRsvp('${eventId2}','going')" class="evt-raffle-buy">RSVP to Enter Raffle</button>`;
+      return;
+    }
+    const cost = event.raffle_entry_cost_cents || 0;
+    panel.innerHTML = `
+    ${closeBtn}
+    <div class="evt-cta-panel-head"><strong>Enter the raffle</strong><span>${cost > 0 ? "Confirm to start checkout. Raffle tickets are non-refundable." : "One tap and you are in the draw."}</span></div>
+    <button type="button" onclick="${cost > 0 ? `evtHandleRaffleEntry('${eventId2}')` : `evtHandleFreeRaffleEntry('${eventId2}')`}" class="evt-raffle-buy">${cost > 0 ? `Buy Raffle Entry \u2014 ${formatCurrency(cost)}` : "Enter Raffle \u2014 Free"}</button>`;
+  }
+  function openTeamToolsPanel(eventId2) {
+    injectTeamToolsStyles();
+    if (typeof globalThis.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
+    const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
+    if (!event) return;
+    const ctx = window.__evtTeamToolsCtx || {};
+    const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
+    const myRaffleEntry = ctx.eventId === eventId2 ? ctx.myRaffleEntry : null;
+    const entriesClosed = ctx.eventId === eventId2 ? !!ctx.entriesClosed : false;
+    const eventIsFull = ctx.eventId === eventId2 ? !!ctx.eventIsFull : false;
+    const canManageEvent = ctx.eventId === eventId2 ? !!ctx.canManageEvent : false;
+    let bar = document.getElementById("evtCtaBar");
+    if (!bar) bar = ensureCtaBarShell();
+    applyDesktopTeamToolsOverlay(bar);
+    const panel = document.getElementById("evtCtaPanel");
+    if (!panel) return;
+    const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">\xD7</button>';
+    const actionsHtml = buildTeamToolsPanelHtml(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, { canManageEvent });
+    bar.classList.add("evt-cta-bar-expanded");
+    panel.classList.remove("hidden");
+    panel.innerHTML = `
+    ${closeBtn}
+    <div class="evt-cta-panel-head"><strong>Event Tools</strong><span>Team coordination and your personal RSVP, raffle, and ticket.</span></div>
+    ${actionsHtml}`;
+    if (!window.__evtTeamToolsEscBound) {
+      window.__evtTeamToolsEscBound = true;
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        const p = document.getElementById("evtCtaPanel");
+        if (p && !p.classList.contains("hidden")) closeCtaPanel();
+      });
+    }
+  }
+  function cleanupBottomNav() {
+    if (typeof globalThis.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
+    const el = document.getElementById("evtCtaBar");
+    if (el) el.remove();
+    const hint = document.querySelector(".bottom-tab-bar .swipe-hint");
+    if (hint) hint.style.display = "";
+    document.body.classList.remove("evt-cta-active");
+    if (typeof globalThis.evtCleanupHeroCollapse === "function") window.evtCleanupHeroCollapse();
+  }
+  function initBottomNav(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub) {
+    cleanupBottomNav();
+    injectTeamToolsStyles();
+    const rsvpEnabled = event.rsvp_enabled !== false;
+    const raffleEnabled = !!event.raffle_enabled;
+    const teamHubAccess = !!canAccessTeamHub || isHost || typeof canAccessAdminDashboard === "function" && canAccessAdminDashboard();
+    if (!isHost && !teamHubAccess && !rsvpEnabled && !raffleEnabled) return;
+    const isClosed = event.status === "completed" || event.status === "cancelled";
+    const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
+    let primaryBtn = "";
+    let secondaryBtn = "";
+    let ctaFootnote = "";
+    const teamBtn = `<button type="button" class="evt-cta-btn evt-cta-team" onclick="evtOpenTeamToolsPanel('${eventId2}')" aria-label="Open event team tools">Team</button>`;
+    if (isHost) {
+      primaryBtn = `<button type="button" class="evt-cta-btn evt-cta-manage" onclick="window.EventsManage ? window.EventsManage.open('${eventId2}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId2}')">${EVT_CTA_ICONS.manage} Manage Event</button>`;
+      if (teamHubAccess) secondaryBtn = teamBtn;
+    } else if (teamHubAccess) {
+      primaryBtn = teamBtn;
+    } else {
       if (rsvpEnabled) {
-        if (!canRsvp) {
-          rows.push(teamToolsRow("RSVP as Myself", "RSVP is closed for this event", "", true));
-        } else if (eventIsFull && !hasGoingRsvp) {
-          rows.push(teamToolsRow("RSVP as Myself", "Event is full", "", true));
-        } else if (hasGoingRsvp) {
-          rows.push(teamToolsRow("RSVP as Myself", "You're RSVP'd \u2014 tap to update", `evtCloseCtaPanel();evtHandleRsvp('${eventId2}','going')`, false));
-        } else if (event.pricing_mode === "paid") {
-          rows.push(teamToolsRow("RSVP as Myself", `Paid RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}`, `evtCloseCtaPanel();evtHandleRsvp('${eventId2}','going')`, false));
+        if (rsvp?.paid) {
+          primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="evtOpenCtaPanel('ticket','${eventId2}')">${EVT_CTA_ICONS.ticket} RSVP'd \xB7 Ticket</button>`;
+        } else if (rsvp?.status === "going") {
+          primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="evtOpenCtaPanel('ticket','${eventId2}')">${EVT_CTA_ICONS.ticket} Going \xB7 Ticket</button>`;
+        } else if (canRsvp && !eventIsFull && event.pricing_mode === "paid") {
+          primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId2}','going')">RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>`;
+        } else if (canRsvp && !eventIsFull) {
+          primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId2}','going')">RSVP</button>`;
+        } else if (eventIsFull) {
+          primaryBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Full</button>`;
         } else {
-          rows.push(teamToolsRow("RSVP as Myself", "Count yourself as going", `evtCloseCtaPanel();evtHandleRsvp('${eventId2}','going')`, false));
+          primaryBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} ${isClosed ? "Closed" : "RSVP Closed"}</button>`;
         }
       }
       if (raffleEnabled) {
-        const raffleBundled = typeof window.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
-        if (raffleBundled) {
-          rows.push(teamToolsRow("Enter Raffle", rsvp?.paid ? "Included with your paid RSVP" : "Included with paid RSVP", "", true));
-        } else if (myRaffleEntry) {
-          rows.push(teamToolsRow("Enter Raffle", "Already entered", "", true));
-        } else if (entriesClosed) {
-          rows.push(teamToolsRow("Enter Raffle", "Entries are closed", "", true));
-        } else if (!hasGoingRsvp) {
-          rows.push(teamToolsRow("Enter Raffle", "RSVP first to enter the raffle", "", true));
-        } else {
-          rows.push(teamToolsRow("Enter Raffle", event.raffle_entry_cost_cents > 0 ? formatCurrency(event.raffle_entry_cost_cents) : "Free entry", `evtOpenCtaPanel('raffle','${eventId2}')`, false));
-        }
-      }
-      if (hasGoingRsvp) {
-        rows.push(teamToolsRow("View Ticket", "Your RSVP confirmation", `evtOpenCtaPanel('ticket','${eventId2}')`, false));
-      }
-      if (canUseEventScanner(event, canManageEvent)) {
-        rows.push(teamToolsRow("Scanner", "Scan attendee QR codes", `evtCloseCtaPanel();evtOpenScanner('${eventId2}')`, false));
-      }
-      if (canManageEvent) {
-        const manageClick = `evtCloseCtaPanel();(window.EventsManage?window.EventsManage.open('${eventId2}',{source:'portal'}):(window.location='../admin/events.html?id=${eventId2}'))`;
-        rows.push(teamToolsRow("Manage Event", "Hosts, RSVP, raffle, settings", manageClick, false));
-      }
-      return `<div class="evt-team-tool-list">${rows.join("")}</div>`;
-    }
-    function ensureCtaBarShell() {
-      let bar = document.getElementById("evtCtaBar");
-      if (!bar) {
-        bar = document.createElement("div");
-        bar.id = "evtCtaBar";
-        bar.className = "evt-cta-bar evt-cta-floating-shell";
-        bar.dataset.evtFloatingShell = "1";
-        bar.innerHTML = '<div id="evtCtaPanel" class="evt-cta-panel"></div><div class="evt-cta-actions" hidden aria-hidden="true"></div>';
-        document.body.appendChild(bar);
-        document.body.classList.add("evt-cta-active");
-      }
-      return bar;
-    }
-    function applyDesktopTeamToolsOverlay(bar) {
-      if (!bar || !window.matchMedia("(min-width: 1024px)").matches) return;
-      bar.classList.add("evt-cta-floating-shell", "evt-team-tools-overlay");
-      bar.dataset.evtFloatingShell = "1";
-      if (!bar.dataset.evtOverlayCloseBound) {
-        bar.dataset.evtOverlayCloseBound = "1";
-        bar.addEventListener("click", (e) => {
-          if (e.target === bar) closeCtaPanel();
-        });
-      }
-    }
-    function closeCtaPanel() {
-      if (typeof window.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
-      const panel = document.getElementById("evtCtaPanel");
-      const bar = document.getElementById("evtCtaBar");
-      if (panel) {
-        panel.classList.add("hidden");
-        panel.classList.remove("evt-team-chat-panel");
-        panel.innerHTML = "";
-      }
-      if (bar) {
-        bar.classList.remove("evt-cta-bar-expanded", "evt-team-tools-overlay");
-        if (bar.dataset.evtFloatingShell === "1") {
-          bar.classList.remove("evt-cta-floating-shell");
-          delete bar.dataset.evtFloatingShell;
-          cleanupBottomNav();
-          return;
-        }
-      }
-    }
-    function openCtaPanel(kind, eventId2) {
-      const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
-      if (!event) return;
-      const bar = ensureCtaBarShell();
-      const panel = document.getElementById("evtCtaPanel");
-      if (!panel) return;
-      if (bar.dataset.evtFloatingShell === "1") bar.classList.add("evt-team-tools-overlay");
-      const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
-      const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">\xD7</button>';
-      bar.classList.add("evt-cta-bar-expanded");
-      panel.classList.remove("hidden");
-      const memberGoing = typeof window.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
-      if (kind === "ticket") {
-        const hasQr = memberGoing && rsvp?.qr_token && event.checkin_mode === "attendee_ticket";
-        panel.innerHTML = `
-            ${closeBtn}
-            <div class="evt-cta-panel-head"><strong>You're going</strong><span>${evtEscapeHtml(event.title || "Event")}</span></div>
-            <div class="evt-cta-ticket-card">
-                ${hasQr ? '<canvas id="evtCtaTicketQR"></canvas><p>Show this QR code at check-in</p>' : '<div class="ed-notice"><span class="ed-notice-emoji">\u2705</span><div><p class="ed-notice-title">You are on the RSVP list</p><p class="ed-notice-sub">No QR ticket is required for this event.</p></div></div>'}
-            </div>`;
-        if (hasQr) {
-          const canvas = document.getElementById("evtCtaTicketQR");
-          const qrUrl = `${window.location.origin}/events/?e=${event.slug}&ticket=${rsvp.qr_token}`;
-          (async () => {
-            try {
-              const QRCode = typeof window.evtEnsureQRCode === "function" ? await window.evtEnsureQRCode() : window.QRCode;
-              if (QRCode && canvas?.isConnected) {
-                QRCode.toCanvas(canvas, qrUrl, { width: 172, margin: 2 });
-              }
-            } catch (err) {
-              console.warn("CTA ticket QR failed:", err);
-            }
-          })();
-        }
-        return;
-      }
-      const raffleBundled = typeof window.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && event.rsvp_enabled !== false;
-      if (raffleBundled) {
-        panel.innerHTML = `
-            ${closeBtn}
-            <div class="evt-cta-panel-head"><strong>Raffle included</strong><span>Raffle entry is included when you complete your paid RSVP for this event.</span></div>`;
-        return;
-      }
-      if (!memberGoing) {
-        panel.innerHTML = `
-            ${closeBtn}
-            <div class="evt-cta-panel-head"><strong>RSVP first</strong><span>Once you are going, this same member RSVP will be used for the raffle entry.</span></div>
-            <button type="button" onclick="window.evtCtaRaffleIntent='${eventId2}';evtHandleRsvp('${eventId2}','going')" class="evt-raffle-buy">RSVP to Enter Raffle</button>`;
-        return;
-      }
-      const cost = event.raffle_entry_cost_cents || 0;
-      panel.innerHTML = `
-        ${closeBtn}
-        <div class="evt-cta-panel-head"><strong>Enter the raffle</strong><span>${cost > 0 ? "Confirm to start checkout. Raffle tickets are non-refundable." : "One tap and you are in the draw."}</span></div>
-        <button type="button" onclick="${cost > 0 ? `evtHandleRaffleEntry('${eventId2}')` : `evtHandleFreeRaffleEntry('${eventId2}')`}" class="evt-raffle-buy">${cost > 0 ? `Buy Raffle Entry \u2014 ${formatCurrency(cost)}` : "Enter Raffle \u2014 Free"}</button>`;
-    }
-    function openTeamToolsPanel(eventId2) {
-      injectTeamToolsStyles();
-      if (typeof window.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
-      const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
-      if (!event) return;
-      const ctx = window.__evtTeamToolsCtx || {};
-      const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps)[eventId2];
-      const myRaffleEntry = ctx.eventId === eventId2 ? ctx.myRaffleEntry : null;
-      const entriesClosed = ctx.eventId === eventId2 ? !!ctx.entriesClosed : false;
-      const eventIsFull = ctx.eventId === eventId2 ? !!ctx.eventIsFull : false;
-      const canManageEvent = ctx.eventId === eventId2 ? !!ctx.canManageEvent : false;
-      let bar = document.getElementById("evtCtaBar");
-      if (!bar) bar = ensureCtaBarShell();
-      applyDesktopTeamToolsOverlay(bar);
-      const panel = document.getElementById("evtCtaPanel");
-      if (!panel) return;
-      const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="evtCloseCtaPanel()" aria-label="Close">\xD7</button>';
-      const actionsHtml = buildTeamToolsPanelHtml(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, { canManageEvent });
-      bar.classList.add("evt-cta-bar-expanded");
-      panel.classList.remove("hidden");
-      panel.innerHTML = `
-        ${closeBtn}
-        <div class="evt-cta-panel-head"><strong>Event Tools</strong><span>Team coordination and your personal RSVP, raffle, and ticket.</span></div>
-        ${actionsHtml}`;
-      if (!window.__evtTeamToolsEscBound) {
-        window.__evtTeamToolsEscBound = true;
-        document.addEventListener("keydown", (e) => {
-          if (e.key !== "Escape") return;
-          const p = document.getElementById("evtCtaPanel");
-          if (p && !p.classList.contains("hidden")) closeCtaPanel();
-        });
-      }
-    }
-    function cleanupBottomNav() {
-      if (typeof window.evtCleanupTeamChat === "function") window.evtCleanupTeamChat();
-      const el = document.getElementById("evtCtaBar");
-      if (el) el.remove();
-      const hint = document.querySelector(".bottom-tab-bar .swipe-hint");
-      if (hint) hint.style.display = "";
-      document.body.classList.remove("evt-cta-active");
-      if (typeof window.evtCleanupHeroCollapse === "function") window.evtCleanupHeroCollapse();
-    }
-    function initBottomNav(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub) {
-      cleanupBottomNav();
-      injectTeamToolsStyles();
-      const rsvpEnabled = event.rsvp_enabled !== false;
-      const raffleEnabled = !!event.raffle_enabled;
-      const teamHubAccess = !!canAccessTeamHub || isHost || typeof canAccessAdminDashboard === "function" && canAccessAdminDashboard();
-      if (!isHost && !teamHubAccess && !rsvpEnabled && !raffleEnabled) return;
-      const isClosed = event.status === "completed" || event.status === "cancelled";
-      const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
-      let primaryBtn = "";
-      let secondaryBtn = "";
-      let ctaFootnote = "";
-      const teamBtn = `<button type="button" class="evt-cta-btn evt-cta-team" onclick="evtOpenTeamToolsPanel('${eventId2}')" aria-label="Open event team tools">Team</button>`;
-      if (isHost) {
-        primaryBtn = `<button type="button" class="evt-cta-btn evt-cta-manage" onclick="window.EventsManage ? window.EventsManage.open('${eventId2}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId2}')">${EVT_CTA_ICONS.manage} Manage Event</button>`;
-        if (teamHubAccess) secondaryBtn = teamBtn;
-      } else if (teamHubAccess) {
-        primaryBtn = teamBtn;
-      } else {
-        if (rsvpEnabled) {
-          if (rsvp?.paid) {
-            primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="evtOpenCtaPanel('ticket','${eventId2}')">${EVT_CTA_ICONS.ticket} RSVP'd \xB7 Ticket</button>`;
-          } else if (rsvp?.status === "going") {
-            primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="evtOpenCtaPanel('ticket','${eventId2}')">${EVT_CTA_ICONS.ticket} Going \xB7 Ticket</button>`;
-          } else if (canRsvp && !eventIsFull && event.pricing_mode === "paid") {
-            primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId2}','going')">RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>`;
-          } else if (canRsvp && !eventIsFull) {
-            primaryBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="evtHandleRsvp('${eventId2}','going')">RSVP</button>`;
-          } else if (eventIsFull) {
-            primaryBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Full</button>`;
+        const raffleIncluded = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
+        const memberGoingNav = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+        if (!raffleIncluded) {
+          const hasPrimary = !!primaryBtn;
+          const activeCls = hasPrimary ? "evt-cta-raffle-outline" : "evt-cta-raffle";
+          let raffleSlot = "";
+          if (myRaffleEntry) {
+            raffleSlot = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${EVT_CTA_ICONS.check} Entered</button>`;
+          } else if (entriesClosed) {
+            raffleSlot = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Entries Closed</button>`;
+          } else if (!memberGoingNav) {
+            raffleSlot = raffleLockedCtaBtnHtml();
+            ctaFootnote = '<p class="evt-cta-footnote">RSVP first to enter the raffle</p>';
+          } else if (event.raffle_entry_cost_cents > 0) {
+            raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId2}')">${EVT_CTA_ICONS.ticket} Raffle \u2014 ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
           } else {
-            primaryBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} ${isClosed ? "Closed" : "RSVP Closed"}</button>`;
+            raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId2}')">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
           }
-        }
-        if (raffleEnabled) {
-          const raffleIncluded = typeof window.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
-          const memberGoingNav = typeof window.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
-          if (!raffleIncluded) {
-            const hasPrimary = !!primaryBtn;
-            const activeCls = hasPrimary ? "evt-cta-raffle-outline" : "evt-cta-raffle";
-            let raffleSlot = "";
-            if (myRaffleEntry) {
-              raffleSlot = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${EVT_CTA_ICONS.check} Entered</button>`;
-            } else if (entriesClosed) {
-              raffleSlot = `<button class="evt-cta-btn evt-cta-disabled" disabled>${EVT_CTA_ICONS.lock} Entries Closed</button>`;
-            } else if (!memberGoingNav) {
-              raffleSlot = raffleLockedCtaBtnHtml();
-              ctaFootnote = '<p class="evt-cta-footnote">RSVP first to enter the raffle</p>';
-            } else if (event.raffle_entry_cost_cents > 0) {
-              raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId2}')">${EVT_CTA_ICONS.ticket} Raffle \u2014 ${formatCurrency(event.raffle_entry_cost_cents)}</button>`;
-            } else {
-              raffleSlot = `<button class="evt-cta-btn ${activeCls}" onclick="evtOpenCtaPanel('raffle','${eventId2}')">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
-            }
-            if (hasPrimary) {
-              secondaryBtn = raffleSlot;
-            } else {
-              primaryBtn = raffleSlot;
-            }
+          if (hasPrimary) {
+            secondaryBtn = raffleSlot;
+          } else {
+            primaryBtn = raffleSlot;
           }
         }
       }
-      if (!primaryBtn && !secondaryBtn) return;
-      const bar = document.createElement("div");
-      bar.id = "evtCtaBar";
-      bar.className = "evt-cta-bar" + (ctaFootnote ? " evt-cta-bar-has-footnote" : "");
-      bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${primaryBtn + secondaryBtn}</div>${ctaFootnote}`;
-      document.body.appendChild(bar);
-      document.body.classList.add("evt-cta-active");
-      const hint = document.querySelector(".bottom-tab-bar .swipe-hint");
-      if (hint) hint.style.display = "none";
     }
-    window.PortalEvents.team.tools = {
-      injectStyles: injectTeamToolsStyles,
-      ensureCtaBarShell,
-      applyDesktopTeamToolsOverlay,
-      buildPanelHtml: buildTeamToolsPanelHtml,
-      open: openTeamToolsPanel,
-      closePanel: closeCtaPanel,
-      openCtaPanel,
-      initBottomNav,
-      cleanupBottomNav,
-      raffleLockedCtaBtnHtml
-    };
-    window.evtInjectTeamToolsStyles = injectTeamToolsStyles;
-    window.evtEnsureCtaBarShell = ensureCtaBarShell;
-    window.evtApplyDesktopTeamToolsOverlay = applyDesktopTeamToolsOverlay;
-    window.evtOpenTeamToolsPanel = openTeamToolsPanel;
-    window.evtCloseCtaPanel = closeCtaPanel;
-    window.evtOpenCtaPanel = openCtaPanel;
-    window.evtInitBottomNav = initBottomNav;
-    window.evtCleanupBottomNav = cleanupBottomNav;
-  })();
+    if (!primaryBtn && !secondaryBtn) return;
+    const bar = document.createElement("div");
+    bar.id = "evtCtaBar";
+    bar.className = "evt-cta-bar" + (ctaFootnote ? " evt-cta-bar-has-footnote" : "");
+    bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${primaryBtn + secondaryBtn}</div>${ctaFootnote}`;
+    document.body.appendChild(bar);
+    document.body.classList.add("evt-cta-active");
+    const hint = document.querySelector(".bottom-tab-bar .swipe-hint");
+    if (hint) hint.style.display = "none";
+  }
+  var teamToolsApi = {
+    injectStyles: injectTeamToolsStyles,
+    ensureCtaBarShell,
+    applyDesktopTeamToolsOverlay,
+    buildPanelHtml: buildTeamToolsPanelHtml,
+    open: openTeamToolsPanel,
+    closePanel: closeCtaPanel,
+    openCtaPanel,
+    initBottomNav,
+    cleanupBottomNav,
+    raffleLockedCtaBtnHtml
+  };
+  globalThis.evtInjectTeamToolsStyles = injectTeamToolsStyles;
+  globalThis.evtEnsureCtaBarShell = ensureCtaBarShell;
+  globalThis.evtApplyDesktopTeamToolsOverlay = applyDesktopTeamToolsOverlay;
+  globalThis.evtOpenTeamToolsPanel = openTeamToolsPanel;
+  globalThis.evtCloseCtaPanel = closeCtaPanel;
+  globalThis.evtOpenCtaPanel = openCtaPanel;
+  globalThis.evtInitBottomNav = initBottomNav;
+  globalThis.evtCleanupBottomNav = cleanupBottomNav;
+  var PortalEvents2 = globalThis.PortalEvents = globalThis.PortalEvents || {};
+  PortalEvents2.team = PortalEvents2.team || {};
+  PortalEvents2.team.tools = teamToolsApi;
 
   // js/portal/events/detail/presentation.js
   (function() {
@@ -4972,7 +4968,7 @@
       const canManageEvent = isCreator || !!hostRecord || typeof canManageEvents === "function" && canManageEvents();
       const canAccessTeamHub = canManageEvent || typeof canAccessAdminDashboard === "function" && canAccessAdminDashboard();
       const isHost = canManageEvent;
-      const canCreateTeamChat = isCreator || typeof canManageEvents === "function" && canManageEvents();
+      const canCreateTeamChat2 = isCreator || typeof canManageEvents === "function" && canManageEvents();
       let creatorProfile = event.creator && event.creator.id ? { ...event.creator } : null;
       if (event.created_by) {
         const { data: cp } = await supabaseClient.from("profiles").select("id, first_name, last_name, profile_picture_url, displayed_badge, title, bio").eq("id", event.created_by).maybeSingle();
@@ -5036,7 +5032,7 @@
         canManageEvent,
         canAccessTeamHub,
         isHost,
-        canCreateTeamChat,
+        canCreateTeamChat: canCreateTeamChat2,
         creatorProfile,
         cpName,
         cpInitials,
@@ -5729,7 +5725,7 @@
         eventIsFull,
         isHost,
         canAccessTeamHub,
-        canCreateTeamChat
+        canCreateTeamChat: canCreateTeamChat2
       } = ctx;
       if (!isPast && !isClosed) {
         let _tickCd = function() {
@@ -5763,7 +5759,7 @@
         eventIsFull,
         canManageEvent: isHost,
         canAccessTeamHub,
-        canCreateTeamChat
+        canCreateTeamChat: canCreateTeamChat2
       };
       if (typeof window.evtInitBottomNav === "function") {
         window.evtInitBottomNav(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub);
@@ -6116,7 +6112,7 @@
         canManageEvent,
         canAccessTeamHub,
         isHost,
-        canCreateTeamChat,
+        canCreateTeamChat: canCreateTeamChat2,
         creatorProfile,
         cpName,
         cpInitials,
@@ -6248,7 +6244,7 @@
         eventIsFull,
         isHost,
         canAccessTeamHub,
-        canCreateTeamChat
+        canCreateTeamChat: canCreateTeamChat2
       });
       evtInitHeroCollapse();
       window.evtRunDetailPostRenderBasics({ eventId: eventId2 });
@@ -6268,12 +6264,12 @@
     detail.openLightbox = window.evtOpenLightbox;
     detail.openFullscreenMap = window.evtOpenFullscreenMap;
     detail.closeFullscreenMap = window.evtCloseFullscreenMap;
-    detail.initBottomNav = window.evtInitBottomNav;
-    detail.cleanupBottomNav = window.evtCleanupBottomNav;
-    detail.openCtaPanel = window.evtOpenCtaPanel;
-    detail.closeCtaPanel = window.evtCloseCtaPanel;
-    detail.openTeamToolsPanel = window.evtOpenTeamToolsPanel;
-    detail.openTeamChat = window.evtOpenTeamChat;
+    detail.initBottomNav = globalThis.evtInitBottomNav;
+    detail.cleanupBottomNav = globalThis.evtCleanupBottomNav;
+    detail.openCtaPanel = globalThis.evtOpenCtaPanel;
+    detail.closeCtaPanel = globalThis.evtCloseCtaPanel;
+    detail.openTeamToolsPanel = globalThis.evtOpenTeamToolsPanel;
+    detail.openTeamChat = globalThis.evtOpenTeamChat;
     detail.startLiveCountdown = window.evtStartLiveCountdown;
     detail.initSectionAnimations = window.evtInitSectionAnimations;
     detail.recenterFullscreenMap = window.evtRecenterFullscreenMap;
@@ -8734,7 +8730,7 @@
       document.getElementById("ecNextBtn").addEventListener("click", _next);
       document.getElementById("ecDraftBtn").addEventListener("click", () => _submit("draft"));
     }
-    function open() {
+    function open2() {
       _ensureMounted();
       STATE.step = 0;
       STATE.bannerFile = null;
@@ -8888,10 +8884,10 @@
       window.EventsCreateSteps.wireRaffleBuilder = rb.wire;
     }
     _bindCreateStepsApi();
-    window.EventsCreate = { open, close, isFlagOn };
+    window.EventsCreate = { open: open2, close, isFlagOn };
     window.PortalEvents = window.PortalEvents || {};
     window.PortalEvents.create = window.PortalEvents.create || {};
-    window.PortalEvents.create.open = open;
+    window.PortalEvents.create.open = open2;
     window.PortalEvents.create.close = close;
     window.PortalEvents.create.isFlagOn = isFlagOn;
   })();
@@ -11241,7 +11237,7 @@ Type RESET to continue.`
       const { data: checkins } = await supabaseClient.from("event_checkins").select("user_id, guest_token, checked_in_at").eq("event_id", eventId2);
       STATE.checkins = checkins || [];
     }
-    async function open(eventId2, opts = {}) {
+    async function open2(eventId2, opts = {}) {
       if (!eventId2) return;
       Shell.ensureMounted();
       STATE.eventId = eventId2;
@@ -11398,15 +11394,15 @@ Type RESET to continue.`
       renderTab: _renderTab,
       notifyParent: _notifyParent
     };
-    window.EventsManage = { open, close, refreshRaffle };
+    window.EventsManage = { open: open2, close, refreshRaffle };
     if (window.PortalEvents) {
       window.PortalEvents.manage = window.PortalEvents.manage || {};
-      window.PortalEvents.manage.open = open;
+      window.PortalEvents.manage.open = open2;
       window.PortalEvents.manage.close = close;
       window.PortalEvents.manage.refreshRaffle = refreshRaffle;
     }
     if (window.PortalEvents && window.PortalEvents.detail && typeof window.PortalEvents.detail.register === "function") {
-      window.PortalEvents.detail.register("manage", { open, close });
+      window.PortalEvents.detail.register("manage", { open: open2, close });
     }
   })();
 

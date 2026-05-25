@@ -34,3 +34,4 @@ jobs:
       - run: node test/_smoke-phase5l-readiness.js
       - run: node test/_smoke-phase7-esm-progress.js
       - run: node test/_smoke-phase3a-list-bridge.js
+      - run: node test/_smoke-event-team-chat-ui.js

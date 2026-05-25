@@ -38,12 +38,20 @@
 | `list/shell.js` | Still IIFE orchestrator (delegates to list modules) |
 | `scripts/unwrap-list-iife.js` | One-off / repeat helper for list folder |
 
+## Done in Phase 7.5 (team)
+
+| File | Change |
+|------|--------|
+| `team/chat.js` | `export const teamChatApi`; `PortalEvents.team.chat` bridge; `globalThis.evtOpenTeamChat` |
+| `team/tools.js` | `export const teamToolsApi`; CTA/tools `globalThis.evt*` bridge |
+| `scripts/unwrap-team-iife.js` | Helper for team folder |
+
 ## Remaining (incremental PRs)
 
 | Area | Files | Approach |
 |------|-------|----------|
 | `list/shell.js` | 1 | Unwrap last list IIFE when ready |
-| IIFE modules | detail/create/manage/team | Same pattern as list; use unwrap script or manual |
+| IIFE modules | detail/*, create/*, manage/* | `scripts/unwrap-list-iife.js` pattern or folder-specific unwrap |
 | `compat/global-reexports.js` | 1 | Shrink as modules import each other directly |
 | Shared components | `js/components/events/*` | Optional `export` for `EventsConstants`, etc. |
 

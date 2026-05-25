@@ -29,6 +29,9 @@ const listEsm = ['header.js', 'search.js', 'filters.js', 'buckets.js'].every((f)
     /export const PortalEventsList/.test(read(`js/portal/events/list/${f}`)));
 check('list modules export (7/8, shell still IIFE)', listEsm);
 check('list/shell.js still IIFE orchestrator', read('js/portal/events/list/shell.js').includes('(function () {'));
+check('team/chat.js exports', read('js/portal/events/team/chat.js').includes('export const teamChatApi'));
+check('team/tools.js exports', read('js/portal/events/team/tools.js').includes('export const teamToolsApi'));
+check('team modules not IIFE', !read('js/portal/events/team/chat.js').includes('(function () {'));
 const bundle = read('js/portal/events/events.bundle.js');
 check('bundle uses EventsState', bundle.includes('EventsState'));
 check('classic-chain-loader removed', !fs.existsSync(path.join(eventsDir, 'classic-chain-loader.js')));
