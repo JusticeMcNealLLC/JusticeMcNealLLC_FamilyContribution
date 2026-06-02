@@ -26,7 +26,8 @@ const STATE = {
     activeTab: 'overview',
     source:  'admin', // 'admin' | 'portal'
     editCopyOnOpen: false,
-    tabData: {}, // lazy per-tab cache: { money, docs, raffle, comp }
+    tabData: {}, // lazy per-tab cache: { money, docs, raffle, comp, notifications }
+    canManageNotifications: false,
 };
 
 const RAFFLE_PRIZE_IMAGE_FILES = {};
@@ -47,11 +48,27 @@ const Docs = window.EventsManageDocs;
 const Raffle = window.EventsManageRaffle;
 const Comp = window.EventsManageCompetition;
 const Participation = window.EventsManageParticipation;
+const Notifications = window.EventsManageNotifications;
 
 function _ensureMounted() { return Shell.ensureMounted(); }
 function _renderHeader() { return Shell.renderHeader(); }
 function _renderTabs() { return Shell.renderTabs(); }
 function _renderContent(html) { return Shell.renderContent(html); }
+
+async function _canManageNotificationsForEvent(event) {
+    if (typeof canManageEventNotifications === 'function' && canManageEventNotifications()) return true;
+    if (typeof canManageEvents === 'function' && canManageEvents()) return true;
+    const uid = globalThis.evtCurrentUser?.id;
+    if (!uid || !event) return false;
+    if (event.created_by === uid) return true;
+    const { data: host } = await supabaseClient
+        .from('event_hosts')
+        .select('id')
+        .eq('event_id', event.id)
+        .eq('user_id', uid)
+        .maybeSingle();
+    return !!host;
+}
 
 // ─── Data loading ───────────────────────────────────────────────
 async function _loadEventData(eventId) {
@@ -96,6 +113,13 @@ async function open(eventId, opts = {}) {
     Shell.openPanel();
 
     await _loadEventData(eventId);
+    STATE.canManageNotifications = await _canManageNotificationsForEvent(STATE.event);
+    if (opts.notificationsPrefill && Notifications?.resetNotificationsUi) {
+        Notifications.resetNotificationsUi(opts.notificationsPrefill);
+    }
+    if (opts.tab === 'notifications' && !STATE.canManageNotifications) {
+        STATE.activeTab = 'overview';
+    }
     Shell.renderHeader();
     _renderTab(STATE.activeTab);
 }
@@ -108,6 +132,9 @@ function _renderTab(tab) {
     if (tab === 'overview') { _renderContent(Overview.overviewHtml()); Overview.wireOverview(); return; }
     if (tab === 'images')   { _renderContent(Images.imagesHtml());   Images.wireImages();   return; }
     if (tab === 'rsvps')    { _renderContent(Rsvps.rsvpsHtml()); Rsvps.wireRsvps(); return; }
+    if (tab === 'notifications') {
+        return _renderTabAsync('notifications', Notifications.loadNotifications, Notifications.notificationsHtml, Notifications.wireNotifications);
+    }
     if (tab === 'danger')   { _renderContent(Danger.dangerHtml()); Danger.wireDanger(); return; }
     // Lazy-loaded M3b tabs:
     if (tab === 'money')    return _renderTabAsync('money',  Money.loadMoney,  Money.moneyHtml,  Money.wireMoney);
@@ -227,10 +254,20 @@ globalThis.EventsManageCompetitionApi = {
     emptyHtml: _emptyHtml,
 };
 
+globalThis.EventsManageNotificationsApi = {
+    getState: () => STATE,
+    renderTab: _renderTab,
+    refreshNotificationsTab: () => Notifications.refreshNotificationsTab?.(),
+};
+
 globalThis.EventsManageShellApi = {
     getState: () => STATE,
     onClose: close,
     renderTab: _renderTab,
+    getVisibleTabs: () => M3A_TABS.filter((t) => {
+        if (t.key !== 'notifications') return true;
+        return !!STATE.canManageNotifications;
+    }),
 };
 
 globalThis.EventsManageOverviewApi = {

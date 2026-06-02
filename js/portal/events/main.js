@@ -66,6 +66,7 @@ import './manage/overview.js';
 import './manage/images.js';
 import './manage/docs.js';
 import './manage/rsvps.js';
+import './manage/notifications.js';
 import './manage/money.js';
 import './manage/competition.js';
 import './manage/participation.js';

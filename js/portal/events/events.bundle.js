@@ -298,7 +298,7 @@
           const number = Number(value);
           return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : null;
         }
-        const api18 = {
+        const api19 = {
           VERSION,
           DEFAULT_EMOJI,
           normalizeConfig,
@@ -311,10 +311,10 @@
           getDrawQueue,
           validateConfig
         };
-        root2.EventsRaffleModel = api18;
-        if (typeof module !== "undefined" && module.exports) module.exports = api18;
+        root2.EventsRaffleModel = api19;
+        if (typeof module !== "undefined" && module.exports) module.exports = api19;
         if (typeof root2.PortalEvents === "undefined") root2.PortalEvents = {};
-        root2.PortalEvents.raffleModel = api18;
+        root2.PortalEvents.raffleModel = api19;
       })(typeof globalThis !== "undefined" ? globalThis : window);
     }
   });
@@ -806,10 +806,10 @@
       if (!event || !event.category) return "";
       const emoji = C7.CATEGORY_EMOJI && C7.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
       const label = C7.CATEGORY_TAG && C7.CATEGORY_TAG[event.category]?.label || event.category;
-      const esc9 = H6.escapeHtml || ((s) => String(s == null ? "" : s));
-      return `<button type="button" data-evt-cat="${esc9(event.category)}"
+      const esc10 = H6.escapeHtml || ((s) => String(s == null ? "" : s));
+      return `<button type="button" data-evt-cat="${esc10(event.category)}"
             class="evt-cat-chip absolute top-2 left-2 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-base leading-none hover:scale-110 active:scale-95 transition-transform"
-            aria-label="Filter by ${esc9(label)}" title="Filter by ${esc9(label)}">${emoji}</button>`;
+            aria-label="Filter by ${esc10(label)}" title="Filter by ${esc10(label)}">${emoji}</button>`;
     }
     function _dateStamp(event) {
       const d = _startDate(event);
@@ -1630,7 +1630,7 @@
     }
     const all = window.evtAllEvents || [];
     const rsvps = window.evtAllRsvps || {};
-    const esc9 = H.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc10 = H.escapeHtml || ((s) => String(s == null ? "" : s));
     const now = Date.now();
     const mine = all.filter((ev) => {
       const r = rsvps[ev.id];
@@ -1648,8 +1648,8 @@
       const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
       const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
       const hasBanner = !!ev.banner_url;
-      const thumbStyle = hasBanner ? "background: url('" + esc9(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);";
-      return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc9(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc9(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc9(dateStr) + ", " + esc9(timeStr) + "</span></span></button>";
+      const thumbStyle = hasBanner ? "background: url('" + esc10(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);";
+      return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc10(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc10(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc10(dateStr) + ", " + esc10(timeStr) + "</span></span></button>";
     }).join("");
     mount.innerHTML = '<div class="evt-myrsvps"><div class="evt-myrsvps-head"><h3 class="evt-myrsvps-title">Your Upcoming RSVPs</h3><span class="evt-myrsvps-count">' + total + '</span></div><div class="evt-myrsvps-list">' + rows + '</div><button type="button" class="evt-myrsvps-all" data-evt-myrsvps-all>View All My Events</button></div>';
     mount.querySelectorAll("[data-evt-myrsvp]").forEach((btn) => {
@@ -1730,8 +1730,8 @@
       g2.className = "evt-header-greeting block text-xs text-gray-400 mb-1";
       title.parentNode.insertBefore(g2, title);
     }
-    const esc9 = H2.escapeHtml || ((s) => String(s == null ? "" : s));
-    g2.textContent = "Hey " + esc9(name) + " \u{1F44B}";
+    const esc10 = H2.escapeHtml || ((s) => String(s == null ? "" : s));
+    g2.textContent = "Hey " + esc10(name) + " \u{1F44B}";
   }
   function renderHeaderCount() {
     const el = document.getElementById("evtHeaderCount");
@@ -1959,10 +1959,10 @@
       host.innerHTML = "";
       return;
     }
-    const esc9 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc10 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
     const emoji = C3.CATEGORY_EMOJI && C3.CATEGORY_EMOJI[_activeCategory] || "\u{1F4C5}";
     const label = C3.CATEGORY_TAG && C3.CATEGORY_TAG[_activeCategory]?.label || _activeCategory;
-    host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc9(label) + '</span><span aria-hidden="true" class="text-brand-500">\xD7</span><span class="sr-only">Clear ' + esc9(label) + " filter</span></button>";
+    host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc10(label) + '</span><span aria-hidden="true" class="text-brand-500">\xD7</span><span class="sr-only">Clear ' + esc10(label) + " filter</span></button>";
     host.querySelector("[data-clear-cat]")?.addEventListener("click", () => {
       _activeCategory = "";
       persistState();
@@ -2263,7 +2263,7 @@
   function renderCalendar() {
     const mount = document.getElementById("evtCalendarMount");
     if (!mount) return;
-    const esc9 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc10 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
     let calMonth = api4().getCalMonth?.();
     if (!calMonth) {
       const now = /* @__PURE__ */ new Date();
@@ -2311,7 +2311,7 @@
       }
       const clsCell = "evt-cal-cell" + (hasEv ? " evt-cal-cell--has" : "") + (isToday ? " evt-cal-cell--today" : "");
       parts.push(
-        '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc9(dateObj.toDateString()) + '"' : 'aria-label="' + esc9(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
+        '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc10(dateObj.toDateString()) + '"' : 'aria-label="' + esc10(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
       );
     }
     parts.push("</div>");
@@ -2359,7 +2359,7 @@
       heroEl.innerHTML = "";
       return;
     }
-    const esc9 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc10 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const start = new Date(event.start_date);
     const rel = H3.relativeDate ? H3.relativeDate(start) : "";
     const time = H3.formatDate ? H3.formatDate(event.start_date, "time") : "";
@@ -2371,7 +2371,7 @@
     const isFav = !!(rsvp && rsvp.status === "maybe");
     const heartCls = "evt-hero-heart" + (isFav ? " evt-hero-heart--on" : "");
     const heartPath = isFav ? '<path d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z" fill="currentColor"/>' : '<path stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none" d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z"/>';
-    const heartBtn = '<button type="button" data-evt-hero-heart="' + esc9(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
+    const heartBtn = '<button type="button" data-evt-hero-heart="' + esc10(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
     const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
     const useVlift = document.body.classList.contains("evt-vlift");
     if (useVlift) {
@@ -2427,12 +2427,12 @@
       })();
       const descRaw = event.description ? String(event.description).trim() : "";
       const descShort = descRaw.length > 180 ? descRaw.slice(0, 177) + "\u2026" : descRaw;
-      heroEl.innerHTML = '<div class="evt-hero-vlift relative"><a href="' + href + '" data-evt-hero="' + esc9(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event, true) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + "</div>" + // F14 — FEATURED EVENT kicker (vlift only; only shown when admin-featured)
+      heroEl.innerHTML = '<div class="evt-hero-vlift relative"><a href="' + href + '" data-evt-hero="' + esc10(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event, true) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + "</div>" + // F14 — FEATURED EVENT kicker (vlift only; only shown when admin-featured)
       (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : "") + // Bottom-edge dark fade for legibility
-      '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div><div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' + (fMon ? '<span class="evt-hero-datechip__mon">' + esc9(fMon) + "</span>" : "") + (fDay !== "" ? '<span class="evt-hero-datechip__day">' + esc9(fDay) + "</span>" : "") + (fDow ? '<span class="evt-hero-datechip__dow">' + esc9(fDow) + "</span>" : "") + '</div><div class="evt-hero-meta-body">' + // E7 — Avatar cluster
-      attendeeCluster(event.id) + '<h2 class="text-xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc9(event.title || "Untitled event") + "</h2>" + // F14 — Host line
-      (hostLine ? '<p class="evt-hero-host" data-f14-host>' + esc9(hostLine) + "</p>" : "") + // F20 — Time + location on the same line
-      (timeShort || loc ? '<div class="evt-hero-timeloc" data-f14-timeloc>' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc9(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc9(loc) + "</span>" : "") + "</div>" : "") + '</div></div><div class="evt-hero-side" data-f14-side>' + (descShort ? '<p class="evt-hero-side__desc">' + esc9(descShort) + "</p>" : "") + '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc9(event.id) + '" role="button" aria-hidden="true">View Details</span></div></a><button type="button" data-evt-hero-cta="' + esc9(event.id) + '" class="evt-hero-cta" aria-label="View details for ' + esc9(event.title || "this event") + '">View Details</button></div>';
+      '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div><div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' + (fMon ? '<span class="evt-hero-datechip__mon">' + esc10(fMon) + "</span>" : "") + (fDay !== "" ? '<span class="evt-hero-datechip__day">' + esc10(fDay) + "</span>" : "") + (fDow ? '<span class="evt-hero-datechip__dow">' + esc10(fDow) + "</span>" : "") + '</div><div class="evt-hero-meta-body">' + // E7 — Avatar cluster
+      attendeeCluster(event.id) + '<h2 class="text-xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc10(event.title || "Untitled event") + "</h2>" + // F14 — Host line
+      (hostLine ? '<p class="evt-hero-host" data-f14-host>' + esc10(hostLine) + "</p>" : "") + // F20 — Time + location on the same line
+      (timeShort || loc ? '<div class="evt-hero-timeloc" data-f14-timeloc>' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc10(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc10(loc) + "</span>" : "") + "</div>" : "") + '</div></div><div class="evt-hero-side" data-f14-side>' + (descShort ? '<p class="evt-hero-side__desc">' + esc10(descShort) + "</p>" : "") + '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc10(event.id) + '" role="button" aria-hidden="true">View Details</span></div></a><button type="button" data-evt-hero-cta="' + esc10(event.id) + '" class="evt-hero-cta" aria-label="View details for ' + esc10(event.title || "this event") + '">View Details</button></div>';
       const ctaBtn = heroEl.querySelector("button[data-evt-hero-cta]");
       if (ctaBtn) {
         ctaBtn.addEventListener("click", (e) => {
@@ -2478,7 +2478,7 @@
         });
       }
     } else {
-      heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc9(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc9(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc9(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc9(loc) + "</p>" : "") + "</div></a>";
+      heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc10(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc10(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc10(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc10(loc) + "</p>" : "") + "</div></a>";
     }
     const link = heroEl.querySelector("a[data-evt-hero]");
     if (link) {
@@ -2496,18 +2496,18 @@
   function attendeeCluster(eventId2) {
     const list = window.evtAttendees && window.evtAttendees[eventId2] || [];
     if (!list.length) return "";
-    const esc9 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc10 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const bubs = list.slice(0, 5).map((p, i) => {
       const pic = p && p.profile_picture_url;
       const first = p && p.first_name || "";
       const initial = (first.trim().charAt(0) || "?").toUpperCase();
       const ml = i === 0 ? "" : " -ml-2";
-      const inner = pic ? '<img src="' + esc9(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc9(initial) + "</span>";
-      return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc9(first) + '">' + inner + "</span>";
+      const inner = pic ? '<img src="' + esc10(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc10(initial) + "</span>";
+      return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc10(first) + '">' + inner + "</span>";
     }).join("");
     const trueCount = window.evtAttendeeCounts && window.evtAttendeeCounts[eventId2] || list.length;
     const labelN = String(trueCount);
-    return '<button type="button" data-evt-hero-going="' + esc9(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
+    return '<button type="button" data-evt-hero-going="' + esc10(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
   }
   function renderLiveBanner(events) {
     const el = document.getElementById("evtLiveBanner");
@@ -2526,12 +2526,12 @@
       el.innerHTML = "";
       return;
     }
-    const esc9 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc10 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const first = live[0];
-    const label = live.length === 1 ? esc9(first.title || "An event") + " is happening now" : live.length + " events happening now";
+    const label = live.length === 1 ? esc10(first.title || "An event") + " is happening now" : live.length + " events happening now";
     const href = live.length === 1 && first.slug ? "?event=" + encodeURIComponent(first.slug) : "javascript:void(0)";
     el.classList.remove("hidden");
-    el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc9(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
+    el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc10(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
     const link = el.querySelector("a[data-evt-live]");
     if (link && live.length === 1) {
       link.addEventListener("click", (e) => {
@@ -2582,13 +2582,13 @@
     });
   }
   function miniCard(event, attendees, goingCount) {
-    const esc9 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc10 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const d = new Date(event.start_date);
     const day = d.getDate();
     const mon = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
     const rel = H3.relativeDate ? H3.relativeDate(d) : "";
     const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
-    const title = esc9(event.title || "Untitled event");
+    const title = esc10(event.title || "Untitled event");
     const loc = event.location_nickname || event.location_text || "";
     let bannerStyle;
     if (event.banner_url) {
@@ -2602,7 +2602,7 @@
     const attLine = attCount ? '<span class="text-[11px] text-gray-500 truncate">' + attCount + " going</span>" : "";
     const isPinnedLlc = event.is_pinned && event.event_type === "llc";
     const pin = isPinnedLlc ? '<span class="evt-date-pin evt-date-pin--mini" aria-label="Pinned LLC event" title="Pinned">\u{1F4CC}</span>' : "";
-    return '<a href="' + href + '" data-evt-mini="' + esc9(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc9(rel) : "") + (loc && rel ? " \xB7 " : "") + esc9(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
+    return '<a href="' + href + '" data-evt-mini="' + esc10(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc10(rel) : "") + (loc && rel ? " \xB7 " : "") + esc10(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
   }
   function renderTopPicks(events, attendees, heroId, eventsById) {
     const rail = document.getElementById("evtTopPicks");
@@ -5264,6 +5264,14 @@
     const cpTitle = creatorProfile ? creatorProfile.title || "Member" : "";
     const memberGoing2 = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
     const hasRsvp = rsvp && (memberGoing2 || rsvp.status === "maybe");
+    let memberPhone = null;
+    let eventSmsRecipient = null;
+    const { data: memberProfile } = await supabaseClient.from("profiles").select("phone").eq("id", globalThis.evtCurrentUser.id).maybeSingle();
+    memberPhone = (memberProfile?.phone || "").trim() || null;
+    if (memberPhone) {
+      const { data: smsRec } = await supabaseClient.from("event_sms_recipients").select("id, opted_in, opted_out_at").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
+      eventSmsRecipient = smsRec;
+    }
     const documentsHtml = await evtBuildDocumentsHtml(event, isHost, hasRsvp);
     const mapHtml = evtBuildMapHtml(event, hasRsvp, isHost);
     const competitionHtml = isComp ? await evtBuildCompetitionHtml(event, isHost) : "";
@@ -5326,7 +5334,9 @@
       entriesClosed,
       rsvpEnabled,
       canRsvp,
-      eventIsFull
+      eventIsFull,
+      memberPhone,
+      eventSmsRecipient
     };
   }
   globalThis.evtLoadDetailContext = evtLoadDetailContext;
@@ -5341,6 +5351,18 @@
   var _edPill = window.evtEdPill;
   var _edNotice = window.evtEdNotice;
   var _edSectionHead = window.evtEdSectionHead;
+  function evtBuildDetailSmsOptInHtml(ctx) {
+    const { eventId: eventId2, isHost, memberPhone, memberGoing: memberGoing2, canRsvp, rsvpEnabled, eventSmsRecipient } = ctx;
+    if (isHost || !memberPhone) return "";
+    if (!rsvpEnabled || !memberGoing2 && !canRsvp) return "";
+    const checked = !!(eventSmsRecipient?.opted_in && !eventSmsRecipient?.opted_out_at);
+    return `
+        <label class="ed-checkbox-label" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px">
+            <input type="checkbox" id="evtSmsOptInCheck" ${checked ? "checked" : ""}
+                onchange="evtHandleEventSmsOptIn('${eventId2}', this.checked)">
+            <span class="ed-hint" style="margin:0">Text me event updates for this event. Message/data rates may apply. Reply STOP to opt out.</span>
+        </label>`;
+  }
   function evtBuildDetailRsvpSectionHtml(ctx) {
     const {
       eventId: eventId2,
@@ -5421,7 +5443,8 @@
         rsvpButtons = _edNotice("\u{1F512}", "RSVP Closed", closedReason);
       }
     }
-    return rsvpButtons;
+    const smsOptInHtml = evtBuildDetailSmsOptInHtml(ctx);
+    return rsvpButtons + smsOptInHtml;
   }
   function evtBuildDetailRaffleSectionHtml(ctx) {
     const {
@@ -8147,8 +8170,12 @@ Proceed to checkout?`
         window.evtAllRsvps = window.evtAllRsvps || {};
         window.evtAllRsvps[eventId2] = data;
       }
+      const wantSmsOptIn = status === "going" && !!document.getElementById("evtSmsOptInCheck")?.checked;
       evtRenderEvents();
       await globalThis.evtOpenDetail(eventId2);
+      if (wantSmsOptIn) {
+        await evtHandleEventSmsOptIn(eventId2, true);
+      }
       if (status === "going" && window.evtCtaRaffleIntent === eventId2) {
         window.evtCtaRaffleIntent = null;
         evtOpenCtaPanel("raffle", eventId2);
@@ -8156,6 +8183,20 @@ Proceed to checkout?`
     } catch (err) {
       console.error("RSVP error:", err);
       alert("Failed to update RSVP. Please try again.");
+    }
+  }
+  async function evtHandleEventSmsOptIn(eventId2, optIn) {
+    try {
+      await callEdgeFunction("upsert-event-sms-recipient", {
+        event_id: eventId2,
+        sms_opt_in: !!optIn,
+        sms_consent_text_version: "event_sms_v1"
+      });
+    } catch (err) {
+      console.error("Event SMS preference error:", err);
+      alert(err.message || "Failed to save SMS preference. Please try again.");
+      const checkbox = document.getElementById("evtSmsOptInCheck");
+      if (checkbox) checkbox.checked = !optIn;
     }
   }
   async function evtHandleRaffleEntry(eventId2) {
@@ -8502,6 +8543,7 @@ Type the event title to confirm:`);
     evtIsRaffleBundledWithPaidRsvp,
     evtCanEnterMemberRaffle,
     evtHandleRsvp,
+    evtHandleEventSmsOptIn,
     evtHandleRaffleEntry,
     evtHandleFreeRaffleEntry,
     evtUpdateStatus,
@@ -9909,7 +9951,7 @@ Type the event title to confirm:`);
     const steps = _steps2();
     const STATE4 = steps.getState();
     const validateStep = steps.validateStep;
-    const esc9 = steps.esc;
+    const esc10 = steps.esc;
     const close4 = steps.close;
     if (typeof validateStep === "function") {
       const err = validateStep();
@@ -10008,8 +10050,8 @@ Type the event title to confirm:`);
     } catch (e) {
       const msg = e && e.message ? e.message : String(e);
       const errBox2 = document.getElementById("ecError");
-      if (errBox2 && typeof esc9 === "function") {
-        errBox2.innerHTML = `<div class="ec-error">${esc9(msg)}</div>`;
+      if (errBox2 && typeof esc10 === "function") {
+        errBox2.innerHTML = `<div class="ec-error">${esc10(msg)}</div>`;
       } else {
         alert("Save failed: " + msg);
       }
@@ -10694,10 +10736,11 @@ Type the event title to confirm:`);
   });
 
   // js/portal/events/manage/shell.js
-  var M3A_TABS = [
+  var M3A_TABS2 = [
     { key: "overview", label: "Overview" },
     { key: "images", label: "Images" },
     { key: "rsvps", label: "RSVPs" },
+    { key: "notifications", label: "Notifications" },
     { key: "money", label: "Money" },
     { key: "docs", label: "Docs" },
     { key: "raffle", label: "Raffle" },
@@ -10804,6 +10847,8 @@ Type the event title to confirm:`);
             .em-textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
             .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
             .em-placeholder svg { width:48px; height:48px; margin-bottom:12px; opacity:.4; }
+            .em-notif-row { align-items:flex-start; }
+            .em-notif-row input[type="checkbox"] { margin-top:4px; flex-shrink:0; }
             @media(max-width:639px){
                 #emSheetPanel { max-height: 92vh; }
                 .em-op-grid { grid-template-columns:1fr; }
@@ -10831,7 +10876,8 @@ Type the event title to confirm:`);
   function renderTabs2() {
     const STATE4 = getState2();
     const bar = document.getElementById("emSheetTabs");
-    bar.innerHTML = M3A_TABS.map(
+    const tabs = typeof api8().getVisibleTabs === "function" ? api8().getVisibleTabs() : M3A_TABS2;
+    bar.innerHTML = tabs.map(
       (t) => `<button class="em-tab${t.placeholder ? " placeholder" : ""}${t.key === STATE4.activeTab ? " active" : ""}" data-tab="${t.key}">${t.label}${t.placeholder ? ' <span style="font-size:9px;opacity:.7">soon</span>' : ""}</button>`
     ).join("");
     bar.querySelectorAll(".em-tab").forEach((btn) => {
@@ -10890,7 +10936,7 @@ Type the event title to confirm:`);
     setLoadingChrome: setLoadingChrome2,
     openPanel: openPanel2,
     closePanel: closePanel2,
-    getTabs: () => M3A_TABS
+    getTabs: () => M3A_TABS2
   };
   globalThis.EventsManageShell = manageShellApi;
 
@@ -11723,11 +11769,415 @@ Type the event title to confirm:`);
   };
   globalThis.EventsManageRsvps = manageRsvpsApi;
 
-  // js/portal/events/manage/money.js
+  // js/portal/events/manage/notifications.js
+  var SOURCE_LABELS = {
+    guest_rsvp: "Guest RSVP",
+    member_rsvp: "Member RSVP",
+    member_profile: "Member profile",
+    admin_manual: "Admin"
+  };
+  var UI = {
+    filter: "all",
+    search: "",
+    selected: /* @__PURE__ */ new Set(),
+    expandedMessageId: null,
+    prefillBody: ""
+  };
   function api13() {
-    return window.EventsManageMoneyApi || {};
+    return window.EventsManageNotificationsApi || {};
   }
   function esc5(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function maskPhone(phone) {
+    const digits = String(phone || "").replace(/\D/g, "");
+    if (digits.length < 4) return "***";
+    return `***-***-${digits.slice(-4)}`;
+  }
+  function contactPhone(row) {
+    const c = row.sms_phone_contacts;
+    if (!c) return "";
+    return Array.isArray(c) ? c[0]?.phone_e164 || "" : c.phone_e164 || "";
+  }
+  function isGuestRecipient(r) {
+    return r.consent_source === "guest_rsvp" || !!r.guest_rsvp_id;
+  }
+  function isMemberRecipient(r) {
+    return !isGuestRecipient(r);
+  }
+  function optOutLabel(r) {
+    if (r.opted_in && !r.opted_out_at) return "Opted in";
+    if (r.opted_out_at) return "Opted out";
+    return "Not opted in";
+  }
+  function optOutClass(r) {
+    if (r.opted_in && !r.opted_out_at) return "em-pill-going";
+    if (r.opted_out_at) return "em-pill-not";
+    return "em-pill-maybe";
+  }
+  async function loadNotifications() {
+    const STATE4 = api13().getState?.() || {};
+    const eventId2 = STATE4.eventId;
+    if (!eventId2) return { recipients: [], messages: [], suppressedPhones: /* @__PURE__ */ new Set(), lastSentAt: null };
+    const { data: recipients, error: recErr } = await supabaseClient.from("event_sms_recipients").select(`
+            id, contact_id, display_name, email, user_id, guest_rsvp_id, event_rsvp_id,
+            opted_in, opted_in_at, opted_out_at, consent_source,
+            sms_phone_contacts ( phone_e164 )
+        `).eq("event_id", eventId2).order("created_at", { ascending: true });
+    if (recErr) throw new Error(recErr.message);
+    const rows = recipients || [];
+    const phones = [...new Set(rows.map(contactPhone).filter(Boolean))];
+    let suppressedPhones = /* @__PURE__ */ new Set();
+    if (phones.length) {
+      const { data: supps } = await supabaseClient.from("sms_global_suppressions").select("phone_e164").in("phone_e164", phones).is("released_at", null);
+      suppressedPhones = new Set((supps || []).map((s) => s.phone_e164));
+    }
+    const { data: messages, error: msgErr } = await supabaseClient.from("sms_messages").select("id, body, message_type, sender_user_id, recipient_count, created_at").eq("event_id", eventId2).order("created_at", { ascending: false });
+    if (msgErr) throw new Error(msgErr.message);
+    const messageList = messages || [];
+    const messageIds = messageList.map((m) => m.id);
+    let deliveries = [];
+    if (messageIds.length) {
+      const { data: delRows, error: delErr } = await supabaseClient.from("sms_message_deliveries").select("id, message_id, event_sms_recipient_id, phone_e164, status, status_updated_at, error_message").in("message_id", messageIds);
+      if (delErr) throw new Error(delErr.message);
+      deliveries = delRows || [];
+    }
+    const latestByRecipient = {};
+    for (const d of deliveries) {
+      if (!d.event_sms_recipient_id) continue;
+      const prev = latestByRecipient[d.event_sms_recipient_id];
+      const ts = new Date(d.status_updated_at || 0).getTime();
+      if (!prev || ts >= prev._ts) {
+        latestByRecipient[d.event_sms_recipient_id] = { ...d, _ts: ts };
+      }
+    }
+    const deliveriesByMessage = {};
+    for (const d of deliveries) {
+      if (!deliveriesByMessage[d.message_id]) deliveriesByMessage[d.message_id] = [];
+      deliveriesByMessage[d.message_id].push(d);
+    }
+    const enriched = rows.map((r) => {
+      const phone = contactPhone(r);
+      return {
+        ...r,
+        phone_e164: phone,
+        phone_masked: maskPhone(phone),
+        globally_suppressed: phone ? suppressedPhones.has(phone) : false,
+        latest_delivery: latestByRecipient[r.id] || null
+      };
+    });
+    const lastSentAt = messageList.length ? messageList[0].created_at : null;
+    return {
+      recipients: enriched,
+      messages: messageList,
+      deliveriesByMessage,
+      suppressedPhones,
+      lastSentAt,
+      senderProfiles: {}
+    };
+  }
+  function getFilteredRecipients(data) {
+    const q = UI.search.trim().toLowerCase();
+    return (data.recipients || []).filter((r) => {
+      if (UI.filter === "opted_in" && !(r.opted_in && !r.opted_out_at)) return false;
+      if (UI.filter === "opted_out" && (r.opted_in && !r.opted_out_at)) return false;
+      if (UI.filter === "guests" && !isGuestRecipient(r)) return false;
+      if (UI.filter === "members" && !isMemberRecipient(r)) return false;
+      if (UI.filter === "failed") {
+        const st = r.latest_delivery?.status;
+        if (st !== "failed" && st !== "undelivered") return false;
+      }
+      if (q) {
+        const last4 = (r.phone_e164 || "").replace(/\D/g, "").slice(-4);
+        const hay = `${r.display_name || ""} ${r.email || ""} ${last4}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+  function isEligibleToSend(r) {
+    return !!(r.opted_in && !r.opted_out_at && r.phone_e164 && !r.globally_suppressed);
+  }
+  function summaryMetrics(data) {
+    const all = data.recipients || [];
+    const optedIn = all.filter((r) => r.opted_in && !r.opted_out_at).length;
+    const optedOutCount = all.filter((r) => r.opted_out_at || !r.opted_in).length;
+    const suppressed = all.filter((r) => r.globally_suppressed).length;
+    return {
+      total: all.length,
+      optedIn,
+      optedOut: optedOutCount,
+      suppressed,
+      lastSentAt: data.lastSentAt
+    };
+  }
+  function notificationsHtml() {
+    const STATE4 = api13().getState?.() || {};
+    const data = STATE4.tabData?.notifications || { recipients: [], messages: [] };
+    const metrics = summaryMetrics(data);
+    const visible = getFilteredRecipients(data);
+    const selectedEligible = [...UI.selected].filter((id) => {
+      const row = data.recipients.find((r) => r.id === id);
+      return row && isEligibleToSend(row);
+    });
+    const lastSentLabel = metrics.lastSentAt ? new Date(metrics.lastSentAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Never";
+    const recipientRows = visible.length ? visible.map((r) => {
+      const checked = UI.selected.has(r.id) ? " checked" : "";
+      const disabled = isEligibleToSend(r) ? "" : " disabled";
+      const delivery = r.latest_delivery?.status ? `<span class="em-pill">${esc5(r.latest_delivery.status)}</span>` : '<span class="text-xs text-gray-400">\u2014</span>';
+      const suppressed = r.globally_suppressed ? '<span class="em-pill em-pill-not">STOP</span>' : "";
+      return `
+                <div class="em-row em-notif-row" data-recipient-id="${esc5(r.id)}">
+                    <input type="checkbox" class="em-notif-check" data-recipient-id="${esc5(r.id)}"${checked}${disabled} aria-label="Select ${esc5(r.display_name || "recipient")}">
+                    <div class="flex-1 min-w-0">
+                        <p class="em-attendee-name">${esc5(r.display_name || "Unknown")}</p>
+                        <p class="em-attendee-sub">${esc5(r.phone_masked)}${r.email ? ` \xB7 ${esc5(r.email)}` : ""}</p>
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            <span class="em-pill ${optOutClass(r)}">${esc5(optOutLabel(r))}</span>
+                            <span class="em-pill">${esc5(SOURCE_LABELS[r.consent_source] || r.consent_source)}</span>
+                            ${suppressed}
+                            ${delivery}
+                        </div>
+                    </div>
+                </div>`;
+    }).join("") : '<p class="text-xs text-gray-400 italic py-3">No recipients match this filter.</p>';
+    const historyRows = (data.messages || []).length ? data.messages.map((m) => {
+      const dels = data.deliveriesByMessage?.[m.id] || [];
+      const counts = dels.reduce((acc, d) => {
+        acc[d.status] = (acc[d.status] || 0) + 1;
+        return acc;
+      }, {});
+      const summary = Object.keys(counts).map((k) => `${k}: ${counts[k]}`).join(" \xB7 ") || "No deliveries";
+      const expanded = UI.expandedMessageId === m.id;
+      const preview = (m.body || "").length > 120 ? `${m.body.slice(0, 120)}\u2026` : m.body || "";
+      const detail2 = expanded ? `<div class="mt-2 space-y-1">${dels.map((d) => {
+        const name = data.recipients.find((r) => r.id === d.event_sms_recipient_id)?.display_name;
+        return `<p class="text-xs text-gray-600">${esc5(name || maskPhone(d.phone_e164))} \xB7 ${esc5(d.status)}${d.error_message ? ` \u2014 ${esc5(d.error_message)}` : ""}</p>`;
+      }).join("") || '<p class="text-xs text-gray-400">No per-recipient rows.</p>'}</div>` : "";
+      return `
+                <div class="em-card mb-2">
+                    <button type="button" class="w-full text-left" data-toggle-message="${esc5(m.id)}">
+                        <div class="flex justify-between gap-2">
+                            <strong class="text-sm text-gray-900">${esc5(m.message_type)}</strong>
+                            <span class="text-xs text-gray-400">${new Date(m.created_at).toLocaleString()}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">${esc5(preview)}</p>
+                        <p class="text-xs text-gray-400 mt-1">${m.recipient_count} recipients \xB7 ${esc5(summary)}</p>
+                    </button>
+                    ${detail2}
+                </div>`;
+    }).join("") : '<p class="text-xs text-gray-400 italic py-2">No messages sent for this event yet.</p>';
+    return `
+        <div class="em-card em-command-card mb-4" style="background:linear-gradient(135deg,#0f172a,#4338ca)">
+            <p class="em-command-eyebrow">Notifications</p>
+            <h3 class="em-command-title">Event SMS</h3>
+            <p class="em-command-copy">Send manual updates to opted-in recipients. Phones are masked in this view.</p>
+        </div>
+
+        <div class="em-metric-grid mb-4">
+            <div class="em-metric"><span>Recipients</span><strong>${metrics.total}</strong><small>All contacts</small></div>
+            <div class="em-metric"><span>Opted in</span><strong>${metrics.optedIn}</strong><small>Eligible to send</small></div>
+            <div class="em-metric"><span>Opted out</span><strong>${metrics.optedOut}</strong><small>Event preference</small></div>
+            <div class="em-metric"><span>Global STOP</span><strong>${metrics.suppressed}</strong><small>Last sent: ${esc5(lastSentLabel)}</small></div>
+        </div>
+
+        <div class="em-card mb-4">
+            <div class="em-section-head">
+                <div>
+                    <h3 class="em-section-title">Compose SMS</h3>
+                    <p class="em-section-sub">${selectedEligible.length} selected \xB7 only opted-in, non-suppressed recipients will receive messages.</p>
+                </div>
+            </div>
+            <textarea id="emNotifBody" class="em-textarea" maxlength="1600" placeholder="Write your event update\u2026">${esc5(UI.prefillBody || "")}</textarea>
+            <p class="text-xs text-gray-400 mt-1"><span id="emNotifCharCount">${(UI.prefillBody || "").length}</span> / 1600 characters</p>
+            <div class="flex flex-wrap gap-2 mt-3">
+                <button type="button" class="em-btn-primary" id="emNotifSendBtn"${selectedEligible.length ? "" : " disabled"}>Send SMS</button>
+                <button type="button" class="em-btn-ghost" id="emNotifSelectOptedIn">Select all opted-in</button>
+                <button type="button" class="em-btn-ghost" id="emNotifClearSelection">Clear selection</button>
+            </div>
+            <p id="emNotifSendResult" class="text-xs mt-2" style="min-height:1rem"></p>
+        </div>
+
+        <div class="em-card mb-4">
+            <div class="em-section-head">
+                <div>
+                    <h3 class="em-section-title">Recipients</h3>
+                    <p class="em-section-sub">Filter and select who should receive the next message.</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-3">
+                ${["all", "opted_in", "opted_out", "guests", "members", "failed"].map((f) => {
+      const label = { all: "All", opted_in: "Opted in", opted_out: "Opted out", guests: "Guests", members: "Members", failed: "Failed" }[f];
+      const active = UI.filter === f ? "background:#eef2ff;color:#4338ca" : "background:#f3f4f6;color:#374151";
+      return `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 10px;${active}" data-notif-filter="${f}">${label}</button>`;
+    }).join("")}
+            </div>
+            <input type="search" id="emNotifSearch" class="em-input mb-3" placeholder="Search name, email, or last 4 of phone" value="${esc5(UI.search)}">
+            <label class="text-xs text-gray-500 flex items-center gap-2 mb-2">
+                <input type="checkbox" id="emNotifSelectVisible"> Select all visible
+            </label>
+            ${recipientRows}
+        </div>
+
+        <div class="em-card">
+            <div class="em-section-head">
+                <div>
+                    <h3 class="em-section-title">Message history</h3>
+                    <p class="em-section-sub">Tap a message to expand delivery details.</p>
+                </div>
+            </div>
+            ${historyRows}
+        </div>
+    `;
+  }
+  async function refreshNotificationsTab() {
+    const STATE4 = api13().getState?.() || {};
+    STATE4.tabData.notifications = await loadNotifications();
+    api13().renderTab?.("notifications");
+  }
+  async function sendSelectedSms() {
+    const STATE4 = api13().getState?.() || {};
+    const data = STATE4.tabData?.notifications;
+    if (!data) return;
+    const body = document.getElementById("emNotifBody")?.value?.trim() || "";
+    const resultEl = document.getElementById("emNotifSendResult");
+    const selectedIds = [...UI.selected].filter((id) => {
+      const row = data.recipients.find((r) => r.id === id);
+      return row && isEligibleToSend(row);
+    });
+    if (!body) {
+      if (resultEl) resultEl.textContent = "Enter a message before sending.";
+      return;
+    }
+    if (!selectedIds.length) {
+      if (resultEl) resultEl.textContent = "Select at least one opted-in recipient.";
+      return;
+    }
+    const ok = confirm(`Send this SMS to ${selectedIds.length} recipient${selectedIds.length === 1 ? "" : "s"}?`);
+    if (!ok) return;
+    const btn = document.getElementById("emNotifSendBtn");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Sending\u2026";
+    }
+    if (resultEl) resultEl.textContent = "";
+    try {
+      const res = await callEdgeFunction("send-event-sms", {
+        event_id: STATE4.eventId,
+        body,
+        message_type: "manual",
+        recipient_ids: selectedIds,
+        select_all_opted_in: false,
+        dry_run: false
+      });
+      const skipped = (res.skipped || 0) + (res.skipped_suppressed || 0) + (res.skipped_invalid || 0);
+      if (resultEl) {
+        resultEl.textContent = res.ok ? `Sent to ${res.sent || 0} recipient(s). Skipped: ${skipped}. Failed: ${res.failed || 0}.${res.dry_run ? " (dry run)" : ""}` : res.error || "Send failed.";
+        resultEl.style.color = res.ok ? "#059669" : "#dc2626";
+      }
+      UI.selected.clear();
+      UI.prefillBody = "";
+      await refreshNotificationsTab();
+    } catch (err) {
+      if (resultEl) {
+        resultEl.textContent = err.message || "Send failed.";
+        resultEl.style.color = "#dc2626";
+      }
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Send SMS";
+      }
+    }
+  }
+  function wireNotifications() {
+    const STATE4 = api13().getState?.() || {};
+    const data = STATE4.tabData?.notifications;
+    const root2 = document.getElementById("emSheetContent");
+    if (!root2 || !data) return;
+    root2.querySelectorAll("[data-notif-filter]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        UI.filter = btn.dataset.notifFilter || "all";
+        api13().renderTab?.("notifications");
+      });
+    });
+    const search = document.getElementById("emNotifSearch");
+    if (search) {
+      search.addEventListener("input", () => {
+        UI.search = search.value;
+        api13().renderTab?.("notifications");
+      });
+    }
+    const body = document.getElementById("emNotifBody");
+    const charCount = document.getElementById("emNotifCharCount");
+    if (body) {
+      body.addEventListener("input", () => {
+        UI.prefillBody = body.value;
+        if (charCount) charCount.textContent = String(body.value.length);
+      });
+    }
+    root2.querySelectorAll(".em-notif-check").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const id = cb.dataset.recipientId;
+        if (!id || cb.disabled) return;
+        if (cb.checked) UI.selected.add(id);
+        else UI.selected.delete(id);
+        api13().renderTab?.("notifications");
+      });
+    });
+    document.getElementById("emNotifSelectVisible")?.addEventListener("change", (e) => {
+      const visible = getFilteredRecipients(data);
+      if (e.target.checked) {
+        visible.forEach((r) => {
+          if (isEligibleToSend(r)) UI.selected.add(r.id);
+        });
+      } else {
+        visible.forEach((r) => UI.selected.delete(r.id));
+      }
+      api13().renderTab?.("notifications");
+    });
+    document.getElementById("emNotifSelectOptedIn")?.addEventListener("click", () => {
+      (data.recipients || []).forEach((r) => {
+        if (isEligibleToSend(r)) UI.selected.add(r.id);
+      });
+      api13().renderTab?.("notifications");
+    });
+    document.getElementById("emNotifClearSelection")?.addEventListener("click", () => {
+      UI.selected.clear();
+      api13().renderTab?.("notifications");
+    });
+    document.getElementById("emNotifSendBtn")?.addEventListener("click", () => sendSelectedSms());
+    root2.querySelectorAll("[data-toggle-message]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.toggleMessage;
+        UI.expandedMessageId = UI.expandedMessageId === id ? null : id;
+        api13().renderTab?.("notifications");
+      });
+    });
+  }
+  function resetNotificationsUi(prefillBody = "") {
+    UI.filter = "all";
+    UI.search = "";
+    UI.selected.clear();
+    UI.expandedMessageId = null;
+    UI.prefillBody = prefillBody || "";
+  }
+  var manageNotificationsApi = {
+    loadNotifications,
+    notificationsHtml,
+    wireNotifications,
+    resetNotificationsUi,
+    refreshNotificationsTab
+  };
+  globalThis.EventsManageNotifications = manageNotificationsApi;
+
+  // js/portal/events/manage/money.js
+  function api14() {
+    return window.EventsManageMoneyApi || {};
+  }
+  function esc6(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -11736,7 +12186,7 @@ Type the event title to confirm:`);
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
   }
   async function loadMoney() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const [rsvpsRes, guestRes, raffleRes, poolRes] = await Promise.all([
       supabaseClient.from("event_rsvps").select("id, user_id, status, amount_paid_cents, paid, refunded, refund_amount_cents, stripe_payment_intent_id, profiles!event_rsvps_user_id_fkey(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
@@ -11752,7 +12202,7 @@ Type the event title to confirm:`);
     };
   }
   function moneyHtml() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     const d = STATE4.tabData.money;
     const isPaidEvent = STATE4.event?.pricing_mode === "paid" || Number(STATE4.event?.rsvp_cost_cents || 0) > 0;
     const paidRsvps = d.rsvps.filter((r) => r.paid);
@@ -11774,8 +12224,8 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ""}>${avatarHtml2}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc5(name)}</p>
-                    <p class="em-attendee-sub">${esc5(sub)}</p>
+                    <p class="em-attendee-name">${esc6(name)}</p>
+                    <p class="em-attendee-sub">${esc6(sub)}</p>
                     <div class="flex flex-wrap gap-1 mt-2">${refundPill}${isGuest ? '<span class="em-pill em-pill-going">Guest</span>' : ""}</div>
                 </div>
                 ${stripeId ? `<a href="https://dashboard.stripe.com/payments/${encodeURIComponent(stripeId)}" target="_blank" rel="noopener" class="text-xs text-brand-600 font-semibold hover:underline whitespace-nowrap">Stripe \u2197</a>` : ""}
@@ -11785,7 +12235,7 @@ Type the event title to confirm:`);
       const p = r.profiles || {};
       const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
       const initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?";
-      const avatar = p.profile_picture_url ? `<img src="${esc5(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
+      const avatar = p.profile_picture_url ? `<img src="${esc6(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
       return paymentRow({ name, sub: "Member RSVP payment", amount: r.amount_paid_cents || 0, refundedAmount: r.refund_amount_cents || 0, stripeId: r.stripe_payment_intent_id, avatarHtml: avatar });
     });
     const guestRows = paidGuests.map((g2) => paymentRow({
@@ -11794,7 +12244,7 @@ Type the event title to confirm:`);
       amount: g2.amount_paid_cents || 0,
       refundedAmount: 0,
       stripeId: g2.stripe_payment_intent_id,
-      avatarHtml: `<span>${esc5((g2.guest_name || "G").slice(0, 1).toUpperCase())}</span>`,
+      avatarHtml: `<span>${esc6((g2.guest_name || "G").slice(0, 1).toUpperCase())}</span>`,
       isGuest: true
     }));
     const paymentRows = [...memberRows, ...guestRows].join("") || `<p class="text-xs text-gray-400 italic py-2">No paid RSVPs yet.</p>`;
@@ -11831,7 +12281,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireMoney() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
   }
   var manageMoneyApi = {
     loadMoney,
@@ -11841,10 +12291,10 @@ Type the event title to confirm:`);
   globalThis.EventsManageMoney = manageMoneyApi;
 
   // js/portal/events/manage/competition.js
-  function api14() {
+  function api15() {
     return window.EventsManageCompetitionApi || {};
   }
-  function esc6(s) {
+  function esc7(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -11853,7 +12303,7 @@ Type the event title to confirm:`);
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
   }
   async function loadComp() {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api15().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const [phasesRes, entriesRes, votesRes, winnersRes, contribRes] = await Promise.all([
       supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true }),
@@ -11871,10 +12321,10 @@ Type the event title to confirm:`);
     };
   }
   function compHtml() {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api15().getState?.() || {};
     const e = STATE4.event;
     if (e.event_type !== "competition") {
-      return api14().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
+      return api15().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
     }
     const d = STATE4.tabData.comp;
     const fmt = window.formatCurrency || money3;
@@ -11895,9 +12345,9 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:${color}22;color:${color};font-weight:900">${ph.phase_num}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc6(ph.name || "Competition phase")}</p>
+                    <p class="em-attendee-name">${esc7(ph.name || "Competition phase")}</p>
                     <p class="em-attendee-sub">${dates || "Dates not set"}</p>
-                    <div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked" style="background:${color}22;color:${color}">${esc6(ph.status || "pending")}</span>${ph.extended_once ? '<span class="em-pill em-pill-paid">Extended</span>' : ""}</div>
+                    <div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked" style="background:${color}22;color:${color}">${esc7(ph.status || "pending")}</span>${ph.extended_once ? '<span class="em-pill em-pill-paid">Extended</span>' : ""}</div>
                 </div>
             </div>
         `;
@@ -11917,8 +12367,8 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:18px">${medal}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc6(name)}</p>
-                    <p class="em-attendee-sub">${esc6(entry.title || "Winning entry")} \xB7 ${fmt(w.prize_amount_cents)}${w.needs_1099 ? " \xB7 1099 needed" : ""}</p>
+                    <p class="em-attendee-name">${esc7(name)}</p>
+                    <p class="em-attendee-sub">${esc7(entry.title || "Winning entry")} \xB7 ${fmt(w.prize_amount_cents)}${w.needs_1099 ? " \xB7 1099 needed" : ""}</p>
                     <div class="flex flex-wrap gap-1 mt-2">${payoutBadge}</div>
                 </div>
             </div>
@@ -11927,7 +12377,7 @@ Type the event title to confirm:`);
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Competition command</p>
-            <h3 class="em-command-title">${activePhase ? `Phase ${activePhase.phase_num}: ${esc6(activePhase.name || "Active")}` : "Competition setup"}</h3>
+            <h3 class="em-command-title">${activePhase ? `Phase ${activePhase.phase_num}: ${esc7(activePhase.name || "Active")}` : "Competition setup"}</h3>
             <p class="em-command-copy">${liveEntries.length} live entr${liveEntries.length === 1 ? "y" : "ies"}${entryTarget ? ` toward ${entryTarget} minimum` : ""}. ${d.voteCount} vote${d.voteCount === 1 ? "" : "s"} recorded with ${fmt(netPool)} net payout available.</p>
             <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${entryPct}%;background:#a78bfa"></span></div>
         </div>
@@ -11946,10 +12396,10 @@ Type the event title to confirm:`);
 
         <div class="em-card mb-3">
             <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving entries, voting, and payouts.</p></div></div>
-            <div class="em-money-row"><span>Entry type</span><strong>${esc6(cfg.entry_type || "any")}</strong></div>
+            <div class="em-money-row"><span>Entry type</span><strong>${esc7(cfg.entry_type || "any")}</strong></div>
             <div class="em-money-row"><span>Entry fee</span><strong>${cfg.entry_fee_cents ? fmt(cfg.entry_fee_cents) : "Free"}</strong></div>
             <div class="em-money-row"><span>House cut</span><strong>${housePct}%</strong></div>
-            <div class="em-money-row"><span>Voter eligibility</span><strong>${esc6(cfg.voter_eligibility || "all_members")}</strong></div>
+            <div class="em-money-row"><span>Voter eligibility</span><strong>${esc7(cfg.voter_eligibility || "all_members")}</strong></div>
             ${moderatedCount ? `<div class="em-money-row"><span>Moderated entries</span><strong style="color:#dc2626">${moderatedCount}</strong></div>` : ""}
         </div>
 
@@ -11961,7 +12411,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireComp() {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api15().getState?.() || {};
   }
   var manageCompetitionApi = {
     loadComp,
@@ -11971,11 +12421,11 @@ Type the event title to confirm:`);
   globalThis.EventsManageCompetition = manageCompetitionApi;
 
   // js/portal/events/manage/participation.js
-  function api15() {
+  function api16() {
     return window.EventsManageParticipationApi || {};
   }
   async function getParticipationResetCounts() {
-    const STATE4 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const tables = [
       ["member RSVPs", "event_rsvps"],
@@ -11992,7 +12442,7 @@ Type the event title to confirm:`);
     return results;
   }
   async function resetParticipation() {
-    const STATE4 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const e = STATE4.event;
     if (!e) return;
     let counts = [];
@@ -12023,14 +12473,14 @@ Type RESET to continue.`
         action: "reset_participation",
         event_id: e.id
       });
-      await api15().refreshEventManager?.("danger");
+      await api16().refreshEventManager?.("danger");
       alert("Participation reset complete. The event is still intact.");
     } catch (err) {
       alert("Reset failed: " + (err.message || "unknown error"));
     }
   }
   async function removeParticipationPerson(btn) {
-    const STATE4 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const kind = btn.dataset.removeRsvp;
     const name = btn.dataset.name || (kind === "guest" ? "this guest" : "this member");
     const isPaid = btn.dataset.paid === "1";
@@ -12060,10 +12510,10 @@ Type RESET to continue.`
           user_id: userId
         });
       }
-      await api15().refreshEventManager?.("rsvps");
+      await api16().refreshEventManager?.("rsvps");
     } catch (err) {
       alert("Remove failed: " + (err.message || "unknown error"));
-      api15().renderTab?.("rsvps");
+      api16().renderTab?.("rsvps");
     }
   }
   var manageParticipationApi = {
@@ -12074,10 +12524,10 @@ Type RESET to continue.`
   globalThis.EventsManageParticipation = manageParticipationApi;
 
   // js/portal/events/manage/raffle.js
-  function api16() {
+  function api17() {
     return window.EventsManageRaffleApi || {};
   }
-  function esc7(s) {
+  function esc8(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -12091,7 +12541,7 @@ Type RESET to continue.`
     return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
   }
   async function loadRaffle() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const [entriesRes, winnersRes, guestsRes] = await Promise.all([
       supabaseClient.from("event_raffle_entries").select("id, user_id, guest_token, paid, amount_paid_cents, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
@@ -12109,10 +12559,10 @@ Type RESET to continue.`
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
   function raffleHtml2() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const e = STATE4.event;
     if (!e.raffle_enabled) {
-      return api16().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
+      return api17().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
     }
     const d = STATE4.tabData.raffle;
     const fmt = window.formatCurrency || money4;
@@ -12142,8 +12592,8 @@ Type RESET to continue.`
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:#faf5ff;color:#7c3aed;font-size:18px">${medal}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc7(name)}</p>
-                    <p class="em-attendee-sub">${ord(w.place)} place \xB7 ${esc7(w.prize_description || "Prize pending")}</p>
+                    <p class="em-attendee-name">${esc8(name)}</p>
+                    <p class="em-attendee-sub">${ord(w.place)} place \xB7 ${esc8(w.prize_description || "Prize pending")}</p>
                     <div class="flex flex-wrap gap-1 mt-2">
                         <span class="em-pill em-pill-checked">${w.user_id ? "Member" : "Guest"}</span>
                         ${w.selection_status === "pending_choice" ? '<span class="em-pill em-pill-paid">Needs prize choice</span>' : '<span class="em-pill em-pill-going">Prize assigned</span>'}
@@ -12158,12 +12608,12 @@ Type RESET to continue.`
       const items = raffleItems(config, cat.id);
       const pendingSlots = drawQueue.filter((slot) => slot.category_id === cat.id).length;
       const drawnCount = Math.max(0, (cat.winner_count || 0) - pendingSlots);
-      const itemPreview = items.length ? items.slice(0, 3).map((item) => `${item.emoji || "\u{1F381}"} ${esc7(item.name)}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "Prize details pending";
+      const itemPreview = items.length ? items.slice(0, 3).map((item) => `${item.emoji || "\u{1F381}"} ${esc8(item.name)}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "Prize details pending";
       const extraItems = Math.max(0, items.length - 3);
       return `
             <div class="em-card em-op-card">
                 <div class="em-op-head">
-                    <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${esc7(cat.label || "Prize category")}</p></div>
+                    <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${esc8(cat.label || "Prize category")}</p></div>
                     <span class="em-op-icon">\u{1F381}</span>
                 </div>
                 <p class="em-op-copy">${drawModeLabel(cat.draw_mode)} \xB7 ${drawnCount}/${cat.winner_count || 0} drawn</p>
@@ -12179,7 +12629,7 @@ Type RESET to continue.`
             <div class="em-section-head">
                 <div>
                     <h3 class="em-section-title">Next draw</h3>
-                    <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc7(prizeSlotLabel(nextSlot)) : "Next available prize"}${nextSlot?.category_label ? ` \xB7 ${esc7(nextSlot.category_label)}` : ""}</p>
+                    <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc8(prizeSlotLabel(nextSlot)) : "Next available prize"}${nextSlot?.category_label ? ` \xB7 ${esc8(nextSlot.category_label)}` : ""}</p>
                 </div>
                 <span class="em-pill em-pill-paid">${remainingDraws} remaining</span>
             </div>
@@ -12191,15 +12641,15 @@ Type RESET to continue.`
       const guest = en.guest_token ? guestByToken.get(en.guest_token) : null;
       const name = en.user_id ? `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member" : guest?.guest_name || "Guest";
       const sub = en.user_id ? "Member raffle entry" : guest?.guest_email || "Guest raffle entry";
-      const tokenAttr = en.guest_token ? ` data-guest-token="${esc7(en.guest_token)}"` : "";
-      const userAttr = en.user_id ? ` data-user-id="${esc7(en.user_id)}"` : "";
-      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#f5f3ff;color:#6d28d9"><span>\u{1F39F}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc7(name)}</p><p class="em-attendee-sub">${esc7(sub)}</p><div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked">${en.user_id ? "Member" : "Guest"}</span>${en.paid ? '<span class="em-pill em-pill-paid">Paid</span>' : ""}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-raffle-entry="${esc7(en.id)}"${userAttr}${tokenAttr} data-paid="${en.paid ? "1" : "0"}" data-name="${esc7(name)}">Remove</button></div>`;
+      const tokenAttr = en.guest_token ? ` data-guest-token="${esc8(en.guest_token)}"` : "";
+      const userAttr = en.user_id ? ` data-user-id="${esc8(en.user_id)}"` : "";
+      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#f5f3ff;color:#6d28d9"><span>\u{1F39F}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc8(name)}</p><p class="em-attendee-sub">${esc8(sub)}</p><div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked">${en.user_id ? "Member" : "Guest"}</span>${en.paid ? '<span class="em-pill em-pill-paid">Paid</span>' : ""}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-raffle-entry="${esc8(en.id)}"${userAttr}${tokenAttr} data-paid="${en.paid ? "1" : "0"}" data-name="${esc8(name)}">Remove</button></div>`;
     }).join("") : `<p class="text-xs text-gray-400 italic py-2">No eligible entries yet.</p>`;
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Raffle command</p>
             <h3 class="em-command-title">${allDrawn ? "All winners drawn" : `${remainingDraws} draw${remainingDraws === 1 ? "" : "s"} remaining`}</h3>
-            <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? "y" : "ies"} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : "No eligible raffle entries yet."} ${nextSlot ? `Next up: ${esc7(prizeSlotLabel(nextSlot))}.` : ""}</p>
+            <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? "y" : "ies"} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : "No eligible raffle entries yet."} ${nextSlot ? `Next up: ${esc8(prizeSlotLabel(nextSlot))}.` : ""}</p>
             <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${drawPct}%;background:#a78bfa"></span></div>
         </div>
 
@@ -12224,14 +12674,14 @@ Type RESET to continue.`
 
             <div class="em-card">
                 <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving the draw.</p></div></div>
-                <div class="em-money-row"><span>Type</span><strong>${esc7(e.raffle_type || "digital")}</strong></div>
-                <div class="em-money-row"><span>Draw trigger</span><strong>${esc7(e.raffle_draw_trigger || "manual")}</strong></div>
+                <div class="em-money-row"><span>Type</span><strong>${esc8(e.raffle_type || "digital")}</strong></div>
+                <div class="em-money-row"><span>Draw trigger</span><strong>${esc8(e.raffle_draw_trigger || "manual")}</strong></div>
                 <div class="em-money-row"><span>Entry cost</span><strong>${e.raffle_entry_cost_cents ? fmt(e.raffle_entry_cost_cents) : "Free"}</strong></div>
                 <div style="margin:12px 0;padding:12px;border:1px solid #eef2ff;border-radius:12px;background:#f8fafc">
                     <label for="emRaffleEntryPrice" style="display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Raffle entry price</label>
                     <div style="display:flex;gap:8px;align-items:center">
                         <span style="font-size:13px;font-weight:800;color:#475569">$</span>
-                        <input id="emRaffleEntryPrice" class="em-input" type="number" min="0" max="500" step="0.01" value="${esc7(raffleEntryPriceDollars)}" ${paidEventRaffleIncluded ? "disabled" : ""} style="flex:1;min-width:0">
+                        <input id="emRaffleEntryPrice" class="em-input" type="number" min="0" max="500" step="0.01" value="${esc8(raffleEntryPriceDollars)}" ${paidEventRaffleIncluded ? "disabled" : ""} style="flex:1;min-width:0">
                         <button id="emRafflePriceSave" type="button" class="em-btn-primary" ${paidEventRaffleIncluded ? "disabled" : ""}>Save</button>
                     </div>
                     <p id="emRafflePriceStatus" class="text-xs text-gray-400 mt-2">${paidEventRaffleIncluded ? "Paid RSVP events include raffle entry with the RSVP, so separate raffle pricing is not used." : "Set 0 for a free raffle. Changes apply to future raffle checkouts only."}</p>
@@ -12250,7 +12700,7 @@ Type RESET to continue.`
     `;
   }
   function wireRaffle() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const drawBtn = document.getElementById("emRaffleDrawBtn");
     if (drawBtn) {
       drawBtn.onclick = () => window.evtOpenRaffleDraw?.(STATE4.eventId, STATE4.event);
@@ -12284,7 +12734,7 @@ Type RESET to continue.`
     wireRafflePrizeImages();
   }
   function rafflePrizeSetupHtml(config, winners = []) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const model = window.EventsRaffleModel;
     if (!model) {
       return `<div class="em-card mt-3"><div class="em-section-head"><div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Raffle editor unavailable because the raffle model helper did not load.</p></div></div></div>`;
@@ -12293,7 +12743,7 @@ Type RESET to continue.`
     const categories = model.getOrderedCategories(normalized);
     const items = normalized.items || [];
     const validation = model.validateConfig(normalized);
-    const categoryOptions = categories.map((category) => `<option value="${esc7(category.id)}">${esc7(category.label)}</option>`).join("");
+    const categoryOptions = categories.map((category) => `<option value="${esc8(category.id)}">${esc8(category.label)}</option>`).join("");
     const usedPrizeIds = new Set((winners || []).map((winner) => winner.prize_id).filter(Boolean));
     const drawModeOptions = (selected) => [
       ["specific_item", "Specific items"],
@@ -12301,10 +12751,10 @@ Type RESET to continue.`
       ["winner_choice", "Winner chooses later"]
     ].map(([value, label]) => `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`).join("");
     const categoryRows = categories.length ? categories.map((category, index) => `
-        <div class="em-raffle-edit-row" data-em-raffle-category-row="${esc7(category.id)}" data-sort-order="${(index + 1) * 10}">
+        <div class="em-raffle-edit-row" data-em-raffle-category-row="${esc8(category.id)}" data-sort-order="${(index + 1) * 10}">
             <div>
                 <label class="em-raffle-edit-label">Category</label>
-                <input class="em-input" data-em-raffle-category-field="label" value="${esc7(category.label)}" maxlength="80">
+                <input class="em-input" data-em-raffle-category-field="label" value="${esc8(category.label)}" maxlength="80">
             </div>
             <div>
                 <label class="em-raffle-edit-label">Draw mode</label>
@@ -12314,45 +12764,45 @@ Type RESET to continue.`
                 <label class="em-raffle-edit-label">Winners</label>
                 <input class="em-input" type="number" min="0" step="1" data-em-raffle-category-field="winner_count" value="${category.winner_count ?? ""}">
             </div>
-            <button type="button" class="em-btn-ghost" data-em-raffle-remove-category="${esc7(category.id)}" data-category-label="${esc7(category.label)}" ${categories.length <= 1 ? "disabled" : ""}>Remove</button>
+            <button type="button" class="em-btn-ghost" data-em-raffle-remove-category="${esc8(category.id)}" data-category-label="${esc8(category.label)}" ${categories.length <= 1 ? "disabled" : ""}>Remove</button>
         </div>
     `).join("") : `<p class="text-xs text-gray-400 italic py-2">No prize categories yet.</p>`;
     const itemRows = items.length ? items.map((item, index) => {
       const previewUrl = prizeImagePreviews[item.id] || item.image_url || "";
       const pendingName = prizeImageFiles[item.id]?.name || "";
       return `
-        <div class="em-raffle-item-wrap" data-em-raffle-item-row="${esc7(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${esc7(item.image_url || "")}">
+        <div class="em-raffle-item-wrap" data-em-raffle-item-row="${esc8(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${esc8(item.image_url || "")}">
             <div class="em-raffle-edit-row em-raffle-item-row">
                 <div>
                     <label class="em-raffle-edit-label">Emoji</label>
-                    <input class="em-input" data-em-raffle-item-field="emoji" value="${esc7(item.emoji || "\u{1F381}")}" maxlength="4">
+                    <input class="em-input" data-em-raffle-item-field="emoji" value="${esc8(item.emoji || "\u{1F381}")}" maxlength="4">
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Prize</label>
-                    <input class="em-input" data-em-raffle-item-field="name" value="${esc7(item.name)}" maxlength="120">
+                    <input class="em-input" data-em-raffle-item-field="name" value="${esc8(item.name)}" maxlength="120">
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Category</label>
                     <select class="em-input" data-em-raffle-item-field="category_id">
-                        ${categories.map((category) => `<option value="${esc7(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${esc7(category.label)}</option>`).join("")}
+                        ${categories.map((category) => `<option value="${esc8(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${esc8(category.label)}</option>`).join("")}
                     </select>
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Qty</label>
                     <input class="em-input" type="number" min="1" step="1" data-em-raffle-item-field="quantity" value="${item.quantity || 1}">
                 </div>
-                <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${esc7(item.id)}" data-item-label="${esc7(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ""}>Remove</button>
+                <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${esc8(item.id)}" data-item-label="${esc8(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ""}>Remove</button>
             </div>
             <div class="em-prize-img-row">
-                <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-em-prize-file="${esc7(item.id)}">
-                <div class="em-prize-img-drop" data-em-prize-drop="${esc7(item.id)}" title="Click or drag an image here">
-                    ${previewUrl ? `<img src="${esc7(previewUrl)}" alt="Prize image">` : "<span>\u{1F4F7}</span>"}
+                <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-em-prize-file="${esc8(item.id)}">
+                <div class="em-prize-img-drop" data-em-prize-drop="${esc8(item.id)}" title="Click or drag an image here">
+                    ${previewUrl ? `<img src="${esc8(previewUrl)}" alt="Prize image">` : "<span>\u{1F4F7}</span>"}
                 </div>
-                <div class="em-prize-img-copy" data-em-prize-copy="${esc7(item.id)}">
-                    <strong>${pendingName ? esc7(pendingName) : previewUrl ? "Image set" : "Prize image"}</strong>
+                <div class="em-prize-img-copy" data-em-prize-copy="${esc8(item.id)}">
+                    <strong>${pendingName ? esc8(pendingName) : previewUrl ? "Image set" : "Prize image"}</strong>
                     <span>${previewUrl ? "Click or drop to replace. Save prize setup to keep changes." : "Click or drag a PNG, JPG, or WebP image here."}</span>
                 </div>
-                ${previewUrl ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-em-prize-clear="${esc7(item.id)}">Remove image</button>` : ""}
+                ${previewUrl ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-em-prize-clear="${esc8(item.id)}">Remove image</button>` : ""}
             </div>
         </div>
     `;
@@ -12390,7 +12840,7 @@ Type RESET to continue.`
                 <button type="button" class="em-btn-ghost" data-em-raffle-add-item>Add prize</button>
             </div>
             ${itemRows}
-            ${validation.valid ? "" : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(esc7).join("<br>")}</div>`}
+            ${validation.valid ? "" : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(esc8).join("<br>")}</div>`}
             <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
                 <button type="button" id="emRafflePrizeSave" class="em-btn-primary">Save prize setup</button>
                 <span id="emRafflePrizeStatus" class="text-xs text-gray-400">${categories.length} categor${categories.length === 1 ? "y" : "ies"} \xB7 ${items.length} item${items.length === 1 ? "" : "s"}</span>
@@ -12399,7 +12849,7 @@ Type RESET to continue.`
     `;
   }
   function collectRafflePrizeConfigFromDom() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const model = window.EventsRaffleModel;
     if (!model) throw new Error("Raffle model helper is not loaded.");
     const categoryRows = Array.from(document.querySelectorAll("[data-em-raffle-category-row]"));
@@ -12433,7 +12883,7 @@ Type RESET to continue.`
     return model.normalizeConfig({ version: 2, categories, items });
   }
   function wireRafflePrizeImages() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     document.querySelectorAll("[data-em-prize-drop]").forEach((zone) => {
       const itemId = zone.dataset.emPrizeDrop;
       const fileInput = document.querySelector(`[data-em-prize-file="${CSS.escape(itemId)}"]`);
@@ -12462,7 +12912,7 @@ Type RESET to continue.`
     });
   }
   function setRafflePrizeImage(itemId, file) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
       alert("Please use a PNG, JPG, or WebP image.");
       return;
@@ -12476,16 +12926,16 @@ Type RESET to continue.`
     reader.onload = () => {
       prizeImagePreviews[itemId] = reader.result;
       const zone = document.querySelector(`[data-em-prize-drop="${CSS.escape(itemId)}"]`);
-      if (zone) zone.innerHTML = `<img src="${esc7(reader.result)}" alt="Prize image">`;
+      if (zone) zone.innerHTML = `<img src="${esc8(reader.result)}" alt="Prize image">`;
       const copy = document.querySelector(`[data-em-prize-copy="${CSS.escape(itemId)}"]`);
-      if (copy) copy.innerHTML = `<strong>${esc7(file.name)}</strong><span>Ready to upload. Save prize setup to keep this image.</span>`;
+      if (copy) copy.innerHTML = `<strong>${esc8(file.name)}</strong><span>Ready to upload. Save prize setup to keep this image.</span>`;
       const status = document.getElementById("emRafflePrizeStatus");
       if (status) status.textContent = "Image selected. Save prize setup to upload it.";
     };
     reader.readAsDataURL(file);
   }
   function clearRafflePrizeImage(itemId) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     if (!itemId) return;
     delete prizeImageFiles[itemId];
     delete prizeImagePreviews[itemId];
@@ -12501,7 +12951,7 @@ Type RESET to continue.`
     if (status) status.textContent = "Image removed. Save prize setup to keep this change.";
   }
   async function uploadPendingRafflePrizeImages(config) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const uploads = Object.entries(prizeImageFiles);
     if (!uploads.length) return config;
     const slug = safeFilename2(STATE4.event?.slug || STATE4.event?.title || STATE4.eventId || "event");
@@ -12518,7 +12968,7 @@ Type RESET to continue.`
     return config;
   }
   async function saveRafflePrizeSetup(action = {}) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const model = window.EventsRaffleModel;
     const status = document.getElementById("emRafflePrizeStatus");
     const saveBtn = document.getElementById("emRafflePrizeSave");
@@ -12563,7 +13013,7 @@ Type RESET to continue.`
       if (error) throw error;
       STATE4.event.raffle_prizes = config;
       STATE4.event.raffle_winner_count = winnerCount;
-      await api16().refreshEventManager?.("raffle");
+      await api17().refreshEventManager?.("raffle");
     } catch (err) {
       if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
       else alert("Prize setup save failed: " + (err.message || "unknown error"));
@@ -12574,18 +13024,18 @@ Type RESET to continue.`
     }
   }
   function categoryPrizeQuantity(config, categoryId) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     return (config.items || []).filter((item) => item.category_id === categoryId).reduce((sum, item) => sum + Math.max(1, Number(item.quantity || 1)), 0);
   }
   function capRaffleWinnerCounts(config) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     (config.categories || []).forEach((category) => {
       const quantity = categoryPrizeQuantity(config, category.id);
       category.winner_count = Math.min(Number(category.winner_count || 0), quantity);
     });
   }
   async function saveRaffleEntryPrice() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const input = document.getElementById("emRaffleEntryPrice");
     const btn = document.getElementById("emRafflePriceSave");
     const status = document.getElementById("emRafflePriceStatus");
@@ -12610,7 +13060,7 @@ Type RESET to continue.`
       const { error } = await supabaseClient.from("events").update({ raffle_entry_cost_cents: cents }).eq("id", STATE4.eventId);
       if (error) throw error;
       STATE4.event.raffle_entry_cost_cents = cents;
-      await api16().refreshEventManager?.("raffle");
+      await api17().refreshEventManager?.("raffle");
     } catch (err) {
       if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
       if (btn) {
@@ -12620,7 +13070,7 @@ Type RESET to continue.`
     }
   }
   async function removeRaffleEntry(btn) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const name = btn.dataset.name || "this entry";
     const isPaid = btn.dataset.paid === "1";
     const warning = isPaid ? "\n\nThis was marked paid. Removing the record does not refund Stripe payments." : "";
@@ -12634,33 +13084,33 @@ Type RESET to continue.`
         entry_id: btn.dataset.removeRaffleEntry
       });
       STATE4.tabData.raffle = null;
-      await api16().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
-      api16().notifyParent?.("updated", STATE4.eventId);
+      await api17().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+      api17().notifyParent?.("updated", STATE4.eventId);
     } catch (err) {
       alert("Raffle entry remove failed: " + (err.message || "unknown error"));
       STATE4.tabData.raffle = null;
-      await api16().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+      await api17().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
     }
   }
   function winnerChoiceHtml(winner, config, winners) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     if (winner.selection_status !== "pending_choice") return "";
     const items = availableChoiceItems(config, winners, winner);
     if (!items.length) {
       return `<div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">No unassigned items are available in this category.</div>`;
     }
-    const options = items.map((item) => `<option value="${esc7(item.id)}">${esc7(item.emoji || "\u{1F381}")} ${esc7(item.name)}${item.quantity > 1 ? ` (${item.quantity} total)` : ""}</option>`).join("");
+    const options = items.map((item) => `<option value="${esc8(item.id)}">${esc8(item.emoji || "\u{1F381}")} ${esc8(item.name)}${item.quantity > 1 ? ` (${item.quantity} total)` : ""}</option>`).join("");
     return `
         <div class="mt-3 flex flex-col sm:flex-row gap-2">
-            <select id="emWinnerChoice_${esc7(winner.id)}" class="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-200">
+            <select id="emWinnerChoice_${esc8(winner.id)}" class="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-200">
                 ${options}
             </select>
-            <button type="button" data-raffle-assign-choice="1" data-winner-id="${esc7(winner.id)}" class="rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition">Assign prize</button>
+            <button type="button" data-raffle-assign-choice="1" data-winner-id="${esc8(winner.id)}" class="rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition">Assign prize</button>
         </div>
     `;
   }
   function availableChoiceItems(config, winners, currentWinner) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const items = raffleItems(config, currentWinner.category_id);
     const used = /* @__PURE__ */ new Map();
     (winners || []).forEach((winner) => {
@@ -12671,7 +13121,7 @@ Type RESET to continue.`
     return items.filter((item) => (used.get(item.id) || 0) < item.quantity);
   }
   async function assignWinnerChoice(winnerId) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const winner = (STATE4.tabData.raffle?.winners || []).find((row) => row.id === winnerId);
     if (!winner) return;
     const select = document.getElementById(`emWinnerChoice_${winnerId}`);
@@ -12689,42 +13139,42 @@ Type RESET to continue.`
     }).eq("id", winnerId).eq("event_id", STATE4.eventId).eq("selection_status", "pending_choice");
     if (error) return alert("Prize assignment failed: " + error.message);
     STATE4.tabData.raffle = null;
-    await api16().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+    await api17().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
     document.dispatchEvent(new CustomEvent("events:raffle:drawn", { detail: { eventId: STATE4.eventId } }));
   }
   function raffleConfig(event) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
     return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
   }
   function raffleCategories(config) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getOrderedCategories(config);
   }
   function raffleItems(config, categoryId) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
   }
   function raffleTotalWinners(config) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     if (!window.EventsRaffleModel) return 0;
     return window.EventsRaffleModel.getTotalWinnerCount(config);
   }
   function raffleDrawQueue(config, winners) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getDrawQueue(config, winners || []);
   }
   function drawModeLabel(drawMode) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     if (drawMode === "random_item") return "Random prize assigned";
     if (drawMode === "winner_choice") return "Winner chooses later";
     return "Specific prize";
   }
   function prizeSlotLabel(slot) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     if (!slot) return "";
     if (slot.prize_name) return slot.prize_name;
     if (slot.draw_mode === "winner_choice") return `${slot.category_label || "Prize tier"} choice`;
@@ -12735,10 +13185,10 @@ Type RESET to continue.`
     Object.keys(prizeImagePreviews).forEach((key) => delete prizeImagePreviews[key]);
   }
   function refreshRaffle(eventId2) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     if (eventId2 && eventId2 !== STATE4.eventId) return;
     STATE4.tabData.raffle = null;
-    if (STATE4.activeTab === "raffle") api16().renderTab?.("raffle");
+    if (STATE4.activeTab === "raffle") api17().renderTab?.("raffle");
   }
   document.addEventListener("events:raffle:drawn", (evt) => refreshRaffle(evt.detail?.eventId));
   var manageRaffleApi = {
@@ -12751,16 +13201,16 @@ Type RESET to continue.`
   globalThis.EventsManageRaffle = manageRaffleApi;
 
   // js/portal/events/manage/danger.js
-  function api17() {
+  function api18() {
     return window.EventsManageDangerApi || {};
   }
-  function esc8(s) {
+  function esc9(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
   function dangerHtml() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const e = STATE4.event;
     const isCancelled = e.status === "cancelled";
     const isCompleted = e.status === "completed";
@@ -12776,7 +13226,7 @@ Type RESET to continue.`
         </div>
 
         <div class="em-metric-grid mb-4">
-            <div class="em-metric"><span>Status</span><strong style="font-size:18px">${esc8(statusLabel)}</strong><small>Current lifecycle</small></div>
+            <div class="em-metric"><span>Status</span><strong style="font-size:18px">${esc9(statusLabel)}</strong><small>Current lifecycle</small></div>
             <div class="em-metric"><span>RSVP records</span><strong>${totalRsvps}</strong><small>Member + guest</small></div>
             <div class="em-metric"><span>Paid tickets</span><strong>${paidTickets}</strong><small>Refund review</small></div>
             <div class="em-metric"><span>Check-ins</span><strong>${checkins}</strong><small>Attendance history</small></div>
@@ -12813,13 +13263,13 @@ Type RESET to continue.`
     `;
   }
   function wireDanger() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     document.getElementById("emSheetContent").querySelectorAll("[data-action]").forEach((btn) => {
       btn.addEventListener("click", () => runDangerAction(btn.dataset.action));
     });
   }
   async function runDangerAction(action) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const e = STATE4.event;
     if (!e) return;
     if (action === "delete") {
@@ -12834,8 +13284,8 @@ Type RESET to continue.`
         const { error } = await supabaseClient.from("events").delete().eq("id", e.id);
         if (error) throw error;
         alert("Event deleted.");
-        api17().close?.();
-        api17().notifyParent?.("deleted", e.id);
+        api18().close?.();
+        api18().notifyParent?.("deleted", e.id);
       } catch (err) {
         alert("Delete failed: " + (err.message || "unknown error"));
       }
@@ -12847,16 +13297,30 @@ Type RESET to continue.`
         const { error } = await supabaseClient.from("events").update({ status: "cancelled" }).eq("id", e.id);
         if (error) throw error;
         STATE4.event.status = "cancelled";
-        api17().renderHeader?.();
-        api17().renderTab?.("danger");
-        api17().notifyParent?.("updated", e.id);
+        api18().renderHeader?.();
+        api18().renderTab?.("danger");
+        api18().notifyParent?.("updated", e.id);
+        try {
+          const { count } = await supabaseClient.from("event_sms_recipients").select("id", { count: "exact", head: true }).eq("event_id", e.id).eq("opted_in", true).is("opted_out_at", null);
+          if (count && count > 0 && confirm(`Send a cancellation SMS to ${count} opted-in recipient${count === 1 ? "" : "s"}?`)) {
+            const prefill = `"${e.title}" has been cancelled. We will follow up if plans change.`;
+            if (window.EventsManage?.open) {
+              await window.EventsManage.open(e.id, {
+                source: STATE4.source,
+                tab: "notifications",
+                notificationsPrefill: prefill
+              });
+            }
+          }
+        } catch (_) {
+        }
       } catch (err) {
         alert("Cancel failed: " + (err.message || "unknown error"));
       }
       return;
     }
     if (action === "reset-participation") {
-      await api17().resetParticipation?.();
+      await api18().resetParticipation?.();
       return;
     }
     if (action === "complete") {
@@ -12865,9 +13329,9 @@ Type RESET to continue.`
         const { error } = await supabaseClient.from("events").update({ status: "completed" }).eq("id", e.id);
         if (error) throw error;
         STATE4.event.status = "completed";
-        api17().renderHeader?.();
-        api17().renderTab?.("danger");
-        api17().notifyParent?.("updated", e.id);
+        api18().renderHeader?.();
+        api18().renderTab?.("danger");
+        api18().notifyParent?.("updated", e.id);
       } catch (err) {
         alert("Complete failed: " + (err.message || "unknown error"));
       }
@@ -12943,8 +13407,9 @@ Type RESET to continue.`
     source: "admin",
     // 'admin' | 'portal'
     editCopyOnOpen: false,
-    tabData: {}
-    // lazy per-tab cache: { money, docs, raffle, comp }
+    tabData: {},
+    // lazy per-tab cache: { money, docs, raffle, comp, notifications }
+    canManageNotifications: false
   };
   function getDocTypes() {
     const types = window.EventsConstants && window.EventsConstants.EVENT_DOC_TYPES;
@@ -12960,6 +13425,7 @@ Type RESET to continue.`
   var Raffle = window.EventsManageRaffle;
   var Comp = window.EventsManageCompetition;
   var Participation = window.EventsManageParticipation;
+  var Notifications = window.EventsManageNotifications;
   function _renderHeader() {
     return Shell2.renderHeader();
   }
@@ -12968,6 +13434,15 @@ Type RESET to continue.`
   }
   function _renderContent(html5) {
     return Shell2.renderContent(html5);
+  }
+  async function _canManageNotificationsForEvent(event) {
+    if (typeof canManageEventNotifications === "function" && canManageEventNotifications()) return true;
+    if (typeof canManageEvents === "function" && canManageEvents()) return true;
+    const uid = globalThis.evtCurrentUser?.id;
+    if (!uid || !event) return false;
+    if (event.created_by === uid) return true;
+    const { data: host } = await supabaseClient.from("event_hosts").select("id").eq("event_id", event.id).eq("user_id", uid).maybeSingle();
+    return !!host;
   }
   async function _loadEventData(eventId2) {
     const { data: event } = await supabaseClient.from("events").select("*").eq("id", eventId2).single();
@@ -12991,6 +13466,13 @@ Type RESET to continue.`
     Shell2.setLoadingChrome();
     Shell2.openPanel();
     await _loadEventData(eventId2);
+    STATE3.canManageNotifications = await _canManageNotificationsForEvent(STATE3.event);
+    if (opts.notificationsPrefill && Notifications?.resetNotificationsUi) {
+      Notifications.resetNotificationsUi(opts.notificationsPrefill);
+    }
+    if (opts.tab === "notifications" && !STATE3.canManageNotifications) {
+      STATE3.activeTab = "overview";
+    }
     Shell2.renderHeader();
     _renderTab(STATE3.activeTab);
   }
@@ -13012,6 +13494,9 @@ Type RESET to continue.`
       _renderContent(Rsvps.rsvpsHtml());
       Rsvps.wireRsvps();
       return;
+    }
+    if (tab === "notifications") {
+      return _renderTabAsync("notifications", Notifications.loadNotifications, Notifications.notificationsHtml, Notifications.wireNotifications);
     }
     if (tab === "danger") {
       _renderContent(Danger.dangerHtml());
@@ -13115,10 +13600,19 @@ Type RESET to continue.`
     getState: () => STATE3,
     emptyHtml: _emptyHtml
   };
+  globalThis.EventsManageNotificationsApi = {
+    getState: () => STATE3,
+    renderTab: _renderTab,
+    refreshNotificationsTab: () => Notifications.refreshNotificationsTab?.()
+  };
   globalThis.EventsManageShellApi = {
     getState: () => STATE3,
     onClose: close3,
-    renderTab: _renderTab
+    renderTab: _renderTab,
+    getVisibleTabs: () => M3A_TABS.filter((t) => {
+      if (t.key !== "notifications") return true;
+      return !!STATE3.canManageNotifications;
+    })
   };
   globalThis.EventsManageOverviewApi = {
     getState: () => STATE3,

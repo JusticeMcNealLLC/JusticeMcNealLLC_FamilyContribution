@@ -68,6 +68,11 @@ function canManageEvents() {
     return hasPermission('events.manage_all');
 }
 
+/** Event SMS / Notifications tab — RBAC; per-event host/creator checked in Manage sheet */
+function canManageEventNotifications() {
+    return hasPermission('events.manage_notifications') || hasPermission('events.manage_all');
+}
+
 /** Award event banners on the admin events dashboard */
 function canManageEventBanners() {
     return hasPermission('events.banners') || hasPermission('events.manage_all');

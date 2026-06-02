@@ -6,6 +6,7 @@ const M3A_TABS = [
     { key: 'overview', label: 'Overview' },
     { key: 'images',   label: 'Images'   },
     { key: 'rsvps',    label: 'RSVPs'    },
+    { key: 'notifications', label: 'Notifications' },
     { key: 'money',    label: 'Money'    },
     { key: 'docs',     label: 'Docs'     },
     { key: 'raffle',   label: 'Raffle'   },
@@ -115,6 +116,8 @@ function getState() {
             .em-textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
             .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
             .em-placeholder svg { width:48px; height:48px; margin-bottom:12px; opacity:.4; }
+            .em-notif-row { align-items:flex-start; }
+            .em-notif-row input[type="checkbox"] { margin-top:4px; flex-shrink:0; }
             @media(max-width:639px){
                 #emSheetPanel { max-height: 92vh; }
                 .em-op-grid { grid-template-columns:1fr; }
@@ -146,7 +149,8 @@ function renderHeader() {
 function renderTabs() {
     const STATE = getState();
     const bar = document.getElementById('emSheetTabs');
-    bar.innerHTML = M3A_TABS.map(t =>
+    const tabs = typeof api().getVisibleTabs === 'function' ? api().getVisibleTabs() : M3A_TABS;
+    bar.innerHTML = tabs.map(t =>
         `<button class="em-tab${t.placeholder ? ' placeholder' : ''}${t.key === STATE.activeTab ? ' active' : ''}" data-tab="${t.key}">${t.label}${t.placeholder ? ' <span style="font-size:9px;opacity:.7">soon</span>' : ''}</button>`
     ).join('');
     bar.querySelectorAll('.em-tab').forEach(btn => {

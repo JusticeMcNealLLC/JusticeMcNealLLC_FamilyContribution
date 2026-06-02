@@ -109,6 +109,26 @@ async function runDangerAction(action) {
             api().renderHeader?.();
             api().renderTab?.('danger');
             api().notifyParent?.('updated', e.id);
+
+            // Phase 5: full cancellation SMS flow — offer Notifications tab with prefilled body
+            try {
+                const { count } = await supabaseClient
+                    .from('event_sms_recipients')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('event_id', e.id)
+                    .eq('opted_in', true)
+                    .is('opted_out_at', null);
+                if (count && count > 0 && confirm(`Send a cancellation SMS to ${count} opted-in recipient${count === 1 ? '' : 's'}?`)) {
+                    const prefill = `"${e.title}" has been cancelled. We will follow up if plans change.`;
+                    if (window.EventsManage?.open) {
+                        await window.EventsManage.open(e.id, {
+                            source: STATE.source,
+                            tab: 'notifications',
+                            notificationsPrefill: prefill,
+                        });
+                    }
+                }
+            } catch (_) { /* non-blocking */ }
         } catch (err) {
             alert('Cancel failed: ' + (err.message || 'unknown error'));
         }
