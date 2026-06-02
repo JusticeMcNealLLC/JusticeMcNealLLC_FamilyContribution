@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno&no-check'
+import { upsertEventSmsRecipient } from '../_shared/sms.ts'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   apiVersion: '2023-10-16',
@@ -218,7 +219,7 @@ async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Se
 
     console.log(`Guest RSVP payment: email=${guestEmail}, event=${eventId}, amount=${amountPaid}`)
 
-    const { error } = await supabase.from('event_guest_rsvps').upsert({
+    const { data: guestRsvpRow, error } = await supabase.from('event_guest_rsvps').upsert({
       event_id: eventId,
       guest_name: guestName,
       guest_email: guestEmail,
@@ -231,12 +232,27 @@ async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Se
       accepted_no_refund_at: new Date().toISOString(),
     }, {
       onConflict: 'event_id,guest_email',
-    })
+    }).select('id').single()
 
     if (error) {
       console.error('Error upserting guest RSVP:', error)
     } else {
       console.log('Guest RSVP confirmed (paid) for:', guestEmail)
+
+      const guestPhone = session.metadata?.guest_phone
+      const smsOptIn = session.metadata?.sms_opt_in === 'true'
+      if (guestPhone && smsOptIn && guestRsvpRow?.id) {
+        await upsertEventSmsRecipient(supabase, {
+          event_id: eventId,
+          phone_raw: guestPhone,
+          sms_opt_in: true,
+          sms_consent_text_version: session.metadata?.sms_consent_text_version || 'event_sms_v1',
+          display_name: guestName,
+          email: guestEmail,
+          guest_rsvp_id: guestRsvpRow.id,
+          consent_source: 'guest_rsvp',
+        })
+      }
     }
 
     // Check for bundled raffle

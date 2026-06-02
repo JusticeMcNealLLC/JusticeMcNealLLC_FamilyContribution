@@ -128,6 +128,24 @@ async function evtLoadDetailContext(eventId) {
 
     const memberGoing = typeof globalThis.evtIsGoingRsvp === 'function' ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
     const hasRsvp = rsvp && (memberGoing || rsvp.status === 'maybe');
+
+    let memberPhone = null;
+    let eventSmsRecipient = null;
+    const { data: memberProfile } = await supabaseClient
+        .from('profiles')
+        .select('phone')
+        .eq('id', globalThis.evtCurrentUser.id)
+        .maybeSingle();
+    memberPhone = (memberProfile?.phone || '').trim() || null;
+    if (memberPhone) {
+        const { data: smsRec } = await supabaseClient
+            .from('event_sms_recipients')
+            .select('id, opted_in, opted_out_at')
+            .eq('event_id', eventId)
+            .eq('user_id', globalThis.evtCurrentUser.id)
+            .maybeSingle();
+        eventSmsRecipient = smsRec;
+    }
     const documentsHtml = await evtBuildDocumentsHtml(event, isHost, hasRsvp);
     const mapHtml = evtBuildMapHtml(event, hasRsvp, isHost);
     const competitionHtml = isComp ? await evtBuildCompetitionHtml(event, isHost) : '';
@@ -194,6 +212,8 @@ async function evtLoadDetailContext(eventId) {
         rsvpEnabled,
         canRsvp,
         eventIsFull,
+        memberPhone,
+        eventSmsRecipient,
     };
 }
 

@@ -12,6 +12,20 @@ const _edPill = window.evtEdPill;
 const _edNotice = window.evtEdNotice;
 const _edSectionHead = window.evtEdSectionHead;
 
+function evtBuildDetailSmsOptInHtml(ctx) {
+    const { eventId, isHost, memberPhone, memberGoing, canRsvp, rsvpEnabled, eventSmsRecipient } = ctx;
+    if (isHost || !memberPhone) return '';
+    if (!rsvpEnabled || (!memberGoing && !canRsvp)) return '';
+
+    const checked = !!(eventSmsRecipient?.opted_in && !eventSmsRecipient?.opted_out_at);
+    return `
+        <label class="ed-checkbox-label" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px">
+            <input type="checkbox" id="evtSmsOptInCheck" ${checked ? 'checked' : ''}
+                onchange="evtHandleEventSmsOptIn('${eventId}', this.checked)">
+            <span class="ed-hint" style="margin:0">Text me event updates for this event. Message/data rates may apply. Reply STOP to opt out.</span>
+        </label>`;
+}
+
 function evtBuildDetailRsvpSectionHtml(ctx) {
     const {
         eventId,
@@ -95,7 +109,8 @@ function evtBuildDetailRsvpSectionHtml(ctx) {
             rsvpButtons = _edNotice('🔒', 'RSVP Closed', closedReason);
         }
     }
-    return rsvpButtons;
+    const smsOptInHtml = evtBuildDetailSmsOptInHtml(ctx);
+    return rsvpButtons + smsOptInHtml;
 }
 
 function evtBuildDetailRaffleSectionHtml(ctx) {

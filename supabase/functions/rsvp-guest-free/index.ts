@@ -4,6 +4,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { upsertEventSmsRecipient } from '../_shared/sms.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
@@ -21,7 +22,14 @@ serve(async (req) => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { event_id, guest_name, guest_email } = await req.json()
+    const {
+      event_id,
+      guest_name,
+      guest_email,
+      guest_phone,
+      sms_opt_in,
+      sms_consent_text_version,
+    } = await req.json()
 
     if (!event_id) throw new Error('event_id is required')
     if (!guest_name || !guest_name.trim()) throw new Error('guest_name is required')
@@ -74,7 +82,19 @@ serve(async (req) => {
       .maybeSingle()
 
     if (existingGuest) {
-      // Already RSVP'd — return their existing token
+      if (guest_phone && sms_opt_in === true) {
+        await upsertEventSmsRecipient(supabase, {
+          event_id,
+          phone_raw: String(guest_phone),
+          sms_opt_in: true,
+          sms_consent_text_version: sms_consent_text_version || 'event_sms_v1',
+          display_name: guest_name.trim(),
+          email: emailLower,
+          guest_rsvp_id: existingGuest.id,
+          consent_source: 'guest_rsvp',
+        })
+      }
+
       return new Response(JSON.stringify({
         guest_token: existingGuest.guest_token,
         status: existingGuest.status,
@@ -135,6 +155,19 @@ serve(async (req) => {
           .maybeSingle()
 
         if (existingAfterConflict) {
+          if (guest_phone && sms_opt_in === true) {
+            await upsertEventSmsRecipient(supabase, {
+              event_id,
+              phone_raw: String(guest_phone),
+              sms_opt_in: true,
+              sms_consent_text_version: sms_consent_text_version || 'event_sms_v1',
+              display_name: guest_name.trim(),
+              email: emailLower,
+              guest_rsvp_id: existingAfterConflict.id,
+              consent_source: 'guest_rsvp',
+            })
+          }
+
           return new Response(JSON.stringify({
             guest_token: existingAfterConflict.guest_token,
             status: existingAfterConflict.status,
@@ -146,6 +179,19 @@ serve(async (req) => {
         }
       }
       throw new Error('Failed to create RSVP. Please try again.')
+    }
+
+    if (guest_phone && sms_opt_in === true) {
+      await upsertEventSmsRecipient(supabase, {
+        event_id,
+        phone_raw: String(guest_phone),
+        sms_opt_in: true,
+        sms_consent_text_version: sms_consent_text_version || 'event_sms_v1',
+        display_name: guest_name.trim(),
+        email: emailLower,
+        guest_rsvp_id: guestRsvp.id,
+        consent_source: 'guest_rsvp',
+      })
     }
 
     return new Response(JSON.stringify({

@@ -472,3 +472,122 @@ export function parseInboundCommand(body: string): string | null {
   if (first === 'HELP' || first === 'INFO') return 'HELP'
   return null
 }
+
+export type EventSmsConsentSource = 'guest_rsvp' | 'member_rsvp' | 'member_profile' | 'admin_manual'
+
+export type UpsertEventSmsRecipientInput = {
+  event_id: string
+  phone_raw?: string | null
+  sms_opt_in?: boolean
+  sms_consent_text_version?: string
+  display_name?: string | null
+  email?: string | null
+  user_id?: string | null
+  guest_rsvp_id?: string | null
+  event_rsvp_id?: string | null
+  consent_source: EventSmsConsentSource
+}
+
+export type UpsertEventSmsRecipientResult = {
+  ok: boolean
+  opted_in: boolean
+  reason?: string
+  recipient_id?: string
+  contact_id?: string
+}
+
+/** Persist event SMS opt-in/out. Does not send messages. */
+export async function upsertEventSmsRecipient(
+  supabase: SupabaseClient,
+  input: UpsertEventSmsRecipientInput,
+): Promise<UpsertEventSmsRecipientResult> {
+  const consentVersion = input.sms_consent_text_version || 'event_sms_v1'
+
+  if (!input.sms_opt_in) {
+    if (input.user_id) {
+      const { error } = await supabase
+        .from('event_sms_recipients')
+        .update({
+          opted_in: false,
+          opted_out_at: new Date().toISOString(),
+        })
+        .eq('event_id', input.event_id)
+        .eq('user_id', input.user_id)
+
+      if (error) {
+        console.error('Event SMS opt-out failed for user', input.user_id, error.message)
+        return { ok: false, opted_in: false, reason: 'opt_out_failed' }
+      }
+    }
+    return { ok: true, opted_in: false, reason: 'no_consent' }
+  }
+
+  const phoneE164 = input.phone_raw ? normalizePhoneE164(input.phone_raw) : null
+  if (!phoneE164) {
+    return { ok: true, opted_in: false, reason: 'invalid_phone' }
+  }
+
+  const { data: existingContact } = await supabase
+    .from('sms_phone_contacts')
+    .select('id, user_id')
+    .eq('phone_e164', phoneE164)
+    .maybeSingle()
+
+  let contactId = existingContact?.id as string | undefined
+
+  if (!contactId) {
+    const { data: inserted, error: contactErr } = await supabase
+      .from('sms_phone_contacts')
+      .insert({
+        phone_e164: phoneE164,
+        user_id: input.user_id ?? null,
+      })
+      .select('id')
+      .single()
+
+    if (contactErr || !inserted?.id) {
+      console.error('sms_phone_contacts insert failed', maskPhone(phoneE164), contactErr?.message)
+      return { ok: false, opted_in: false, reason: 'contact_insert_failed' }
+    }
+    contactId = inserted.id
+  } else if (input.user_id && !existingContact?.user_id) {
+    await supabase
+      .from('sms_phone_contacts')
+      .update({ user_id: input.user_id })
+      .eq('id', contactId)
+  }
+
+  const { data: recipient, error: recipientErr } = await supabase
+    .from('event_sms_recipients')
+    .upsert(
+      {
+        event_id: input.event_id,
+        contact_id: contactId,
+        display_name: input.display_name ?? null,
+        email: input.email ?? null,
+        user_id: input.user_id ?? null,
+        guest_rsvp_id: input.guest_rsvp_id ?? null,
+        event_rsvp_id: input.event_rsvp_id ?? null,
+        opted_in: true,
+        opted_in_at: new Date().toISOString(),
+        opted_out_at: null,
+        consent_source: input.consent_source,
+        consent_text_version: consentVersion,
+      },
+      { onConflict: 'event_id,contact_id' },
+    )
+    .select('id')
+    .single()
+
+  if (recipientErr || !recipient?.id) {
+    console.error('event_sms_recipients upsert failed', recipientErr?.message)
+    return { ok: false, opted_in: false, reason: 'recipient_upsert_failed' }
+  }
+
+  return {
+    ok: true,
+    opted_in: true,
+    recipient_id: recipient.id,
+    contact_id: contactId,
+  }
+}

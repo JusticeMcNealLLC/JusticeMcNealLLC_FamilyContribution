@@ -227,6 +227,45 @@ function pubRenderGuestRsvpSection(event) {
         const isPaid = event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0;
         noRefundCheck.closest('label').classList.toggle('hidden', !isPaid);
     }
+
+    pubWireGuestSmsFields();
+}
+
+/* ── Guest SMS consent helpers ───────────── */
+
+function pubSyncGuestSmsConsent() {
+    const phone = (document.getElementById('guestPhoneInput')?.value
+        || document.getElementById('ctaGuestPhoneInput')?.value || '').trim();
+    if (!phone) return;
+    const checks = [
+        document.getElementById('guestSmsConsentCheck'),
+        document.getElementById('ctaGuestSmsConsentCheck'),
+    ].filter(Boolean);
+    checks.forEach((el) => { el.checked = true; });
+}
+
+function pubWireGuestSmsFields() {
+    ['guestPhoneInput', 'ctaGuestPhoneInput'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el && !el.dataset.smsWired) {
+            el.dataset.smsWired = '1';
+            el.addEventListener('input', pubSyncGuestSmsConsent);
+        }
+    });
+}
+
+function pubGetGuestSmsPayload() {
+    const phone = (document.getElementById('guestPhoneInput')?.value
+        || document.getElementById('ctaGuestPhoneInput')?.value || '').trim();
+    const consentChecked = !!(
+        document.getElementById('guestSmsConsentCheck')?.checked
+        || document.getElementById('ctaGuestSmsConsentCheck')?.checked
+    );
+    return {
+        guest_phone: phone || undefined,
+        sms_opt_in: !!(phone && consentChecked),
+        sms_consent_text_version: 'event_sms_v1',
+    };
 }
 
 /* ── Guest RSVP Handler ──────────────────── */
@@ -270,6 +309,8 @@ async function pubHandleGuestRsvp() {
             return;
         }
 
+        const smsPayload = pubGetGuestSmsPayload();
+
         if (isPaid) {
             // Paid event → Stripe checkout
             const { url } = await callEdgeFunctionPublic('create-event-checkout', {
@@ -277,6 +318,7 @@ async function pubHandleGuestRsvp() {
                 type: 'rsvp',
                 guest_name: name,
                 guest_email: email,
+                ...smsPayload,
             });
             if (url) window.location.href = url;
         } else {
@@ -285,6 +327,7 @@ async function pubHandleGuestRsvp() {
                 event_id: pubCurrentEvent.id,
                 guest_name: name,
                 guest_email: email,
+                ...smsPayload,
             });
 
             if (result.guest_token) {

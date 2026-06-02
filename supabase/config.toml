@@ -84,3 +84,6 @@ verify_jwt = false
 
 [functions.schedule-event-sms-reminders]
 verify_jwt = false
+
+[functions.upsert-event-sms-recipient]
+verify_jwt = false

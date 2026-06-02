@@ -66,10 +66,13 @@ function pubOpenCtaPanel(kind, opts = {}) {
         <div class="evt-cta-field-stack">
             <input type="text" id="ctaGuestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name">
             <input type="email" id="ctaGuestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address">
+            <input type="tel" id="ctaGuestPhoneInput" placeholder="Phone number (optional)" class="evt-input" aria-label="Phone number optional">
+            <label class="evt-checkbox-label"><input type="checkbox" id="ctaGuestSmsConsentCheck"><span>Text me event updates at this number. Message/data rates may apply. Reply STOP to opt out.</span></label>
             <label class="evt-checkbox-label${pubCurrentEvent.pricing_mode === 'paid' && pubCurrentEvent.rsvp_cost_cents > 0 ? '' : ' hidden'}"><input type="checkbox" id="ctaGuestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label>
             <button type="button" onclick="pubSubmitCtaGuestRsvp()" id="ctaGuestRsvpBtn" class="evt-rsvp-pay">${pubCurrentEvent.pricing_mode === 'paid' && pubCurrentEvent.rsvp_cost_cents > 0 ? `RSVP as Guest — ${pubFormatCurrency(pubCurrentEvent.rsvp_cost_cents)}` : 'RSVP as Guest'}</button>
         </div>
         ${memberPrompt}`;
+    if (typeof pubWireGuestSmsFields === 'function') pubWireGuestSmsFields();
 }
 
 function pubRenderCtaTicket(panel, closeBtn) {
@@ -123,12 +126,18 @@ function pubRenderCtaRaffle(panel, closeBtn) {
 async function pubSubmitCtaGuestRsvp() {
     const name = document.getElementById('ctaGuestNameInput')?.value.trim() || '';
     const email = document.getElementById('ctaGuestEmailInput')?.value.trim() || '';
+    const phone = document.getElementById('ctaGuestPhoneInput')?.value.trim() || '';
+    const smsConsent = document.getElementById('ctaGuestSmsConsentCheck');
     const noRefund = document.getElementById('ctaGuestNoRefundCheck');
     const targetName = document.getElementById('guestNameInput');
     const targetEmail = document.getElementById('guestEmailInput');
+    const targetPhone = document.getElementById('guestPhoneInput');
+    const targetSmsConsent = document.getElementById('guestSmsConsentCheck');
     const targetNoRefund = document.getElementById('guestNoRefundCheck');
     if (targetName) targetName.value = name;
     if (targetEmail) targetEmail.value = email;
+    if (targetPhone) targetPhone.value = phone;
+    if (targetSmsConsent && smsConsent) targetSmsConsent.checked = smsConsent.checked;
     if (targetNoRefund && noRefund) targetNoRefund.checked = noRefund.checked;
     await pubHandleGuestRsvp();
     if (pubGuestRsvp) pubOpenCtaPanel('ticket');

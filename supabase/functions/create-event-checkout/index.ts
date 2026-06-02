@@ -27,7 +27,19 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Parse body
-    const { event_id, type, guest_name, guest_email, guest_token, from_waitlist, invest_eligible_acknowledged, amount_cents } = await req.json()
+    const {
+      event_id,
+      type,
+      guest_name,
+      guest_email,
+      guest_phone,
+      sms_opt_in,
+      sms_consent_text_version,
+      guest_token,
+      from_waitlist,
+      invest_eligible_acknowledged,
+      amount_cents,
+    } = await req.json()
     // type: 'rsvp' | 'raffle_entry' | 'competition_entry' | 'prize_pool'
     // guest_name + guest_email: for non-member (public event) RSVP
     // guest_token: existing public guest RSVP token for guest raffle checkout
@@ -329,6 +341,11 @@ serve(async (req) => {
       metadata.guest_name = guestNameNormalized!
       metadata.guest_email = guestEmailNormalized!
       metadata.guest_token = guestToken!
+      if (guest_phone) metadata.guest_phone = String(guest_phone).trim()
+      if (sms_opt_in === true) metadata.sms_opt_in = 'true'
+      if (sms_consent_text_version) {
+        metadata.sms_consent_text_version = String(sms_consent_text_version)
+      }
     }
 
     // LLC-specific metadata

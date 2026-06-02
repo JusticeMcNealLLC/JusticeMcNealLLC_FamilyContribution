@@ -123,9 +123,16 @@ async function evtHandleRsvp(eventId, status) {
             window.evtAllRsvps[eventId] = data;
         }
 
+        const wantSmsOptIn = status === 'going' && !!document.getElementById('evtSmsOptInCheck')?.checked;
+
         // Refresh detail and card list
         evtRenderEvents();
         await globalThis.evtOpenDetail(eventId);
+
+        if (wantSmsOptIn) {
+            await evtHandleEventSmsOptIn(eventId, true);
+        }
+
         if (status === 'going' && window.evtCtaRaffleIntent === eventId) {
             window.evtCtaRaffleIntent = null;
             evtOpenCtaPanel('raffle', eventId);
@@ -133,6 +140,21 @@ async function evtHandleRsvp(eventId, status) {
     } catch (err) {
         console.error('RSVP error:', err);
         alert('Failed to update RSVP. Please try again.');
+    }
+}
+
+async function evtHandleEventSmsOptIn(eventId, optIn) {
+    try {
+        await callEdgeFunction('upsert-event-sms-recipient', {
+            event_id: eventId,
+            sms_opt_in: !!optIn,
+            sms_consent_text_version: 'event_sms_v1',
+        });
+    } catch (err) {
+        console.error('Event SMS preference error:', err);
+        alert(err.message || 'Failed to save SMS preference. Please try again.');
+        const checkbox = document.getElementById('evtSmsOptInCheck');
+        if (checkbox) checkbox.checked = !optIn;
     }
 }
 
@@ -605,6 +627,7 @@ export {
     evtIsRaffleBundledWithPaidRsvp,
     evtCanEnterMemberRaffle,
     evtHandleRsvp,
+    evtHandleEventSmsOptIn,
     evtHandleRaffleEntry,
     evtHandleFreeRaffleEntry,
     evtUpdateStatus,
@@ -625,6 +648,7 @@ publishGlobals({
     evtIsRaffleBundledWithPaidRsvp,
     evtCanEnterMemberRaffle,
     evtHandleRsvp,
+    evtHandleEventSmsOptIn,
     evtHandleRaffleEntry,
     evtHandleFreeRaffleEntry,
     evtUpdateStatus,
