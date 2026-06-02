@@ -87,3 +87,6 @@ verify_jwt = false
 
 [functions.upsert-event-sms-recipient]
 verify_jwt = false
+
+[functions.send-event-rsvp-confirmation]
+verify_jwt = false

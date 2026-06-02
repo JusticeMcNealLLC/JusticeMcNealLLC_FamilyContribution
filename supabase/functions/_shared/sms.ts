@@ -591,3 +591,264 @@ export async function upsertEventSmsRecipient(
     contact_id: contactId,
   }
 }
+
+// ── RSVP confirmation SMS (Phase 5.1) ───────────────────────────
+
+export function isRsvpConfirmationsEnabled(): boolean {
+  return Deno.env.get('SMS_RSVP_CONFIRMATIONS_ENABLED') === 'true'
+}
+
+export type EventSmsEventRow = {
+  title: string
+  start_date: string
+  timezone?: string | null
+  location_text?: string | null
+  location_nickname?: string | null
+  gate_location?: boolean | null
+  gate_time?: boolean | null
+  raffle_enabled?: boolean | null
+}
+
+export function formatEventDateTimeForSms(startDate: string, timezone?: string | null): string {
+  const d = new Date(startDate)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: (timezone || 'America/New_York').trim() || 'America/New_York',
+  })
+}
+
+/** Build RSVP confirmation body. Caller omits location when gate rules are uncertain. */
+export function buildRsvpConfirmationBody(
+  event: EventSmsEventRow,
+  opts: {
+    include_location?: boolean
+    include_raffle_hint?: boolean
+    include_docs_hint?: boolean
+  } = {},
+): string {
+  const title = (event.title || 'the event').trim()
+  const when = formatEventDateTimeForSms(event.start_date, event.timezone)
+  const parts = [`Thanks for RSVPing to ${title}!`]
+  if (when) parts.push(when + '.')
+
+  if (opts.include_location) {
+    const loc = (event.location_nickname || event.location_text || '').trim()
+    if (loc) parts.push(`Location: ${loc}.`)
+  }
+
+  if (opts.include_raffle_hint && event.raffle_enabled) {
+    parts.push('Raffle entry is available for this event.')
+  }
+
+  if (opts.include_docs_hint) {
+    parts.push('Event documents are posted in the portal.')
+  }
+
+  parts.push('Reply STOP to opt out.')
+  let body = parts.join(' ')
+  if (body.length > 480) {
+    body = body.slice(0, 477) + '...'
+  }
+  return body
+}
+
+export async function hasRsvpConfirmationBeenSent(
+  supabase: SupabaseClient,
+  eventId: string,
+  recipientId: string,
+): Promise<boolean> {
+  const { data: messages, error: msgErr } = await supabase
+    .from('sms_messages')
+    .select('id')
+    .eq('event_id', eventId)
+    .eq('message_type', 'rsvp_confirmation')
+
+  if (msgErr) {
+    console.error('RSVP confirmation duplicate check (messages) failed', msgErr.message)
+    return false
+  }
+
+  const messageIds = (messages || []).map((m) => m.id)
+  if (!messageIds.length) return false
+
+  const { count, error: delErr } = await supabase
+    .from('sms_message_deliveries')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_sms_recipient_id', recipientId)
+    .in('message_id', messageIds)
+
+  if (delErr) {
+    console.error('RSVP confirmation duplicate check (deliveries) failed', delErr.message)
+    return false
+  }
+
+  return (count ?? 0) > 0
+}
+
+export type RsvpConfirmationSendResult = {
+  ok: boolean
+  skipped?: boolean
+  already_sent?: boolean
+  reason?: string
+  message_id?: string | null
+  dry_run?: boolean
+  phone_masked?: string
+  sent?: number
+  failed?: number
+}
+
+export async function sendEventRsvpConfirmation(
+  supabase: SupabaseClient,
+  input: { event_id: string; event_sms_recipient_id: string },
+): Promise<RsvpConfirmationSendResult> {
+  if (!isRsvpConfirmationsEnabled()) {
+    return { ok: true, skipped: true, reason: 'confirmations_disabled' }
+  }
+
+  const eventId = input.event_id
+  const recipientId = input.event_sms_recipient_id
+  if (!eventId || !recipientId) {
+    return { ok: false, reason: 'missing_ids' }
+  }
+
+  if (await hasRsvpConfirmationBeenSent(supabase, eventId, recipientId)) {
+    return { ok: true, skipped: true, already_sent: true, reason: 'already_sent' }
+  }
+
+  const { data: recipient, error: recErr } = await supabase
+    .from('event_sms_recipients')
+    .select(`
+      id, event_id, opted_in, opted_out_at, guest_rsvp_id, event_rsvp_id,
+      sms_phone_contacts ( phone_e164 )
+    `)
+    .eq('id', recipientId)
+    .eq('event_id', eventId)
+    .maybeSingle()
+
+  if (recErr) {
+    console.error('RSVP confirmation recipient load failed', recErr.message)
+    return { ok: false, reason: 'recipient_load_failed' }
+  }
+
+  if (!recipient?.opted_in || recipient.opted_out_at) {
+    return { ok: true, skipped: true, reason: 'not_opted_in' }
+  }
+
+  const contact = recipient.sms_phone_contacts as { phone_e164: string } | { phone_e164: string }[] | null
+  const phoneRaw = Array.isArray(contact) ? contact[0]?.phone_e164 : contact?.phone_e164
+  const phoneE164 = phoneRaw ? normalizePhoneE164(phoneRaw) : null
+  if (!phoneE164) {
+    return { ok: true, skipped: true, reason: 'invalid_phone' }
+  }
+
+  const twilioFrom = getTwilioFrom()
+  if (await isPhoneGloballySuppressed(supabase, phoneE164, twilioFrom)) {
+    return { ok: true, skipped: true, reason: 'globally_suppressed' }
+  }
+
+  const { data: event, error: evtErr } = await supabase
+    .from('events')
+    .select('title, start_date, timezone, location_text, location_nickname, gate_location, gate_time, raffle_enabled')
+    .eq('id', eventId)
+    .maybeSingle()
+
+  if (evtErr || !event) {
+    console.error('RSVP confirmation event load failed', evtErr?.message)
+    return { ok: false, reason: 'event_load_failed' }
+  }
+
+  const rsvpConfirmed = !!(recipient.guest_rsvp_id || recipient.event_rsvp_id)
+  const includeLocation = rsvpConfirmed
+    ? (!!((event.location_nickname || event.location_text || '').trim()) &&
+      (!event.gate_location || rsvpConfirmed))
+    : false
+
+  let includeDocsHint = false
+  const { count: docCount, error: docErr } = await supabase
+    .from('event_documents')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_id', eventId)
+    .eq('distributed', true)
+
+  if (!docErr && (docCount ?? 0) > 0) {
+    includeDocsHint = true
+  }
+
+  const body = buildRsvpConfirmationBody(event as EventSmsEventRow, {
+    include_location: includeLocation,
+    include_raffle_hint: !!event.raffle_enabled,
+    include_docs_hint: includeDocsHint,
+  })
+
+  const { data: messageRow, error: messageErr } = await supabase
+    .from('sms_messages')
+    .insert({
+      event_id: eventId,
+      body,
+      message_type: 'rsvp_confirmation',
+      sender_user_id: null,
+      recipient_count: 1,
+    })
+    .select('id')
+    .single()
+
+  if (messageErr || !messageRow?.id) {
+    console.error('RSVP confirmation sms_messages insert failed', messageErr?.message)
+    return { ok: false, reason: 'message_insert_failed' }
+  }
+
+  const sendResult = await executeSendSms(supabase, {
+    message_id: messageRow.id,
+    body,
+    recipients: [{
+      event_sms_recipient_id: recipientId,
+      phone_e164: phoneE164,
+    }],
+  })
+
+  return {
+    ok: true,
+    message_id: messageRow.id,
+    dry_run: sendResult.dry_run,
+    phone_masked: maskPhone(phoneE164),
+    sent: sendResult.sent,
+    failed: sendResult.failed,
+  }
+}
+
+/** Fire-and-forget RSVP confirmation; never throws to caller. */
+export async function trySendEventRsvpConfirmation(
+  supabase: SupabaseClient,
+  input: {
+    event_id: string
+    event_sms_recipient_id?: string | null
+    upsert_result?: UpsertEventSmsRecipientResult
+  },
+): Promise<void> {
+  const recipientId = input.event_sms_recipient_id ?? input.upsert_result?.recipient_id ?? null
+  if (!recipientId || !input.upsert_result?.opted_in) return
+
+  try {
+    const result = await sendEventRsvpConfirmation(supabase, {
+      event_id: input.event_id,
+      event_sms_recipient_id: recipientId,
+    })
+    if (!result.ok) {
+      console.error('RSVP confirmation send failed', input.event_id, recipientId, result.reason)
+    } else if (result.skipped && result.reason) {
+      console.log('RSVP confirmation skipped', input.event_id, recipientId, result.reason)
+    }
+  } catch (err) {
+    console.error(
+      'RSVP confirmation unexpected error (non-blocking)',
+      input.event_id,
+      recipientId,
+      (err as Error).message,
+    )
+  }
+}

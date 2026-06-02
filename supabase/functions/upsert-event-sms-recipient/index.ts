@@ -6,6 +6,7 @@ import {
   createServiceClient,
   jsonResponse,
   upsertEventSmsRecipient,
+  trySendEventRsvpConfirmation,
 } from '../_shared/sms.ts'
 
 serve(async (req) => {
@@ -60,6 +61,13 @@ serve(async (req) => {
         error: 'Add a phone number to your profile to receive event SMS updates.',
         opted_in: false,
       }, 400)
+    }
+
+    if (smsOptIn && result.opted_in && result.recipient_id) {
+      await trySendEventRsvpConfirmation(supabase, {
+        event_id: eventId,
+        upsert_result: result,
+      })
     }
 
     return jsonResponse({

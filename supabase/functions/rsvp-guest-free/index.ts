@@ -4,7 +4,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { upsertEventSmsRecipient } from '../_shared/sms.ts'
+import { upsertEventSmsRecipient, trySendEventRsvpConfirmation } from '../_shared/sms.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
@@ -83,7 +83,7 @@ serve(async (req) => {
 
     if (existingGuest) {
       if (guest_phone && sms_opt_in === true) {
-        await upsertEventSmsRecipient(supabase, {
+        const smsUpsert = await upsertEventSmsRecipient(supabase, {
           event_id,
           phone_raw: String(guest_phone),
           sms_opt_in: true,
@@ -93,6 +93,7 @@ serve(async (req) => {
           guest_rsvp_id: existingGuest.id,
           consent_source: 'guest_rsvp',
         })
+        await trySendEventRsvpConfirmation(supabase, { event_id, upsert_result: smsUpsert })
       }
 
       return new Response(JSON.stringify({
@@ -156,7 +157,7 @@ serve(async (req) => {
 
         if (existingAfterConflict) {
           if (guest_phone && sms_opt_in === true) {
-            await upsertEventSmsRecipient(supabase, {
+            const smsUpsert = await upsertEventSmsRecipient(supabase, {
               event_id,
               phone_raw: String(guest_phone),
               sms_opt_in: true,
@@ -166,6 +167,7 @@ serve(async (req) => {
               guest_rsvp_id: existingAfterConflict.id,
               consent_source: 'guest_rsvp',
             })
+            await trySendEventRsvpConfirmation(supabase, { event_id, upsert_result: smsUpsert })
           }
 
           return new Response(JSON.stringify({
@@ -182,7 +184,7 @@ serve(async (req) => {
     }
 
     if (guest_phone && sms_opt_in === true) {
-      await upsertEventSmsRecipient(supabase, {
+      const smsUpsert = await upsertEventSmsRecipient(supabase, {
         event_id,
         phone_raw: String(guest_phone),
         sms_opt_in: true,
@@ -192,6 +194,7 @@ serve(async (req) => {
         guest_rsvp_id: guestRsvp.id,
         consent_source: 'guest_rsvp',
       })
+      await trySendEventRsvpConfirmation(supabase, { event_id, upsert_result: smsUpsert })
     }
 
     return new Response(JSON.stringify({

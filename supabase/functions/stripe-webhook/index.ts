@@ -4,7 +4,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno&no-check'
-import { upsertEventSmsRecipient } from '../_shared/sms.ts'
+import { upsertEventSmsRecipient, trySendEventRsvpConfirmation } from '../_shared/sms.ts'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   apiVersion: '2023-10-16',
@@ -242,7 +242,7 @@ async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Se
       const guestPhone = session.metadata?.guest_phone
       const smsOptIn = session.metadata?.sms_opt_in === 'true'
       if (guestPhone && smsOptIn && guestRsvpRow?.id) {
-        await upsertEventSmsRecipient(supabase, {
+        const smsUpsert = await upsertEventSmsRecipient(supabase, {
           event_id: eventId,
           phone_raw: guestPhone,
           sms_opt_in: true,
@@ -252,6 +252,7 @@ async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Se
           guest_rsvp_id: guestRsvpRow.id,
           consent_source: 'guest_rsvp',
         })
+        await trySendEventRsvpConfirmation(supabase, { event_id: eventId, upsert_result: smsUpsert })
       }
     }
 
