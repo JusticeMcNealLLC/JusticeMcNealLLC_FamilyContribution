@@ -852,3 +852,153 @@ export async function trySendEventRsvpConfirmation(
     )
   }
 }
+
+// ── 24-hour reminder SMS (Phase 5.2) ───────────────────────────
+
+export const REMINDER_24H_WINDOW = { hoursMin: 23, hoursMax: 25 } as const
+
+export function isSmsRemindersEnabled(): boolean {
+  return Deno.env.get('SMS_REMINDERS_ENABLED') === 'true'
+}
+
+export function reminder24hWindowBounds(now = new Date()): { start: Date; end: Date } {
+  return {
+    start: new Date(now.getTime() + REMINDER_24H_WINDOW.hoursMin * 60 * 60 * 1000),
+    end: new Date(now.getTime() + REMINDER_24H_WINDOW.hoursMax * 60 * 60 * 1000),
+  }
+}
+
+export function formatEventTimeForSms(startDate: string, timezone?: string | null): string {
+  const d = new Date(startDate)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: (timezone || 'America/New_York').trim() || 'America/New_York',
+  })
+}
+
+/** Build 24h reminder body. Caller controls location/docs/raffle hints. */
+export function buildReminder24hBody(
+  event: EventSmsEventRow,
+  opts: {
+    include_location?: boolean
+    include_raffle_hint?: boolean
+    include_docs_hint?: boolean
+  } = {},
+): string {
+  const title = (event.title || 'the event').trim()
+  const time = formatEventTimeForSms(event.start_date, event.timezone)
+  let lead = `Reminder: ${title} is tomorrow`
+  if (time) lead += ` at ${time}`
+  lead += '.'
+  const parts = [lead]
+
+  if (opts.include_location) {
+    const loc = (event.location_nickname || event.location_text || '').trim()
+    if (loc) parts.push(`Location: ${loc}.`)
+  }
+
+  if (opts.include_raffle_hint && event.raffle_enabled) {
+    parts.push('Raffle entry is available for this event.')
+  }
+
+  if (opts.include_docs_hint) {
+    parts.push('Event documents are posted in the portal.')
+  }
+
+  parts.push('Reply STOP to opt out.')
+  let body = parts.join(' ')
+  if (body.length > 480) {
+    body = body.slice(0, 477) + '...'
+  }
+  return body
+}
+
+export async function hasReminder24hBeenSent(
+  supabase: SupabaseClient,
+  eventId: string,
+): Promise<boolean> {
+  const { count, error } = await supabase
+    .from('sms_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_id', eventId)
+    .eq('message_type', 'reminder_24h')
+
+  if (error) {
+    console.error('24h reminder duplicate check failed for event', eventId, error.message)
+    return false
+  }
+
+  return (count ?? 0) > 0
+}
+
+export type EventSmsSendTarget = {
+  event_sms_recipient_id: string
+  phone_e164: string
+}
+
+export async function resolveOptedInSmsTargets(
+  supabase: SupabaseClient,
+  eventId: string,
+): Promise<{
+  targets: EventSmsSendTarget[]
+  skipped_invalid: number
+  skipped_suppressed: number
+}> {
+  const { data: recipients, error: recErr } = await supabase
+    .from('event_sms_recipients')
+    .select('id, sms_phone_contacts(phone_e164)')
+    .eq('event_id', eventId)
+    .eq('opted_in', true)
+    .is('opted_out_at', null)
+
+  if (recErr) {
+    console.error('SMS recipient load failed for event', eventId, recErr.message)
+    return { targets: [], skipped_invalid: 0, skipped_suppressed: 0 }
+  }
+
+  const twilioFrom = getTwilioFrom()
+  const targets: EventSmsSendTarget[] = []
+  let skipped_invalid = 0
+  let skipped_suppressed = 0
+
+  for (const row of recipients || []) {
+    const contact = row.sms_phone_contacts as { phone_e164: string } | { phone_e164: string }[] | null
+    const phone = Array.isArray(contact) ? contact[0]?.phone_e164 : contact?.phone_e164
+    if (!phone) {
+      skipped_invalid++
+      continue
+    }
+    const normalized = normalizePhoneE164(phone)
+    if (!normalized) {
+      skipped_invalid++
+      continue
+    }
+    if (await isPhoneGloballySuppressed(supabase, normalized, twilioFrom)) {
+      skipped_suppressed++
+      continue
+    }
+    targets.push({ event_sms_recipient_id: row.id, phone_e164: normalized })
+  }
+
+  return { targets, skipped_invalid, skipped_suppressed }
+}
+
+export async function eventHasDistributedDocs(
+  supabase: SupabaseClient,
+  eventId: string,
+): Promise<boolean> {
+  const { count, error } = await supabase
+    .from('event_documents')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_id', eventId)
+    .eq('distributed', true)
+
+  if (error) {
+    console.error('Event docs lookup failed for', eventId, error.message)
+    return false
+  }
+
+  return (count ?? 0) > 0
+}

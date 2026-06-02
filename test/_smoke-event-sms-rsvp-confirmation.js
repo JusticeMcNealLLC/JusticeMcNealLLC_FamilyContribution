@@ -22,7 +22,7 @@ assert(/function trySendEventRsvpConfirmation/.test(sms), 'trySendEventRsvpConfi
 assert(/hasRsvpConfirmationBeenSent/.test(sms), 'duplicate prevention helper');
 assert(/message_type:\s*'rsvp_confirmation'/.test(sms), 'creates rsvp_confirmation sms_messages');
 assert(/Reply STOP to opt out/.test(sms), 'STOP language in body builder');
-assert(!/SMS_REMINDERS_ENABLED/.test(sms.replace(/schedule-event-sms-reminders/g, '')), 'no reminder cron in shared sms');
+assert(!/buildReminder24hBody|hasReminder24hBeenSent/.test(rsvp), 'RSVP functions do not send 24h reminders');
 
 assert(/trySendEventRsvpConfirmation/.test(rsvp), 'rsvp-guest-free triggers confirmation');
 assert(/trySendEventRsvpConfirmation/.test(webhook), 'stripe-webhook triggers confirmation');

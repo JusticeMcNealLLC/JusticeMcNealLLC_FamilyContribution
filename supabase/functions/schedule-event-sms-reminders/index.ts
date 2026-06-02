@@ -1,17 +1,22 @@
-// Edge Function: schedule-event-sms-reminders — 24h SMS reminder shell (disabled by default).
+// Edge Function: schedule-event-sms-reminders — 24h SMS reminders (Phase 5.2).
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import {
   assertServiceRole,
+  buildReminder24hBody,
   corsHeaders,
   createServiceClient,
+  eventHasDistributedDocs,
   executeSendSms,
-  isPhoneGloballySuppressed,
+  hasReminder24hBeenSent,
+  isSmsRemindersEnabled,
   jsonResponse,
-  normalizePhoneE164,
+  reminder24hWindowBounds,
+  resolveOptedInSmsTargets,
+  type EventSmsEventRow,
 } from '../_shared/sms.ts'
 
-const REMINDER_WINDOW = { hoursMin: 23, hoursMax: 25 }
+const ACTIVE_EVENT_STATUSES = ['open', 'confirmed', 'active'] as const
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -21,107 +26,81 @@ serve(async (req) => {
   try {
     assertServiceRole(req)
 
-    const supabase = createServiceClient()
-    const now = new Date()
-    const remindersEnabled = Deno.env.get('SMS_REMINDERS_ENABLED') === 'true'
+    const emptySummary = {
+      success: true,
+      enabled: false,
+      events_checked: 0,
+      events_sent: 0,
+      recipients_sent: 0,
+      events_skipped_duplicate: 0,
+      recipients_skipped: 0,
+    }
 
-    const start = new Date(now.getTime() + REMINDER_WINDOW.hoursMin * 60 * 60 * 1000)
-    const end = new Date(now.getTime() + REMINDER_WINDOW.hoursMax * 60 * 60 * 1000)
+    if (!isSmsRemindersEnabled()) {
+      return jsonResponse(emptySummary)
+    }
+
+    const supabase = createServiceClient()
+    const { start, end } = reminder24hWindowBounds()
 
     const { data: events, error: evtErr } = await supabase
       .from('events')
-      .select('id, title, start_date, location_text, status, timezone')
+      .select(`
+        id, title, start_date, timezone, status,
+        location_text, location_nickname, gate_location, raffle_enabled
+      `)
       .gte('start_date', start.toISOString())
-      .lte('start_date', end.toISOString())
-      .in('status', ['open', 'confirmed', 'active'])
+      .lt('start_date', end.toISOString())
+      .in('status', [...ACTIVE_EVENT_STATUSES])
 
     if (evtErr) throw new Error(evtErr.message)
 
-    const summary: Array<{
-      event_id: string
-      eligible: number
-      sent: number
-      skipped: number
-      reminders_enabled: boolean
-    }> = []
+    let events_sent = 0
+    let recipients_sent = 0
+    let events_skipped_duplicate = 0
+    let recipients_skipped = 0
 
     for (const event of events || []) {
-      const { data: recipients } = await supabase
-        .from('event_sms_recipients')
-        .select('id, sms_phone_contacts(phone_e164)')
-        .eq('event_id', event.id)
-        .eq('opted_in', true)
-        .is('opted_out_at', null)
-
-      const twilioFrom = Deno.env.get('TWILIO_FROM_PHONE')?.trim() || null
-      const targets: Array<{ event_sms_recipient_id: string; phone_e164: string }> = []
-
-      for (const row of recipients || []) {
-        const contact = row.sms_phone_contacts as { phone_e164: string } | { phone_e164: string }[] | null
-        const phone = Array.isArray(contact) ? contact[0]?.phone_e164 : contact?.phone_e164
-        if (!phone) continue
-        const normalized = normalizePhoneE164(phone)
-        if (!normalized) continue
-        if (await isPhoneGloballySuppressed(supabase, normalized, twilioFrom)) continue
-        targets.push({ event_sms_recipient_id: row.id, phone_e164: normalized })
-      }
-
-      if (!targets.length) {
-        summary.push({
-          event_id: event.id,
-          eligible: 0,
-          sent: 0,
-          skipped: 0,
-          reminders_enabled: remindersEnabled,
-        })
+      if (await hasReminder24hBeenSent(supabase, event.id)) {
+        events_skipped_duplicate++
         continue
       }
 
-      if (!remindersEnabled) {
-        summary.push({
-          event_id: event.id,
-          eligible: targets.length,
-          sent: 0,
-          skipped: targets.length,
-          reminders_enabled: false,
-        })
-        continue
-      }
+      const { targets, skipped_invalid, skipped_suppressed } = await resolveOptedInSmsTargets(
+        supabase,
+        event.id,
+      )
 
-      const eventDate = new Date(event.start_date)
-      const dateStr = eventDate.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        timeZone: event.timezone || 'America/New_York',
-      })
-      const timeStr = eventDate.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        timeZone: event.timezone || 'America/New_York',
-      })
-      const locationPart = event.location_text ? ` Location: ${event.location_text}.` : ''
-      const body = `Reminder: "${event.title}" starts in about 24 hours (${dateStr} at ${timeStr}).${locationPart}`
+      recipients_skipped += skipped_invalid + skipped_suppressed
 
-      const { data: messageRow } = await supabase
+      if (!targets.length) continue
+
+      const eventRow = event as EventSmsEventRow
+      const hasLocation = !!(eventRow.location_nickname || eventRow.location_text || '').trim()
+      const includeDocsHint = await eventHasDistributedDocs(supabase, event.id)
+
+      const body = buildReminder24hBody(eventRow, {
+        include_location: hasLocation,
+        include_raffle_hint: !!eventRow.raffle_enabled,
+        include_docs_hint: includeDocsHint,
+      })
+
+      const { data: messageRow, error: messageErr } = await supabase
         .from('sms_messages')
         .insert({
           event_id: event.id,
+          channel: 'sms',
           body,
           message_type: 'reminder_24h',
+          sender_user_id: null,
           recipient_count: targets.length,
         })
         .select('id')
         .single()
 
-      if (!messageRow?.id) {
-        summary.push({
-          event_id: event.id,
-          eligible: targets.length,
-          sent: 0,
-          skipped: targets.length,
-          reminders_enabled: true,
-        })
+      if (messageErr || !messageRow?.id) {
+        console.error('24h reminder sms_messages insert failed for event', event.id, messageErr?.message)
+        recipients_skipped += targets.length
         continue
       }
 
@@ -131,25 +110,24 @@ serve(async (req) => {
         recipients: targets,
       })
 
-      summary.push({
-        event_id: event.id,
-        eligible: targets.length,
-        sent: result.sent,
-        skipped: result.skipped + result.failed,
-        reminders_enabled: true,
-      })
+      events_sent++
+      recipients_sent += result.sent
+      recipients_skipped += result.skipped + result.failed
     }
 
     return jsonResponse({
-      ok: true,
-      reminders_enabled: remindersEnabled,
-      events_in_window: (events || []).length,
-      summary,
+      success: true,
+      enabled: true,
+      events_checked: (events || []).length,
+      events_sent,
+      recipients_sent,
+      events_skipped_duplicate,
+      recipients_skipped,
     })
   } catch (err) {
     console.error('schedule-event-sms-reminders error:', (err as Error).message)
     const message = (err as Error).message || 'Unknown error'
     const status = message.includes('Unauthorized') ? 401 : 500
-    return jsonResponse({ ok: false, error: message }, status)
+    return jsonResponse({ success: false, error: message }, status)
   }
 })
