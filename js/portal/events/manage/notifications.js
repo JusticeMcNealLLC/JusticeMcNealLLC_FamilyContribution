@@ -59,6 +59,29 @@ function optOutClass(r) {
     return 'em-pill-maybe';
 }
 
+function _smsSchemaMissingMessage(err) {
+    const code = String(err?.code || '');
+    const msg = String(err?.message || err?.details || '').toLowerCase();
+    const missing =
+        code === 'PGRST205' ||
+        code === '42P01' ||
+        msg.includes('does not exist') ||
+        msg.includes('could not find') ||
+        msg.includes('schema cache') ||
+        msg.includes('not found');
+    if (!missing) return null;
+    return (
+        'Event SMS tables are not deployed on this Supabase project yet. ' +
+        'Apply migration supabase/migrations/094_event_sms_notifications.sql ' +
+        '(Supabase Dashboard → SQL, or `supabase db push` on the linked project), then reload.'
+    );
+}
+
+function _throwIfDbError(err, fallback) {
+    if (!err) return;
+    throw new Error(_smsSchemaMissingMessage(err) || err.message || fallback);
+}
+
 async function loadNotifications() {
     const STATE = api().getState?.() || {};
     const eventId = STATE.eventId;
@@ -74,7 +97,7 @@ async function loadNotifications() {
         .eq('event_id', eventId)
         .order('created_at', { ascending: true });
 
-    if (recErr) throw new Error(recErr.message);
+    _throwIfDbError(recErr, 'Failed to load SMS recipients');
 
     const rows = recipients || [];
     const phones = [...new Set(rows.map(contactPhone).filter(Boolean))];
@@ -95,7 +118,7 @@ async function loadNotifications() {
         .eq('event_id', eventId)
         .order('created_at', { ascending: false });
 
-    if (msgErr) throw new Error(msgErr.message);
+    _throwIfDbError(msgErr, 'Failed to load SMS messages');
 
     const messageList = messages || [];
     const messageIds = messageList.map((m) => m.id);
@@ -106,7 +129,7 @@ async function loadNotifications() {
             .from('sms_message_deliveries')
             .select('id, message_id, event_sms_recipient_id, phone_e164, status, status_updated_at, error_message')
             .in('message_id', messageIds);
-        if (delErr) throw new Error(delErr.message);
+        _throwIfDbError(delErr, 'Failed to load SMS deliveries');
         deliveries = delRows || [];
     }
 

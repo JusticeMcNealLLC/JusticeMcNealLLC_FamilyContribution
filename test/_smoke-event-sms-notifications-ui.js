@@ -38,6 +38,8 @@ pass('sheet router supports notifications tab');
 assert(/send-event-sms/.test(notifications), 'notifications uses send-event-sms Edge Function');
 assert(!/send-sms/.test(notifications.replace(/send-event-sms/g, '')), 'notifications does not call send-sms directly');
 assert(/loadNotifications/.test(notifications) && /notificationsHtml/.test(notifications) && /wireNotifications/.test(notifications), 'notifications module exports load/render/wire');
+assert(/function _smsSchemaMissingMessage/.test(notifications) && /function _throwIfDbError/.test(notifications), 'notifications schema-missing fallback helpers');
+assert(/094_event_sms_notifications/.test(notifications), 'schema-missing message references migration 094');
 assert(/getFilteredRecipients/.test(notifications), 'recipient filters exist');
 assert(/Select all opted-in/.test(notifications), 'select all opted-in control exists');
 assert(/Message history/.test(notifications), 'message history section exists');
