@@ -104,7 +104,8 @@ async function open(eventId, opts = {}) {
     Shell.ensureMounted();
     STATE.eventId = eventId;
     STATE.source  = opts.source || 'admin';
-    STATE.activeTab = Shell.getTabs().some(t => t.key === opts.tab) ? opts.tab : 'overview';
+    const tabList = Shell.getVisibleTabs?.() || Shell.getTabs?.() || [];
+    STATE.activeTab = tabList.some(t => t.key === opts.tab) ? opts.tab : 'overview';
     STATE.editCopyOnOpen = !!opts.editCopy;
     STATE.tabData = {};
     Raffle?.clearPrizeImageState?.();
@@ -121,6 +122,7 @@ async function open(eventId, opts = {}) {
         STATE.activeTab = 'overview';
     }
     Shell.renderHeader();
+    Shell.renderTabs();
     _renderTab(STATE.activeTab);
 }
 
@@ -264,10 +266,6 @@ globalThis.EventsManageShellApi = {
     getState: () => STATE,
     onClose: close,
     renderTab: _renderTab,
-    getVisibleTabs: () => M3A_TABS.filter((t) => {
-        if (t.key !== 'notifications') return true;
-        return !!STATE.canManageNotifications;
-    }),
 };
 
 globalThis.EventsManageOverviewApi = {

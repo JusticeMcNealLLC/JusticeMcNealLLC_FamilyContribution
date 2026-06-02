@@ -30,7 +30,9 @@ pass('shell tabs include Notifications in order');
 
 assert(/tab === 'notifications'/.test(sheet), 'sheet routes notifications tab');
 assert(/Notifications\.loadNotifications/.test(sheet), 'sheet lazy-loads notifications data');
-assert(/getVisibleTabs/.test(sheet) && /canManageNotifications/.test(sheet), 'sheet filters Notifications tab by permission');
+assert(!/\bM3A_TABS\b/.test(sheet), 'sheet must not reference module-local M3A_TABS');
+assert(/Shell\.getVisibleTabs/.test(sheet) && /canManageNotifications/.test(sheet), 'sheet uses shell tab API and permission gate');
+assert(/getVisibleTabs/.test(shell) && /tabs:\s*M3A_TABS/.test(shell), 'shell owns tabs and exports getVisibleTabs');
 pass('sheet router supports notifications tab');
 
 assert(/send-event-sms/.test(notifications), 'notifications uses send-event-sms Edge Function');

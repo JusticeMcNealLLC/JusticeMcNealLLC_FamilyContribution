@@ -10736,7 +10736,7 @@ Type the event title to confirm:`);
   });
 
   // js/portal/events/manage/shell.js
-  var M3A_TABS2 = [
+  var M3A_TABS = [
     { key: "overview", label: "Overview" },
     { key: "images", label: "Images" },
     { key: "rsvps", label: "RSVPs" },
@@ -10873,10 +10873,17 @@ Type the event title to confirm:`);
     const typeLabel = { llc: "LLC", member: "Member", competition: "Competition" }[e.event_type] || e.event_type;
     document.getElementById("emSheetSub").textContent = `${typeLabel} \xB7 ${dateStr} \xB7 ${(e.status || "").toUpperCase()}`;
   }
+  function getVisibleTabs() {
+    const st = getState2();
+    return M3A_TABS.filter((t) => {
+      if (t.key !== "notifications") return true;
+      return !!st.canManageNotifications;
+    });
+  }
   function renderTabs2() {
     const STATE4 = getState2();
     const bar = document.getElementById("emSheetTabs");
-    const tabs = typeof api8().getVisibleTabs === "function" ? api8().getVisibleTabs() : M3A_TABS2;
+    const tabs = getVisibleTabs();
     bar.innerHTML = tabs.map(
       (t) => `<button class="em-tab${t.placeholder ? " placeholder" : ""}${t.key === STATE4.activeTab ? " active" : ""}" data-tab="${t.key}">${t.label}${t.placeholder ? ' <span style="font-size:9px;opacity:.7">soon</span>' : ""}</button>`
     ).join("");
@@ -10936,7 +10943,10 @@ Type the event title to confirm:`);
     setLoadingChrome: setLoadingChrome2,
     openPanel: openPanel2,
     closePanel: closePanel2,
-    getTabs: () => M3A_TABS2
+    /** Full tab definitions (single source of truth). */
+    tabs: M3A_TABS,
+    getTabs: () => M3A_TABS,
+    getVisibleTabs
   };
   globalThis.EventsManageShell = manageShellApi;
 
@@ -11817,6 +11827,17 @@ Type the event title to confirm:`);
     if (r.opted_out_at) return "em-pill-not";
     return "em-pill-maybe";
   }
+  function _smsSchemaMissingMessage(err) {
+    const code = String(err?.code || "");
+    const msg = String(err?.message || err?.details || "").toLowerCase();
+    const missing = code === "PGRST205" || code === "42P01" || msg.includes("does not exist") || msg.includes("could not find") || msg.includes("schema cache") || msg.includes("not found");
+    if (!missing) return null;
+    return "Event SMS tables are not deployed on this Supabase project yet. Apply migration supabase/migrations/094_event_sms_notifications.sql (Supabase Dashboard \u2192 SQL, or `supabase db push` on the linked project), then reload.";
+  }
+  function _throwIfDbError(err, fallback) {
+    if (!err) return;
+    throw new Error(_smsSchemaMissingMessage(err) || err.message || fallback);
+  }
   async function loadNotifications() {
     const STATE4 = api13().getState?.() || {};
     const eventId2 = STATE4.eventId;
@@ -11826,7 +11847,7 @@ Type the event title to confirm:`);
             opted_in, opted_in_at, opted_out_at, consent_source,
             sms_phone_contacts ( phone_e164 )
         `).eq("event_id", eventId2).order("created_at", { ascending: true });
-    if (recErr) throw new Error(recErr.message);
+    _throwIfDbError(recErr, "Failed to load SMS recipients");
     const rows = recipients || [];
     const phones = [...new Set(rows.map(contactPhone).filter(Boolean))];
     let suppressedPhones = /* @__PURE__ */ new Set();
@@ -11835,13 +11856,13 @@ Type the event title to confirm:`);
       suppressedPhones = new Set((supps || []).map((s) => s.phone_e164));
     }
     const { data: messages, error: msgErr } = await supabaseClient.from("sms_messages").select("id, body, message_type, sender_user_id, recipient_count, created_at").eq("event_id", eventId2).order("created_at", { ascending: false });
-    if (msgErr) throw new Error(msgErr.message);
+    _throwIfDbError(msgErr, "Failed to load SMS messages");
     const messageList = messages || [];
     const messageIds = messageList.map((m) => m.id);
     let deliveries = [];
     if (messageIds.length) {
       const { data: delRows, error: delErr } = await supabaseClient.from("sms_message_deliveries").select("id, message_id, event_sms_recipient_id, phone_e164, status, status_updated_at, error_message").in("message_id", messageIds);
-      if (delErr) throw new Error(delErr.message);
+      _throwIfDbError(delErr, "Failed to load SMS deliveries");
       deliveries = delRows || [];
     }
     const latestByRecipient = {};
@@ -13459,7 +13480,8 @@ Type RESET to continue.`
     Shell2.ensureMounted();
     STATE3.eventId = eventId2;
     STATE3.source = opts.source || "admin";
-    STATE3.activeTab = Shell2.getTabs().some((t) => t.key === opts.tab) ? opts.tab : "overview";
+    const tabList = Shell2.getVisibleTabs?.() || Shell2.getTabs?.() || [];
+    STATE3.activeTab = tabList.some((t) => t.key === opts.tab) ? opts.tab : "overview";
     STATE3.editCopyOnOpen = !!opts.editCopy;
     STATE3.tabData = {};
     Raffle?.clearPrizeImageState?.();
@@ -13474,6 +13496,7 @@ Type RESET to continue.`
       STATE3.activeTab = "overview";
     }
     Shell2.renderHeader();
+    Shell2.renderTabs();
     _renderTab(STATE3.activeTab);
   }
   function close3() {
@@ -13608,11 +13631,7 @@ Type RESET to continue.`
   globalThis.EventsManageShellApi = {
     getState: () => STATE3,
     onClose: close3,
-    renderTab: _renderTab,
-    getVisibleTabs: () => M3A_TABS.filter((t) => {
-      if (t.key !== "notifications") return true;
-      return !!STATE3.canManageNotifications;
-    })
+    renderTab: _renderTab
   };
   globalThis.EventsManageOverviewApi = {
     getState: () => STATE3,

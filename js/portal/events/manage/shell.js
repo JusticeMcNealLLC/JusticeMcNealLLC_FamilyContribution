@@ -145,11 +145,19 @@ function renderHeader() {
     document.getElementById('emSheetSub').textContent = `${typeLabel} · ${dateStr} · ${(e.status || '').toUpperCase()}`;
 }
 
+function getVisibleTabs() {
+    const st = getState();
+    return M3A_TABS.filter((t) => {
+        if (t.key !== 'notifications') return true;
+        return !!st.canManageNotifications;
+    });
+}
+
 // ─── Tab bar ────────────────────────────────────────────────────
 function renderTabs() {
     const STATE = getState();
     const bar = document.getElementById('emSheetTabs');
-    const tabs = typeof api().getVisibleTabs === 'function' ? api().getVisibleTabs() : M3A_TABS;
+    const tabs = getVisibleTabs();
     bar.innerHTML = tabs.map(t =>
         `<button class="em-tab${t.placeholder ? ' placeholder' : ''}${t.key === STATE.activeTab ? ' active' : ''}" data-tab="${t.key}">${t.label}${t.placeholder ? ' <span style="font-size:9px;opacity:.7">soon</span>' : ''}</button>`
     ).join('');
@@ -216,7 +224,10 @@ export const manageShellApi = {
     setLoadingChrome,
     openPanel,
     closePanel,
+    /** Full tab definitions (single source of truth). */
+    tabs: M3A_TABS,
     getTabs: () => M3A_TABS,
+    getVisibleTabs,
 };
 
 globalThis.EventsManageShell = manageShellApi;
