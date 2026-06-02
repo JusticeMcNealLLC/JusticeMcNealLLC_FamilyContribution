@@ -69,3 +69,18 @@ verify_jwt = false
 
 [functions.process-event-cancellation]
 verify_jwt = false
+
+[functions.send-sms]
+verify_jwt = false
+
+[functions.send-event-sms]
+verify_jwt = false
+
+[functions.twilio-sms-status-callback]
+verify_jwt = false
+
+[functions.twilio-sms-inbound-webhook]
+verify_jwt = false
+
+[functions.schedule-event-sms-reminders]
+verify_jwt = false
