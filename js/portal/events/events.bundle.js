@@ -11786,12 +11786,19 @@ Type the event title to confirm:`);
     member_profile: "Member profile",
     admin_manual: "Admin"
   };
+  var MESSAGE_TYPES = [
+    { value: "manual", label: "Manual update" },
+    { value: "cancellation", label: "Cancellation" },
+    { value: "update", label: "Schedule / location update" }
+  ];
   var UI = {
     filter: "all",
     search: "",
     selected: /* @__PURE__ */ new Set(),
     expandedMessageId: null,
-    prefillBody: ""
+    prefillBody: "",
+    messageType: "manual",
+    selectAllOptedInOnLoad: false
   };
   function api13() {
     return window.EventsManageNotificationsApi || {};
@@ -12011,6 +12018,13 @@ Type the event title to confirm:`);
                     <p class="em-section-sub">${selectedEligible.length} selected \xB7 only opted-in, non-suppressed recipients will receive messages.</p>
                 </div>
             </div>
+            <label class="text-xs text-gray-600 block mb-1">Message type</label>
+            <select id="emNotifMessageType" class="em-input mb-2" aria-label="SMS message type">
+                ${MESSAGE_TYPES.map((t) => {
+      const sel = UI.messageType === t.value ? " selected" : "";
+      return `<option value="${esc5(t.value)}"${sel}>${esc5(t.label)}</option>`;
+    }).join("")}
+            </select>
             <textarea id="emNotifBody" class="em-textarea" maxlength="1600" placeholder="Write your event update\u2026">${esc5(UI.prefillBody || "")}</textarea>
             <p class="text-xs text-gray-400 mt-1"><span id="emNotifCharCount">${(UI.prefillBody || "").length}</span> / 1600 characters</p>
             <div class="flex flex-wrap gap-2 mt-3">
@@ -12076,7 +12090,9 @@ Type the event title to confirm:`);
       if (resultEl) resultEl.textContent = "Select at least one opted-in recipient.";
       return;
     }
-    const ok = confirm(`Send this SMS to ${selectedIds.length} recipient${selectedIds.length === 1 ? "" : "s"}?`);
+    const messageType = document.getElementById("emNotifMessageType")?.value || UI.messageType || "manual";
+    const typeLabel = MESSAGE_TYPES.find((t) => t.value === messageType)?.label || messageType;
+    const ok = confirm(`Send this ${typeLabel} SMS to ${selectedIds.length} recipient${selectedIds.length === 1 ? "" : "s"}?`);
     if (!ok) return;
     const btn = document.getElementById("emNotifSendBtn");
     if (btn) {
@@ -12088,7 +12104,7 @@ Type the event title to confirm:`);
       const res = await callEdgeFunction("send-event-sms", {
         event_id: STATE4.eventId,
         body,
-        message_type: "manual",
+        message_type: messageType,
         recipient_ids: selectedIds,
         select_all_opted_in: false,
         dry_run: false
@@ -12139,6 +12155,18 @@ Type the event title to confirm:`);
         if (charCount) charCount.textContent = String(body.value.length);
       });
     }
+    const typeSelect = document.getElementById("emNotifMessageType");
+    if (typeSelect) {
+      typeSelect.addEventListener("change", () => {
+        UI.messageType = typeSelect.value || "manual";
+      });
+    }
+    if (UI.selectAllOptedInOnLoad) {
+      (data.recipients || []).forEach((r) => {
+        if (isEligibleToSend(r)) UI.selected.add(r.id);
+      });
+      UI.selectAllOptedInOnLoad = false;
+    }
     root2.querySelectorAll(".em-notif-check").forEach((cb) => {
       cb.addEventListener("change", () => {
         const id = cb.dataset.recipientId;
@@ -12178,19 +12206,38 @@ Type the event title to confirm:`);
       });
     });
   }
-  function resetNotificationsUi(prefillBody = "") {
+  function resetNotificationsUi(prefill = "") {
     UI.filter = "all";
     UI.search = "";
     UI.selected.clear();
     UI.expandedMessageId = null;
-    UI.prefillBody = prefillBody || "";
+    if (prefill && typeof prefill === "object") {
+      UI.prefillBody = prefill.body || "";
+      UI.messageType = prefill.messageType || "manual";
+      UI.selectAllOptedInOnLoad = !!prefill.selectAllOptedIn;
+    } else {
+      UI.prefillBody = prefill || "";
+      UI.messageType = "manual";
+      UI.selectAllOptedInOnLoad = false;
+    }
+  }
+  async function sendSmsAllOptedIn(eventId2, body, messageType) {
+    return callEdgeFunction("send-event-sms", {
+      event_id: eventId2,
+      body,
+      message_type: messageType,
+      recipient_ids: [],
+      select_all_opted_in: true,
+      dry_run: false
+    });
   }
   var manageNotificationsApi = {
     loadNotifications,
     notificationsHtml,
     wireNotifications,
     resetNotificationsUi,
-    refreshNotificationsTab
+    refreshNotificationsTab,
+    sendSmsAllOptedIn
   };
   globalThis.EventsManageNotifications = manageNotificationsApi;
 
@@ -13289,6 +13336,85 @@ Type RESET to continue.`
       btn.addEventListener("click", () => runDangerAction(btn.dataset.action));
     });
   }
+  function cancellationSmsDefaultBody(title) {
+    return `Update: ${title} has been cancelled. Reply STOP to opt out.`;
+  }
+  async function offerCancellationSmsPrompt(event, optedInCount) {
+    if (!optedInCount || optedInCount < 1) return;
+    const defaultBody = cancellationSmsDefaultBody(event.title);
+    const overlay = document.createElement("div");
+    overlay.id = "emCancelSmsOverlay";
+    overlay.className = "fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50";
+    overlay.innerHTML = `
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-4" role="dialog" aria-labelledby="emCancelSmsTitle">
+            <h3 id="emCancelSmsTitle" class="text-base font-semibold text-gray-900">Send cancellation text?</h3>
+            <p class="text-sm text-gray-600 mt-1">Notify ${optedInCount} opted-in attendee${optedInCount === 1 ? "" : "s"}. You can edit the message below. Phone numbers stay masked.</p>
+            <textarea id="emCancelSmsBody" class="em-textarea mt-3" rows="4" maxlength="1600">${esc9(defaultBody)}</textarea>
+            <p id="emCancelSmsResult" class="text-xs mt-2" style="min-height:1rem"></p>
+            <div class="flex flex-wrap gap-2 mt-3 justify-end">
+                <button type="button" class="em-btn-ghost" data-cancel-sms-skip>Skip</button>
+                <button type="button" class="em-btn-primary" data-cancel-sms-send>Send SMS</button>
+            </div>
+        </div>
+    `;
+    const cleanup2 = () => overlay.remove();
+    return new Promise((resolve) => {
+      document.body.appendChild(overlay);
+      overlay.querySelector("[data-cancel-sms-skip]")?.addEventListener("click", () => {
+        cleanup2();
+        resolve({ sent: false, skipped: true });
+      });
+      overlay.querySelector("[data-cancel-sms-send]")?.addEventListener("click", async () => {
+        const resultEl = overlay.querySelector("#emCancelSmsResult");
+        const bodyEl = overlay.querySelector("#emCancelSmsBody");
+        const body = (bodyEl?.value || "").trim();
+        if (!body) {
+          if (resultEl) {
+            resultEl.textContent = "Enter a message before sending.";
+            resultEl.style.color = "#dc2626";
+          }
+          return;
+        }
+        if (!confirm(`Send cancellation SMS to ${optedInCount} opted-in recipient${optedInCount === 1 ? "" : "s"}?`)) return;
+        const sendBtn = overlay.querySelector("[data-cancel-sms-send]");
+        if (sendBtn) {
+          sendBtn.disabled = true;
+          sendBtn.textContent = "Sending\u2026";
+        }
+        if (resultEl) resultEl.textContent = "";
+        try {
+          const res = await callEdgeFunction("send-event-sms", {
+            event_id: event.id,
+            body,
+            message_type: "cancellation",
+            recipient_ids: [],
+            select_all_opted_in: true,
+            dry_run: false
+          });
+          const skipped = (res.skipped || 0) + (res.skipped_suppressed || 0) + (res.skipped_invalid || 0);
+          if (resultEl) {
+            resultEl.textContent = res.ok ? `Sent to ${res.sent || 0} recipient(s). Skipped: ${skipped}. Failed: ${res.failed || 0}.${res.dry_run ? " (dry run)" : ""}` : res.error || "Send failed.";
+            resultEl.style.color = res.ok ? "#059669" : "#dc2626";
+          }
+          if (res.ok) {
+            setTimeout(() => {
+              cleanup2();
+              resolve({ sent: true, result: res });
+            }, 1200);
+          }
+        } catch (err) {
+          if (resultEl) {
+            resultEl.textContent = err.message || "Send failed.";
+            resultEl.style.color = "#dc2626";
+          }
+          if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.textContent = "Send SMS";
+          }
+        }
+      });
+    });
+  }
   async function runDangerAction(action) {
     const STATE4 = api18().getState?.() || {};
     const e = STATE4.event;
@@ -13323,17 +13449,11 @@ Type RESET to continue.`
         api18().notifyParent?.("updated", e.id);
         try {
           const { count } = await supabaseClient.from("event_sms_recipients").select("id", { count: "exact", head: true }).eq("event_id", e.id).eq("opted_in", true).is("opted_out_at", null);
-          if (count && count > 0 && confirm(`Send a cancellation SMS to ${count} opted-in recipient${count === 1 ? "" : "s"}?`)) {
-            const prefill = `"${e.title}" has been cancelled. We will follow up if plans change.`;
-            if (window.EventsManage?.open) {
-              await window.EventsManage.open(e.id, {
-                source: STATE4.source,
-                tab: "notifications",
-                notificationsPrefill: prefill
-              });
-            }
+          if (count && count > 0) {
+            await offerCancellationSmsPrompt(e, count);
           }
-        } catch (_) {
+        } catch (smsErr) {
+          console.warn("Cancellation SMS prompt skipped:", smsErr?.message || smsErr);
         }
       } catch (err) {
         alert("Cancel failed: " + (err.message || "unknown error"));

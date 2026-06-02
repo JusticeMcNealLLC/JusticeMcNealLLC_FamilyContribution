@@ -62,7 +62,14 @@ assert(!/manage\/notifications\.js/.test(portalHtml), 'portal/events.html unchan
 pass('portal/events.html unchanged');
 
 assert(/notificationsPrefill/.test(sheet), 'sheet supports notifications prefill open option');
-assert(/cancellation SMS/.test(danger) || /Phase 5/.test(danger), 'danger zone documents or offers cancellation SMS');
-pass('cancellation SMS hook or Phase 5 note in danger');
+assert(/offerCancellationSmsPrompt/.test(danger), 'danger zone offers cancellation SMS modal');
+assert(/message_type:\s*'cancellation'/.test(danger), 'cancellation prompt uses cancellation message type');
+assert(/select_all_opted_in:\s*true/.test(danger), 'cancellation prompt sends to all opted-in');
+assert(/Reply STOP to opt out/.test(danger), 'cancellation default body includes STOP language');
+assert(/emNotifMessageType/.test(notifications), 'compose has message type selector');
+assert(/value:\s*'cancellation'/.test(notifications) && /value:\s*'update'/.test(notifications), 'manual/cancellation/update types in compose');
+assert(/message_type:\s*messageType/.test(notifications), 'send uses selected message type');
+assert(/sendSmsAllOptedIn/.test(notifications), 'shared send-all-opted-in helper for coordinators');
+pass('cancellation SMS prompt and compose message types');
 
 console.log('\nevent SMS notifications UI smoke: all pass');

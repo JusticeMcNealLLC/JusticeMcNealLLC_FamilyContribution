@@ -9,12 +9,20 @@ const SOURCE_LABELS = {
     admin_manual: 'Admin',
 };
 
+const MESSAGE_TYPES = [
+    { value: 'manual', label: 'Manual update' },
+    { value: 'cancellation', label: 'Cancellation' },
+    { value: 'update', label: 'Schedule / location update' },
+];
+
 const UI = {
     filter: 'all',
     search: '',
     selected: new Set(),
     expandedMessageId: null,
     prefillBody: '',
+    messageType: 'manual',
+    selectAllOptedInOnLoad: false,
 };
 
 function api() {
@@ -303,6 +311,13 @@ function notificationsHtml() {
                     <p class="em-section-sub">${selectedEligible.length} selected · only opted-in, non-suppressed recipients will receive messages.</p>
                 </div>
             </div>
+            <label class="text-xs text-gray-600 block mb-1">Message type</label>
+            <select id="emNotifMessageType" class="em-input mb-2" aria-label="SMS message type">
+                ${MESSAGE_TYPES.map((t) => {
+                    const sel = UI.messageType === t.value ? ' selected' : '';
+                    return `<option value="${esc(t.value)}"${sel}>${esc(t.label)}</option>`;
+                }).join('')}
+            </select>
             <textarea id="emNotifBody" class="em-textarea" maxlength="1600" placeholder="Write your event update…">${esc(UI.prefillBody || '')}</textarea>
             <p class="text-xs text-gray-400 mt-1"><span id="emNotifCharCount">${(UI.prefillBody || '').length}</span> / 1600 characters</p>
             <div class="flex flex-wrap gap-2 mt-3">
@@ -373,7 +388,9 @@ async function sendSelectedSms() {
         return;
     }
 
-    const ok = confirm(`Send this SMS to ${selectedIds.length} recipient${selectedIds.length === 1 ? '' : 's'}?`);
+    const messageType = document.getElementById('emNotifMessageType')?.value || UI.messageType || 'manual';
+    const typeLabel = MESSAGE_TYPES.find((t) => t.value === messageType)?.label || messageType;
+    const ok = confirm(`Send this ${typeLabel} SMS to ${selectedIds.length} recipient${selectedIds.length === 1 ? '' : 's'}?`);
     if (!ok) return;
 
     const btn = document.getElementById('emNotifSendBtn');
@@ -387,7 +404,7 @@ async function sendSelectedSms() {
         const res = await callEdgeFunction('send-event-sms', {
             event_id: STATE.eventId,
             body,
-            message_type: 'manual',
+            message_type: messageType,
             recipient_ids: selectedIds,
             select_all_opted_in: false,
             dry_run: false,
@@ -446,6 +463,20 @@ function wireNotifications() {
         });
     }
 
+    const typeSelect = document.getElementById('emNotifMessageType');
+    if (typeSelect) {
+        typeSelect.addEventListener('change', () => {
+            UI.messageType = typeSelect.value || 'manual';
+        });
+    }
+
+    if (UI.selectAllOptedInOnLoad) {
+        (data.recipients || []).forEach((r) => {
+            if (isEligibleToSend(r)) UI.selected.add(r.id);
+        });
+        UI.selectAllOptedInOnLoad = false;
+    }
+
     root.querySelectorAll('.em-notif-check').forEach((cb) => {
         cb.addEventListener('change', () => {
             const id = cb.dataset.recipientId;
@@ -489,12 +520,32 @@ function wireNotifications() {
     });
 }
 
-function resetNotificationsUi(prefillBody = '') {
+function resetNotificationsUi(prefill = '') {
     UI.filter = 'all';
     UI.search = '';
     UI.selected.clear();
     UI.expandedMessageId = null;
-    UI.prefillBody = prefillBody || '';
+    if (prefill && typeof prefill === 'object') {
+        UI.prefillBody = prefill.body || '';
+        UI.messageType = prefill.messageType || 'manual';
+        UI.selectAllOptedInOnLoad = !!prefill.selectAllOptedIn;
+    } else {
+        UI.prefillBody = prefill || '';
+        UI.messageType = 'manual';
+        UI.selectAllOptedInOnLoad = false;
+    }
+}
+
+/** Send cancellation/update to all opted-in recipients (user must confirm in caller). */
+async function sendSmsAllOptedIn(eventId, body, messageType) {
+    return callEdgeFunction('send-event-sms', {
+        event_id: eventId,
+        body,
+        message_type: messageType,
+        recipient_ids: [],
+        select_all_opted_in: true,
+        dry_run: false,
+    });
 }
 
 export const manageNotificationsApi = {
@@ -503,6 +554,7 @@ export const manageNotificationsApi = {
     wireNotifications,
     resetNotificationsUi,
     refreshNotificationsTab,
+    sendSmsAllOptedIn,
 };
 
 globalThis.EventsManageNotifications = manageNotificationsApi;

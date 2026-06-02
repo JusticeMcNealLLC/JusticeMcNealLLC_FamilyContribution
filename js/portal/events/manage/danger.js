@@ -77,6 +77,96 @@ function wireDanger() {
     });
 }
 
+function cancellationSmsDefaultBody(title) {
+    return `Update: ${title} has been cancelled. Reply STOP to opt out.`;
+}
+
+async function offerCancellationSmsPrompt(event, optedInCount) {
+    if (!optedInCount || optedInCount < 1) return;
+
+    const defaultBody = cancellationSmsDefaultBody(event.title);
+    const overlay = document.createElement('div');
+    overlay.id = 'emCancelSmsOverlay';
+    overlay.className = 'fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50';
+    overlay.innerHTML = `
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-4" role="dialog" aria-labelledby="emCancelSmsTitle">
+            <h3 id="emCancelSmsTitle" class="text-base font-semibold text-gray-900">Send cancellation text?</h3>
+            <p class="text-sm text-gray-600 mt-1">Notify ${optedInCount} opted-in attendee${optedInCount === 1 ? '' : 's'}. You can edit the message below. Phone numbers stay masked.</p>
+            <textarea id="emCancelSmsBody" class="em-textarea mt-3" rows="4" maxlength="1600">${esc(defaultBody)}</textarea>
+            <p id="emCancelSmsResult" class="text-xs mt-2" style="min-height:1rem"></p>
+            <div class="flex flex-wrap gap-2 mt-3 justify-end">
+                <button type="button" class="em-btn-ghost" data-cancel-sms-skip>Skip</button>
+                <button type="button" class="em-btn-primary" data-cancel-sms-send>Send SMS</button>
+            </div>
+        </div>
+    `;
+
+    const cleanup = () => overlay.remove();
+
+    return new Promise((resolve) => {
+        document.body.appendChild(overlay);
+
+        overlay.querySelector('[data-cancel-sms-skip]')?.addEventListener('click', () => {
+            cleanup();
+            resolve({ sent: false, skipped: true });
+        });
+
+        overlay.querySelector('[data-cancel-sms-send]')?.addEventListener('click', async () => {
+            const resultEl = overlay.querySelector('#emCancelSmsResult');
+            const bodyEl = overlay.querySelector('#emCancelSmsBody');
+            const body = (bodyEl?.value || '').trim();
+            if (!body) {
+                if (resultEl) {
+                    resultEl.textContent = 'Enter a message before sending.';
+                    resultEl.style.color = '#dc2626';
+                }
+                return;
+            }
+            if (!confirm(`Send cancellation SMS to ${optedInCount} opted-in recipient${optedInCount === 1 ? '' : 's'}?`)) return;
+
+            const sendBtn = overlay.querySelector('[data-cancel-sms-send]');
+            if (sendBtn) {
+                sendBtn.disabled = true;
+                sendBtn.textContent = 'Sending…';
+            }
+            if (resultEl) resultEl.textContent = '';
+
+            try {
+                const res = await callEdgeFunction('send-event-sms', {
+                    event_id: event.id,
+                    body,
+                    message_type: 'cancellation',
+                    recipient_ids: [],
+                    select_all_opted_in: true,
+                    dry_run: false,
+                });
+                const skipped = (res.skipped || 0) + (res.skipped_suppressed || 0) + (res.skipped_invalid || 0);
+                if (resultEl) {
+                    resultEl.textContent = res.ok
+                        ? `Sent to ${res.sent || 0} recipient(s). Skipped: ${skipped}. Failed: ${res.failed || 0}.${res.dry_run ? ' (dry run)' : ''}`
+                        : (res.error || 'Send failed.');
+                    resultEl.style.color = res.ok ? '#059669' : '#dc2626';
+                }
+                if (res.ok) {
+                    setTimeout(() => {
+                        cleanup();
+                        resolve({ sent: true, result: res });
+                    }, 1200);
+                }
+            } catch (err) {
+                if (resultEl) {
+                    resultEl.textContent = err.message || 'Send failed.';
+                    resultEl.style.color = '#dc2626';
+                }
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send SMS';
+                }
+            }
+        });
+    });
+}
+
 async function runDangerAction(action) {
     const STATE = api().getState?.() || {};
     const e = STATE.event;
@@ -110,7 +200,6 @@ async function runDangerAction(action) {
             api().renderTab?.('danger');
             api().notifyParent?.('updated', e.id);
 
-            // Phase 5: full cancellation SMS flow — offer Notifications tab with prefilled body
             try {
                 const { count } = await supabaseClient
                     .from('event_sms_recipients')
@@ -118,17 +207,12 @@ async function runDangerAction(action) {
                     .eq('event_id', e.id)
                     .eq('opted_in', true)
                     .is('opted_out_at', null);
-                if (count && count > 0 && confirm(`Send a cancellation SMS to ${count} opted-in recipient${count === 1 ? '' : 's'}?`)) {
-                    const prefill = `"${e.title}" has been cancelled. We will follow up if plans change.`;
-                    if (window.EventsManage?.open) {
-                        await window.EventsManage.open(e.id, {
-                            source: STATE.source,
-                            tab: 'notifications',
-                            notificationsPrefill: prefill,
-                        });
-                    }
+                if (count && count > 0) {
+                    await offerCancellationSmsPrompt(e, count);
                 }
-            } catch (_) { /* non-blocking */ }
+            } catch (smsErr) {
+                console.warn('Cancellation SMS prompt skipped:', smsErr?.message || smsErr);
+            }
         } catch (err) {
             alert('Cancel failed: ' + (err.message || 'unknown error'));
         }
