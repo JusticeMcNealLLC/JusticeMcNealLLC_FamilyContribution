@@ -9,9 +9,12 @@ const memberModal = fs.readFileSync(path.join(root, 'js/admin/members/members-mo
 const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 
 assert(/id="settingsBirthday"/.test(settingsHtml), 'settings page should render a birthday input');
-assert(/\.select\('first_name, last_name, birthday, profile_picture_url'\)/.test(settingsJs), 'settings profile load should fetch birthday');
+assert(/id="settingsPhone"/.test(settingsHtml), 'settings page should render a phone input');
+assert(/\.select\('first_name, last_name, birthday, phone, profile_picture_url'\)/.test(settingsJs), 'settings profile load should fetch birthday and phone');
 assert(/birthday: birthday \|\| null/.test(settingsJs), 'settings save should persist birthday');
+assert(/phone: phoneNorm/.test(settingsJs), 'settings save should persist phone');
 assert(/Birthday must be in the past/.test(settingsJs), 'settings save should validate future birthdays');
+assert(/normalizeSettingsPhone/.test(settingsJs), 'settings save should validate phone');
 
 assert(/data-action="reset-onboarding"/.test(memberModal), 'member sheet settings should include reset onboarding action');
 assert(/function _onResetOnboarding\(/.test(memberModal), 'member sheet should implement reset onboarding handler');

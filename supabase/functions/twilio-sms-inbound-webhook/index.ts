@@ -7,6 +7,7 @@ import {
   normalizePhoneE164,
   parseInboundCommand,
   parseTwilioFormBody,
+  formatOutboundSmsBody,
   twimlResponse,
   validateTwilioSignature,
 } from '../_shared/sms.ts'
@@ -84,14 +85,20 @@ serve(async (req) => {
     }
 
     if (command === 'HELP') {
+      const helpText = formatOutboundSmsBody(
+        'Event SMS: reply STOP to opt out. Contact your event host for help.',
+      )
       return twimlResponse(
-        '<?xml version="1.0" encoding="UTF-8"?><Response><Message>Event SMS: reply STOP to opt out. Contact your event host for help.</Message></Response>',
+        `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${helpText}</Message></Response>`,
       )
     }
 
     if (command === 'STOP') {
+      const stopText = formatOutboundSmsBody(
+        'You are unsubscribed from SMS updates for this number. Reply START to resubscribe.',
+      )
       return twimlResponse(
-        '<?xml version="1.0" encoding="UTF-8"?><Response><Message>You are unsubscribed from SMS updates for this number. Reply START to resubscribe.</Message></Response>',
+        `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${stopText}</Message></Response>`,
       )
     }
 

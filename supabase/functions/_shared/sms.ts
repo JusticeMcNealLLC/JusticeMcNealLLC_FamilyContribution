@@ -86,6 +86,16 @@ export function normalizePhoneE164(raw: string): string | null {
   return null
 }
 
+/** Brand prefix applied to all outbound Twilio SMS bodies (not stored in sms_messages). */
+export const SMS_OUTBOUND_PREFIX = 'JMLLC: '
+
+export function formatOutboundSmsBody(body: string): string {
+  const trimmed = (body ?? '').trim()
+  if (!trimmed) return trimmed
+  if (/^JMLLC:\s*/i.test(trimmed)) return trimmed
+  return `${SMS_OUTBOUND_PREFIX}${trimmed}`
+}
+
 export function isSmsDryRun(forceDryRun = false): boolean {
   if (forceDryRun) return true
   if (Deno.env.get('SMS_DRY_RUN') === 'true') return true
@@ -192,7 +202,7 @@ async function twilioSendMessage(
 
   const form = new URLSearchParams()
   form.set('To', to)
-  form.set('Body', body)
+  form.set('Body', formatOutboundSmsBody(body))
   if (messagingServiceSid) {
     form.set('MessagingServiceSid', messagingServiceSid)
   } else if (fromPhone) {
@@ -557,6 +567,13 @@ export async function upsertEventSmsRecipient(
       .eq('id', contactId)
   }
 
+  const { data: existingRecipient } = await supabase
+    .from('event_sms_recipients')
+    .select('id, guest_rsvp_id, event_rsvp_id')
+    .eq('event_id', input.event_id)
+    .eq('contact_id', contactId)
+    .maybeSingle()
+
   const { data: recipient, error: recipientErr } = await supabase
     .from('event_sms_recipients')
     .upsert(
@@ -566,8 +583,8 @@ export async function upsertEventSmsRecipient(
         display_name: input.display_name ?? null,
         email: input.email ?? null,
         user_id: input.user_id ?? null,
-        guest_rsvp_id: input.guest_rsvp_id ?? null,
-        event_rsvp_id: input.event_rsvp_id ?? null,
+        guest_rsvp_id: input.guest_rsvp_id ?? existingRecipient?.guest_rsvp_id ?? null,
+        event_rsvp_id: input.event_rsvp_id ?? existingRecipient?.event_rsvp_id ?? null,
         opted_in: true,
         opted_in_at: new Date().toISOString(),
         opted_out_at: null,
@@ -622,6 +639,28 @@ export function formatEventDateTimeForSms(startDate: string, timezone?: string |
   })
 }
 
+/** SMS location line — prefer street address so iOS/Android data detectors can link Maps/Calendar. */
+export function formatSmsLocationLine(event: EventSmsEventRow): string | null {
+  const nickname = (event.location_nickname || '').trim()
+  const address = (event.location_text || '').trim()
+  if (!address && !nickname) return null
+  if (address && nickname && nickname.toLowerCase() !== address.toLowerCase()) {
+    return `At ${nickname}, ${address}.`
+  }
+  return `At ${address || nickname}.`
+}
+
+/** Public events always include location in SMS; gated locations require confirmed RSVP. */
+export function shouldIncludeSmsLocation(
+  event: EventSmsEventRow,
+  rsvpConfirmed: boolean,
+): boolean {
+  const hasLoc = !!((event.location_nickname || event.location_text || '').trim())
+  if (!hasLoc) return false
+  if (!event.gate_location) return true
+  return rsvpConfirmed
+}
+
 /** Build RSVP confirmation body. Caller omits location when gate rules are uncertain. */
 export function buildRsvpConfirmationBody(
   event: EventSmsEventRow,
@@ -637,8 +676,8 @@ export function buildRsvpConfirmationBody(
   if (when) parts.push(when + '.')
 
   if (opts.include_location) {
-    const loc = (event.location_nickname || event.location_text || '').trim()
-    if (loc) parts.push(`Location: ${loc}.`)
+    const loc = formatSmsLocationLine(event)
+    if (loc) parts.push(loc)
   }
 
   if (opts.include_raffle_hint && event.raffle_enabled) {
@@ -723,7 +762,7 @@ export async function sendEventRsvpConfirmation(
   const { data: recipient, error: recErr } = await supabase
     .from('event_sms_recipients')
     .select(`
-      id, event_id, opted_in, opted_out_at, guest_rsvp_id, event_rsvp_id,
+      id, event_id, opted_in, opted_out_at, guest_rsvp_id, event_rsvp_id, user_id,
       sms_phone_contacts ( phone_e164 )
     `)
     .eq('id', recipientId)
@@ -762,11 +801,27 @@ export async function sendEventRsvpConfirmation(
     return { ok: false, reason: 'event_load_failed' }
   }
 
-  const rsvpConfirmed = !!(recipient.guest_rsvp_id || recipient.event_rsvp_id)
-  const includeLocation = rsvpConfirmed
-    ? (!!((event.location_nickname || event.location_text || '').trim()) &&
-      (!event.gate_location || rsvpConfirmed))
-    : false
+  let rsvpConfirmed = !!(recipient.guest_rsvp_id || recipient.event_rsvp_id)
+
+  if (!rsvpConfirmed && recipient.user_id) {
+    const { data: memberRsvp } = await supabase
+      .from('event_rsvps')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('user_id', recipient.user_id)
+      .eq('status', 'going')
+      .maybeSingle()
+
+    if (memberRsvp?.id) {
+      rsvpConfirmed = true
+      await supabase
+        .from('event_sms_recipients')
+        .update({ event_rsvp_id: memberRsvp.id })
+        .eq('id', recipientId)
+    }
+  }
+
+  const includeLocation = shouldIncludeSmsLocation(event as EventSmsEventRow, rsvpConfirmed)
 
   let includeDocsHint = false
   const { count: docCount, error: docErr } = await supabase
@@ -895,8 +950,8 @@ export function buildReminder24hBody(
   const parts = [lead]
 
   if (opts.include_location) {
-    const loc = (event.location_nickname || event.location_text || '').trim()
-    if (loc) parts.push(`Location: ${loc}.`)
+    const loc = formatSmsLocationLine(event)
+    if (loc) parts.push(loc)
   }
 
   if (opts.include_raffle_hint && event.raffle_enabled) {
@@ -1001,4 +1056,105 @@ export async function eventHasDistributedDocs(
   }
 
   return (count ?? 0) > 0
+}
+
+export type TestReminder24hResult = {
+  ok: boolean
+  event_id: string
+  phone_masked: string
+  body: string
+  message_id?: string
+  sent?: number
+  failed?: number
+  dry_run?: boolean
+  error?: string
+}
+
+/** Staging QA: send one 24h reminder template to a single phone (ignores time window). */
+export async function sendTestReminder24h(
+  supabase: SupabaseClient,
+  input: { event_id: string; phone_e164: string; display_name?: string | null },
+): Promise<TestReminder24hResult> {
+  const eventId = input.event_id
+  const phone = normalizePhoneE164(input.phone_e164)
+  if (!eventId) return { ok: false, event_id: eventId, phone_masked: '***', body: '', error: 'event_id required' }
+  if (!phone) return { ok: false, event_id: eventId, phone_masked: '***', body: '', error: 'invalid_phone' }
+
+  const { data: event, error: evtErr } = await supabase
+    .from('events')
+    .select('id, title, start_date, timezone, location_text, location_nickname, gate_location, raffle_enabled')
+    .eq('id', eventId)
+    .maybeSingle()
+
+  if (evtErr || !event) {
+    return { ok: false, event_id: eventId, phone_masked: maskPhone(phone), body: '', error: 'event_not_found' }
+  }
+
+  const eventRow = event as EventSmsEventRow
+  const hasLocation = !!(eventRow.location_nickname || eventRow.location_text || '').trim()
+  const includeDocsHint = await eventHasDistributedDocs(supabase, eventId)
+  const body = buildReminder24hBody(eventRow, {
+    include_location: hasLocation,
+    include_raffle_hint: !!eventRow.raffle_enabled,
+    include_docs_hint: includeDocsHint,
+  })
+
+  const upsert = await upsertEventSmsRecipient(supabase, {
+    event_id: eventId,
+    phone_raw: phone,
+    sms_opt_in: true,
+    sms_consent_text_version: 'event_sms_v1',
+    display_name: input.display_name ?? null,
+    consent_source: 'admin_manual',
+  })
+
+  if (!upsert.recipient_id) {
+    return {
+      ok: false,
+      event_id: eventId,
+      phone_masked: maskPhone(phone),
+      body,
+      error: upsert.reason || 'recipient_upsert_failed',
+    }
+  }
+
+  const { data: messageRow, error: messageErr } = await supabase
+    .from('sms_messages')
+    .insert({
+      event_id: eventId,
+      channel: 'sms',
+      body,
+      message_type: 'reminder_24h',
+      sender_user_id: null,
+      recipient_count: 1,
+    })
+    .select('id')
+    .single()
+
+  if (messageErr || !messageRow?.id) {
+    return {
+      ok: false,
+      event_id: eventId,
+      phone_masked: maskPhone(phone),
+      body,
+      error: messageErr?.message || 'message_insert_failed',
+    }
+  }
+
+  const result = await executeSendSms(supabase, {
+    message_id: messageRow.id,
+    body,
+    recipients: [{ event_sms_recipient_id: upsert.recipient_id, phone_e164: phone }],
+  })
+
+  return {
+    ok: true,
+    event_id: eventId,
+    phone_masked: maskPhone(phone),
+    body,
+    message_id: messageRow.id,
+    sent: result.sent,
+    failed: result.failed,
+    dry_run: result.dry_run,
+  }
 }

@@ -159,7 +159,7 @@ body.public-event-detail #raffleSection { margin-top:16px; }
 /* Guest form */
 .evt-input { width:100%; font-size:15px; padding:14px 16px; border:1.5px solid #ddd; border-radius:12px; outline:none; transition:border-color .2s; box-sizing:border-box; }
 .evt-input:focus { border-color:#222; }
-.evt-checkbox-label { display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#717171; }
+.evt-checkbox-label:not(.hidden) { display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#717171; }
 .evt-checkbox-label input { margin-top:2px; }
 
 /* Footer */

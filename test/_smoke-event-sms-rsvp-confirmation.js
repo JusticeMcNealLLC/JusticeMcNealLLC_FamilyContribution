@@ -22,6 +22,11 @@ assert(/function trySendEventRsvpConfirmation/.test(sms), 'trySendEventRsvpConfi
 assert(/hasRsvpConfirmationBeenSent/.test(sms), 'duplicate prevention helper');
 assert(/message_type:\s*'rsvp_confirmation'/.test(sms), 'creates rsvp_confirmation sms_messages');
 assert(/Reply STOP to opt out/.test(sms), 'STOP language in body builder');
+assert(/SMS_OUTBOUND_PREFIX = 'JMLLC: '/.test(sms), 'outbound SMS brand prefix constant');
+assert(/formatOutboundSmsBody/.test(sms), 'formatOutboundSmsBody helper');
+assert(/formatSmsLocationLine/.test(sms), 'formatSmsLocationLine prefers address for SMS');
+assert(/shouldIncludeSmsLocation/.test(sms), 'shouldIncludeSmsLocation gate helper');
+assert(/form\.set\('Body', formatOutboundSmsBody\(body\)\)/.test(sms), 'Twilio send applies brand prefix');
 assert(!/buildReminder24hBody|hasReminder24hBeenSent/.test(rsvp), 'RSVP functions do not send 24h reminders');
 
 assert(/trySendEventRsvpConfirmation/.test(rsvp), 'rsvp-guest-free triggers confirmation');

@@ -13,6 +13,7 @@ import {
   jsonResponse,
   reminder24hWindowBounds,
   resolveOptedInSmsTargets,
+  sendTestReminder24h,
   type EventSmsEventRow,
 } from '../_shared/sms.ts'
 
@@ -24,6 +25,25 @@ serve(async (req) => {
   }
 
   try {
+    const supabase = createServiceClient()
+    const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {}
+
+    const testEventId = String(body.test_event_id || '').trim()
+    const testPhone = String(body.test_phone_e164 || body.test_phone || '').trim()
+    if (testEventId && testPhone) {
+      const testKey = Deno.env.get('SMS_TEST_KEY')?.trim()
+      const provided = req.headers.get('x-sms-test-key') || String(body.test_key || '').trim()
+      if (!testKey || provided !== testKey) {
+        return jsonResponse({ success: false, error: 'Unauthorized test send' }, 401)
+      }
+      const result = await sendTestReminder24h(supabase, {
+        event_id: testEventId,
+        phone_e164: testPhone,
+        display_name: body.display_name ? String(body.display_name) : null,
+      })
+      return jsonResponse({ success: result.ok, test: true, ...result })
+    }
+
     assertServiceRole(req)
 
     const emptySummary = {
@@ -40,7 +60,6 @@ serve(async (req) => {
       return jsonResponse(emptySummary)
     }
 
-    const supabase = createServiceClient()
     const { start, end } = reminder24hWindowBounds()
 
     const { data: events, error: evtErr } = await supabase

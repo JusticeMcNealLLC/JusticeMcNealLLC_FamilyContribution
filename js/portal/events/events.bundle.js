@@ -8110,6 +8110,23 @@
   window.evtIsRaffleEntriesOpen = evtIsRaffleEntriesOpen;
   window.evtIsRaffleBundledWithPaidRsvp = evtIsRaffleBundledWithPaidRsvp;
   window.evtCanEnterMemberRaffle = evtCanEnterMemberRaffle;
+  function evtMaskPhoneLast4(phone) {
+    const digits = String(phone || "").replace(/\D/g, "");
+    if (digits.length < 4) return "your phone";
+    return `***-***-${digits.slice(-4)}`;
+  }
+  async function evtConfirmMemberSmsOptIn() {
+    if (!globalThis.evtCurrentUser?.id) return false;
+    const { data: profile } = await supabaseClient.from("profiles").select("phone").eq("id", globalThis.evtCurrentUser.id).maybeSingle();
+    const phone = (profile?.phone || "").trim();
+    if (!phone) {
+      alert("Add a mobile phone in Settings to receive event SMS updates.");
+      return false;
+    }
+    return confirm(
+      `Text you event updates at ${evtMaskPhoneLast4(phone)}? Message/data rates may apply. Reply STOP to opt out.`
+    );
+  }
   async function evtHandleRsvp(eventId2, status) {
     try {
       const event = (window.evtAllEvents || globalThis.evtAllEvents).find((e) => e.id === eventId2);
@@ -8170,7 +8187,15 @@ Proceed to checkout?`
         window.evtAllRsvps = window.evtAllRsvps || {};
         window.evtAllRsvps[eventId2] = data;
       }
-      const wantSmsOptIn = status === "going" && !!document.getElementById("evtSmsOptInCheck")?.checked;
+      let wantSmsOptIn = false;
+      if (status === "going") {
+        const smsCheck = document.getElementById("evtSmsOptInCheck");
+        if (smsCheck?.checked) {
+          wantSmsOptIn = true;
+        } else if (!smsCheck) {
+          wantSmsOptIn = await evtConfirmMemberSmsOptIn();
+        }
+      }
       evtRenderEvents();
       await globalThis.evtOpenDetail(eventId2);
       if (wantSmsOptIn) {

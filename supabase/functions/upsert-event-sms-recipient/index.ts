@@ -42,6 +42,7 @@ serve(async (req) => {
       .select('id')
       .eq('event_id', eventId)
       .eq('user_id', user.id)
+      .eq('status', 'going')
       .maybeSingle()
 
     const result = await upsertEventSmsRecipient(supabase, {
