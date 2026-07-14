@@ -32,7 +32,7 @@
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Events Dashboard</h1>
                 <p class="text-gray-500 mt-1 text-sm">Overview of all events, revenue, RSVPs, competitions & payouts</p>
             </div>
-            <a href="../portal/events.html" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
+            <a href="../pages/portal/events.html" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                 <span class="hidden sm:inline">View Portal</span>
             </a>
@@ -161,13 +161,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
-    <script src="../js/components/pageShell/icons.js"></script>
-    <script src="../js/components/pageShell/helpers.js"></script>
-    <script src="../js/components/pageShell/nav.js"></script>
-    <script src="../js/components/pageShell/dropdowns.js"></script>
-    <script src="../js/components/pageShell/drawer.js"></script>
-    <script src="../js/components/pageShell/profile-loader.js"></script>
-    <script src="../js/components/pageShell/index.js"></script>
+    <script type="module" src="../js/components/pageShell/index.js"></script>
     <script src="../js/auth/shared.js"></script>
     <!-- Shared event modules (M0 — load first) -->
     <script src="../js/components/events/constants.js"></script>

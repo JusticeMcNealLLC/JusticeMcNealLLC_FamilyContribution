@@ -9,8 +9,14 @@ const assert = require('assert');
 const root = path.resolve(__dirname, '..');
 
 const sharedJs = fs.readFileSync(path.join(root, 'js/auth/shared.js'), 'utf8');
-const loginJs = fs.readFileSync(path.join(root, 'js/auth/login.js'), 'utf8');
-const resetJs = fs.readFileSync(path.join(root, 'js/auth/reset-password.js'), 'utf8');
+const loginMessagesJs = fs.readFileSync(path.join(root, 'js/pages/login/state/messages.js'), 'utf8');
+const loginDeactivatedJs = fs.readFileSync(path.join(root, 'js/pages/login/utils/deactivated.js'), 'utf8');
+const loginBindJs = fs.readFileSync(path.join(root, 'js/pages/login/ui/bindForms.js'), 'utf8');
+const loginJs = [loginMessagesJs, loginDeactivatedJs, loginBindJs].join('\n');
+const resetMessagesJs = fs.readFileSync(path.join(root, 'js/pages/reset-password/state/messages.js'), 'utf8');
+const resetRecoveryJs = fs.readFileSync(path.join(root, 'js/pages/reset-password/ui/recovery.js'), 'utf8');
+const resetBindJs = fs.readFileSync(path.join(root, 'js/pages/reset-password/ui/bindPasswordForm.js'), 'utf8');
+const resetJs = [resetMessagesJs, loginDeactivatedJs, resetRecoveryJs, resetBindJs].join('\n');
 
 // shared.js — checkAuth hard block
 assert(/function isProfileDeactivated/.test(sharedJs), 'shared.js defines isProfileDeactivated');
@@ -21,20 +27,20 @@ assert(/error=account_deactivated/.test(sharedJs), 'shared.js redirects with acc
 assert(/isProfileDeactivated\(profile\)/.test(sharedJs), 'checkAuth uses isProfileDeactivated on profile');
 assert(/select\('role, setup_completed, is_active'\)/.test(sharedJs), 'checkAuth loads is_active on profile');
 
-// login.js
-assert(/function isProfileDeactivated/.test(loginJs), 'login.js defines isProfileDeactivated');
-assert(/profile\.is_active === false/.test(loginJs), 'login.js checks is_active false');
-assert(/signOut/.test(loginJs), 'login.js signs out deactivated users');
-assert(/deactivated\. Please contact support/i.test(loginJs), 'login.js shows deactivated message');
-assert(!/subscription/.test(loginJs), 'login.js must not use subscription as hard block');
+// login page modules
+assert(/function isProfileDeactivated/.test(loginJs), 'login page defines isProfileDeactivated');
+assert(/profile\.is_active === false/.test(loginJs), 'login page checks is_active false');
+assert(/signOut/.test(loginJs), 'login page signs out deactivated users');
+assert(/deactivated\. Please contact support/i.test(loginJs), 'login page shows deactivated message');
+assert(!/subscription/.test(loginJs), 'login page must not use subscription as hard block');
 
 const loginSubmitBlock = loginJs.match(
     /signInWithPassword[\s\S]{0,500}isProfileDeactivated[\s\S]{0,200}signOut/
 );
 assert(loginSubmitBlock, 'login submit flow checks deactivation and signs out');
 
-// reset-password.js
-assert(/function isProfileDeactivated/.test(resetJs), 'reset-password.js defines isProfileDeactivated');
+// reset-password page modules
+assert(/function isProfileDeactivated/.test(resetJs), 'reset-password page uses isProfileDeactivated');
 assert(/guardDeactivatedRecoverySession/.test(resetJs), 'reset-password guards recovery session');
 assert(/profile\.is_active === false/.test(resetJs), 'reset-password checks is_active false');
 assert(/signOut/.test(resetJs), 'reset-password signs out deactivated users');

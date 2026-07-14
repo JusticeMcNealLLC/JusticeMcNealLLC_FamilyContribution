@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -23,7 +23,7 @@
 
     <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
 
-        <!-- â”€â”€ Page Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <!-- ── Page Header ──────────────────────────────────────────── -->
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4 mb-6">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Members</h1>
@@ -48,43 +48,43 @@
             </div>
         </div>
 
-        <!-- â”€â”€ Stats Row (5 tiles) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <!-- ── Stats Row (5 tiles) ──────────────────────────────────── -->
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
             <div class="col-span-2 lg:col-span-2 bg-gradient-to-br from-brand-600 to-brand-700 rounded-2xl p-5 text-white">
                 <div class="text-[10px] font-bold uppercase tracking-widest text-brand-100">This Month</div>
-                <div class="text-3xl sm:text-4xl font-extrabold tracking-tight mt-2" id="statThisMonth">â€”</div>
+                <div class="text-3xl sm:text-4xl font-extrabold tracking-tight mt-2" id="statThisMonth">—</div>
                 <div class="text-brand-200 text-xs mt-1">collected so far</div>
             </div>
             <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
                 <div class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Active</div>
-                <div class="text-2xl font-extrabold text-gray-900 tracking-tight mt-1" id="statActiveCount">â€”</div>
+                <div class="text-2xl font-extrabold text-gray-900 tracking-tight mt-1" id="statActiveCount">—</div>
             </div>
             <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
                 <div class="text-[10px] font-bold uppercase tracking-widest text-gray-500">All Time</div>
-                <div class="text-2xl font-extrabold text-gray-900 tracking-tight mt-1" id="statAllTime">â€”</div>
+                <div class="text-2xl font-extrabold text-gray-900 tracking-tight mt-1" id="statAllTime">—</div>
             </div>
             <div class="bg-white rounded-2xl p-4 border border-gray-200/80">
                 <div class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Total Invited</div>
-                <div class="text-2xl font-extrabold text-gray-900 tracking-tight mt-1" id="statTotalInvited">â€”</div>
+                <div class="text-2xl font-extrabold text-gray-900 tracking-tight mt-1" id="statTotalInvited">—</div>
             </div>
             <button type="button" id="statNeedsAttentionTile"
                 class="bg-white rounded-2xl p-4 border border-amber-200 text-left hover:border-amber-400 hover:bg-amber-50 transition focus:outline-none focus:ring-2 focus:ring-amber-400"
                 title="Show only members needing attention">
                 <div class="text-[10px] font-bold uppercase tracking-widest text-amber-600">Needs Attention</div>
-                <div class="text-2xl font-extrabold text-amber-700 tracking-tight mt-1" id="statNeedsAttention">—</div>
+                <div class="text-2xl font-extrabold text-amber-700 tracking-tight mt-1" id="statNeedsAttention">�</div>
             </button>
         </div>
 
-        <!-- ── Attention Banner (Phase 5) ────────────────────────────────── -->
+        <!-- -- Attention Banner (Phase 5) ---------------------------------- -->
         <div id="attentionBanner" class="hidden mb-4"></div>
 
-        <!-- ── Search + Sort Toolbar ─────────────────────────────────────── -->
+        <!-- -- Search + Sort Toolbar --------------------------------------- -->
         <div class="flex flex-col sm:flex-row gap-2 mb-4">
             <div class="relative flex-1">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/>
                 </svg>
-                <input id="memberSearchInput" type="search" autocomplete="off" placeholder="Search by name or email…"
+                <input id="memberSearchInput" type="search" autocomplete="off" placeholder="Search by name or email�"
                     class="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-200 bg-white text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 <button id="memberSearchClear" type="button"
                     class="hidden absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100"
@@ -96,23 +96,23 @@
             </div>
             <select id="memberSortSelect"
                 class="py-2.5 px-3 pr-8 rounded-xl border border-gray-200 bg-white text-base sm:text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                <option value="name_asc">Sort: Name A–Z</option>
+                <option value="name_asc">Sort: Name A�Z</option>
                 <option value="join_desc">Sort: Newest first</option>
                 <option value="join_asc">Sort: Oldest first</option>
-                <option value="contribution_desc">Sort: Contribution ↓</option>
+                <option value="contribution_desc">Sort: Contribution ?</option>
                 <option value="last_active_desc">Sort: Recently active</option>
             </select>
         </div>
 
-        <!-- ── Status Filter Tabs ────────────────────────────────────────── -->
+        <!-- -- Status Filter Tabs ------------------------------------------ -->
         <div id="membersTabs" class="flex gap-1 mb-4 overflow-x-auto -mx-1 px-1 pb-1"></div>
 
-        <!-- â”€â”€ Member List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <!-- ── Member List ──────────────────────────────────────────── -->
         <div id="membersListContainer" class="grid gap-3"></div>
 
     </main>
 
-    <!-- ── Invite Modal (Phase 1B) ─────────────────────────────────────────── -->
+    <!-- -- Invite Modal (Phase 1B) ------------------------------------------- -->
     <div id="inviteModal" class="fixed inset-0 z-[60] hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="inviteModalTitle">
         <div id="inviteModalBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
         <div class="absolute inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -166,7 +166,7 @@
     <div id="footer-placeholder"></div>
     <div id="tabs-placeholder"></div>
 
-    <!-- ── Member Profile Sheet (Phase 2) ───────────────────────────────────── -->
+    <!-- -- Member Profile Sheet (Phase 2) ------------------------------------- -->
     <div id="memberSheet" class="fixed inset-0 z-[60] hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memberSheetHeader">
         <div id="memberSheetBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
         <div class="absolute inset-x-0 bottom-0 sm:inset-y-0 sm:right-0 sm:left-auto sm:w-full sm:max-w-xl flex">
@@ -192,13 +192,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/config.js"></script>
-    <script src="../js/components/pageShell/icons.js"></script>
-    <script src="../js/components/pageShell/helpers.js"></script>
-    <script src="../js/components/pageShell/nav.js"></script>
-    <script src="../js/components/pageShell/dropdowns.js"></script>
-    <script src="../js/components/pageShell/drawer.js"></script>
-    <script src="../js/components/pageShell/profile-loader.js"></script>
-    <script src="../js/components/pageShell/index.js"></script>
+    <script type="module" src="../js/components/pageShell/index.js"></script>
     <script src="../js/auth/shared.js"></script>
     <script src="../js/admin/members/members-status.js"></script>
     <script src="../js/admin/members/members-cards.js"></script>

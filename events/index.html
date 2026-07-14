@@ -37,16 +37,16 @@
             <img src="/assets/icons/icon-192.png" alt="Justice McNeal LLC" style="width:32px;height:32px;border-radius:8px;display:block;">
             Justice McNeal LLC
         </a>
-        <a href="/auth/login.html" class="pub-nav-sign-in" id="pubNavSignIn">Sign In</a>
+        <a href="/pages/login/" class="pub-nav-sign-in" id="pubNavSignIn">Sign In</a>
     </nav>
     <script>
         (function () {
             var slug = new URLSearchParams(location.search).get('e');
             if (!slug) return;
-            var dest = '/portal/events.html?event=' + encodeURIComponent(slug);
-            var href = '/auth/login.html?redirect=' + encodeURIComponent(dest);
+            var dest = '/pages/portal/events.html?event=' + encodeURIComponent(slug);
+            var href = '/pages/login/?redirect=' + encodeURIComponent(dest);
             function apply() {
-                document.querySelectorAll('.pub-nav-sign-in, a[href="/auth/login.html"]').forEach(function (a) {
+                document.querySelectorAll('.pub-nav-sign-in, a[href="/pages/login/"]').forEach(function (a) {
                     a.setAttribute('href', href);
                 });
             }

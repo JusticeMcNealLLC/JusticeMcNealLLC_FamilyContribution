@@ -22,3 +22,45 @@ But besides events this can also be a feature for notificatiosn for anything acc
 [] bottom nav for mobile swipe over fix
 [] fix next bill date not showing on index page
 [x] event tools ui height increase, just take up the whole screen on mobile
+[] add rsvp entry popup after people rsvp asking if they want to join the raffle
+[] add a raffle discounted price and a time line before the price increases to entice urgency
+[] imporved raffle prize show off?? to intice more importance ect.
+[] a way for people to take images via the website and the images will auto upload to the DB
+[] after event management can audit images 
+[] after event ends, event summary with images and turn out description of sorts?
+[] allow multi rsvping from one person (for guest or kids, maybe kid amount and for guest they get names)
+[] possible system for paid food plates with menus and such???
+[] react js
+[] on boarding phone number
+[] checks on the your all set fix for onboarding
+[] enable notifications only after nad if added to the homescreen/onboarding?
+[] complete your profile notification control for admins
+[] monthly contribution and next bill date placeholder for non contributiong members
+[] timebased good afternoon on dashboard
+[]activity feed section .md
+[] quest page skeleton fix
+[] fix investrmenets page
+[] milstone page audit
+[] milestone page date ahcieved and est arrival date 
+[] milestone unlock revamp
+[] contribution page audit
+[] universal mobile view activator esp for events page
+[] event w/ raffle enter and sub text fix
+[] events page audit
+[] events page map view upgrade
+[] replay and reaction feature for event discussion
+[] feed page scroll on sorting
+[] feed back background and border change depending on post type
+[] feed page like count fix
+[]complete cosmetic system override
+[] feed notification for likes and comment sand replies
+[] dashboard quick links and additional pages
+[]enable location for members to see locations yours has to be active
+[] family tree page members only full page fix
+[]change log page?
+[] team page not hard coded
+[] logo load on my finanances, instead of stamwenet upload itll be account link
+[] admin members page skeleton fix
+[] admin event dashboard fix for goin amount
+[] admin page manage event fix
+[] brand settings ability to change mobile and desktop backgrounds, add to supabase. change code to reflect

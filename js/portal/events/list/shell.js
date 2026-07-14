@@ -443,7 +443,7 @@ async function _runContextAction(act, eventId) {
 
 function _eventShareUrl(ev) {
     const origin = location.origin;
-    const base = origin + (location.pathname.includes('/portal/') ? location.pathname.split('?')[0] : '/portal/events.html');
+    const base = origin + (location.pathname.includes('/portal/') ? location.pathname.split('?')[0] : '/pages/portal/events.html');
     return ev.slug ? (base + '?event=' + encodeURIComponent(ev.slug)) : base;
 }
 

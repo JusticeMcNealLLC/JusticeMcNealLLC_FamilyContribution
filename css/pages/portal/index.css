@@ -1,74 +1,603 @@
 /*
- * dashboard.css
- * Custom styles for dashboard.html
- * Pairs with Tailwind CDN — Tailwind handles layout/spacing/color utilities
- * via inline classes; this file covers reusable component styles and
- * anything Tailwind can't express cleanly (pseudo-elements, media overrides).
- * ─────────────────────────────────────────────────────────────────────────── */
-
-
-/* ─── GLOBAL RESET & BASE ──────────────────────────────────────────────────── */
-
-* {
-  -webkit-tap-highlight-color: transparent; /* Remove tap flash on mobile */
-  box-sizing: border-box;
-}
-
-body {
-  background-color: #f0f4f8;              /* Page background — light blue-gray */
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;    /* Crisp text on webkit browsers */
-  color: #1f2937;                         /* Default body text — gray-800 */
-}
-
-/* Hide scrollbars while keeping scroll functionality */
-::-webkit-scrollbar { display: none; }
-
-
-/* ─── CARD ──────────────────────────────────────────────────────────────────── */
-/*
- * .card-bg — white surface card with a subtle layered shadow.
- * Used as base for every stat card, activity item, and section panel.
+ * Portal dashboard (pages/portal/index.html)
+ * Option A — page CSS for all dashboard visuals; Tailwind for layout only.
+ * Tokens: theme/Theme_JMLLC001/Theme_JMLLC001.css
  */
-.card-bg {
-  background-color: #ffffff;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.08),
-    0 1px 2px rgba(0, 0, 0, 0.05);
+
+/* ─── Page shell ─── */
+.portal-dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
 }
 
+/* pageShell injects md:flex-row — must match at desktop or sidebar stacks above content */
+@media (min-width: 768px) {
+  .portal-dashboard {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
 
-/* ─── PROGRESS BARS ─────────────────────────────────────────────────────────── */
-/*
- * .progress-track — the grey pill-shaped container for all progress bars.
- * .progress-fill  — the coloured fill, width set via inline style (%).
- *
- * The default fill gradient (#1b6fe8 → #00c8b8) is used for fiscal milestones.
- * XP / level bars override background via an inline style on .progress-fill.
- */
-.progress-track {
+/* Dashboard has its own header row — hide generic mobile chrome */
+.portal-dashboard #mobileHeader {
+  display: none !important;
+}
+
+.portal-dashboard #pageContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.portal-dashboard * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.portal-dashboard ::-webkit-scrollbar {
+  display: none;
+}
+
+.portal-dashboard .dashboard-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.portal-dashboard .dashboard-container {
+  max-width: 430px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .portal-dashboard .dashboard-container {
+    max-width: none;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .portal-dashboard #pageContent > footer > div {
+    max-width: none;
+  }
+
+  .portal-dashboard #activityTrack {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    transform: none !important;
+    gap: 12px;
+  }
+
+  .portal-dashboard #activityTrack > div {
+    width: 100% !important;
+  }
+
+  .portal-dashboard #activityDots {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .portal-dashboard > nav {
+    display: none !important;
+  }
+}
+
+/* ─── Cards & typography ─── */
+.portal-dashboard .card-bg {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.portal-dashboard .dashboard-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.portal-dashboard .dashboard-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.portal-dashboard .dashboard-greeting {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.portal-dashboard .dashboard-name {
+  font-family: var(--font-headline);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.portal-dashboard .dashboard-verify-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+.portal-dashboard .dashboard-role-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border: 1px solid rgba(14, 139, 139, 0.22);
+}
+
+.portal-dashboard .dashboard-email {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 0.125rem;
+}
+
+.portal-dashboard .dashboard-email.is-hidden {
+  display: none;
+}
+
+.portal-dashboard .dashboard-text-sm {
+  font-size: 14px;
+}
+
+.portal-dashboard .dashboard-text-caption {
+  font-size: 13px;
+}
+
+.portal-dashboard .dashboard-text-xs {
+  font-size: 12px;
+}
+
+.portal-dashboard .dashboard-text-meta {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.portal-dashboard .dashboard-text-meta-strong {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.portal-dashboard .dashboard-stat-value {
+  font-family: var(--font-headline);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+}
+
+.portal-dashboard .dashboard-stat-value-lg {
+  font-family: var(--font-headline);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.portal-dashboard .dashboard-stat-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text);
+}
+
+.portal-dashboard .dashboard-milestone-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 0.25rem;
+}
+
+.portal-dashboard .dashboard-link-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.375rem;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.portal-dashboard .dashboard-link-sm:hover {
+  color: var(--color-accent);
+}
+
+.portal-dashboard .dashboard-link-primary {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.portal-dashboard .dashboard-link-primary:hover {
+  color: var(--color-primary-hover);
+}
+
+.portal-dashboard .dashboard-body-text {
+  font-size: 13px;
+  line-height: 1.375;
+  color: var(--color-text-muted);
+}
+
+.portal-dashboard .dashboard-body-text-faint {
+  font-size: 12px;
+  margin-top: 0.25rem;
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+.portal-dashboard .dashboard-label-strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* ─── Header actions ─── */
+.portal-dashboard .dashboard-icon-btn {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.portal-dashboard .dashboard-icon-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.portal-dashboard .dashboard-notif-badge {
+  position: absolute;
+  top: -0.125rem;
+  right: -0.125rem;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 9999px;
+  background-color: #ef4444;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-dashboard .dashboard-avatar-ring {
+  box-shadow: 0 0 0 3px rgba(19, 54, 110, 0.22);
+}
+
+/* ─── Hero contribution card ─── */
+.portal-dashboard .dashboard-hero-card {
+  border-radius: 1rem;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary-hover) 0%,
+    var(--color-primary) 38%,
+    #1a5a96 62%,
+    var(--color-accent) 100%
+  );
+  box-shadow: var(--shadow-md);
+  color: #fff;
+  overflow: hidden;
+}
+
+.portal-dashboard .dashboard-hero-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .portal-dashboard .dashboard-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 0.85fr);
+    align-items: center;
+  }
+}
+
+.portal-dashboard .dashboard-hero-col {
+  padding: 1.5rem 1.75rem;
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  .portal-dashboard .dashboard-hero-col {
+    padding: 1.75rem 2rem;
+  }
+
+  .portal-dashboard .dashboard-hero-col + .dashboard-hero-col {
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}
+
+@media (max-width: 767px) {
+  .portal-dashboard .dashboard-hero-col + .dashboard-hero-col {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}
+
+.portal-dashboard .dashboard-hero-col--aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.portal-dashboard .dashboard-hero-contrib-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.25rem;
+}
+
+.portal-dashboard .dashboard-hero-info {
+  min-width: 0;
+  text-align: left;
+}
+
+.portal-dashboard .dashboard-hero-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.4;
+}
+
+.portal-dashboard .dashboard-hero-amount {
+  font-family: var(--font-headline);
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  margin-top: 0.125rem;
+}
+
+@media (min-width: 768px) {
+  .portal-dashboard .dashboard-hero-amount {
+    font-size: 3rem;
+  }
+}
+
+.portal-dashboard .dashboard-hero-renewal {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.4;
+}
+
+.portal-dashboard .dashboard-hero-action {
+  flex-shrink: 0;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: #fff;
+  border: none;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 3px rgba(11, 37, 69, 0.12);
+}
+
+.portal-dashboard .dashboard-hero-action:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(11, 37, 69, 0.14);
+}
+
+.portal-dashboard .dashboard-hero-action-chevron {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.portal-dashboard .dashboard-hero-bill-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.portal-dashboard .dashboard-hero-icon-wrap {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.portal-dashboard .dashboard-hero-date {
+  font-family: var(--font-headline);
+  font-size: 1.75rem;
+  line-height: 1.1;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+@media (min-width: 768px) {
+  .portal-dashboard .dashboard-hero-date {
+    font-size: 2rem;
+  }
+}
+
+.portal-dashboard .dashboard-hero-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.portal-dashboard .dashboard-hero-status {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.portal-dashboard .dashboard-days-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  color: var(--color-primary);
+  background-color: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 1px 3px rgba(11, 37, 69, 0.1);
+  white-space: nowrap;
+}
+
+.portal-dashboard .dashboard-days-badge-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.portal-dashboard .dashboard-hero-streak {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-dashboard .dashboard-hero-streak-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.portal-dashboard .dashboard-hero-streak-copy {
+  text-align: left;
+}
+
+.portal-dashboard .dashboard-hero-streak-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.3;
+}
+
+.portal-dashboard .dashboard-hero-streak-value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+  margin-top: 0.125rem;
+}
+
+@media (max-width: 479px) {
+  .portal-dashboard .dashboard-hero-contrib-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .portal-dashboard .dashboard-hero-action {
+    align-self: flex-start;
+  }
+}
+
+/* ─── Stat cards ─── */
+.portal-dashboard .dashboard-stat-icon-wrap {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.portal-dashboard .dashboard-stat-icon-wrap svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.portal-dashboard .dashboard-cp-tier-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #c0c0c0, #8a8a8a);
+  box-shadow: 0 0 0 3px rgba(19, 54, 110, 0.22);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (min-width: 475px) {
+  .portal-dashboard .dashboard-cp-tier-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+.portal-dashboard .progress-track {
   height: 9px;
-  background-color: #e2e8f0;   /* slate-200 */
+  background-color: var(--color-border);
   border-radius: 9999px;
   overflow: hidden;
 }
 
-.progress-fill {
+.portal-dashboard .progress-fill {
   height: 9px;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #1b6fe8, #00c8b8);  /* blue → teal */
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
 }
 
-
-/* ─── QUICK LINK BUTTONS ────────────────────────────────────────────────────── */
-/*
- * .quick-btn — horizontal pill button used in the Quick Links grid.
- * Background colour is set per-button via inline style (each link has its
- * own brand colour). The frosted icon container inside also uses inline style.
- *
- * .quick-btn.active — inset white ring to indicate the current/selected link.
- */
-.quick-btn {
+/* ─── Quick links ─── */
+.portal-dashboard .quick-btn {
   border-radius: 14px;
   display: flex;
   flex-direction: row;
@@ -77,63 +606,175 @@ body {
   gap: 10px;
   padding: 12px 14px;
   cursor: pointer;
-  transition: filter 0.15s ease;
-  border: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  border: 1px solid var(--color-border);
   width: 100%;
+  text-decoration: none;
+  background-color: var(--color-background);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text);
 }
 
-.quick-btn:hover {
-  filter: brightness(1.1);  /* Slight lighten on hover, preserves brand colour */
+.portal-dashboard .quick-btn:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
-.quick-btn.active {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5) inset;  /* Inset white ring */
+.portal-dashboard .quick-btn:hover .quick-btn-icon {
+  filter: brightness(1.06);
 }
 
-
-/* ─── MAIN SCROLL ───────────────────────────────────────────────────────────── */
-/*
- * .main-scroll — applied to <main> so the content area is independently
- * scrollable on desktop (full-height viewport, overflow hidden on outer shell).
- */
-.main-scroll {
-  overflow-y: auto;
-  height: 100vh;
+.portal-dashboard .quick-btn-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: filter 0.15s ease;
 }
 
+.portal-dashboard .quick-btn-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #fff;
+}
 
-/* ─── DESKTOP OVERRIDES (md: 768px+) ───────────────────────────────────────── */
-@media (min-width: 768px) {
+.portal-dashboard .quick-btn-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
 
-  /*
-   * Monthly Contribution card — Next Bill Date section:
-   * On mobile: sits below with a top border acting as divider.
-   * On desktop: sits to the right with a left border divider instead.
-   */
-  #nextBillSection {
-    border-top: none !important;
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
-    padding-left: 2rem;
-  }
+.portal-dashboard .quick-btn--quests .quick-btn-icon { background-color: #7c3aed; }
+.portal-dashboard .quick-btn--investments .quick-btn-icon { background-color: #16a34a; }
+.portal-dashboard .quick-btn--milestones .quick-btn-icon { background-color: #0d9488; }
+.portal-dashboard .quick-btn--contribute .quick-btn-icon { background-color: #db2777; }
+.portal-dashboard .quick-btn--deposit .quick-btn-icon { background-color: #0891b2; }
+.portal-dashboard .quick-btn--history .quick-btn-icon { background-color: var(--color-primary); }
+.portal-dashboard .quick-btn--events .quick-btn-icon { background-color: #ea580c; }
+.portal-dashboard .quick-btn--feed .quick-btn-icon { background-color: #6d28d9; }
+.portal-dashboard .quick-btn--settings .quick-btn-icon { background-color: #475569; }
 
-  /*
-   * Activity Feed carousel — desktop layout:
-   * On mobile: single-slide carousel (translateX driven by JS).
-   * On desktop: switch to a 2-column grid showing all cards simultaneously.
-   * JS transform is locked to none, dot indicators are hidden.
-   */
-  #activityTrack {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    transform: none !important;
-    gap: 12px;
-  }
+/* ─── Activity feed ─── */
+.portal-dashboard .dashboard-primary-soft {
+  background-color: rgba(19, 54, 110, 0.08);
+  color: var(--color-primary);
+}
 
-  #activityTrack > div {
-    width: 100% !important;  /* Override the flex-shrink-0 w-full mobile sizing */
-  }
+.portal-dashboard .dashboard-accent-soft {
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+}
 
-  #activityDots {
-    display: none;  /* Dots only needed for single-slide mobile carousel */
-  }
+.portal-dashboard .dashboard-tag {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.portal-dashboard .dashboard-tag--primary {
+  background-color: rgba(19, 54, 110, 0.08);
+  color: var(--color-primary);
+}
+
+.portal-dashboard .dashboard-tag--accent {
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.portal-dashboard .dashboard-activity-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.portal-dashboard .dashboard-activity-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.portal-dashboard .dashboard-activity-emoji {
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.75rem;
+}
+
+.portal-dashboard .dashboard-carousel-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--color-border);
+}
+
+.portal-dashboard .dashboard-carousel-dot--active {
+  background-color: var(--color-primary);
+}
+
+/* ─── Empty subscription state ─── */
+.portal-dashboard .dashboard-empty-icon {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 1.5rem;
+  background-color: rgba(19, 54, 110, 0.08);
+  color: var(--color-primary);
+}
+
+.portal-dashboard .dashboard-empty-icon svg {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.portal-dashboard .dashboard-empty-title {
+  font-family: var(--font-headline);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.portal-dashboard .dashboard-empty-text {
+  color: var(--color-text-muted);
+  margin-bottom: 2rem;
+  max-width: 24rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.portal-dashboard .dashboard-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background-color: var(--color-primary);
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.15s ease;
+}
+
+.portal-dashboard .dashboard-cta:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.portal-dashboard .dashboard-cta svg {
+  width: 1.25rem;
+  height: 1.25rem;
 }

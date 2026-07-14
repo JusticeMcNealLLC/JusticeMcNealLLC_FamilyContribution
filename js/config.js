@@ -14,10 +14,11 @@ const APP_CONFIG = {
     MAX_AMOUNT: 250,
     
     // URLs
-    LOGIN_URL: '/auth/login.html',
-    PORTAL_URL: '/portal/index.html',
+    LOGIN_URL: '/pages/login/',
+    RESET_PASSWORD_URL: '/pages/reset-password/',
+    PORTAL_URL: '/pages/portal/index.html',
     ADMIN_URL: '/admin/index.html',
-    ONBOARDING_URL: '/portal/onboarding.html',
+    ONBOARDING_URL: '/pages/portal/onboarding.html',
     
     // Supabase Edge Function base URL
     FUNCTIONS_URL: `${SUPABASE_URL}/functions/v1`,

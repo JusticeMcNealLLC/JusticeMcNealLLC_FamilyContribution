@@ -38,7 +38,7 @@ function lineCount(relPath) {
     return read(relPath).split(/\r?\n/).length;
 }
 
-const html = read('portal/events.html');
+const html = read('pages/portal/events.html');
 const indexJs = read('js/portal/events/index.js');
 const initJs = read('js/portal/events/init.js');
 const smoke5j = read('test/_smoke-phase5j-compat-exports.js');

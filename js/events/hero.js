@@ -146,7 +146,7 @@ function pubInitBottomNav(event) {
         } else if (pubCurrentUser) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubHandleRsvp('going')">RSVP</button>`;
         } else if (event.member_only) {
-            rsvpBtn = `<a href="${typeof pubPortalLoginHref === 'function' ? pubPortalLoginHref(event.slug) : '/auth/login.html'}" class="evt-cta-btn evt-cta-rsvp">Sign In to RSVP</a>`;
+            rsvpBtn = `<a href="${typeof pubPortalLoginHref === 'function' ? pubPortalLoginHref(event.slug) : '/pages/login/'}" class="evt-cta-btn evt-cta-rsvp">Sign In to RSVP</a>`;
         } else if (event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenCtaPanel('rsvp')">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
         } else {

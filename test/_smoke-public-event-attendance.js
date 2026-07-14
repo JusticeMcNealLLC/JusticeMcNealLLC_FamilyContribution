@@ -20,11 +20,14 @@ const root = path.resolve(__dirname, '..');
 
 const indexJs = fs.readFileSync(path.join(root, 'js/events/index.js'), 'utf8');
 
-const loginJs = fs.readFileSync(path.join(root, 'js/auth/login.js'), 'utf8');
+const loginRedirectJs = fs.readFileSync(path.join(root, 'js/pages/login/utils/redirect.js'), 'utf8');
+const loginDeactivatedJs = fs.readFileSync(path.join(root, 'js/pages/login/utils/deactivated.js'), 'utf8');
+const loginBindJs = fs.readFileSync(path.join(root, 'js/pages/login/ui/bindForms.js'), 'utf8');
+const loginJs = [loginRedirectJs, loginDeactivatedJs, loginBindJs].join('\n');
 
 const heroJs = fs.readFileSync(path.join(root, 'js/events/hero.js'), 'utf8');
 
-const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const portalHtml = fs.readFileSync(path.join(root, 'pages/portal/events.html'), 'utf8');
 
 const rpcMigration = path.join(root, 'supabase/migrations/092_public_event_going_count_rpc.sql');
 

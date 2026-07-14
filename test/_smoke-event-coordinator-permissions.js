@@ -63,7 +63,7 @@ assert(
 
 // ── Scope guard: this phase does not touch forbidden paths ──
 const forbidden = [
-    'portal/events.html',
+    'pages/portal/events.html',
     'supabase/migrations',
     'supabase/functions',
 ];

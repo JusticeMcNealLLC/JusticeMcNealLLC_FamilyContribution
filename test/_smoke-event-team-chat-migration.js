@@ -12,7 +12,7 @@ const planPath = path.join(
     root,
     'docs/improvements/pages/events/team-chat/001_event_team_chat_schema_rls_plan.md'
 );
-const portalHtml = path.join(root, 'portal/events.html');
+const portalHtml = path.join(root, 'pages/portal/events.html');
 const detailJs = path.join(root, 'js/portal/events/detail.js');
 
 assert(fs.existsSync(migrationPath), '093 migration must exist');

@@ -39,7 +39,7 @@ function fileExists(relPath) {
     return fs.existsSync(path.join(root, relPath));
 }
 
-const html = read('portal/events.html');
+const html = read('pages/portal/events.html');
 const detail = read('js/portal/events/detail.js');
 const initJs = read('js/portal/events/init.js');
 const globalReexportsJs = read('js/portal/events/compat/global-reexports.js');

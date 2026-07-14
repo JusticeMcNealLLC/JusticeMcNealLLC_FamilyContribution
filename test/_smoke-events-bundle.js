@@ -17,7 +17,7 @@ function check(label, ok, detail) {
 
 const bundlePath = path.join(root, 'js/portal/events/events.bundle.js');
 const mainPath = path.join(root, 'js/portal/events/main.js');
-const html = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'pages/portal/events.html'), 'utf8');
 
 check('main.js exists', fs.existsSync(mainPath));
 check('events.bundle.js exists', fs.existsSync(bundlePath));

@@ -56,7 +56,7 @@
         // Wait for auth
         if (typeof supabaseClient === 'undefined') return;
         const { data: { user } } = await supabaseClient.auth.getUser();
-        if (!user) { window.location.href = '../login.html'; return; }
+        if (!user) { window.location.href = APP_CONFIG.LOGIN_URL; return; }
 
         await loadTeam();
         renderRoleDefinitions();

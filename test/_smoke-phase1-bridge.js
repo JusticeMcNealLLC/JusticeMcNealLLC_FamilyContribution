@@ -191,7 +191,7 @@ check(
 console.log('\n── Cross-file invariants ───────────────────────────────');
 
 // portal/events.html must still have the classic script tags — not changed in Phase 1
-const eventsHtml = read('portal/events.html');
+const eventsHtml = read('pages/portal/events.html');
 
 check(
     'portal/events.html still loads init.js as a classic script',

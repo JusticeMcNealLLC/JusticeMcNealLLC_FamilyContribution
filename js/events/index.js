@@ -25,14 +25,14 @@ var pubGuestRaffleEntry = false;
 
 /** After login, land on portal event detail (not public /events/). */
 function pubPortalLoginHref(eventSlug) {
-    if (!eventSlug) return '/auth/login.html';
-    const dest = `/portal/events.html?event=${encodeURIComponent(eventSlug)}`;
-    return `/auth/login.html?redirect=${encodeURIComponent(dest)}`;
+    if (!eventSlug) return '/pages/login/';
+    const dest = `/pages/portal/events.html?event=${encodeURIComponent(eventSlug)}`;
+    return `/pages/login/?redirect=${encodeURIComponent(dest)}`;
 }
 
 function pubApplyPublicSignInLinks(eventSlug) {
     const href = pubPortalLoginHref(eventSlug);
-    document.querySelectorAll('a[href="/auth/login.html"], a[href^="/auth/login.html?"]').forEach(link => {
+    document.querySelectorAll('a[href="/pages/login/"], a[href^="/pages/login/?"]').forEach(link => {
         link.setAttribute('href', href);
     });
 }

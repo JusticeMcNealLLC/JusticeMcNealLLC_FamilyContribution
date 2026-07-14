@@ -24,7 +24,7 @@ const { chromium } = require('playwright');
 // ── Config ──────────────────────────────────────────────────────────────────
 
 const BASE_URL   = 'https://justicemcneal.com';
-const LOGIN_URL  = `${BASE_URL}/auth/login.html`;
+const LOGIN_URL  = `${BASE_URL}/pages/login/`;
 const EVENTS_URL = `${BASE_URL}/portal/events.html`;
 
 const ADMIN_EMAIL     = process.env.E2E_ADMIN_EMAIL;
@@ -94,7 +94,7 @@ async function login(page, email, password) {
     await page.fill('#password', password);
     await page.click('#loginBtn');
     // waitForURL callback receives a URL object — must use .toString()
-    await page.waitForURL(url => !url.toString().includes('/auth/login'), { timeout: 20000 });
+    await page.waitForURL(url => !url.toString().includes('/pages/login'), { timeout: 20000 });
 }
 
 function attachListeners(page) {

@@ -3141,7 +3141,7 @@
   }
   function _eventShareUrl(ev) {
     const origin = location.origin;
-    const base = origin + (location.pathname.includes("/portal/") ? location.pathname.split("?")[0] : "/portal/events.html");
+    const base = origin + (location.pathname.includes("/portal/") ? location.pathname.split("?")[0] : "/pages/portal/events.html");
     return ev.slug ? base + "?event=" + encodeURIComponent(ev.slug) : base;
   }
   async function _copyToClipboard(text) {
@@ -11046,7 +11046,7 @@ Type the event title to confirm:`);
     const transportEstimate = e.transportation_estimate_cents ? money(e.transportation_estimate_cents) : "";
     const thresholdCopy = thresholdMet ? `${going} confirmed RSVP${going === 1 ? "" : "s"}; minimum was ${minNeeded}${deadline ? ` by ${deadline}` : ""}. This event can stay confirmed.` : `${going} of ${minNeeded} required RSVP${minNeeded === 1 ? "" : "s"}${deadline ? ` by ${deadline}` : ""}. ${Math.max(0, minNeeded - going)} more RSVP${minNeeded - going === 1 ? "" : "s"} needed.`;
     const inviteUrl = publicEventUrl(e);
-    const portalLink = `<a href="../portal/events.html?event=${encodeURIComponent(e.slug || "")}" class="em-btn-ghost" style="text-decoration:none;display:inline-block">Open in portal \u2192</a>`;
+    const portalLink = `<a href="/pages/portal/events.html?event=${encodeURIComponent(e.slug || "")}" class="em-btn-ghost" style="text-decoration:none;display:inline-block">Open in portal \u2192</a>`;
     const thresholdCard = isLlc && minNeeded ? `
         <div class="em-card em-op-card">
             <div class="em-op-head">

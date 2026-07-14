@@ -56,7 +56,7 @@
             `<button id="logoutBtnMobile" class="tab-inactive">${icons.signout}<span>Sign Out</span></button>`,
         ].join('\n');
     } else {
-        settingsHref = '../portal/settings.html';
+        settingsHref = '/pages/portal/settings.html';
         badgeHtml = '<span class="bg-brand-100 text-brand-700 text-xs font-semibold px-2.5 py-1 rounded-full">Admin</span>';
 
         desktopLinks = [
@@ -66,14 +66,14 @@
             dLink('deposits.html', 'Deposits', 'deposits'),
             dLink('transactions.html', 'Transactions', 'transactions'),
             '<div class="w-px h-6 bg-gray-200 mx-1"></div>',
-            dLink('../portal/index.html', 'My Portal', ''),
+            dLink('/pages/portal/index.html', 'My Portal', ''),
         ].join('\n');
 
         mobileTabs = [
             mTab('index.html', 'Hub', icons.hub, 'hub'),
             mTab('members.html', 'Members', icons.members, 'members'),
             mTab('invite.html', 'Invite', icons.invite, 'invite'),
-            mTab('../portal/index.html', 'Portal', icons.portal, ''),
+            mTab('/pages/portal/index.html', 'Portal', icons.portal, ''),
             `<button id="logoutBtnMobile" class="tab-inactive">${icons.signout}<span>Sign Out</span></button>`,
         ].join('\n');
     }

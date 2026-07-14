@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, '..');
 const read = (filePath) => fs.readFileSync(path.join(root, filePath), 'utf8');
 const model = require('../js/portal/events/core/raffle-model.js');
 
-const html = read('portal/events.html');
+const html = read('pages/portal/events.html');
 const publicHtml = read('events/index.html');
 const createSheet = read('js/portal/events/create/sheet.js');
 const raffleBuilder = read('js/portal/events/create/raffle-builder.js');

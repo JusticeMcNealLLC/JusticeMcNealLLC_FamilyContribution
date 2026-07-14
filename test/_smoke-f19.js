@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
-const html = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'pages/portal/events.html'), 'utf8');
 const css = require('./_events-css');
 const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 const checks = [];

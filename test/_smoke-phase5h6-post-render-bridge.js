@@ -34,7 +34,7 @@ function read(relPath) {
 const postRender = read('js/portal/events/detail/post-render.js');
 const detail = read('js/portal/events/detail.js');
 const sections = read('js/portal/events/detail/sections.js');
-const html = read('portal/events.html');
+const html = read('pages/portal/events.html');
 
 console.log('\n── Phase 5H.6.1 — detail/post-render.js ───────────────────────────────────');
 

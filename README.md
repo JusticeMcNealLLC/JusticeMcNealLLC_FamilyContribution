@@ -114,7 +114,7 @@ A full-featured, invite-only family financial platform and social hub. Members c
 │   │   └── layout.js             # Admin layout component
 │   │
 │   ├── portal/
-│   │   ├── portal.js             # Dashboard page
+│   │   ├── pages/portal/           # Dashboard page modules (index.js entry)
 │   │   ├── contribution.js       # Contribution form
 │   │   ├── extra-deposit.js      # Extra deposit form
 │   │   ├── history.js            # History page

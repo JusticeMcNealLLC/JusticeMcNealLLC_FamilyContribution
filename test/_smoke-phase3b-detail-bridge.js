@@ -826,7 +826,7 @@ TOOLS_INTERNAL_FNS.forEach(fn => {
 // ─── portal/events.html invariants ───────────────────────
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
 
-const html = read('portal/events.html');
+const html = read('pages/portal/events.html');
 
 const classicChain3b = parseClassicChain(root);
 isProductionLoaded(html, classicChain3b, '../js/portal/events/detail.js')

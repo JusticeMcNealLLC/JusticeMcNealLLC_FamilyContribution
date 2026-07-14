@@ -15,7 +15,7 @@ const ctaBar = fs.readFileSync(path.join(root, 'js/portal/events/team/cta-bar.js
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
 const detailData = fs.readFileSync(path.join(root, 'js/portal/events/detail/data.js'), 'utf8');
 const detailSections = fs.readFileSync(path.join(root, 'js/portal/events/detail/sections.js'), 'utf8');
-const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const portalHtml = fs.readFileSync(path.join(root, 'pages/portal/events.html'), 'utf8');
 const detailRender = detail + '\n' + detailSections;
 
 function pass(msg) { console.log(`  ✓ ${msg}`); }

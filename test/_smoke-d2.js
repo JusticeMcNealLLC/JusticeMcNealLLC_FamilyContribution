@@ -11,7 +11,7 @@ const swText  = fs.readFileSync(path + '/sw.js', 'utf8');
 const window = {};
 global.window = window;
 global.navigator = { userAgent: 'node', clipboard: undefined };
-global.location = { origin: 'https://example.test', pathname: '/portal/events.html' };
+global.location = { origin: 'https://example.test', pathname: '/pages/portal/events.html' };
 global.document = {
     body: { classList: { add(){}, remove(){}, contains(){return false;}, toggle(){} } },
     addEventListener(){}, removeEventListener(){},

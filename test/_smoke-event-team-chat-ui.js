@@ -18,7 +18,7 @@ const sheet = fs.readFileSync(path.join(root, 'js/portal/events/team/sheet.js'),
 const shell = fs.readFileSync(path.join(root, 'js/portal/events/team/shell.js'), 'utf8');
 const toolsList = fs.readFileSync(path.join(root, 'js/portal/events/team/tools-list.js'), 'utf8');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
-const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const portalHtml = fs.readFileSync(path.join(root, 'pages/portal/events.html'), 'utf8');
 const uiTw = fs.readFileSync(path.join(root, 'js/portal/events/team/ui-tw.js'), 'utf8');
 const tailwindCss = fs.readFileSync(path.join(root, 'css/tailwind.portal.css'), 'utf8');
 

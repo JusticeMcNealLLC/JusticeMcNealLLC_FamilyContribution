@@ -105,7 +105,7 @@ serve(async (req) => {
     if (resend && existingUser) {
       // Resend invitation - send a password recovery email
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${req.headers.get('origin') || 'http://localhost:8080'}/auth/reset-password.html`,
+        redirectTo: `${req.headers.get('origin') || 'http://localhost:8080'}/pages/reset-password/`,
       })
 
       if (resetError) {
@@ -124,7 +124,7 @@ serve(async (req) => {
 
     // Invite the user - this creates user AND sends invite email
     const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${req.headers.get('origin') || 'http://localhost:8080'}/auth/reset-password.html`,
+      redirectTo: `${req.headers.get('origin') || 'http://localhost:8080'}/pages/reset-password/`,
       data: {
         invited_by: user.id,
         invited_at: new Date().toISOString(),

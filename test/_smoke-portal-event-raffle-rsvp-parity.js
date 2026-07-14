@@ -19,7 +19,7 @@ const teamTools = [
     'js/portal/events/team/ui-tw.js',
 ].map((rel) => fs.readFileSync(path.join(root, rel), 'utf8')).join('\n');
 const rsvp = fs.readFileSync(path.join(root, 'js/portal/events/engagement/rsvp.js'), 'utf8');
-const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const portalHtml = fs.readFileSync(path.join(root, 'pages/portal/events.html'), 'utf8');
 const publicBody = fs.readFileSync(path.join(root, 'js/events/body.js'), 'utf8');
 
 function pass(msg) { console.log(`  ✓ ${msg}`); }

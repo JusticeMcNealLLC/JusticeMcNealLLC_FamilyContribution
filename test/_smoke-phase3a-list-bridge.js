@@ -298,7 +298,7 @@ NAMESPACE_KEYS.forEach(key => {
 // ─── portal/events.html invariants ───────────────────────
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
 
-const html = read('portal/events.html');
+const html = read('pages/portal/events.html');
 
 classicChain3a && classicChain3a.includes('list/shell.js')
     ? pass('list/shell.js present in classic-chain-loader.js chain')

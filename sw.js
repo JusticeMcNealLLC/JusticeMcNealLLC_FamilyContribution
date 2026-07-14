@@ -2,23 +2,53 @@
 // Cache-first for statics, network-first for API calls.
 // Push notification handler for native OS notifications.
 
-const CACHE_NAME = 'jm-portal-v113';
+const CACHE_NAME = 'jm-portal-v117';
 
 // Shell assets to pre-cache on install
 const SHELL_ASSETS = [
-    '/portal/index.html',
-    '/portal/feed.html',
-    '/portal/quests.html',
+    '/pages/portal/index.html',
+    '/pages/portal/feed.html',
+    '/pages/portal/quests.html',
+    '/js/pages/portal/index.js',
+    '/js/pages/portal/ui/greeting.js',
+    '/js/pages/portal/ui/activityCarousel.js',
+    '/js/pages/portal/ui/successBanner.js',
+    '/js/pages/portal/ui/profileNudge.js',
+    '/js/pages/portal/ui/subscriptionUi.js',
+    '/js/pages/portal/loaders/dashboard.js',
+    '/js/pages/portal/loaders/profileHeader.js',
+    '/js/pages/portal/loaders/subscription.js',
+    '/js/pages/portal/loaders/totalContributed.js',
+    '/js/pages/portal/loaders/nextMilestone.js',
+    '/js/pages/portal/loaders/cpStatus.js',
+    '/js/pages/portal/utils/billingDate.js',
+    '/js/pages/portal/utils/subscriptionStatus.js',
+    '/js/pages/portal/utils/billingPortal.js',
+    '/js/portal/milestones/state/tiers.js',
+    '/js/portal/quests/state/cpTiers.js',
     '/js/portal/quests/config.js',
     '/js/portal/quests/renders.js',
     '/js/portal/quests/init.js',
     '/css/shared.css',
-    '/js/components/pageShell/icons.js',
-    '/js/components/pageShell/helpers.js',
-    '/js/components/pageShell/nav.js',
-    '/js/components/pageShell/dropdowns.js',
-    '/js/components/pageShell/drawer.js',
-    '/js/components/pageShell/profile-loader.js',
+    '/js/components/pageShell/index.js',
+    '/js/components/pageShell/state/icons.js',
+    '/js/components/pageShell/state/pageContext.js',
+    '/js/components/pageShell/state/portalNavIcons.js',
+    '/js/components/pageShell/utils/svgPath.js',
+    '/js/components/pageShell/render/links.js',
+    '/js/components/pageShell/render/portalSidebar.js',
+    '/js/components/pageShell/render/adminSidebar.js',
+    '/js/components/pageShell/render/mobileHeader.js',
+    '/js/components/pageShell/render/footer.js',
+    '/js/components/pageShell/render/tabBar.js',
+    '/js/components/pageShell/render/drawer.js',
+    '/js/components/pageShell/render/notificationPanel.js',
+    '/js/components/pageShell/ui/inject.js',
+    '/js/components/pageShell/ui/dropdowns.js',
+    '/js/components/pageShell/ui/drawer.js',
+    '/js/components/pageShell/ui/profileLoader.js',
+    '/js/components/pageShell/ui/adminBadges.js',
+    '/js/components/pageShell/ui/reentrySplash.js',
     '/js/config.js',
     '/js/lottie-effects.js',
     '/assets/lottie/founders.json',
@@ -73,7 +103,7 @@ self.addEventListener('fetch', (e) => {
     }
 
     // Network-only for Supabase API & auth
-    if (url.hostname.includes('supabase') || url.pathname.startsWith('/auth/')) {
+    if (url.hostname.includes('supabase') || url.pathname.startsWith('/pages/login') || url.pathname.startsWith('/pages/reset-password')) {
         return;
     }
 
@@ -125,7 +155,7 @@ self.addEventListener('push', (e) => {
             title: '🔔 Justice McNeal Portal',
             body: e.data.text() || 'New notification',
             icon: '/assets/icons/icon-192.svg',
-            data: { url: '/portal/feed.html' },
+            data: { url: '/pages/portal/feed.html' },
         };
     }
 
@@ -136,7 +166,7 @@ self.addEventListener('push', (e) => {
         tag: payload.tag || 'jm-notification',
         renotify: true,
         vibrate: [100, 50, 100],
-        data: payload.data || { url: '/portal/feed.html' },
+        data: payload.data || { url: '/pages/portal/feed.html' },
         actions: [
             { action: 'open', title: 'View' },
             { action: 'dismiss', title: 'Dismiss' },
@@ -154,7 +184,7 @@ self.addEventListener('notificationclick', (e) => {
 
     if (e.action === 'dismiss') return;
 
-    const targetUrl = (e.notification.data && e.notification.data.url) || '/portal/feed.html';
+    const targetUrl = (e.notification.data && e.notification.data.url) || '/pages/portal/feed.html';
 
     e.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {

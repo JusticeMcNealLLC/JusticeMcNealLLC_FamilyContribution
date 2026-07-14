@@ -2,14 +2,14 @@
 // Usage: node scripts/mobile-screenshot.mjs [targetUrl] [outFile]
 // Defaults: portal/events.html @ iPhone 14 Pro → .tmp/mobile.png
 //
-// Logs in via auth/login.html first so the Supabase session is real.
+// Logs in via pages/login/ first so the Supabase session is real.
 
 import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
 import path from 'path';
 
 const BASE     = 'http://127.0.0.1:5500';
-const TARGET   = process.argv[2] || `${BASE}/portal/events.html`;
+const TARGET   = process.argv[2] || `${BASE}/pages/portal/events.html`;
 const OUT_FILE = process.argv[3] || '.tmp/mobile.png';
 const EMAIL    = process.argv[4] || 'mcneal.justin99@gmail.com';
 const PASS     = process.argv[5] || 'Monday23!';
@@ -29,7 +29,7 @@ const page    = await ctx.newPage();
 
 // --- Step 1: Log in ---
 console.log('Logging in…');
-await page.goto(`${BASE}/auth/login.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+await page.goto(`${BASE}/pages/login/`, { waitUntil: 'domcontentloaded', timeout: 15000 });
 
 // Fill email & password then submit
 await page.fill('#email',    EMAIL);

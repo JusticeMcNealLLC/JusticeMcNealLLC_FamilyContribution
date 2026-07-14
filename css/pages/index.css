@@ -1,0 +1,148 @@
+/* ════════════════════════════════════════════════════════════════
+ * Splash page (index.html) — animations + theme overrides
+ * Brand tokens: theme/Theme_JMLLC001/Theme_JMLLC001.css + websiteTheme.md
+ * ════════════════════════════════════════════════════════════════ */
+
+body {
+    background-color: var(--color-background);
+}
+
+/* Full-page background — assets/background/jm-login-mobile.png | jm-login-desktop.png */
+.splash-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-image: url('../../assets/background/jm-login-mobile.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    animation: splashBgFadeIn 1s ease-out forwards;
+}
+
+@media (min-width: 768px) {
+    .splash-bg {
+        background-image: url('../../assets/background/jm-login-desktop.png');
+    }
+}
+@keyframes splashBgFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Logo container entrance */
+.splash-logo-wrap {
+    opacity: 0;
+    transform: scale(0.5) translateY(20px);
+    animation: logoEntrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
+}
+@keyframes logoEntrance {
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Glow ring behind logo */
+.logo-glow {
+    position: absolute;
+    inset: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(19, 54, 110, 0.22) 0%, transparent 70%);
+    opacity: 0;
+    animation: glowPulse 2s ease-in-out 0.8s infinite;
+}
+@keyframes glowPulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.55; transform: scale(1.08); }
+}
+
+/* Brand name reveal */
+.brand-name {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: textReveal 0.6s ease-out 0.9s forwards;
+}
+@keyframes textReveal {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tagline */
+.brand-tagline {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: textReveal 0.6s ease-out 1.2s forwards;
+}
+
+/* Progress bar */
+.splash-progress {
+    opacity: 0;
+    animation: textReveal 0.5s ease-out 1.5s forwards;
+}
+.splash-progress-bar {
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent), #4a6f9a);
+    background-size: 200% 100%;
+    animation: shimmerBar 1.5s ease-in-out infinite;
+    width: 0%;
+    transition: width 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes shimmerBar {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Page exit */
+.splash-exit {
+    animation: splashExit 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+@keyframes splashExit {
+    to {
+        opacity: 0;
+        transform: scale(1.05);
+        filter: blur(8px);
+    }
+}
+
+/* Splash → login: exit motion is driven by js/pages/index/ui/exit.js (Web Animations API) */
+body.splash-handoff {
+    overflow: hidden;
+}
+
+/* Hide login content until handoff entrance runs (set in <head> when coming from splash) */
+html.login-handoff-pending .login-brand,
+html.login-handoff-pending .login-card,
+html.login-handoff-pending .login-footer {
+    opacity: 0;
+}
+/* Logo loading spinner */
+.logo-spinner {
+    position: absolute;
+    inset: -6px;
+    border-radius: 2rem;
+    border: 3px solid rgba(255, 255, 255, 0.15);
+    border-top-color: rgba(255, 255, 255, 0.9);
+    border-right-color: rgba(14, 139, 139, 0.55);
+    animation: spinnerRotate 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+.logo-spinner.spinner-hidden {
+    opacity: 0;
+}
+@keyframes spinnerRotate {
+    to { transform: rotate(360deg); }
+}
+
+/* Logo image fade-in when loaded */
+.logo-reveal {
+    animation: logoRevealIn 0.4s ease-out forwards;
+}
+@keyframes logoRevealIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Transparent logo — no gradient box behind image */
+.logo-container--transparent {
+    background: transparent !important;
+    box-shadow: none !important;
+}

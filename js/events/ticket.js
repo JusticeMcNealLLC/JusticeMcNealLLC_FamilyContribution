@@ -98,7 +98,7 @@ function pubRenderVenueCheckin(event) {
             <span class="evt-notice-icon">📍</span>
             <div>
                 <p class="evt-notice-title">Sign in to check in</p>
-                <a href="${typeof pubPortalLoginHref === 'function' && pubCurrentEvent ? pubPortalLoginHref(pubCurrentEvent.slug) : '/auth/login.html'}" class="evt-action-btn" style="display:inline-flex;width:auto;padding:10px 24px;margin-top:10px;text-decoration:none">Sign In</a>
+                <a href="${typeof pubPortalLoginHref === 'function' && pubCurrentEvent ? pubPortalLoginHref(pubCurrentEvent.slug) : '/pages/login/'}" class="evt-action-btn" style="display:inline-flex;width:auto;padding:10px 24px;margin-top:10px;text-decoration:none">Sign In</a>
             </div>
         </div>`;
         return;
@@ -375,7 +375,7 @@ async function pubHandleTicketScan(event, ticketToken) {
                 <h3 class="evt-qr-title">Event Ticket</h3>
                 <p style="font-size:14px;color:#717171;margin-bottom:16px">Show this QR code to the event coordinator to check in.</p>
                 <p style="font-size:13px;color:#b0b0b0">The event host uses the in-app scanner to verify your ticket.</p>
-                ${!pubCurrentUser ? '<p style="font-size:13px;color:#717171;margin-top:14px"><a href="' + (typeof pubPortalLoginHref === 'function' && pubCurrentEvent ? pubPortalLoginHref(pubCurrentEvent.slug) : '/auth/login.html') + '" style="color:#222;font-weight:600">Sign in</a> if you\'re the event host.</p>' : ''}
+                ${!pubCurrentUser ? '<p style="font-size:13px;color:#717171;margin-top:14px"><a href="' + (typeof pubPortalLoginHref === 'function' && pubCurrentEvent ? pubPortalLoginHref(pubCurrentEvent.slug) : '/pages/login/') + '" style="color:#222;font-weight:600">Sign in</a> if you\'re the event host.</p>' : ''}
             </div>`;
     }
 }

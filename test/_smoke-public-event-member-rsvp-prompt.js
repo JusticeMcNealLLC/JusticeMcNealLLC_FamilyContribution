@@ -11,7 +11,7 @@ const root = path.resolve(__dirname, '..');
 const indexJs = fs.readFileSync(path.join(root, 'js/events/index.js'), 'utf8');
 const bodyJs = fs.readFileSync(path.join(root, 'js/events/body.js'), 'utf8');
 const rsvpJs = fs.readFileSync(path.join(root, 'js/events/rsvp.js'), 'utf8');
-const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const portalHtml = fs.readFileSync(path.join(root, 'pages/portal/events.html'), 'utf8');
 
 assert(/function pubMemberRsvpPromptHtml/.test(indexJs), 'pubMemberRsvpPromptHtml helper required');
 assert(/public-member-rsvp-inline/.test(indexJs), 'compact inline member prompt markup required');

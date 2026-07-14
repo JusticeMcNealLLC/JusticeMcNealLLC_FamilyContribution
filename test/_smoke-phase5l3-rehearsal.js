@@ -42,8 +42,8 @@ function portalEventsScriptsFromHtml(html) {
         .filter((s) => s.includes('portal/events'));
 }
 
-const PROD_HTML = 'portal/events.html';
-const REH_HTML = 'portal/events.rehearsal.html';
+const PROD_HTML = 'pages/portal/events.html';
+const REH_HTML = 'pages/portal/events.rehearsal.html';
 const PROD_COUNT = 1;
 const REH_COUNT = 1;
 const BUNDLE_TAG = '../js/portal/events/events.bundle.js';

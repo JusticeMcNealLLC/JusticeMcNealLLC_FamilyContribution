@@ -105,7 +105,7 @@ apiMethods.forEach(method => {
 // ─── portal/events.html invariants ────────────────────────
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
 
-const html = read('portal/events.html');
+const html = read('pages/portal/events.html');
 
 html.includes('events.bundle.js') || (html.includes('src="../js/components/events/constants.js"') && !html.includes('src="../js/components/events/constants.js" type="module"'))
     ? pass('EventsConstants available via bundle or classic script tag')

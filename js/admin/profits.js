@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         .single();
 
     if (!profile || profile.role !== 'admin') {
-        window.location.href = '/portal/index.html';
+        window.location.href = '/pages/portal/index.html';
         return;
     }
 

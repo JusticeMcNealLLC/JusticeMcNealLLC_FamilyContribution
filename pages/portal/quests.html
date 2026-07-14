@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Quests | Justice McNeal LLC</title>
+    <link rel="stylesheet" href="../../css/tailwind.portal.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/shared.css">
+    <link rel="manifest" href="../../manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JMLLC">
+    <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png">
+    <style>
+        /* Hero replaces the mobile nav — nav.js swaps nav-placeholder with <nav>,
+           so we must target the rendered element, not the placeholder id */
+        @media (max-width: 767px) {
+            body[data-active-page="quests"] > nav { display: none !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="quests">
+
+    <!-- Desktop nav (hidden on mobile via style in <head>) -->
+    <div id="nav-placeholder"></div>
+
+    <!-- Hero: full-bleed on mobile, rounded card on desktop -->
+    <div id="cpHero" class="sticky top-0 z-30 md:static">
+        <div class="bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 animate-pulse md:rounded-2xl md:max-w-5xl md:mx-4 lg:mx-auto md:mt-4 md:overflow-hidden"
+             style="min-height: 160px; padding-top: max(1rem, env(safe-area-inset-top));"></div>
+    </div>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <!-- Loading State -->
+        <div id="loadingState">
+            <div class="space-y-4">
+                <div class="skeleton h-10 rounded-xl"></div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="skeleton aspect-square rounded-full"></div>
+                    <div class="skeleton aspect-square rounded-full"></div>
+                    <div class="skeleton aspect-square rounded-full"></div>
+                    <div class="skeleton aspect-square rounded-full"></div>
+                    <div class="skeleton aspect-square rounded-full"></div>
+                    <div class="skeleton aspect-square rounded-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden">
+            <div class="text-center py-16">
+                <div class="text-4xl mb-4">😵</div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Failed to load quests</h3>
+                <p class="text-gray-500 text-sm mb-6">Something went wrong. Please try again.</p>
+                <button onclick="location.reload()" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 px-5 rounded-xl transition text-sm">
+                    Retry
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content (hidden until loaded) -->
+        <div id="questsContent" class="hidden space-y-5 sm:space-y-6">
+
+            <!-- Filter Tabs -->
+            <div id="questFilters"></div>
+
+            <!-- Quest Grid (3-column circles) -->
+            <div id="questList"></div>
+
+            <!-- CP History -->
+            <section class="mt-6 sm:mt-8">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-base sm:text-lg font-bold text-gray-900">Credit Points History</h2>
+                    <span class="text-xs text-gray-400">Rolling 90-day window</span>
+                </div>
+                <div id="cpHistory"></div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Quest Detail Modal -->
+    <div id="questDetailModal" class="hidden"></div>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../js/config.js"></script>
+    <script type="module" src="../../js/components/pageShell/index.js"></script>
+    <script src="../../js/components/notifications.js"></script>
+    <script src="../../js/push.js"></script>
+    <script src="../../js/auth/shared.js"></script>
+    <!-- Quest modules (load order matters) -->
+    <script type="module" src="../../js/portal/quests/config.js"></script>
+    <script src="../../js/lottie-effects.js"></script>
+    <script defer src="../../js/portal/quests/renders.js"></script>
+    <script defer src="../../js/portal/quests/init.js"></script>
+    <script src="../../js/sw-register.js"></script>
+</body>
+</html>

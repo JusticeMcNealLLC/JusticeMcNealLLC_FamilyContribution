@@ -41,7 +41,7 @@ function read(relPath) {
 const detailData = read('js/portal/events/detail/data.js');
 const detailSections = read('js/portal/events/detail/sections.js');
 const detail = read('js/portal/events/detail.js');
-const html = read('portal/events.html');
+const html = read('pages/portal/events.html');
 const detailTemplate = read('js/portal/events/detail/template.js');
 const handlerSources = detail + '\n' + detailSections + '\n' + detailTemplate;
 

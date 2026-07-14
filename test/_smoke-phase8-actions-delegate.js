@@ -57,7 +57,7 @@ if (offenders.length) {
 
 check('rehearsal classic-chain-loader removed', !fs.existsSync(path.join(eventsDir, 'rehearsal/classic-chain-loader.js')));
 
-const html = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'pages/portal/events.html'), 'utf8');
 check('events.html map buttons use data-evt-action', html.includes('data-evt-action="evtCloseFullscreenMap"'));
 check('events.html has no onclick="evt', !/onclick\s*=\s*["']evt/.test(html));
 

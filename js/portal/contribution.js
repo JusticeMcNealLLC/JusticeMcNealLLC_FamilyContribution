@@ -1,16 +1,80 @@
 // Contribution page functionality
 
 document.addEventListener('DOMContentLoaded', async function() {
-    // Check authentication
     const user = await checkAuth();
     if (!user) return;
 
-    // Load current subscription
     const subscription = await loadSubscription(user.id);
-
-    // Set up forms
     setupContributionForms(subscription);
 });
+
+async function loadSubscription(userId) {
+    try {
+        const { data: initial, error } = await supabaseClient
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        if (error) {
+            console.error('Error loading subscription:', error);
+            return null;
+        }
+
+        if (!initial) {
+            updateContributionUi(null);
+            return null;
+        }
+
+        let subscription = initial;
+
+        if (!subscription.current_period_end && subscription.stripe_subscription_id) {
+            try {
+                const refreshed = await callEdgeFunction('refresh-my-subscription');
+                if (refreshed?.current_period_end) {
+                    subscription = { ...subscription, ...refreshed };
+                }
+            } catch (err) {
+                console.warn('Could not refresh subscription from Stripe:', err.message);
+            }
+        }
+
+        const currentAmountDisplayEl = document.getElementById('currentAmountDisplay');
+        const nextBillDateDisplayEl = document.getElementById('nextBillDateDisplay');
+
+        if (currentAmountDisplayEl) {
+            currentAmountDisplayEl.textContent = `${formatCurrency(subscription.current_amount_cents)}/month`;
+        }
+        if (nextBillDateDisplayEl) {
+            nextBillDateDisplayEl.textContent = subscription.current_period_end
+                ? formatDate(subscription.current_period_end)
+                : '--';
+        }
+
+        updateContributionUi(subscription);
+        return subscription;
+    } catch (error) {
+        console.error('Error loading subscription:', error);
+        return null;
+    }
+}
+
+function updateContributionUi(subscription) {
+    const currentInfoEl = document.getElementById('currentInfo');
+    const contributionFormEl = document.getElementById('contributionForm');
+    const firstTimeSetupEl = document.getElementById('firstTimeSetup');
+
+    if (!subscription || subscription.status === 'canceled') {
+        if (currentInfoEl) currentInfoEl.classList.add('hidden');
+        if (contributionFormEl) contributionFormEl.classList.add('hidden');
+        if (firstTimeSetupEl) firstTimeSetupEl.classList.remove('hidden');
+        return;
+    }
+
+    if (currentInfoEl) currentInfoEl.classList.remove('hidden');
+    if (contributionFormEl) contributionFormEl.classList.remove('hidden');
+    if (firstTimeSetupEl) firstTimeSetupEl.classList.add('hidden');
+}
 
 function setupContributionForms(subscription) {
     const contributionForm = document.getElementById('contributionForm');

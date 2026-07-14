@@ -71,7 +71,7 @@ window.ProfileApp.setupShareModal = function setupShareModal() {
 function getProfileUrl() {
     const S = window.ProfileApp.state;
     const base = window.location.origin;
-    return `${base}/portal/profile.html?id=${S.viewingUserId}`;
+    return `${base}/pages/portal/profile.html?id=${S.viewingUserId}`;
 }
 
 function openShareModal() {

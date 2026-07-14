@@ -114,12 +114,12 @@ function record(scope, key, ok, detail) {
 
 async function login(page, email, password) {
     const base = (process.env.E2E_BASE_URL || 'https://justicemcneal.com').replace(/\/$/, '');
-    await page.goto(`${base}/auth/login.html`, { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto(`${base}/pages/login/`, { waitUntil: 'networkidle', timeout: 45000 });
     await page.fill('#email', email);
     await page.fill('#password', password);
     await page.click('#loginBtn');
     try {
-        await page.waitForURL((url) => !url.toString().includes('/auth/login'), { timeout: 25000 });
+        await page.waitForURL((url) => !url.toString().includes('/pages/login'), { timeout: 25000 });
     } catch (err) {
         const loginErr = await page.locator('#loginError').textContent().catch(() => '');
         throw new Error(loginErr || 'login timed out');
@@ -135,7 +135,7 @@ function attachConsole(page, tag) {
 
 async function openEventDetail(page) {
     const base = (process.env.E2E_BASE_URL || 'https://justicemcneal.com').replace(/\/$/, '');
-    const url = `${base}/portal/events.html?event=${EVENT_SLUG}`;
+    const url = `${BASE}/pages/portal/events.html?event=${EVENT_SLUG}`;
     await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
     await page.waitForSelector('#eventsDetailView, #evtShell', { timeout: 30000 }).catch(() => null);
     await page.waitForTimeout(2000);

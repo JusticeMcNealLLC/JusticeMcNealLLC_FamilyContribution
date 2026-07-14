@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             try {
                 const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/auth/reset-password.html`,
+                    redirectTo: `${window.location.origin}${APP_CONFIG.RESET_PASSWORD_URL || '/pages/reset-password/'}`,
                 });
 
                 if (error) throw error;
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 // Add Admin Hub link to portal navigation for admin users
 async function addAdminDashboardLink() {
     // Only run on portal pages (not admin pages or login)
-    if (window.location.pathname.includes('/admin/') || window.location.pathname.includes('/auth/')) {
+    if (window.location.pathname.includes('/admin/') || window.location.pathname.includes('/pages/login') || window.location.pathname.includes('/pages/reset-password')) {
         return;
     }
 

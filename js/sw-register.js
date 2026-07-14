@@ -7,7 +7,7 @@
     }
 
     if ('serviceWorker' in navigator) {
-        // Determine root path (works from /portal/, /admin/, /auth/ etc.)
+        // Determine root path (works from /portal/, /admin/, /pages/login/, etc.)
         var swPath = '/sw.js';
         // For GitHub Pages custom domain, root is always /
         navigator.serviceWorker.register(swPath, { scope: '/' })

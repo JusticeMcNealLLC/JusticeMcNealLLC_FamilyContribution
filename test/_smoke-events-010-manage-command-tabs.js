@@ -6,7 +6,7 @@ const assert = require('assert');
 const root = path.resolve(__dirname, '..');
 const manageSheet = fs.readFileSync(path.join(root, 'js/portal/events/manage/sheet.js'), 'utf8');
 const adminEventsHtml = fs.readFileSync(path.join(root, 'admin/events.html'), 'utf8');
-const portalEventsHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const portalEventsHtml = fs.readFileSync(path.join(root, 'pages/portal/events.html'), 'utf8');
 const rsvpPolicy = fs.readFileSync(path.join(root, 'supabase/migrations/090_event_rsvps_admin_delete.sql'), 'utf8');
 const participationFn = fs.readFileSync(path.join(root, 'supabase/functions/manage-event-participation/index.ts'), 'utf8');
 

@@ -76,7 +76,7 @@ function overviewHtml() {
         : `${going} of ${minNeeded} required RSVP${minNeeded === 1 ? '' : 's'}${deadline ? ` by ${deadline}` : ''}. ${Math.max(0, minNeeded - going)} more RSVP${minNeeded - going === 1 ? '' : 's'} needed.`;
 
     const inviteUrl = publicEventUrl(e);
-    const portalLink = `<a href="../portal/events.html?event=${encodeURIComponent(e.slug || '')}" class="em-btn-ghost" style="text-decoration:none;display:inline-block">Open in portal →</a>`;
+    const portalLink = `<a href="/pages/portal/events.html?event=${encodeURIComponent(e.slug || '')}" class="em-btn-ghost" style="text-decoration:none;display:inline-block">Open in portal →</a>`;
     const thresholdCard = isLlc && minNeeded ? `
         <div class="em-card em-op-card">
             <div class="em-op-head">

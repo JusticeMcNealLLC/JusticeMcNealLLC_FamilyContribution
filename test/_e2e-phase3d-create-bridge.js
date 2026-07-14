@@ -12,7 +12,7 @@ const { chromium } = require(playwrightPath);
 
 const CHROMIUM_PATH = 'C:\\Users\\justi\\AppData\\Local\\ms-playwright\\chromium-1217\\chrome-win64\\chrome.exe';
 const BASE_URL = process.env.E2E_BASE_URL || 'https://justicemcneal.com';
-const LOGIN_URL = `${BASE_URL}/auth/login.html`;
+const LOGIN_URL = `${BASE_URL}/pages/login/`;
 const EVENTS_URL = `${BASE_URL}/portal/events.html`;
 const EMAIL = process.env.E2E_ADMIN_EMAIL || 'mcneal.justin99@gmail.com';
 const PASS  = process.env.E2E_ADMIN_PASSWORD || 'Monday23!';
@@ -51,7 +51,7 @@ function info(msg) { console.log(`  ℹ ${msg}`); }
     await page.fill('input[type="email"]', EMAIL);
     await page.fill('input[type="password"]', PASS);
     await page.click('button[type="submit"]');
-    await page.waitForURL(url => !url.toString().includes('/auth/login'), { timeout: 15000 });
+    await page.waitForURL(url => !url.toString().includes('/pages/login'), { timeout: 15000 });
     pass('Admin login succeeded');
 
     // ── Navigate to events page ────────────────────────────────────

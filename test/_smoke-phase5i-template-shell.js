@@ -29,7 +29,7 @@ function read(relPath) {
 
 const template = read('js/portal/events/detail/template.js');
 const detail = read('js/portal/events/detail.js');
-const html = read('portal/events.html');
+const html = read('pages/portal/events.html');
 
 console.log('\n── Phase 5I.1 — detail/template.js ───────────────────────────────────────');
 

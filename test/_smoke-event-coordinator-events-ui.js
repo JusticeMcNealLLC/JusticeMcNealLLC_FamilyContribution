@@ -24,7 +24,7 @@ for (const [key, rel] of Object.entries(portalFiles)) {
 
 const ticketJs = fs.readFileSync(path.join(root, 'js/events/ticket.js'), 'utf8');
 const sharedJs = fs.readFileSync(path.join(root, 'js/auth/shared.js'), 'utf8');
-const portalHtml = fs.readFileSync(path.join(root, 'portal/events.html'), 'utf8');
+const portalHtml = fs.readFileSync(path.join(root, 'pages/portal/events.html'), 'utf8');
 
 // ── canCreateEvents on create gates ──
 assert(/canCreateEvents\(\)/.test(sources.init), 'init.js should gate create button with canCreateEvents()');

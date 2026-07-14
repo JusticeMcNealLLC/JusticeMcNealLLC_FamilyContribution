@@ -332,7 +332,7 @@ sheet.includes('EventsManageDocsApi')
 // ─── portal/events.html invariants ───────────────────────
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
 
-const html = read('portal/events.html');
+const html = read('pages/portal/events.html');
 const classicChain3c = parseClassicChain(root);
 
 classicChain3c && classicChain3c.includes('manage/shell.js')

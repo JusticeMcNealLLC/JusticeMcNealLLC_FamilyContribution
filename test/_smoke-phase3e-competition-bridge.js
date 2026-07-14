@@ -28,7 +28,7 @@ function check(label, ok, detail) {
 }
 
 const competition = read('js/portal/events/detail/competition.js');
-const events = read('portal/events.html');
+const events = read('pages/portal/events.html');
 const loader = read('js/portal/events/main.js');
 
 console.log('\n── js/portal/events/detail/competition.js — file structure ──────────────');

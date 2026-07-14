@@ -2,9 +2,10 @@
 module.exports = {
     content: [
         './index.html',
-        './portal/**/*.html',
+        './pages/portal/**/*.html',
         './admin/**/*.html',
-        './auth/**/*.html',
+        './pages/login/**/*.html',
+        './pages/reset-password/**/*.html',
         './events/**/*.html',
         './public/**/*.html',
         './js/**/*.js',

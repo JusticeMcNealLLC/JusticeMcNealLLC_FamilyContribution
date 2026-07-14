@@ -366,7 +366,7 @@
         try {
             const { data: sess } = await supabaseClient.auth.getSession();
             const uid = sess?.session?.user?.id;
-            if (!uid) { window.location.href = '/login.html'; return; }
+            if (!uid) { window.location.href = APP_CONFIG.LOGIN_URL; return; }
 
             const [{ data: me }, { data: sub }] = await Promise.all([
                 supabaseClient.from('profiles').select('role').eq('id', uid).single(),

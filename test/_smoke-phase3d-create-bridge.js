@@ -75,7 +75,7 @@ const legacyCostsJs = read('js/portal/events/create/legacy-costs.js');
 const legacyLocationJs = read('js/portal/events/create/legacy-location.js');
 const legacyPreviewJs = read('js/portal/events/create/legacy-preview.js');
 const legacySubmitJs = read('js/portal/events/create/legacy-submit.js');
-const events = read('portal/events.html');
+const events = read('pages/portal/events.html');
 const classicChain3d = parseClassicChain(ROOT);
 
 // ── File structure ─────────────────────────────────────────────────────────

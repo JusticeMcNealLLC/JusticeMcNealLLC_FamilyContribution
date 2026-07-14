@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Extra Deposit | Justice McNeal LLC</title>
+    <link rel="stylesheet" href="../../css/tailwind.portal.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/shared.css">
+    <link rel="manifest" href="../../manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JMLLC">
+    <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png">
+    <style>
+        /* Hide top nav on mobile — full-screen immersive like contribution page */
+        @media (max-width: 767px) {
+            body[data-active-page="extra-deposit"] > nav { display: none !important; }
+        }
+        /* Lottie full-screen cover background */
+        #lottie-bg {
+            position: fixed; inset: 0; z-index: 0;
+            overflow: hidden; pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #lottie-bg dotlottie-player {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            height: 100vh; width: calc(100vh * 16 / 9);
+            min-width: 100vw;
+        }
+        #lottie-bg dotlottie-player canvas,
+        #lottie-bg dotlottie-player svg { width: 100% !important; height: 100% !important; }
+        /* Back link readable on dark background */
+        .deposit-back-link { color: rgba(255,255,255,0.65) !important; }
+        .deposit-back-link:hover { color: rgba(255,255,255,0.95) !important; }
+    </style>
+    <!-- dotLottie player (ES module web component) -->
+    <script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
+</head>
+<body class="min-h-screen font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="extra-deposit" style="background-color:#14532d">
+
+    <!-- Lottie background (fixed, full-screen, below all content) -->
+    <div id="lottie-bg" aria-hidden="true">
+        <dotlottie-player
+            src="https://assets-v2.lottiefiles.com/a/79b3576a-1174-11ee-9fa3-3fc654b3f7a4/a9czsITbXR.lottie"
+            autoplay
+            loop
+        ></dotlottie-player>
+    </div>
+
+    <div id="nav-placeholder"></div>
+
+    <main class="relative z-10 max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full flex flex-col" style="padding-top: max(1.25rem, calc(env(safe-area-inset-top) + 1rem));">
+
+        <!-- Canceled Banner -->
+        <div id="canceledBanner" class="hidden mb-5 fade-in">
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
+                <div class="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+                </div>
+                <p class="text-sm text-amber-800">Payment was canceled. You can try again anytime.</p>
+            </div>
+        </div>
+
+        <!-- No Subscription State -->
+        <div id="noSubscription" class="hidden fade-in flex-1 flex items-center justify-center">
+            <div class="bg-emerald-900/80 backdrop-blur-sm border border-emerald-700/60 rounded-2xl p-8 sm:p-12 text-center w-full max-w-sm">
+                <div class="w-16 h-16 bg-emerald-500/20 border border-emerald-400/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
+                </div>
+                <h3 class="text-lg font-bold text-white mb-2">Set Up Your Contribution First</h3>
+                <p class="text-emerald-200/80 text-sm mb-6 max-w-sm mx-auto">Extra deposits are available to active members. Start your monthly contribution to unlock one-time deposits.</p>
+                <a href="contribution.html" class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold py-3 px-6 rounded-xl transition shadow-sm text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Start Your Contribution
+                </a>
+            </div>
+        </div>
+
+        <div id="depositContent" class="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-8 fade-in">
+
+            <!-- Header -->
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"></path></svg>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">Extra Deposit</h1>
+                <p class="text-gray-500 text-sm mt-1">Make a one-time contribution outside your monthly subscription.</p>
+            </div>
+
+            <!-- Info Card -->
+            <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-6">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div class="text-sm text-teal-800">
+                        <p class="font-semibold mb-1">How it works</p>
+                        <ul class="space-y-1 text-teal-700">
+                            <li>This is a one-time payment — it won't affect your monthly subscription.</li>
+                            <li>You'll be redirected to Stripe to enter your payment details.</li>
+                            <li>The deposit adds to your total contribution balance.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Amount Buttons -->
+            <div class="mb-5">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Quick Select</label>
+                <div class="grid grid-cols-4 gap-2">
+                    <button type="button" data-amount="25" class="quick-amount-btn py-2.5 px-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700 transition">$25</button>
+                    <button type="button" data-amount="50" class="quick-amount-btn py-2.5 px-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700 transition">$50</button>
+                    <button type="button" data-amount="100" class="quick-amount-btn py-2.5 px-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700 transition">$100</button>
+                    <button type="button" data-amount="250" class="quick-amount-btn py-2.5 px-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700 transition">$250</button>
+                </div>
+            </div>
+
+            <!-- Amount Form -->
+            <form id="extraDepositForm" class="space-y-5">
+                <div>
+                    <label for="depositAmount" class="block text-sm font-medium text-gray-700 mb-2">
+                        Deposit Amount
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg">$</span>
+                        <input 
+                            type="number" 
+                            id="depositAmount" 
+                            name="depositAmount" 
+                            min="5" 
+                            max="500" 
+                            step="1"
+                            required 
+                            placeholder="50"
+                            class="w-full pl-9 pr-4 py-3.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition text-lg font-semibold"
+                        >
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">Minimum $5, maximum $500 (whole dollars only)</p>
+                </div>
+
+                <div id="depositError" class="text-red-600 text-sm hidden"></div>
+
+                <button type="submit" id="depositBtn" class="w-full bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-semibold py-3.5 px-4 rounded-xl transition text-sm flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Continue to Payment
+                </button>
+
+                <div class="flex gap-3">
+                    <a href="index.html" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-xl transition text-center text-sm">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Security Note -->
+        <div class="mt-4 text-center">
+            <p class="text-xs text-gray-400 flex items-center justify-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                Payments processed securely by Stripe
+            </p>
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../js/config.js"></script>
+    <script type="module" src="../../js/components/pageShell/index.js"></script>
+    <script src="../../js/components/notifications.js"></script>
+    <script src="../../js/push.js"></script>
+    <script src="../../js/auth/shared.js"></script>
+    <script src="../../js/portal/extra-deposit.js"></script>
+    <script src="../../js/sw-register.js"></script>
+</body>
+</html>

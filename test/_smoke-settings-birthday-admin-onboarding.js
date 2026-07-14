@@ -3,7 +3,7 @@ const path = require('path');
 const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
-const settingsHtml = fs.readFileSync(path.join(root, 'portal/settings.html'), 'utf8');
+const settingsHtml = fs.readFileSync(path.join(root, 'pages/portal/settings.html'), 'utf8');
 const settingsJs = fs.readFileSync(path.join(root, 'js/portal/settings.js'), 'utf8');
 const memberModal = fs.readFileSync(path.join(root, 'js/admin/members/members-modal.js'), 'utf8');
 const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');

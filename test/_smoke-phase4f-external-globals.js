@@ -53,7 +53,7 @@ function gitDiffNames(rel) {
 const helperPath = 'js/portal/events/compat/external-globals.js';
 const testPath = 'test/_smoke-phase4f-external-globals.js';
 const helper = read(helperPath);
-const eventsHtml = read('portal/events.html');
+const eventsHtml = read('pages/portal/events.html');
 const externalGlobals = require(resolve(helperPath));
 
 console.log('\n── Phase 4F external-globals.js — file and syntax ─────────────────────');
@@ -170,7 +170,7 @@ try {
 }
 
 console.log('\n── portal/events.html invariants ──────────────────────────────────────');
-check('portal/events.html has no unstaged content diff', gitDiffNames('portal/events.html') === '');
+check('portal/events.html has no unstaged content diff', gitDiffNames('pages/portal/events.html') === '');
 check('external-globals.js is not added to portal/events.html yet', !eventsHtml.includes('js/portal/events/compat/external-globals.js'));
 check('No portal events module entry exists yet', !eventsHtml.match(/<script[^>]+type=["']module["'][^>]+js\/portal\/events\/index\.js/));
 

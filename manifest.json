@@ -2,7 +2,7 @@
     "name": "Justice McNeal Family Portal",
     "short_name": "JMLLC",
     "description": "Family Contribution Portal — Justice McNeal LLC",
-    "start_url": "/portal/index.html",
+    "start_url": "/pages/portal/index.html",
     "scope": "/",
     "display": "standalone",
     "orientation": "portrait",

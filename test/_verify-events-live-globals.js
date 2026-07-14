@@ -21,8 +21,8 @@ function loadPlaywright() {
 const { chromium } = loadPlaywright();
 
 const BASE_URL = (process.env.E2E_BASE_URL || 'https://justicemcneal.com').replace(/\/$/, '');
-const LOGIN_URL = BASE_URL + '/auth/login.html';
-const EVENTS_URL = BASE_URL + '/portal/events.html';
+const LOGIN_URL = BASE_URL + '/pages/login/';
+const EVENTS_URL = BASE_URL + '/pages/portal/events.html';
 
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD;
@@ -160,7 +160,7 @@ async function login(page, email, password, label) {
     await page.fill('input[type="email"], #email', email);
     await page.fill('input[type="password"], #password', password);
     await page.click('#loginBtn, button[type="submit"]');
-    await page.waitForURL((url) => !url.toString().includes('/auth/login'), { timeout: 20000 });
+    await page.waitForURL((url) => !url.toString().includes('/pages/login'), { timeout: 20000 });
     pass(label + ' login succeeds');
 }
 

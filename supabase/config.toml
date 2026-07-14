@@ -34,6 +34,9 @@ verify_jwt = false
 [functions.sync-subscription]
 verify_jwt = false
 
+[functions.refresh-my-subscription]
+verify_jwt = false
+
 [functions.send-push-notification]
 verify_jwt = false
 

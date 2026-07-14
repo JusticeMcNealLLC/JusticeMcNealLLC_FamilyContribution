@@ -14,7 +14,7 @@ const sheet = read('js/portal/events/manage/sheet.js');
 const notifications = read('js/portal/events/manage/notifications.js');
 const shared = read('js/auth/shared.js');
 const main = read('js/portal/events/main.js');
-const portalHtml = read('portal/events.html');
+const portalHtml = read('pages/portal/events.html');
 const danger = read('js/portal/events/manage/danger.js');
 
 function pass(msg) { console.log(`  ✓ ${msg}`); }

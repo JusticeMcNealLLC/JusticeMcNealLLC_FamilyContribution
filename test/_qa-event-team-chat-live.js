@@ -50,11 +50,11 @@ function pass(scope, key, ok, detail = '') {
 
 async function login(page, email, password) {
     const base = (process.env.E2E_BASE_URL || 'https://justicemcneal.com').replace(/\/$/, '');
-    await page.goto(`${base}/auth/login.html`, { waitUntil: 'networkidle', timeout: 60000 });
+    await page.goto(`${base}/pages/login/`, { waitUntil: 'networkidle', timeout: 60000 });
     await page.fill('#email', email);
     await page.fill('#password', password);
     await page.click('#loginBtn');
-    await page.waitForURL((u) => !u.toString().includes('/auth/login'), { timeout: 30000 });
+    await page.waitForURL((u) => !u.toString().includes('/pages/login'), { timeout: 30000 });
 }
 
 function attachObservers(page, tag) {
@@ -72,7 +72,7 @@ function attachObservers(page, tag) {
 
 async function openEventDetail(page) {
     const base = (process.env.E2E_BASE_URL || 'https://justicemcneal.com').replace(/\/$/, '');
-    const url = `${base}/portal/events.html?event=${EVENT_SLUG}`;
+    const url = `${BASE}/pages/portal/events.html?event=${EVENT_SLUG}`;
     await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
     await page.waitForSelector('#eventsDetailView, #evtShell', { timeout: 30000 }).catch(() => null);
     await page.waitForTimeout(2500);
@@ -230,7 +230,7 @@ async function runAdminChat(browser) {
 
 async function runRealtime(browser) {
     const base = (process.env.E2E_BASE_URL || 'https://justicemcneal.com').replace(/\/$/, '');
-    const url = `${base}/portal/events.html?event=${EVENT_SLUG}`;
+    const url = `${BASE}/pages/portal/events.html?event=${EVENT_SLUG}`;
     const tagB = `QA-rt-${Date.now()}`;
 
     const ctxA = await browser.newContext({ viewport: { width: 900, height: 800 } });
@@ -358,7 +358,7 @@ async function checkLiveDeploy() {
         const [chatRes, detailRes, htmlRes] = await Promise.all([
             fetch(`${base}/js/portal/events/team/chat.js`, { signal: AbortSignal.timeout(15000) }),
             fetch(`${base}/js/portal/events/detail.js`, { signal: AbortSignal.timeout(15000) }),
-            fetch(`${base}/portal/events.html`, { signal: AbortSignal.timeout(15000) }),
+            fetch(`${BASE}/pages/portal/events.html`, { signal: AbortSignal.timeout(15000) }),
         ]);
         const chatBody = await chatRes.text();
         const detailBody = await detailRes.text();

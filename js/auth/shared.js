@@ -99,7 +99,7 @@ async function rejectDeactivatedAccount() {
     }
     window.__userRoles = null;
     window.__userPermissions = null;
-    const loginUrl = APP_CONFIG.LOGIN_URL || '/auth/login.html';
+    const loginUrl = APP_CONFIG.LOGIN_URL || '/pages/login/';
     const joiner = loginUrl.includes('?') ? '&' : '?';
     window.location.href = loginUrl + joiner + 'error=account_deactivated';
     return null;
@@ -184,7 +184,7 @@ async function checkAuth(requireAdmin = false, skipOnboardingCheck = false) {
 // Add Admin Hub link to portal navigation for admin users
 async function addAdminDashboardLink() {
     // Only run on portal pages (not admin pages or login)
-    if (window.location.pathname.includes('/admin/') || window.location.pathname.includes('/auth/')) {
+    if (window.location.pathname.includes('/admin/') || window.location.pathname.includes('/pages/login') || window.location.pathname.includes('/pages/reset-password')) {
         return;
     }
 
@@ -358,7 +358,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Start inactivity auto-logout timer (skip on login, reset-password, onboarding, and splash pages)
     const path = window.location.pathname;
     const skipInactivity = path === '/' || path === '/index.html'
-        || path.includes('/auth/')
+        || path.includes('/pages/login')
+        || path.includes('/pages/reset-password')
         || path.includes('/onboarding');
     if (!skipInactivity) {
         startInactivityTimer();

@@ -53,7 +53,7 @@ function gitDiffNames(rel) {
 const helperPath = 'js/portal/events/compat/inline-handlers.js';
 const testPath = 'test/_smoke-phase4f-inline-handlers.js';
 const helper = read(helperPath);
-const eventsHtml = read('portal/events.html');
+const eventsHtml = read('pages/portal/events.html');
 const inlineHandlers = require(resolve(helperPath));
 
 console.log('\n── Phase 4F inline-handlers.js — file and syntax ──────────────────────');
@@ -198,7 +198,7 @@ try {
 }
 
 console.log('\n── portal/events.html invariants ──────────────────────────────────────');
-check('portal/events.html has no unstaged content diff', gitDiffNames('portal/events.html') === '');
+check('portal/events.html has no unstaged content diff', gitDiffNames('pages/portal/events.html') === '');
 check('inline-handlers.js is not added to portal/events.html yet', !eventsHtml.includes('js/portal/events/compat/inline-handlers.js'));
 check('window-exports.js is not added to portal/events.html yet', !eventsHtml.includes('js/portal/events/compat/window-exports.js'));
 check('external-globals.js is not added to portal/events.html yet', !eventsHtml.includes('js/portal/events/compat/external-globals.js'));

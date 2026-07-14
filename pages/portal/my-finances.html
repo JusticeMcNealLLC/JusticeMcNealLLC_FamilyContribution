@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>My Finances | Justice McNeal LLC</title>
+    <link rel="stylesheet" href="../../css/tailwind.portal.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/shared.css">
+    <link rel="manifest" href="../../manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JMLLC">
+    <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png">
+
+    <!-- Chart.js for spending visuals -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+    <!-- pdf.js for bank statement PDF parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+    <script>
+        // Pre-load pdf.js as global so finances.js can use it
+        window._pdfjs = null;
+        import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs').then(m => {
+            m.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
+            window._pdfjs = m;
+        }).catch(e => console.warn('pdf.js load failed:', e));
+    </script>
+
+    <style>
+        .category-chip { @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold cursor-pointer select-none transition; }
+        .category-chip.active { @apply ring-2 ring-brand-400; }
+        .stat-card { @apply bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5; }
+        .upload-zone { @apply border-2 border-dashed border-gray-300 rounded-2xl p-6 sm:p-8 text-center transition hover:border-brand-400 hover:bg-brand-50/30 cursor-pointer; }
+        .upload-zone.dragover { @apply border-brand-500 bg-brand-50/50; }
+        .txn-row { @apply flex items-center justify-between py-2.5 px-2 sm:px-3 rounded-lg hover:bg-gray-50 transition cursor-default; }
+        .txn-row:not(:last-child) { @apply border-b border-gray-100; }
+        .account-tab { @apply px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition cursor-pointer whitespace-nowrap; }
+        .account-tab.active { @apply bg-brand-600 text-white shadow-sm; }
+        .account-tab:not(.active) { @apply text-gray-600 hover:bg-gray-100; }
+
+        /* ── Insight cards — glassmorphism + gradient ── */
+        .insight-card {
+            @apply rounded-2xl p-4 sm:p-5 relative overflow-hidden;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 2px 16px rgba(0,0,0,0.04), 0 0 0 1px rgba(255,255,255,0.6) inset;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .insight-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.6) inset; }
+        .insight-card::before {
+            content: '';
+            position: absolute; top: 0; right: 0;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            opacity: 0.12;
+            pointer-events: none;
+        }
+        .insight-card.insight-purple { background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 60%, #ddd6fe 100%); border: 1px solid rgba(167,139,250,0.3); }
+        .insight-card.insight-purple::before { background: radial-gradient(circle, #8b5cf6, transparent 70%); }
+        .insight-card.insight-emerald { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 60%, #a7f3d0 100%); border: 1px solid rgba(52,211,153,0.3); }
+        .insight-card.insight-emerald::before { background: radial-gradient(circle, #10b981, transparent 70%); }
+        .insight-card.insight-red { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 60%, #fecaca 100%); border: 1px solid rgba(252,165,165,0.3); }
+        .insight-card.insight-red::before { background: radial-gradient(circle, #ef4444, transparent 70%); }
+        .insight-card.insight-brand { background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 60%, #c7d2fe 100%); border: 1px solid rgba(129,140,248,0.3); }
+        .insight-card.insight-brand::before { background: radial-gradient(circle, #6366f1, transparent 70%); }
+        .insight-card.insight-amber { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 60%, #fde68a 100%); border: 1px solid rgba(252,211,77,0.3); }
+        .insight-card.insight-amber::before { background: radial-gradient(circle, #f59e0b, transparent 70%); }
+
+        /* ── Insights horizontal scroll on mobile ── */
+        .insights-scroll { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+        @media (max-width: 639px) {
+            .insights-scroll {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                gap: 12px;
+                padding-bottom: 8px;
+                scrollbar-width: none;
+            }
+            .insights-scroll::-webkit-scrollbar { display: none; }
+            .insights-scroll > .insight-card {
+                flex: 0 0 85vw;
+                max-width: 320px;
+                scroll-snap-align: start;
+            }
+        }
+
+        /* ── Quick-cat chips — always visible on touch ── */
+        .quick-cat-chip { @apply text-[10px] px-2 py-0.5 rounded-full font-semibold cursor-pointer transition; }
+        @media (hover: hover) and (pointer: fine) {
+            .quick-cat-chip { opacity: 0; }
+            .group:hover .quick-cat-chip { opacity: 1; }
+        }
+        @media (hover: none) {
+            .quick-cat-chip { opacity: 1; }
+        }
+
+        /* ── Mobile chart height overrides ── */
+        @media (max-width: 639px) {
+            .chart-container-sm { height: 180px !important; }
+            .chart-container-md { height: 200px !important; }
+            .chart-container-lg { height: 220px !important; }
+        }
+
+        /* ── Scroll-indicator dots for insights ── */
+        .scroll-dots { display: none; }
+        @media (max-width: 639px) {
+            .scroll-dots { display: flex; justify-content: center; gap: 6px; padding-top: 4px; }
+            .scroll-dot { width: 6px; height: 6px; border-radius: 50%; background: #d1d5db; transition: background 0.2s; }
+            .scroll-dot.active { background: #6366f1; }
+        }
+
+        @media (max-width: 639px) { .hide-mobile-nav { display: none !important; } }
+    </style>
+</head>
+<body class="min-h-screen bg-surface-50 font-sans antialiased flex flex-col has-bottom-bar" data-page-type="portal" data-active-page="finances">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4 sm:mb-6">
+            <div>
+                <h1 class="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">My Finances</h1>
+                <p class="text-gray-500 mt-0.5 sm:mt-1 text-xs sm:text-sm">Upload statements · See where your money goes</p>
+            </div>
+            <button id="addAccountBtn" class="hidden items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span class="hidden sm:inline">Add Account</span>
+                <span class="sm:hidden">Add</span>
+            </button>
+        </div>
+
+        <!-- No accounts — empty state -->
+        <div id="emptyState" class="hidden text-center py-16 sm:py-24">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-100 flex items-center justify-center">
+                <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900 mb-1">No Accounts Yet</h2>
+            <p class="text-gray-500 text-sm max-w-sm mx-auto mb-5">Add a bank account to start uploading statements and tracking your spending.</p>
+            <button id="emptyAddAccountBtn" class="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Add Your First Account
+            </button>
+        </div>
+
+        <!-- Main content (hidden until accounts exist) -->
+        <div id="mainContent" class="hidden space-y-6">
+
+            <!-- Account Tabs -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <div id="accountTabs" class="flex items-center gap-2"></div>
+                <button id="addAccountTabBtn" class="flex-shrink-0 w-8 h-8 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-brand-400 hover:text-brand-500 transition" title="Add account">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                </button>
+            </div>
+
+            <!-- Cross-account summary stats -->
+            <div id="summaryStats" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                <div class="stat-card">
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Income</p>
+                    <p id="statIncome" class="text-base sm:text-xl font-bold text-emerald-600 mt-0.5 sm:mt-1">$0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Spending</p>
+                    <p id="statSpending" class="text-base sm:text-xl font-bold text-red-500 mt-0.5 sm:mt-1">$0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Net</p>
+                    <p id="statNet" class="text-base sm:text-xl font-bold text-gray-900 mt-0.5 sm:mt-1">$0</p>
+                </div>
+                <div class="stat-card">
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">LLC Contribution</p>
+                    <p id="statLLC" class="text-base sm:text-xl font-bold text-brand-600 mt-0.5 sm:mt-1">$0</p>
+                </div>
+            </div>
+
+            <!-- Upload zone -->
+            <section class="fade-in">
+                <div id="uploadZone" class="upload-zone">
+                    <svg class="w-10 h-10 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <p class="text-sm font-semibold text-gray-700 mb-1">Drop a bank statement here</p>
+                    <p class="text-xs text-gray-400">CSV or PDF · Max 10 MB</p>
+                    <input type="file" id="fileInput" accept=".csv,.pdf" class="hidden">
+                    <button id="browseBtn" class="mt-3 text-sm font-semibold text-brand-600 hover:text-brand-700 transition">Browse files</button>
+                </div>
+                <div id="uploadProgress" class="hidden mt-3">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div id="uploadBar" class="h-full bg-brand-600 rounded-full transition-all duration-300" style="width:0%"></div>
+                        </div>
+                        <span id="uploadPct" class="text-xs font-medium text-gray-500">0%</span>
+                    </div>
+                    <p id="uploadStatus" class="text-xs text-gray-400 mt-1">Uploading…</p>
+                </div>
+            </section>
+
+            <!-- Review banner — shown after upload if there are uncategorized transactions -->
+            <div id="reviewBanner" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🔍</span>
+                    <div>
+                        <p class="text-sm font-semibold text-amber-900"><span id="reviewBannerCount">0</span> transactions need categorization</p>
+                        <p class="text-xs text-amber-600">These couldn't be auto-categorized. Review them to improve accuracy.</p>
+                    </div>
+                </div>
+                <button id="reviewBannerBtn" class="flex-shrink-0 text-sm font-semibold text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 px-4 py-2 rounded-lg transition">Review Now</button>
+            </div>
+
+            <!-- Month selector for viewing -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-sm font-bold text-gray-900">Spending Breakdown</h2>
+                <select id="monthSelect" class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none">
+                    <option value="">Loading…</option>
+                </select>
+            </div>
+
+            <!-- Insights Panel (Phase 2) -->
+            <section id="insightsPanel" class="hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-brand-100">
+                            <svg class="w-3.5 h-3.5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        </span>
+                        Smart Insights
+                    </h2>
+                    <button id="insightsToggle" class="text-xs text-gray-400 hover:text-gray-600 transition" onclick="const c=document.getElementById('insightsCards');const d=document.getElementById('insightsDots');c.classList.toggle('hidden');d?.classList.toggle('hidden'); this.textContent = this.textContent === 'Hide' ? 'Show' : 'Hide'">Hide</button>
+                </div>
+                <div id="insightsCards" class="insights-scroll"></div>
+                <div id="insightsDots" class="scroll-dots"></div>
+            </section>
+
+            <!-- Category Breakdown Chart + List -->
+            <div class="grid sm:grid-cols-2 gap-3 sm:gap-4">
+                <!-- Doughnut chart -->
+                <div class="stat-card flex flex-col items-center justify-center min-h-[200px] sm:min-h-[280px]">
+                    <canvas id="categoryChart" class="max-w-[200px] max-h-[200px] sm:max-w-[240px] sm:max-h-[240px]"></canvas>
+                    <p id="chartEmpty" class="hidden text-sm text-gray-400 mt-4">Upload a statement to see your breakdown</p>
+                </div>
+
+                <!-- Category list -->
+                <div class="stat-card overflow-hidden">
+                    <div id="categoryList" class="divide-y divide-gray-100 max-h-[260px] sm:max-h-[320px] overflow-y-auto">
+                        <p class="text-sm text-gray-400 text-center py-8">No data yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction detail (drill-down) -->
+            <section id="txnSection" class="hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-gray-900">
+                        <span id="txnCategoryLabel">All Transactions</span>
+                        <span id="txnCount" class="ml-1 text-gray-400 font-normal"></span>
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <button id="txnBulkCategorize" class="hidden text-xs font-semibold text-amber-700 hover:text-amber-800 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition">Categorize All</button>
+                        <button id="txnClearFilter" class="hidden text-xs font-semibold text-brand-600 hover:text-brand-700 transition">Clear filter</button>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div id="txnList" class="divide-y divide-gray-100 max-h-[400px] overflow-y-auto"></div>
+                </div>
+            </section>
+
+            <!-- Monthly Trend Chart -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-900 mb-3">Monthly Trend</h2>
+                <div class="stat-card chart-container-sm" style="height:200px">
+                    <canvas id="trendChart"></canvas>
+                    <p id="trendEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months to see trends</p>
+                </div>
+            </section>
+
+            <!-- Income vs Spending Line Chart -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-900 mb-3">Income vs Spending</h2>
+                <div class="stat-card chart-container-md" style="height:240px">
+                    <canvas id="incomeLineChart"></canvas>
+                    <p id="incomeLineEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months to compare income & spending</p>
+                </div>
+            </section>
+
+            <!-- Month-over-Month Delta -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-900 mb-3">Month-over-Month</h2>
+                <div id="monthDeltaCards">
+                    <p class="text-sm text-gray-400 text-center py-6">Need 2+ months to show changes</p>
+                </div>
+            </section>
+
+            <!-- Subscription Cost Over Time -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-900 mb-3">Subscription & Entertainment Trend</h2>
+                <div class="stat-card chart-container-sm" style="height:220px">
+                    <canvas id="subTrendChart"></canvas>
+                    <p id="subTrendEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months with subscriptions to see trends</p>
+                </div>
+            </section>
+
+            <!-- Spending by Category (Stacked Bar) -->
+            <section>
+                <h2 class="text-sm font-bold text-gray-900 mb-3">Spending by Category Over Time</h2>
+                <div class="stat-card chart-container-lg" style="height:280px">
+                    <canvas id="catStackChart"></canvas>
+                    <p id="catStackEmpty" class="hidden text-sm text-gray-400 text-center py-8">Upload 2+ months to see category breakdown over time</p>
+                </div>
+            </section>
+
+            <!-- Statement History -->
+            <section>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-gray-900">Statement History</h2>
+                </div>
+                <div id="stmtHistory" class="space-y-2">
+                    <p class="text-sm text-gray-400 text-center py-4">No statements uploaded yet</p>
+                </div>
+            </section>
+
+            <!-- My Rules -->
+            <section>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-gray-900">My Rules <span id="rulesCount" class="text-gray-400 font-normal">(0)</span></h2>
+                    <button id="addRuleBtn" class="text-xs font-semibold text-brand-600 hover:text-brand-700 transition flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Add Rule
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 mb-2">Custom rules auto-categorize your transactions. They run before the default rules, so your preferences always win.</p>
+                <div id="rulesList" class="space-y-2">
+                    <p class="text-sm text-gray-400 text-center py-4">No custom rules yet. Edit a transaction and choose "Always categorize this way" to create one.</p>
+                </div>
+            </section>
+
+            <!-- Privacy notice -->
+            <div class="bg-brand-50 border border-brand-100 rounded-xl p-4 flex items-start gap-3">
+                <svg class="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                <div>
+                    <p class="text-sm font-semibold text-brand-800">Your data is 100% private</p>
+                    <p class="text-xs text-brand-600 mt-0.5">Only you can see your financial data. No admin, no other member — no one. You can delete statements and accounts at any time.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <div id="tabs-placeholder"></div>
+
+    <!-- ─── Add / Edit Account Modal ─── -->
+    <div id="accountModal" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" id="accountModalBackdrop"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+                <button id="accountModalClose" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h3 id="accountModalTitle" class="text-lg font-bold text-gray-900 mb-4">Add Account</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Account Name</label>
+                        <input type="text" id="acctLabel" placeholder="e.g. Chase Checking" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Institution</label>
+                        <input type="text" id="acctInstitution" placeholder="e.g. Chase, Wells Fargo" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Account Type</label>
+                        <select id="acctType" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                            <option value="checking">Checking</option>
+                            <option value="savings">Savings</option>
+                            <option value="credit">Credit Card</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="acctError" class="text-red-600 text-sm hidden mt-3"></div>
+                <div class="mt-5 flex items-center justify-between">
+                    <button id="acctDeleteBtn" class="hidden text-sm font-semibold text-red-500 hover:text-red-600 transition">Delete Account</button>
+                    <div class="flex items-center gap-2 ml-auto">
+                        <button id="acctCancelBtn" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition px-4 py-2">Cancel</button>
+                        <button id="acctSaveBtn" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">Save</button>
+                    </div>
+                </div>
+                <input type="hidden" id="acctEditId" value="">
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Edit Transaction Modal ─── -->
+    <div id="txnEditModal" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" id="txnEditBackdrop"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+                <button id="txnEditClose" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Edit Transaction</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
+                        <input type="text" id="txnEditDesc" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Category</label>
+                        <select id="txnEditCategory" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                            <option value="housing">🏠 Housing</option>
+                            <option value="groceries">🛒 Groceries</option>
+                            <option value="dining">🍽️ Dining</option>
+                            <option value="transportation">🚗 Transportation</option>
+                            <option value="entertainment">🎬 Entertainment</option>
+                            <option value="subscriptions">📱 Subscriptions</option>
+                            <option value="shopping">🛍️ Shopping</option>
+                            <option value="health">💊 Health</option>
+                            <option value="education">📚 Education</option>
+                            <option value="business">💼 Business</option>
+                            <option value="llc_contribution">💸 LLC Contribution</option>
+                            <option value="savings">💰 Savings / P2P</option>
+                            <option value="transfer">🔄 Transfer</option>
+                            <option value="income">💵 Income</option>
+                            <option value="other">🔁 Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Notes</label>
+                        <input type="text" id="txnEditNotes" placeholder="Optional" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                    </div>
+                    <!-- Always categorize this way -->
+                    <div class="bg-brand-50 border border-brand-100 rounded-xl p-3">
+                        <label class="flex items-start gap-2.5 cursor-pointer">
+                            <input type="checkbox" id="txnAlwaysCheck" class="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            <div>
+                                <span class="text-sm font-medium text-brand-800">Always categorize this way</span>
+                                <p class="text-xs text-brand-600 mt-0.5">Creates a rule matching: "<span id="txnRuleMatchPreview" class="font-semibold"></span>"</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div id="txnEditError" class="text-red-600 text-sm hidden mt-3"></div>
+                <div class="mt-5 flex items-center justify-end gap-2">
+                    <button id="txnEditCancelBtn" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition px-4 py-2">Cancel</button>
+                    <button id="txnEditSaveBtn" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">Save</button>
+                </div>
+                <input type="hidden" id="txnEditId" value="">
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" id="deleteModalBackdrop"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </div>
+                <h3 id="deleteTitle" class="text-lg font-bold text-gray-900 mb-1">Delete Statement?</h3>
+                <p id="deleteMsg" class="text-sm text-gray-500 mb-5">This will permanently remove this statement and all its transactions.</p>
+                <div class="flex items-center gap-3 justify-center">
+                    <button id="deleteCancelBtn" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition px-4 py-2">Cancel</button>
+                    <button id="deleteConfirmBtn" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Rule modal -->
+    <div id="ruleModal" class="fixed inset-0 z-50 hidden">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" id="ruleModalBackdrop"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+                <button id="ruleModalClose" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h3 id="ruleModalTitle" class="text-lg font-bold text-gray-900 mb-1">New Rule</h3>
+                <p class="text-xs text-gray-400 mb-4">When a transaction contains your match text, it will be auto-categorized.</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Match Text <span class="text-gray-300">(case-insensitive)</span></label>
+                        <input type="text" id="ruleMatchText" placeholder='e.g. "zelle yolanda mcneal" or "payment to loan 0090"' class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                        <p class="text-xs text-gray-400 mt-1">Tip: use the part that stays the same each time (person's name, loan number, etc.)</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Categorize As</label>
+                        <select id="ruleCategory" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                            <option value="housing">🏠 Housing</option>
+                            <option value="groceries">🛒 Groceries</option>
+                            <option value="dining">🍽️ Dining</option>
+                            <option value="transportation">🚗 Transportation</option>
+                            <option value="entertainment">🎬 Entertainment</option>
+                            <option value="subscriptions">📱 Subscriptions</option>
+                            <option value="shopping">🛍️ Shopping</option>
+                            <option value="health">💊 Health</option>
+                            <option value="education">📚 Education</option>
+                            <option value="business">💼 Business</option>
+                            <option value="llc_contribution">💸 LLC Contribution</option>
+                            <option value="savings">💰 Savings / P2P</option>
+                            <option value="transfer">🔄 Transfer</option>
+                            <option value="income">💵 Income</option>
+                            <option value="other">🔁 Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Label <span class="text-gray-300">(optional)</span></label>
+                        <input type="text" id="ruleLabel" placeholder='e.g. "Car Note" or "Rent to Mom"' class="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                    </div>
+                </div>
+                <div id="ruleError" class="text-red-600 text-sm hidden mt-3"></div>
+                <div class="mt-5 flex items-center justify-end gap-2">
+                    <button id="ruleCancelBtn" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition px-4 py-2">Cancel</button>
+                    <button id="ruleSaveBtn" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition">Save Rule</button>
+                </div>
+                <input type="hidden" id="ruleEditId" value="">
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase + shared -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../js/config.js"></script>
+    <script src="../../js/auth.js"></script>
+
+    <!-- Page Shell -->
+    <script type="module" src="../../js/components/pageShell/index.js"></script>
+
+    <!-- Push notifications -->
+    <script src="../../js/push.js"></script>
+    <script src="../../js/sw-register.js"></script>
+
+    <!-- Page JS -->
+    <script src="../../js/portal/finances.js"></script>
+</body>
+</html>
