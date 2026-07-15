@@ -1,0 +1,55 @@
+---
+description: JS module layout — page entry points, folders, 500-line limit
+globs: "{js,pages}/**/*.{js,html}"
+alwaysApply: false
+---
+
+# JavaScript File Structure
+
+## Core rules
+
+1. **Max 500 lines** per `.js` file.
+2. **One page entry:** `js/pages/{pageName}/index.js` — wire-up only; no large logic.
+3. **Split by purpose:** `state/`, `parse/`, `render/`, `export/`, `ui/`, `utils/`, `loaders/` as needed.
+4. Only create folders that match real responsibilities.
+
+## Layout
+
+```
+js/
+  components/          ← shared (pageShell, etc.)
+  pages/{pageName}/
+    index.js           ← HTML imports this only
+    state|render|ui|utils|loaders/
+  portal/              ← legacy feature bundles until migrated
+```
+
+HTML lives under `pages/{pageName}/`. Portal feature code may stay in `js/portal/` until migrated.
+
+## `index.js` should
+
+- Import modules, register init, attach listeners, call setup exports
+
+## `index.js` must not
+
+- Hold large parse/render/export implementations
+- Exceed 500 lines
+- Duplicate supporting-file logic
+
+## HTML import
+
+```html
+<script type="module" src="../../js/pages/{pageName}/index.js"></script>
+```
+
+Use ES modules (no build step). camelCase filenames by purpose.
+
+## When to split
+
+Split near 500 lines, multiple responsibilities, or reusable/testable slices. Keep tiny related helpers together.
+
+## Checklist
+
+- [ ] Single `index.js` script tag on the page
+- [ ] Entry + supporting files each under 500 lines
+- [ ] Folders by purpose; ES `import`/`export`

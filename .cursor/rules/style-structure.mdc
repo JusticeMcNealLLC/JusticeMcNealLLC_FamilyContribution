@@ -1,0 +1,70 @@
+---
+description: CSS stack, Theme_JMLLC001 layers, shared vs page styles
+globs: "{css,theme,pages,admin}/**/*.{css,html,js}"
+alwaysApply: false
+---
+
+# CSS / Style Structure
+
+## Core rules
+
+1. Use **Theme_JMLLC001** tokens — not legacy `brand-*`, indigo, or one-off hex when a token exists.
+2. Load order: theme → Tailwind → shared → page.
+3. Shell chrome → `shared.css`. Page-only layout → `css/pages/…`.
+4. Per page: prefer **page CSS** *or* Tailwind utilities for the same patterns — not both.
+5. After token/config changes: `npm run build:tailwind:Theme_JMLLC001`.
+
+## Stylesheet stack
+
+```html
+<link rel="stylesheet" href="…/theme/Theme_JMLLC001/Theme_JMLLC001.css">
+<link rel="stylesheet" href="…/css/tailwind.Theme_JMLLC001.css">
+<link rel="stylesheet" href="…/css/shared.css">
+<link rel="stylesheet" href="…/css/pages/{area}/{page}.css"><!-- optional -->
+```
+
+| Layer | Role |
+|-------|------|
+| Theme | Tokens + base (`--color-primary`, fonts) |
+| Tailwind | Utilities from Theme_JMLLC001 config |
+| Shared | pageShell (sidebar, tabs, drawer, notifs), cross-page utils |
+| Page | One-page components only |
+
+**Dashboard (Option A):** visuals in `css/pages/portal/index.css`; Tailwind only for layout (`flex`, `grid`, `gap`, `hidden`).
+
+Login may skip `shared.css` (no shell) and use `css/pages/login.css`.
+
+## Portal conventions
+
+- **A — Page CSS:** complex single pages (dashboard semantic classes).
+- **B — Tailwind HTML:** simple pages.
+- **C — `@layer components`:** shared patterns across portal pages.
+
+Do not define the same pattern in both page CSS and Tailwind components.
+
+## Shared vs page
+
+**Shared:** `.portal-side-nav`, `.bottom-tab-bar`, `.nav-drawer`, `.notif-panel`, `.skeleton`, `.badge-chip`, admin `#sideNav`.
+
+**Page CSS:** one-file layouts (hero card, local grids). Not colors/fonts already in theme.
+
+Shell pages need `#nav-placeholder`, `#footer-placeholder`, `#tabs-placeholder` + `shared.css`.
+
+## Prefer theme utilities
+
+`bg-primary`, `text-primary`, `bg-accent`, `bg-surface`, `border-border`, `text-foreground`, `text-muted`, `font-headline`, `font-body`.
+
+## Anti-patterns
+
+- Legacy `tailwind.portal.css` on themed pages
+- Shell styles duplicated in page CSS
+- Editing compiled Tailwind by hand
+- Inline `<style>` except tiny overrides
+
+## Checklist
+
+- [ ] Theme + Tailwind (+ shared if shell)
+- [ ] Page CSS only if needed
+- [ ] Theme utilities over hex / `brand-*`
+- [ ] `theme-color` `#13366e`
+- [ ] Rebuild Tailwind if config changes

@@ -1,6 +1,6 @@
 /**
  * Theme_JMLLC001 — Justice McNeal LLC official Tailwind config
- * Tokens from aiControl/websiteTheme.md
+ * Tokens from .cursor/rules/website-theme.mdc
  *
  * Build:
  *   npm run build:tailwind:Theme_JMLLC001

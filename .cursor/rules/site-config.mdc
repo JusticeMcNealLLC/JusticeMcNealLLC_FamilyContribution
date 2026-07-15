@@ -1,0 +1,33 @@
+---
+description: Site paths, page locations, and shared chrome conventions
+alwaysApply: true
+---
+
+# Site Config
+
+## Page locations
+
+- Portal / auth HTML: `pages/portal/`, `pages/login/`, `pages/reset-password/`
+- Legacy `/portal/*.html` and `/auth/*` are redirects to `pages/…`
+- Admin: `admin/`
+- Public events: `events/`
+- Shared shell: `js/components/pageShell/`
+- Theme: `theme/Theme_JMLLC001/`
+
+## Shell pages
+
+Include placeholders and `shared.css`:
+
+- `#nav-placeholder`
+- `#footer-placeholder`
+- `#tabs-placeholder` (portal mobile)
+
+Set `data-page-type="portal"` or `"admin"` and `data-active-page` as needed.
+
+## Cache / deploy
+
+After visual or SW asset changes, bump `CACHE_NAME` in `sw.js` and use `?v=` on critical CSS/JS when Cloudflare may serve stale paths.
+
+## Copy / chrome
+
+Navigation labels, footer, and chrome copy should stay consistent across portal and admin. Prefer existing pageShell render helpers over one-off hardcoded nav strings.

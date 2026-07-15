@@ -1,0 +1,48 @@
+---
+description: Justice McNeal LLC brand — fonts, colors, UI usage
+alwaysApply: true
+---
+
+# Website Theme (Theme_JMLLC001)
+
+Feel: professional, trustworthy, family/legacy-focused, clean, accessible — strong enough for money, warm enough for family.
+
+## Typography
+
+| Role | Font | Use |
+|------|------|-----|
+| Headlines | **Source Serif 4** | Titles, heroes, section headers, formal legacy copy |
+| Body | **Atkinson Hyperlegible Next** | UI text, forms, nav, tables, buttons |
+
+## Colors
+
+| Token | HEX | Use |
+|-------|-----|-----|
+| Background | `#FFFFFF` | Page background |
+| Text | `#0B2545` | Body + headings |
+| Primary | `#13366E` | Buttons, links, active, CTAs |
+| Accent | `#0E8B8B` | Progress, success, highlights (sparingly) |
+| Surface | `#EEF2F6` | Cards, panels |
+| Border | `#D5DFEC` | Dividers, inputs |
+
+CSS vars: `--font-headline`, `--font-body`, `--color-background`, `--color-text`, `--color-primary`, `--color-accent`, `--color-surface`, `--color-border`.
+
+## UI patterns
+
+- **Primary button:** primary bg, white text
+- **Secondary:** white/surface bg, primary text, border
+- **Accent / positive:** accent bg, white text
+- **Cards:** surface (or white on surface page) + border; readable spacing
+- **Headings:** `font-headline`; body: `font-body`
+
+## Logo tones
+
+Navy `#0B2545`, primary `#13366E`, teal accent `#0E8B8B`; white mark on dark.
+
+## Accessibility
+
+- Body text `#0B2545` on white/surface
+- Teal for highlights, not long copy
+- Clear spacing; keep payment flows simple and direct
+
+Source of truth for implementation: `theme/Theme_JMLLC001/Theme_JMLLC001.css`.
