@@ -10,7 +10,7 @@ Format: `[ ] P# · size — task`
 ## Platform / Architecture
 
 - [ ] **P1 · xl** — Revamp every page to match the JS file structure and website theme (dashboard done as reference; remaining portal/admin pages still open)
-- [ ] **P2 · m** — Organize md files
+- [ ] **P2 · m** — Organize md files (see `docs/README.md` proposed product / business / legal layout)
 - [ ] **P3 · s** — Activity feed section `.md`
 - [ ] **P4 · xl** — React.js migration
 - [ ] **P4 · m** — Changelog page?
