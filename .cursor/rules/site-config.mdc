@@ -31,3 +31,10 @@ After visual or SW asset changes, bump `CACHE_NAME` in `sw.js` and use `?v=` on 
 ## Copy / chrome
 
 Navigation labels, footer, and chrome copy should stay consistent across portal and admin. Prefer existing pageShell render helpers over one-off hardcoded nav strings.
+
+## Docs layout
+
+- Product: `docs/product/` (`todo.md`, `audits/`, `improvements/`, `systems/`)
+- Business: `docs/business/` (`strategy/`, `ventures/`, `ideas/`)
+- Legal: `docs/legal/official/`
+- Index: `docs/README.md`

@@ -1,60 +1,44 @@
 # Docs
 
-Project documentation for **Justice McNeal LLC** — product (website), business, and legal/official.
+Project documentation for **Justice McNeal LLC** — product (website), business, and legal.
 
-## Current layout
+## Layout
 
-| Path | Role |
-|------|------|
-| `docs/todo.md` | Active product backlog (priority + difficulty) |
-| `docs/ROADMAP.md` | Product / platform roadmap |
-| `docs/audit/` | Page-by-page code audits (esp. events phases) |
-| `docs/improvements/` | Feature plans + rollout QA (SMS, team chat, moderation) |
-| `docs/general/` | Mix of **business** strategy *and* member-system design (contribution, credits, Fidelity, property, LLC overview) |
-| `docs/officialDocs/` | Legal / governance drafts (charter, contribution policy, operating notes, trust concept) |
-| `docs/business/` | **Company** brainstorms & money ideas (not website tickets) |
+```
+docs/
+  README.md
+  product/                 ← website / portal work
+    todo.md                ← active backlog (priority + difficulty)
+    ROADMAP.md
+    audits/                ← page audits (events phases, admin, etc.)
+    improvements/          ← feature plans + rollout QA
+    systems/               ← contribution, credits, Fidelity, lending design
+  business/                ← company strategy & money (not code tickets)
+    strategy/              ← LLC structure, property, profits, tax
+    ventures/              ← named ventures (Karry Kraze, AI, …)
+    ideas/
+      revenue-ideas.md     ← brainstorm how the LLC makes more money
+  legal/
+    official/              ← charter, policies, operating notes, trust concept
+      index.html           ← browser viewer for official markdown
+```
 
 ## Where to put new writing
 
 | If it’s about… | Put it in… |
 |----------------|------------|
-| A website bug/feature | `todo.md` (and optionally a plan under `improvements/`) |
-| How a portal system works | `general/` for now → later `product/systems/` |
-| Code/refactor audit | `audit/` |
-| Making the LLC more money / new ventures | **`business/`** ← start here |
-| Legal / trust / foundation policy | `officialDocs/` |
+| A website bug/feature | `product/todo.md` (+ plan under `product/improvements/` if needed) |
+| How a portal system works | `product/systems/` |
+| Code/refactor audit | `product/audits/` |
+| Making the LLC more money / new ventures | `business/ideas/` or `business/ventures/` |
+| Holding / property / tax strategy | `business/strategy/` |
+| Legal / trust / foundation policy | `legal/official/` |
 
-**Your revenue brainstorm:** [`business/revenue-ideas.md`](./business/revenue-ideas.md)
+**Revenue brainstorm:** [`business/ideas/revenue-ideas.md`](./business/ideas/revenue-ideas.md)
 
----
+## Quick links
 
-## Proposed makeover (not executed yet)
-
-Goal: separate **product**, **business**, and **legal** so nothing important lives in a vague `general/` bucket.
-
-```
-docs/
-  README.md                 ← this file
-  product/
-    todo.md                 ← from docs/todo.md
-    ROADMAP.md
-    audits/                 ← from audit/
-    improvements/           ← from improvements/
-    systems/                ← member contribution, credits, quests (from general/)
-  business/
-    strategy/               ← LLC structure, property, profits (from general/)
-    ventures/               ← Karry Kraze, AI content, etc.
-    ideas/
-      revenue-ideas.md      ← already started at business/revenue-ideas.md
-  legal/
-    official/               ← from officialDocs/
-```
-
-### Migration notes
-
-1. Create folders above; move files with `git mv` so history is kept.
-2. Update any links in README / audits that point at old paths.
-3. Keep `officialDocs/` public-facing HTML (`index.html`) wiring in mind if members will read those docs on the site.
-4. Prefer short names: `legal/foundation-charter.md` over spaces when practical.
-
-When you’re ready to run the full restructure, use the product todo item: **Organize md files**.
+- Product backlog → [`product/todo.md`](./product/todo.md)
+- Product roadmap → [`product/ROADMAP.md`](./product/ROADMAP.md)
+- 4-LLC overview → [`business/strategy/overview.md`](./business/strategy/overview.md)
+- Official docs viewer → [`legal/official/index.html`](./legal/official/index.html)

@@ -184,8 +184,9 @@ A full-featured, invite-only family financial platform and social hub. Members c
 │       ├── ...
 │       └── 023_notifications.sql
 │
-└── md/docs/
-    └── ROADMAP.md                # Full 10-phase roadmap (1050+ lines)
+└── docs/
+    └── product/
+        └── ROADMAP.md            # Full product roadmap
 ```
 
 ---
@@ -235,7 +236,7 @@ A full-featured, invite-only family financial platform and social hub. Members c
 
 ## Roadmap (Upcoming)
 
-See [md/docs/ROADMAP.md](md/docs/ROADMAP.md) for the full 10-phase roadmap. Next up:
+See [docs/product/ROADMAP.md](docs/product/ROADMAP.md) for the full product roadmap. Next up:
 
 - **Notification triggers** — DB triggers for likes, comments, follows, quest completions, badge awards
 - **Push notifications** — Web Push API via service worker + VAPID keys

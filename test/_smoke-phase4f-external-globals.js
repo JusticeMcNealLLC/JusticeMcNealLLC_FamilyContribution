@@ -189,9 +189,9 @@ console.log('\n── Phase 1-3E bridge files still exist ───────�
 
 console.log('\n── Phase 4 docs remain intact ─────────────────────────────────────────');
 [
-    ['docs/audit/pages/events/011_phase_4b_compatibility_wrapper_design.md', 'Phase 4B Compatibility Wrapper Design'],
-    ['docs/audit/pages/events/012_phase_4c_module_import_map_design.md', 'Phase 4C Module Import Map Design'],
-    ['docs/audit/pages/events/014_phase_4e_pre_phase_5_readiness_review.md', 'Phase 4E Pre-Phase-5 Readiness Review']
+    ['docs/product/audits/pages/events/011_phase_4b_compatibility_wrapper_design.md', 'Phase 4B Compatibility Wrapper Design'],
+    ['docs/product/audits/pages/events/012_phase_4c_module_import_map_design.md', 'Phase 4C Module Import Map Design'],
+    ['docs/product/audits/pages/events/014_phase_4e_pre_phase_5_readiness_review.md', 'Phase 4E Pre-Phase-5 Readiness Review']
 ].forEach(([rel, title]) => {
     check(`${rel} exists`, exists(rel));
     check(`${rel} title intact`, read(rel).includes(title));

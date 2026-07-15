@@ -10,7 +10,7 @@ const root = path.resolve(__dirname, '..');
 const migrationPath = path.join(root, 'supabase/migrations/093_event_team_chat.sql');
 const planPath = path.join(
     root,
-    'docs/improvements/pages/events/team-chat/001_event_team_chat_schema_rls_plan.md'
+    'docs/product/improvements/pages/events/team-chat/001_event_team_chat_schema_rls_plan.md'
 );
 const portalHtml = path.join(root, 'pages/portal/events.html');
 const detailJs = path.join(root, 'js/portal/events/detail.js');
