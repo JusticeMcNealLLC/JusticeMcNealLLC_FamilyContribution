@@ -63,8 +63,8 @@ function html() {
     const f = STATE.form;
     const types = [
         { key:'member', emoji:'👥', label:'Member event', sub:'Anyone can RSVP', enabled:true },
-        { key:'llc', emoji:'🏢', label:'LLC event', sub:'Use legacy editor for now', enabled:false },
-        { key:'competition', emoji:'🏆', label:'Competition', sub:'Use legacy editor for now', enabled:false },
+        { key:'llc', emoji:'🏢', label:'LLC event', sub:'Buy-in trips & cost share', enabled:true },
+        { key:'competition', emoji:'🏆', label:'Competition', sub:'Prizes, rules, GFX contest', enabled:true },
     ];
     return `
         <div class="ec-row">
@@ -78,7 +78,7 @@ function html() {
                     </div>
                 `).join('')}
             </div>
-            <p class="ec-help">LLC &amp; Competition events use the legacy form — select Member to continue here.</p>
+            <p class="ec-help">Member events for gatherings; LLC for shared-cost trips; Competition for prize contests with GFX uploads.</p>
         </div>
 
         <div class="ec-row">
@@ -136,6 +136,10 @@ function wire() {
         el.addEventListener('click', () => {
             if (el.dataset.disabled) return;
             STATE.form.event_type = el.dataset.type;
+            if (STATE.form.event_type === 'llc') {
+                STATE.form.pricing_mode = 'paid';
+                if (!Array.isArray(STATE.form.cost_items)) STATE.form.cost_items = [];
+            }
             window.EventsCreateSteps.render();
         });
     });

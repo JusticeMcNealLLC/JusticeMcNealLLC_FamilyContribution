@@ -73,7 +73,7 @@ const bundleJs = fs.existsSync(path.join(root, 'js/portal/events/events.bundle.j
 
 const DETAIL_PIPELINE_TAGS = [
     '../js/portal/events/team/chat.js',
-    '../js/portal/events/team/tools.js',
+    '../js/portal/events/team/tools-list.js',
     '../js/portal/events/detail/presentation.js',
     '../js/portal/events/detail/raffle-render.js',
     '../js/portal/events/detail/map-overlay.js',
@@ -179,10 +179,6 @@ if (!chainPaths.length) {
     const templateIdx = chainPaths.indexOf('detail/template.js');
     const detailIdx = chainPaths.indexOf('detail.js');
     const createGeoIdx = chainPaths.indexOf('create/geocode.js');
-    const legacyCostsIdx = chainPaths.indexOf('create/legacy-costs.js');
-    const legacyLocationIdx = chainPaths.indexOf('create/legacy-location.js');
-    const legacyPreviewIdx = chainPaths.indexOf('create/legacy-preview.js');
-    const legacySubmitIdx = chainPaths.indexOf('create/legacy-submit.js');
     const stepBasicsIdx = chainPaths.indexOf('create/step-basics.js');
     const stepWhenIdx = chainPaths.indexOf('create/step-when.js');
     const stepPricingIdx = chainPaths.indexOf('create/step-pricing.js');
@@ -212,9 +208,9 @@ if (!chainPaths.length) {
     const managePartIdx = chainPaths.indexOf('manage/participation.js');
     const manageRaffleIdx = chainPaths.indexOf('manage/raffle.js');
     const manageDangerIdx = chainPaths.indexOf('manage/danger.js');
-    chainPaths.length === 57
-        ? pass('main.js lists 57 middle module imports')
-        : fail('loader chain must have 57 entries', `found ${chainPaths.length}`);
+    chainPaths.length === 67
+        ? pass('main.js lists 67 middle module imports (excl. index + init)')
+        : fail('loader chain must have 67 entries', `found ${chainPaths.length}`);
     raffleModelIdx >= 0 && listSearchIdx > raffleModelIdx
         && listRightRailIdx > listSearchIdx && listHeaderIdx > listRightRailIdx
         && listFiltersIdx > listHeaderIdx && listCalendarIdx > listFiltersIdx
@@ -235,15 +231,14 @@ if (!chainPaths.length) {
         && manageSheetIdx > globalReexportsIdx
         ? pass('loader order: … → danger → global-reexports → sheet')
         : fail('loader manage module order');
-    createGeoIdx >= 0 && legacyCostsIdx > createGeoIdx
-        && legacyLocationIdx > legacyCostsIdx && legacyPreviewIdx > legacyLocationIdx
-        && legacySubmitIdx > legacyPreviewIdx && stepBasicsIdx > legacySubmitIdx
+    createGeoIdx >= 0 && stepBasicsIdx > createGeoIdx
         && stepWhenIdx > stepBasicsIdx
         && stepPricingIdx > stepWhenIdx && stepReviewIdx > stepPricingIdx
         && raffleBuilderIdx > stepReviewIdx && submitIdx > raffleBuilderIdx
         && createSheetIdx > submitIdx
-        ? pass('loader order: geocode → legacy-* → steps → raffle-builder → submit → sheet')
-        : fail('loader geocode → legacy → steps → raffle-builder → submit → sheet order');
+        && chainPaths.indexOf('create/legacy-costs.js') < 0
+        ? pass('loader order: geocode → steps → raffle-builder → submit → sheet (no legacy create)')
+        : fail('loader geocode → steps → raffle-builder → submit → sheet order');
     teamChatIdx >= 0 && presentationIdx > teamChatIdx
         ? pass('loader order: team before detail/presentation')
         : fail('loader team → detail pipeline order');

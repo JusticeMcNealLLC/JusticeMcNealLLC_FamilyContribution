@@ -9,7 +9,7 @@
     if ('serviceWorker' in navigator) {
         // Query bust forces CDN/browser to fetch the latest sw.js when we bump caches.
         // Scope stays / so the SW still controls the whole origin.
-        var swPath = '/sw.js?v=118';
+        var swPath = '/sw.js?v=124';
         navigator.serviceWorker.register(swPath, { scope: '/' })
             .then(function(reg) {
                 // Check for updates periodically

@@ -4,6 +4,25 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno&no-check'
+import { normalizeIncludedItems } from '../_shared/included-items.ts'
+import {
+  normalizeDisclaimers,
+  parseAckIds,
+  validateAcks,
+} from '../_shared/disclaimers.ts'
+import { requirePhone, requireMemberPhone } from '../_shared/rsvp-contact.ts'
+import { needsVote, validateVote } from '../_shared/amenity-voting.ts'
+import {
+  resolveCheckoutTotals,
+  validateChoice as validatePaymentChoice,
+} from '../_shared/payment-choice.ts'
+import { preparePaidRsvpForCheckout } from '../_shared/paid-rsvp-prep.ts'
+import {
+  countCapacitySeats,
+  normalizePartySeats,
+  partyBaseTotalCents,
+  validatePartySeats,
+} from '../_shared/party-seats.ts'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   apiVersion: '2023-10-16',
@@ -39,6 +58,14 @@ serve(async (req) => {
       from_waitlist,
       invest_eligible_acknowledged,
       amount_cents,
+      seat_options,
+      seats: rawSeats,
+      disclaimer_acks,
+      phone,
+      seat_role,
+      amenity_vote_option_id,
+      plan_kind,
+      method,
     } = await req.json()
     // type: 'rsvp' | 'raffle_entry' | 'competition_entry' | 'prize_pool'
     // guest_name + guest_email: for non-member (public event) RSVP
@@ -46,6 +73,8 @@ serve(async (req) => {
     // from_waitlist: true when claiming a waitlist spot
     // invest_eligible_acknowledged: true when user acknowledged Fidelity risk
     // amount_cents: custom amount for prize_pool contributions
+    // seat_options: map of included item id → answer (RSVP type)
+    // disclaimer_acks: id list or {id,acked_at}[] for required clauses
 
     if (!event_id) throw new Error('event_id is required')
     if (!type || !['rsvp', 'raffle_entry', 'competition_entry', 'prize_pool'].includes(type)) {
@@ -92,6 +121,77 @@ serve(async (req) => {
       throw new Error('RSVP deadline has passed')
     }
 
+    let seatOptionsJson = ''
+    let disclaimerAcksJson = ''
+    let rsvpSeatRole: 'adult' | 'kid' = 'adult'
+    let rsvpSeats: ReturnType<typeof normalizePartySeats> = []
+    if (type === 'rsvp') {
+      const catalog = normalizeIncludedItems(event.included_items)
+      const discCatalog = normalizeDisclaimers(event.disclaimers)
+      const ackErr = validateAcks(discCatalog, disclaimer_acks)
+      if (ackErr) throw new Error(ackErr)
+      const ackIds = parseAckIds(disclaimer_acks)
+      if (ackIds.length) {
+        disclaimerAcksJson = JSON.stringify(ackIds)
+        if (disclaimerAcksJson.length > 450) {
+          throw new Error('Disclaimer acknowledgments payload is too long.')
+        }
+      }
+
+      let payerDisplayName = guestNameNormalized || 'Guest'
+      if (!isGuest && user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', user.id)
+          .maybeSingle()
+        payerDisplayName = (
+          [profile?.first_name, profile?.last_name].filter(Boolean).join(' ')
+          || user.email
+          || 'Member'
+        ).trim()
+      }
+
+      rsvpSeats = normalizePartySeats(rawSeats, {
+        seatRole: seat_role,
+        seatOptions: seat_options,
+        displayName: payerDisplayName,
+        phone: isGuest ? guest_phone : phone,
+      })
+      const seatsErr = validatePartySeats(event, rsvpSeats, catalog, { allowIncompleteGuests: true })
+      if (seatsErr) throw new Error(seatsErr)
+      rsvpSeatRole = rsvpSeats.find((s) => s.is_payer)?.role === 'kid' ? 'kid' : 'adult'
+
+      const payerSeat = rsvpSeats.find((s) => s.is_payer) || rsvpSeats[0]
+      if (payerSeat?.options && Object.keys(payerSeat.options).length) {
+        seatOptionsJson = JSON.stringify(payerSeat.options)
+        if (seatOptionsJson.length > 450) {
+          throw new Error('Included option answers are too long. Shorten text answers and try again.')
+        }
+      }
+
+      if (event.invest_eligible && !invest_eligible_acknowledged) {
+        throw new Error('Investment risk acknowledgment is required before checkout.')
+      }
+
+      const voteRequired = needsVote(event)
+      if (voteRequired) {
+        const voteErr = validateVote(event.amenity_voting, amenity_vote_option_id)
+        if (voteErr) throw new Error(voteErr)
+      }
+
+      if (isGuest) {
+        requirePhone(guest_phone)
+      } else if (user) {
+        await requireMemberPhone(supabase, user.id, phone)
+      }
+    }
+
+    let guestPhoneForMetadata: string | null = null
+    if (type === 'rsvp' && isGuest) {
+      guestPhoneForMetadata = requirePhone(guest_phone)
+    }
+
     // Determine amount
     let amountCents = 0
     let productName = ''
@@ -130,23 +230,26 @@ serve(async (req) => {
         }
       }
 
-      // Check capacity (members + guests)
+      // Check capacity when party seats count toward cap
       if (event.max_participants) {
-        const { count: memberCount } = await supabase
-          .from('event_rsvps')
-          .select('id', { count: 'exact', head: true })
-          .eq('event_id', event_id)
-          .eq('status', 'going')
+        const newCapSeats = countCapacitySeats(event, rsvpSeats)
+        if (newCapSeats > 0) {
+          const { count: memberCount } = await supabase
+            .from('event_rsvps')
+            .select('id', { count: 'exact', head: true })
+            .eq('event_id', event_id)
+            .eq('status', 'going')
 
-        const { count: guestCount } = await supabase
-          .from('event_guest_rsvps')
-          .select('id', { count: 'exact', head: true })
-          .eq('event_id', event_id)
-          .eq('paid', true)
+          const { count: guestCount } = await supabase
+            .from('event_guest_rsvps')
+            .select('id', { count: 'exact', head: true })
+            .eq('event_id', event_id)
+            .eq('status', 'going')
 
-        const totalGoing = (memberCount || 0) + (guestCount || 0)
-        if (totalGoing >= event.max_participants) {
-          throw new Error('This event is full')
+          const totalGoing = (memberCount || 0) + (guestCount || 0)
+          if (totalGoing + newCapSeats > event.max_participants) {
+            throw new Error('This event is full')
+          }
         }
       }
 
@@ -155,10 +258,23 @@ serve(async (req) => {
         throw new Error('Cost breakdown must be locked before accepting payments. Please contact the event host.')
       }
 
-      amountCents = event.rsvp_cost_cents || 0
-      if (amountCents <= 0) throw new Error('Invalid RSVP price configured')
+      const basePartyCents = partyBaseTotalCents(event, rsvpSeats)
+      amountCents = basePartyCents
+      if (amountCents <= 0) {
+        throw new Error('This party is free — complete RSVP without checkout')
+      }
 
-      productName = `RSVP — ${event.title}`
+      const payErr = validatePaymentChoice(event, amountCents, plan_kind, method)
+      if (payErr) throw new Error(payErr)
+      const payMethod = String(method || 'ach').trim() === 'card' ? 'card' : 'ach'
+      const payPlanKind = String(plan_kind || 'full').trim() === 'monthly' ? 'monthly' : 'full'
+      const checkoutTotals = resolveCheckoutTotals(event, amountCents, payMethod)
+      amountCents = checkoutTotals.checkoutTotalCents
+
+      const seatCount = rsvpSeats.length
+      productName = seatCount > 1
+        ? `RSVP — ${event.title} (${seatCount} people)`
+        : `RSVP — ${event.title}${rsvpSeatRole === 'kid' ? ' (Child)' : ''}`
       productDescription = `Event RSVP for "${event.title}"`
 
       // LLC invest-eligible: add Fidelity risk disclosure
@@ -285,7 +401,8 @@ serve(async (req) => {
     }
 
     // Build Stripe customer (member) or use guest email
-    let customerConfig: any = {}
+    let customerConfig: Record<string, string> = {}
+    let rsvpPayMethod: 'ach' | 'card' = 'card'
 
     if (!isGuest) {
       // Get or create Stripe customer for member
@@ -314,14 +431,89 @@ serve(async (req) => {
 
       customerConfig = { customer: stripeCustomerId }
     } else {
-      // For guests: pre-fill email, don't attach to a Stripe customer
+      // Default for guests: pre-fill email (ACH RSVP overrides below with a Customer)
       customerConfig = { customer_email: guestEmailNormalized! }
     }
 
-    // Guest RSVPs need a fresh token; guest raffle entries must attach to the existing RSVP token.
-    const guestToken = isGuest
-      ? (type === 'raffle_entry' ? String(guest_token || guestRaffleToken || '') : crypto.randomUUID())
-      : null
+    // Guest RSVPs need a token from prep (paid RSVP) or fresh for raffle; reuse unpaid guest token when present.
+    let guestToken: string | null = null
+    let prepResult: Awaited<ReturnType<typeof preparePaidRsvpForCheckout>> | null = null
+
+    if (type === 'rsvp') {
+      const payMethod = String(method || 'ach').trim() === 'card' ? 'card' as const : 'ach' as const
+      rsvpPayMethod = payMethod
+      const payPlanKind = String(plan_kind || 'full').trim() === 'monthly' ? 'monthly' as const : 'full' as const
+
+      prepResult = await preparePaidRsvpForCheckout(supabase, {
+        event,
+        seats: rsvpSeats,
+        seatRole: rsvpSeatRole,
+        seatOptions: seat_options,
+        disclaimerAcks: disclaimer_acks,
+        amenityVoteOptionId: amenity_vote_option_id,
+        planKind: payPlanKind,
+        method: payMethod,
+        payer: isGuest
+          ? {
+              kind: 'guest',
+              guestName: guestNameNormalized!,
+              guestEmail: guestEmailNormalized!,
+              guestPhone: guestPhoneForMetadata,
+            }
+          : {
+              kind: 'member',
+              userId: user.id,
+              email: user.email,
+              phone: phone ? String(phone).trim() : null,
+            },
+      })
+      if (isGuest) guestToken = prepResult.guest_token || null
+
+      // §13.10 full pay — Checkout amount must match plan total_due (source of truth)
+      if (payPlanKind === 'full' && prepResult.plan_id) {
+        const { data: planRow } = await supabase
+          .from('event_payment_plans')
+          .select('total_due_cents')
+          .eq('id', prepResult.plan_id)
+          .maybeSingle()
+        const planDue = Number(planRow?.total_due_cents)
+        if (Number.isFinite(planDue) && planDue > 0) {
+          amountCents = planDue
+        }
+      }
+
+      // §13.10 monthly — charge first scheduled installment only
+      if (payPlanKind === 'monthly' && prepResult.installment_id) {
+        const { data: firstInst } = await supabase
+          .from('event_payment_installments')
+          .select('amount_cents')
+          .eq('id', prepResult.installment_id)
+          .maybeSingle()
+        const firstAmt = Number(firstInst?.amount_cents)
+        if (Number.isFinite(firstAmt) && firstAmt > 0) {
+          amountCents = firstAmt
+        }
+      }
+
+      // §13.10 — ACH/card RSVP always needs a Stripe Customer (guests included) so PM can attach
+      if (isGuest && (payMethod === 'ach' || payMethod === 'card')) {
+        const customer = await stripe.customers.create({
+          email: guestEmailNormalized!,
+          name: guestNameNormalized || undefined,
+          metadata: {
+            event_id: String(event_id),
+            guest: 'true',
+            ...(prepResult.party_id ? { party_id: prepResult.party_id } : {}),
+            ...(prepResult.plan_id ? { plan_id: prepResult.plan_id } : {}),
+          },
+        })
+        customerConfig = { customer: customer.id }
+      }
+    } else if (isGuest) {
+      guestToken = type === 'raffle_entry'
+        ? String(guest_token || guestRaffleToken || '')
+        : crypto.randomUUID()
+    }
 
     if (isGuest && type === 'raffle_entry' && !guestToken) {
       throw new Error('Please RSVP before entering the raffle')
@@ -341,7 +533,7 @@ serve(async (req) => {
       metadata.guest_name = guestNameNormalized!
       metadata.guest_email = guestEmailNormalized!
       metadata.guest_token = guestToken!
-      if (guest_phone) metadata.guest_phone = String(guest_phone).trim()
+      if (guestPhoneForMetadata) metadata.guest_phone = guestPhoneForMetadata
       if (sms_opt_in === true) metadata.sms_opt_in = 'true'
       if (sms_consent_text_version) {
         metadata.sms_consent_text_version = String(sms_consent_text_version)
@@ -352,6 +544,31 @@ serve(async (req) => {
     if (from_waitlist) metadata.from_waitlist = 'true'
     if (invest_eligible_acknowledged) metadata.invest_eligible_acknowledged = 'true'
     if (event.invest_eligible) metadata.invest_eligible = 'true'
+    if (type === 'rsvp' && seatOptionsJson) metadata.seat_options = seatOptionsJson
+    if (type === 'rsvp' && disclaimerAcksJson) metadata.disclaimer_acks = disclaimerAcksJson
+    if (type === 'rsvp') metadata.seat_role = rsvpSeatRole
+    if (type === 'rsvp' && amenity_vote_option_id) {
+      metadata.amenity_vote_option_id = String(amenity_vote_option_id).trim()
+    }
+    if (type === 'rsvp') {
+      const baseCents = partyBaseTotalCents(event, rsvpSeats)
+      const payMethod = String(method || 'ach').trim() === 'card' ? 'card' : 'ach'
+      const payPlanKind = String(plan_kind || 'full').trim() === 'monthly' ? 'monthly' : 'full'
+      const checkoutTotals = resolveCheckoutTotals(event, baseCents, payMethod)
+      metadata.plan_kind = payPlanKind
+      metadata.method = payMethod
+      metadata.base_total_cents = String(checkoutTotals.baseCents)
+      // Prefer aligned Checkout charge (full total_due or monthly first installment)
+      metadata.checkout_total_cents = String(
+        amountCents > 0 ? amountCents : checkoutTotals.checkoutTotalCents,
+      )
+      if (prepResult) {
+        metadata.party_id = prepResult.party_id
+        metadata.plan_id = prepResult.plan_id
+        metadata.installment_id = prepResult.installment_id
+        metadata.jm_type = 'event_party_plan'
+      }
+    }
 
     // Success URL
     const origin = req.headers.get('origin') || 'https://justicemcneal.com'
@@ -359,10 +576,12 @@ serve(async (req) => {
       ? `${origin}/events/?e=${event.slug}&paid=${type}&guest_token=${guestToken}`
       : `${origin}/portal/events.html?paid=${type}&event=${event_id}`
 
-    // Create one-time Checkout Session
-    const session = await stripe.checkout.sessions.create({
+    // Create one-time Checkout Session (§13.10 ACH/card save PM for off-session)
+    const isAchRsvp = type === 'rsvp' && rsvpPayMethod === 'ach'
+    const isCardRsvp = type === 'rsvp' && rsvpPayMethod === 'card'
+    const sessionParams: Record<string, unknown> = {
       ...customerConfig,
-      payment_method_types: ['card'],
+      payment_method_types: isAchRsvp ? ['us_bank_account'] : ['card'],
       line_items: [
         {
           price_data: {
@@ -380,10 +599,46 @@ serve(async (req) => {
       success_url: successUrl,
       cancel_url: `${origin}${isGuest ? `/events/?e=${event.slug}&canceled=true` : `/portal/events.html?canceled=true&event=${event_id}`}`,
       metadata,
-    })
+    }
+    if (isAchRsvp || isCardRsvp) {
+      sessionParams.payment_intent_data = {
+        setup_future_usage: 'off_session',
+        metadata: {
+          jm_type: 'event_party_plan',
+          payment_type: 'event_rsvp',
+          event_id: String(event_id),
+          ...(prepResult?.party_id ? { party_id: prepResult.party_id } : {}),
+          ...(prepResult?.plan_id ? { plan_id: prepResult.plan_id } : {}),
+          ...(prepResult?.installment_id ? { installment_id: prepResult.installment_id } : {}),
+          method: isAchRsvp ? 'ach' : 'card',
+        },
+      }
+    }
+
+    // Persist Customer on plan at session create (webhook adds PaymentMethod)
+    if (type === 'rsvp' && prepResult?.plan_id && customerConfig.customer) {
+      await supabase
+        .from('event_payment_plans')
+        .update({
+          stripe_customer_id: customerConfig.customer,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', prepResult.plan_id)
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams as any)
 
     return new Response(
-      JSON.stringify({ url: session.url }),
+      JSON.stringify({
+        url: session.url,
+        ...(type === 'rsvp' && prepResult
+          ? {
+              party_id: prepResult.party_id,
+              seat_info_tokens: prepResult.seat_info_tokens || [],
+              ...(prepResult.guest_token ? { guest_token: prepResult.guest_token } : {}),
+            }
+          : {}),
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
 

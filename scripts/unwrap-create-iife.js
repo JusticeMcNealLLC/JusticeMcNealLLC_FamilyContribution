@@ -35,10 +35,6 @@ function finish(preamble, body, footer) {
 /** @type {Array<{ file: string, kind: string, key?: string, exportName?: string }>} */
 const MODULES = [
     { file: 'geocode.js', kind: 'evt-only' },
-    { file: 'legacy-costs.js', kind: 'evt-only' },
-    { file: 'legacy-location.js', kind: 'evt-only' },
-    { file: 'legacy-preview.js', kind: 'evt-only' },
-    { file: 'legacy-submit.js', kind: 'evt-only' },
     { file: 'step-basics.js', kind: 'step', key: 'basics', exportName: 'createStepBasicsApi' },
     { file: 'step-when.js', kind: 'step', key: 'when', exportName: 'createStepWhenApi' },
     { file: 'step-pricing.js', kind: 'step', key: 'pricing', exportName: 'createStepPricingApi' },

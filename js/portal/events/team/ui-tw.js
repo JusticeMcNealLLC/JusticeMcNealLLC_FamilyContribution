@@ -24,5 +24,7 @@ export const TW_CTA_RAFFLE_OUTLINE = 'bg-white text-amber-600 !border-2 !border-
 export const TW_CTA_RAFFLE_DONE = 'bg-green-600 text-white';
 export const TW_CTA_DISABLED = 'bg-gray-200 text-gray-400';
 export const TW_CTA_RAFFLE_LOCKED = 'evt-cta-raffle-locked bg-gray-100 text-gray-400 border border-gray-200 shadow-none cursor-not-allowed';
+export const TW_CTA_COMP = 'bg-rose-600 text-white';
+export const TW_CTA_COMP_DONE = 'bg-green-600 text-white';
 
 export const TW_CTA_FOOTNOTE = 'evt-cta-footnote m-0 px-4 pb-0.5 text-center text-[11px] font-semibold leading-snug text-gray-500';

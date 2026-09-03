@@ -71,10 +71,7 @@ const stepPricingJs = read('js/portal/events/create/step-pricing.js');
 const stepReviewJs = read('js/portal/events/create/step-review.js');
 const raffleBuilderJs = read('js/portal/events/create/raffle-builder.js');
 const submitJs = read('js/portal/events/create/submit.js');
-const legacyCostsJs = read('js/portal/events/create/legacy-costs.js');
-const legacyLocationJs = read('js/portal/events/create/legacy-location.js');
-const legacyPreviewJs = read('js/portal/events/create/legacy-preview.js');
-const legacySubmitJs = read('js/portal/events/create/legacy-submit.js');
+const initJs = read('js/portal/events/init.js');
 const events = read('pages/portal/events.html');
 const classicChain3d = parseClassicChain(ROOT);
 
@@ -138,8 +135,8 @@ console.log('\n── create/submit.js — custom event dispatch ─────
 check("'events:created' custom event present in submit.js",
     submitJs.includes("'events:created'"));
 
-check("CustomEvent('events:created', ...) dispatch call present in submit.js",
-    submitJs.includes("new CustomEvent('events:created'"));
+check("CustomEvent('events:created'|'events:updated', ...) dispatch in submit.js",
+    submitJs.includes("new CustomEvent(editing ? 'events:updated' : 'events:created'"));
 
 // ── Core internal functions ────────────────────────────────────────────────
 console.log('\n── create/sheet.js — core internal functions ─────────────────────────────');
@@ -189,8 +186,8 @@ console.log('\n── create/sheet.js — external dependencies ─────�
 check('submit.js uses supabaseClient for events insert',
     submitJs.includes('supabaseClient.from('));
 
-check('submit.js dispatches events:created',
-    submitJs.includes("new CustomEvent('events:created'"));
+check('submit.js dispatches events:created or events:updated',
+    submitJs.includes("new CustomEvent(editing ? 'events:updated' : 'events:created'"));
 
 check('raffle-builder.js uses window.EventsRaffleModel',
     raffleBuilderJs.includes('window.EventsRaffleModel'));
@@ -235,30 +232,26 @@ check('create/geocode.js bridges evtGeocodeAddress',
 check('create/geocode.js bridges evtExpandAddress',
     hasGlobalBridge(geocodeJs, 'evtExpandAddress'));
 
-// ── legacy create modules (5M.1.5; empty create.js facade removed) ─────────
-console.log('\n── create legacy modules + production chain ───────────────────────────────');
+// ── legacy create removed (sheet-only) ───────────────────────────────────
+console.log('\n── create sheet-only (legacy modal removed) ─────────────────────────────');
 
-check('empty create.js facade removed from repo',
-    !exists('js/portal/events/create.js'));
+check('legacy create modules removed from repo',
+    !exists('js/portal/events/create/legacy-costs.js')
+    && !exists('js/portal/events/create/legacy-location.js')
+    && !exists('js/portal/events/create/legacy-preview.js')
+    && !exists('js/portal/events/create/legacy-submit.js'));
 
-check('create.js not in classic-chain-loader.js chain',
-    !classicChain3d || !classicChain3d.includes("'create.js'"));
+check('portal/events.html has no #createModal',
+    !events.includes('id="createModal"'));
 
-check('evtHandleCreate lives in create/legacy-submit.js',
-    legacySubmitJs.includes('async function evtHandleCreate')
-    || legacySubmitJs.includes('function evtHandleCreate'));
+check('init.js opens EventsCreate sheet only (no createModal fallback)',
+    initJs.includes('EventsCreate.open')
+    && !initJs.includes("evtToggleModal('createModal'"));
 
-check('legacy-submit.js has no native export (classic-script safe)',
-    !(/^\s*export\s+(default|const|function|class|let|var|\{)/m.test(legacySubmitJs)));
-
-check('load order: geocode → legacy modules → step-basics',
+check('load order: geocode → step-basics (no legacy modules)',
     chainOrderOk(
         classicChain3d,
         'create/geocode.js',
-        'create/legacy-costs.js',
-        'create/legacy-location.js',
-        'create/legacy-preview.js',
-        'create/legacy-submit.js',
         'create/step-basics.js'
     ));
 
@@ -269,35 +262,6 @@ check('load order: raffle-builder → submit → create/sheet in classic chain',
         'create/submit.js',
         'create/sheet.js'
     ));
-
-check('legacy-submit.js defines evtHandleCreate',
-    legacySubmitJs.includes('async function evtHandleCreate')
-    && hasGlobalBridge(legacySubmitJs, 'evtHandleCreate'));
-
-check('legacy-costs.js assigns LLC cost globals',
-    hasGlobalBridge(legacyCostsJs, 'evtToggleLlcFields')
-    && hasGlobalBridge(legacyCostsJs, 'evtAddCostItem')
-    && hasGlobalBridge(legacyCostsJs, 'evtRemoveCostItem'));
-
-check('legacy-location.js assigns location globals and uses evtGeocodeAddress',
-    hasGlobalBridge(legacyLocationJs, 'evtValidateLocation')
-    && hasGlobalBridge(legacyLocationJs, 'evtInitLocationValidation')
-    && legacyLocationJs.includes('evtGeocodeAddress'));
-
-check('legacy-preview.js assigns preview globals',
-    hasGlobalBridge(legacyPreviewJs, 'evtHandlePreview')
-    && hasGlobalBridge(legacyPreviewJs, 'evtClosePreview'));
-
-check('legacy-submit uses window.evtGeocodeAddress and evtLoadEvents',
-    legacySubmitJs.includes('window.evtGeocodeAddress')
-    && legacySubmitJs.includes('evtLoadEvents')
-    && legacySubmitJs.includes('evtNavigateToEvent'));
-
-check('legacy modules in classic-chain-loader.js chain',
-    classicChain3d.includes('create/legacy-costs.js')
-    && classicChain3d.includes('create/legacy-location.js')
-    && classicChain3d.includes('create/legacy-preview.js')
-    && classicChain3d.includes('create/legacy-submit.js'));
 
 // ── portal/events.html invariants ─────────────────────────────────────────
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
@@ -352,7 +316,7 @@ check('step-review.js delegates raffle review HTML to EventsCreateSteps',
     stepReviewJs.includes('raffleReviewHtml'));
 
 check('sheet.js dispatches steps via EventsCreateSteps namespace',
-    sheet.includes('EventsCreateSteps') && sheet.includes('steps.basics.html()'));
+    sheet.includes('EventsCreateSteps') && sheet.includes('stepApis.basics.html()'));
 
 // ── Create raffle builder (Phase 5M.1.3) ──────────────────────────────────
 console.log('\n── js/portal/events/create/raffle-builder.js — raffle builder (5M.1.3) ──');
@@ -417,13 +381,13 @@ console.log('\n── File split safety — create/ sub-files in production chai
 const createDir = path.join(ROOT, 'js/portal/events/create');
 const EXPECTED_CREATE_FILES = [
     'geocode.js',
-    'legacy-costs.js',
-    'legacy-location.js',
-    'legacy-preview.js',
-    'legacy-submit.js',
     'step-basics.js',
+    'step-about.js',
+    'step-included.js',
     'step-when.js',
     'step-pricing.js',
+    'step-llc.js',
+    'step-disclaimers.js',
     'step-review.js',
     'raffle-builder.js',
     'submit.js',

@@ -18,7 +18,6 @@ Format: `[ ] P# · size — task`
 
 ## Navigation / Mobile Shell
 
-- [ ] **P1 · m** — Fix mobile view for dashboard so it works with iPhone dock area
 - [ ] **P1 · m** — Mobile nav bar: fix not being able to swipe left
 - [ ] **P1 · m** — Bottom nav for mobile swipe-over fix
 - [ ] **P2 · m** — Universal mobile view activator (esp. for events page)
@@ -52,6 +51,7 @@ Format: `[ ] P# · size — task`
 
 ## Events — Core & List
 
+- [ ] **P1 · xl** — Events system overhaul (Colorado Jan 2028 driver) — planning: [000_events_system_overhaul_brainstorm.md](improvements/pages/events/000_events_system_overhaul_brainstorm.md)
 - [ ] **P1 · s** — Past events go in their own Past Events section (not Tonight); on mobile remove the Past badge over the event banner
 - [ ] **P1 · s** — Events page top nav combine for mobile
 - [ ] **P2 · m** — Events page audit
@@ -175,3 +175,5 @@ Format: `[ ] P# · size — task`
 - [x] Change login page to an image instead of the video
 - [x] Dashboard Option A theme pass (hero contribution card, quick-link theme cards, full-width desktop layout, SW/CDN cache bust)
 - [x] Organize md files into `docs/product`, `docs/business`, and `docs/legal`
+- [x] Fix mobile view for dashboard safe areas (top notch + bottom dock via has-bottom-bar)
+- [] Luggage tags idea. Basically uploaded file for events for users to print out and put on their bags.

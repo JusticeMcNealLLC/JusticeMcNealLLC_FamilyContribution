@@ -57,6 +57,8 @@ const {
     myWaitlistEntry,
     raffleEntryCount,
     myRaffleEntry,
+    myCompetitionEntry,
+    competitionPhases,
     raffleWinners,
     isCreator,
     canManageEvent,
@@ -139,6 +141,9 @@ const waitlistHtml = window.evtBuildDetailWaitlistHtml(ctx);
 const graceHtml = window.evtBuildDetailGraceNoticeHtml(ctx);
 
 const rsvpButtons = window.evtBuildDetailRsvpSectionHtml(ctx);
+const priceSummaryHtml = window.evtBuildDetailPriceSummaryHtml(ctx);
+const includedCatalogHtml = window.evtBuildDetailIncludedCatalogHtml(ctx);
+const amenityResultsHtml = window.evtBuildDetailAmenityResultsHtml(ctx);
 const raffleHtml = window.evtBuildDetailRaffleSectionHtml(ctx);
 const attendeePreviewHtml = window.evtBuildDetailAttendeePreviewHtml(ctx);
 const shareCardHtml = window.evtBuildDetailShareCardHtml(ctx);
@@ -151,7 +156,14 @@ const pageHeaderActionsHtml = window.evtBuildDetailPageHeaderActionsHtml(ctx);
 
 // ── Description ──────────────────────────────────────
 const rawDesc = event.description || '';
-const descHtml = rawDesc ? window.evtMiniMarkdown(rawDesc) : '<span class="ed-no-desc">No details yet — check back closer to the event.</span>';
+const aboutTabsHtml = (window.EventsAboutTabs && typeof window.EventsAboutTabs.aboutTabsHtml === 'function')
+    ? window.EventsAboutTabs.aboutTabsHtml(event.about_tabs, { idPrefix: `portalAbout-${eventId}` })
+    : '';
+const descHtml = rawDesc
+    ? window.evtMiniMarkdown(rawDesc)
+    : (aboutTabsHtml
+        ? ''
+        : '<span class="ed-no-desc">No details yet — check back closer to the event.</span>');
 const descIsLong = rawDesc.length > 500;
 
 // ── Collapsible cost wrapper ─────────────────────────
@@ -191,6 +203,9 @@ const templateCtx = {
     mobileHostedHtml,
     descHtml,
     descIsLong,
+    aboutTabsHtml,
+    includedCatalogHtml,
+    amenityResultsHtml,
     eventContextHtml,
     attendeePreviewHtml,
     organizerHtml,
@@ -205,6 +220,7 @@ const templateCtx = {
     scrapbookHtml,
     relatedHtml,
     rsvpButtons,
+    priceSummaryHtml,
     teamHubCardHtml,
     qrHtml,
     documentsHtml,
@@ -223,6 +239,8 @@ window.evtRunDetailPostRenderUi({
     isClosed,
     rsvp,
     myRaffleEntry,
+    myCompetitionEntry,
+    competitionPhases,
     entriesClosed,
     eventIsFull,
     isHost,

@@ -237,17 +237,17 @@
                 <div class="bg-surface-50 rounded-xl p-4 mb-5 border border-gray-100">
                     <p class="text-xs text-gray-500 mb-3">Choose your monthly amount</p>
                     <div class="grid grid-cols-3 gap-2 mb-3" id="amountPresets">
+                        <button type="button" data-amount="10" class="amount-preset-btn py-2.5 px-3 rounded-lg border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-brand-400 hover:bg-brand-50 transition">$10</button>
                         <button type="button" data-amount="30" class="amount-preset-btn py-2.5 px-3 rounded-lg border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-brand-400 hover:bg-brand-50 transition">$30</button>
                         <button type="button" data-amount="50" class="amount-preset-btn py-2.5 px-3 rounded-lg border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-brand-400 hover:bg-brand-50 transition">$50</button>
                         <button type="button" data-amount="75" class="amount-preset-btn py-2.5 px-3 rounded-lg border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-brand-400 hover:bg-brand-50 transition">$75</button>
                         <button type="button" data-amount="100" class="amount-preset-btn py-2.5 px-3 rounded-lg border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-brand-400 hover:bg-brand-50 transition">$100</button>
-                        <button type="button" data-amount="150" class="amount-preset-btn py-2.5 px-3 rounded-lg border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-brand-400 hover:bg-brand-50 transition">$150</button>
                         <button type="button" data-amount="custom" class="amount-preset-btn py-2.5 px-3 rounded-lg border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-brand-400 hover:bg-brand-50 transition">Custom</button>
                     </div>
                     <div id="customAmountWrapper" class="hidden">
                         <div class="relative">
                             <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm">$</span>
-                            <input type="number" id="contributionCustomAmount" min="30" max="250" step="1" placeholder="30 – 250" class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
+                            <input type="number" id="contributionCustomAmount" min="10" max="250" step="1" placeholder="10 – 250" class="w-full pl-8 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition text-sm">
                         </div>
                     </div>
                 </div>

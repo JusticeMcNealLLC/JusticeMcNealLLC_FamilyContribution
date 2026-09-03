@@ -68,6 +68,33 @@ async function evtLoadDetailContext(eventId) {
     let raffleEntryCount = 0;
     let myRaffleEntry = null;
     let raffleWinners = [];
+    let myCompetitionEntry = null;
+    let competitionPhases = [];
+    let myCompVote = null;
+    if (isComp) {
+        const [{ data: myCompEntry }, { data: phases }, { data: myVote }] = await Promise.all([
+            supabaseClient
+                .from('competition_entries')
+                .select('*')
+                .eq('event_id', eventId)
+                .eq('user_id', globalThis.evtCurrentUser.id)
+                .maybeSingle(),
+            supabaseClient
+                .from('competition_phases')
+                .select('*')
+                .eq('event_id', eventId)
+                .order('phase_num', { ascending: true }),
+            supabaseClient
+                .from('competition_votes')
+                .select('entry_id')
+                .eq('event_id', eventId)
+                .eq('voter_id', globalThis.evtCurrentUser.id)
+                .maybeSingle(),
+        ]);
+        myCompetitionEntry = myCompEntry;
+        competitionPhases = phases || [];
+        myCompVote = myVote;
+    }
     if (event.raffle_enabled) {
         const { count: rCount } = await supabaseClient
             .from('event_raffle_entries')
@@ -163,6 +190,23 @@ async function evtLoadDetailContext(eventId) {
     const canRsvp = rsvpEnabled && ['open', 'confirmed', 'active'].includes(event.status) && !entriesClosed;
     const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
 
+    let amenityVoteConfig = null;
+    let amenityVoteTallies = null;
+    if (!isComp && window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === 'function') {
+        amenityVoteConfig = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
+        if (amenityVoteConfig.enabled) {
+            const { data: voteRows } = await supabaseClient
+                .from('event_parties')
+                .select('amenity_vote_option_id, amenity_vote_status')
+                .eq('event_id', eventId)
+                .eq('amenity_vote_status', 'counted');
+            amenityVoteTallies = window.EventsAmenityVoting.tallyCounts(
+                voteRows || [],
+                amenityVoteConfig.options.map((o) => o.id),
+            );
+        }
+    }
+
     return {
         eventId,
         event,
@@ -186,6 +230,9 @@ async function evtLoadDetailContext(eventId) {
         raffleEntryCount,
         myRaffleEntry,
         raffleWinners,
+        myCompetitionEntry,
+        competitionPhases,
+        myCompVote,
         isCreator,
         canManageEvent,
         canAccessTeamHub,
@@ -214,6 +261,8 @@ async function evtLoadDetailContext(eventId) {
         eventIsFull,
         memberPhone,
         eventSmsRecipient,
+        amenityVoteConfig,
+        amenityVoteTallies,
     };
 }
 

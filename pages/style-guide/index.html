@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Style Guide | Theme_JMLLC001</title>
+  <meta name="theme-color" content="#13366e">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="../../theme/Theme_JMLLC001/Theme_JMLLC001.css">
+  <link rel="stylesheet" href="../../css/tailwind.Theme_JMLLC001.css">
+  <link rel="stylesheet" href="../../css/pages/style-guide.css">
+</head>
+<body class="sg-page">
+
+  <header class="sg-hero">
+    <div class="container">
+      <p class="sg-eyebrow" style="color: rgba(255,255,255,0.85);">Theme_JMLLC001</p>
+      <h1>Justice McNeal LLC Style Guide</h1>
+      <p>
+        Visual reference for the website theme and style structure —
+        fonts, colors, buttons, cards, forms, layout, and mobile / safe-area patterns.
+      </p>
+      <div class="sg-hero-meta">
+        <span class="sg-chip">Source Serif 4</span>
+        <span class="sg-chip">Atkinson Hyperlegible Next</span>
+        <span class="sg-chip">Navy · Primary · Teal</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="sg-nav" aria-label="Style guide sections">
+    <div class="container sg-nav-inner">
+      <a href="#colors">Colors</a>
+      <a href="#typography">Typography</a>
+      <a href="#buttons">Buttons</a>
+      <a href="#cards">Cards</a>
+      <a href="#forms">Forms</a>
+      <a href="#status">Status</a>
+      <a href="#layout">Layout</a>
+      <a href="#logo">Logo</a>
+      <a href="#shadows">Shadows</a>
+      <a href="#mobile">Mobile</a>
+    </div>
+  </nav>
+
+  <!-- COLORS -->
+  <section class="sg-section" id="colors">
+    <div class="container">
+      <p class="sg-eyebrow">Palette</p>
+      <h2 class="sg-section-title">Colors</h2>
+      <p class="sg-section-lead">Token colors from the theme. Prefer CSS variables / theme utilities over raw hex in new UI.</p>
+
+      <div class="sg-grid-3">
+        <article class="sg-swatch">
+          <div class="sg-swatch-chip" style="background:#FFFFFF; border-bottom:1px solid var(--color-border);"></div>
+          <div class="sg-swatch-meta">
+            <p class="sg-swatch-name">Background</p>
+            <p class="sg-swatch-hex">#FFFFFF · --color-background</p>
+            <p class="sg-swatch-use">Page background, clean content areas</p>
+          </div>
+        </article>
+        <article class="sg-swatch">
+          <div class="sg-swatch-chip" style="background:#0B2545;"></div>
+          <div class="sg-swatch-meta">
+            <p class="sg-swatch-name">Text</p>
+            <p class="sg-swatch-hex">#0B2545 · --color-text</p>
+            <p class="sg-swatch-use">Body, headings, icons, serious brand</p>
+          </div>
+        </article>
+        <article class="sg-swatch">
+          <div class="sg-swatch-chip" style="background:#13366E;"></div>
+          <div class="sg-swatch-meta">
+            <p class="sg-swatch-name">Primary</p>
+            <p class="sg-swatch-hex">#13366E · --color-primary</p>
+            <p class="sg-swatch-use">Buttons, links, active states, CTAs</p>
+          </div>
+        </article>
+        <article class="sg-swatch">
+          <div class="sg-swatch-chip" style="background:#0E8B8B;"></div>
+          <div class="sg-swatch-meta">
+            <p class="sg-swatch-name">Accent</p>
+            <p class="sg-swatch-hex">#0E8B8B · --color-accent</p>
+            <p class="sg-swatch-use">Progress, success, highlights (sparingly)</p>
+          </div>
+        </article>
+        <article class="sg-swatch">
+          <div class="sg-swatch-chip" style="background:#EEF2F6;"></div>
+          <div class="sg-swatch-meta">
+            <p class="sg-swatch-name">Surface</p>
+            <p class="sg-swatch-hex">#EEF2F6 · --color-surface</p>
+            <p class="sg-swatch-use">Cards, panels, soft sections</p>
+          </div>
+        </article>
+        <article class="sg-swatch">
+          <div class="sg-swatch-chip" style="background:#D5DFEC;"></div>
+          <div class="sg-swatch-meta">
+            <p class="sg-swatch-name">Border</p>
+            <p class="sg-swatch-hex">#D5DFEC · --color-border</p>
+            <p class="sg-swatch-use">Dividers, inputs, subtle outlines</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- TYPOGRAPHY -->
+  <section class="sg-section sg-section--surface" id="typography">
+    <div class="container">
+      <p class="sg-eyebrow">Type</p>
+      <h2 class="sg-section-title">Typography</h2>
+      <p class="sg-section-lead">Source Serif 4 for headlines. Atkinson Hyperlegible Next for UI and body copy.</p>
+
+      <div class="sg-demo-card">
+        <div class="sg-type-row">
+          <span class="sg-type-label">H1 / Headline</span>
+          <p class="sg-type-sample-headline" style="font-size:2.5rem; font-weight:700;">Family Legacy Platform</p>
+        </div>
+        <div class="sg-type-row">
+          <span class="sg-type-label">H2</span>
+          <p class="sg-type-sample-headline" style="font-size:2rem; font-weight:600;">Monthly Contribution</p>
+        </div>
+        <div class="sg-type-row">
+          <span class="sg-type-label">H3</span>
+          <p class="sg-type-sample-headline" style="font-size:1.5rem; font-weight:600;">Next Milestone</p>
+        </div>
+        <div class="sg-type-row">
+          <span class="sg-type-label">Body</span>
+          <p class="sg-type-sample-body">
+            Track contributions, celebrate wins, and keep the family building together.
+            Body text stays navy on white or surface for accessibility.
+          </p>
+        </div>
+        <div class="sg-type-row">
+          <span class="sg-type-label">Muted</span>
+          <p class="sg-type-sample-body text-muted">Supporting copy, captions, and helper text use muted navy.</p>
+        </div>
+        <div class="sg-type-row">
+          <span class="sg-type-label">Link</span>
+          <p class="sg-type-sample-body"><a href="#buttons">View all contributions</a></p>
+        </div>
+        <div class="sg-type-row">
+          <span class="sg-type-label">Accent</span>
+          <p class="sg-type-sample-body text-accent" style="font-weight:700;">14 months strong</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUTTONS -->
+  <section class="sg-section" id="buttons">
+    <div class="container">
+      <p class="sg-eyebrow">Actions</p>
+      <h2 class="sg-section-title">Buttons</h2>
+      <p class="sg-section-lead">Primary for main CTAs, secondary for quieter actions, accent for positive / success moments.</p>
+
+      <div class="sg-demo-card">
+        <div class="sg-btn-row">
+          <button type="button" class="button-primary">Primary action</button>
+          <button type="button" class="button-secondary">Secondary</button>
+          <button type="button" class="button-accent">Accent / success</button>
+          <a href="#cards" class="button-primary">Primary link button</a>
+        </div>
+        <div class="sg-btn-row">
+          <button type="button" class="button-primary" disabled style="opacity:0.55; cursor:not-allowed;">Disabled primary</button>
+          <button type="button" class="button-secondary" disabled style="opacity:0.55; cursor:not-allowed;">Disabled secondary</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARDS -->
+  <section class="sg-section sg-section--surface" id="cards">
+    <div class="container">
+      <p class="sg-eyebrow">Surfaces</p>
+      <h2 class="sg-section-title">Cards & panels</h2>
+      <p class="sg-section-lead">White or surface cards with soft borders. Keep spacing readable and payment flows direct.</p>
+
+      <div class="sg-grid-3">
+        <article class="card">
+          <span class="sg-badge sg-badge--primary">Surface card</span>
+          <h3 style="margin-top:0.85rem;">Contribution summary</h3>
+          <p style="color:var(--color-text-muted); margin:0 0 1rem;">Soft surface background for panels and dashboard blocks.</p>
+          <button type="button" class="button-secondary">View details</button>
+        </article>
+
+        <article class="card card--elevated">
+          <span class="sg-badge sg-badge--accent">Elevated</span>
+          <h3 style="margin-top:0.85rem;">White elevated card</h3>
+          <p style="color:var(--color-text-muted); margin:0 0 1rem;">White on surface sections with a slightly stronger shadow.</p>
+          <button type="button" class="button-primary">Continue</button>
+        </article>
+
+        <article class="sg-hero-mini">
+          <p class="sg-eyebrow">Hero pattern</p>
+          <h3>$50</h3>
+          <p>Monthly contribution · Renews on Jul 17, 2026</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- FORMS -->
+  <section class="sg-section" id="forms">
+    <div class="container">
+      <p class="sg-eyebrow">Inputs</p>
+      <h2 class="sg-section-title">Forms</h2>
+      <p class="sg-section-lead">Clear labels, bordered inputs, primary focus ring. Keep contribution and payment forms simple.</p>
+
+      <div class="sg-demo-card" style="max-width:32rem;">
+        <div class="form-group">
+          <label for="sg-name">Full name</label>
+          <input id="sg-name" type="text" placeholder="Jordan McNeal">
+        </div>
+        <div class="form-group">
+          <label for="sg-email">Email</label>
+          <input id="sg-email" type="email" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label for="sg-amount">Contribution amount</label>
+          <input id="sg-amount" type="number" placeholder="50">
+        </div>
+        <div class="form-group">
+          <label for="sg-note">Notes</label>
+          <textarea id="sg-note" rows="3" placeholder="Optional message"></textarea>
+        </div>
+        <div class="sg-btn-row">
+          <button type="button" class="button-primary">Save changes</button>
+          <button type="button" class="button-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATUS -->
+  <section class="sg-section sg-section--surface" id="status">
+    <div class="container">
+      <p class="sg-eyebrow">Feedback</p>
+      <h2 class="sg-section-title">Status, badges & progress</h2>
+      <p class="sg-section-lead">Use teal for positive/active highlights — not long paragraphs.</p>
+
+      <div class="sg-grid-2">
+        <div class="sg-demo-card">
+          <div class="sg-btn-row" style="margin-bottom:1rem;">
+            <span class="sg-badge sg-badge--primary">Member</span>
+            <span class="sg-badge sg-badge--accent"><span class="sg-status-dot"></span> Active</span>
+            <span class="sg-badge sg-badge--muted">Draft</span>
+          </div>
+          <p style="margin:0; color:var(--color-text-muted); font-size:0.9375rem;">
+            Badges for roles, subscription status, and quiet metadata.
+          </p>
+        </div>
+
+        <div class="sg-demo-card">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+            <strong>Next milestone</strong>
+            <span class="text-muted">68%</span>
+          </div>
+          <div class="sg-progress" aria-hidden="true"><span></span></div>
+          <p style="margin:0.75rem 0 0; color:var(--color-text-muted); font-size:0.875rem;">
+            Progress uses primary → accent gradient.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LAYOUT -->
+  <section class="sg-section" id="layout">
+    <div class="container">
+      <p class="sg-eyebrow">Composition</p>
+      <h2 class="sg-section-title">Layout samples</h2>
+      <p class="sg-section-lead">Example compositions using the container width, grids, and content hierarchy.</p>
+
+      <div class="sg-layout-demo">
+        <div class="sg-demo-card">
+          <p class="sg-eyebrow">Main column</p>
+          <h3>Dashboard-style content block</h3>
+          <p>
+            Primary content sits in a readable column with clear hierarchy:
+            eyebrow, headline, supporting sentence, then actions.
+          </p>
+          <div class="sg-btn-row">
+            <button type="button" class="button-primary">Manage contribution</button>
+            <button type="button" class="button-secondary">View history</button>
+          </div>
+        </div>
+        <div class="sg-demo-card">
+          <p class="sg-eyebrow">Side panel</p>
+          <h3 style="font-size:1.25rem;">Quick facts</h3>
+          <p style="margin-bottom:0.75rem;">Next bill · Active streak · Role</p>
+          <div class="sg-btn-row">
+            <span class="sg-badge sg-badge--accent"><span class="sg-status-dot"></span> Active</span>
+            <span class="sg-badge sg-badge--primary">14 mo streak</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-table-wrap" style="margin-top:1.25rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Alex Rivera</td>
+              <td>Member</td>
+              <td><span class="sg-badge sg-badge--accent"><span class="sg-status-dot"></span> Active</span></td>
+              <td>$50</td>
+            </tr>
+            <tr>
+              <td>Sam Chen</td>
+              <td>Admin</td>
+              <td><span class="sg-badge sg-badge--accent"><span class="sg-status-dot"></span> Active</span></td>
+              <td>$100</td>
+            </tr>
+            <tr>
+              <td>Jordan Lee</td>
+              <td>Member</td>
+              <td><span class="sg-badge sg-badge--muted">Paused</span></td>
+              <td>$25</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGO -->
+  <section class="sg-section sg-section--surface" id="logo">
+    <div class="container">
+      <p class="sg-eyebrow">Brand mark</p>
+      <h2 class="sg-section-title">Logo tones</h2>
+      <p class="sg-section-lead">Navy, primary blue, and teal accent. White mark on dark backgrounds.</p>
+
+      <div class="sg-logo-panel">
+        <div class="sg-logo-box sg-logo-box--light">
+          <div class="sg-logo-mark">JM</div>
+          <h3>On light</h3>
+          <p>Primary mark on white / surface</p>
+        </div>
+        <div class="sg-logo-box sg-logo-box--dark">
+          <div class="sg-logo-mark">JM</div>
+          <h3>On dark</h3>
+          <p>White mark on navy text color</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHADOWS -->
+  <section class="sg-section" id="shadows">
+    <div class="container">
+      <p class="sg-eyebrow">Elevation</p>
+      <h2 class="sg-section-title">Shadows</h2>
+      <p class="sg-section-lead">Soft navy-tinted shadows — keep elevation subtle.</p>
+
+      <div class="sg-grid-3">
+        <div class="sg-shadow-demo sg-shadow-sm">
+          <strong>shadow-sm</strong>
+          <span>Cards, quiet panels</span>
+        </div>
+        <div class="sg-shadow-demo sg-shadow-md">
+          <strong>shadow-md</strong>
+          <span>Hero cards, emphasis</span>
+        </div>
+        <div class="sg-shadow-demo sg-shadow-lg">
+          <strong>shadow-lg</strong>
+          <span>Modals, overlays</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOBILE -->
+  <section class="sg-section sg-section--surface" id="mobile">
+    <div class="container">
+      <p class="sg-eyebrow">PWA / phone</p>
+      <h2 class="sg-section-title">Mobile layout</h2>
+      <p class="sg-section-lead">
+        From <code>.cursor/rules/mobile.mdc</code> — breakpoints, safe areas, and bottom tab clearance.
+        Resize this page or open DevTools device mode to feel the responsive grids.
+      </p>
+
+      <div class="sg-grid-3" style="margin-bottom:1.5rem;">
+        <article class="sg-demo-card">
+          <p class="sg-eyebrow">Breakpoint</p>
+          <h3 style="font-size:1.25rem; margin-bottom:0.35rem;">&lt; 640px</h3>
+          <p style="margin:0;">Phone — single column, touch-first</p>
+        </article>
+        <article class="sg-demo-card">
+          <p class="sg-eyebrow">Breakpoint</p>
+          <h3 style="font-size:1.25rem; margin-bottom:0.35rem;">&lt; 768px</h3>
+          <p style="margin:0;">Mobile shell — bottom tabs, no desktop sidebar</p>
+        </article>
+        <article class="sg-demo-card">
+          <p class="sg-eyebrow">Breakpoint</p>
+          <h3 style="font-size:1.25rem; margin-bottom:0.35rem;">≥ 768px</h3>
+          <p style="margin:0;">Desktop shell — sidebar, hide bottom tabs</p>
+        </article>
+      </div>
+
+      <div class="sg-mobile-demo-wrap">
+        <div class="sg-phone" aria-label="Mock phone showing safe areas and bottom tab bar">
+          <div class="sg-phone-notch" title="safe-area-inset-top">Notch / Dynamic Island zone</div>
+          <div class="sg-phone-body">
+            <p class="sg-eyebrow">Content area</p>
+            <h3 style="font-size:1.15rem; margin:0 0 0.5rem;">Has room above the dock</h3>
+            <p style="margin:0 0 0.75rem; font-size:0.875rem; color:var(--color-text-muted);">
+              Use <code>has-bottom-bar</code> so scroll content clears the tab bar + home indicator.
+            </p>
+            <div class="sg-btn-row">
+              <button type="button" class="button-primary" style="min-height:44px;">Touch CTA ≥ 44px</button>
+            </div>
+            <div class="sg-phone-clearance" aria-hidden="true">
+              Tab bar clearance<br>
+              <small>72px + safe-area-inset-bottom</small>
+            </div>
+          </div>
+          <div class="sg-phone-tabs" aria-hidden="true">
+            <span>Home</span>
+            <span>Feed</span>
+            <span class="sg-phone-tabs-center">+</span>
+            <span>Events</span>
+            <span>More</span>
+          </div>
+          <div class="sg-phone-home" title="safe-area-inset-bottom">Home indicator</div>
+        </div>
+
+        <div class="sg-mobile-checklist">
+          <h3 style="font-size:1.15rem; margin:0 0 0.75rem;">Checklist</h3>
+          <ul>
+            <li><code>viewport-fit=cover</code> on portal pages</li>
+            <li><code>env(safe-area-inset-top/bottom)</code> on fixed chrome</li>
+            <li><code>has-bottom-bar</code> body class with pageShell tabs</li>
+            <li>No primary CTA trapped under the dock</li>
+            <li>Tap targets ~44px; don’t rely on hover alone</li>
+            <li>This page uses <code>viewport-fit=cover</code> — on a real iPhone, insets apply</li>
+          </ul>
+
+          <div class="sg-live-insets" aria-live="polite">
+            <p class="sg-eyebrow">Live env() on this device</p>
+            <p id="sgInsetReadout" style="margin:0; font-family:ui-monospace,monospace; font-size:0.8125rem; color:var(--color-text-muted);">
+              Measuring…
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="sg-footer sg-footer--safe">
+    <div class="container">
+      <p style="margin:0 0 0.5rem;">
+        Source: <code>.cursor/rules/website-theme.mdc</code> ·
+        <code>.cursor/rules/style-structure.mdc</code> ·
+        <code>.cursor/rules/mobile.mdc</code> ·
+        <code>theme/Theme_JMLLC001/Theme_JMLLC001.css</code>
+      </p>
+      <p style="margin:0;">
+        Open locally at <code>/pages/style-guide/index.html</code> — not linked in portal nav.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var el = document.getElementById('sgInsetReadout');
+      if (!el) return;
+      var probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;' +
+        'padding-top:env(safe-area-inset-top,0px);' +
+        'padding-right:env(safe-area-inset-right,0px);' +
+        'padding-bottom:env(safe-area-inset-bottom,0px);' +
+        'padding-left:env(safe-area-inset-left,0px);';
+      document.body.appendChild(probe);
+      var cs = getComputedStyle(probe);
+      el.textContent =
+        'top ' + cs.paddingTop +
+        ' · right ' + cs.paddingRight +
+        ' · bottom ' + cs.paddingBottom +
+        ' · left ' + cs.paddingLeft +
+        ' (0px is normal in desktop browsers)';
+      probe.remove();
+    })();
+  </script>
+
+</body>
+</html>

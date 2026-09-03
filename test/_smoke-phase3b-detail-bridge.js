@@ -56,7 +56,9 @@ console.log('\n── js/portal/events/detail.js — file structure ────
 
 const detail = read('js/portal/events/detail.js');
 const teamChat = read('js/portal/events/team/chat.js');
-const teamTools = read('js/portal/events/team/tools.js');
+const teamCtaBar = read('js/portal/events/team/cta-bar.js');
+const teamSheet = read('js/portal/events/team/sheet.js');
+const teamTools = teamCtaBar + '\n' + teamSheet;
 const detailPresentation = read('js/portal/events/detail/presentation.js');
 const detailRaffleRender = read('js/portal/events/detail/raffle-render.js');
 const detailMapOverlay = read('js/portal/events/detail/map-overlay.js');
@@ -556,20 +558,20 @@ detailTemplate.includes('id="detailEventMap"')
     : fail('evtHandleRaffleEntry still inline in detail.js — should be in detail/sections.js');
 
 const REQUIRED_TOOLS_WINDOW_GLOBALS = [
-    ['window.evtInitBottomNav', 'sticky CTA bar init (team/tools.js)'],
-    ['window.evtCleanupBottomNav', 'sticky CTA bar cleanup (team/tools.js)'],
-    ['window.evtOpenCtaPanel', 'CTA panel open (team/tools.js)'],
-    ['window.evtCloseCtaPanel', 'CTA panel close (team/tools.js)'],
-    ['window.evtOpenTeamToolsPanel', 'team tools panel open (team/tools.js)'],
+    ['window.evtInitBottomNav', 'sticky CTA bar init (team/cta-bar.js)'],
+    ['window.evtCleanupBottomNav', 'sticky CTA bar cleanup (team/cta-bar.js)'],
+    ['window.evtOpenCtaPanel', 'CTA panel open (team/cta-bar.js)'],
+    ['window.evtCloseCtaPanel', 'CTA panel close (team/sheet.js)'],
+    ['window.evtOpenTeamToolsPanel', 'team tools panel open (team/sheet.js)'],
 ];
 
-console.log('\n── team/tools.js — public globals (Phase 5C) ─────────────────────────────');
+console.log('\n── team/cta-bar.js + team/sheet.js — public globals (Phase 5C) ────────────');
 
 REQUIRED_TOOLS_WINDOW_GLOBALS.forEach(([assign, note]) => {
     const name = assign.replace('window.', '');
     hasGlobalBridge(teamTools, name)
-        ? pass(`${assign} bridged in team/tools.js (${note})`)
-        : fail(`${assign} missing from team/tools.js — ${note}`);
+        ? pass(`${assign} bridged in team CTA/sheet (${note})`)
+        : fail(`${assign} missing from team CTA/sheet — ${note}`);
 });
 
 // ─── Phase 5B Team Chat (team/chat.js + detail bridge) ─────
@@ -812,16 +814,19 @@ const TOOLS_INTERNAL_FNS = [
     'function cleanupBottomNav',
     'function closeCtaPanel',
     'function openCtaPanel',
-    'function openTeamToolsPanel',
 ];
 
-console.log('\n── team/tools.js — internal functions (Phase 5C) ───────────────────────');
+console.log('\n── team/cta-bar.js — internal functions (Phase 5C) ───────────────────────');
 
 TOOLS_INTERNAL_FNS.forEach(fn => {
-    teamTools.includes(fn)
-        ? pass(`${fn} present in team/tools.js`)
-        : fail(`${fn} missing from team/tools.js`);
+    teamCtaBar.includes(fn)
+        ? pass(`${fn} present in team/cta-bar.js`)
+        : fail(`${fn} missing from team/cta-bar.js`);
 });
+
+teamSheet.includes('globalThis.evtOpenTeamToolsPanel')
+    ? pass('evtOpenTeamToolsPanel bridged in team/sheet.js')
+    : fail('evtOpenTeamToolsPanel missing from team/sheet.js');
 
 // ─── portal/events.html invariants ───────────────────────
 console.log('\n── portal/events.html invariants ─────────────────────────────────────────');
@@ -846,7 +851,7 @@ console.log('\n── File split safety — team/ and detail/ scripts in events.
 
 const productionScripts = [
     ['team/chat.js', '../js/portal/events/team/chat.js', 'team/chat.js'],
-    ['team/tools.js', '../js/portal/events/team/tools.js', 'team/tools.js'],
+    ['team/cta-bar.js', '../js/portal/events/team/cta-bar.js', 'team/cta-bar.js'],
     ['detail/presentation.js', '../js/portal/events/detail/presentation.js', 'detail/presentation.js'],
     ['detail/raffle-render.js', '../js/portal/events/detail/raffle-render.js', 'detail/raffle-render.js'],
     ['detail/map-overlay.js', '../js/portal/events/detail/map-overlay.js', 'detail/map-overlay.js'],
@@ -871,7 +876,7 @@ productionScripts.forEach(([label, src, chainKey]) => {
 chainOrderOk(
     classicChain3b,
     'team/chat.js',
-    'team/tools.js',
+    'team/cta-bar.js',
     'detail/presentation.js',
     'detail/raffle-render.js',
     'detail/map-overlay.js',
@@ -906,6 +911,120 @@ if (fs.existsSync(detailDir)) {
 } else {
     fail('js/portal/events/detail/ directory missing — presentation.js required for Phase 5D.1');
 }
+
+// ─── §13.7 detail price summary + included catalog ───────────────────────
+console.log('\n── §13.7 detail price summary + included catalog ────────────────────────');
+const includedItems = read('js/components/events/included-items.js');
+includedItems.includes('function catalogListHtml(')
+    ? pass('EventsIncludedItems.catalogListHtml present')
+    : fail('catalogListHtml missing from included-items.js');
+detailSections.includes('function evtBuildDetailPriceSummaryHtml(')
+    ? pass('evtBuildDetailPriceSummaryHtml present')
+    : fail('evtBuildDetailPriceSummaryHtml missing from sections.js');
+detailSections.includes('function evtBuildDetailIncludedCatalogHtml(')
+    ? pass('evtBuildDetailIncludedCatalogHtml present')
+    : fail('evtBuildDetailIncludedCatalogHtml missing from sections.js');
+detail.includes('evtBuildDetailPriceSummaryHtml(ctx)')
+    ? pass('detail.js wires priceSummaryHtml')
+    : fail('detail.js missing priceSummaryHtml builder call');
+detail.includes('evtBuildDetailIncludedCatalogHtml(ctx)')
+    ? pass('detail.js wires includedCatalogHtml')
+    : fail('detail.js missing includedCatalogHtml builder call');
+detailTemplate.includes('priceSummaryHtml')
+    ? pass('template.js includes priceSummaryHtml slot')
+    : fail('template.js missing priceSummaryHtml');
+detailTemplate.includes('includedCatalogHtml')
+    ? pass('template.js includes includedCatalogHtml slot')
+    : fail('template.js missing includedCatalogHtml');
+detailSections.includes('evtDetailAdultPriceCents')
+    ? pass('sections uses adult_price_cents helper for paid RSVP')
+    : fail('evtDetailAdultPriceCents missing');
+
+// ─── §13.7 clear RSVP CTA + member/guest paths ───────────────────────────
+console.log('\n── §13.7 clear RSVP CTA + member/guest paths ────────────────────────────');
+detailSections.includes('function evtBuildDetailRsvpCtaHtml(')
+    ? pass('evtBuildDetailRsvpCtaHtml present')
+    : fail('evtBuildDetailRsvpCtaHtml missing from sections.js');
+detailSections.includes('function evtBuildDetailRsvpPrepHtml(')
+    ? pass('evtBuildDetailRsvpPrepHtml present')
+    : fail('evtBuildDetailRsvpPrepHtml missing from sections.js');
+detailSections.includes('function evtBuildDetailGuestRsvpHintHtml(')
+    ? pass('evtBuildDetailGuestRsvpHintHtml present')
+    : fail('evtBuildDetailGuestRsvpHintHtml missing from sections.js');
+detailSections.includes('RSVP as Member')
+    ? pass('member RSVP CTA label present')
+    : fail('RSVP as Member label missing');
+detailSections.includes('ed-rsvp-cta-block') && detailSections.includes('ed-rsvp-prep')
+    ? pass('RSVP section orders CTA before prep wrapper')
+    : fail('RSVP CTA/prep structure missing');
+detailSections.includes('/events/?e=') || detailSections.includes('evtDetailPublicInviteUrl')
+    ? pass('guest hint uses public invite URL')
+    : fail('guest hint missing public invite URL');
+(function () {
+    const shareFn = detailSections.match(/function evtBuildDetailShareCardHtml[\s\S]*?^}/m);
+    shareFn && shareFn[0].includes('evtDetailPublicInviteUrl') && !shareFn[0].includes('window.location.href')
+        ? pass('share card uses public invite URL not portal href')
+        : fail('share card still references window.location.href or missing evtDetailPublicInviteUrl');
+})();
+!detailTemplate.includes('rsvpButtons && rsvpEnabled')
+    ? pass('template shows RSVP card without rsvpEnabled gate')
+    : fail('template still gates RSVP card on rsvpEnabled');
+
+// ─── §13.7 amenity voting results ────────────────────────────────────────
+console.log('\n── §13.7 amenity voting results ─────────────────────────────────────────');
+const amenityVoting = read('js/components/events/amenity-voting.js');
+const stepVoting = read('js/portal/events/create/step-voting.js');
+const submitJs = read('js/portal/events/create/submit.js');
+const mainJs = read('js/portal/events/main.js');
+const detailCss = read('css/pages/portal/events/detail.css');
+const eventsHtml = read('pages/portal/events.html');
+
+amenityVoting.includes('window.EventsAmenityVoting') || amenityVoting.includes('globalThis.EventsAmenityVoting')
+    ? pass('amenity-voting.js exports EventsAmenityVoting')
+    : fail('EventsAmenityVoting export missing');
+amenityVoting.includes('function tallyCounts(') && amenityVoting.includes('function canShowResults(')
+    ? pass('amenity-voting.js has tallyCounts + canShowResults')
+    : fail('amenity-voting.js missing core helpers');
+stepVoting.includes('validateVoting')
+    ? pass('step-voting.js present with validateVoting')
+    : fail('step-voting.js missing validateVoting');
+mainJs.includes("import '../../components/events/amenity-voting.js'")
+    ? pass('main.js imports amenity-voting.js')
+    : fail('main.js missing amenity-voting import');
+mainJs.includes("import './create/step-voting.js'")
+    ? pass('main.js imports step-voting.js')
+    : fail('main.js missing step-voting import');
+submitJs.includes('amenity_voting')
+    ? pass('submit.js writes amenity_voting')
+    : fail('submit.js missing amenity_voting write');
+detailData.includes('event_parties') && detailData.includes('amenityVoteTallies')
+    ? pass('detail/data.js fetches amenity vote tallies')
+    : fail('detail/data.js missing amenity tally fetch');
+detailSections.includes('function evtBuildDetailAmenityResultsHtml(')
+    ? pass('evtBuildDetailAmenityResultsHtml present')
+    : fail('evtBuildDetailAmenityResultsHtml missing from sections.js');
+detail.includes('evtBuildDetailAmenityResultsHtml(ctx)')
+    ? pass('detail.js wires amenityResultsHtml')
+    : fail('detail.js missing amenityResultsHtml builder call');
+detailTemplate.includes('amenityResultsHtml')
+    ? pass('template.js includes amenityResultsHtml slot')
+    : fail('template.js missing amenityResultsHtml');
+detailCss.includes('.ed-amenity-results')
+    ? pass('detail.css has amenity results styles')
+    : fail('detail.css missing .ed-amenity-results');
+fs.existsSync(path.join(root, 'supabase/migrations/20260901150000_106_event_amenity_voting.sql'))
+    ? pass('migration 106_event_amenity_voting.sql exists')
+    : fail('migration 106 missing');
+eventsHtml.includes('events.bundle.js?v=163')
+    ? pass('events.html bundle cache v=161')
+    : fail('events.html should bump events.bundle.js to ?v=163');
+eventsHtml.includes('index.css?v=163')
+    ? pass('events.html index.css cache v=161')
+    : fail('events.html should bump index.css to ?v=163');
+const eventsIndexCss = read('css/pages/portal/events/index.css');
+eventsIndexCss.includes('detail.css?v=163')
+    ? pass('index.css versioned detail.css @import')
+    : fail('index.css should @import detail.css?v=163');
 
 // ─── Phase 1 bridge still intact ─────────────────────────
 console.log('\n── Phase 1 bridge (init.js) — regression check ────────────────────────────');

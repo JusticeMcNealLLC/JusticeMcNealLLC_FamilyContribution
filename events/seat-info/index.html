@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Your trip details | Justice McNeal LLC</title>
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#13366E">
+    <link rel="stylesheet" href="../../theme/Theme_JMLLC001/Theme_JMLLC001.css">
+    <link rel="stylesheet" href="../../css/shared.css">
+    <link rel="stylesheet" href="../../css/pages/portal/events/detail.css?v=167">
+    <style>
+        body.seat-info-page {
+            margin: 0;
+            font-family: var(--font-body, system-ui, sans-serif);
+            color: var(--color-text, #0B2545);
+            background: var(--color-background, #fff);
+            min-height: 100dvh;
+            padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+        }
+        .seat-info-wrap {
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        .seat-info-brand {
+            font-family: var(--font-headline, Georgia, serif);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-primary, #13366E);
+            margin: 0 0 1.25rem;
+        }
+        .seat-info-card {
+            border: 1.5px solid var(--color-border, #D5DFEC);
+            border-radius: 12px;
+            background: var(--color-surface, #EEF2F6);
+            padding: 1.25rem;
+        }
+        .seat-info-card h1 {
+            font-family: var(--font-headline, Georgia, serif);
+            font-size: 1.35rem;
+            margin: 0 0 0.35rem;
+            color: var(--color-text, #0B2545);
+        }
+        .seat-info-sub {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0 0 1rem;
+        }
+        .seat-info-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--color-primary, #13366E);
+            background: #fff;
+            border: 1px solid var(--color-border, #D5DFEC);
+            border-radius: 999px;
+            padding: 4px 10px;
+            margin-bottom: 1rem;
+        }
+        .seat-info-actions {
+            margin-top: 1.25rem;
+        }
+        .seat-info-submit {
+            width: 100%;
+            min-height: 44px;
+            border: none;
+            border-radius: 10px;
+            background: var(--color-primary, #13366E);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .seat-info-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .seat-info-error,
+        .seat-info-success {
+            text-align: center;
+            padding: 2rem 0.5rem;
+        }
+        .seat-info-error h1,
+        .seat-info-success h1 {
+            font-family: var(--font-headline, Georgia, serif);
+            font-size: 1.35rem;
+            margin: 0 0 0.5rem;
+        }
+        .seat-info-muted { color: #6b7280; font-size: 0.9rem; }
+        .seat-info-loading { text-align: center; padding: 3rem 1rem; color: #6b7280; }
+    </style>
+</head>
+<body class="seat-info-page antialiased">
+    <div class="seat-info-wrap">
+        <p class="seat-info-brand">Justice McNeal LLC</p>
+        <div id="seatInfoRoot">
+            <p class="seat-info-loading">Loading your invite…</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../js/config.js"></script>
+    <script src="../../js/components/events/helpers.js?v=167"></script>
+    <script src="../../js/components/events/included-items.js?v=167"></script>
+    <script src="../../js/events/seat-info.js?v=167"></script>
+</body>
+</html>

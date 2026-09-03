@@ -26,7 +26,25 @@ async function loadDocs() {
         .eq('event_id', STATE.eventId)
         .order('created_at', { ascending: true });
     if (error) throw error;
-    return { docs: data || [] };
+    const docs = data || [];
+    if (STATE.event?.event_type === 'llc') {
+        STATE.eventDocuments = docs.map((d) => ({
+            id: d.id,
+            doc_type: d.doc_type,
+            target_user_id: d.target_user_id,
+            distributed: d.distributed,
+        }));
+    }
+    return { docs };
+}
+
+async function _syncEventDocuments(STATE) {
+    if (STATE.event?.event_type !== 'llc' || !STATE.eventId) return;
+    const { data } = await supabaseClient
+        .from('event_documents')
+        .select('id, doc_type, target_user_id, distributed')
+        .eq('event_id', STATE.eventId);
+    STATE.eventDocuments = data || [];
 }
 
 function docTypeIcon(type) {
@@ -105,8 +123,24 @@ function docsHtml() {
 
     const memberOptions = goingMembers.map(m => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join('');
     const typeOptions = (api().getDocTypes?.() || []).map(t => `<option value="${esc(t.value)}">${esc(t.label)}</option>`).join('');
+    const isPlaneLlc = STATE.event?.event_type === 'llc'
+        && STATE.event?.transportation_mode === 'llc_provides'
+        && STATE.event?.transportation_method === 'plane';
+    const ticketHelper = window.EventsManageTicketHandoff;
+    const planeHandoff = isPlaneLlc && ticketHelper
+        ? ticketHelper.computePlaneTicketHandoff({
+            goingRsvps: STATE.rsvps.filter((r) => r.status === 'going'),
+            documents: docs,
+        })
+        : null;
+    const firstMissingUserId = planeHandoff?.missingUserIds?.[0] || '';
 
     return `
+        ${planeHandoff && planeHandoff.missingCount ? `
+        <div class="em-card mb-4" style="border-color:#fcd34d;background:#fffbeb" data-doc-preset-member="${esc(firstMissingUserId)}">
+            <p class="text-sm font-bold text-amber-900">${planeHandoff.missingCount} member${planeHandoff.missingCount === 1 ? '' : 's'} still need plane tickets</p>
+            <p class="text-xs text-amber-800 mt-1">Upload per-member plane tickets below. The form will preset the next member who needs a ticket.</p>
+        </div>` : ''}
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Document handoff</p>
             <h3 class="em-command-title">${pendingCount ? `${pendingCount} document${pendingCount === 1 ? '' : 's'} pending` : 'Documents are caught up'}</h3>
@@ -168,7 +202,18 @@ function wireDocs() {
     const targetMode = document.getElementById('emDocTargetMode');
     const memberWrap = document.getElementById('emDocMemberWrap');
     const type = document.getElementById('emDocType');
-    if (type) type.value = 'itinerary';
+    const memberSelect = document.getElementById('emDocMember');
+    const presetMemberId = document.querySelector('[data-doc-preset-member]')?.getAttribute('data-doc-preset-member') || '';
+    const isPlaneLlc = STATE.event?.event_type === 'llc'
+        && STATE.event?.transportation_mode === 'llc_provides'
+        && STATE.event?.transportation_method === 'plane';
+    if (type) type.value = isPlaneLlc && presetMemberId ? 'plane_ticket' : 'itinerary';
+    if (presetMemberId && targetMode && memberSelect) {
+        targetMode.value = 'member';
+        memberWrap?.classList.remove('hidden');
+        memberSelect.value = presetMemberId;
+        if (type) type.value = 'plane_ticket';
+    }
     targetMode?.addEventListener('change', () => {
         memberWrap?.classList.toggle('hidden', targetMode.value !== 'member');
         if (type) type.value = targetMode.value === 'member' ? 'plane_ticket' : 'itinerary';
@@ -193,6 +238,7 @@ function wireDocs() {
                 if (error) return alert('Update failed: ' + error.message);
             }
             STATE.tabData.docs = null;
+            await _syncEventDocuments(STATE);
             api().renderTab?.('docs');
             api().notifyParent?.('updated', STATE.eventId);
         });
@@ -238,6 +284,7 @@ async function uploadDocFromManage() {
         if (dbErr) throw dbErr;
 
         STATE.tabData.docs = null;
+        await _syncEventDocuments(STATE);
         api().renderTab?.('docs');
         api().notifyParent?.('updated', STATE.eventId);
     } catch (err) {

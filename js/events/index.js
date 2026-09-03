@@ -202,6 +202,7 @@ async function pubLoadEvent(slug, isCheckin, ticketToken, paidType) {
         pubGuestRsvp = gRsvp;
         if (gRsvp) {
             pubGuestToken = gRsvp.guest_token;
+            window.pubGuestAttachRequested = !!gRsvp.attach_requested;
             if (paidType === 'raffle_entry') {
                 pubGuestRaffleEntry = true;
             } else if (typeof pubRefreshGuestRaffleEntry === 'function') {
@@ -352,7 +353,7 @@ function pubBuildPublicDetailShell(event, goingCount) {
                         </div>
                     </div>
                     <div id="memberRsvpCard" class="hidden ed-card ed-card-rsvp event-detail-card-tight public-action-card"><p class="ed-summary-heading">Your RSVP</p><div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div></div>
-                    <div id="guestRsvpSection" class="hidden ed-card event-detail-card-tight public-action-card"><p class="ed-summary-heading">RSVP for This Event</p><p class="public-ed-muted" style="margin-bottom:14px">No account needed. Enter your name and email.</p><div class="public-ed-field-stack"><input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name"><input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address"><input type="tel" id="guestPhoneInput" placeholder="Phone number (optional)" class="evt-input" aria-label="Phone number optional"><label class="evt-checkbox-label"><input type="checkbox" id="guestSmsConsentCheck"><span>Text me event updates at this number. Message/data rates may apply. Reply STOP to opt out.</span></label><label class="evt-checkbox-label hidden"><input type="checkbox" id="guestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label><button onclick="pubHandleGuestRsvp()" id="guestRsvpBtn" class="evt-rsvp-pay">RSVP as Guest</button></div>${pubMemberRsvpPromptHtml(event.slug)}<div class="pub-rsvp-links"><button type="button" onclick="pubToggleLookup()" class="pub-rsvp-text-link">Already RSVP'd? Look up your ticket</button></div><div id="lookupPanel" class="hidden" style="margin-top:14px"><p class="public-ed-muted" style="margin-bottom:10px">Enter the email you used to RSVP and your ticket will show here.</p><div class="public-ed-field-stack"><input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" aria-label="Email used for RSVP"><button onclick="pubLookupGuestTicket()" id="lookupBtn" class="evt-action-btn">Find My Ticket</button></div><div id="lookupResult" style="margin-top:10px"></div></div></div>
+                    <div id="guestRsvpSection" class="hidden ed-card event-detail-card-tight public-action-card"><p class="ed-summary-heading">RSVP for This Event</p><p class="public-ed-muted" style="margin-bottom:14px">No account needed. Enter your name, email, and phone.</p><div class="public-ed-field-stack"><input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name"><input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address"><input type="tel" id="guestPhoneInput" placeholder="Phone number" class="evt-input" required aria-label="Phone number"><div id="guestSeatPicker"></div><div id="guestIncludedOptions"></div><div id="guestDisclaimerAcks"></div><div id="guestAmenityVote"></div><div id="guestPaymentChoice"></div><label class="evt-checkbox-label"><input type="checkbox" id="guestSmsConsentCheck"><span>Text me event updates at this number. Message/data rates may apply. Reply STOP to opt out.</span></label><label class="evt-checkbox-label hidden"><input type="checkbox" id="guestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label><button onclick="pubHandleGuestRsvp()" id="guestRsvpBtn" class="evt-rsvp-pay">RSVP as Guest</button></div>${pubMemberRsvpPromptHtml(event.slug)}<div class="pub-rsvp-links"><button type="button" onclick="pubToggleLookup()" class="pub-rsvp-text-link">Already RSVP'd? Look up your ticket</button></div><div id="lookupPanel" class="hidden" style="margin-top:14px"><p class="public-ed-muted" style="margin-bottom:10px">Enter the email you used to RSVP and your ticket will show here.</p><div class="public-ed-field-stack"><input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" aria-label="Email used for RSVP"><button onclick="pubLookupGuestTicket()" id="lookupBtn" class="evt-action-btn">Find My Ticket</button></div><div id="lookupResult" style="margin-top:10px"></div></div></div>
                     <div id="memberOnlyNotice" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-notice-card"><span class="evt-notice-icon">🔒</span><div><p class="evt-notice-title">Members-only event</p><p class="evt-notice-sub">Sign in with your member account to RSVP.</p><a href="${pubPortalLoginHref(event.slug)}" class="pub-member-rsvp-btn pub-member-rsvp-btn--inline">Sign in to RSVP</a></div></div></div>
                     <div id="ticketSection" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-qr-card"><h3 class="evt-qr-title">🎫 Your Event Ticket</h3><canvas id="ticketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p></div></div>
                     <div id="guestTicketSection" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-qr-card"><div style="font-size:36px;margin-bottom:8px">🎉</div><h3 class="evt-qr-title">You're In!</h3><p id="guestTicketName" style="font-size:13px;color:#717171;margin-bottom:16px"></p><canvas id="guestTicketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p><p style="font-size:13px;color:#f59e0b;font-weight:600;margin-top:10px">Bookmark this page. This is your ticket.</p></div></div>
@@ -498,6 +499,7 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     // Description (markdown, collapsible, empty state)
     const descEl = document.getElementById('eventDesc');
     const rawDesc = event.description || '';
+    const hasAboutTabs = Array.isArray(event.about_tabs) && event.about_tabs.length > 0;
     if (rawDesc.trim()) {
         const rendered = pubMiniMarkdown(pubEscapeHtml(rawDesc)).replace(/\n/g, '<br>');
         descEl.classList.add('evt-desc');
@@ -513,8 +515,25 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
             });
             descEl.parentNode.insertBefore(btn, descEl.nextSibling);
         }
-    } else {
+    } else if (!hasAboutTabs) {
         descEl.innerHTML = '<em style="color:#b0b0b0">No details yet — check back closer to the event.</em>';
+    } else {
+        descEl.innerHTML = '';
+    }
+
+    if (hasAboutTabs && window.EventsAboutTabs && typeof window.EventsAboutTabs.aboutTabsHtml === 'function') {
+        const tabsWrap = document.createElement('div');
+        tabsWrap.innerHTML = window.EventsAboutTabs.aboutTabsHtml(event.about_tabs, { idPrefix: 'publicAbout' });
+        const tabsNode = tabsWrap.firstElementChild;
+        if (tabsNode) {
+            let insertAfter = descEl;
+            const maybeBtn = descEl.nextSibling;
+            if (maybeBtn && maybeBtn.classList && maybeBtn.classList.contains('evt-read-more')) {
+                insertAfter = maybeBtn;
+            }
+            insertAfter.parentNode.insertBefore(tabsNode, insertAfter.nextSibling);
+            window.EventsAboutTabs.wireAboutTabs(descEl.parentNode);
+        }
     }
 
     // Gated Notes

@@ -16,6 +16,8 @@ import {
     TW_CTA_RAFFLE_DONE,
     TW_CTA_DISABLED,
     TW_CTA_RAFFLE_LOCKED,
+    TW_CTA_COMP,
+    TW_CTA_COMP_DONE,
     TW_CTA_FOOTNOTE,
 } from './ui-tw.js';
 
@@ -122,20 +124,38 @@ function cleanupBottomNav() {
     if (typeof globalThis.evtCleanupHeroCollapse === 'function') window.evtCleanupHeroCollapse();
 }
 
-function initBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub) {
+function initBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub, myCompetitionEntry, competitionPhases, myCompVote) {
     cleanupBottomNav();
 
     if (window.matchMedia('(min-width: 1024px)').matches) return;
 
+    const isCompetition = event.event_type === 'competition';
     const rsvpEnabled = event.rsvp_enabled !== false;
     const raffleEnabled = !!event.raffle_enabled;
     const teamHubAccess = !!canAccessTeamHub || isHost
         || (typeof canAccessAdminDashboard === 'function' && canAccessAdminDashboard());
 
-    if (!isHost && !teamHubAccess && !rsvpEnabled && !raffleEnabled) return;
+    if (!isHost && !teamHubAccess && !rsvpEnabled && !raffleEnabled && !isCompetition) return;
 
     const isClosed = event.status === 'completed' || event.status === 'cancelled';
     const canRsvp = rsvpEnabled && ['open', 'confirmed', 'active'].includes(event.status) && !entriesClosed;
+    const compPh = window.EventsCompetitionPhases || {};
+    const phases = compPh.normalizePhases ? compPh.normalizePhases(competitionPhases) : (competitionPhases || []);
+    const displayPhaseNum = compPh.resolveDisplayPhase ? compPh.resolveDisplayPhase(phases, new Date()) : 0;
+    const votingOpen = compPh.isVotingOpen ? compPh.isVotingOpen(phases, new Date()) : false;
+    const submissionOpen = compPh.isSubmissionOpen ? compPh.isSubmissionOpen(phases, new Date()) : false;
+    const hasSubmission = compPh.entryHasSubmission ? compPh.entryHasSubmission(myCompetitionEntry) : false;
+    const entryFee = event.competition_config?.entry_fee_cents || 0;
+    const showCompJoin = isCompetition && !isHost && !teamHubAccess && displayPhaseNum <= 1 && !isClosed;
+    const showCompSubmit = isCompetition && !isHost && !teamHubAccess && submissionOpen && !!myCompetitionEntry && !isClosed;
+    const memberGoingNav = typeof globalThis.evtIsGoingRsvp === 'function'
+        ? window.evtIsGoingRsvp(rsvp)
+        : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
+    const voterCtx = { hasRsvp: memberGoingNav, hasCompEntry: !!myCompetitionEntry };
+    const voterEligible = compPh.isVoterEligible
+        ? compPh.isVoterEligible(event.competition_config || {}, voterCtx)
+        : true;
+    const showCompVote = isCompetition && !isHost && !teamHubAccess && votingOpen && voterEligible && !isClosed;
 
     let primaryBtn = '';
     let secondaryBtn = '';
@@ -149,13 +169,63 @@ function initBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, event
     } else if (teamHubAccess) {
         primaryBtn = teamBtn;
     } else {
+        if (showCompJoin) {
+            if (myCompetitionEntry) {
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_COMP_DONE}" disabled>${EVT_CTA_ICONS.check} Registered</button>`;
+            } else if (entryFee > 0) {
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_COMP}" ${evtDataAction('evtJoinCompetition', eventId)}>${EVT_CTA_ICONS.ticket} Join — ${formatCurrency(entryFee)}</button>`;
+            } else {
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_COMP}" ${evtDataAction('evtJoinCompetition', eventId)}>${EVT_CTA_ICONS.ticket} Join as Competitor</button>`;
+            }
+        } else if (showCompSubmit) {
+            if (hasSubmission) {
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_COMP_DONE}" disabled>${EVT_CTA_ICONS.check} Submitted</button>`;
+            } else {
+                primaryBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_COMP}" onclick="document.getElementById('competition-section')?.scrollIntoView({behavior:'smooth',block:'start'})">📤 Submit your entry</button>`;
+            }
+        } else if (showCompVote) {
+            if (myCompVote) {
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_COMP_DONE}" disabled>${EVT_CTA_ICONS.check} Voted</button>`;
+            } else {
+                primaryBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_COMP}" onclick="document.getElementById('competition-section')?.scrollIntoView({behavior:'smooth',block:'start'})">🗳️ Cast your vote</button>`;
+            }
+        }
+
         if (rsvpEnabled) {
             if (rsvp?.paid) {
                 primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP_DONE}" ${evtDataAction('evtOpenCtaPanel', 'ticket', eventId)}>${EVT_CTA_ICONS.ticket} RSVP'd · Ticket</button>`;
+            } else if (rsvp?.status === 'going' && event.pricing_mode === 'paid') {
+                const detailRoot = document.getElementById('eventsDetailView') || document;
+                const role = (window.EventsPartySeats && typeof window.EventsPartySeats.readPayerRoleFromRoot === 'function')
+                    ? window.EventsPartySeats.readPayerRoleFromRoot(detailRoot)
+                    : ((window.EventsSeatPicker && typeof window.EventsSeatPicker.readRoleFromRoot === 'function')
+                        ? window.EventsSeatPicker.readRoleFromRoot(detailRoot)
+                        : 'adult');
+                let partyTotal = null;
+                if (window.EventsPartySeats && typeof window.EventsPartySeats.partyBaseTotalCents === 'function') {
+                    const seats = window.EventsPartySeats.readSeatsFromRoot(detailRoot, event);
+                    partyTotal = window.EventsPartySeats.partyBaseTotalCents(event, seats);
+                }
+                const label = (window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === 'function')
+                    ? window.EventsHelpers.rsvpPayButtonLabel(event, role, {
+                        mode: 'complete',
+                        audience: 'member',
+                        ...(partyTotal != null ? { partyTotalCents: partyTotal } : {}),
+                    })
+                    : 'Complete Payment';
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction('evtHandleRsvp', eventId, 'going')}>${label}</button>`;
             } else if (rsvp?.status === 'going') {
                 primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP_DONE}" ${evtDataAction('evtOpenCtaPanel', 'ticket', eventId)}>${EVT_CTA_ICONS.ticket} Going · Ticket</button>`;
             } else if (canRsvp && !eventIsFull && event.pricing_mode === 'paid') {
-                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction('evtHandleRsvp', eventId, 'going')}>RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>`;
+                const adultPrice = typeof globalThis.evtDetailAdultPriceCents === 'function'
+                    ? globalThis.evtDetailAdultPriceCents(event)
+                    : (event.adult_price_cents ?? event.rsvp_cost_cents ?? 0);
+                const kidsPricingVaries = event.kids_free !== false
+                    || (event.kid_price_cents != null && Number(event.kid_price_cents) !== Number(adultPrice));
+                const label = kidsPricingVaries
+                    ? 'RSVP'
+                    : `RSVP — ${formatCurrency(adultPrice)}`;
+                primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction('evtHandleRsvp', eventId, 'going')}>${label}</button>`;
             } else if (canRsvp && !eventIsFull) {
                 primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction('evtHandleRsvp', eventId, 'going')}>RSVP</button>`;
             } else if (eventIsFull) {

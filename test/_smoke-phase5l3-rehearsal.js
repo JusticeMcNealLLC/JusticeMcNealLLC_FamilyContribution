@@ -111,9 +111,9 @@ if (!chainEntries.length) {
     const manageRaffleIdx = chainEntries.indexOf('manage/raffle.js');
     const manageDangerIdx = chainEntries.indexOf('manage/danger.js');
     const globalReexportsIdx = chainEntries.indexOf('compat/global-reexports.js');
-    chainEntries.length === 55
+    chainEntries.length === 67
         ? pass(`main.js lists ${chainEntries.length} middle imports (production order)`)
-        : fail('main.js must have 55 middle imports', `found ${chainEntries.length}`);
+        : fail('main.js must have 67 middle imports', `found ${chainEntries.length}`);
     const raffleModelIdx = chainEntries.indexOf('core/raffle-model.js');
     const listSearchIdx = chainEntries.indexOf('list/search.js');
     const listRightRailIdx = chainEntries.indexOf('list/right-rail.js');
@@ -141,10 +141,6 @@ if (!chainEntries.length) {
         ? pass('loader order: … → danger → global-reexports → sheet')
         : fail('loader manage module order');
     const geoIdx = chainEntries.indexOf('create/geocode.js');
-    const legacyCostsIdx = chainEntries.indexOf('create/legacy-costs.js');
-    const legacyLocationIdx = chainEntries.indexOf('create/legacy-location.js');
-    const legacyPreviewIdx = chainEntries.indexOf('create/legacy-preview.js');
-    const legacySubmitIdx = chainEntries.indexOf('create/legacy-submit.js');
     const stepBasicsIdx = chainEntries.indexOf('create/step-basics.js');
     const stepWhenIdx = chainEntries.indexOf('create/step-when.js');
     const stepPricingIdx = chainEntries.indexOf('create/step-pricing.js');
@@ -152,15 +148,14 @@ if (!chainEntries.length) {
     const raffleBuilderIdx = chainEntries.indexOf('create/raffle-builder.js');
     const submitIdx = chainEntries.indexOf('create/submit.js');
     const sheetIdx = chainEntries.indexOf('create/sheet.js');
-    geoIdx >= 0 && legacyCostsIdx > geoIdx
-        && legacyLocationIdx > legacyCostsIdx && legacyPreviewIdx > legacyLocationIdx
-        && legacySubmitIdx > legacyPreviewIdx && stepBasicsIdx > legacySubmitIdx
+    geoIdx >= 0 && stepBasicsIdx > geoIdx
         && stepWhenIdx > stepBasicsIdx
         && stepPricingIdx > stepWhenIdx && stepReviewIdx > stepPricingIdx
         && raffleBuilderIdx > stepReviewIdx && submitIdx > raffleBuilderIdx
         && sheetIdx > submitIdx
-        ? pass('loader order: geocode → legacy-* → steps → raffle-builder → submit → sheet')
-        : fail('loader geocode → legacy → steps → raffle-builder → submit → sheet order');
+        && chainEntries.indexOf('create/legacy-costs.js') < 0
+        ? pass('loader order: geocode → steps → raffle-builder → submit → sheet (no legacy create)')
+        : fail('loader geocode → steps → raffle-builder → submit → sheet order');
 }
 
 !fs.existsSync(path.join(root, 'js/portal/events/classic-chain-loader.js'))

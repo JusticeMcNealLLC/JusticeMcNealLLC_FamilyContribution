@@ -33,6 +33,9 @@ function evtBuildDetailTemplate(templateCtx) {
         mobileHostedHtml,
         descHtml,
         descIsLong,
+        aboutTabsHtml,
+        includedCatalogHtml,
+        amenityResultsHtml,
         eventContextHtml,
         attendeePreviewHtml,
         organizerHtml,
@@ -47,6 +50,7 @@ function evtBuildDetailTemplate(templateCtx) {
         scrapbookHtml,
         relatedHtml,
         rsvpButtons,
+        priceSummaryHtml,
         teamHubCardHtml,
         qrHtml,
         documentsHtml,
@@ -160,6 +164,9 @@ function evtBuildDetailTemplate(templateCtx) {
                             <p class="ed-about-heading">About This Event</p>
                             <div class="ed-desc${descIsLong ? ' ed-desc-collapsed' : ''}" id="evtDescWrap">${descHtml}</div>
                             ${descIsLong ? '<button class="ed-read-more" onclick="var w=document.getElementById(\'evtDescWrap\'),c=w.classList.toggle(\'ed-desc-collapsed\');this.textContent=c?\'Read more\':\'Show less\'">Read more</button>' : ''}
+                            ${aboutTabsHtml || ''}
+                            ${includedCatalogHtml || ''}
+                            ${amenityResultsHtml || ''}
                             ${eventContextHtml ? `<div class="ed-context-list">${eventContextHtml}</div>` : ''}
                         </div>
                         ${attendeePreviewHtml ? `
@@ -260,9 +267,10 @@ function evtBuildDetailTemplate(templateCtx) {
                                 ${event.location_text ? `<a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? 'https://maps.apple.com/?daddr=' : 'https://www.google.com/maps/dir/?api=1&destination='}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-maps-link">View on Maps ↗</a>` : ''}
                             </div>
                         </div>` : ''}
+                        ${priceSummaryHtml || ''}
                     </div>
                 </div>
-                ${rsvpButtons && rsvpEnabled ? `
+                ${rsvpButtons ? `
                 <div class="ed-card ed-card-rsvp event-detail-card-tight portal-action-card">
                     <p class="ed-summary-heading">Your RSVP</p>
                     ${rsvpButtons}

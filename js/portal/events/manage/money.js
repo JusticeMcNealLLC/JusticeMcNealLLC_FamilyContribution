@@ -21,7 +21,8 @@ function money(cents) {
 async function loadMoney() {
     const STATE = api().getState?.() || {};
     const eventId = STATE.eventId;
-    const [rsvpsRes, guestRes, raffleRes, poolRes] = await Promise.all([
+    const isLlc = STATE.event?.event_type === 'llc';
+    const queries = [
         supabaseClient
             .from('event_rsvps')
             .select('id, user_id, status, amount_paid_cents, paid, refunded, refund_amount_cents, stripe_payment_intent_id, profiles!event_rsvps_user_id_fkey(first_name, last_name, profile_picture_url)')
@@ -38,19 +39,35 @@ async function loadMoney() {
             .from('prize_pool_contributions')
             .select('id, amount_cents')
             .eq('event_id', eventId),
-    ]);
+    ];
+    if (isLlc) {
+        queries.push(
+            supabaseClient
+                .from('event_cost_items')
+                .select('*')
+                .eq('event_id', eventId)
+                .order('sort_order', { ascending: true }),
+        );
+    }
+    const results = await Promise.all(queries);
+    const [rsvpsRes, guestRes, raffleRes, poolRes, costRes] = results;
     return {
         rsvps:    rsvpsRes.data    || [],
         guests:   guestRes.data    || [],
         raffle:   raffleRes.data   || [],
         poolPays: poolRes.data     || [],
+        costItems: isLlc ? (costRes?.data || []) : [],
+        costBreakdown: isLlc ? (STATE.event?.cost_breakdown || null) : null,
     };
 }
 
 function moneyHtml() {
     const STATE = api().getState?.() || {};
     const d = STATE.tabData.money;
-    const isPaidEvent = STATE.event?.pricing_mode === 'paid' || Number(STATE.event?.rsvp_cost_cents || 0) > 0;
+    const adultCents = Number(STATE.event?.adult_price_cents);
+    const isPaidEvent = STATE.event?.pricing_mode === 'paid'
+        || (Number.isFinite(adultCents) && adultCents > 0)
+        || Number(STATE.event?.rsvp_cost_cents || 0) > 0;
     const paidRsvps = d.rsvps.filter(r => r.paid);
     const paidGuests = d.guests.filter(g => g.paid);
     const refundedRsvps = d.rsvps.filter(r => r.refunded);
@@ -101,6 +118,47 @@ function moneyHtml() {
     }));
     const paymentRows = [...memberRows, ...guestRows].join('') || `<p class="text-xs text-gray-400 italic py-2">No paid RSVPs yet.</p>`;
 
+    const isLlc = STATE.event?.event_type === 'llc';
+    const costItems = d.costItems || [];
+    const costBreakdown = d.costBreakdown || {};
+    const goingCount = STATE.rsvps.filter((r) => r.status === 'going').length
+        + STATE.guestRsvps.filter((g) => g.status === 'going').length;
+    const buyInCents = Number(STATE.event?.adult_price_cents ?? STATE.event?.rsvp_cost_cents ?? 0);
+    const budgetIncluded = Number(costBreakdown.total_included_cents)
+        || costItems
+            .filter((i) => i.included_in_buyin !== false)
+            .reduce((s, i) => s + (Number(i.total_cost_cents) || 0), 0);
+    const projectedAtGoing = goingCount * buyInCents;
+    const budgetDelta = projectedAtGoing - budgetIncluded;
+    const budgetDeltaLabel = budgetDelta >= 0
+        ? `${fmt(budgetDelta)} over budget at current RSVPs`
+        : `${fmt(Math.abs(budgetDelta))} under budget at current RSVPs`;
+
+    function llcBudgetHtml() {
+        if (!isLlc) return '';
+        const itemRows = costItems.length
+            ? costItems.map((item) => {
+                const included = item.included_in_buyin !== false;
+                const amt = included
+                    ? (Number(item.total_cost_cents) || 0)
+                    : (Number(item.avg_per_person_cents) || 0);
+                const amtLabel = included ? fmt(amt) : `~${fmt(amt)}/person`;
+                return `<div class="em-money-row"><span>${esc(item.name || 'Item')}${included ? '' : ' (OOP)'}</span><strong>${amtLabel}</strong></div>`;
+            }).join('')
+            : `<p class="text-xs text-gray-400 italic py-2">No cost items on file. Budget totals use saved breakdown if available.</p>`;
+        return `
+            <div class="em-card">
+                <div class="em-section-head"><div><h3 class="em-section-title">Trip budget</h3><p class="em-section-sub">Planned costs vs RSVP revenue collected.</p></div></div>
+                ${itemRows}
+                <div class="em-money-row" style="margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb"><span>Included budget total</span><strong>${fmt(budgetIncluded)}</strong></div>
+                ${costBreakdown.final_buyin_cents ? `<div class="em-money-row"><span>Suggested buy-in</span><strong>${fmt(costBreakdown.final_buyin_cents)}/person</strong></div>` : ''}
+                ${costBreakdown.llc_cut_cents ? `<div class="em-money-row"><span>LLC cut (per person)</span><strong>+${fmt(costBreakdown.llc_cut_cents)}</strong></div>` : ''}
+                <div class="em-money-row"><span>Collected (net RSVP)</span><strong>${fmt(netRevenue)}</strong></div>
+                <div class="em-money-row"><span>Projected at ${goingCount} going</span><strong>${fmt(projectedAtGoing)}</strong></div>
+                ${budgetIncluded > 0 ? `<p class="text-xs text-gray-500 mt-2">${budgetDeltaLabel}.</p>` : ''}
+            </div>`;
+    }
+
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Money command</p>
@@ -130,6 +188,8 @@ function moneyHtml() {
                 <div class="em-money-row"><span>Refunds recorded</span><strong>${fmt(refunded)}</strong></div>
                 <p class="text-xs text-gray-400 mt-3">Refunds are still handled through Stripe/dashboard tooling. This panel keeps the host-facing audit trail together.</p>
             </div>
+
+            ${llcBudgetHtml()}
         </div>
     `;
 }

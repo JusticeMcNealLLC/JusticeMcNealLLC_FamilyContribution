@@ -298,7 +298,7 @@
           const number = Number(value);
           return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : null;
         }
-        const api19 = {
+        const api21 = {
           VERSION,
           DEFAULT_EMOJI,
           normalizeConfig,
@@ -311,10 +311,10 @@
           getDrawQueue,
           validateConfig
         };
-        root2.EventsRaffleModel = api19;
-        if (typeof module !== "undefined" && module.exports) module.exports = api19;
+        root2.EventsRaffleModel = api21;
+        if (typeof module !== "undefined" && module.exports) module.exports = api21;
         if (typeof root2.PortalEvents === "undefined") root2.PortalEvents = {};
-        root2.PortalEvents.raffleModel = api19;
+        root2.PortalEvents.raffleModel = api21;
       })(typeof globalThis !== "undefined" ? globalThis : window);
     }
   });
@@ -443,14 +443,18 @@
     }
     function miniMarkdown(text, escapeFirst = false) {
       if (!text) return "";
-      let html5 = escapeFirst ? escapeHtml(text) : text;
-      html5 = html5.replace(
+      let html11 = escapeFirst ? escapeHtml(text) : text;
+      html11 = html11.replace(
+        /!\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g,
+        '<img src="$2" alt="$1" loading="lazy" class="ed-md-img">'
+      );
+      html11 = html11.replace(
         /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
         '<a href="$2" target="_blank" rel="noopener">$1</a>'
       );
-      html5 = html5.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-      html5 = html5.replace(/\*(.+?)\*/g, "<em>$1</em>");
-      return html5;
+      html11 = html11.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      html11 = html11.replace(/\*(.+?)\*/g, "<em>$1</em>");
+      return html11;
     }
     function formatMoney(cents, opts = {}) {
       const n = Number(cents) || 0;
@@ -658,6 +662,118 @@
       }
       return labels.map((label) => ({ label, events: buckets[label] })).filter((g2) => g2.events.length > 0);
     }
+    function normalizeSeatRole(raw) {
+      const v = String(raw || "").trim().toLowerCase();
+      return v === "kid" ? "kid" : "adult";
+    }
+    function adultPriceCents2(event) {
+      if (event?.adult_price_cents != null && Number.isFinite(Number(event.adult_price_cents))) {
+        return Math.max(0, Number(event.adult_price_cents));
+      }
+      return Math.max(0, Number(event?.rsvp_cost_cents || 0));
+    }
+    function seatPriceCents(event, role) {
+      const r = normalizeSeatRole(role);
+      if (r === "kid") {
+        if (event?.kids_free !== false) return 0;
+        const kid = Number(event?.kid_price_cents);
+        return Number.isFinite(kid) && kid >= 0 ? kid : 0;
+      }
+      return adultPriceCents2(event);
+    }
+    function partyBaseTotalCents(event, seats) {
+      let total = 0;
+      for (const seat of seats || []) {
+        total += seatPriceCents(event, seat.role);
+      }
+      return total;
+    }
+    function seatPriceLabel(event, role) {
+      const cents = seatPriceCents(event, role);
+      if (cents <= 0) return "Free";
+      return formatMoney(cents);
+    }
+    function seatInfoInviteUrl(token) {
+      const t = String(token || "").trim();
+      if (!t) return "";
+      const origin = typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "https://justicemcneal.com";
+      return `${origin}/events/seat-info/?t=${encodeURIComponent(t)}`;
+    }
+    function seatInfoInvitesHtml(tokens, opts) {
+      const list = Array.isArray(tokens) ? tokens.filter((row) => row && row.info_invite_token && !row.options_complete) : [];
+      if (!list.length) return "";
+      const title = opts && opts.title || "Guest invite links";
+      const sub = opts && opts.sub || "Send these so guests can fill their sizes. You still handle payment.";
+      const rows = list.map((row) => {
+        const name = escapeHtml(row.display_name || "Guest");
+        const token = escapeHtml(row.info_invite_token);
+        return `
+                <div class="ed-seat-info-invite-row">
+                    <span class="ed-seat-info-invite-name">${name}</span>
+                    <button type="button" class="ed-seat-info-invite-copy" data-seat-info-copy="${token}">Copy invite link</button>
+                </div>`;
+      }).join("");
+      return `
+            <div class="ed-seat-info-invites" data-seat-info-invites="1">
+                <p class="ed-seat-info-invites-title">${escapeHtml(title)}</p>
+                <p class="ed-seat-info-invites-sub">${escapeHtml(sub)}</p>
+                ${rows}
+            </div>`;
+    }
+    function wireSeatInfoInviteCopy(root2) {
+      const scope = root2 || document;
+      scope.querySelectorAll("[data-seat-info-copy]").forEach((btn) => {
+        if (btn.dataset.copyWired) return;
+        btn.dataset.copyWired = "1";
+        btn.addEventListener("click", async () => {
+          const token = btn.getAttribute("data-seat-info-copy") || "";
+          const url = seatInfoInviteUrl(token);
+          if (!url) return;
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(url);
+            } else {
+              const ta = document.createElement("textarea");
+              ta.value = url;
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand("copy");
+              ta.remove();
+            }
+            const prev = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(() => {
+              btn.textContent = prev || "Copy invite link";
+            }, 1500);
+          } catch (_) {
+            prompt("Copy this invite link:", url);
+          }
+        });
+      });
+    }
+    function rsvpPayButtonLabel(event, role, opts) {
+      const options = opts && typeof opts === "object" ? opts : {};
+      const mode = options.mode === "complete" ? "complete" : "rsvp";
+      const audience = options.audience === "guest" ? "guest" : "member";
+      const seatPrice = options.partyTotalCents != null ? Math.max(0, Number(options.partyTotalCents) || 0) : seatPriceCents(event, role);
+      const guestPrefix = audience === "guest" ? "RSVP as Guest" : "RSVP as Member";
+      const prefix = mode === "complete" ? "Complete Payment" : guestPrefix;
+      if (event?.pricing_mode === "paid") {
+        if (seatPrice > 0) return `${prefix} \u2014 ${formatMoney(seatPrice)}`;
+        return mode === "complete" ? prefix : `${guestPrefix} \u2014 Free`;
+      }
+      return guestPrefix;
+    }
+    function validatePhone(raw) {
+      const trimmed = String(raw || "").trim();
+      if (!trimmed) return { error: "Phone number is required." };
+      const digits = trimmed.replace(/\D/g, "");
+      if (digits.length < 10) {
+        return { error: "Enter a valid 10-digit US phone number (or include country code)." };
+      }
+      if (digits.length > 15) return { error: "Phone number is too long." };
+      return { value: trimmed };
+    }
     function toggleModal(id, show) {
       const modal = document.getElementById(id);
       if (!modal) return;
@@ -682,9 +798,1894 @@
       openLightbox,
       startLiveCountdown,
       toast,
-      toggleModal
+      toggleModal,
+      validatePhone,
+      normalizeSeatRole,
+      adultPriceCents: adultPriceCents2,
+      seatPriceCents,
+      seatPriceLabel,
+      partyBaseTotalCents,
+      seatInfoInviteUrl,
+      seatInfoInvitesHtml,
+      wireSeatInfoInviteCopy,
+      rsvpPayButtonLabel
     };
     window.EventsHelpers = EventsHelpers;
+  })();
+
+  // js/components/events/about-tabs.js
+  (function() {
+    "use strict";
+    const TITLE_MAX4 = 60;
+    const BODY_MAX4 = 8e3;
+    function escapeHtml(str) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === "function") {
+        return window.EventsHelpers.escapeHtml(str);
+      }
+      if (str == null) return "";
+      const div = document.createElement("div");
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+    function normalizeAboutTabs(tabs) {
+      if (!Array.isArray(tabs)) return [];
+      const out = [];
+      for (const raw of tabs) {
+        if (!raw || typeof raw !== "object") continue;
+        const title = String(raw.title || "").trim().slice(0, TITLE_MAX4);
+        if (!title) continue;
+        const body = String(raw.body || "").slice(0, BODY_MAX4);
+        const id = String(raw.id || "").trim() || `tab-${out.length + 1}`;
+        out.push({ id, title, body });
+      }
+      return out;
+    }
+    function bodyToHtml(body) {
+      const md = window.EventsHelpers && typeof window.EventsHelpers.miniMarkdown === "function" ? window.EventsHelpers.miniMarkdown(body || "", true) : escapeHtml(body || "");
+      return md.replace(/\n/g, "<br>");
+    }
+    function aboutTabsHtml(tabs, opts) {
+      const list = normalizeAboutTabs(tabs);
+      if (!list.length) return "";
+      const prefix = opts && opts.idPrefix || "aboutTabs";
+      const buttons = list.map((tab, i) => `
+            <button type="button"
+                class="ed-about-tab${i === 0 ? " is-active" : ""}"
+                data-about-tab="${escapeHtml(tab.id)}"
+                aria-selected="${i === 0 ? "true" : "false"}">${escapeHtml(tab.title)}</button>
+        `).join("");
+      const panels = list.map((tab, i) => `
+            <div class="ed-about-tab-panel${i === 0 ? "" : " hidden"}"
+                data-about-panel="${escapeHtml(tab.id)}"
+                ${i === 0 ? "" : "hidden"}>
+                <div class="ed-about-tab-body">${bodyToHtml(tab.body)}</div>
+            </div>
+        `).join("");
+      return `
+            <div class="ed-about-tabs" id="${escapeHtml(prefix)}Root" data-about-tabs-root>
+                <div class="ed-about-tablist" role="tablist">${buttons}</div>
+                <div class="ed-about-tabpanels">${panels}</div>
+            </div>
+        `;
+    }
+    function wireAboutTabs(root2) {
+      const scope = root2 || document;
+      scope.querySelectorAll("[data-about-tabs-root]").forEach((wrap) => {
+        if (wrap.dataset.aboutWired === "1") return;
+        wrap.dataset.aboutWired = "1";
+        wrap.querySelectorAll("[data-about-tab]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-about-tab");
+            wrap.querySelectorAll("[data-about-tab]").forEach((b) => {
+              const on = b.getAttribute("data-about-tab") === id;
+              b.classList.toggle("is-active", on);
+              b.setAttribute("aria-selected", on ? "true" : "false");
+            });
+            wrap.querySelectorAll("[data-about-panel]").forEach((panel) => {
+              const on = panel.getAttribute("data-about-panel") === id;
+              panel.classList.toggle("hidden", !on);
+              if (on) panel.removeAttribute("hidden");
+              else panel.setAttribute("hidden", "");
+            });
+          });
+        });
+      });
+    }
+    const EventsAboutTabs = {
+      TITLE_MAX: TITLE_MAX4,
+      BODY_MAX: BODY_MAX4,
+      normalizeAboutTabs,
+      aboutTabsHtml,
+      wireAboutTabs
+    };
+    globalThis.EventsAboutTabs = EventsAboutTabs;
+  })();
+
+  // js/components/events/included-items.js
+  (function() {
+    "use strict";
+    const NAME_MAX2 = 80;
+    const CHOICE_MAX2 = 40;
+    const CHOICES_MAX2 = 40;
+    const ANSWER_MAX = 120;
+    const OPTION_TYPES2 = ["size", "color", "text", "select"];
+    const APPLIES_TO = ["all", "adult", "kid"];
+    const SIZE_PRESET2 = ["XS", "S", "M", "L", "XL", "XXL"];
+    const COLOR_PRESET2 = ["Black", "White", "Navy", "Gray", "Red", "Green"];
+    function escapeHtml(str) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === "function") {
+        return window.EventsHelpers.escapeHtml(str);
+      }
+      if (str == null) return "";
+      const div = document.createElement("div");
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+    function needsChoices(type) {
+      return type === "size" || type === "color" || type === "select";
+    }
+    function normalizeAppliesTo(raw) {
+      const v = String(raw || "").trim();
+      return APPLIES_TO.includes(v) ? v : "all";
+    }
+    function normalizeIncludedItems(items) {
+      if (!Array.isArray(items)) return [];
+      const out = [];
+      for (const raw of items) {
+        if (!raw || typeof raw !== "object") continue;
+        const name = String(raw.name || "").trim().slice(0, NAME_MAX2);
+        if (!name) continue;
+        const option_type = String(raw.option_type || "").trim();
+        if (!OPTION_TYPES2.includes(option_type)) continue;
+        let choices = [];
+        if (needsChoices(option_type)) {
+          const seen = /* @__PURE__ */ new Set();
+          const src = Array.isArray(raw.choices) ? raw.choices : [];
+          for (const c of src) {
+            const v = String(c || "").trim().slice(0, CHOICE_MAX2);
+            if (!v) continue;
+            const key = v.toLowerCase();
+            if (seen.has(key)) continue;
+            seen.add(key);
+            choices.push(v);
+            if (choices.length >= CHOICES_MAX2) break;
+          }
+          if (!choices.length) continue;
+        }
+        const id = String(raw.id || "").trim() || `inc-${out.length + 1}`;
+        out.push({
+          id,
+          name,
+          required: !!raw.required,
+          option_type,
+          choices,
+          applies_to: normalizeAppliesTo(raw.applies_to)
+        });
+      }
+      return out;
+    }
+    function forRole(catalog, role) {
+      const list = normalizeIncludedItems(catalog);
+      const r = role === "kid" ? "kid" : role === "adult" ? "adult" : null;
+      if (!r) return list;
+      return list.filter((item) => item.applies_to === "all" || item.applies_to === r);
+    }
+    function hasCatalog(catalog) {
+      return normalizeIncludedItems(catalog).length > 0;
+    }
+    function hasCatalogForRole(catalog, role) {
+      return forRole(catalog, role).length > 0;
+    }
+    function seatOptionsTitle(role) {
+      const r = role === "kid" ? "kid" : "adult";
+      return r === "kid" ? "Your choices (child seat)" : "Your choices (adult seat)";
+    }
+    function defaultSeatRoleForCatalog(catalog) {
+      const list = normalizeIncludedItems(catalog);
+      if (!list.length) return "adult";
+      const hasAdultOrAll = list.some((item) => item.applies_to === "all" || item.applies_to === "adult");
+      if (hasAdultOrAll) return "adult";
+      const hasKid = list.some((item) => item.applies_to === "kid");
+      return hasKid ? "kid" : "adult";
+    }
+    function validateAnswers(catalog, answers, role) {
+      const list = role ? forRole(catalog, role) : normalizeIncludedItems(catalog);
+      const map = answers && typeof answers === "object" ? answers : {};
+      for (const item of list) {
+        const raw = map[item.id];
+        const value = raw == null ? "" : String(raw).trim();
+        if (item.required && !value) {
+          return `${item.name} is required.`;
+        }
+        if (!value) continue;
+        if (value.length > ANSWER_MAX) {
+          return `${item.name} must be ${ANSWER_MAX} characters or fewer.`;
+        }
+        if (needsChoices(item.option_type)) {
+          const ok = item.choices.some((c) => c === value);
+          if (!ok) return `Pick a valid option for ${item.name}.`;
+        }
+      }
+      return null;
+    }
+    function answersComplete(catalog, answers, role) {
+      return validateAnswers(catalog, answers, role) == null;
+    }
+    function sanitizeAnswers(catalog, answers, role) {
+      const list = role ? forRole(catalog, role) : normalizeIncludedItems(catalog);
+      const map = answers && typeof answers === "object" ? answers : {};
+      const out = {};
+      for (const item of list) {
+        const value = map[item.id] == null ? "" : String(map[item.id]).trim().slice(0, ANSWER_MAX);
+        if (!value) continue;
+        if (needsChoices(item.option_type) && !item.choices.includes(value)) continue;
+        out[item.id] = value;
+      }
+      return out;
+    }
+    function formFieldsHtml(catalog, opts) {
+      const role = opts && opts.role || "adult";
+      const list = forRole(catalog, role);
+      if (!list.length) return "";
+      const prefix = opts && opts.idPrefix || "incOpt";
+      const fields = list.map((item) => {
+        const fieldId = `${prefix}-${item.id}`;
+        const req = item.required ? ' <span class="text-red-500">*</span>' : "";
+        let control = "";
+        if (needsChoices(item.option_type)) {
+          const optsHtml = [
+            `<option value="">Select\u2026</option>`,
+            ...item.choices.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`)
+          ].join("");
+          control = `<select class="ec-input ed-inc-input" id="${escapeHtml(fieldId)}" data-inc-answer="${escapeHtml(item.id)}" ${item.required ? "required" : ""}>${optsHtml}</select>`;
+        } else {
+          control = `<input class="ec-input ed-inc-input" type="text" id="${escapeHtml(fieldId)}" data-inc-answer="${escapeHtml(item.id)}" maxlength="${ANSWER_MAX}" placeholder="Your answer" ${item.required ? "required" : ""}>`;
+        }
+        return `
+                <div class="ed-inc-field" style="margin-bottom:10px">
+                    <label class="ec-label" for="${escapeHtml(fieldId)}" style="display:block;font-size:12px;font-weight:600;color:#0b2545;margin-bottom:4px">${escapeHtml(item.name)}${req}</label>
+                    ${control}
+                </div>
+            `;
+      }).join("");
+      return `
+            <div class="ed-inc-options" data-inc-options-root="${escapeHtml(prefix)}">
+                <p class="ed-inc-options-title" style="font-size:13px;font-weight:700;color:#0b2545;margin:0 0 8px">${escapeHtml(seatOptionsTitle(role))}</p>
+                ${fields}
+            </div>
+        `;
+    }
+    function readAnswersFromRoot(root2, catalog, role) {
+      const list = role ? forRole(catalog, role) : normalizeIncludedItems(catalog);
+      const scope = root2 || document;
+      const out = {};
+      for (const item of list) {
+        const el = scope.querySelector(`[data-inc-answer="${CSS.escape(item.id)}"]`);
+        if (!el) continue;
+        const value = String(el.value || "").trim().slice(0, ANSWER_MAX);
+        if (value) out[item.id] = value;
+      }
+      return out;
+    }
+    function optionTypeLabel(type) {
+      if (type === "size") return "Size";
+      if (type === "color") return "Color";
+      if (type === "select") return "Choice";
+      return "Text";
+    }
+    function appliesToLabel(appliesTo) {
+      if (appliesTo === "adult") return "Adults";
+      if (appliesTo === "kid") return "Kids";
+      return "All";
+    }
+    function catalogListHtml(catalog) {
+      const list = normalizeIncludedItems(catalog);
+      if (!list.length) return "";
+      const rows = list.map((item) => {
+        const typeLabel = optionTypeLabel(item.option_type);
+        const appliesLabel = appliesToLabel(item.applies_to);
+        const requiredBadge = item.required ? '<span class="ed-inc-pill ed-inc-pill-required">Required</span>' : "";
+        const appliesBadge = `<span class="ed-inc-pill ed-inc-pill-applies">${escapeHtml(appliesLabel)}</span>`;
+        let choicesHtml = "";
+        if (needsChoices(item.option_type) && item.choices.length) {
+          choicesHtml = `<div class="ed-inc-catalog-choices">${item.choices.map((c) => `<span class="ed-inc-pill ed-inc-pill-choice">${escapeHtml(c)}</span>`).join("")}</div>`;
+        } else if (item.option_type === "text") {
+          choicesHtml = '<p class="ed-inc-catalog-note">Free-text answer at RSVP</p>';
+        }
+        return `
+                <li class="ed-inc-catalog-item">
+                    <div class="ed-inc-catalog-head">
+                        <span class="ed-inc-catalog-name">${escapeHtml(item.name)}</span>
+                        <div class="ed-inc-catalog-badges">${requiredBadge}${appliesBadge}<span class="ed-inc-pill ed-inc-pill-type">${escapeHtml(typeLabel)}</span></div>
+                    </div>
+                    ${choicesHtml}
+                </li>`;
+      }).join("");
+      return `<ul class="ed-inc-catalog-list">${rows}</ul>`;
+    }
+    const EventsIncludedItems = {
+      NAME_MAX: NAME_MAX2,
+      CHOICE_MAX: CHOICE_MAX2,
+      CHOICES_MAX: CHOICES_MAX2,
+      ANSWER_MAX,
+      OPTION_TYPES: OPTION_TYPES2,
+      APPLIES_TO,
+      SIZE_PRESET: SIZE_PRESET2,
+      COLOR_PRESET: COLOR_PRESET2,
+      needsChoices,
+      normalizeAppliesTo,
+      normalizeIncludedItems,
+      forRole,
+      hasCatalog,
+      hasCatalogForRole,
+      seatOptionsTitle,
+      defaultSeatRoleForCatalog,
+      validateAnswers,
+      answersComplete,
+      sanitizeAnswers,
+      formFieldsHtml,
+      readAnswersFromRoot,
+      catalogListHtml,
+      optionTypeLabel,
+      appliesToLabel
+    };
+    globalThis.EventsIncludedItems = EventsIncludedItems;
+  })();
+
+  // js/components/events/disclaimers.js
+  (function() {
+    "use strict";
+    const TITLE_MAX4 = 80;
+    const BODY_MAX4 = 4e3;
+    function escapeHtml(str) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === "function") {
+        return window.EventsHelpers.escapeHtml(str);
+      }
+      if (str == null) return "";
+      const div = document.createElement("div");
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+    function normalizeDisclaimers(items) {
+      if (!Array.isArray(items)) return [];
+      const out = [];
+      for (const raw of items) {
+        if (!raw || typeof raw !== "object") continue;
+        const title = String(raw.title || "").trim().slice(0, TITLE_MAX4);
+        const body = String(raw.body || "").trim().slice(0, BODY_MAX4);
+        if (!title || !body) continue;
+        const id = String(raw.id || "").trim() || `disc-${out.length + 1}`;
+        out.push({
+          id,
+          title,
+          body,
+          required: raw.required !== false,
+          is_default: !!raw.is_default
+        });
+      }
+      return out;
+    }
+    function hasDisclaimers(catalog) {
+      return normalizeDisclaimers(catalog).length > 0;
+    }
+    const DEFAULT_DISCLAIMERS = [
+      {
+        id: "default-no-refunds",
+        title: "No refunds",
+        body: "Payments for this event are non-refundable for the payment period unless the event is cancelled or rescheduled by organizers.",
+        required: true,
+        is_default: true
+      },
+      {
+        id: "default-flyers",
+        title: "Flyers / tickets",
+        body: "Guests who book their own travel (flights, etc.) are responsible for those costs; the event fee does not reimburse tickets or travel.",
+        required: true,
+        is_default: true
+      }
+    ];
+    function effectiveDisclaimers(event) {
+      const normalized = normalizeDisclaimers(event?.disclaimers);
+      if (normalized.length) return normalized;
+      const isPaidRsvp = event?.pricing_mode === "paid" && event?.rsvp_enabled !== false;
+      return isPaidRsvp ? DEFAULT_DISCLAIMERS.map((d) => ({ ...d })) : [];
+    }
+    function scrollToAckField(root2) {
+      const scope = root2 || document;
+      const prep = scope.querySelector(".ed-rsvp-prep");
+      if (prep) {
+        prep.scrollIntoView({ behavior: "smooth", block: "center" });
+        const unchecked2 = prep.querySelector("[data-disc-ack]:not(:checked)");
+        if (unchecked2 && typeof unchecked2.focus === "function") unchecked2.focus();
+        return;
+      }
+      const unchecked = scope.querySelector("[data-disc-ack]:not(:checked)");
+      if (unchecked && typeof unchecked.focus === "function") {
+        unchecked.scrollIntoView({ behavior: "smooth", block: "center" });
+        unchecked.focus();
+      }
+    }
+    function hasRequiredDisclaimers(catalog) {
+      return requiredIds(catalog).length > 0;
+    }
+    function requiredIds(catalog) {
+      return normalizeDisclaimers(catalog).filter((d) => d.required).map((d) => d.id);
+    }
+    function validateAcks(catalog, ackIds) {
+      const required = requiredIds(catalog);
+      if (!required.length) return null;
+      const set = new Set(Array.isArray(ackIds) ? ackIds.map(String) : []);
+      for (const id of required) {
+        if (!set.has(id)) {
+          const clause = normalizeDisclaimers(catalog).find((d) => d.id === id);
+          return `Please acknowledge: ${clause?.title || "required disclaimer"}.`;
+        }
+      }
+      return null;
+    }
+    function acksPayload(catalog, ackIds) {
+      const list = normalizeDisclaimers(catalog);
+      const set = new Set(Array.isArray(ackIds) ? ackIds.map(String) : []);
+      const now = (/* @__PURE__ */ new Date()).toISOString();
+      const out = [];
+      for (const d of list) {
+        if (!set.has(d.id)) continue;
+        out.push({ id: d.id, acked_at: now });
+      }
+      return out;
+    }
+    function formFieldsHtml(catalog, opts) {
+      const list = normalizeDisclaimers(catalog);
+      if (!list.length) return "";
+      const prefix = opts && opts.idPrefix || "discAck";
+      const fields = list.map((d) => {
+        const fieldId = `${prefix}-${d.id}`;
+        const req = d.required ? ' <span class="text-red-500">*</span>' : "";
+        return `
+                <label class="ed-disc-ack" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;border:1px solid #d5dfec;border-radius:12px;background:#fff;cursor:pointer">
+                    <input type="checkbox" id="${escapeHtml(fieldId)}" data-disc-ack="${escapeHtml(d.id)}" ${d.required ? "required" : ""} style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
+                    <span style="min-width:0">
+                        <span style="display:block;font-size:13px;font-weight:700;color:#0b2545;margin-bottom:4px">${escapeHtml(d.title)}${req}</span>
+                        <span style="display:block;font-size:12px;line-height:1.5;color:#374151">${escapeHtml(d.body)}</span>
+                    </span>
+                </label>
+            `;
+      }).join("");
+      return `
+            <div class="ed-disc-acks" data-disc-acks-root="${escapeHtml(prefix)}" style="margin:12px 0">
+                <p style="font-size:13px;font-weight:700;color:#0b2545;margin:0 0 8px">Please acknowledge</p>
+                ${fields}
+            </div>
+        `;
+    }
+    function readAckIdsFromRoot(root2, catalog) {
+      const list = normalizeDisclaimers(catalog);
+      const scope = root2 || document;
+      const out = [];
+      for (const d of list) {
+        const el = scope.querySelector(`[data-disc-ack="${CSS.escape(d.id)}"]`);
+        if (el && el.checked) out.push(d.id);
+      }
+      return out;
+    }
+    const EventsDisclaimers = {
+      TITLE_MAX: TITLE_MAX4,
+      BODY_MAX: BODY_MAX4,
+      normalizeDisclaimers,
+      hasDisclaimers,
+      effectiveDisclaimers,
+      scrollToAckField,
+      hasRequiredDisclaimers,
+      requiredIds,
+      validateAcks,
+      acksPayload,
+      formFieldsHtml,
+      readAckIdsFromRoot
+    };
+    globalThis.EventsDisclaimers = EventsDisclaimers;
+  })();
+
+  // js/components/events/amenity-voting.js
+  (function() {
+    "use strict";
+    const LABEL_MAX2 = 80;
+    const DESC_MAX2 = 240;
+    const OPTIONS_MAX = 10;
+    const RESULTS_VISIBLE = ["after_close", "always", "host_only"];
+    function escapeHtml(str) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === "function") {
+        return window.EventsHelpers.escapeHtml(str);
+      }
+      if (str == null) return "";
+      const div = document.createElement("div");
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+    function defaultConfig() {
+      return {
+        enabled: false,
+        options: [],
+        closes_at: null,
+        results_visible: "after_close"
+      };
+    }
+    function normalizeOptions(items) {
+      if (!Array.isArray(items)) return [];
+      const out = [];
+      const seenLabels = /* @__PURE__ */ new Set();
+      for (const raw of items) {
+        if (!raw || typeof raw !== "object") continue;
+        const label = String(raw.label || "").trim().slice(0, LABEL_MAX2);
+        if (!label) continue;
+        const key = label.toLowerCase();
+        if (seenLabels.has(key)) continue;
+        seenLabels.add(key);
+        const id = String(raw.id || "").trim() || `amenity-${out.length + 1}`;
+        const description = String(raw.description || "").trim().slice(0, DESC_MAX2);
+        out.push({
+          id,
+          label,
+          ...description ? { description } : {}
+        });
+        if (out.length >= OPTIONS_MAX) break;
+      }
+      return out;
+    }
+    function normalizeConfig(raw) {
+      const base = defaultConfig();
+      if (!raw || typeof raw !== "object") return base;
+      const options = normalizeOptions(raw.options);
+      let resultsVisible = String(raw.results_visible || base.results_visible).trim();
+      if (!RESULTS_VISIBLE.includes(resultsVisible)) resultsVisible = base.results_visible;
+      let closesAt = raw.closes_at;
+      if (closesAt != null && closesAt !== "") {
+        const d = new Date(closesAt);
+        closesAt = Number.isNaN(d.getTime()) ? null : d.toISOString();
+      } else {
+        closesAt = null;
+      }
+      return {
+        enabled: raw.enabled === true && options.length >= 2,
+        options,
+        closes_at: closesAt,
+        results_visible: resultsVisible
+      };
+    }
+    function isVotingClosed(config, now) {
+      const cfg = normalizeConfig(config);
+      if (!cfg.closes_at) return false;
+      const t = now instanceof Date ? now : /* @__PURE__ */ new Date();
+      return new Date(cfg.closes_at) <= t;
+    }
+    function canShowResults(config, ctx) {
+      const cfg = normalizeConfig(config);
+      if (!cfg.enabled) return false;
+      const isHost = !!(ctx && (ctx.isHost || ctx.canManageEvent));
+      if (isHost) return true;
+      if (cfg.results_visible === "host_only") return false;
+      if (cfg.results_visible === "always") return true;
+      return isVotingClosed(cfg, ctx && ctx.now);
+    }
+    function tallyCounts(parties, optionIds) {
+      const ids = new Set(Array.isArray(optionIds) ? optionIds : []);
+      const tallies = {};
+      for (const id of ids) tallies[id] = 0;
+      for (const row of parties || []) {
+        if (!row || row.amenity_vote_status !== "counted") continue;
+        const optId = row.amenity_vote_option_id;
+        if (!optId || !ids.has(optId)) continue;
+        tallies[optId] = (tallies[optId] || 0) + 1;
+      }
+      return tallies;
+    }
+    function totalVotes(tallies) {
+      return Object.values(tallies || {}).reduce((sum, n) => sum + (Number(n) || 0), 0);
+    }
+    function resultsHtml(config, tallies, opts) {
+      const cfg = normalizeConfig(config);
+      if (!cfg.enabled) return "";
+      const options = cfg.options;
+      const counts = tallies || {};
+      const total = totalVotes(counts);
+      const isHost = !!(opts && opts.isHost);
+      const maxCount = Math.max(0, ...options.map((o) => Number(counts[o.id]) || 0));
+      if (total <= 0) {
+        if (!isHost) return "";
+        return `
+                <div class="ed-amenity-results-inner">
+                    <p class="ed-amenity-results-heading">Amenity vote results</p>
+                    <p class="ed-hint">No counted votes yet. Votes appear after RSVPs are committed.</p>
+                </div>`;
+      }
+      const rows = options.map((opt) => {
+        const count = Number(counts[opt.id]) || 0;
+        const pct = total > 0 ? Math.round(count / total * 100) : 0;
+        const leader = count > 0 && count === maxCount ? " ed-amenity-row-leader" : "";
+        return `
+                <div class="ed-amenity-row${leader}">
+                    <div class="ed-amenity-row-head">
+                        <span class="ed-amenity-label">${escapeHtml(opt.label)}</span>
+                        <span class="ed-amenity-count">${count} vote${count === 1 ? "" : "s"} \xB7 ${pct}%</span>
+                    </div>
+                    <div class="ed-amenity-bar" aria-hidden="true"><span class="ed-amenity-bar-fill" style="width:${pct}%"></span></div>
+                    ${opt.description ? `<p class="ed-amenity-desc">${escapeHtml(opt.description)}</p>` : ""}
+                </div>`;
+      }).join("");
+      return `
+            <div class="ed-amenity-results-inner">
+                <p class="ed-amenity-results-heading">Amenity vote results</p>
+                <p class="ed-amenity-results-sub">${total} counted vote${total === 1 ? "" : "s"}</p>
+                <div class="ed-amenity-rows">${rows}</div>
+            </div>`;
+    }
+    function pendingMessageHtml(config) {
+      const cfg = normalizeConfig(config);
+      if (!cfg.enabled) return "";
+      const closed = isVotingClosed(cfg);
+      const closeLabel = cfg.closes_at ? new Date(cfg.closes_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+      return `
+            <div class="ed-amenity-pending">
+                <p class="ed-amenity-pending-title">${closed ? "Voting closed" : "Voting open"}</p>
+                <p class="ed-hint">${closed ? "Results will appear here when organizers publish them." : `Results shown after voting closes${closeLabel ? ` (${closeLabel})` : ""}. Cast your vote when you RSVP.`}</p>
+            </div>`;
+    }
+    function needsVote(event) {
+      const cfg = normalizeConfig(event && event.amenity_voting);
+      if (!cfg.enabled) return false;
+      return !isVotingClosed(cfg);
+    }
+    function formFieldsHtml(config, opts) {
+      const cfg = normalizeConfig(config);
+      if (!cfg.enabled || isVotingClosed(cfg)) return "";
+      const prefix = opts && opts.idPrefix || "amenityVote";
+      const name = `${prefix}-group`;
+      const fields = cfg.options.map((opt) => {
+        const fieldId = `${prefix}-${opt.id}`;
+        return `
+                <label class="ed-amenity-vote-opt" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px;border:1px solid #d5dfec;border-radius:12px;background:#fff;cursor:pointer">
+                    <input type="radio" name="${escapeHtml(name)}" id="${escapeHtml(fieldId)}" value="${escapeHtml(opt.id)}" data-amenity-vote="${escapeHtml(opt.id)}" required style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
+                    <span style="min-width:0">
+                        <span style="display:block;font-size:13px;font-weight:700;color:#0b2545;margin-bottom:4px">${escapeHtml(opt.label)}</span>
+                        ${opt.description ? `<span style="display:block;font-size:12px;line-height:1.5;color:#374151">${escapeHtml(opt.description)}</span>` : ""}
+                    </span>
+                </label>
+            `;
+      }).join("");
+      return `
+            <div class="ed-amenity-vote" data-amenity-vote-root="${escapeHtml(prefix)}" style="margin:12px 0">
+                <p style="font-size:13px;font-weight:700;color:#0b2545;margin:0 0 8px">Amenity preference <span class="text-red-500">*</span></p>
+                <p class="ed-hint" style="margin:0 0 8px">Pick one option for your party. Your vote counts after RSVP is complete.</p>
+                ${fields}
+            </div>
+        `;
+    }
+    function readVoteFromRoot(root2) {
+      const scope = root2 || document;
+      const checked = scope.querySelector("[data-amenity-vote]:checked");
+      return checked ? String(checked.getAttribute("data-amenity-vote") || checked.value || "").trim() : "";
+    }
+    function validateVote(config, optionId) {
+      const cfg = normalizeConfig(config);
+      if (!cfg.enabled || isVotingClosed(cfg)) return null;
+      const id = String(optionId || "").trim();
+      if (!id) return "Please select an amenity preference.";
+      const valid = cfg.options.some((o) => o.id === id);
+      if (!valid) return "Please select a valid amenity option.";
+      return null;
+    }
+    function voteStatusForRsvp(event, seatPriceCents) {
+      const price = Number(seatPriceCents) || 0;
+      if (price > 0) return "provisional";
+      return "counted";
+    }
+    function scrollToVoteField(root2) {
+      const scope = root2 || document;
+      const wrap = scope.querySelector(".ed-amenity-vote") || scope.querySelector("[data-amenity-vote-root]");
+      if (wrap) {
+        wrap.scrollIntoView({ behavior: "smooth", block: "center" });
+        const first = wrap.querySelector("[data-amenity-vote]");
+        if (first && typeof first.focus === "function") first.focus();
+      }
+    }
+    const api21 = {
+      defaultConfig,
+      normalizeConfig,
+      normalizeOptions,
+      isVotingClosed,
+      canShowResults,
+      tallyCounts,
+      totalVotes,
+      resultsHtml,
+      pendingMessageHtml,
+      needsVote,
+      formFieldsHtml,
+      readVoteFromRoot,
+      validateVote,
+      voteStatusForRsvp,
+      scrollToVoteField
+    };
+    globalThis.EventsAmenityVoting = api21;
+  })();
+
+  // js/components/events/payment-choice.js
+  (function() {
+    "use strict";
+    const PLATFORM_CARD_FEE_BPS = 290;
+    const PLAN_KINDS = ["full", "monthly"];
+    const METHODS = ["ach", "card"];
+    function escapeHtml(str) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === "function") {
+        return window.EventsHelpers.escapeHtml(str);
+      }
+      if (str == null) return "";
+      const div = document.createElement("div");
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+    function formatMoney(cents) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.formatMoney === "function") {
+        return window.EventsHelpers.formatMoney(cents);
+      }
+      const n = Number(cents) || 0;
+      return `$${(n / 100).toFixed(2)}`;
+    }
+    function monthsUntilFundDeadline2(deadlineStr) {
+      if (!deadlineStr) return null;
+      const deadline = new Date(deadlineStr);
+      if (Number.isNaN(deadline.getTime())) return null;
+      const now = /* @__PURE__ */ new Date();
+      if (deadline <= now) return 0;
+      let months = (deadline.getFullYear() - now.getFullYear()) * 12 + (deadline.getMonth() - now.getMonth());
+      if (deadline.getDate() >= now.getDate()) months += 1;
+      return Math.max(1, months);
+    }
+    function needsChoice(event, seatPriceCents) {
+      if (!event || event.pricing_mode !== "paid") return false;
+      return (Number(seatPriceCents) || 0) > 0;
+    }
+    function cardFeeBps(event) {
+      const raw = event?.card_fee_bps;
+      if (raw != null && Number.isFinite(Number(raw)) && Number(raw) >= 0) {
+        return Number(raw);
+      }
+      return PLATFORM_CARD_FEE_BPS;
+    }
+    function baseTotalCents(seatPriceCents) {
+      return Math.max(0, Number(seatPriceCents) || 0);
+    }
+    function cardTotalCents(baseCents, feeBps) {
+      const base = Math.max(0, Number(baseCents) || 0);
+      const bps = Math.max(0, Number(feeBps) || 0);
+      if (base <= 0) return 0;
+      if (bps <= 0) return base;
+      return Math.ceil(base * 1e4 / (1e4 - bps));
+    }
+    function monthlyAmountCents(totalCents, fundDeadline) {
+      const total = Math.max(0, Number(totalCents) || 0);
+      const months = monthsUntilFundDeadline2(fundDeadline);
+      if (!months || months <= 0 || total <= 0) return null;
+      return Math.ceil(total / months);
+    }
+    function enabledPlanKinds(event) {
+      const kinds = ["full"];
+      const months = monthsUntilFundDeadline2(event?.fund_deadline);
+      if (event?.fund_deadline && months && months > 0) kinds.push("monthly");
+      return kinds;
+    }
+    function enabledMethods(event) {
+      const methods = [];
+      if (event?.ach_payments_enabled !== false) methods.push("ach");
+      if (event?.card_payments_enabled !== false) methods.push("card");
+      if (!methods.length) methods.push("card");
+      return methods;
+    }
+    function defaultPlanKind(event) {
+      const kinds = enabledPlanKinds(event);
+      if (kinds.includes("monthly")) return "monthly";
+      return "full";
+    }
+    function defaultMethod(event) {
+      const methods = enabledMethods(event);
+      if (methods.includes("ach")) return "ach";
+      return methods[0] || "card";
+    }
+    function quote(event, opts) {
+      const seatPriceCents = baseTotalCents(opts?.seatPriceCents);
+      const planKind = opts?.planKind || defaultPlanKind(event);
+      const method = opts?.method || defaultMethod(event);
+      const feeBps = cardFeeBps(event);
+      const baseCents = seatPriceCents;
+      const achTotal = baseCents;
+      const cardTotal = cardTotalCents(baseCents, feeBps);
+      const totalCents = method === "card" ? cardTotal : achTotal;
+      const feeCents = method === "card" ? Math.max(0, cardTotal - baseCents) : 0;
+      const monthlyAch = monthlyAmountCents(achTotal, event?.fund_deadline);
+      const monthlyCard = monthlyAmountCents(cardTotal, event?.fund_deadline);
+      const monthlyCents = planKind === "monthly" ? method === "card" ? monthlyCard : monthlyAch : null;
+      let deadlineLabel = "";
+      if (event?.fund_deadline) {
+        const d = new Date(event.fund_deadline);
+        if (!Number.isNaN(d.getTime())) {
+          deadlineLabel = d.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+          });
+        }
+      }
+      return {
+        planKind,
+        method,
+        baseCents,
+        feeCents,
+        feeBps,
+        achTotalCents: achTotal,
+        cardTotalCents: cardTotal,
+        totalCents,
+        monthlyAchCents: monthlyAch,
+        monthlyCardCents: monthlyCard,
+        monthlyCents,
+        deadlineLabel,
+        achLabel: formatMoney(achTotal),
+        cardLabel: formatMoney(cardTotal),
+        monthlyAchLabel: monthlyAch != null ? formatMoney(monthlyAch) : "",
+        monthlyCardLabel: monthlyCard != null ? formatMoney(monthlyCard) : ""
+      };
+    }
+    function planOptionLabel(event, planKind, q) {
+      if (planKind === "monthly" && q.deadlineLabel && q.monthlyAchLabel) {
+        return `Pay monthly until ${q.deadlineLabel} (~${q.monthlyAchLabel}/mo)`;
+      }
+      return "Pay in full";
+    }
+    function methodOptionLabel(method, q, planKind) {
+      if (method === "ach") {
+        if (planKind === "monthly" && q.monthlyAchCents != null) {
+          return `Bank account (ACH): ${q.monthlyAchLabel}/mo`;
+        }
+        return `Bank account (ACH): ${q.achLabel}`;
+      }
+      if (planKind === "monthly" && q.monthlyCardCents != null) {
+        return `Card: ${q.monthlyCardLabel}/mo (includes processing fee)`;
+      }
+      return `Card: ${q.cardLabel} (includes processing fee)`;
+    }
+    function formFieldsHtml(event, opts) {
+      const seatPriceCents = baseTotalCents(opts?.seatPriceCents);
+      if (!needsChoice(event, seatPriceCents)) return "";
+      const prefix = opts && opts.idPrefix || "paymentChoice";
+      const planKinds = enabledPlanKinds(event);
+      const methods = enabledMethods(event);
+      const defaultPlan = defaultPlanKind(event);
+      const defaultMeth = defaultMethod(event);
+      const q = quote(event, { seatPriceCents, planKind: defaultPlan, method: defaultMeth });
+      const planName = `${prefix}-plan`;
+      const methodName = `${prefix}-method`;
+      const planFields = planKinds.map((kind) => {
+        const checked = kind === defaultPlan ? " checked" : "";
+        const label = planOptionLabel(event, kind, quote(event, { seatPriceCents, planKind: kind, method: "ach" }));
+        return `
+                <label class="ed-payment-opt">
+                    <input type="radio" name="${escapeHtml(planName)}" value="${kind}" data-payment-plan="${kind}"${checked} required>
+                    <span class="ed-payment-opt-text">${escapeHtml(label)}</span>
+                </label>`;
+      }).join("");
+      const methodFields = methods.map((meth) => {
+        const checked = meth === defaultMeth ? " checked" : "";
+        const label = methodOptionLabel(meth, q, defaultPlan);
+        return `
+                <label class="ed-payment-opt">
+                    <input type="radio" name="${escapeHtml(methodName)}" value="${meth}" data-payment-method="${meth}"${checked} required>
+                    <span class="ed-payment-opt-text ed-payment-method-label" data-method="${meth}">${escapeHtml(label)}</span>
+                </label>`;
+      }).join("");
+      return `
+            <div class="ed-payment-choice" data-payment-choice-root="${escapeHtml(prefix)}" data-seat-price="${seatPriceCents}">
+                <p class="ed-payment-heading">Payment <span class="text-red-500">*</span></p>
+                <p class="ed-hint ed-payment-sub">Choose how you want to pay. Bank (ACH) is preferred; card totals include processing fees.</p>
+                ${planKinds.length > 1 ? `
+                    <fieldset class="ed-payment-fieldset">
+                        <legend class="ed-payment-legend">Payment schedule</legend>
+                        ${planFields}
+                    </fieldset>` : `<input type="hidden" data-payment-plan="${defaultPlan}" value="${defaultPlan}">`}
+                ${methods.length > 1 ? `
+                    <fieldset class="ed-payment-fieldset">
+                        <legend class="ed-payment-legend">Payment method</legend>
+                        ${methodFields}
+                    </fieldset>` : `<input type="hidden" data-payment-method="${defaultMeth}" value="${defaultMeth}">`}
+            </div>`;
+    }
+    function readFromRoot(root2) {
+      const scope = root2 || document;
+      const planEl = scope.querySelector("[data-payment-plan]:checked") || scope.querySelector('[data-payment-plan][type="hidden"]');
+      const methodEl = scope.querySelector("[data-payment-method]:checked") || scope.querySelector('[data-payment-method][type="hidden"]');
+      return {
+        plan_kind: planEl ? String(planEl.getAttribute("data-payment-plan") || planEl.value || "").trim() : "",
+        method: methodEl ? String(methodEl.getAttribute("data-payment-method") || methodEl.value || "").trim() : ""
+      };
+    }
+    function validateChoice(event, choice, seatPriceCents) {
+      if (!needsChoice(event, seatPriceCents)) return null;
+      const planKind = String(choice?.plan_kind || "").trim();
+      const method = String(choice?.method || "").trim();
+      const plans = enabledPlanKinds(event);
+      const methods = enabledMethods(event);
+      if (!planKind || !plans.includes(planKind)) {
+        return "Please choose a payment schedule (pay in full or monthly).";
+      }
+      if (!method || !methods.includes(method)) {
+        return "Please choose a payment method (bank or card).";
+      }
+      return null;
+    }
+    function scrollToField(root2) {
+      const scope = root2 || document;
+      const wrap = scope.querySelector(".ed-payment-choice") || scope.querySelector("[data-payment-choice-root]");
+      const prep = scope.querySelector(".ed-rsvp-prep");
+      const target = wrap || prep;
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        const first = target.querySelector("[data-payment-plan], [data-payment-method]");
+        if (first && typeof first.focus === "function") first.focus();
+      }
+    }
+    function updateMethodLabels(root2, event, seatPriceCents) {
+      const scope = root2 || document;
+      const wrap = scope.querySelector(".ed-payment-choice");
+      if (!wrap) return;
+      const choice = readFromRoot(scope);
+      const planKind = choice.plan_kind || defaultPlanKind(event);
+      const q = quote(event, { seatPriceCents, planKind, method: "ach" });
+      scope.querySelectorAll(".ed-payment-method-label").forEach((el) => {
+        const meth = el.getAttribute("data-method");
+        if (!meth) return;
+        el.textContent = methodOptionLabel(meth, q, planKind);
+      });
+    }
+    function displayTotalCents(event, choice, baseCents) {
+      const base = baseTotalCents(baseCents);
+      if (!needsChoice(event, base)) return base;
+      const q = quote(event, {
+        seatPriceCents: base,
+        planKind: choice?.plan_kind || choice?.planKind || defaultPlanKind(event),
+        method: choice?.method || defaultMethod(event)
+      });
+      if (q.planKind === "monthly" && q.monthlyCents != null) return q.monthlyCents;
+      return q.totalCents;
+    }
+    function payButtonAmountLabel(event, choice, baseCents) {
+      const cents = displayTotalCents(event, choice, baseCents);
+      if (cents <= 0) return "";
+      const planKind = choice?.plan_kind || choice?.planKind || defaultPlanKind(event);
+      const money5 = formatMoney(cents);
+      return planKind === "monthly" ? `~${money5}/mo` : money5;
+    }
+    function wireForm(root2, event, getSeatPriceCents, onChange) {
+      const scope = root2 || document;
+      const wrap = scope.querySelector(".ed-payment-choice");
+      if (!wrap || wrap.dataset.paymentWired === "1") return;
+      wrap.dataset.paymentWired = "1";
+      const refresh = () => {
+        const price = typeof getSeatPriceCents === "function" ? getSeatPriceCents() : Number(wrap.getAttribute("data-seat-price") || 0);
+        wrap.setAttribute("data-seat-price", String(price));
+        updateMethodLabels(scope, event, price);
+        if (typeof onChange === "function") onChange(readFromRoot(scope), price);
+      };
+      scope.querySelectorAll("[data-payment-plan], [data-payment-method]").forEach((el) => {
+        el.addEventListener("change", refresh);
+      });
+      refresh();
+    }
+    function refreshWrap(wrapEl, event, seatPriceCents, idPrefix, onChange) {
+      if (!wrapEl || !event) return;
+      const parent = wrapEl.parentElement;
+      if (!parent) return;
+      const html11 = formFieldsHtml(event, { seatPriceCents, idPrefix });
+      if (!html11) {
+        wrapEl.innerHTML = "";
+        return;
+      }
+      const tmp = document.createElement("div");
+      tmp.innerHTML = html11;
+      const next = tmp.firstElementChild;
+      if (next) {
+        wrapEl.replaceWith(next);
+        wireForm(parent, event, () => seatPriceCents, onChange);
+      }
+    }
+    function wireSeatRoleChange(root2, event, opts) {
+      if (!root2 || !event || typeof opts?.onRoleChange !== "function") return;
+      const original = opts.onRoleChange;
+      opts.onRoleChange = (role) => {
+        original(role);
+        const wrapId = opts.wrapId;
+        const idPrefix = opts.idPrefix || "paymentChoice";
+        const wrap = wrapId ? document.getElementById(wrapId) : root2.querySelector("[data-payment-choice-root]");
+        if (!wrap || !window.EventsHelpers) return;
+        const seatPrice = window.EventsHelpers.seatPriceCents(event, role);
+        if (wrap.id) {
+          const container = document.getElementById(wrapId);
+          if (container && needsChoice(event, seatPrice)) {
+            container.innerHTML = formFieldsHtml(event, { seatPriceCents: seatPrice, idPrefix });
+            wireForm(root2, event, () => window.EventsHelpers.seatPriceCents(event, role), opts.onPaymentChange);
+          } else if (container) {
+            container.innerHTML = "";
+          }
+        }
+      };
+    }
+    function confirmMessage(event, choice, seatPriceCents) {
+      const q = quote(event, {
+        seatPriceCents,
+        planKind: choice?.plan_kind || defaultPlanKind(event),
+        method: choice?.method || defaultMethod(event)
+      });
+      const methodLabel = q.method === "card" ? "card" : "bank (ACH)";
+      const amountLabel = q.planKind === "monthly" && q.monthlyCents != null ? `~${formatMoney(q.monthlyCents)}/month` : formatMoney(q.totalCents);
+      return `RSVP payment: ${amountLabel} via ${methodLabel}.
+
+Proceed to checkout?`;
+    }
+    const api21 = {
+      PLATFORM_CARD_FEE_BPS,
+      needsChoice,
+      enabledPlanKinds,
+      enabledMethods,
+      cardFeeBps,
+      baseTotalCents,
+      cardTotalCents,
+      monthlyAmountCents,
+      monthsUntilFundDeadline: monthsUntilFundDeadline2,
+      quote,
+      displayTotalCents,
+      payButtonAmountLabel,
+      formFieldsHtml,
+      readFromRoot,
+      validateChoice,
+      scrollToField,
+      wireForm,
+      refreshWrap,
+      wireSeatRoleChange,
+      confirmMessage,
+      defaultPlanKind,
+      defaultMethod
+    };
+    globalThis.EventsPaymentChoice = api21;
+  })();
+
+  // js/components/events/invest-ack.js
+  (function() {
+    "use strict";
+    const ACK_COPY = "Investment-eligible event. Funds may be allocated to LLC investment accounts. Past performance does not guarantee future results.";
+    function escapeHtml(str) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === "function") {
+        return window.EventsHelpers.escapeHtml(str);
+      }
+      if (str == null) return "";
+      const div = document.createElement("div");
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+    function isRequired(event) {
+      return !!(event && event.invest_eligible);
+    }
+    function formFieldHtml(event, opts) {
+      if (!isRequired(event)) return "";
+      const prefix = opts && opts.idPrefix || "investAck";
+      const fieldId = `${prefix}-checkbox`;
+      return `
+            <div class="ed-disc-acks" data-invest-ack-root="${escapeHtml(prefix)}" style="margin:12px 0">
+                <p style="font-size:13px;font-weight:700;color:#0b2545;margin:0 0 8px">Investment acknowledgment</p>
+                <label class="ed-disc-ack" style="display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #d5dfec;border-radius:12px;background:#fff;cursor:pointer">
+                    <input type="checkbox" id="${escapeHtml(fieldId)}" data-invest-ack="1" required style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
+                    <span style="min-width:0">
+                        <span style="display:block;font-size:13px;font-weight:700;color:#0b2545;margin-bottom:4px">Fidelity investment risk <span class="text-red-500">*</span></span>
+                        <span style="display:block;font-size:12px;line-height:1.5;color:#374151">${escapeHtml(ACK_COPY)}</span>
+                    </span>
+                </label>
+            </div>
+        `;
+    }
+    function readAcknowledgedFromRoot(root2) {
+      const scope = root2 || document;
+      const el = scope.querySelector('[data-invest-ack="1"]');
+      return !!(el && el.checked);
+    }
+    function validateAck(event, root2) {
+      if (!isRequired(event)) return null;
+      if (readAcknowledgedFromRoot(root2)) return null;
+      return "Please acknowledge the investment risk disclosure before continuing.";
+    }
+    const EventsInvestAck = {
+      ACK_COPY,
+      isRequired,
+      formFieldHtml,
+      readAcknowledgedFromRoot,
+      validateAck
+    };
+    globalThis.EventsInvestAck = EventsInvestAck;
+  })();
+
+  // js/components/events/seat-picker.js
+  (function() {
+    "use strict";
+    const INPUT_NAME = "evtSeatRole";
+    function escapeHtml(str) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === "function") {
+        return window.EventsHelpers.escapeHtml(str);
+      }
+      if (str == null) return "";
+      const div = document.createElement("div");
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+    function priceLabel(event, role) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.seatPriceLabel === "function") {
+        return window.EventsHelpers.seatPriceLabel(event, role);
+      }
+      return role === "kid" ? "Free" : "";
+    }
+    function shouldShow(event, ctx) {
+      if (!event || event.event_type === "competition" || event.rsvp_enabled === false) {
+        return false;
+      }
+      if (ctx && ctx.isHost) return false;
+      return true;
+    }
+    function formFieldsHtml(event, opts) {
+      if (!event) return "";
+      const prefix = opts && opts.idPrefix || "seatPicker";
+      let defaultRole = opts && opts.defaultRole || "adult";
+      if (window.EventsIncludedItems && typeof window.EventsIncludedItems.defaultSeatRoleForCatalog === "function") {
+        defaultRole = opts && opts.defaultRole != null ? defaultRole : window.EventsIncludedItems.defaultSeatRoleForCatalog(event.included_items);
+      }
+      if (window.EventsHelpers && window.EventsHelpers.normalizeSeatRole) {
+        defaultRole = window.EventsHelpers.normalizeSeatRole(defaultRole);
+      } else {
+        defaultRole = defaultRole === "kid" ? "kid" : "adult";
+      }
+      const adultLabel = priceLabel(event, "adult");
+      const kidLabel = priceLabel(event, "kid");
+      return `
+            <div class="ed-seat-picker" data-seat-picker-root="${escapeHtml(prefix)}" style="margin-bottom:12px">
+                <p class="ed-seat-picker-label">Who is this RSVP for?</p>
+                <div class="ed-seat-picker-options" role="radiogroup" aria-label="Seat type">
+                    <label class="ed-seat-picker-option${defaultRole === "adult" ? " is-selected" : ""}">
+                        <input type="radio" name="${escapeHtml(INPUT_NAME)}" value="adult" data-seat-role-input="1"
+                            ${defaultRole === "adult" ? "checked" : ""}>
+                        <span class="ed-seat-picker-option-body">
+                            <span class="ed-seat-picker-option-title">Adult</span>
+                            <span class="ed-seat-picker-option-price">${escapeHtml(adultLabel)}</span>
+                        </span>
+                    </label>
+                    <label class="ed-seat-picker-option${defaultRole === "kid" ? " is-selected" : ""}">
+                        <input type="radio" name="${escapeHtml(INPUT_NAME)}" value="kid" data-seat-role-input="1"
+                            ${defaultRole === "kid" ? "checked" : ""}>
+                        <span class="ed-seat-picker-option-body">
+                            <span class="ed-seat-picker-option-title">Child</span>
+                            <span class="ed-seat-picker-option-price">${escapeHtml(kidLabel)}</span>
+                        </span>
+                    </label>
+                </div>
+            </div>`;
+    }
+    function readRoleFromRoot(root2) {
+      const scope = root2 || document;
+      const checked = scope.querySelector('[data-seat-role-input="1"]:checked');
+      const raw = checked ? checked.value : "adult";
+      if (window.EventsHelpers && typeof window.EventsHelpers.normalizeSeatRole === "function") {
+        return window.EventsHelpers.normalizeSeatRole(raw);
+      }
+      return raw === "kid" ? "kid" : "adult";
+    }
+    function wireRoleChange(root2, event, onChange) {
+      const scope = root2 || document;
+      const inputs = scope.querySelectorAll('[data-seat-role-input="1"]');
+      if (!inputs.length) return;
+      function syncSelected() {
+        inputs.forEach((input) => {
+          const label = input.closest(".ed-seat-picker-option");
+          if (label) label.classList.toggle("is-selected", input.checked);
+        });
+      }
+      inputs.forEach((input) => {
+        input.addEventListener("change", () => {
+          syncSelected();
+          if (typeof onChange === "function") {
+            onChange(readRoleFromRoot(scope), event);
+          }
+        });
+      });
+    }
+    const EventsSeatPicker = {
+      INPUT_NAME,
+      shouldShow,
+      formFieldsHtml,
+      readRoleFromRoot,
+      wireRoleChange
+    };
+    globalThis.EventsSeatPicker = EventsSeatPicker;
+  })();
+
+  // js/components/events/party-seats.js
+  (function() {
+    "use strict";
+    const MAX_PARTY_SEATS = 12;
+    const DISPLAY_NAME_MAX = 120;
+    function escapeHtml(str) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === "function") {
+        return window.EventsHelpers.escapeHtml(str);
+      }
+      if (str == null) return "";
+      const div = document.createElement("div");
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+    function normalizeSeatRole(raw) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.normalizeSeatRole === "function") {
+        return window.EventsHelpers.normalizeSeatRole(raw);
+      }
+      return String(raw || "").trim().toLowerCase() === "kid" ? "kid" : "adult";
+    }
+    function seatPriceCents(event, role) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.seatPriceCents === "function") {
+        return window.EventsHelpers.seatPriceCents(event, role);
+      }
+      return Number(event?.rsvp_cost_cents || 0);
+    }
+    function seatPriceLabel(event, role) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.seatPriceLabel === "function") {
+        return window.EventsHelpers.seatPriceLabel(event, role);
+      }
+      const cents = seatPriceCents(event, role);
+      return cents <= 0 ? "Free" : `$${(cents / 100).toFixed(0)}`;
+    }
+    function formatMoney(cents) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.formatMoney === "function") {
+        return window.EventsHelpers.formatMoney(cents);
+      }
+      return `$${((Number(cents) || 0) / 100).toFixed(0)}`;
+    }
+    function partyBaseTotalCents(event, seats) {
+      let total = 0;
+      for (const seat of seats || []) {
+        total += seatPriceCents(event, seat.role);
+      }
+      return total;
+    }
+    function validatePartySeats(event, seats, catalog, opts) {
+      const allowIncompleteGuests = !!(opts && opts.allowIncompleteGuests);
+      if (!seats || !seats.length) return "Add at least one person to your party.";
+      if (seats.length > MAX_PARTY_SEATS) {
+        return `Parties are limited to ${MAX_PARTY_SEATS} people.`;
+      }
+      if (!seats.some((s) => s.is_payer)) return "The payer must be included in your party.";
+      for (const seat of seats) {
+        if (!String(seat.display_name || "").trim()) {
+          return seat.is_payer ? "Your name is required." : "Each guest needs a name.";
+        }
+        if (allowIncompleteGuests && !seat.is_payer) continue;
+        if (window.EventsIncludedItems && typeof window.EventsIncludedItems.validateAnswers === "function") {
+          const err = window.EventsIncludedItems.validateAnswers(catalog, seat.options || {}, seat.role);
+          if (err) {
+            const who = seat.is_payer ? "Your" : `${seat.display_name}'s`;
+            return `${who} ${err.charAt(0).toLowerCase()}${err.slice(1)}`;
+          }
+        }
+      }
+      return null;
+    }
+    function shouldShow(event, ctx) {
+      if (!event || event.event_type === "competition" || event.rsvp_enabled === false) {
+        return false;
+      }
+      if (ctx && ctx.isHost) return false;
+      return true;
+    }
+    function defaultPayerRole(event) {
+      if (window.EventsIncludedItems && typeof window.EventsIncludedItems.defaultSeatRoleForCatalog === "function") {
+        return window.EventsIncludedItems.defaultSeatRoleForCatalog(event.included_items);
+      }
+      return "adult";
+    }
+    function seatRowIncludedHtml(event, prefix, index, role) {
+      if (!window.EventsIncludedItems || typeof window.EventsIncludedItems.formFieldsHtml !== "function") {
+        return "";
+      }
+      const catalog = event.included_items;
+      if (!window.EventsIncludedItems.hasCatalogForRole(catalog, role)) return "";
+      return window.EventsIncludedItems.formFieldsHtml(catalog, {
+        idPrefix: `${prefix}-seat-${index}`,
+        role
+      });
+    }
+    function seatRoleRadiosHtml(event, prefix, index, role, isPayer) {
+      const adultLabel = seatPriceLabel(event, "adult");
+      const kidLabel = seatPriceLabel(event, "kid");
+      const name = `${prefix}-role-${index}`;
+      return `
+            <div class="ed-party-seat-roles" role="radiogroup" aria-label="Seat type">
+                <label class="ed-seat-picker-option${role === "adult" ? " is-selected" : ""}">
+                    <input type="radio" name="${escapeHtml(name)}" value="adult" data-party-seat-role="1"
+                        data-party-seat-index="${index}" ${role === "adult" ? "checked" : ""}
+                        ${!isPayer ? "disabled" : ""}>
+                    <span class="ed-seat-picker-option-body">
+                        <span class="ed-seat-picker-option-title">Adult</span>
+                        <span class="ed-seat-picker-option-price">${escapeHtml(adultLabel)}</span>
+                    </span>
+                </label>
+                <label class="ed-seat-picker-option${role === "kid" ? " is-selected" : ""}">
+                    <input type="radio" name="${escapeHtml(name)}" value="kid" data-party-seat-role="1"
+                        data-party-seat-index="${index}" ${role === "kid" ? "checked" : ""}
+                        ${!isPayer ? "disabled" : ""}>
+                    <span class="ed-seat-picker-option-body">
+                        <span class="ed-seat-picker-option-title">Child</span>
+                        <span class="ed-seat-picker-option-price">${escapeHtml(kidLabel)}</span>
+                    </span>
+                </label>
+            </div>`;
+    }
+    function seatRowHtml(event, prefix, index, seat, opts) {
+      const isPayer = !!seat.is_payer;
+      const role = normalizeSeatRole(seat.role);
+      const title = isPayer ? "You (payer)" : `Guest ${index}`;
+      const removeBtn = isPayer ? "" : `
+            <button type="button" class="ed-party-seat-remove" data-party-seat-remove="${index}"
+                aria-label="Remove guest">Remove</button>`;
+      const roleBlock = isPayer ? seatRoleRadiosHtml(event, prefix, index, role, true) : `<input type="hidden" data-party-seat-fixed-role="${index}" value="${escapeHtml(role)}">
+               <span class="ed-party-seat-role-badge">${role === "kid" ? "Child" : "Adult"} \xB7 ${escapeHtml(seatPriceLabel(event, role))}</span>`;
+      return `
+            <div class="ed-party-seat-row${isPayer ? " is-payer" : ""}" data-party-seat-row="${index}">
+                <div class="ed-party-seat-header">
+                    <span class="ed-party-seat-title">${escapeHtml(title)}</span>
+                    ${removeBtn}
+                </div>
+                <label class="ec-label" for="${escapeHtml(prefix)}-name-${index}">Name</label>
+                <input type="text" class="ec-input ed-party-seat-name" id="${escapeHtml(prefix)}-name-${index}"
+                    data-party-seat-name="${index}" maxlength="${DISPLAY_NAME_MAX}"
+                    value="${escapeHtml(seat.display_name || "")}" ${isPayer ? 'data-party-seat-payer="1"' : ""}
+                    placeholder="${isPayer ? "Your name" : "Guest name"}" required>
+                ${roleBlock}
+                <div class="ed-party-seat-inc" data-party-seat-inc="${index}">
+                    ${seatRowIncludedHtml(event, prefix, index, role)}
+                </div>
+                ${!isPayer && window.EventsIncludedItems && typeof window.EventsIncludedItems.hasCatalogForRole === "function" && window.EventsIncludedItems.hasCatalogForRole(event.included_items, role) ? '<p class="ed-party-seat-invite-hint">Leave blank to send an invite link after RSVP.</p>' : ""}
+            </div>`;
+    }
+    function formFieldsHtml(event, opts) {
+      if (!event) return "";
+      const prefix = opts && opts.idPrefix || "partySeats";
+      const payerName = String(opts && opts.payerName || "").trim();
+      const payerRole = normalizeSeatRole(opts && opts.defaultRole || defaultPayerRole(event));
+      const payerSeat = {
+        role: payerRole,
+        display_name: payerName,
+        is_payer: true
+      };
+      const total = partyBaseTotalCents(event, [payerSeat]);
+      return `
+            <div class="ed-party-seats" data-party-seats-root="${escapeHtml(prefix)}">
+                <p class="ed-party-seats-label">Who's coming?</p>
+                <div class="ed-party-seat-rows" data-party-seat-rows="1">
+                    ${seatRowHtml(event, prefix, 0, payerSeat, opts)}
+                </div>
+                <div class="ed-party-seat-actions">
+                    <button type="button" class="ed-btn-secondary ed-party-add-seat" data-party-add-role="adult">+ Add Adult</button>
+                    <button type="button" class="ed-btn-secondary ed-party-add-seat" data-party-add-role="kid">+ Add Child</button>
+                </div>
+                <p class="ed-party-total" data-party-total="1">Party total: <strong>${escapeHtml(formatMoney(total))}</strong></p>
+            </div>`;
+    }
+    function readRoleFromRow(row, index) {
+      const fixed = row.querySelector(`[data-party-seat-fixed-role="${index}"]`);
+      if (fixed) return normalizeSeatRole(fixed.value);
+      const checked = row.querySelector(`[data-party-seat-role="1"][data-party-seat-index="${index}"]:checked`);
+      return normalizeSeatRole(checked ? checked.value : "adult");
+    }
+    function readAnswersFromRow(row, catalog, role) {
+      if (window.EventsIncludedItems && typeof window.EventsIncludedItems.readAnswersFromRoot === "function") {
+        return window.EventsIncludedItems.readAnswersFromRoot(row, catalog, role);
+      }
+      return {};
+    }
+    function readSeatsFromRoot(root2, event) {
+      const scope = root2 || document;
+      const partyRoot = scope.querySelector("[data-party-seats-root]");
+      if (!partyRoot) return [];
+      const prefix = partyRoot.getAttribute("data-party-seats-root") || "partySeats";
+      const rows = partyRoot.querySelectorAll("[data-party-seat-row]");
+      const catalog = window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === "function" ? window.EventsIncludedItems.normalizeIncludedItems(event.included_items) : [];
+      const seats = [];
+      rows.forEach((row) => {
+        const index = Number(row.getAttribute("data-party-seat-row"));
+        const nameEl = row.querySelector(`[data-party-seat-name="${index}"]`);
+        const isPayer = !!row.querySelector('[data-party-seat-payer="1"]');
+        const role = readRoleFromRow(row, index);
+        const display_name = String(nameEl?.value || "").trim().slice(0, DISPLAY_NAME_MAX);
+        const options = readAnswersFromRow(row, catalog, role);
+        seats.push({
+          role,
+          display_name,
+          is_payer: isPayer,
+          ...Object.keys(options).length ? { options } : {}
+        });
+      });
+      if (seats.length && !seats.some((s) => s.is_payer)) seats[0].is_payer = true;
+      return seats;
+    }
+    function readPayerRoleFromRoot(root2) {
+      const seats = readSeatsFromRoot(root2, {});
+      const payer = seats.find((s) => s.is_payer) || seats[0];
+      return payer ? normalizeSeatRole(payer.role) : "adult";
+    }
+    function updateTotalLabel(partyRoot, event) {
+      const totalEl = partyRoot.querySelector('[data-party-total="1"]');
+      if (!totalEl || !event) return;
+      const seats = readSeatsFromRoot(partyRoot, event);
+      const total = partyBaseTotalCents(event, seats);
+      totalEl.innerHTML = `Party total: <strong>${escapeHtml(formatMoney(total))}</strong>`;
+    }
+    function reindexRows(partyRoot, event, prefix) {
+      const rowsWrap = partyRoot.querySelector('[data-party-seat-rows="1"]');
+      if (!rowsWrap) return;
+      const rows = Array.from(rowsWrap.querySelectorAll("[data-party-seat-row]"));
+      rows.forEach((row, i) => {
+        const isPayer = row.classList.contains("is-payer");
+        const nameEl = row.querySelector(".ed-party-seat-name");
+        const display_name = String(nameEl?.value || "").trim();
+        const role = readRoleFromRow(row, Number(row.getAttribute("data-party-seat-row")));
+        const seat = { role, display_name, is_payer: isPayer };
+        const tmp = document.createElement("div");
+        tmp.innerHTML = seatRowHtml(event, prefix, i, seat, {});
+        const newRow = tmp.firstElementChild;
+        rowsWrap.replaceChild(newRow, row);
+      });
+      wireRowEvents(partyRoot, event, prefix);
+    }
+    function wireRowEvents(partyRoot, event, prefix) {
+      const onChange = partyRoot._partyOnChange;
+      partyRoot.querySelectorAll('[data-party-seat-role="1"]').forEach((input) => {
+        if (input.dataset.wired) return;
+        input.dataset.wired = "1";
+        input.addEventListener("change", () => {
+          const index = Number(input.getAttribute("data-party-seat-index"));
+          const row = partyRoot.querySelector(`[data-party-seat-row="${index}"]`);
+          if (!row) return;
+          row.querySelectorAll(".ed-seat-picker-option").forEach((label) => {
+            const radio = label.querySelector('input[type="radio"]');
+            label.classList.toggle("is-selected", !!(radio && radio.checked));
+          });
+          const role = readRoleFromRow(row, index);
+          const incWrap = row.querySelector(`[data-party-seat-inc="${index}"]`);
+          if (incWrap) {
+            incWrap.innerHTML = seatRowIncludedHtml(event, prefix, index, role);
+          }
+          updateTotalLabel(partyRoot, event);
+          if (typeof onChange === "function") onChange(readSeatsFromRoot(partyRoot, event), event);
+        });
+      });
+      partyRoot.querySelectorAll(".ed-party-seat-name").forEach((input) => {
+        if (input.dataset.wired) return;
+        input.dataset.wired = "1";
+        input.addEventListener("input", () => {
+          updateTotalLabel(partyRoot, event);
+          if (typeof onChange === "function") onChange(readSeatsFromRoot(partyRoot, event), event);
+        });
+      });
+      partyRoot.querySelectorAll("[data-party-seat-remove]").forEach((btn) => {
+        if (btn.dataset.wired) return;
+        btn.dataset.wired = "1";
+        btn.addEventListener("click", () => {
+          const index = Number(btn.getAttribute("data-party-seat-remove"));
+          const row = partyRoot.querySelector(`[data-party-seat-row="${index}"]`);
+          if (row && !row.classList.contains("is-payer")) {
+            row.remove();
+            reindexRows(partyRoot, event, prefix);
+            updateTotalLabel(partyRoot, event);
+            if (typeof onChange === "function") onChange(readSeatsFromRoot(partyRoot, event), event);
+          }
+        });
+      });
+      partyRoot.querySelectorAll("[data-party-add-role]").forEach((btn) => {
+        if (btn.dataset.wired) return;
+        btn.dataset.wired = "1";
+        btn.addEventListener("click", () => {
+          const rowsWrap = partyRoot.querySelector('[data-party-seat-rows="1"]');
+          const count = rowsWrap ? rowsWrap.querySelectorAll("[data-party-seat-row]").length : 0;
+          if (count >= MAX_PARTY_SEATS) {
+            alert(`Parties are limited to ${MAX_PARTY_SEATS} people.`);
+            return;
+          }
+          const addRole = normalizeSeatRole(btn.getAttribute("data-party-add-role"));
+          const seat = { role: addRole, display_name: "", is_payer: false };
+          const tmp = document.createElement("div");
+          tmp.innerHTML = seatRowHtml(event, prefix, count, seat, {});
+          rowsWrap.appendChild(tmp.firstElementChild);
+          reindexRows(partyRoot, event, prefix);
+          updateTotalLabel(partyRoot, event);
+          if (typeof onChange === "function") onChange(readSeatsFromRoot(partyRoot, event), event);
+        });
+      });
+    }
+    function wireForm(root2, event, onChange) {
+      const scope = root2 || document;
+      const partyRoot = scope.querySelector("[data-party-seats-root]");
+      if (!partyRoot || !event) return;
+      const prefix = partyRoot.getAttribute("data-party-seats-root") || "partySeats";
+      partyRoot._partyOnChange = onChange;
+      wireRowEvents(partyRoot, event, prefix);
+      updateTotalLabel(partyRoot, event);
+    }
+    const EventsPartySeats = {
+      MAX_PARTY_SEATS,
+      shouldShow,
+      formFieldsHtml,
+      readSeatsFromRoot,
+      readPayerRoleFromRoot,
+      validatePartySeats,
+      partyBaseTotalCents,
+      wireForm
+    };
+    globalThis.EventsPartySeats = EventsPartySeats;
+  })();
+
+  // js/components/events/attach-guests.js
+  (function() {
+    "use strict";
+    function escapeHtml(str) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === "function") {
+        return window.EventsHelpers.escapeHtml(str);
+      }
+      if (str == null) return "";
+      const div = document.createElement("div");
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+    function formatMoney(cents) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.formatMoney === "function") {
+        return window.EventsHelpers.formatMoney(cents);
+      }
+      const n = Math.max(0, Number(cents) || 0) / 100;
+      return `$${n.toFixed(2)}`;
+    }
+    function guestIntentHtml(event, opts) {
+      const options = opts || {};
+      const idPrefix = options.idPrefix || "guestPayIntent";
+      const show = event && (event.pricing_mode === "paid" || options.forceShow);
+      if (!show) return "";
+      return `
+            <div class="ed-attach-intent" data-attach-intent-root="${escapeHtml(idPrefix)}" style="margin:12px 0;padding:12px;border:1px solid var(--color-border,#d5dfec);border-radius:12px;background:#fff">
+                <p style="font-size:13px;font-weight:700;color:#0b2545;margin:0 0 8px">Who pays?</p>
+                <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;cursor:pointer;font-size:13px;color:#0b2545">
+                    <input type="radio" name="${escapeHtml(idPrefix)}" value="self" data-payment-intent="self" checked style="margin-top:3px">
+                    <span>I\u2019ll pay for myself</span>
+                </label>
+                <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:13px;color:#0b2545">
+                    <input type="radio" name="${escapeHtml(idPrefix)}" value="attach_later" data-payment-intent="attach_later" style="margin-top:3px">
+                    <span>Someone else will pay for me</span>
+                </label>
+                <p style="margin:10px 0 0;font-size:12px;line-height:1.45;color:#6b7280">Paying with someone else\u2019s bank via a verification code is not available. Either pay yourself, or ask them to add you to their party.</p>
+            </div>`;
+    }
+    function readGuestIntent(root2) {
+      const scope = root2 || document;
+      const checked = scope.querySelector("[data-payment-intent]:checked") || document.querySelector("[data-payment-intent]:checked");
+      const v = checked ? String(checked.value || checked.getAttribute("data-payment-intent") || "") : "self";
+      return v === "attach_later" ? "attach_later" : "self";
+    }
+    function wireGuestIntent(root2, onChange) {
+      const scope = root2 || document;
+      scope.querySelectorAll("[data-payment-intent]").forEach((el) => {
+        if (el.dataset.intentWired === "1") return;
+        el.dataset.intentWired = "1";
+        el.addEventListener("change", () => {
+          if (typeof onChange === "function") onChange(readGuestIntent(scope));
+        });
+      });
+    }
+    function panelShellHtml(idPrefix) {
+      const id = idPrefix || "attachGuests";
+      return `<div id="${escapeHtml(id)}" class="ed-attach-guests" data-attach-guests-root="1" style="margin:12px 0"></div>`;
+    }
+    function renderPendingList(slot, pending, opts) {
+      if (!slot) return;
+      const options = opts || {};
+      const unpaid = options.payerUnpaid !== false;
+      if (!unpaid) {
+        slot.innerHTML = "";
+        return;
+      }
+      const list = Array.isArray(pending) ? pending : [];
+      if (!list.length) {
+        slot.innerHTML = `
+                <div style="padding:10px 12px;border:1px dashed var(--color-border,#d5dfec);border-radius:12px;background:#fafbfc">
+                    <p style="margin:0;font-size:13px;font-weight:700;color:#0b2545">Add guest</p>
+                    <p style="margin:4px 0 0;font-size:12px;color:#6b7280">No guests are waiting to be added yet.</p>
+                </div>`;
+        return;
+      }
+      const rows = list.map((g2) => {
+        const name = escapeHtml(g2.display_name || "Guest");
+        const role = g2.role === "kid" ? "Kid" : "Adult";
+        const seats = Number(g2.seat_count) > 1 ? ` \xB7 ${g2.seat_count} seats` : "";
+        const optsOk = g2.options_complete ? "" : " \xB7 sizes pending";
+        return `
+                <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--color-border,#d5dfec)">
+                    <div style="min-width:0">
+                        <p style="margin:0;font-size:13px;font-weight:700;color:#0b2545">${name}</p>
+                        <p style="margin:2px 0 0;font-size:12px;color:#6b7280">${role}${seats}${optsOk}</p>
+                    </div>
+                    <button type="button" class="evt-action-btn" data-attach-guest-btn="1"
+                        data-guest-rsvp-id="${escapeHtml(g2.guest_rsvp_id)}"
+                        data-pending-party-id="${escapeHtml(g2.pending_party_id || "")}"
+                        style="width:auto;padding:8px 14px;font-size:13px;flex-shrink:0">
+                        Add
+                    </button>
+                </div>`;
+      }).join("");
+      slot.innerHTML = `
+            <div style="padding:12px;border:1px solid var(--color-border,#d5dfec);border-radius:12px;background:#fff">
+                <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#0b2545">Add guest</p>
+                <p style="margin:0 0 8px;font-size:12px;color:#6b7280">Guests who asked someone else to pay. Adding updates your party total.</p>
+                ${rows}
+            </div>`;
+    }
+    async function loadAndWire(slot, opts) {
+      if (!slot || !opts || !opts.eventId || typeof opts.callEdge !== "function") return;
+      const payerUnpaid = opts.payerUnpaid !== false;
+      if (!payerUnpaid) {
+        slot.innerHTML = "";
+        return;
+      }
+      slot.innerHTML = `<p style="font-size:12px;color:#6b7280;margin:8px 0">Loading guests\u2026</p>`;
+      try {
+        const result = await opts.callEdge("event-party-attach", {
+          action: "list_pending",
+          event_id: opts.eventId
+        });
+        const pending = result?.pending_guests || [];
+        renderPendingList(slot, pending, { payerUnpaid: true });
+        slot.querySelectorAll("[data-attach-guest-btn]").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            if (btn.disabled) return;
+            btn.disabled = true;
+            const prev = btn.textContent;
+            btn.textContent = "Adding\u2026";
+            try {
+              const attached = await opts.callEdge("event-party-attach", {
+                action: "attach",
+                event_id: opts.eventId,
+                guest_rsvp_id: btn.getAttribute("data-guest-rsvp-id") || "",
+                pending_party_id: btn.getAttribute("data-pending-party-id") || ""
+              });
+              if (typeof opts.onAttached === "function") {
+                await opts.onAttached(attached);
+              } else {
+                await loadAndWire(slot, opts);
+              }
+            } catch (err) {
+              alert(err.message || "Could not add guest.");
+              btn.disabled = false;
+              btn.textContent = prev;
+            }
+          });
+        });
+      } catch (_) {
+        slot.innerHTML = `
+                <div style="padding:10px 12px;border:1px solid var(--color-border,#d5dfec);border-radius:12px">
+                    <p style="margin:0;font-size:12px;color:#6b7280">Could not load guests waiting to join.</p>
+                </div>`;
+      }
+    }
+    window.EventsAttachGuests = {
+      guestIntentHtml,
+      readGuestIntent,
+      wireGuestIntent,
+      panelShellHtml,
+      renderPendingList,
+      loadAndWire,
+      formatMoney
+    };
+  })();
+
+  // js/components/events/competition-phases.js
+  (function() {
+    "use strict";
+    const PHASE_NAMES = {
+      1: "Registration",
+      2: "Submission",
+      3: "Voting",
+      4: "Results"
+    };
+    function normalizePhases(phases) {
+      return Array.isArray(phases) ? phases : [];
+    }
+    function getPhase(phases, num) {
+      return normalizePhases(phases).find((p) => Number(p.phase_num) === Number(num)) || null;
+    }
+    function isPhaseActiveStatus(status) {
+      return status === "active" || status === "extended";
+    }
+    function isWithinWindow(phase, now) {
+      if (!phase || !phase.starts_at || !phase.ends_at) return false;
+      const t = now instanceof Date ? now : new Date(now);
+      const start = new Date(phase.starts_at);
+      const end = new Date(phase.ends_at);
+      return t >= start && t < end;
+    }
+    function resolveDisplayPhase(phases, now) {
+      const list = normalizePhases(phases);
+      const t = now instanceof Date ? now : new Date(now);
+      const active = list.find((p) => isPhaseActiveStatus(p.status));
+      if (active) return Number(active.phase_num) || 0;
+      for (const p of list) {
+        if (isWithinWindow(p, t)) return Number(p.phase_num) || 0;
+      }
+      return 0;
+    }
+    function isRegistrationOpen(phases, now) {
+      const phase1 = getPhase(phases, 1);
+      if (!phase1) return false;
+      if (phase1.status === "completed") return false;
+      const display = resolveDisplayPhase(phases, now);
+      if (display > 1) return false;
+      if (isPhaseActiveStatus(phase1.status)) {
+        if (phase1.starts_at && phase1.ends_at) return isWithinWindow(phase1, now);
+        return true;
+      }
+      if (display <= 1 && phase1.status === "pending") return true;
+      return false;
+    }
+    function isSubmissionOpen(phases, now) {
+      const phase2 = getPhase(phases, 2);
+      if (!phase2) return false;
+      const t = now instanceof Date ? now : new Date(now);
+      if (!isPhaseActiveStatus(phase2.status)) return false;
+      return isWithinWindow(phase2, t);
+    }
+    function isVotingOpen(phases, now) {
+      const phase3 = getPhase(phases, 3);
+      if (!phase3) return false;
+      const t = now instanceof Date ? now : new Date(now);
+      if (!isPhaseActiveStatus(phase3.status)) return false;
+      return isWithinWindow(phase3, t);
+    }
+    function isVotingClosed(phases, now) {
+      const phase3 = getPhase(phases, 3);
+      if (!phase3) return false;
+      const t = now instanceof Date ? now : new Date(now);
+      if (phase3.status === "completed") return true;
+      if (phase3.ends_at && t >= new Date(phase3.ends_at)) return true;
+      return false;
+    }
+    function isVoterEligible(config, ctx) {
+      const rule = config && config.voter_eligibility || "all_members";
+      const hasRsvp = !!(ctx && ctx.hasRsvp);
+      const hasCompEntry = !!(ctx && ctx.hasCompEntry);
+      if (rule === "rsvped_only") return hasRsvp || hasCompEntry;
+      if (rule === "competitors_only") return hasCompEntry;
+      return true;
+    }
+    function voterEligibilityMessage(config) {
+      const rule = config && config.voter_eligibility || "all_members";
+      if (rule === "rsvped_only") {
+        return "Only RSVPed members or registered competitors can vote in this competition.";
+      }
+      if (rule === "competitors_only") {
+        return "Only registered competitors can vote in this competition.";
+      }
+      return "";
+    }
+    function formatPhaseDate(iso) {
+      if (!iso) return "\u2014";
+      return new Date(iso).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+    function submissionWindowLabel(phase2, now) {
+      if (!phase2 || !phase2.starts_at || !phase2.ends_at) {
+        return { state: "not_configured", message: "Submission window not configured yet." };
+      }
+      const t = now instanceof Date ? now : new Date(now);
+      const start = new Date(phase2.starts_at);
+      const end = new Date(phase2.ends_at);
+      if (t < start) {
+        return {
+          state: "upcoming",
+          message: `Submissions open ${formatPhaseDate(phase2.starts_at)}.`
+        };
+      }
+      if (t >= end) {
+        return {
+          state: "closed",
+          message: `Submission window closed (${formatPhaseDate(phase2.ends_at)}).`
+        };
+      }
+      if (isPhaseActiveStatus(phase2.status)) {
+        return {
+          state: "open",
+          message: `Submissions open until ${formatPhaseDate(phase2.ends_at)}.`
+        };
+      }
+      return {
+        state: "scheduled",
+        message: `Scheduled ${formatPhaseDate(phase2.starts_at)} \u2192 ${formatPhaseDate(phase2.ends_at)}. Start Phase 2 on the event page when ready.`
+      };
+    }
+    function votingWindowLabel(phase3, now) {
+      if (!phase3 || !phase3.starts_at || !phase3.ends_at) {
+        return { state: "not_configured", message: "Voting window not configured yet." };
+      }
+      const t = now instanceof Date ? now : new Date(now);
+      const start = new Date(phase3.starts_at);
+      const end = new Date(phase3.ends_at);
+      if (t < start) {
+        return {
+          state: "upcoming",
+          message: `Voting opens ${formatPhaseDate(phase3.starts_at)}.`
+        };
+      }
+      if (t >= end) {
+        return {
+          state: "closed",
+          message: `Voting window closed (${formatPhaseDate(phase3.ends_at)}).`
+        };
+      }
+      if (isPhaseActiveStatus(phase3.status)) {
+        return {
+          state: "open",
+          message: `Voting open until ${formatPhaseDate(phase3.ends_at)}.`
+        };
+      }
+      return {
+        state: "scheduled",
+        message: `Scheduled ${formatPhaseDate(phase3.starts_at)} \u2192 ${formatPhaseDate(phase3.ends_at)}. Start Phase 3 on the event page when ready.`
+      };
+    }
+    function entryHasSubmission(entry) {
+      if (!entry) return false;
+      if (entry.file_url || entry.external_url) return true;
+      if (entry.entry_type === "text" && entry.title && entry.title !== "Registered") return true;
+      return !!(entry.title && entry.title !== "Registered");
+    }
+    function isStoragePath(value) {
+      return typeof value === "string" && value.length > 0 && !/^https?:\/\//i.test(value);
+    }
+    async function resolveCompEntryFileUrl(pathOrUrl, expiresInSec) {
+      if (!pathOrUrl) return null;
+      if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+      const ttl = Number(expiresInSec) > 0 ? Number(expiresInSec) : 3600;
+      const { data, error } = await supabaseClient.storage.from("competition-entries").createSignedUrl(pathOrUrl, ttl);
+      if (error) {
+        console.warn("resolveCompEntryFileUrl:", error.message);
+        return null;
+      }
+      return data?.signedUrl || null;
+    }
+    const EventsCompetitionPhases = {
+      PHASE_NAMES,
+      normalizePhases,
+      getPhase,
+      resolveDisplayPhase,
+      isRegistrationOpen,
+      isSubmissionOpen,
+      isVotingOpen,
+      isVotingClosed,
+      isWithinWindow,
+      isPhaseActiveStatus,
+      submissionWindowLabel,
+      votingWindowLabel,
+      isVoterEligible,
+      voterEligibilityMessage,
+      formatPhaseDate,
+      entryHasSubmission,
+      isStoragePath,
+      resolveCompEntryFileUrl
+    };
+    globalThis.EventsCompetitionPhases = EventsCompetitionPhases;
   })();
 
   // js/components/events/pills.js
@@ -806,10 +2807,10 @@
       if (!event || !event.category) return "";
       const emoji = C7.CATEGORY_EMOJI && C7.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
       const label = C7.CATEGORY_TAG && C7.CATEGORY_TAG[event.category]?.label || event.category;
-      const esc10 = H6.escapeHtml || ((s) => String(s == null ? "" : s));
-      return `<button type="button" data-evt-cat="${esc10(event.category)}"
+      const esc12 = H6.escapeHtml || ((s) => String(s == null ? "" : s));
+      return `<button type="button" data-evt-cat="${esc12(event.category)}"
             class="evt-cat-chip absolute top-2 left-2 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-base leading-none hover:scale-110 active:scale-95 transition-transform"
-            aria-label="Filter by ${esc10(label)}" title="Filter by ${esc10(label)}">${emoji}</button>`;
+            aria-label="Filter by ${esc12(label)}" title="Filter by ${esc12(label)}">${emoji}</button>`;
     }
     function _dateStamp(event) {
       const d = _startDate(event);
@@ -1630,7 +3631,7 @@
     }
     const all = window.evtAllEvents || [];
     const rsvps = window.evtAllRsvps || {};
-    const esc10 = H.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc12 = H.escapeHtml || ((s) => String(s == null ? "" : s));
     const now = Date.now();
     const mine = all.filter((ev) => {
       const r = rsvps[ev.id];
@@ -1648,8 +3649,8 @@
       const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
       const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
       const hasBanner = !!ev.banner_url;
-      const thumbStyle = hasBanner ? "background: url('" + esc10(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);";
-      return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc10(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc10(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc10(dateStr) + ", " + esc10(timeStr) + "</span></span></button>";
+      const thumbStyle = hasBanner ? "background: url('" + esc12(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);";
+      return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc12(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc12(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc12(dateStr) + ", " + esc12(timeStr) + "</span></span></button>";
     }).join("");
     mount.innerHTML = '<div class="evt-myrsvps"><div class="evt-myrsvps-head"><h3 class="evt-myrsvps-title">Your Upcoming RSVPs</h3><span class="evt-myrsvps-count">' + total + '</span></div><div class="evt-myrsvps-list">' + rows + '</div><button type="button" class="evt-myrsvps-all" data-evt-myrsvps-all>View All My Events</button></div>';
     mount.querySelectorAll("[data-evt-myrsvp]").forEach((btn) => {
@@ -1730,8 +3731,8 @@
       g2.className = "evt-header-greeting block text-xs text-gray-400 mb-1";
       title.parentNode.insertBefore(g2, title);
     }
-    const esc10 = H2.escapeHtml || ((s) => String(s == null ? "" : s));
-    g2.textContent = "Hey " + esc10(name) + " \u{1F44B}";
+    const esc12 = H2.escapeHtml || ((s) => String(s == null ? "" : s));
+    g2.textContent = "Hey " + esc12(name) + " \u{1F44B}";
   }
   function renderHeaderCount() {
     const el = document.getElementById("evtHeaderCount");
@@ -1959,10 +3960,10 @@
       host.innerHTML = "";
       return;
     }
-    const esc10 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc12 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
     const emoji = C3.CATEGORY_EMOJI && C3.CATEGORY_EMOJI[_activeCategory] || "\u{1F4C5}";
     const label = C3.CATEGORY_TAG && C3.CATEGORY_TAG[_activeCategory]?.label || _activeCategory;
-    host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc10(label) + '</span><span aria-hidden="true" class="text-brand-500">\xD7</span><span class="sr-only">Clear ' + esc10(label) + " filter</span></button>";
+    host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc12(label) + '</span><span aria-hidden="true" class="text-brand-500">\xD7</span><span class="sr-only">Clear ' + esc12(label) + " filter</span></button>";
     host.querySelector("[data-clear-cat]")?.addEventListener("click", () => {
       _activeCategory = "";
       persistState();
@@ -2263,7 +4264,7 @@
   function renderCalendar() {
     const mount = document.getElementById("evtCalendarMount");
     if (!mount) return;
-    const esc10 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc12 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
     let calMonth = api4().getCalMonth?.();
     if (!calMonth) {
       const now = /* @__PURE__ */ new Date();
@@ -2311,7 +4312,7 @@
       }
       const clsCell = "evt-cal-cell" + (hasEv ? " evt-cal-cell--has" : "") + (isToday ? " evt-cal-cell--today" : "");
       parts.push(
-        '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc10(dateObj.toDateString()) + '"' : 'aria-label="' + esc10(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
+        '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc12(dateObj.toDateString()) + '"' : 'aria-label="' + esc12(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
       );
     }
     parts.push("</div>");
@@ -2359,7 +4360,7 @@
       heroEl.innerHTML = "";
       return;
     }
-    const esc10 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc12 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const start = new Date(event.start_date);
     const rel = H3.relativeDate ? H3.relativeDate(start) : "";
     const time = H3.formatDate ? H3.formatDate(event.start_date, "time") : "";
@@ -2371,7 +4372,7 @@
     const isFav = !!(rsvp && rsvp.status === "maybe");
     const heartCls = "evt-hero-heart" + (isFav ? " evt-hero-heart--on" : "");
     const heartPath = isFav ? '<path d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z" fill="currentColor"/>' : '<path stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none" d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z"/>';
-    const heartBtn = '<button type="button" data-evt-hero-heart="' + esc10(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
+    const heartBtn = '<button type="button" data-evt-hero-heart="' + esc12(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
     const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
     const useVlift = document.body.classList.contains("evt-vlift");
     if (useVlift) {
@@ -2427,12 +4428,12 @@
       })();
       const descRaw = event.description ? String(event.description).trim() : "";
       const descShort = descRaw.length > 180 ? descRaw.slice(0, 177) + "\u2026" : descRaw;
-      heroEl.innerHTML = '<div class="evt-hero-vlift relative"><a href="' + href + '" data-evt-hero="' + esc10(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event, true) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + "</div>" + // F14 — FEATURED EVENT kicker (vlift only; only shown when admin-featured)
+      heroEl.innerHTML = '<div class="evt-hero-vlift relative"><a href="' + href + '" data-evt-hero="' + esc12(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event, true) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + "</div>" + // F14 — FEATURED EVENT kicker (vlift only; only shown when admin-featured)
       (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : "") + // Bottom-edge dark fade for legibility
-      '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div><div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' + (fMon ? '<span class="evt-hero-datechip__mon">' + esc10(fMon) + "</span>" : "") + (fDay !== "" ? '<span class="evt-hero-datechip__day">' + esc10(fDay) + "</span>" : "") + (fDow ? '<span class="evt-hero-datechip__dow">' + esc10(fDow) + "</span>" : "") + '</div><div class="evt-hero-meta-body">' + // E7 — Avatar cluster
-      attendeeCluster(event.id) + '<h2 class="text-xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc10(event.title || "Untitled event") + "</h2>" + // F14 — Host line
-      (hostLine ? '<p class="evt-hero-host" data-f14-host>' + esc10(hostLine) + "</p>" : "") + // F20 — Time + location on the same line
-      (timeShort || loc ? '<div class="evt-hero-timeloc" data-f14-timeloc>' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc10(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc10(loc) + "</span>" : "") + "</div>" : "") + '</div></div><div class="evt-hero-side" data-f14-side>' + (descShort ? '<p class="evt-hero-side__desc">' + esc10(descShort) + "</p>" : "") + '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc10(event.id) + '" role="button" aria-hidden="true">View Details</span></div></a><button type="button" data-evt-hero-cta="' + esc10(event.id) + '" class="evt-hero-cta" aria-label="View details for ' + esc10(event.title || "this event") + '">View Details</button></div>';
+      '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div><div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' + (fMon ? '<span class="evt-hero-datechip__mon">' + esc12(fMon) + "</span>" : "") + (fDay !== "" ? '<span class="evt-hero-datechip__day">' + esc12(fDay) + "</span>" : "") + (fDow ? '<span class="evt-hero-datechip__dow">' + esc12(fDow) + "</span>" : "") + '</div><div class="evt-hero-meta-body">' + // E7 — Avatar cluster
+      attendeeCluster(event.id) + '<h2 class="text-xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc12(event.title || "Untitled event") + "</h2>" + // F14 — Host line
+      (hostLine ? '<p class="evt-hero-host" data-f14-host>' + esc12(hostLine) + "</p>" : "") + // F20 — Time + location on the same line
+      (timeShort || loc ? '<div class="evt-hero-timeloc" data-f14-timeloc>' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc12(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc12(loc) + "</span>" : "") + "</div>" : "") + '</div></div><div class="evt-hero-side" data-f14-side>' + (descShort ? '<p class="evt-hero-side__desc">' + esc12(descShort) + "</p>" : "") + '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc12(event.id) + '" role="button" aria-hidden="true">View Details</span></div></a><button type="button" data-evt-hero-cta="' + esc12(event.id) + '" class="evt-hero-cta" aria-label="View details for ' + esc12(event.title || "this event") + '">View Details</button></div>';
       const ctaBtn = heroEl.querySelector("button[data-evt-hero-cta]");
       if (ctaBtn) {
         ctaBtn.addEventListener("click", (e) => {
@@ -2478,7 +4479,7 @@
         });
       }
     } else {
-      heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc10(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc10(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc10(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc10(loc) + "</p>" : "") + "</div></a>";
+      heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc12(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc12(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc12(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc12(loc) + "</p>" : "") + "</div></a>";
     }
     const link = heroEl.querySelector("a[data-evt-hero]");
     if (link) {
@@ -2496,18 +4497,18 @@
   function attendeeCluster(eventId2) {
     const list = window.evtAttendees && window.evtAttendees[eventId2] || [];
     if (!list.length) return "";
-    const esc10 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc12 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const bubs = list.slice(0, 5).map((p, i) => {
       const pic = p && p.profile_picture_url;
       const first = p && p.first_name || "";
       const initial = (first.trim().charAt(0) || "?").toUpperCase();
       const ml = i === 0 ? "" : " -ml-2";
-      const inner = pic ? '<img src="' + esc10(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc10(initial) + "</span>";
-      return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc10(first) + '">' + inner + "</span>";
+      const inner = pic ? '<img src="' + esc12(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc12(initial) + "</span>";
+      return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc12(first) + '">' + inner + "</span>";
     }).join("");
     const trueCount = window.evtAttendeeCounts && window.evtAttendeeCounts[eventId2] || list.length;
     const labelN = String(trueCount);
-    return '<button type="button" data-evt-hero-going="' + esc10(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
+    return '<button type="button" data-evt-hero-going="' + esc12(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
   }
   function renderLiveBanner(events) {
     const el = document.getElementById("evtLiveBanner");
@@ -2526,12 +4527,12 @@
       el.innerHTML = "";
       return;
     }
-    const esc10 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc12 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const first = live[0];
-    const label = live.length === 1 ? esc10(first.title || "An event") + " is happening now" : live.length + " events happening now";
+    const label = live.length === 1 ? esc12(first.title || "An event") + " is happening now" : live.length + " events happening now";
     const href = live.length === 1 && first.slug ? "?event=" + encodeURIComponent(first.slug) : "javascript:void(0)";
     el.classList.remove("hidden");
-    el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc10(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
+    el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc12(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
     const link = el.querySelector("a[data-evt-live]");
     if (link && live.length === 1) {
       link.addEventListener("click", (e) => {
@@ -2582,13 +4583,13 @@
     });
   }
   function miniCard(event, attendees, goingCount) {
-    const esc10 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc12 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const d = new Date(event.start_date);
     const day = d.getDate();
     const mon = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
     const rel = H3.relativeDate ? H3.relativeDate(d) : "";
     const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
-    const title = esc10(event.title || "Untitled event");
+    const title = esc12(event.title || "Untitled event");
     const loc = event.location_nickname || event.location_text || "";
     let bannerStyle;
     if (event.banner_url) {
@@ -2602,7 +4603,7 @@
     const attLine = attCount ? '<span class="text-[11px] text-gray-500 truncate">' + attCount + " going</span>" : "";
     const isPinnedLlc = event.is_pinned && event.event_type === "llc";
     const pin = isPinnedLlc ? '<span class="evt-date-pin evt-date-pin--mini" aria-label="Pinned LLC event" title="Pinned">\u{1F4CC}</span>' : "";
-    return '<a href="' + href + '" data-evt-mini="' + esc10(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc10(rel) : "") + (loc && rel ? " \xB7 " : "") + esc10(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
+    return '<a href="' + href + '" data-evt-mini="' + esc12(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc12(rel) : "") + (loc && rel ? " \xB7 " : "") + esc12(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
   }
   function renderTopPicks(events, attendees, heroId, eventsById) {
     const rail = document.getElementById("evtTopPicks");
@@ -3281,10 +5282,10 @@
   function renderSkeletons() {
     const groups = document.getElementById("evtGroups");
     if (!groups || !Card2) return;
-    let html5 = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">';
-    for (let i = 0; i < 4; i++) html5 += Card2.skeleton();
-    html5 += "</div>";
-    groups.innerHTML = html5;
+    let html11 = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">';
+    for (let i = 0; i < 4; i++) html11 += Card2.skeleton();
+    html11 += "</div>";
+    groups.innerHTML = html11;
   }
   function _renderHeaderCount() {
     return window.PortalEventsListHeader.renderHeaderCount();
@@ -3975,6 +5976,8 @@
   var TW_CTA_RAFFLE_DONE = "bg-green-600 text-white";
   var TW_CTA_DISABLED = "bg-gray-200 text-gray-400";
   var TW_CTA_RAFFLE_LOCKED = "evt-cta-raffle-locked bg-gray-100 text-gray-400 border border-gray-200 shadow-none cursor-not-allowed";
+  var TW_CTA_COMP = "bg-rose-600 text-white";
+  var TW_CTA_COMP_DONE = "bg-green-600 text-white";
   var TW_CTA_FOOTNOTE = "evt-cta-footnote m-0 px-4 pb-0.5 text-center text-[11px] font-semibold leading-snug text-gray-500";
 
   // js/portal/events/team/shell.js
@@ -4070,8 +6073,8 @@
       });
     });
   }
-  function renderContent(html5) {
-    document.getElementById("etSheetContent").innerHTML = html5;
+  function renderContent(html11) {
+    document.getElementById("etSheetContent").innerHTML = html11;
   }
   function setContentMode(mode) {
     const el = document.getElementById("etSheetContent");
@@ -4693,15 +6696,29 @@
     document.body.classList.remove("evt-cta-active");
     if (typeof globalThis.evtCleanupHeroCollapse === "function") window.evtCleanupHeroCollapse();
   }
-  function initBottomNav(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub) {
+  function initBottomNav(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub, myCompetitionEntry, competitionPhases, myCompVote) {
     cleanupBottomNav();
     if (window.matchMedia("(min-width: 1024px)").matches) return;
+    const isCompetition = event.event_type === "competition";
     const rsvpEnabled = event.rsvp_enabled !== false;
     const raffleEnabled = !!event.raffle_enabled;
     const teamHubAccess = !!canAccessTeamHub || isHost || typeof canAccessAdminDashboard === "function" && canAccessAdminDashboard();
-    if (!isHost && !teamHubAccess && !rsvpEnabled && !raffleEnabled) return;
+    if (!isHost && !teamHubAccess && !rsvpEnabled && !raffleEnabled && !isCompetition) return;
     const isClosed = event.status === "completed" || event.status === "cancelled";
     const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
+    const compPh = window.EventsCompetitionPhases || {};
+    const phases = compPh.normalizePhases ? compPh.normalizePhases(competitionPhases) : competitionPhases || [];
+    const displayPhaseNum = compPh.resolveDisplayPhase ? compPh.resolveDisplayPhase(phases, /* @__PURE__ */ new Date()) : 0;
+    const votingOpen = compPh.isVotingOpen ? compPh.isVotingOpen(phases, /* @__PURE__ */ new Date()) : false;
+    const submissionOpen = compPh.isSubmissionOpen ? compPh.isSubmissionOpen(phases, /* @__PURE__ */ new Date()) : false;
+    const hasSubmission = compPh.entryHasSubmission ? compPh.entryHasSubmission(myCompetitionEntry) : false;
+    const entryFee = event.competition_config?.entry_fee_cents || 0;
+    const showCompJoin = isCompetition && !isHost && !teamHubAccess && displayPhaseNum <= 1 && !isClosed;
+    const showCompSubmit = isCompetition && !isHost && !teamHubAccess && submissionOpen && !!myCompetitionEntry && !isClosed;
+    const memberGoingNav = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+    const voterCtx = { hasRsvp: memberGoingNav, hasCompEntry: !!myCompetitionEntry };
+    const voterEligible = compPh.isVoterEligible ? compPh.isVoterEligible(event.competition_config || {}, voterCtx) : true;
+    const showCompVote = isCompetition && !isHost && !teamHubAccess && votingOpen && voterEligible && !isClosed;
     let primaryBtn = "";
     let secondaryBtn = "";
     let ctaFootnote = "";
@@ -4712,13 +6729,51 @@
     } else if (teamHubAccess) {
       primaryBtn = teamBtn;
     } else {
+      if (showCompJoin) {
+        if (myCompetitionEntry) {
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_COMP_DONE}" disabled>${EVT_CTA_ICONS.check} Registered</button>`;
+        } else if (entryFee > 0) {
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_COMP}" ${evtDataAction("evtJoinCompetition", eventId2)}>${EVT_CTA_ICONS.ticket} Join \u2014 ${formatCurrency(entryFee)}</button>`;
+        } else {
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_COMP}" ${evtDataAction("evtJoinCompetition", eventId2)}>${EVT_CTA_ICONS.ticket} Join as Competitor</button>`;
+        }
+      } else if (showCompSubmit) {
+        if (hasSubmission) {
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_COMP_DONE}" disabled>${EVT_CTA_ICONS.check} Submitted</button>`;
+        } else {
+          primaryBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_COMP}" onclick="document.getElementById('competition-section')?.scrollIntoView({behavior:'smooth',block:'start'})">\u{1F4E4} Submit your entry</button>`;
+        }
+      } else if (showCompVote) {
+        if (myCompVote) {
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_COMP_DONE}" disabled>${EVT_CTA_ICONS.check} Voted</button>`;
+        } else {
+          primaryBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_COMP}" onclick="document.getElementById('competition-section')?.scrollIntoView({behavior:'smooth',block:'start'})">\u{1F5F3}\uFE0F Cast your vote</button>`;
+        }
+      }
       if (rsvpEnabled) {
         if (rsvp?.paid) {
           primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP_DONE}" ${evtDataAction("evtOpenCtaPanel", "ticket", eventId2)}>${EVT_CTA_ICONS.ticket} RSVP'd \xB7 Ticket</button>`;
+        } else if (rsvp?.status === "going" && event.pricing_mode === "paid") {
+          const detailRoot = document.getElementById("eventsDetailView") || document;
+          const role = window.EventsPartySeats && typeof window.EventsPartySeats.readPayerRoleFromRoot === "function" ? window.EventsPartySeats.readPayerRoleFromRoot(detailRoot) : window.EventsSeatPicker && typeof window.EventsSeatPicker.readRoleFromRoot === "function" ? window.EventsSeatPicker.readRoleFromRoot(detailRoot) : "adult";
+          let partyTotal = null;
+          if (window.EventsPartySeats && typeof window.EventsPartySeats.partyBaseTotalCents === "function") {
+            const seats = window.EventsPartySeats.readSeatsFromRoot(detailRoot, event);
+            partyTotal = window.EventsPartySeats.partyBaseTotalCents(event, seats);
+          }
+          const label = window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === "function" ? window.EventsHelpers.rsvpPayButtonLabel(event, role, {
+            mode: "complete",
+            audience: "member",
+            ...partyTotal != null ? { partyTotalCents: partyTotal } : {}
+          }) : "Complete Payment";
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction("evtHandleRsvp", eventId2, "going")}>${label}</button>`;
         } else if (rsvp?.status === "going") {
           primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP_DONE}" ${evtDataAction("evtOpenCtaPanel", "ticket", eventId2)}>${EVT_CTA_ICONS.ticket} Going \xB7 Ticket</button>`;
         } else if (canRsvp && !eventIsFull && event.pricing_mode === "paid") {
-          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction("evtHandleRsvp", eventId2, "going")}>RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>`;
+          const adultPrice = typeof globalThis.evtDetailAdultPriceCents === "function" ? globalThis.evtDetailAdultPriceCents(event) : event.adult_price_cents ?? event.rsvp_cost_cents ?? 0;
+          const kidsPricingVaries = event.kids_free !== false || event.kid_price_cents != null && Number(event.kid_price_cents) !== Number(adultPrice);
+          const label = kidsPricingVaries ? "RSVP" : `RSVP \u2014 ${formatCurrency(adultPrice)}`;
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction("evtHandleRsvp", eventId2, "going")}>${label}</button>`;
         } else if (canRsvp && !eventIsFull) {
           primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction("evtHandleRsvp", eventId2, "going")}>RSVP</button>`;
         } else if (eventIsFull) {
@@ -4729,7 +6784,7 @@
       }
       if (raffleEnabled) {
         const raffleIncluded = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
-        const memberGoingNav = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+        const memberGoingNav2 = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
         if (!raffleIncluded) {
           const hasPrimary = !!primaryBtn;
           const activeCls = hasPrimary ? TW_CTA_RAFFLE_OUTLINE : TW_CTA_RAFFLE;
@@ -4738,7 +6793,7 @@
             raffleSlot = `<button class="${TW_CTA_BTN} ${TW_CTA_RAFFLE_DONE}" disabled>${EVT_CTA_ICONS.check} Entered</button>`;
           } else if (entriesClosed) {
             raffleSlot = `<button class="${TW_CTA_BTN} ${TW_CTA_DISABLED}" disabled>${EVT_CTA_ICONS.lock} Entries Closed</button>`;
-          } else if (!memberGoingNav) {
+          } else if (!memberGoingNav2) {
             raffleSlot = raffleLockedCtaBtnHtml();
             ctaFootnote = `<p class="${TW_CTA_FOOTNOTE}">RSVP first to enter the raffle</p>`;
           } else if (event.raffle_entry_cost_cents > 0) {
@@ -4910,11 +6965,11 @@
   // js/portal/events/detail/presentation.js
   function evtMiniMarkdown(text) {
     if (!text) return "";
-    let html5 = evtEscapeHtml(text);
-    html5 = html5.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-    html5 = html5.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    html5 = html5.replace(/\*(.+?)\*/g, "<em>$1</em>");
-    return html5;
+    let html11 = evtEscapeHtml(text);
+    html11 = html11.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    html11 = html11.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    html11 = html11.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    return html11;
   }
   function evtOpenLightbox(imgUrl) {
     if (!imgUrl) return;
@@ -5228,6 +7283,19 @@
     let raffleEntryCount = 0;
     let myRaffleEntry = null;
     let raffleWinners = [];
+    let myCompetitionEntry = null;
+    let competitionPhases = [];
+    let myCompVote = null;
+    if (isComp) {
+      const [{ data: myCompEntry }, { data: phases }, { data: myVote }] = await Promise.all([
+        supabaseClient.from("competition_entries").select("*").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle(),
+        supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true }),
+        supabaseClient.from("competition_votes").select("entry_id").eq("event_id", eventId2).eq("voter_id", globalThis.evtCurrentUser.id).maybeSingle()
+      ]);
+      myCompetitionEntry = myCompEntry;
+      competitionPhases = phases || [];
+      myCompVote = myVote;
+    }
     if (event.raffle_enabled) {
       const { count: rCount } = await supabaseClient.from("event_raffle_entries").select("id", { count: "exact", head: true }).eq("event_id", eventId2);
       raffleEntryCount = rCount || 0;
@@ -5286,6 +7354,18 @@
     const rsvpEnabled = event.rsvp_enabled !== false;
     const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
     const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
+    let amenityVoteConfig = null;
+    let amenityVoteTallies = null;
+    if (!isComp && window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === "function") {
+      amenityVoteConfig = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
+      if (amenityVoteConfig.enabled) {
+        const { data: voteRows } = await supabaseClient.from("event_parties").select("amenity_vote_option_id, amenity_vote_status").eq("event_id", eventId2).eq("amenity_vote_status", "counted");
+        amenityVoteTallies = window.EventsAmenityVoting.tallyCounts(
+          voteRows || [],
+          amenityVoteConfig.options.map((o) => o.id)
+        );
+      }
+    }
     return {
       eventId: eventId2,
       event,
@@ -5309,6 +7389,9 @@
       raffleEntryCount,
       myRaffleEntry,
       raffleWinners,
+      myCompetitionEntry,
+      competitionPhases,
+      myCompVote,
       isCreator,
       canManageEvent,
       canAccessTeamHub,
@@ -5336,7 +7419,9 @@
       canRsvp,
       eventIsFull,
       memberPhone,
-      eventSmsRecipient
+      eventSmsRecipient,
+      amenityVoteConfig,
+      amenityVoteTallies
     };
   }
   globalThis.evtLoadDetailContext = evtLoadDetailContext;
@@ -5351,6 +7436,169 @@
   var _edPill = window.evtEdPill;
   var _edNotice = window.evtEdNotice;
   var _edSectionHead = window.evtEdSectionHead;
+  function evtDetailAdultPriceCents(event) {
+    if (event?.adult_price_cents != null && Number.isFinite(Number(event.adult_price_cents))) {
+      return Number(event.adult_price_cents);
+    }
+    return Number(event?.rsvp_cost_cents || 0);
+  }
+  function evtBuildDetailPriceSummaryHtml(ctx) {
+    const { event, deadlinePassed } = ctx;
+    if (!event || event.event_type === "competition" || event.rsvp_enabled === false) {
+      return "";
+    }
+    const rows = [];
+    const pricingMode = event.pricing_mode || "free";
+    if (pricingMode === "paid") {
+      rows.push({
+        label: "Adult",
+        main: formatCurrency(evtDetailAdultPriceCents(event)),
+        sub: "Per adult seat"
+      });
+      if (event.kids_free !== false) {
+        rows.push({ label: "Kids", main: "Free", sub: "Children included" });
+      } else {
+        rows.push({
+          label: "Kids",
+          main: formatCurrency(event.kid_price_cents || 0),
+          sub: "Per child seat"
+        });
+      }
+    } else if (pricingMode === "free_paid_raffle") {
+      rows.push({ label: "RSVP", main: "Free", sub: "Paid raffle optional" });
+    } else {
+      rows.push({ label: "RSVP", main: "Free", sub: "No payment required" });
+    }
+    if (event.rsvp_deadline) {
+      const dl = new Date(event.rsvp_deadline);
+      const dlStr = dl.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+      rows.push({
+        label: "RSVP by",
+        main: dlStr,
+        sub: deadlinePassed ? "Deadline passed" : "Reserve your spot",
+        passed: !!deadlinePassed
+      });
+    }
+    if (!rows.length) return "";
+    const rowHtml = rows.map((row) => `
+        <div class="ed-summary-row ed-price-summary-row">
+            <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+            <div>
+                <span class="ed-summary-main${row.passed ? " ed-deadline-passed" : ""}">${evtEscapeHtml(row.main)}</span>
+                <span class="ed-summary-sub2">${evtEscapeHtml(row.label)}${row.sub ? ` \xB7 ${evtEscapeHtml(row.sub)}` : ""}</span>
+            </div>
+        </div>`).join("");
+    return `<div class="ed-price-summary">${rowHtml}</div>`;
+  }
+  function evtBuildDetailIncludedCatalogHtml(ctx) {
+    const { event } = ctx;
+    if (!event || !window.EventsIncludedItems || typeof window.EventsIncludedItems.catalogListHtml !== "function") {
+      return "";
+    }
+    const listHtml = window.EventsIncludedItems.catalogListHtml(event.included_items);
+    if (!listHtml) return "";
+    return `
+        <div class="ed-included-catalog">
+            <p class="ed-about-heading" style="margin-top:16px">What&apos;s included</p>
+            <p class="ed-hint" style="margin-bottom:10px">Options you&apos;ll choose during RSVP.</p>
+            ${listHtml}
+        </div>`;
+  }
+  function evtBuildDetailAmenityResultsHtml(ctx) {
+    const { event, isComp, isHost, canManageEvent, amenityVoteConfig, amenityVoteTallies } = ctx;
+    if (isComp || !window.EventsAmenityVoting) return "";
+    const cfg = amenityVoteConfig || window.EventsAmenityVoting.normalizeConfig(event && event.amenity_voting);
+    if (!cfg.enabled) return "";
+    const hostLike = !!(isHost || canManageEvent);
+    const showCtx = { isHost: hostLike, canManageEvent: hostLike, now: /* @__PURE__ */ new Date() };
+    const canShow = window.EventsAmenityVoting.canShowResults(cfg, showCtx);
+    const tallies = amenityVoteTallies || {};
+    if (!canShow) {
+      const pending = window.EventsAmenityVoting.pendingMessageHtml(cfg);
+      return pending ? `<div class="ed-amenity-results">${pending}</div>` : "";
+    }
+    const inner = window.EventsAmenityVoting.resultsHtml(cfg, tallies, { isHost: hostLike });
+    if (!inner) return "";
+    const hint = hostLike && window.EventsAmenityVoting.totalVotes(tallies) <= 0 ? "" : '<p class="ed-hint ed-amenity-rsvp-hint">Cast your vote when you RSVP.</p>';
+    return `<div class="ed-amenity-results">${inner}${hint}</div>`;
+  }
+  function evtReadSeatRoleForDetail(eventId2) {
+    const root2 = document.getElementById("eventsDetailView") || document;
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.readPayerRoleFromRoot === "function") {
+      return window.EventsPartySeats.readPayerRoleFromRoot(root2);
+    }
+    if (window.EventsSeatPicker && typeof window.EventsSeatPicker.readRoleFromRoot === "function") {
+      return window.EventsSeatPicker.readRoleFromRoot(root2);
+    }
+    return "adult";
+  }
+  function evtMemberDisplayName() {
+    const u = globalThis.evtCurrentUser;
+    if (u) {
+      const name = [u.first_name, u.last_name].filter(Boolean).join(" ").trim();
+      if (name) return name;
+      if (u.email) return String(u.email).split("@")[0];
+    }
+    return window.evtCurrentUserName || "Member";
+  }
+  function evtPartyTotalCents(event, root2) {
+    const scope = root2 || document.getElementById("eventsDetailView") || document;
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.partyBaseTotalCents === "function") {
+      const seats = window.EventsPartySeats.readSeatsFromRoot(scope, event);
+      return window.EventsPartySeats.partyBaseTotalCents(event, seats);
+    }
+    const role = evtReadSeatRoleForDetail();
+    return window.EventsHelpers && typeof window.EventsHelpers.seatPriceCents === "function" ? window.EventsHelpers.seatPriceCents(event, role) : Number(event?.rsvp_cost_cents || 0);
+  }
+  function evtMemberNoRefundCheckVisible(event, seatRole, hasRequiredDisclaimers) {
+    if (!event || event.pricing_mode !== "paid" || hasRequiredDisclaimers) return false;
+    const root2 = document.getElementById("eventsDetailView") || document;
+    const partyTotal = evtPartyTotalCents(event, root2);
+    return partyTotal > 0;
+  }
+  function evtFeeAwarePartyTotal(event, root2, partyTotal) {
+    const base = Math.max(0, Number(partyTotal) || 0);
+    if (!window.EventsPaymentChoice || typeof window.EventsPaymentChoice.displayTotalCents !== "function") {
+      return base;
+    }
+    if (!window.EventsPaymentChoice.needsChoice(event, base)) return base;
+    const choice = window.EventsPaymentChoice.readFromRoot(root2 || document);
+    return window.EventsPaymentChoice.displayTotalCents(event, choice, base);
+  }
+  function evtUpdateMemberRsvpBtnLabels(eventId2, event, opts) {
+    if (!eventId2 || !event) return;
+    const options = opts && typeof opts === "object" ? opts : {};
+    const role = options.role || evtReadSeatRoleForDetail(eventId2);
+    const root2 = document.getElementById("eventsDetailView") || document;
+    const partyTotal = evtPartyTotalCents(event, root2);
+    const displayTotal = evtFeeAwarePartyTotal(event, root2, partyTotal);
+    const rsvp = options.rsvp || (globalThis.evtAllRsvps || {})[eventId2];
+    const unpaidGoing = !!(rsvp?.status === "going" && !rsvp?.paid && event.pricing_mode === "paid");
+    const labelOpts = unpaidGoing ? { mode: "complete", audience: "member", partyTotalCents: displayTotal } : { mode: "rsvp", audience: "member", partyTotalCents: displayTotal };
+    const label = window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === "function" ? window.EventsHelpers.rsvpPayButtonLabel(event, role, labelOpts) : `RSVP as Member \u2014 ${formatCurrency(displayTotal)}`;
+    const payBtn = document.getElementById(`evtMemberRsvpPayBtn-${eventId2}`);
+    if (payBtn) payBtn.textContent = label;
+    const claimBtn = document.getElementById(`evtWaitlistClaimBtn-${eventId2}`);
+    if (claimBtn) {
+      claimBtn.textContent = displayTotal > 0 ? `Claim Spot \u2014 ${formatCurrency(displayTotal)}` : "Claim Spot \u2014 Free";
+    }
+    const noRefundCheck = root2.querySelector("#evtMemberNoRefundCheck");
+    if (noRefundCheck) {
+      const discCatalog = window.EventsDisclaimers && typeof window.EventsDisclaimers.effectiveDisclaimers === "function" ? window.EventsDisclaimers.effectiveDisclaimers(event) : [];
+      const hasRequiredDisclaimers = window.EventsDisclaimers && typeof window.EventsDisclaimers.hasRequiredDisclaimers === "function" ? window.EventsDisclaimers.hasRequiredDisclaimers(discCatalog) : discCatalog.some((d) => d.required);
+      const visible = evtMemberNoRefundCheckVisible(event, role, hasRequiredDisclaimers);
+      noRefundCheck.closest("label")?.classList.toggle("hidden", !visible);
+    }
+  }
+  function evtWireMemberPrepPhoneSms() {
+    const phoneEl = document.getElementById("evtMemberPhoneInput");
+    const smsCheck = document.getElementById("evtSmsOptInCheck");
+    if (!phoneEl || !smsCheck || phoneEl.dataset.smsWired) return;
+    phoneEl.dataset.smsWired = "1";
+    phoneEl.addEventListener("input", () => {
+      if (String(phoneEl.value || "").trim()) smsCheck.checked = true;
+    });
+  }
   function evtBuildDetailSmsOptInHtml(ctx) {
     const { eventId: eventId2, isHost, memberPhone, memberGoing: memberGoing2, canRsvp, rsvpEnabled, eventSmsRecipient } = ctx;
     if (isHost || !memberPhone) return "";
@@ -5363,7 +7611,7 @@
             <span class="ed-hint" style="margin:0">Text me event updates for this event. Message/data rates may apply. Reply STOP to opt out.</span>
         </label>`;
   }
-  function evtBuildDetailRsvpSectionHtml(ctx) {
+  function evtBuildDetailRsvpCtaHtml(ctx) {
     const {
       eventId: eventId2,
       event,
@@ -5378,12 +7626,12 @@
       isPast,
       deadlinePassed
     } = ctx;
-    let rsvpButtons = "";
+    let ctaHtml = "";
     if (!rsvpEnabled) {
-      rsvpButtons = _edNotice("\u2139\uFE0F", "Informational Event", "RSVP is not required for this event");
+      ctaHtml = _edNotice("\u2139\uFE0F", "Informational Event", "RSVP is not required for this event");
     } else if (isHost) {
       const teamBtnHtml = canAccessTeamHub ? `<button type="button" ${evtDataAction("evtOpenTeamToolsPanel", eventId2)} class="ed-outline-btn" aria-label="Open event team tools">Team</button>` : "";
-      rsvpButtons = `
+      ctaHtml = `
         <div class="ed-rsvp-confirmed">
             <div class="ed-rsvp-confirmed-row">
                 <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
@@ -5397,22 +7645,36 @@
         ${canAccessTeamHub ? '<p class="ed-hint">Use <strong>Team</strong> for RSVP as yourself, raffle entry, and your ticket.</p>' : ""}`;
     } else if (canRsvp && !eventIsFull && event.pricing_mode === "paid") {
       if (rsvp?.paid) {
-        rsvpButtons = `
+        ctaHtml = `
             <div class="ed-rsvp-confirmed">
                 <div class="ed-rsvp-confirmed-row">
                     <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
                     <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">Non-refundable \xB7 Contact admin for changes</span></div>
                 </div>
             </div>`;
+      } else if (rsvp?.status === "going") {
+        const payLabel = window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === "function" ? window.EventsHelpers.rsvpPayButtonLabel(event, "adult", { mode: "complete", audience: "member" }) : `Complete Payment \u2014 ${formatCurrency(evtDetailAdultPriceCents(event))}`;
+        ctaHtml = `
+            <div class="ed-notice ed-notice-highlight" style="margin-bottom:12px">
+                <span class="ed-notice-emoji">\u{1F4B3}</span>
+                <div>
+                    <p class="ed-notice-title">Payment pending</p>
+                    <p class="ed-notice-sub">Complete checkout to confirm your RSVP.</p>
+                </div>
+            </div>
+            <button id="evtMemberRsvpPayBtn-${eventId2}" ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-primary-btn">${payLabel}</button>
+            <button ${evtDataAction("evtMessageHost", eventId2)} class="ed-outline-btn">Message Host</button>
+            <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? " \xB7 Includes raffle entry" : ""}</p>`;
       } else {
-        rsvpButtons = `
-            <button ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-primary-btn">RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>
+        const payLabel = window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === "function" ? window.EventsHelpers.rsvpPayButtonLabel(event, "adult", { mode: "rsvp", audience: "member" }) : `RSVP as Member \u2014 ${formatCurrency(evtDetailAdultPriceCents(event))}`;
+        ctaHtml = `
+            <button id="evtMemberRsvpPayBtn-${eventId2}" ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-primary-btn">${payLabel}</button>
             <button ${evtDataAction("evtMessageHost", eventId2)} class="ed-outline-btn">Message Host</button>
             <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? " \xB7 Includes raffle entry" : ""}</p>`;
       }
     } else if (canRsvp && !eventIsFull) {
       if (rsvp?.status === "going") {
-        rsvpButtons = `
+        ctaHtml = `
             <div class="ed-rsvp-confirmed">
                 <div class="ed-rsvp-confirmed-row">
                     <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
@@ -5422,15 +7684,15 @@
             <button ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-outline-btn">Update RSVP</button>`;
       } else {
         const interestedActive = rsvp?.status === "maybe" ? " active" : "";
-        rsvpButtons = `
-            <button ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-primary-btn">RSVP</button>
+        ctaHtml = `
+            <button ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-primary-btn">RSVP as Member</button>
             <button ${evtDataAction("evtMessageHost", eventId2)} class="ed-outline-btn">Message Host</button>
             <div class="ed-rsvp-secondary">
                 <button ${evtDataAction("evtHandleRsvp", eventId2, "maybe")} class="ed-rsvp-sm${interestedActive ? " active" : ""}">\u2764\uFE0F Interested</button>
             </div>`;
       }
     }
-    if (rsvpEnabled && !isHost && entriesClosed && !rsvpButtons) {
+    if (rsvpEnabled && !isHost && entriesClosed && !ctaHtml) {
       let closedReason = "";
       if (isClosed) closedReason = event.status === "cancelled" ? "Event cancelled" : "Event ended";
       else if (isPast) closedReason = "Event has already started";
@@ -5438,13 +7700,216 @@
       if (rsvp) {
         const statusEmoji = rsvp.status === "going" ? "\u2705" : rsvp.status === "maybe" ? "\u2764\uFE0F" : "\u274C";
         const statusLabel = rsvp.status === "going" ? "Going" : rsvp.status === "maybe" ? "Interested" : "Not Going";
-        rsvpButtons = _edNotice(statusEmoji, `Your RSVP: ${statusLabel}`, closedReason);
+        ctaHtml = _edNotice(statusEmoji, `Your RSVP: ${statusLabel}`, closedReason);
       } else {
-        rsvpButtons = _edNotice("\u{1F512}", "RSVP Closed", closedReason);
+        ctaHtml = _edNotice("\u{1F512}", "RSVP Closed", closedReason);
       }
     }
+    return ctaHtml ? `<div class="ed-rsvp-cta-block">${ctaHtml}</div>` : "";
+  }
+  function evtBuildDetailRsvpPrepHtml(ctx) {
+    const {
+      eventId: eventId2,
+      event,
+      rsvp,
+      isHost,
+      canRsvp,
+      eventIsFull,
+      memberPhone
+    } = ctx;
+    const showPrep = !isHost && canRsvp && !eventIsFull && !(event.pricing_mode === "paid" && rsvp?.paid);
+    const showPartySeats = showPrep && window.EventsPartySeats && typeof window.EventsPartySeats.shouldShow === "function" && window.EventsPartySeats.shouldShow(event, { isHost });
+    const seatRole = window.EventsIncludedItems && typeof window.EventsIncludedItems.defaultSeatRoleForCatalog === "function" ? window.EventsIncludedItems.defaultSeatRoleForCatalog(event.included_items) : "adult";
+    let partySeatsHtml = "";
+    if (showPartySeats && typeof window.EventsPartySeats.formFieldsHtml === "function") {
+      partySeatsHtml = window.EventsPartySeats.formFieldsHtml(event, {
+        idPrefix: `portalParty-${eventId2}`,
+        defaultRole: seatRole,
+        payerName: evtMemberDisplayName()
+      });
+    }
+    const hasIncludedCatalog = window.EventsIncludedItems && typeof window.EventsIncludedItems.hasCatalog === "function" && window.EventsIncludedItems.hasCatalog(event.included_items);
+    let includedOptsHtml = "";
+    const discCatalog = window.EventsDisclaimers && typeof window.EventsDisclaimers.effectiveDisclaimers === "function" ? window.EventsDisclaimers.effectiveDisclaimers(event) : window.EventsDisclaimers && typeof window.EventsDisclaimers.normalizeDisclaimers === "function" ? window.EventsDisclaimers.normalizeDisclaimers(event.disclaimers) : [];
+    const hasDisclaimers = window.EventsDisclaimers && typeof window.EventsDisclaimers.hasDisclaimers === "function" ? window.EventsDisclaimers.hasDisclaimers(discCatalog) : discCatalog.length > 0;
+    const showDiscAcks = hasDisclaimers && showPrep;
+    let discAcksHtml = "";
+    if (showDiscAcks && typeof window.EventsDisclaimers.formFieldsHtml === "function") {
+      discAcksHtml = window.EventsDisclaimers.formFieldsHtml(discCatalog, {
+        idPrefix: `portalDisc-${eventId2}`
+      });
+    }
+    const showInvestAck = event.invest_eligible && showPrep;
+    let investAckHtml = "";
+    const needsAmenityVote = window.EventsAmenityVoting && typeof window.EventsAmenityVoting.needsVote === "function" && window.EventsAmenityVoting.needsVote(event);
+    let amenityVoteHtml = "";
+    if (needsAmenityVote && showPrep && typeof window.EventsAmenityVoting.formFieldsHtml === "function") {
+      const cfg = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
+      amenityVoteHtml = `<div id="portalAmenityWrap-${eventId2}">${window.EventsAmenityVoting.formFieldsHtml(cfg, {
+        idPrefix: `portalAmenity-${eventId2}`
+      })}</div>`;
+    }
+    const prepSeatPrice = evtPartyTotalCents(event);
+    let paymentChoiceHtml = "";
+    if (showPrep && window.EventsPaymentChoice && typeof window.EventsPaymentChoice.needsChoice === "function" && window.EventsPaymentChoice.needsChoice(event, prepSeatPrice) && typeof window.EventsPaymentChoice.formFieldsHtml === "function") {
+      paymentChoiceHtml = `<div id="portalPaymentWrap-${eventId2}">${window.EventsPaymentChoice.formFieldsHtml(event, {
+        seatPriceCents: prepSeatPrice,
+        idPrefix: `portalPayment-${eventId2}`
+      })}</div>`;
+    }
+    const hasRequiredDisclaimers = window.EventsDisclaimers && typeof window.EventsDisclaimers.hasRequiredDisclaimers === "function" ? window.EventsDisclaimers.hasRequiredDisclaimers(discCatalog) : discCatalog.some((d) => d.required);
+    const showNoRefundCheck = showPrep && evtMemberNoRefundCheckVisible(event, seatRole, hasRequiredDisclaimers);
+    let noRefundHtml = "";
+    if (showNoRefundCheck) {
+      noRefundHtml = `
+            <label class="ed-checkbox-label evt-member-no-refund" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px">
+                <input type="checkbox" id="evtMemberNoRefundCheck">
+                <span class="ed-hint" style="margin:0">I understand this payment is non-refundable unless cancelled by staff.</span>
+            </label>`;
+    }
+    const showMemberPhone = showPrep && !memberPhone;
+    let memberPhoneHtml = "";
+    let memberSmsPrepHtml = "";
+    if (showMemberPhone) {
+      memberPhoneHtml = `
+            <div class="ed-rsvp-phone-field">
+                <label class="ec-label" for="evtMemberPhoneInput">Mobile phone</label>
+                <input type="tel" id="evtMemberPhoneInput" class="ec-input" placeholder="Phone number" required aria-label="Mobile phone">
+                <p class="ed-hint" style="margin-top:6px">Required for RSVP. Saved to your profile.</p>
+            </div>`;
+      memberSmsPrepHtml = `
+            <label class="ed-checkbox-label" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px">
+                <input type="checkbox" id="evtSmsOptInCheck">
+                <span class="ed-hint" style="margin:0">Text me event updates for this event. Message/data rates may apply. Reply STOP to opt out.</span>
+            </label>`;
+    }
+    if (showInvestAck && window.EventsInvestAck && typeof window.EventsInvestAck.formFieldHtml === "function") {
+      investAckHtml = window.EventsInvestAck.formFieldHtml(event, {
+        idPrefix: `portalInvest-${eventId2}`
+      });
+    }
+    const attachGuestsHtml = showPrep ? `<div id="portalAttachGuests-${eventId2}" class="ed-attach-guests" data-attach-guests-root="1"></div>` : "";
+    const inner = partySeatsHtml + attachGuestsHtml + memberPhoneHtml + memberSmsPrepHtml + includedOptsHtml + discAcksHtml + amenityVoteHtml + paymentChoiceHtml + investAckHtml + noRefundHtml;
+    if (!inner) return "";
+    if (inner === partySeatsHtml && !attachGuestsHtml && !memberPhoneHtml && !memberSmsPrepHtml && !includedOptsHtml && !discAcksHtml && !amenityVoteHtml && !paymentChoiceHtml && !investAckHtml && !noRefundHtml) {
+      return `<div class="ed-rsvp-prep">${partySeatsHtml}</div>`;
+    }
+    if (memberPhoneHtml && !partySeatsHtml && !attachGuestsHtml && !includedOptsHtml && !discAcksHtml && !amenityVoteHtml && !paymentChoiceHtml && !investAckHtml && !noRefundHtml) {
+      return `<div class="ed-rsvp-prep">${memberPhoneHtml}${memberSmsPrepHtml}</div>`;
+    }
+    return `<div class="ed-rsvp-prep"><p class="ed-rsvp-prep-label">Before you RSVP</p>${inner}</div>`;
+  }
+  function evtWireSeatPickerPrep(eventId2, event) {
+    if (!eventId2 || !event) return;
+    const root2 = document.getElementById("eventsDetailView") || document;
+    const refreshPaymentAndLabels = () => {
+      const payWrap = document.getElementById(`portalPaymentWrap-${eventId2}`);
+      const partyTotal = evtPartyTotalCents(event, root2);
+      if (payWrap && window.EventsPaymentChoice && window.EventsHelpers) {
+        if (window.EventsPaymentChoice.needsChoice(event, partyTotal)) {
+          payWrap.innerHTML = window.EventsPaymentChoice.formFieldsHtml(event, {
+            seatPriceCents: partyTotal,
+            idPrefix: `portalPayment-${eventId2}`
+          });
+          window.EventsPaymentChoice.wireForm(
+            root2,
+            event,
+            () => evtPartyTotalCents(event, root2),
+            () => {
+              const role2 = evtReadSeatRoleForDetail(eventId2);
+              evtUpdateMemberRsvpBtnLabels(eventId2, event, { role: role2 });
+            }
+          );
+        } else {
+          payWrap.innerHTML = "";
+        }
+      }
+      const role = evtReadSeatRoleForDetail(eventId2);
+      evtUpdateMemberRsvpBtnLabels(eventId2, event, { role });
+    };
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.wireForm === "function") {
+      window.EventsPartySeats.wireForm(root2, event, () => refreshPaymentAndLabels());
+    }
+    refreshPaymentAndLabels();
+    evtWireMemberPrepPhoneSms();
+    evtLoadSeatInfoInvites(eventId2);
+    evtLoadAttachGuests(eventId2, event);
+  }
+  async function evtLoadAttachGuests(eventId2, event) {
+    if (!eventId2 || !window.EventsAttachGuests || typeof window.EventsAttachGuests.loadAndWire !== "function") return;
+    const slot = document.getElementById(`portalAttachGuests-${eventId2}`);
+    if (!slot) return;
+    const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps || {})[eventId2];
+    const unpaid = !(rsvp && rsvp.paid);
+    await window.EventsAttachGuests.loadAndWire(slot, {
+      eventId: eventId2,
+      payerUnpaid: unpaid,
+      callEdge: (name, body) => callEdgeFunction(name, body),
+      onAttached: async () => {
+        if (typeof globalThis.evtOpenDetail === "function") {
+          await globalThis.evtOpenDetail(eventId2);
+        } else {
+          await window.EventsAttachGuests.loadAndWire(slot, {
+            eventId: eventId2,
+            payerUnpaid: unpaid,
+            callEdge: (name, body) => callEdgeFunction(name, body)
+          });
+        }
+      }
+    });
+  }
+  async function evtLoadSeatInfoInvites(eventId2) {
+    const slot = document.getElementById(`portalSeatInfoInvites-${eventId2}`);
+    if (!slot || !eventId2) return;
+    if (typeof callEdgeFunction !== "function") return;
+    try {
+      const result = await callEdgeFunction("event-seat-info", {
+        action: "list",
+        event_id: eventId2
+      });
+      const tokens = result?.seat_info_tokens || [];
+      if (!tokens.length) {
+        slot.innerHTML = "";
+        return;
+      }
+      if (window.EventsHelpers && typeof window.EventsHelpers.seatInfoInvitesHtml === "function") {
+        slot.innerHTML = window.EventsHelpers.seatInfoInvitesHtml(tokens);
+        window.EventsHelpers.wireSeatInfoInviteCopy(slot);
+      }
+    } catch (_) {
+      slot.innerHTML = "";
+    }
+  }
+  function evtDetailPublicInviteUrl(slug) {
+    if (!slug) return "";
+    if (typeof globalThis.evtPublicEventInviteUrl === "function") {
+      return globalThis.evtPublicEventInviteUrl(slug);
+    }
+    return `https://justicemcneal.com/events/?e=${encodeURIComponent(slug)}`;
+  }
+  function evtBuildDetailGuestRsvpHintHtml(ctx) {
+    const { event, rsvpEnabled } = ctx;
+    if (!event || event.event_type === "competition" || !rsvpEnabled) {
+      return "";
+    }
+    if (event.member_only) {
+      return `<p class="ed-rsvp-members-only-note">Members-only event \u2014 guests cannot RSVP on the public page.</p>`;
+    }
+    if (!event.slug) return "";
+    const inviteUrl = evtDetailPublicInviteUrl(event.slug);
+    return `
+        <div class="ed-rsvp-guest-hint">
+            <p class="ed-rsvp-guest-hint-text">Guests RSVP on the <a href="${evtEscapeHtml(inviteUrl)}" target="_blank" rel="noopener">public event page</a>.</p>
+            <button type="button" class="ed-link-btn" ${evtDataAction("evtCopyShareUrl", event.slug)}>Copy public link</button>
+        </div>`;
+  }
+  function evtBuildDetailRsvpSectionHtml(ctx) {
+    const ctaHtml = evtBuildDetailRsvpCtaHtml(ctx);
+    const prepHtml = evtBuildDetailRsvpPrepHtml(ctx);
+    const guestHintHtml = evtBuildDetailGuestRsvpHintHtml(ctx);
     const smsOptInHtml = evtBuildDetailSmsOptInHtml(ctx);
-    return rsvpButtons + smsOptInHtml;
+    const seatInvitesPlaceholder = !ctx.isHost && ctx.rsvp?.status === "going" ? `<div id="portalSeatInfoInvites-${ctx.eventId}" class="ed-seat-info-invites-slot"></div>` : "";
+    return ctaHtml + prepHtml + seatInvitesPlaceholder + guestHintHtml + smsOptInHtml;
   }
   function evtBuildDetailRaffleSectionHtml(ctx) {
     const {
@@ -5553,7 +8018,9 @@
                     <div style="flex:1">
                         <p class="ed-notice-title">A spot opened up for you!</p>
                         <p class="ed-notice-sub">Complete your RSVP by ${expiresStr}</p>
-                        <button ${evtDataAction("evtClaimWaitlistSpot", eventId2)} class="ed-primary-btn" style="margin-top:10px">Claim Spot \u2014 ${formatCurrency(event.rsvp_cost_cents)}</button>
+                        <button id="evtWaitlistClaimBtn-${eventId2}" ${evtDataAction("evtClaimWaitlistSpot", eventId2)} class="ed-primary-btn" style="margin-top:10px">Claim Spot \u2014 ${formatCurrency(
+        window.EventsHelpers && typeof window.EventsHelpers.seatPriceCents === "function" ? window.EventsHelpers.seatPriceCents(event, "adult") : event.rsvp_cost_cents || 0
+      )}</button>
                     </div>
                 </div>`;
     } else if (isWaiting) {
@@ -5570,17 +8037,13 @@
     return `${_edSectionHead("Waitlist")}<p class="ed-sub-count">${activeWaitlist.length} waiting</p>${waitlistAction}`;
   }
   function evtBuildDetailGraceNoticeHtml(ctx) {
-    const { eventId: eventId2, event, rsvp } = ctx;
-    if (!event.rescheduled_at || !event.grace_window_end || new Date(event.grace_window_end) <= /* @__PURE__ */ new Date()) {
-      return "";
-    }
-    const graceEnd = new Date(event.grace_window_end).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    const { event } = ctx;
+    if (!event.rescheduled_at) return "";
     return `<div class="ed-notice ed-notice-warn">
         <span class="ed-notice-emoji">\u{1F4C5}</span>
         <div>
             <p class="ed-notice-title">This event was rescheduled</p>
-            <p class="ed-notice-sub">Request a full refund until <strong>${graceEnd}</strong> if the new date doesn't work.</p>
-            ${rsvp?.paid ? `<button ${evtDataAction("evtRequestGraceRefund", eventId2)} class="ed-link-btn danger" style="margin-top:8px">Request Full Refund</button>` : ""}
+            <p class="ed-notice-sub">Payments are non-refundable in-app. Contact a host if you cannot attend the new date.</p>
         </div>
     </div>`;
   }
@@ -5657,7 +8120,17 @@
       return "";
     }
     const isProvided = event.transportation_mode === "llc_provides";
-    return `<div class="ed-context-row"><span>${isProvided ? "\u2708\uFE0F" : "\u{1F9F3}"}</span><div><strong>${isProvided ? "LLC provides transportation" : "Self-arranged transportation"}</strong><p>${isProvided ? "Tickets will appear in documents when available." : `Members book their own travel${event.transportation_estimate_cents ? ` \u2014 est. ~${formatCurrency(event.transportation_estimate_cents)}` : ""}.`}</p></div></div>`;
+    if (!isProvided) {
+      return `<div class="ed-context-row"><span>\u{1F9F3}</span><div><strong>Self-arranged transportation</strong><p>Members book their own travel${event.transportation_estimate_cents ? ` \u2014 est. ~${formatCurrency(event.transportation_estimate_cents)}` : ""}.</p></div></div>`;
+    }
+    const method = event.transportation_method;
+    if (method === "plane") {
+      return `<div class="ed-context-row"><span>\u2708\uFE0F</span><div><strong>LLC provides flights</strong><p>Tickets will appear in documents when available.</p></div></div>`;
+    }
+    if (method === "car") {
+      return `<div class="ed-context-row"><span>\u{1F697}</span><div><strong>LLC provides ground transport</strong><p>Travel is by car \u2014 no flight tickets required.</p></div></div>`;
+    }
+    return `<div class="ed-context-row"><span>\u{1F690}</span><div><strong>LLC provides transportation</strong><p>The LLC is arranging travel for this trip.</p></div></div>`;
   }
   function evtBuildDetailLocationNoticeHtml(ctx) {
     const { event, isLlc } = ctx;
@@ -5708,17 +8181,20 @@
         </div>`;
   }
   function evtBuildDetailShareCardHtml(ctx) {
-    const { event } = ctx;
+    const { event, rsvpEnabled } = ctx;
+    const inviteUrl = evtDetailPublicInviteUrl(event.slug);
+    const guestSubcopy = !event.member_only && rsvpEnabled !== false ? '<p class="ed-share-subcopy">Public link for guest RSVPs</p>' : "";
     return `
                     <p class="ed-summary-heading">Share This Event</p>
+                    ${guestSubcopy}
                     <div class="ed-share-row">
-                        <button class="ed-share-btn" title="Copy link" onclick="(function(){navigator.clipboard.writeText(window.location.href);const b=this;b.classList.add('ed-share-btn-copied');setTimeout(()=>b.classList.remove('ed-share-btn-copied'),1500)}).call(this)">
+                        <button type="button" class="ed-share-btn" title="Copy public link" ${event.slug ? evtDataAction("evtCopyShareUrl", event.slug) : ""}>
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                         </button>
-                        <a class="ed-share-btn" title="Share on Facebook" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}" target="_blank" rel="noopener">
+                        <a class="ed-share-btn" title="Share on Facebook" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(inviteUrl)}" target="_blank" rel="noopener">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                         </a>
-                        <a class="ed-share-btn" title="Share on X" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&text=${encodeURIComponent(event.title)}" target="_blank" rel="noopener">
+                        <a class="ed-share-btn" title="Share on X" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(event.title)}" target="_blank" rel="noopener">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                         </a>
                         <a class="ed-share-btn" title="Share on Instagram" href="https://instagram.com" target="_blank" rel="noopener">
@@ -5853,6 +8329,18 @@
         </div>`;
   }
   globalThis.evtBuildDetailRsvpSectionHtml = evtBuildDetailRsvpSectionHtml;
+  globalThis.evtBuildDetailRsvpCtaHtml = evtBuildDetailRsvpCtaHtml;
+  globalThis.evtBuildDetailRsvpPrepHtml = evtBuildDetailRsvpPrepHtml;
+  globalThis.evtMemberDisplayName = evtMemberDisplayName;
+  globalThis.evtWireSeatPickerPrep = evtWireSeatPickerPrep;
+  globalThis.evtLoadSeatInfoInvites = evtLoadSeatInfoInvites;
+  globalThis.evtUpdateMemberRsvpBtnLabels = evtUpdateMemberRsvpBtnLabels;
+  globalThis.evtWireMemberPrepPhoneSms = evtWireMemberPrepPhoneSms;
+  globalThis.evtBuildDetailGuestRsvpHintHtml = evtBuildDetailGuestRsvpHintHtml;
+  globalThis.evtBuildDetailPriceSummaryHtml = evtBuildDetailPriceSummaryHtml;
+  globalThis.evtBuildDetailIncludedCatalogHtml = evtBuildDetailIncludedCatalogHtml;
+  globalThis.evtBuildDetailAmenityResultsHtml = evtBuildDetailAmenityResultsHtml;
+  globalThis.evtDetailAdultPriceCents = evtDetailAdultPriceCents;
   globalThis.evtBuildDetailRaffleSectionHtml = evtBuildDetailRaffleSectionHtml;
   globalThis.evtBuildDetailHostControlsHtml = evtBuildDetailHostControlsHtml;
   globalThis.evtBuildDetailWaitlistHtml = evtBuildDetailWaitlistHtml;
@@ -5873,6 +8361,13 @@
   globalThis.evtBuildDetailPageHeaderActionsHtml = evtBuildDetailPageHeaderActionsHtml;
   var detailSectionsApi = {
     buildRsvpSectionHtml: evtBuildDetailRsvpSectionHtml,
+    buildRsvpCtaHtml: evtBuildDetailRsvpCtaHtml,
+    buildRsvpPrepHtml: evtBuildDetailRsvpPrepHtml,
+    wireSeatPickerPrep: evtWireSeatPickerPrep,
+    buildGuestRsvpHintHtml: evtBuildDetailGuestRsvpHintHtml,
+    buildPriceSummaryHtml: evtBuildDetailPriceSummaryHtml,
+    buildIncludedCatalogHtml: evtBuildDetailIncludedCatalogHtml,
+    buildAmenityResultsHtml: evtBuildDetailAmenityResultsHtml,
     buildRaffleSectionHtml: evtBuildDetailRaffleSectionHtml,
     buildHostControlsHtml: evtBuildDetailHostControlsHtml,
     buildWaitlistHtml: evtBuildDetailWaitlistHtml,
@@ -5945,6 +8440,12 @@
     if (typeof globalThis.evtLoadComments === "function") {
       window.evtLoadComments(eventId2);
     }
+    if (window.EventsAboutTabs && typeof window.EventsAboutTabs.wireAboutTabs === "function") {
+      window.EventsAboutTabs.wireAboutTabs(document.getElementById("eventsDetailView"));
+    }
+    if (typeof globalThis.evtWireSeatPickerPrep === "function" && ctx && ctx.event && ctx.eventId) {
+      globalThis.evtWireSeatPickerPrep(ctx.eventId, ctx.event);
+    }
     _bindHostDropdownOutsideClick();
     _paintAttendeeAvatars(eventId2);
   }
@@ -6013,6 +8514,9 @@
       isClosed,
       rsvp,
       myRaffleEntry,
+      myCompetitionEntry,
+      competitionPhases,
+      myCompVote,
       entriesClosed,
       eventIsFull,
       isHost,
@@ -6054,7 +8558,19 @@
       canCreateTeamChat: canCreateTeamChat2
     };
     if (typeof globalThis.evtInitBottomNav === "function") {
-      window.evtInitBottomNav(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub);
+      window.evtInitBottomNav(
+        event,
+        eventId2,
+        rsvp,
+        myRaffleEntry,
+        entriesClosed,
+        eventIsFull,
+        isHost,
+        canAccessTeamHub,
+        myCompetitionEntry,
+        competitionPhases,
+        myCompVote
+      );
     }
   }
   var detailPostRenderApi = {
@@ -6097,6 +8613,9 @@
       mobileHostedHtml,
       descHtml,
       descIsLong,
+      aboutTabsHtml,
+      includedCatalogHtml,
+      amenityResultsHtml,
       eventContextHtml,
       attendeePreviewHtml,
       organizerHtml,
@@ -6111,6 +8630,7 @@
       scrapbookHtml,
       relatedHtml,
       rsvpButtons,
+      priceSummaryHtml,
       teamHubCardHtml,
       qrHtml,
       documentsHtml,
@@ -6223,6 +8743,9 @@
                             <p class="ed-about-heading">About This Event</p>
                             <div class="ed-desc${descIsLong ? " ed-desc-collapsed" : ""}" id="evtDescWrap">${descHtml}</div>
                             ${descIsLong ? `<button class="ed-read-more" onclick="var w=document.getElementById('evtDescWrap'),c=w.classList.toggle('ed-desc-collapsed');this.textContent=c?'Read more':'Show less'">Read more</button>` : ""}
+                            ${aboutTabsHtml || ""}
+                            ${includedCatalogHtml || ""}
+                            ${amenityResultsHtml || ""}
                             ${eventContextHtml ? `<div class="ed-context-list">${eventContextHtml}</div>` : ""}
                         </div>
                         ${attendeePreviewHtml ? `
@@ -6323,9 +8846,10 @@
                                 ${event.location_text ? `<a href="${/iPad|iPhone|iPod/.test(navigator.userAgent) ? "https://maps.apple.com/?daddr=" : "https://www.google.com/maps/dir/?api=1&destination="}${encodeURIComponent(event.location_text)}" target="_blank" rel="noopener" class="ed-maps-link">View on Maps \u2197</a>` : ""}
                             </div>
                         </div>` : ""}
+                        ${priceSummaryHtml || ""}
                     </div>
                 </div>
-                ${rsvpButtons && rsvpEnabled ? `
+                ${rsvpButtons ? `
                 <div class="ed-card ed-card-rsvp event-detail-card-tight portal-action-card">
                     <p class="ed-summary-heading">Your RSVP</p>
                     ${rsvpButtons}
@@ -6397,6 +8921,8 @@
       myWaitlistEntry,
       raffleEntryCount,
       myRaffleEntry,
+      myCompetitionEntry,
+      competitionPhases,
       raffleWinners,
       isCreator,
       canManageEvent,
@@ -6457,6 +8983,9 @@
     const waitlistHtml = window.evtBuildDetailWaitlistHtml(ctx);
     const graceHtml = window.evtBuildDetailGraceNoticeHtml(ctx);
     const rsvpButtons = window.evtBuildDetailRsvpSectionHtml(ctx);
+    const priceSummaryHtml = window.evtBuildDetailPriceSummaryHtml(ctx);
+    const includedCatalogHtml = window.evtBuildDetailIncludedCatalogHtml(ctx);
+    const amenityResultsHtml = window.evtBuildDetailAmenityResultsHtml(ctx);
     const raffleHtml3 = window.evtBuildDetailRaffleSectionHtml(ctx);
     const attendeePreviewHtml = window.evtBuildDetailAttendeePreviewHtml(ctx);
     const shareCardHtml = window.evtBuildDetailShareCardHtml(ctx);
@@ -6467,7 +8996,8 @@
     const mobileHostedHtml = window.evtBuildDetailMobileHostedHtml(ctx);
     const pageHeaderActionsHtml = window.evtBuildDetailPageHeaderActionsHtml(ctx);
     const rawDesc = event.description || "";
-    const descHtml = rawDesc ? window.evtMiniMarkdown(rawDesc) : '<span class="ed-no-desc">No details yet \u2014 check back closer to the event.</span>';
+    const aboutTabsHtml = window.EventsAboutTabs && typeof window.EventsAboutTabs.aboutTabsHtml === "function" ? window.EventsAboutTabs.aboutTabsHtml(event.about_tabs, { idPrefix: `portalAbout-${eventId2}` }) : "";
+    const descHtml = rawDesc ? window.evtMiniMarkdown(rawDesc) : aboutTabsHtml ? "" : '<span class="ed-no-desc">No details yet \u2014 check back closer to the event.</span>';
     const descIsLong = rawDesc.length > 500;
     if (costBreakdownHtml && event.rsvp_cost_cents) {
       costBreakdownHtml = `
@@ -6500,6 +9030,9 @@
       mobileHostedHtml,
       descHtml,
       descIsLong,
+      aboutTabsHtml,
+      includedCatalogHtml,
+      amenityResultsHtml,
       eventContextHtml,
       attendeePreviewHtml,
       organizerHtml,
@@ -6514,6 +9047,7 @@
       scrapbookHtml,
       relatedHtml,
       rsvpButtons,
+      priceSummaryHtml,
       teamHubCardHtml,
       qrHtml,
       documentsHtml,
@@ -6530,6 +9064,8 @@
       isClosed,
       rsvp,
       myRaffleEntry,
+      myCompetitionEntry,
+      competitionPhases,
       entriesClosed,
       eventIsFull,
       isHost,
@@ -7131,50 +9667,62 @@
   // js/portal/events/detail/competition.js
   async function evtBuildCompetitionHtml2(event, isHost) {
     if (event.event_type !== "competition") return "";
-    const config = event.competition_config || {};
-    const eventId2 = event.id;
-    const { data: phases } = await supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true });
-    const { data: entries } = await supabaseClient.from("competition_entries").select("*, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).eq("moderated", false).order("submitted_at", { ascending: true });
-    const myEntry = (entries || []).find((e) => e.user_id === globalThis.evtCurrentUser.id);
-    const { data: myVote } = await supabaseClient.from("competition_votes").select("entry_id").eq("event_id", eventId2).eq("voter_id", globalThis.evtCurrentUser.id).maybeSingle();
-    const { data: winners } = await supabaseClient.from("competition_winners").select("*, profiles:user_id(first_name, last_name, profile_picture_url), competition_entries!competition_winners_entry_id_fkey(title)").eq("event_id", eventId2).order("place", { ascending: true });
-    const { count: contributionCount } = await supabaseClient.from("prize_pool_contributions").select("id", { count: "exact", head: true }).eq("event_id", eventId2);
-    const { count: totalEntryCount } = await supabaseClient.from("competition_entries").select("id", { count: "exact", head: true }).eq("event_id", eventId2);
-    const now = /* @__PURE__ */ new Date();
-    const currentPhase = (phases || []).find((p) => p.status === "active") || (phases || []).find((p) => p.status === "extended") || { phase_num: 0, status: "pending" };
-    const activePhaseNum = currentPhase.phase_num;
-    let displayPhaseNum = activePhaseNum;
-    if (!activePhaseNum) {
-      for (const p of phases || []) {
-        if (now >= new Date(p.starts_at) && now < new Date(p.ends_at)) {
-          displayPhaseNum = p.phase_num;
-          break;
+    try {
+      const config = event.competition_config || {};
+      const eventId2 = event.id;
+      const compPh = window.EventsCompetitionPhases || {};
+      const phasesRes = await supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true });
+      if (phasesRes.error) throw phasesRes.error;
+      const entriesRes = await supabaseClient.from("competition_entries").select("*, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2).eq("moderated", false).order("submitted_at", { ascending: true });
+      if (entriesRes.error) throw entriesRes.error;
+      const phases = phasesRes.data;
+      const entries = entriesRes.data;
+      const myEntry = (entries || []).find((e) => e.user_id === globalThis.evtCurrentUser.id);
+      const myVoteRes = await supabaseClient.from("competition_votes").select("entry_id").eq("event_id", eventId2).eq("voter_id", globalThis.evtCurrentUser.id).maybeSingle();
+      if (myVoteRes.error) throw myVoteRes.error;
+      const myVote = myVoteRes.data;
+      const winnersRes = await supabaseClient.from("competition_winners").select("*, profiles:user_id(first_name, last_name, profile_picture_url), competition_entries!competition_winners_entry_id_fkey(title)").eq("event_id", eventId2).order("place", { ascending: true });
+      if (winnersRes.error) throw winnersRes.error;
+      const winners = winnersRes.data;
+      const contribCountRes = await supabaseClient.from("prize_pool_contributions").select("id", { count: "exact", head: true }).eq("event_id", eventId2);
+      if (contribCountRes.error) throw contribCountRes.error;
+      const contributionCount = contribCountRes.count;
+      const now = /* @__PURE__ */ new Date();
+      const phaseList = compPh.normalizePhases ? compPh.normalizePhases(phases) : phases || [];
+      const displayPhaseNum = compPh.resolveDisplayPhase ? compPh.resolveDisplayPhase(phaseList, now) : (phases || []).find((p) => p.status === "active" || p.status === "extended")?.phase_num || 0;
+      const phase2 = compPh.getPhase ? compPh.getPhase(phaseList, 2) : null;
+      const phase3 = compPh.getPhase ? compPh.getPhase(phaseList, 3) : null;
+      const submissionOpen = compPh.isSubmissionOpen ? compPh.isSubmissionOpen(phaseList, now) : false;
+      const votingOpen = compPh.isVotingOpen ? compPh.isVotingOpen(phaseList, now) : false;
+      const windowLabel = compPh.submissionWindowLabel ? compPh.submissionWindowLabel(phase2, now) : { state: "not_configured", message: "" };
+      const votingLabel = compPh.votingWindowLabel ? compPh.votingWindowLabel(phase3, now) : { state: "not_configured", message: "" };
+      const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps || {};
+      const rsvp = rsvpMap[eventId2];
+      const hasRsvp = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+      const voterCtx = { hasRsvp, hasCompEntry: !!myEntry };
+      const voterEligible = compPh.isVoterEligible ? compPh.isVoterEligible(config, voterCtx) : true;
+      const voterIneligibleMsg = compPh.voterEligibilityMessage ? compPh.voterEligibilityMessage(config) : "";
+      const entryList = entries || [];
+      const winnerList = winners || [];
+      const phaseTimelineHtml = phaseList.length ? phaseList.map((p) => {
+        const isActive = p.status === "active" || p.status === "extended";
+        const isCompleted = p.status === "completed";
+        const isCancelled = p.status === "cancelled";
+        const statusIcon = isCompleted ? "\u2705" : isActive ? "\u{1F535}" : isCancelled ? "\u274C" : "\u23F3";
+        const statusColor = isCompleted ? "text-emerald-600" : isActive ? "text-blue-600" : isCancelled ? "text-red-500" : "text-gray-400";
+        const bgColor = isActive ? "bg-blue-50 border-blue-200" : isCompleted ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-200";
+        const startStr = p.starts_at ? compPh.formatPhaseDate ? compPh.formatPhaseDate(p.starts_at) : new Date(p.starts_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "\u2014";
+        const endStr = p.ends_at ? compPh.formatPhaseDate ? compPh.formatPhaseDate(p.ends_at) : new Date(p.ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "\u2014";
+        let countdownHtml = "";
+        if (isActive && p.ends_at) {
+          const msLeft = new Date(p.ends_at) - now;
+          if (msLeft > 0) {
+            const daysLeft = Math.floor(msLeft / 864e5);
+            const hoursLeft = Math.floor(msLeft % 864e5 / 36e5);
+            countdownHtml = `<span class="text-xs font-bold text-blue-700 ml-2">${daysLeft > 0 ? daysLeft + "d " : ""}${hoursLeft}h left</span>`;
+          }
         }
-      }
-    }
-    const entryList = entries || [];
-    const winnerList = winners || [];
-    const phaseList = phases || [];
-    const phaseTimelineHtml = phaseList.map((p) => {
-      const isActive = p.status === "active" || p.status === "extended";
-      const isCompleted = p.status === "completed";
-      const isPending = p.status === "pending";
-      const isCancelled = p.status === "cancelled";
-      const statusIcon = isCompleted ? "\u2705" : isActive ? "\u{1F535}" : isCancelled ? "\u274C" : "\u23F3";
-      const statusColor = isCompleted ? "text-emerald-600" : isActive ? "text-blue-600" : isCancelled ? "text-red-500" : "text-gray-400";
-      const bgColor = isActive ? "bg-blue-50 border-blue-200" : isCompleted ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-200";
-      const startStr = new Date(p.starts_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      const endStr = new Date(p.ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-      let countdownHtml = "";
-      if (isActive) {
-        const msLeft = new Date(p.ends_at) - now;
-        if (msLeft > 0) {
-          const daysLeft = Math.floor(msLeft / 864e5);
-          const hoursLeft = Math.floor(msLeft % 864e5 / 36e5);
-          countdownHtml = `<span class="text-xs font-bold text-blue-700 ml-2">${daysLeft > 0 ? daysLeft + "d " : ""}${hoursLeft}h left</span>`;
-        }
-      }
-      return `
+        return `
             <div class="flex items-center gap-3 p-2.5 rounded-xl border ${bgColor}">
                 <span class="text-base">${statusIcon}</span>
                 <div class="flex-1 min-w-0">
@@ -7186,12 +9734,16 @@
                     <p class="text-xs text-gray-500">${startStr} \u2192 ${endStr}</p>
                 </div>
             </div>`;
-    }).join("");
-    const totalPool = event.total_prize_pool_cents || 0;
-    const entryFee = config.entry_fee_cents || 0;
-    const housePct = config.house_pct || 0;
-    const netPool = Math.round(totalPool * (1 - housePct / 100));
-    let prizePoolHtml = `
+      }).join("") : `
+        <div class="p-3 bg-gray-50 border border-gray-200 rounded-xl">
+            <p class="text-sm font-semibold text-gray-700">Competition phases not configured</p>
+            <p class="text-xs text-gray-500 mt-0.5">Edit the event or set submission/voting windows in Manage \u2192 Comp.</p>
+        </div>`;
+      const totalPool = event.total_prize_pool_cents || 0;
+      const entryFee = config.entry_fee_cents || 0;
+      const housePct = config.house_pct || 0;
+      const netPool = Math.round(totalPool * (1 - housePct / 100));
+      let prizePoolHtml = `
         <div class="mt-4 p-4 bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-xl">
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
@@ -7207,19 +9759,19 @@
                 \u{1F4B8} Contribute to Prize Pool
             </button>
         </div>`;
-    const tiers = event.winner_tier_config || [{ place: 1, pct: 100 }];
-    let tierHtml = "";
-    if (tiers.length > 0 && netPool > 0) {
-      const tierEmoji = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
-      tierHtml = `
+      const tiers = event.winner_tier_config || [{ place: 1, pct: 100 }];
+      let tierHtml = "";
+      if (tiers.length > 0 && netPool > 0) {
+        const tierEmoji = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+        tierHtml = `
             <div class="mt-2 flex items-center gap-2 flex-wrap">
                 ${tiers.map((t) => `<span class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">${tierEmoji[t.place - 1] || ""} ${t.pct}% = ${formatCurrency(Math.round(netPool * t.pct / 100))}</span>`).join("")}
             </div>`;
-    }
-    let registrationHtml = "";
-    if (displayPhaseNum <= 1) {
-      if (myEntry) {
-        registrationHtml = `
+      }
+      let registrationHtml = "";
+      if (displayPhaseNum <= 1) {
+        if (myEntry) {
+          registrationHtml = `
                 <div class="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
                     <span class="text-lg">\u2705</span>
                     <div>
@@ -7227,61 +9779,89 @@
                         <p class="text-xs text-emerald-600">Your entry will be submitted in Phase 2.</p>
                     </div>
                 </div>`;
-      } else {
-        registrationHtml = `
+        } else {
+          registrationHtml = `
                 <div class="mt-4">
                     <button ${evtDataAction("evtJoinCompetition", eventId2)} class="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
                         \u{1F3C6} Join as Competitor${entryFee > 0 ? ` \u2014 ${formatCurrency(entryFee)}` : ""}
                     </button>
                     <p class="text-xs text-gray-400 text-center mt-1">${entryList.length} competitor${entryList.length !== 1 ? "s" : ""} registered</p>
                 </div>`;
+        }
       }
-    }
-    let submissionHtml = "";
-    if (displayPhaseNum === 2 || displayPhaseNum <= 2 && myEntry && !myEntry.file_url && !myEntry.external_url && myEntry.entry_type !== "text") {
-      if (myEntry && (myEntry.file_url || myEntry.external_url || myEntry.title)) {
-        submissionHtml = `
+      let submissionHtml = "";
+      if (myEntry) {
+        const hasSubmission = compPh.entryHasSubmission ? compPh.entryHasSubmission(myEntry) : !!(myEntry.file_url || myEntry.external_url);
+        if (hasSubmission) {
+          submissionHtml = `
                 <div class="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
                     <p class="text-sm font-bold text-emerald-700">\u2705 Entry Submitted: "${evtEscapeHtml(myEntry.title)}"</p>
                     <p class="text-xs text-emerald-600 mt-0.5">Submitted ${new Date(myEntry.submitted_at).toLocaleDateString()}</p>
                 </div>`;
-      } else if (myEntry && displayPhaseNum === 2) {
-        submissionHtml = evtBuildSubmitFormHtml(eventId2, config);
+        } else if (submissionOpen) {
+          submissionHtml = evtBuildSubmitFormHtml(eventId2, config);
+        } else if (windowLabel.state === "upcoming") {
+          submissionHtml = `
+                <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p class="text-sm font-semibold text-amber-800">\u23F3 Submissions not open yet</p>
+                    <p class="text-xs text-amber-700 mt-0.5">${evtEscapeHtml(windowLabel.message)}</p>
+                </div>`;
+        } else if (windowLabel.state === "closed") {
+          submissionHtml = `
+                <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                    <p class="text-sm font-semibold text-gray-700">\u{1F512} Submission window closed</p>
+                    <p class="text-xs text-gray-500 mt-0.5">${evtEscapeHtml(windowLabel.message)}</p>
+                </div>`;
+        } else if (windowLabel.state === "not_configured") {
+          submissionHtml = `
+                <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                    <p class="text-sm font-semibold text-gray-700">Submission window pending</p>
+                    <p class="text-xs text-gray-500 mt-0.5">The host has not configured submission dates yet.</p>
+                </div>`;
+        } else {
+          submissionHtml = `
+                <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p class="text-sm font-semibold text-amber-800">Submission window scheduled</p>
+                    <p class="text-xs text-amber-700 mt-0.5">${evtEscapeHtml(windowLabel.message)}</p>
+                </div>`;
+        }
       }
-    }
-    let galleryHtml = "";
-    const showEntries = config.entries_visible_before_voting || displayPhaseNum >= 3;
-    if (showEntries && entryList.length > 0) {
-      const entryCards = entryList.map((entry) => {
-        const p = entry.profiles;
-        const name = p ? `${p.first_name || ""} ${p.last_name || ""}`.trim() : "Unknown";
-        const initials = ((p?.first_name?.[0] || "") + (p?.last_name?.[0] || "")).toUpperCase();
-        const avatar = p?.profile_picture_url ? `<img src="${p.profile_picture_url}" class="w-8 h-8 rounded-full object-cover" alt="">` : `<div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 text-xs font-bold">${initials}</div>`;
-        const isVoted = myVote?.entry_id === entry.id;
-        const voteCountDisplay = config.vote_tally_visible || displayPhaseNum >= 4 ? `<span class="text-xs text-gray-500">${entry.vote_count} vote${entry.vote_count !== 1 ? "s" : ""}</span>` : "";
-        let contentPreview = "";
-        if (entry.entry_type === "file" && entry.file_url) {
-          if (entry.mime_type?.startsWith("image/")) {
-            contentPreview = `<img src="${entry.file_url}" class="w-full h-32 object-cover rounded-lg mt-2" alt="">`;
-          } else {
-            contentPreview = `<div class="mt-2 p-2 bg-gray-50 rounded-lg text-xs text-gray-500">\u{1F4CE} ${evtEscapeHtml(entry.file_name || "File")}</div>`;
+      let galleryHtml = "";
+      const showEntries = config.entries_visible_before_voting || displayPhaseNum >= 3;
+      if (showEntries && entryList.length > 0) {
+        const entryCards = (await Promise.all(entryList.map(async (entry) => {
+          const p = entry.profiles;
+          const name = p ? `${p.first_name || ""} ${p.last_name || ""}`.trim() : "Unknown";
+          const initials = ((p?.first_name?.[0] || "") + (p?.last_name?.[0] || "")).toUpperCase();
+          const avatar = p?.profile_picture_url ? `<img src="${p.profile_picture_url}" class="w-8 h-8 rounded-full object-cover" alt="">` : `<div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 text-xs font-bold">${initials}</div>`;
+          const isVoted = myVote?.entry_id === entry.id;
+          const voteCountDisplay = config.vote_tally_visible || votingOpen || displayPhaseNum >= 4 ? `<span class="text-xs text-gray-500">${entry.vote_count} vote${entry.vote_count !== 1 ? "s" : ""}</span>` : "";
+          let contentPreview = "";
+          if (entry.entry_type === "file" && entry.file_url) {
+            const resolvedUrl = compPh.resolveCompEntryFileUrl ? await compPh.resolveCompEntryFileUrl(entry.file_url) : entry.file_url;
+            if (entry.mime_type?.startsWith("image/") && resolvedUrl) {
+              contentPreview = `<img src="${resolvedUrl}" class="w-full h-32 object-cover rounded-lg mt-2" alt="">`;
+            } else if (resolvedUrl) {
+              contentPreview = `<a href="${resolvedUrl}" target="_blank" rel="noopener" class="mt-2 inline-block text-xs text-brand-600 font-semibold hover:underline">\u{1F4CE} Download ${evtEscapeHtml(entry.file_name || "file")}</a>`;
+            } else {
+              contentPreview = `<div class="mt-2 p-2 bg-gray-50 rounded-lg text-xs text-gray-500">\u{1F4CE} ${evtEscapeHtml(entry.file_name || "File")}</div>`;
+            }
+          } else if (entry.entry_type === "link" && entry.external_url) {
+            contentPreview = `<a href="${entry.external_url}" target="_blank" rel="noopener" class="mt-2 block text-xs text-blue-600 hover:underline truncate">\u{1F517} ${evtEscapeHtml(entry.external_url)}</a>`;
           }
-        } else if (entry.entry_type === "link" && entry.external_url) {
-          contentPreview = `<a href="${entry.external_url}" target="_blank" class="mt-2 block text-xs text-blue-600 hover:underline truncate">\u{1F517} ${evtEscapeHtml(entry.external_url)}</a>`;
-        }
-        let voteBtn = "";
-        if (displayPhaseNum === 3 && !myVote && entry.user_id !== globalThis.evtCurrentUser.id) {
-          voteBtn = `<button ${evtDataAction("evtCastVote", eventId2, entry.id)} class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Vote</button>`;
-        } else if (isVoted) {
-          voteBtn = `<div class="mt-2 text-center text-xs font-bold text-blue-600">\u2713 Your Vote</div>`;
-        }
-        let modBtn = "";
-        if (isHost && displayPhaseNum < 3) {
-          modBtn = `<button ${evtDataAction("evtModerateEntry", eventId2, entry.id)} class="mt-1 text-xs text-red-400 hover:text-red-600">Remove Entry</button>`;
-        }
-        const winnerEntry = winnerList.find((w) => w.entry_id === entry.id);
-        const winnerBadge = winnerEntry ? `<span class="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">${["\u{1F947}", "\u{1F948}", "\u{1F949}"][winnerEntry.place - 1] || ""} ${winnerEntry.place === 1 ? "1st" : winnerEntry.place === 2 ? "2nd" : "3rd"} Place</span>` : "";
-        return `
+          let voteBtn = "";
+          if (votingOpen && voterEligible && !myVote && entry.user_id !== globalThis.evtCurrentUser.id) {
+            voteBtn = `<button ${evtDataAction("evtCastVote", eventId2, entry.id)} class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Vote</button>`;
+          } else if (isVoted) {
+            voteBtn = `<div class="mt-2 text-center text-xs font-bold text-blue-600">\u2713 Your Vote</div>`;
+          }
+          let modBtn = "";
+          if (isHost && displayPhaseNum < 3) {
+            modBtn = `<button ${evtDataAction("evtModerateEntry", eventId2, entry.id)} class="mt-1 text-xs text-red-400 hover:text-red-600">Remove Entry</button>`;
+          }
+          const winnerEntry = winnerList.find((w) => w.entry_id === entry.id);
+          const winnerBadge = winnerEntry ? `<span class="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">${["\u{1F947}", "\u{1F948}", "\u{1F949}"][winnerEntry.place - 1] || ""} ${winnerEntry.place === 1 ? "1st" : winnerEntry.place === 2 ? "2nd" : "3rd"} Place</span>` : "";
+          return `
                 <div class="bg-white border border-gray-200 rounded-xl p-3 ${winnerEntry ? "ring-2 ring-amber-400" : ""}">
                     <div class="flex items-center gap-2 mb-1">
                         ${avatar}
@@ -7299,36 +9879,72 @@
                     </div>
                     ${voteBtn}
                 </div>`;
-      }).join("");
-      galleryHtml = `
+        }))).join("");
+        galleryHtml = `
             <div class="mt-5">
                 <h4 class="text-sm font-bold text-gray-700 mb-3">\u{1F4CB} Entries (${entryList.length})</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${entryCards}</div>
             </div>`;
-    }
-    let votingStatusHtml = "";
-    if (displayPhaseNum === 3) {
-      if (myVote) {
-        votingStatusHtml = `
+      } else if (!showEntries && displayPhaseNum < 3 && entryList.length > 0) {
+        galleryHtml = `
+            <div class="mt-5 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                <p class="text-sm font-semibold text-gray-700">Entries hidden until voting</p>
+                <p class="text-xs text-gray-500 mt-0.5">${entryList.length} competitor${entryList.length !== 1 ? "s" : ""} registered \u2014 gallery opens when voting begins.</p>
+            </div>`;
+      }
+      let votingStatusHtml = "";
+      if (votingOpen || displayPhaseNum === 3 || votingLabel.state !== "not_configured") {
+        if (myVote) {
+          votingStatusHtml = `
                 <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-2">
                     <span class="text-lg">\u{1F5F3}\uFE0F</span>
                     <p class="text-sm font-semibold text-blue-700">You've cast your vote!</p>
                 </div>`;
-      } else if (myEntry) {
-        votingStatusHtml = `
+        } else if (!voterEligible) {
+          votingStatusHtml = `
+                <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                    <p class="text-sm font-semibold text-gray-700">Voting restricted</p>
+                    <p class="text-xs text-gray-500 mt-0.5">${evtEscapeHtml(voterIneligibleMsg)}</p>
+                </div>`;
+        } else if (votingOpen && myEntry) {
+          votingStatusHtml = `
                 <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2">
                     <span class="text-lg">\u26A0\uFE0F</span>
                     <p class="text-sm text-amber-700">You can't vote for your own entry, but you can vote for others!</p>
                 </div>`;
+        } else if (votingLabel.state === "upcoming") {
+          votingStatusHtml = `
+                <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p class="text-sm font-semibold text-amber-800">\u23F3 Voting not open yet</p>
+                    <p class="text-xs text-amber-700 mt-0.5">${evtEscapeHtml(votingLabel.message)}</p>
+                </div>`;
+        } else if (votingLabel.state === "closed" && !myVote) {
+          votingStatusHtml = `
+                <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                    <p class="text-sm font-semibold text-gray-700">\u{1F512} Voting window closed</p>
+                    <p class="text-xs text-gray-500 mt-0.5">${evtEscapeHtml(votingLabel.message)}</p>
+                </div>`;
+        } else if (votingLabel.state === "scheduled" && !votingOpen) {
+          votingStatusHtml = `
+                <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p class="text-sm font-semibold text-amber-800">Voting window scheduled</p>
+                    <p class="text-xs text-amber-700 mt-0.5">${evtEscapeHtml(votingLabel.message)}</p>
+                </div>`;
+        } else if (votingOpen) {
+          votingStatusHtml = `
+                <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                    <p class="text-sm font-semibold text-blue-800">\u{1F5F3}\uFE0F Voting is open</p>
+                    <p class="text-xs text-blue-700 mt-0.5">${evtEscapeHtml(votingLabel.message)}</p>
+                </div>`;
+        }
       }
-    }
-    let thresholdHtml = "";
-    if (config.min_entries && displayPhaseNum <= 2) {
-      const current = entryList.length;
-      const needed = config.min_entries;
-      const pct = Math.min(100, Math.round(current / needed * 100));
-      const met = current >= needed;
-      thresholdHtml = `
+      let thresholdHtml = "";
+      if (config.min_entries && displayPhaseNum <= 2) {
+        const current = entryList.length;
+        const needed = config.min_entries;
+        const pct = Math.min(100, Math.round(current / needed * 100));
+        const met = current >= needed;
+        thresholdHtml = `
             <div class="mt-3 p-3 ${met ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"} border rounded-xl">
                 <div class="flex items-center justify-between mb-1.5">
                     <span class="text-xs font-semibold ${met ? "text-emerald-700" : "text-amber-700"}">${met ? "\u2705 Minimum entries met!" : "\u26A0\uFE0F Minimum entries needed"}</span>
@@ -7337,18 +9953,18 @@
                 <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                     <div class="${met ? "bg-emerald-500" : "bg-amber-500"} h-2 rounded-full transition-all" style="width:${pct}%"></div>
                 </div>
-                ${!met ? `<p class="text-xs text-amber-600 mt-1">If not met, competition may be extended ${config.extension_days || 3} days or cancelled with full refund.</p>` : ""}
+                ${!met ? `<p class="text-xs text-amber-600 mt-1">If not met, competition may be extended ${config.extension_days || 3} days or cancelled. Entry fees are not refunded in-app.</p>` : ""}
             </div>`;
-    }
-    let resultsHtml = "";
-    if (displayPhaseNum >= 4 || winnerList.length > 0) {
-      if (winnerList.length > 0) {
-        const tierEmoji = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
-        const winnerCards = winnerList.map((w) => {
-          const p = w.profiles;
-          const name = p ? `${p.first_name || ""} ${p.last_name || ""}`.trim() : "Unknown";
-          const entryTitle = w.competition_entries?.title || "";
-          return `
+      }
+      let resultsHtml = "";
+      if (displayPhaseNum >= 4 || winnerList.length > 0) {
+        if (winnerList.length > 0) {
+          const tierEmoji = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+          const winnerCards = winnerList.map((w) => {
+            const p = w.profiles;
+            const name = p ? `${p.first_name || ""} ${p.last_name || ""}`.trim() : "Unknown";
+            const entryTitle = w.competition_entries?.title || "";
+            return `
                     <div class="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
                         <span class="text-2xl">${tierEmoji[w.place - 1] || "\u{1F3C5}"}</span>
                         <div class="flex-1">
@@ -7360,47 +9976,53 @@
                             <p class="text-xs text-gray-400">${w.payout_status}</p>
                         </div>
                     </div>`;
-        }).join("");
-        resultsHtml = `
+          }).join("");
+          resultsHtml = `
                 <div class="mt-5">
                     <h4 class="text-sm font-bold text-gray-700 mb-3">\u{1F3C6} Winners</h4>
                     <div class="space-y-2">${winnerCards}</div>
                 </div>`;
-      } else if (displayPhaseNum >= 4 && isHost) {
-        resultsHtml = `
+        } else if (displayPhaseNum >= 4 && isHost) {
+          const rankedPreview = [...entryList].sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0)).slice(0, 5).map((entry, idx) => {
+            const p = entry.profiles;
+            const name = p ? `${p.first_name || ""} ${p.last_name || ""}`.trim() : "Member";
+            return `<div class="flex items-center justify-between text-xs py-1"><span>#${idx + 1} ${evtEscapeHtml(name)} \u2014 ${evtEscapeHtml(entry.title || "Entry")}</span><strong>${entry.vote_count || 0} votes</strong></div>`;
+          }).join("");
+          resultsHtml = `
                 <div class="mt-4">
+                    ${rankedPreview ? `<div class="mb-3 p-3 bg-white border border-gray-200 rounded-xl"><p class="text-xs font-bold text-gray-600 mb-2">Current standings (by votes)</p>${rankedPreview}</div>` : ""}
                     <button ${evtDataAction("evtFinalizeCompetition", eventId2)} class="w-full bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2">
                         \u{1F3C6} Finalize Results & Announce Winners
                     </button>
                 </div>`;
-      }
-    }
-    let phaseControlHtml = "";
-    if (isHost) {
-      const nextPhase = phaseList.find((p) => p.status === "pending");
-      const activeP = phaseList.find((p) => p.status === "active" || p.status === "extended");
-      let buttons = "";
-      if (activeP && !nextPhase) {
-      }
-      if (activeP) {
-        buttons += `<button ${evtDataAction("evtAdvancePhase", eventId2, activeP.phase_num)} class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-blue-700 transition">Complete Phase ${activeP.phase_num} \u2192 Next</button>`;
-        if (activeP.phase_num === 2 && !activeP.extended_once) {
-          buttons += `<button ${evtDataAction("evtExtendPhase", eventId2, activeP.phase_num)} class="bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-amber-600 transition">Extend ${config.extension_days || 3} Days</button>`;
         }
       }
-      if (!activeP && nextPhase) {
-        buttons += `<button ${evtDataAction("evtStartPhase", eventId2, nextPhase.phase_num)} class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition">Start Phase ${nextPhase.phase_num}: ${nextPhase.name}</button>`;
-      }
-      if (buttons) {
-        phaseControlHtml = `
+      let phaseControlHtml = "";
+      if (isHost) {
+        const nextPhase = phaseList.find((p) => p.status === "pending");
+        const activeP = phaseList.find((p) => p.status === "active" || p.status === "extended");
+        let buttons = "";
+        if (activeP && !nextPhase) {
+        }
+        if (activeP) {
+          buttons += `<button ${evtDataAction("evtAdvancePhase", eventId2, activeP.phase_num)} class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-blue-700 transition">Complete Phase ${activeP.phase_num} \u2192 Next</button>`;
+          if (activeP.phase_num === 2 && !activeP.extended_once) {
+            buttons += `<button ${evtDataAction("evtExtendPhase", eventId2, activeP.phase_num)} class="bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-amber-600 transition">Extend ${config.extension_days || 3} Days</button>`;
+          }
+        }
+        if (!activeP && nextPhase) {
+          buttons += `<button ${evtDataAction("evtStartPhase", eventId2, nextPhase.phase_num)} class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition">Start Phase ${nextPhase.phase_num}: ${nextPhase.name}</button>`;
+        }
+        if (buttons) {
+          phaseControlHtml = `
                 <div class="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl">
                     <h5 class="text-xs font-bold text-rose-700 uppercase tracking-wide mb-2">Phase Management</h5>
                     <div class="flex flex-wrap gap-2">${buttons}</div>
                 </div>`;
+        }
       }
-    }
-    return `
-        <div class="mt-6 p-4 bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-xl">
+      return `
+        <div id="competition-section" class="mt-6 p-4 bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-xl">
             <div class="flex items-center gap-2 mb-3">
                 <span class="text-lg">\u{1F3C6}</span>
                 <h4 class="text-sm font-bold text-gray-800">Competition</h4>
@@ -7421,20 +10043,29 @@
         ${galleryHtml}
         ${resultsHtml}
     `;
+    } catch (err) {
+      console.error("evtBuildCompetitionHtml:", err);
+      return `
+            <div id="competition-section" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p class="text-sm font-semibold text-red-800">Could not load competition</p>
+                <p class="text-xs text-red-600 mt-1">${evtEscapeHtml(err.message || "Please refresh and try again.")}</p>
+            </div>`;
+    }
   }
   function evtBuildSubmitFormHtml(eventId2, config) {
     const entryType = config.entry_type || "any";
+    const maxMb = Number(config.max_file_size_mb) > 0 ? Number(config.max_file_size_mb) : 10;
     const fileInput = entryType === "file" || entryType === "any" ? `
         <div id="compFileGroup">
-            <label class="text-xs text-gray-600 font-semibold">Upload File</label>
-            <input type="file" id="compEntryFile" accept="image/*,application/pdf,video/*"
+            <label class="text-xs text-gray-600 font-semibold">Upload GFX${entryType === "file" ? " *" : ""}</label>
+            <input type="file" id="compEntryFile" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,application/pdf,video/*"
                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
-            <p class="text-xs text-gray-400 mt-0.5">Images/PDFs: max 10MB \u2022 Video: max 50MB</p>
+            <p class="text-xs text-gray-400 mt-0.5">PNG, JPG, WebP, SVG, PDF, or video \xB7 Images/PDFs max ${maxMb}MB \xB7 Video max 50MB</p>
         </div>` : "";
     const linkInput = entryType === "link" || entryType === "any" ? `
         <div>
-            <label class="text-xs text-gray-600 font-semibold">External Link</label>
-            <input type="url" id="compEntryLink" placeholder="https://..." 
+            <label class="text-xs text-gray-600 font-semibold">External Link${entryType === "link" ? " *" : ""}</label>
+            <input type="url" id="compEntryLink" placeholder="https://..."
                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
         </div>` : "";
     return `
@@ -7452,7 +10083,7 @@
             </div>
             ${fileInput}
             ${linkInput}
-            <button ${evtDataAction("evtSubmitEntry", eventId2)} class="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
+            <button id="compSubmitBtn" ${evtDataAction("evtSubmitEntry", eventId2)} class="w-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition">
                 Submit Entry
             </button>
         </div>`;
@@ -7462,6 +10093,13 @@
       const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
       const config = event?.competition_config || {};
       const entryFee = config.entry_fee_cents || 0;
+      const compPh = window.EventsCompetitionPhases || {};
+      const { data: phases, error: phasesErr } = await supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true });
+      if (phasesErr) throw phasesErr;
+      if (compPh.isRegistrationOpen && !compPh.isRegistrationOpen(phases, /* @__PURE__ */ new Date())) {
+        alert("Registration is not open for this competition. Check the phase timeline for open dates.");
+        return;
+      }
       if (entryFee > 0) {
         const { data, error: error2 } = await callEdgeFunction("create-event-checkout", {
           event_id: eventId2,
@@ -7493,6 +10131,14 @@
   }
   async function evtSubmitEntry(eventId2) {
     try {
+      const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+      const config = event?.competition_config || {};
+      const compPh = window.EventsCompetitionPhases || {};
+      const { data: phases } = await supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true });
+      if (compPh.isSubmissionOpen && !compPh.isSubmissionOpen(phases, /* @__PURE__ */ new Date())) {
+        alert("The submission window is not open. Check the phase timeline for open dates.");
+        return;
+      }
       const title = document.getElementById("compEntryTitle")?.value?.trim();
       if (!title) {
         alert("Please enter a title for your entry.");
@@ -7503,6 +10149,24 @@
       const linkInput = document.getElementById("compEntryLink");
       const file = fileInput?.files?.[0];
       const link = linkInput?.value?.trim();
+      const entryTypeConfig = config.entry_type || "any";
+      if (entryTypeConfig === "file" && !file) {
+        alert("Please upload a GFX file for this competition.");
+        return;
+      }
+      if (entryTypeConfig === "link" && !link) {
+        alert("Please provide an external link for this competition.");
+        return;
+      }
+      if (entryTypeConfig === "any" && !file && !link) {
+        alert("Please upload a GFX file or provide an external link.");
+        return;
+      }
+      const submitBtn = document.getElementById("compSubmitBtn");
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = file ? "Uploading\u2026" : "Submitting\u2026";
+      }
       let entryType = "text";
       let fileUrl = null;
       let fileName = null;
@@ -7511,17 +10175,17 @@
       let externalUrl = null;
       if (file) {
         const isVideo = file.type.startsWith("video/");
-        const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+        const maxMb = Number(config.max_file_size_mb) > 0 ? Number(config.max_file_size_mb) : 10;
+        const maxSize = isVideo ? 50 * 1024 * 1024 : maxMb * 1024 * 1024;
         if (file.size > maxSize) {
-          alert(`File too large. Max ${isVideo ? "50MB" : "10MB"} for ${isVideo ? "video" : "images/PDFs"}.`);
+          alert(`File too large. Max ${isVideo ? "50MB" : maxMb + "MB"} for ${isVideo ? "video" : "images/PDFs/GFX"}.`);
           return;
         }
         const ext = file.name.split(".").pop();
         const path = `${globalThis.evtCurrentUser.id}/${eventId2}-${Date.now()}.${ext}`;
         const { error: upErr } = await supabaseClient.storage.from("competition-entries").upload(path, file, { contentType: file.type });
         if (upErr) throw upErr;
-        const { data: { publicUrl } } = supabaseClient.storage.from("competition-entries").getPublicUrl(path);
-        fileUrl = publicUrl;
+        fileUrl = path;
         fileName = file.name;
         fileSizeBytes = file.size;
         mimeType = file.type;
@@ -7547,11 +10211,32 @@
     } catch (err) {
       console.error("Submit entry error:", err);
       alert(`Failed to submit: ${err.message}`);
+    } finally {
+      const submitBtn = document.getElementById("compSubmitBtn");
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit Entry";
+      }
     }
   }
   async function evtCastVote(eventId2, entryId) {
     if (!confirm("Cast your vote? This cannot be changed.")) return;
     try {
+      const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+      const config = event?.competition_config || {};
+      const compPh = window.EventsCompetitionPhases || {};
+      const { data: phases } = await supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true });
+      if (compPh.isVotingOpen && !compPh.isVotingOpen(phases, /* @__PURE__ */ new Date())) {
+        alert("The voting window is not open. Check the phase timeline for open dates.");
+        return;
+      }
+      const { data: myEntry } = await supabaseClient.from("competition_entries").select("id").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
+      const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps || {})[eventId2];
+      const hasRsvp = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+      if (compPh.isVoterEligible && !compPh.isVoterEligible(config, { hasRsvp, hasCompEntry: !!myEntry })) {
+        alert(compPh.voterEligibilityMessage ? compPh.voterEligibilityMessage(config) : "You are not eligible to vote in this competition.");
+        return;
+      }
       const { error } = await supabaseClient.from("competition_votes").insert({
         event_id: eventId2,
         voter_id: globalThis.evtCurrentUser.id,
@@ -7626,6 +10311,20 @@
   async function evtAdvancePhase(eventId2, currentPhaseNum) {
     if (!confirm(`Complete Phase ${currentPhaseNum} and advance to next?`)) return;
     try {
+      if (currentPhaseNum === 2) {
+        const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
+        const minEntries = event?.competition_config?.min_entries;
+        if (minEntries) {
+          const { count } = await supabaseClient.from("competition_entries").select("id", { count: "exact", head: true }).eq("event_id", eventId2).eq("moderated", false);
+          const liveCount = count || 0;
+          if (liveCount < minEntries) {
+            const proceed = confirm(
+              `Only ${liveCount} live entr${liveCount === 1 ? "y" : "ies"} (minimum ${minEntries}). Advance anyway? You can extend Phase 2 instead if you need more time.`
+            );
+            if (!proceed) return;
+          }
+        }
+      }
       const { error: e1 } = await supabaseClient.from("competition_phases").update({ status: "completed" }).eq("event_id", eventId2).eq("phase_num", currentPhaseNum);
       if (e1) throw e1;
       const nextNum = currentPhaseNum + 1;
@@ -7670,9 +10369,25 @@
       const totalPool = event?.total_prize_pool_cents || 0;
       const housePct = config.house_pct || 0;
       const netPool = Math.round(totalPool * (1 - housePct / 100));
+      const compPh = window.EventsCompetitionPhases || {};
+      const { data: phases } = await supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true });
+      if (compPh.isVotingClosed && !compPh.isVotingClosed(phases, /* @__PURE__ */ new Date())) {
+        alert("Voting must be closed before finalizing results. Wait until the voting window ends or complete Phase 3.");
+        return;
+      }
+      const { count: existingWinnerCount, error: winnersCheckErr } = await supabaseClient.from("competition_winners").select("id", { count: "exact", head: true }).eq("event_id", eventId2);
+      if (winnersCheckErr) throw winnersCheckErr;
+      if ((existingWinnerCount || 0) > 0) {
+        alert("Winners have already been finalized for this competition.");
+        return;
+      }
       const { data: entries } = await supabaseClient.from("competition_entries").select("id, user_id, title, vote_count").eq("event_id", eventId2).eq("moderated", false).order("vote_count", { ascending: false });
       if (!entries || entries.length === 0) {
         alert("No entries to finalize.");
+        return;
+      }
+      const totalVotes = entries.reduce((sum, e) => sum + (e.vote_count || 0), 0);
+      if (totalVotes === 0 && !confirm("No votes were cast. Finalize anyway with zero-vote results?")) {
         return;
       }
       const winners = [];
@@ -8115,17 +10830,97 @@
     if (digits.length < 4) return "your phone";
     return `***-***-${digits.slice(-4)}`;
   }
-  async function evtConfirmMemberSmsOptIn() {
-    if (!globalThis.evtCurrentUser?.id) return false;
-    const { data: profile } = await supabaseClient.from("profiles").select("phone").eq("id", globalThis.evtCurrentUser.id).maybeSingle();
-    const phone = (profile?.phone || "").trim();
-    if (!phone) {
-      alert("Add a mobile phone in Settings to receive event SMS updates.");
+  function evtValidateMemberNoRefund(event, seatRole, hasRequiredDisclaimers) {
+    const root2 = document.getElementById("eventsDetailView") || document;
+    const noRefund = root2.querySelector("#evtMemberNoRefundCheck");
+    if (!noRefund) return true;
+    const label = noRefund.closest("label");
+    if (label && label.classList.contains("hidden")) return true;
+    const seatPrice = evtSeatPriceCents(event, seatRole);
+    if (event.pricing_mode === "paid" && seatPrice > 0 && !hasRequiredDisclaimers && !noRefund.checked) {
+      alert("Please accept the no-refund policy to continue.");
       return false;
     }
+    return true;
+  }
+  async function evtEnsureMemberPhoneForRsvp() {
+    if (!globalThis.evtCurrentUser?.id) return null;
+    const { data: profile } = await supabaseClient.from("profiles").select("phone").eq("id", globalThis.evtCurrentUser.id).maybeSingle();
+    const existing = (profile?.phone || "").trim();
+    if (existing) return existing;
+    const inputEl = document.getElementById("evtMemberPhoneInput");
+    const raw = (inputEl?.value || "").trim();
+    const validated = window.EventsHelpers && typeof window.EventsHelpers.validatePhone === "function" ? window.EventsHelpers.validatePhone(raw) : raw ? { value: raw } : { error: "Phone number is required." };
+    if (validated.error) {
+      alert(validated.error);
+      return null;
+    }
+    const { error } = await supabaseClient.from("profiles").update({ phone: validated.value }).eq("id", globalThis.evtCurrentUser.id);
+    if (error) {
+      alert(error.message || "Could not save phone number.");
+      return null;
+    }
+    return validated.value;
+  }
+  async function evtConfirmMemberSmsOptIn() {
+    if (!globalThis.evtCurrentUser?.id) return false;
+    const phone = await evtEnsureMemberPhoneForRsvp();
+    if (!phone) return false;
     return confirm(
       `Text you event updates at ${evtMaskPhoneLast4(phone)}? Message/data rates may apply. Reply STOP to opt out.`
     );
+  }
+  function evtReadSeatRoleFromDetail() {
+    const root2 = document.getElementById("eventsDetailView") || document;
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.readPayerRoleFromRoot === "function") {
+      return window.EventsPartySeats.readPayerRoleFromRoot(root2);
+    }
+    if (window.EventsSeatPicker && typeof window.EventsSeatPicker.readRoleFromRoot === "function") {
+      return window.EventsSeatPicker.readRoleFromRoot(root2);
+    }
+    return window.EventsHelpers && window.EventsHelpers.normalizeSeatRole ? window.EventsHelpers.normalizeSeatRole("adult") : "adult";
+  }
+  function evtReadPartySeatsForSubmit(event) {
+    const root2 = document.getElementById("eventsDetailView") || document;
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.readSeatsFromRoot === "function") {
+      return window.EventsPartySeats.readSeatsFromRoot(root2, event);
+    }
+    const seatRole = evtReadSeatRoleFromDetail();
+    const catalog = window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === "function" ? window.EventsIncludedItems.normalizeIncludedItems(event.included_items) : [];
+    let seat_options = {};
+    if (window.EventsIncludedItems && catalog.length) {
+      seat_options = window.EventsIncludedItems.readAnswersFromRoot(root2, catalog, seatRole);
+    }
+    const displayName2 = typeof globalThis.evtMemberDisplayName === "function" ? globalThis.evtMemberDisplayName() : "Member";
+    return [{
+      role: seatRole,
+      display_name: displayName2,
+      is_payer: true,
+      ...Object.keys(seat_options).length ? { options: seat_options } : {}
+    }];
+  }
+  function evtValidatePartySeatsForSubmit(event, seats) {
+    const catalog = window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === "function" ? window.EventsIncludedItems.normalizeIncludedItems(event.included_items) : [];
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.validatePartySeats === "function") {
+      return window.EventsPartySeats.validatePartySeats(event, seats, catalog, {
+        allowIncompleteGuests: true
+      });
+    }
+    return null;
+  }
+  function evtPartyTotalForSubmit(event) {
+    const root2 = document.getElementById("eventsDetailView") || document;
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.partyBaseTotalCents === "function") {
+      const seats = window.EventsPartySeats.readSeatsFromRoot(root2, event);
+      return window.EventsPartySeats.partyBaseTotalCents(event, seats);
+    }
+    return evtSeatPriceCents(event, evtReadSeatRoleFromDetail());
+  }
+  function evtSeatPriceCents(event, role) {
+    if (window.EventsHelpers && typeof window.EventsHelpers.seatPriceCents === "function") {
+      return window.EventsHelpers.seatPriceCents(event, role);
+    }
+    return Number(event?.rsvp_cost_cents || 0);
   }
   async function evtHandleRsvp(eventId2, status) {
     try {
@@ -8139,29 +10934,205 @@
         alert("RSVPs are closed for this event.");
         return;
       }
-      const isPaid = event.pricing_mode === "paid" && event.rsvp_cost_cents > 0;
+      const isPaidEvent = event.pricing_mode === "paid";
       const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps;
       const existing = rsvpMap[eventId2];
-      if (isPaid && status === "going") {
+      const catalog = window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === "function" ? window.EventsIncludedItems.normalizeIncludedItems(event.included_items) : [];
+      const seatRole = status === "going" ? evtReadSeatRoleFromDetail() : "adult";
+      const discCatalog = window.EventsDisclaimers && typeof window.EventsDisclaimers.effectiveDisclaimers === "function" ? window.EventsDisclaimers.effectiveDisclaimers(event) : window.EventsDisclaimers && typeof window.EventsDisclaimers.normalizeDisclaimers === "function" ? window.EventsDisclaimers.normalizeDisclaimers(event.disclaimers) : [];
+      const hasRequiredDisclaimers = window.EventsDisclaimers && typeof window.EventsDisclaimers.hasRequiredDisclaimers === "function" ? window.EventsDisclaimers.hasRequiredDisclaimers(discCatalog) : discCatalog.some((d) => d.required);
+      const needsAmenityVote = window.EventsAmenityVoting && typeof window.EventsAmenityVoting.needsVote === "function" ? window.EventsAmenityVoting.needsVote(event) : false;
+      const hasIncludedCatalog = window.EventsIncludedItems && typeof window.EventsIncludedItems.hasCatalog === "function" && window.EventsIncludedItems.hasCatalog(event.included_items);
+      const root2 = document.getElementById("eventsDetailView") || document;
+      let seats = [];
+      if (status === "going") {
+        seats = evtReadPartySeatsForSubmit(event);
+        const seatsErr = evtValidatePartySeatsForSubmit(event, seats);
+        if (seatsErr) {
+          alert(seatsErr);
+          return;
+        }
+      }
+      let disclaimer_acks = [];
+      if (status === "going" && hasRequiredDisclaimers) {
+        disclaimer_acks = window.EventsDisclaimers.readAckIdsFromRoot(root2, discCatalog);
+        const ackErr = window.EventsDisclaimers.validateAcks(discCatalog, disclaimer_acks);
+        if (ackErr) {
+          if (typeof window.EventsDisclaimers.scrollToAckField === "function") {
+            window.EventsDisclaimers.scrollToAckField(root2);
+          }
+          alert(ackErr);
+          return;
+        }
+      }
+      let amenity_vote_option_id = null;
+      if (status === "going" && needsAmenityVote) {
+        const amenityCfg = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
+        amenity_vote_option_id = window.EventsAmenityVoting.readVoteFromRoot(root2) || "";
+        const voteErr = window.EventsAmenityVoting.validateVote(amenityCfg, amenity_vote_option_id);
+        if (voteErr) {
+          if (typeof window.EventsAmenityVoting.scrollToVoteField === "function") {
+            window.EventsAmenityVoting.scrollToVoteField(root2);
+          }
+          alert(voteErr);
+          return;
+        }
+      }
+      if (status === "going" && window.EventsInvestAck) {
+        const investErr = window.EventsInvestAck.validateAck(event, root2);
+        if (investErr) {
+          alert(investErr);
+          return;
+        }
+      }
+      const investAcknowledged = window.EventsInvestAck && window.EventsInvestAck.isRequired(event) && window.EventsInvestAck.readAcknowledgedFromRoot(root2);
+      const showPartySeats = !!(window.EventsPartySeats && typeof window.EventsPartySeats.shouldShow === "function" && window.EventsPartySeats.shouldShow(event, { isHost: false }));
+      const needsPartyEdge = status === "going" && (hasIncludedCatalog || hasRequiredDisclaimers || showPartySeats || needsAmenityVote);
+      const partyTotal = status === "going" ? evtPartyTotalForSubmit(event) : 0;
+      const needsPaidCheckout = isPaidEvent && status === "going" && partyTotal > 0;
+      const needsPaymentChoice = window.EventsPaymentChoice && typeof window.EventsPaymentChoice.needsChoice === "function" && window.EventsPaymentChoice.needsChoice(event, partyTotal);
+      let paymentChoice = null;
+      if (needsPaidCheckout && needsPaymentChoice) {
+        paymentChoice = window.EventsPaymentChoice.readFromRoot(root2);
+        const payErr = window.EventsPaymentChoice.validateChoice(event, paymentChoice, partyTotal);
+        if (payErr) {
+          if (typeof window.EventsPaymentChoice.scrollToField === "function") {
+            window.EventsPaymentChoice.scrollToField(root2);
+          }
+          alert(payErr);
+          return;
+        }
+      }
+      let memberPhonePayload = {};
+      if (status === "going") {
+        const phone = await evtEnsureMemberPhoneForRsvp();
+        if (!phone) return;
+        memberPhonePayload = { phone };
+      }
+      if (needsPaidCheckout) {
         if (existing?.paid) {
           alert("You have already paid for this RSVP.");
           return;
         }
-        const confirmPay = confirm(
-          `RSVP costs ${formatCurrency(event.rsvp_cost_cents)}.
+        if (!evtValidateMemberNoRefund(event, seatRole, hasRequiredDisclaimers)) return;
+        const confirmMsg = needsPaymentChoice && paymentChoice && window.EventsPaymentChoice.confirmMessage ? window.EventsPaymentChoice.confirmMessage(event, paymentChoice, partyTotal) : hasRequiredDisclaimers ? `RSVP costs ${formatCurrency(partyTotal)}.
 
-By completing your RSVP, you agree that your payment is non-refundable unless this event is cancelled or rescheduled by LLC staff.
-
-Proceed to checkout?`
-        );
-        if (!confirmPay) return;
+Proceed to checkout?` : null;
+        if (confirmMsg && !confirm(confirmMsg)) return;
         const { url } = await callEdgeFunction("create-event-checkout", {
           event_id: eventId2,
-          type: "rsvp"
+          type: "rsvp",
+          seats,
+          seat_role: seatRole,
+          ...memberPhonePayload,
+          ...hasRequiredDisclaimers ? { disclaimer_acks } : {},
+          ...needsAmenityVote ? { amenity_vote_option_id } : {},
+          ...needsPaymentChoice && paymentChoice ? {
+            plan_kind: paymentChoice.plan_kind,
+            method: paymentChoice.method
+          } : {},
+          ...investAcknowledged ? { invest_eligible_acknowledged: true } : {}
         });
         if (url) {
           window.location.href = url;
         }
+        return;
+      }
+      if (status === "going" && needsPartyEdge && !needsPaidCheckout) {
+        if (existing?.paid) {
+          alert("Paid RSVPs cannot be changed. Contact an admin for assistance.");
+          return;
+        }
+        if (existing?.status === "going") {
+          const result2 = await callEdgeFunction("rsvp-member-party", {
+            event_id: eventId2,
+            seats,
+            seat_role: seatRole,
+            ...memberPhonePayload,
+            ...hasRequiredDisclaimers ? { disclaimer_acks } : {},
+            ...needsAmenityVote ? { amenity_vote_option_id } : {}
+          });
+          if (result2?.rsvp) {
+            globalThis.evtAllRsvps[eventId2] = result2.rsvp;
+            window.evtAllRsvps = window.evtAllRsvps || {};
+            window.evtAllRsvps[eventId2] = result2.rsvp;
+          }
+          evtRenderEvents();
+          await globalThis.evtOpenDetail(eventId2);
+          return;
+        }
+        const result = await callEdgeFunction("rsvp-member-party", {
+          event_id: eventId2,
+          seats,
+          seat_role: seatRole,
+          ...memberPhonePayload,
+          ...hasRequiredDisclaimers ? { disclaimer_acks } : {},
+          ...needsAmenityVote ? { amenity_vote_option_id } : {}
+        });
+        if (result?.rsvp) {
+          globalThis.evtAllRsvps[eventId2] = result.rsvp;
+          window.evtAllRsvps = window.evtAllRsvps || {};
+          window.evtAllRsvps[eventId2] = result.rsvp;
+        }
+        let wantSmsOptIn2 = false;
+        const smsCheck = document.getElementById("evtSmsOptInCheck");
+        if (smsCheck?.checked) {
+          wantSmsOptIn2 = true;
+        } else if (!smsCheck) {
+          wantSmsOptIn2 = await evtConfirmMemberSmsOptIn();
+        }
+        evtRenderEvents();
+        await globalThis.evtOpenDetail(eventId2);
+        if (wantSmsOptIn2) {
+          await evtHandleEventSmsOptIn(eventId2, true);
+        }
+        if (window.evtCtaRaffleIntent === eventId2) {
+          window.evtCtaRaffleIntent = null;
+          evtOpenCtaPanel("raffle", eventId2);
+        }
+        return;
+      }
+      if (status === "going" && hasRequiredDisclaimers) {
+        if (existing?.paid) {
+          alert("Paid RSVPs cannot be changed. Contact an admin for assistance.");
+          return;
+        }
+        const result = await callEdgeFunction("rsvp-member-party", {
+          event_id: eventId2,
+          seats,
+          seat_role: seatRole,
+          ...memberPhonePayload,
+          disclaimer_acks,
+          ...needsAmenityVote ? { amenity_vote_option_id } : {}
+        });
+        if (result?.rsvp) {
+          globalThis.evtAllRsvps[eventId2] = result.rsvp;
+          window.evtAllRsvps = window.evtAllRsvps || {};
+          window.evtAllRsvps[eventId2] = result.rsvp;
+        }
+        evtRenderEvents();
+        await globalThis.evtOpenDetail(eventId2);
+        return;
+      }
+      if (status === "going" && needsAmenityVote) {
+        if (existing?.paid) {
+          alert("Paid RSVPs cannot be changed. Contact an admin for assistance.");
+          return;
+        }
+        const result = await callEdgeFunction("rsvp-member-party", {
+          event_id: eventId2,
+          seats,
+          seat_role: seatRole,
+          ...memberPhonePayload,
+          amenity_vote_option_id
+        });
+        if (result?.rsvp) {
+          globalThis.evtAllRsvps[eventId2] = result.rsvp;
+          window.evtAllRsvps = window.evtAllRsvps || {};
+          window.evtAllRsvps[eventId2] = result.rsvp;
+        }
+        evtRenderEvents();
+        await globalThis.evtOpenDetail(eventId2);
         return;
       }
       if (existing) {
@@ -8348,21 +11319,90 @@ Raffle entry is non-refundable. Proceed to checkout?`
     try {
       const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
       if (!event) return;
-      const confirmPay = confirm(
-        `A spot has opened up!
+      const root2 = document.getElementById("eventsDetailView") || document;
+      const discCatalog = window.EventsDisclaimers && typeof window.EventsDisclaimers.effectiveDisclaimers === "function" ? window.EventsDisclaimers.effectiveDisclaimers(event) : [];
+      const hasRequiredDisclaimers = window.EventsDisclaimers && typeof window.EventsDisclaimers.hasRequiredDisclaimers === "function" ? window.EventsDisclaimers.hasRequiredDisclaimers(discCatalog) : discCatalog.some((d) => d.required);
+      const needsAmenityVote = window.EventsAmenityVoting && typeof window.EventsAmenityVoting.needsVote === "function" ? window.EventsAmenityVoting.needsVote(event) : false;
+      const seatRole = evtReadSeatRoleFromDetail();
+      const seats = evtReadPartySeatsForSubmit(event);
+      const seatsErr = evtValidatePartySeatsForSubmit(event, seats);
+      if (seatsErr) {
+        alert(seatsErr);
+        return;
+      }
+      let disclaimer_acks = [];
+      if (hasRequiredDisclaimers) {
+        disclaimer_acks = window.EventsDisclaimers.readAckIdsFromRoot(root2, discCatalog);
+        const ackErr = window.EventsDisclaimers.validateAcks(discCatalog, disclaimer_acks);
+        if (ackErr) {
+          if (typeof window.EventsDisclaimers.scrollToAckField === "function") {
+            window.EventsDisclaimers.scrollToAckField(root2);
+          }
+          alert(ackErr);
+          return;
+        }
+      }
+      let amenity_vote_option_id = null;
+      if (needsAmenityVote) {
+        const amenityCfg = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
+        amenity_vote_option_id = window.EventsAmenityVoting.readVoteFromRoot(root2) || "";
+        const voteErr = window.EventsAmenityVoting.validateVote(amenityCfg, amenity_vote_option_id);
+        if (voteErr) {
+          if (typeof window.EventsAmenityVoting.scrollToVoteField === "function") {
+            window.EventsAmenityVoting.scrollToVoteField(root2);
+          }
+          alert(voteErr);
+          return;
+        }
+      }
+      const partyTotal = evtPartyTotalForSubmit(event);
+      const needsPaymentChoice = window.EventsPaymentChoice && typeof window.EventsPaymentChoice.needsChoice === "function" && window.EventsPaymentChoice.needsChoice(event, partyTotal);
+      let paymentChoice = null;
+      if (needsPaymentChoice) {
+        paymentChoice = window.EventsPaymentChoice.readFromRoot(root2);
+        const payErr = window.EventsPaymentChoice.validateChoice(event, paymentChoice, partyTotal);
+        if (payErr) {
+          if (typeof window.EventsPaymentChoice.scrollToField === "function") {
+            window.EventsPaymentChoice.scrollToField(root2);
+          }
+          alert(payErr);
+          return;
+        }
+      }
+      const waitlistConfirm = needsPaymentChoice && paymentChoice && window.EventsPaymentChoice.confirmMessage ? `A spot has opened up!
 
-RSVP costs ${formatCurrency(event.rsvp_cost_cents)}.
+${window.EventsPaymentChoice.confirmMessage(event, paymentChoice, partyTotal)}` : hasRequiredDisclaimers ? `A spot has opened up!
 
-By completing your RSVP, you agree that your payment is non-refundable unless this event is cancelled or rescheduled by LLC staff.
+RSVP costs ${formatCurrency(partyTotal)}.
 
-Proceed to checkout?`
-      );
-      if (!confirmPay) return;
+Proceed to checkout?` : null;
+      if (waitlistConfirm && !confirm(waitlistConfirm)) return;
+      if (!evtValidateMemberNoRefund(event, seatRole, hasRequiredDisclaimers)) return;
+      if (window.EventsInvestAck) {
+        const investErr = window.EventsInvestAck.validateAck(event, root2);
+        if (investErr) {
+          alert(investErr);
+          return;
+        }
+      }
+      const investAcknowledged = window.EventsInvestAck && window.EventsInvestAck.isRequired(event) && window.EventsInvestAck.readAcknowledgedFromRoot(root2);
+      const phone = await evtEnsureMemberPhoneForRsvp();
+      if (!phone) return;
       await supabaseClient.from("event_waitlist").update({ status: "claimed" }).eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id);
       const { url } = await callEdgeFunction("create-event-checkout", {
         event_id: eventId2,
         type: "rsvp",
-        from_waitlist: true
+        from_waitlist: true,
+        seats,
+        seat_role: seatRole,
+        phone,
+        ...hasRequiredDisclaimers ? { disclaimer_acks } : {},
+        ...needsAmenityVote ? { amenity_vote_option_id } : {},
+        ...needsPaymentChoice && paymentChoice ? {
+          plan_kind: paymentChoice.plan_kind,
+          method: paymentChoice.method
+        } : {},
+        ...investAcknowledged ? { invest_eligible_acknowledged: true } : {}
       });
       if (url) {
         window.location.href = url;
@@ -8376,34 +11416,21 @@ Proceed to checkout?`
     const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
     if (!event) return;
     const isLlc = event.event_type === "llc";
-    let nonRefundableCents = 0;
     let cancellationNote = "";
     if (isLlc) {
       cancellationNote = prompt("Cancellation reason (visible to attendees):");
       if (cancellationNote === null) return;
-      const nonRefundableStr = prompt(
-        "Enter the total non-refundable expenses already incurred (in dollars).\nThis amount will be deducted from each refund proportionally.\nEnter 0 if fully refundable.",
-        "0"
-      );
-      if (nonRefundableStr === null) return;
-      nonRefundableCents = Math.round(parseFloat(nonRefundableStr || "0") * 100);
-      if (isNaN(nonRefundableCents) || nonRefundableCents < 0) nonRefundableCents = 0;
-      const msg = nonRefundableCents > 0 ? `Cancel this event?
-
-Non-refundable expenses: ${formatCurrency(nonRefundableCents)}
-This will be deducted proportionally from each attendee's refund.` : "Cancel this event? All paid attendees will receive a full refund.";
-      if (!confirm(msg)) return;
-    } else {
-      if (!confirm("Are you sure you want to cancel this event?")) return;
     }
+    if (!confirm(
+      "Cancel this event?\n\nPaid attendees will NOT be auto-refunded. Rare exceptions are manager-approved out-of-band via Stripe Dashboard."
+    )) return;
     try {
       const result = await callEdgeFunction("process-event-cancellation", {
         event_id: eventId2,
         reason: "event_cancelled",
-        cancellation_note: cancellationNote || "Event cancelled by host",
-        non_refundable_expenses_cents: nonRefundableCents
+        cancellation_note: cancellationNote || "Event cancelled by host"
       });
-      alert(result.message || "Event cancelled successfully.");
+      alert(result.message || "Event cancelled. Payments were not refunded in-app.");
       await globalThis.evtLoadEvents();
       globalThis.evtNavigateToList();
     } catch (err) {
@@ -8427,20 +11454,19 @@ This will be deducted proportionally from each attendee's refund.` : "Cancel thi
     }
     const confirmMsg = `Reschedule this event to ${parsed.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })} at ${parsed.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}?
 
-All attendees will receive a 72-hour grace window to request a full refund if the new date doesn't work for them.`;
+Payments remain non-refundable in-app.`;
     if (!confirm(confirmMsg)) return;
     try {
       const now = /* @__PURE__ */ new Date();
-      const graceEnd = new Date(now.getTime() + 72 * 60 * 60 * 1e3);
       const { error } = await supabaseClient.from("events").update({
         original_start_date: event.original_start_date || event.start_date,
         start_date: parsed.toISOString(),
         rescheduled_at: now.toISOString(),
-        grace_window_end: graceEnd.toISOString()
+        grace_window_end: null
       }).eq("id", eventId2);
       if (error) throw error;
-      await supabaseClient.from("event_rsvps").update({ grace_refund_eligible: true }).eq("event_id", eventId2).eq("paid", true);
-      alert("Event rescheduled! Attendees have been notified and have 72 hours to request a refund.");
+      await supabaseClient.from("event_rsvps").update({ grace_refund_eligible: false }).eq("event_id", eventId2).eq("grace_refund_eligible", true);
+      alert("Event rescheduled. Payments are not refunded in-app.");
       await globalThis.evtLoadEvents();
       await globalThis.evtOpenDetail(eventId2);
     } catch (err) {
@@ -8448,22 +11474,8 @@ All attendees will receive a 72-hour grace window to request a full refund if th
       alert("Failed to reschedule event.");
     }
   }
-  async function evtRequestGraceRefund(eventId2) {
-    if (!confirm("Request a full refund because the rescheduled date doesn't work for you?\n\nThis action cannot be undone.")) return;
-    try {
-      const result = await callEdgeFunction("process-event-cancellation", {
-        event_id: eventId2,
-        reason: "reschedule_grace",
-        user_id: globalThis.evtCurrentUser.id,
-        single_user_refund: true
-      });
-      alert(result.message || "Refund processed. You will receive it within 5-10 business days.");
-      await globalThis.evtLoadEvents();
-      await globalThis.evtOpenDetail(eventId2);
-    } catch (err) {
-      console.error("Grace refund error:", err);
-      alert("Failed to process refund: " + (err.message || "Unknown error"));
-    }
+  async function evtRequestGraceRefund(_eventId) {
+    alert("In-app refunds are disabled. Contact a host \u2014 rare exceptions are processed out-of-band in Stripe Dashboard.");
   }
   async function evtDeleteEvent(eventId2) {
     const event = globalThis.evtAllEvents.find((e) => e.id === eventId2);
@@ -8755,490 +11767,6 @@ Type the event title to confirm:`);
   globalThis.evtGeocodeNominatim = evtGeocodeNominatim;
   globalThis.evtGeocodeAddress = evtGeocodeAddress;
 
-  // js/portal/events/create/legacy-costs.js
-  var COST_CATEGORIES = [
-    { value: "lodging", label: "\u{1F3E0} Lodging" },
-    { value: "transportation", label: "\u{1F697} Transportation" },
-    { value: "food", label: "\u{1F355} Food" },
-    { value: "gear", label: "\u{1F3BF} Gear / Rentals" },
-    { value: "entertainment", label: "\u{1F3AD} Entertainment" },
-    { value: "other", label: "\u{1F4E6} Other" }
-  ];
-  globalThis.evtCostItems = window.evtCostItems || [];
-  function evtToggleLlcFields() {
-    const type = document.getElementById("eventType").value;
-    const isLlc = type === "llc";
-    const isComp = type === "competition";
-    const llcSection = document.getElementById("llcFieldsSection");
-    const compSection = document.getElementById("compFieldsSection");
-    if (llcSection) llcSection.classList.toggle("hidden", !isLlc);
-    if (compSection) compSection.classList.toggle("hidden", !isComp);
-    if (isLlc) {
-      const pm = document.getElementById("pricingMode");
-      pm.value = "paid";
-      pm.dispatchEvent(new Event("change"));
-      const rsvpCostGroup = document.getElementById("rsvpCostGroup");
-      if (rsvpCostGroup) rsvpCostGroup.classList.add("hidden");
-    }
-    if (isComp) {
-      document.getElementById("memberOnly").checked = true;
-    }
-  }
-  function evtAddCostItem() {
-    const id = crypto.randomUUID();
-    window.evtCostItems.push({ id, name: "", category: "other", total_cost_cents: 0, included_in_buyin: true, avg_per_person_cents: 0, notes: "" });
-    evtRenderCostItems();
-  }
-  function evtRemoveCostItem(itemId) {
-    globalThis.evtCostItems = window.evtCostItems.filter((i) => i.id !== itemId);
-    evtRenderCostItems();
-    evtRecalcCostSummary();
-  }
-  function evtRenderCostItems() {
-    const container = document.getElementById("costItemsList");
-    if (!container) return;
-    const items = window.evtCostItems;
-    container.innerHTML = items.map((item, idx) => `
-    <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-2" data-cost-id="${item.id}">
-        <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-gray-400">#${idx + 1}</span>
-            <button type="button" ${evtDataAction("evtRemoveCostItem", item.id)} class="text-red-400 hover:text-red-600 transition p-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-            <input type="text" placeholder="Item name" value="${evtEscapeHtml(item.name)}" onchange="evtUpdateCostItem('${item.id}','name',this.value)"
-                   class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-            <select onchange="evtUpdateCostItem('${item.id}','category',this.value)"
-                    class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-                ${COST_CATEGORIES.map((c) => `<option value="${c.value}" ${item.category === c.value ? "selected" : ""}>${c.label}</option>`).join("")}
-            </select>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-            <div>
-                <label class="text-xs text-gray-500">Total Cost ($)</label>
-                <input type="number" min="0" step="1" value="${item.total_cost_cents ? item.total_cost_cents / 100 : ""}" placeholder="0"
-                       onchange="evtUpdateCostItem('${item.id}','total_cost_cents',Math.round(this.value*100))"
-                       class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="text-xs text-gray-500">Type</label>
-                <select onchange="evtUpdateCostItem('${item.id}','included_in_buyin',this.value==='true')"
-                        class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-                    <option value="true" ${item.included_in_buyin ? "selected" : ""}>Included in Buy-In</option>
-                    <option value="false" ${!item.included_in_buyin ? "selected" : ""}>Out of Pocket</option>
-                </select>
-            </div>
-        </div>
-        ${!item.included_in_buyin ? `
-        <div>
-            <label class="text-xs text-gray-500">Avg Per Person ($)</label>
-            <input type="number" min="0" step="1" value="${item.avg_per_person_cents ? item.avg_per_person_cents / 100 : ""}" placeholder="0"
-                   onchange="evtUpdateCostItem('${item.id}','avg_per_person_cents',Math.round(this.value*100))"
-                   class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-        </div>` : ""}
-        <input type="text" placeholder="Notes / source link (optional)" value="${evtEscapeHtml(item.notes || "")}" onchange="evtUpdateCostItem('${item.id}','notes',this.value)"
-               class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-    </div>`).join("");
-  }
-  function evtUpdateCostItem(itemId, field, value) {
-    const item = window.evtCostItems.find((i) => i.id === itemId);
-    if (item) {
-      item[field] = value;
-      if (field === "included_in_buyin") evtRenderCostItems();
-      evtRecalcCostSummary();
-    }
-  }
-  function evtRecalcCostSummary() {
-    const summary = document.getElementById("costSummary");
-    if (!summary) return;
-    const minPart = parseInt(document.getElementById("eventMinParticipants")?.value) || 0;
-    const llcCutPct = parseFloat(document.getElementById("eventLlcCut").value) || 0;
-    const items = window.evtCostItems;
-    const totalIncluded = items.filter((i) => i.included_in_buyin).reduce((sum, i) => sum + (i.total_cost_cents || 0), 0);
-    const totalOop = items.filter((i) => !i.included_in_buyin).reduce((sum, i) => sum + (i.avg_per_person_cents || 0), 0);
-    if (items.length === 0) {
-      summary.classList.add("hidden");
-      return;
-    }
-    summary.classList.remove("hidden");
-    const baseBuyIn = minPart > 0 ? Math.ceil(totalIncluded / minPart) : 0;
-    const llcCutAmount = Math.round(baseBuyIn * llcCutPct / 100);
-    const finalBuyIn = baseBuyIn + llcCutAmount;
-    document.getElementById("costTotalIncluded").textContent = formatCurrency(totalIncluded);
-    document.getElementById("costMaxPart").textContent = minPart > 0 ? minPart : "\u2014";
-    document.getElementById("costBuyIn").textContent = minPart > 0 ? `${formatCurrency(finalBuyIn)}/person` : "Set min participants";
-    document.getElementById("costOop").textContent = `~${formatCurrency(totalOop)}/person`;
-    document.getElementById("costGrandTotal").textContent = minPart > 0 ? `~${formatCurrency(finalBuyIn + totalOop)}` : "\u2014";
-    const llcRow = document.getElementById("costLlcCutRow");
-    if (llcCutPct > 0 && minPart > 0) {
-      llcRow.classList.remove("hidden");
-      document.getElementById("costLlcPct").textContent = llcCutPct;
-      document.getElementById("costLlcAmount").textContent = `+${formatCurrency(llcCutAmount)}`;
-    } else {
-      llcRow.classList.add("hidden");
-    }
-    const overrideInput = document.getElementById("llcRsvpOverride");
-    if (minPart > 0 && overrideInput && !overrideInput.dataset.userEdited) {
-      overrideInput.value = Math.ceil(finalBuyIn / 100);
-      overrideInput.placeholder = `Suggested: $${Math.ceil(finalBuyIn / 100)}`;
-    }
-  }
-  publishGlobals({
-    evtToggleLlcFields,
-    evtAddCostItem,
-    evtRemoveCostItem,
-    evtRenderCostItems,
-    evtUpdateCostItem,
-    evtRecalcCostSummary
-  });
-
-  // js/portal/events/create/legacy-location.js
-  window._evtLocGeoCache = null;
-  var _evtLocDebounce = null;
-  function evtSetLocationIcon(state) {
-    const wrap = document.getElementById("locationIcon");
-    const spinner = document.getElementById("locIconSpinner");
-    const check = document.getElementById("locIconCheck");
-    const warn = document.getElementById("locIconWarn");
-    if (!wrap) return;
-    spinner.classList.add("hidden");
-    check.classList.add("hidden");
-    warn.classList.add("hidden");
-    if (state === "hide") {
-      wrap.classList.add("hidden");
-      return;
-    }
-    wrap.classList.remove("hidden");
-    if (state === "spin") spinner.classList.remove("hidden");
-    if (state === "check") check.classList.remove("hidden");
-    if (state === "warn") warn.classList.remove("hidden");
-  }
-  function evtSetLocationStatus(text, color) {
-    const el = document.getElementById("locationStatus");
-    if (!el) return;
-    if (!text) {
-      el.classList.add("hidden");
-      el.textContent = "";
-      return;
-    }
-    el.textContent = text;
-    el.className = `text-xs mt-1 ${color}`;
-    el.classList.remove("hidden");
-  }
-  async function evtValidateLocation() {
-    const input = document.getElementById("eventLocation");
-    const address = input ? input.value.trim() : "";
-    if (!address) {
-      window._evtLocGeoCache = null;
-      evtSetLocationIcon("hide");
-      evtSetLocationStatus("", "");
-      return;
-    }
-    if (window._evtLocGeoCache && window._evtLocGeoCache.address === address) return;
-    evtSetLocationIcon("spin");
-    evtSetLocationStatus("Validating address\u2026", "text-gray-400");
-    const result = await window.evtGeocodeAddress(address);
-    const current = input.value.trim();
-    if (current !== address) return;
-    window._evtLocGeoCache = { address, result };
-    if (result) {
-      evtSetLocationIcon("check");
-      evtSetLocationStatus(`\u2713 ${result.display}`, "text-green-600");
-    } else {
-      evtSetLocationIcon("warn");
-      evtSetLocationStatus("Address not found \u2014 event will have no map pin", "text-amber-600");
-    }
-  }
-  function evtInitLocationValidation() {
-    const input = document.getElementById("eventLocation");
-    if (!input) return;
-    input.addEventListener("input", () => {
-      clearTimeout(_evtLocDebounce);
-      _evtLocDebounce = setTimeout(evtValidateLocation, 800);
-    });
-    input.addEventListener("blur", () => {
-      clearTimeout(_evtLocDebounce);
-      evtValidateLocation();
-    });
-  }
-  publishGlobals({
-    evtSetLocationIcon,
-    evtSetLocationStatus,
-    evtValidateLocation,
-    evtInitLocationValidation
-  });
-
-  // js/portal/events/create/legacy-preview.js
-  function evtHandlePreview() {
-    const title = document.getElementById("eventTitle").value.trim() || "Untitled Event";
-    const desc = document.getElementById("eventDescription").value.trim() || "No description yet.";
-    const start = document.getElementById("eventStart").value;
-    const location2 = document.getElementById("eventLocation").value.trim();
-    const dateStr = start ? new Date(start).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }) : "TBD";
-    const timeStr = start ? new Date(start).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "TBD";
-    const bannerBg = globalThis.evtBannerFile ? `background-image:url('${URL.createObjectURL(globalThis.evtBannerFile)}');background-size:cover;background-position:center;` : `background:linear-gradient(135deg,#6366f1,#8b5cf6);`;
-    const gateTime = document.getElementById("gateTime").checked;
-    const gateLocation = document.getElementById("gateLocation").checked;
-    document.getElementById("eventsDetailView").innerHTML = `
-    <div class="relative" style="${bannerBg} min-height:280px;">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 pointer-events-none"></div>
-        <div class="absolute top-0 left-0" style="padding-top:max(1rem, env(safe-area-inset-top)); padding-left:1rem;">
-            <button ${evtDataAction("evtClosePreview")} class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 hover:bg-black/50 transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Back to Editor
-            </button>
-        </div>
-        <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
-            <div class="mb-2"><span class="type-tag bg-amber-100 text-amber-700">PREVIEW</span></div>
-            <h2 class="text-xl sm:text-2xl font-extrabold text-white drop-shadow-lg">${evtEscapeHtml(title)}</h2>
-        </div>
-    </div>
-    <div class="p-5 sm:p-6">
-        <div class="mt-4 space-y-2 text-gray-600">
-            <div class="flex items-center gap-2.5">
-                <svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                <span class="text-lg font-bold text-gray-900">${dateStr}</span>
-            </div>
-            ${!gateTime ? `<div class="flex items-center gap-2.5 ml-[30px]"><span class="text-base font-semibold text-gray-700">${timeStr}</span></div>` : '<div class="flex items-center gap-2 text-gray-400 italic text-sm"><svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span>Time revealed after RSVP</span></div>'}
-            ${location2 && !gateLocation ? `<div class="flex items-center gap-2.5 mt-1"><svg class="w-5 h-5 text-brand-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="text-base font-semibold text-gray-700">${evtEscapeHtml(location2)}</span></div>` : location2 && gateLocation ? '<div class="flex items-center gap-2 text-gray-400 italic text-sm"><svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span>Location revealed after RSVP</span></div>' : ""}
-        </div>
-        <div class="mt-5"><p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">${evtEscapeHtml(desc)}</p></div>
-        <div class="mt-6 p-4 bg-amber-50 rounded-xl text-center">
-            <p class="text-sm text-amber-700 font-semibold">This is a preview \u2014 the event is not published yet.</p>
-        </div>
-    </div>
-`;
-    globalThis.evtToggleModal("createModal", false);
-    document.getElementById("eventsListView")?.classList.add("hidden");
-    document.getElementById("eventsDetailView")?.classList.remove("hidden");
-  }
-  function evtClosePreview() {
-    document.getElementById("eventsDetailView").innerHTML = "";
-    document.getElementById("eventsDetailView")?.classList.add("hidden");
-    document.getElementById("eventsListView")?.classList.remove("hidden");
-    globalThis.evtToggleModal("createModal", true);
-  }
-  publishGlobals({ evtHandlePreview, evtClosePreview });
-
-  // js/portal/events/create/legacy-submit.js
-  async function evtHandleCreate(e) {
-    e.preventDefault();
-    const publishBtn = document.getElementById("publishEventBtn");
-    publishBtn.disabled = true;
-    publishBtn.textContent = "Publishing\u2026";
-    try {
-      const title = document.getElementById("eventTitle").value.trim();
-      const slug = evtGenerateSlug(title);
-      const checkinMode = document.querySelector('input[name="checkinMode"]:checked').value;
-      const eventType = document.getElementById("eventType").value;
-      const isLlc = eventType === "llc";
-      const checkinEnabled = document.getElementById("checkinEnabled").checked;
-      const rsvpEnabled = document.getElementById("rsvpEnabled").checked;
-      let bannerUrl = null;
-      if (globalThis.evtBannerFile) {
-        const ext = globalThis.evtBannerFile.name.split(".").pop();
-        const path = `${slug}-${Date.now()}.${ext}`;
-        const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, globalThis.evtBannerFile, { contentType: globalThis.evtBannerFile.type });
-        if (upErr) throw upErr;
-        const { data: { publicUrl } } = supabaseClient.storage.from("event-banners").getPublicUrl(path);
-        bannerUrl = publicUrl;
-      }
-      let embedImageUrl = null;
-      if (globalThis.evtEmbedImageFile) {
-        const ext = globalThis.evtEmbedImageFile.name.split(".").pop();
-        const path = `embeds/${slug}-${Date.now()}.${ext}`;
-        const { error: upErr } = await supabaseClient.storage.from("event-banners").upload(path, globalThis.evtEmbedImageFile, { contentType: globalThis.evtEmbedImageFile.type });
-        if (upErr) throw upErr;
-        const { data: { publicUrl } } = supabaseClient.storage.from("event-banners").getPublicUrl(path);
-        embedImageUrl = publicUrl;
-      }
-      const pricingMode = document.getElementById("pricingMode").value;
-      const raffleEnabled = document.getElementById("raffleEnabled").checked;
-      const raffleEntryCostDollars = parseInt(document.getElementById("raffleEntryCostDollars").value) || 0;
-      const maxPart = document.getElementById("eventMax").value ? parseInt(document.getElementById("eventMax").value) : null;
-      const minPart = document.getElementById("eventMinParticipants")?.value ? parseInt(document.getElementById("eventMinParticipants").value) : null;
-      let rsvpCostCents = 0;
-      let costBreakdownSummary = null;
-      const costItems = window.evtCostItems || [];
-      if (isLlc && costItems.length > 0 && (minPart || maxPart)) {
-        const llcCutPct = parseFloat(document.getElementById("eventLlcCut").value) || 0;
-        const totalIncluded = costItems.filter((i) => i.included_in_buyin).reduce((sum, i) => sum + (i.total_cost_cents || 0), 0);
-        const totalOop = costItems.filter((i) => !i.included_in_buyin).reduce((sum, i) => sum + (i.avg_per_person_cents || 0), 0);
-        const divisor = minPart || maxPart;
-        const baseBuyIn = Math.ceil(totalIncluded / divisor);
-        const llcCut = Math.round(baseBuyIn * llcCutPct / 100);
-        const suggestedCents = baseBuyIn + llcCut;
-        costBreakdownSummary = { total_included_cents: totalIncluded, total_oop_per_person_cents: totalOop, base_buyin_cents: baseBuyIn, llc_cut_cents: llcCut, final_buyin_cents: suggestedCents };
-        const overrideVal = parseInt(document.getElementById("llcRsvpOverride")?.value);
-        rsvpCostCents = overrideVal > 0 ? overrideVal * 100 : suggestedCents;
-      } else if (isLlc) {
-        const overrideVal = parseInt(document.getElementById("llcRsvpOverride")?.value) || 0;
-        rsvpCostCents = overrideVal * 100;
-      } else if (!isLlc) {
-        const rsvpCostDollars = parseInt(document.getElementById("rsvpCostDollars").value) || 0;
-        rsvpCostCents = pricingMode === "paid" ? rsvpCostDollars * 100 : 0;
-      }
-      const record = {
-        created_by: globalThis.evtCurrentUser.id,
-        event_type: eventType,
-        title,
-        slug,
-        category: document.getElementById("eventCategory").value,
-        description: document.getElementById("eventDescription").value.trim(),
-        gated_notes: document.getElementById("eventGatedNotes").value.trim() || null,
-        banner_url: bannerUrl,
-        embed_image_url: embedImageUrl,
-        start_date: new Date(document.getElementById("eventStart").value).toISOString(),
-        end_date: document.getElementById("eventEnd").value ? new Date(document.getElementById("eventEnd").value).toISOString() : null,
-        timezone: document.getElementById("eventTimezone").value,
-        location_nickname: document.getElementById("eventLocationNickname").value.trim() || null,
-        location_text: document.getElementById("eventLocation").value.trim() || null,
-        max_participants: maxPart,
-        rsvp_deadline: document.getElementById("eventRsvpDeadline").value ? new Date(document.getElementById("eventRsvpDeadline").value).toISOString() : null,
-        checkin_mode: checkinEnabled ? checkinMode : null,
-        checkin_enabled: checkinEnabled,
-        rsvp_enabled: rsvpEnabled,
-        member_only: document.getElementById("memberOnly").checked,
-        gate_time: document.getElementById("gateTime").checked,
-        gate_location: document.getElementById("gateLocation").checked,
-        gate_notes: document.getElementById("gateNotes").checked,
-        pricing_mode: pricingMode,
-        rsvp_cost_cents: rsvpCostCents,
-        raffle_entry_cost_cents: raffleEnabled && pricingMode !== "paid" ? raffleEntryCostDollars * 100 : 0,
-        raffle_enabled: raffleEnabled,
-        status: "open"
-      };
-      if (record.location_text) {
-        let geo = null;
-        if (window._evtLocGeoCache && window._evtLocGeoCache.address === record.location_text && window._evtLocGeoCache.result) {
-          geo = window._evtLocGeoCache.result;
-        } else {
-          publishBtn.textContent = "Validating address\u2026";
-          geo = await window.evtGeocodeAddress(record.location_text);
-        }
-        if (geo) {
-          record.location_lat = geo.lat;
-          record.location_lng = geo.lng;
-        } else {
-          if (!confirm("Could not verify that address on the map. The event will be created without a map pin.\n\nPublish anyway?")) {
-            publishBtn.disabled = false;
-            publishBtn.textContent = "Publish Event";
-            return;
-          }
-        }
-        publishBtn.textContent = "Publishing\u2026";
-      }
-      if (isLlc) {
-        record.min_participants = parseInt(document.getElementById("eventMinParticipants").value) || null;
-        record.llc_cut_pct = parseFloat(document.getElementById("eventLlcCut").value) || 0;
-        record.invest_eligible = document.getElementById("investEligible").checked;
-        record.show_cost_breakdown = document.getElementById("showCostBreakdown").checked;
-        record.cost_breakdown = costBreakdownSummary;
-        const transportEnabled = document.getElementById("transportationEnabled").checked;
-        record.transportation_enabled = transportEnabled;
-        record.transportation_mode = transportEnabled ? document.getElementById("eventTransportation").value : null;
-        record.transportation_estimate_cents = transportEnabled && document.getElementById("eventTransportation").value === "self_arranged" ? Math.round((parseFloat(document.getElementById("eventTransportEstimate").value) || 0) * 100) : null;
-        record.location_required = document.getElementById("locationRequired").checked;
-      }
-      const isComp = eventType === "competition";
-      if (isComp) {
-        const tier1 = parseInt(document.getElementById("compTier1Pct").value) || 100;
-        const tier2 = parseInt(document.getElementById("compTier2Pct").value) || 0;
-        const tier3 = parseInt(document.getElementById("compTier3Pct").value) || 0;
-        const entryFeeDollars = parseFloat(document.getElementById("compEntryFee").value) || 0;
-        record.competition_config = {
-          entry_type: document.getElementById("compEntryType").value,
-          entry_fee_cents: Math.round(entryFeeDollars * 100),
-          house_pct: parseFloat(document.getElementById("compHousePct").value) || 0,
-          min_entries: parseInt(document.getElementById("compMinEntries").value) || 2,
-          extension_days: parseInt(document.getElementById("compExtensionDays").value) || 3,
-          entries_visible_before_voting: document.getElementById("compEntriesVisible").checked,
-          voter_eligibility: document.getElementById("compVoterEligibility").value,
-          vote_tally_visible: document.getElementById("compVoteTallyVisible").checked
-        };
-        record.winner_tier_config = [
-          { place: 1, pct: tier1 },
-          ...tier2 > 0 ? [{ place: 2, pct: tier2 }] : [],
-          ...tier3 > 0 ? [{ place: 3, pct: tier3 }] : []
-        ];
-        record.member_only = true;
-        record.pricing_mode = entryFeeDollars > 0 ? "paid" : "free";
-        record.rsvp_cost_cents = 0;
-      }
-      if (checkinEnabled && checkinMode === "venue_scan") {
-        record.venue_qr_token = crypto.randomUUID();
-      }
-      if (raffleEnabled) {
-        record.raffle_type = document.getElementById("raffleType").value;
-        record.raffle_draw_trigger = document.getElementById("raffleDrawTrigger").value;
-        const prizesContainer = document.getElementById("rafflePrizesList");
-        const prizeInputs = prizesContainer ? prizesContainer.querySelectorAll('input[type="text"]') : document.querySelectorAll('input[name="rafflePrize"]');
-        const prizes = [];
-        prizeInputs.forEach((input, i) => {
-          const desc = input.value.trim();
-          if (desc) prizes.push({ place: i + 1, description: desc });
-        });
-        record.raffle_prizes = prizes.length > 0 ? prizes : null;
-      }
-      const { data, error } = await supabaseClient.from("events").insert(record).select().single();
-      if (error) throw error;
-      if (isLlc && costItems.length > 0) {
-        const costRows = costItems.map((item, idx) => ({
-          event_id: data.id,
-          name: item.name,
-          category: item.category,
-          total_cost_cents: item.total_cost_cents || 0,
-          included_in_buyin: item.included_in_buyin,
-          avg_per_person_cents: item.avg_per_person_cents || 0,
-          notes: item.notes || null,
-          sort_order: idx
-        }));
-        const { error: costErr } = await supabaseClient.from("event_cost_items").insert(costRows);
-        if (costErr) console.error("Cost items insert error:", costErr);
-      }
-      if (isComp) {
-        const eventStart = new Date(document.getElementById("eventStart").value);
-        const p1End = document.getElementById("compPhase1End").value ? new Date(document.getElementById("compPhase1End").value) : null;
-        const p2End = document.getElementById("compPhase2End").value ? new Date(document.getElementById("compPhase2End").value) : null;
-        const p3End = document.getElementById("compPhase3End").value ? new Date(document.getElementById("compPhase3End").value) : null;
-        const phases = [
-          { event_id: data.id, phase_num: 1, name: "Registration", description: "Sign up as a competitor and build the prize pool.", starts_at: eventStart.toISOString(), ends_at: p1End ? p1End.toISOString() : eventStart.toISOString(), status: "pending" },
-          { event_id: data.id, phase_num: 2, name: "Active Competition", description: "Submit your entry before the deadline.", starts_at: p1End ? p1End.toISOString() : eventStart.toISOString(), ends_at: p2End ? p2End.toISOString() : eventStart.toISOString(), status: "pending" },
-          { event_id: data.id, phase_num: 3, name: "Voting", description: "Vote for your favorite entry. One vote per person.", starts_at: p2End ? p2End.toISOString() : eventStart.toISOString(), ends_at: p3End ? p3End.toISOString() : eventStart.toISOString(), status: "pending" },
-          { event_id: data.id, phase_num: 4, name: "Results", description: "Winners announced and prizes distributed.", starts_at: p3End ? p3End.toISOString() : eventStart.toISOString(), ends_at: document.getElementById("eventEnd").value ? new Date(document.getElementById("eventEnd").value).toISOString() : p3End ? p3End.toISOString() : eventStart.toISOString(), status: "pending" }
-        ];
-        const { error: phaseErr } = await supabaseClient.from("competition_phases").insert(phases);
-        if (phaseErr) console.error("Competition phases insert error:", phaseErr);
-      }
-      document.getElementById("createEventForm").reset();
-      globalThis.evtBannerFile = null;
-      globalThis.evtEmbedImageFile = null;
-      globalThis.evtCostItems = [];
-      window._evtLocGeoCache = null;
-      window.evtSetLocationIcon("hide");
-      window.evtSetLocationStatus("", "");
-      document.getElementById("bannerPreviewWrap").classList.add("hidden");
-      document.getElementById("bannerUploadHint").classList.remove("hidden");
-      document.getElementById("embedImagePreviewWrap")?.classList.add("hidden");
-      document.getElementById("embedImageUploadHint")?.classList.remove("hidden");
-      document.getElementById("llcFieldsSection")?.classList.add("hidden");
-      document.getElementById("compFieldsSection")?.classList.add("hidden");
-      document.getElementById("costItemsList") && (document.getElementById("costItemsList").innerHTML = "");
-      document.getElementById("costSummary")?.classList.add("hidden");
-      globalThis.evtToggleModal("createModal", false);
-      await globalThis.evtLoadEvents();
-      globalThis.evtNavigateToEvent(data.slug);
-    } catch (err) {
-      console.error("Create event error:", err);
-      alert(`Failed to create event: ${err.message}`);
-    } finally {
-      publishBtn.disabled = false;
-      publishBtn.textContent = "Publish Event";
-    }
-  }
-  publishGlobals({ evtHandleCreate });
-
   // js/portal/events/create/step-basics.js
   function _esc(s) {
     return window.EventsCreateSteps.esc(s);
@@ -9301,8 +11829,8 @@ Type the event title to confirm:`);
     const f = STATE4.form;
     const types = [
       { key: "member", emoji: "\u{1F465}", label: "Member event", sub: "Anyone can RSVP", enabled: true },
-      { key: "llc", emoji: "\u{1F3E2}", label: "LLC event", sub: "Use legacy editor for now", enabled: false },
-      { key: "competition", emoji: "\u{1F3C6}", label: "Competition", sub: "Use legacy editor for now", enabled: false }
+      { key: "llc", emoji: "\u{1F3E2}", label: "LLC event", sub: "Buy-in trips & cost share", enabled: true },
+      { key: "competition", emoji: "\u{1F3C6}", label: "Competition", sub: "Prizes, rules, GFX contest", enabled: true }
     ];
     return `
         <div class="ec-row">
@@ -9316,7 +11844,7 @@ Type the event title to confirm:`);
                     </div>
                 `).join("")}
             </div>
-            <p class="ec-help">LLC &amp; Competition events use the legacy form \u2014 select Member to continue here.</p>
+            <p class="ec-help">Member events for gatherings; LLC for shared-cost trips; Competition for prize contests with GFX uploads.</p>
         </div>
 
         <div class="ec-row">
@@ -9367,6 +11895,10 @@ Type the event title to confirm:`);
       el.addEventListener("click", () => {
         if (el.dataset.disabled) return;
         STATE4.form.event_type = el.dataset.type;
+        if (STATE4.form.event_type === "llc") {
+          STATE4.form.pricing_mode = "paid";
+          if (!Array.isArray(STATE4.form.cost_items)) STATE4.form.cost_items = [];
+        }
         window.EventsCreateSteps.render();
       });
     });
@@ -9385,24 +11917,583 @@ Type the event title to confirm:`);
   globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
   globalThis.EventsCreateSteps.basics = createStepBasicsApi;
 
-  // js/portal/events/create/step-when.js
-  var _locDebounce;
+  // js/portal/events/create/step-about.js
+  var TITLE_MAX = 60;
+  var BODY_MAX = 8e3;
   function _esc2(s) {
     return window.EventsCreateSteps.esc(s);
   }
+  function _newTabId() {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    return `tab-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+  function _tabs() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    if (!Array.isArray(STATE4.form.about_tabs)) STATE4.form.about_tabs = [];
+    return STATE4.form.about_tabs;
+  }
+  function _isHttpUrl(url) {
+    return /^https?:\/\/.+/i.test(String(url || "").trim());
+  }
+  function _syncBody(textarea, tab) {
+    if (!textarea || !tab) return;
+    tab.body = String(textarea.value || "").slice(0, BODY_MAX);
+    if (textarea.value !== tab.body) textarea.value = tab.body;
+  }
+  function _replaceSelection(textarea, insertText, selectOffset, selectLength) {
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? start;
+    const before = textarea.value.slice(0, start);
+    const after = textarea.value.slice(end);
+    const next = `${before}${insertText}${after}`.slice(0, BODY_MAX);
+    textarea.value = next;
+    const selStart = Math.min(start + (selectOffset || 0), next.length);
+    const selEnd = Math.min(selStart + (selectLength || 0), next.length);
+    textarea.focus();
+    textarea.setSelectionRange(selStart, selEnd);
+  }
+  function _wrapSelection(textarea, before, after, placeholder) {
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const selected = textarea.value.slice(start, end);
+    const inner = selected || placeholder || "";
+    const insert = `${before}${inner}${after}`;
+    _replaceSelection(textarea, insert, before.length, inner.length);
+  }
+  function _toolbarHtml(tabId) {
+    return `
+        <div class="ec-md-toolbar" role="toolbar" aria-label="Formatting">
+            <button type="button" class="ec-md-btn" data-about-md="bold" data-about-md-for="${_esc2(tabId)}" title="Bold" aria-label="Bold"><strong>B</strong></button>
+            <button type="button" class="ec-md-btn" data-about-md="italic" data-about-md-for="${_esc2(tabId)}" title="Italic" aria-label="Italic"><em>I</em></button>
+            <button type="button" class="ec-md-btn" data-about-md="link" data-about-md-for="${_esc2(tabId)}" title="Link" aria-label="Insert link">Link</button>
+            <button type="button" class="ec-md-btn" data-about-md="image" data-about-md-for="${_esc2(tabId)}" title="Image URL" aria-label="Insert image URL">Image</button>
+        </div>
+    `;
+  }
   function html2() {
+    const tabs = _tabs();
+    if (!tabs.length) {
+      return `
+            <div class="ec-row">
+                <p class="text-sm text-gray-600">Add optional About sections for the event page \u2014 itinerary, lodging, what to bring, and anything else guests need.</p>
+                <p class="ec-help">You can skip this step and add tabs later before publishing.</p>
+            </div>
+            <button type="button" id="ecAboutAdd" class="ec-mini-btn">+ Add tab</button>
+        `;
+    }
+    return `
+        <div class="ec-row">
+            <p class="text-sm text-gray-600 mb-2">Custom About tabs shown on the event page. Drag order with Up / Down.</p>
+        </div>
+        ${tabs.map((tab, index) => `
+            <div class="ec-raffle-item-wrap" data-about-id="${_esc2(tab.id)}">
+                <div class="ec-raffle-head">
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Tab ${index + 1}</span>
+                    <div class="flex items-center gap-1">
+                        <button type="button" class="ec-icon-btn" data-about-up="${_esc2(tab.id)}" ${index === 0 ? "disabled" : ""} aria-label="Move up">\u2191</button>
+                        <button type="button" class="ec-icon-btn" data-about-down="${_esc2(tab.id)}" ${index === tabs.length - 1 ? "disabled" : ""} aria-label="Move down">\u2193</button>
+                        <button type="button" class="ec-mini-btn" data-about-remove="${_esc2(tab.id)}" style="border-color:#fecaca;color:#dc2626">Remove</button>
+                    </div>
+                </div>
+                <div class="ec-row" style="margin-bottom:10px">
+                    <label class="ec-label">Title</label>
+                    <input class="ec-input" type="text" maxlength="${TITLE_MAX}" data-about-title="${_esc2(tab.id)}" placeholder="e.g. Itinerary" value="${_esc2(tab.title || "")}">
+                </div>
+                <div class="ec-row" style="margin-bottom:0">
+                    <label class="ec-label">Body</label>
+                    ${_toolbarHtml(tab.id)}
+                    <textarea class="ec-input ec-textarea" maxlength="${BODY_MAX}" data-about-body="${_esc2(tab.id)}" placeholder="Details for this section\u2026">${_esc2(tab.body || "")}</textarea>
+                    <p class="ec-help">Use the toolbar for bold, links, and image URLs.</p>
+                </div>
+            </div>
+        `).join("")}
+        <button type="button" id="ecAboutAdd" class="ec-mini-btn" style="margin-top:12px">+ Add tab</button>
+    `;
+  }
+  function _applyMdAction(action, textarea, tab) {
+    if (action === "bold") {
+      _wrapSelection(textarea, "**", "**", "bold text");
+      _syncBody(textarea, tab);
+      return;
+    }
+    if (action === "italic") {
+      _wrapSelection(textarea, "*", "*", "italic text");
+      _syncBody(textarea, tab);
+      return;
+    }
+    if (action === "link") {
+      const url = window.prompt("Link URL (https://\u2026)", "https://");
+      if (url == null) return;
+      const trimmed = String(url).trim();
+      if (!_isHttpUrl(trimmed)) {
+        window.alert("Enter a full http:// or https:// URL.");
+        return;
+      }
+      const start = textarea.selectionStart ?? 0;
+      const end = textarea.selectionEnd ?? 0;
+      const selected = textarea.value.slice(start, end) || "link text";
+      const insert = `[${selected}](${trimmed})`;
+      _replaceSelection(textarea, insert, 1, selected.length);
+      _syncBody(textarea, tab);
+      return;
+    }
+    if (action === "image") {
+      const url = window.prompt("Image URL (https://\u2026)", "https://");
+      if (url == null) return;
+      const trimmed = String(url).trim();
+      if (!_isHttpUrl(trimmed)) {
+        window.alert("Enter a full http:// or https:// image URL.");
+        return;
+      }
+      const alt = window.prompt("Image description (alt text)", "Image") || "Image";
+      const insert = `![${String(alt).replace(/[\[\]]/g, "")}](${trimmed})`;
+      _replaceSelection(textarea, insert, 0, 0);
+      _syncBody(textarea, tab);
+    }
+  }
+  function wire2() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    const render = window.EventsCreateSteps.render;
+    const tabs = _tabs();
+    document.getElementById("ecAboutAdd")?.addEventListener("click", () => {
+      tabs.push({ id: _newTabId(), title: "", body: "" });
+      render();
+    });
+    document.querySelectorAll("[data-about-title]").forEach((el) => {
+      el.addEventListener("input", () => {
+        const tab = tabs.find((t) => t.id === el.getAttribute("data-about-title"));
+        if (tab) tab.title = el.value.slice(0, TITLE_MAX);
+      });
+    });
+    document.querySelectorAll("[data-about-body]").forEach((el) => {
+      el.addEventListener("input", () => {
+        const tab = tabs.find((t) => t.id === el.getAttribute("data-about-body"));
+        if (tab) tab.body = el.value.slice(0, BODY_MAX);
+      });
+    });
+    document.querySelectorAll("[data-about-md]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-about-md-for");
+        const action = btn.getAttribute("data-about-md");
+        const tab = tabs.find((t) => t.id === id);
+        const textarea = document.querySelector(`[data-about-body="${CSS.escape(id)}"]`);
+        if (!tab || !textarea) return;
+        _applyMdAction(action, textarea, tab);
+      });
+    });
+    document.querySelectorAll("[data-about-up]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-about-up");
+        const i = tabs.findIndex((t) => t.id === id);
+        if (i <= 0) return;
+        const tmp = tabs[i - 1];
+        tabs[i - 1] = tabs[i];
+        tabs[i] = tmp;
+        render();
+      });
+    });
+    document.querySelectorAll("[data-about-down]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-about-down");
+        const i = tabs.findIndex((t) => t.id === id);
+        if (i < 0 || i >= tabs.length - 1) return;
+        const tmp = tabs[i + 1];
+        tabs[i + 1] = tabs[i];
+        tabs[i] = tmp;
+        render();
+      });
+    });
+    document.querySelectorAll("[data-about-remove]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-about-remove");
+        const tab = tabs.find((t) => t.id === id);
+        if (tab && ((tab.title || "").trim() || (tab.body || "").trim())) {
+          if (!confirm("Remove this About tab?")) return;
+        }
+        STATE4.form.about_tabs = tabs.filter((t) => t.id !== id);
+        render();
+      });
+    });
+  }
+  function validateAboutTabs(form) {
+    const list = Array.isArray(form?.about_tabs) ? form.about_tabs : [];
+    for (let i = 0; i < list.length; i++) {
+      const title = String(list[i].title || "").trim();
+      if (!title) return `About tab ${i + 1} needs a title.`;
+      if (title.length > TITLE_MAX) return `About tab ${i + 1} title must be ${TITLE_MAX} characters or fewer.`;
+      if (String(list[i].body || "").length > BODY_MAX) {
+        return `About tab ${i + 1} body must be ${BODY_MAX} characters or fewer.`;
+      }
+    }
+    return null;
+  }
+  var createStepAboutApi = { html: html2, wire: wire2, validateAboutTabs };
+  globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
+  globalThis.EventsCreateSteps.about = createStepAboutApi;
+
+  // js/portal/events/create/step-included.js
+  var NAME_MAX = 80;
+  var CHOICE_MAX = 40;
+  var CHOICES_MAX = 40;
+  var OPTION_TYPES = [
+    { key: "size", label: "Size" },
+    { key: "color", label: "Color" },
+    { key: "text", label: "Text" },
+    { key: "select", label: "Select" }
+  ];
+  var APPLIES_OPTIONS = [
+    { key: "all", label: "Everyone" },
+    { key: "adult", label: "Adults only" },
+    { key: "kid", label: "Kids only" }
+  ];
+  var SIZE_PRESET = ["XS", "S", "M", "L", "XL", "XXL"];
+  var COLOR_PRESET = ["Black", "White", "Navy", "Gray", "Red", "Green"];
+  function _esc3(s) {
+    return window.EventsCreateSteps.esc(s);
+  }
+  function _newItemId() {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    return `inc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+  function _items() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    if (!Array.isArray(STATE4.form.included_items)) STATE4.form.included_items = [];
+    return STATE4.form.included_items;
+  }
+  function _needsChoices(type) {
+    return type === "size" || type === "color" || type === "select";
+  }
+  function _typeOptions(selected) {
+    return OPTION_TYPES.map(
+      (t) => `<option value="${t.key}" ${selected === t.key ? "selected" : ""}>${t.label}</option>`
+    ).join("");
+  }
+  function _appliesOptions(selected) {
+    const cur = selected || "all";
+    return APPLIES_OPTIONS.map(
+      (t) => `<option value="${t.key}" ${cur === t.key ? "selected" : ""}>${t.label}</option>`
+    ).join("");
+  }
+  function _mergeChoices(item, preset) {
+    if (!Array.isArray(item.choices)) item.choices = [];
+    const seen = new Set(item.choices.map((c) => String(c).toLowerCase()));
+    for (const raw of preset) {
+      if (item.choices.length >= CHOICES_MAX) break;
+      const v = String(raw || "").trim().slice(0, CHOICE_MAX);
+      if (!v) continue;
+      const key = v.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      item.choices.push(v);
+    }
+  }
+  function _presetsBarHtml() {
+    return `
+        <div class="ec-md-toolbar" style="margin-bottom:12px" role="toolbar" aria-label="Included presets">
+            <button type="button" id="ecIncPackClothing" class="ec-mini-btn">+ Trip clothing</button>
+        </div>
+        <p class="ec-help" style="margin-top:0;margin-bottom:10px">Trip clothing adds size + color items. Use Size / Color preset on each item to fill common choices.</p>
+    `;
+  }
+  function _choicesHtml(item) {
+    if (!_needsChoices(item.option_type)) return "";
+    const choices = Array.isArray(item.choices) ? item.choices : [];
+    const presetBtn = item.option_type === "size" ? `<button type="button" class="ec-mini-btn" data-inc-preset="size" data-inc-preset-for="${_esc3(item.id)}">Size preset</button>` : item.option_type === "color" ? `<button type="button" class="ec-mini-btn" data-inc-preset="color" data-inc-preset-for="${_esc3(item.id)}">Color preset</button>` : "";
+    return `
+        <div class="ec-row" style="margin-bottom:0;margin-top:10px">
+            <label class="ec-label">Choices</label>
+            <div class="ec-choice-list" data-inc-choices="${_esc3(item.id)}">
+                ${choices.map((c) => `
+                    <span class="ec-choice-chip">
+                        ${_esc3(c)}
+                        <button type="button" class="ec-choice-chip-x" data-inc-choice-remove="${_esc3(item.id)}" data-inc-choice-value="${_esc3(c)}" aria-label="Remove ${_esc3(c)}">\xD7</button>
+                    </span>
+                `).join("")}
+            </div>
+            <div class="ec-choice-add-row">
+                <input class="ec-input" type="text" maxlength="${CHOICE_MAX}" data-inc-choice-input="${_esc3(item.id)}" placeholder="Add choice\u2026">
+                <button type="button" class="ec-mini-btn" data-inc-choice-add="${_esc3(item.id)}">Add</button>
+                ${presetBtn}
+            </div>
+            <p class="ec-help">Guests pick one of these at RSVP.</p>
+        </div>
+    `;
+  }
+  function html3() {
+    const items = _items();
+    if (!items.length) {
+      return `
+            <div class="ec-row">
+                <p class="text-sm text-gray-600">Optional catalog of what\u2019s included \u2014 e.g. a hoodie with size and color choices collected at RSVP.</p>
+                <p class="ec-help">Skip if this event doesn\u2019t need sizes, colors, or other per-person options.</p>
+            </div>
+            ${_presetsBarHtml()}
+            <button type="button" id="ecIncAdd" class="ec-mini-btn">+ Add item</button>
+        `;
+    }
+    return `
+        <div class="ec-row">
+            <p class="text-sm text-gray-600 mb-2">Items guests will configure when they RSVP. Reorder with Up / Down. Scope adults vs kids per item.</p>
+        </div>
+        ${_presetsBarHtml()}
+        ${items.map((item, index) => `
+            <div class="ec-raffle-item-wrap" data-inc-id="${_esc3(item.id)}">
+                <div class="ec-raffle-head">
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Item ${index + 1}</span>
+                    <div class="flex items-center gap-1">
+                        <button type="button" class="ec-icon-btn" data-inc-up="${_esc3(item.id)}" ${index === 0 ? "disabled" : ""} aria-label="Move up">\u2191</button>
+                        <button type="button" class="ec-icon-btn" data-inc-down="${_esc3(item.id)}" ${index === items.length - 1 ? "disabled" : ""} aria-label="Move down">\u2193</button>
+                        <button type="button" class="ec-mini-btn" data-inc-remove="${_esc3(item.id)}" style="border-color:#fecaca;color:#dc2626">Remove</button>
+                    </div>
+                </div>
+                <div class="ec-row" style="margin-bottom:10px">
+                    <label class="ec-label">Name</label>
+                    <input class="ec-input" type="text" maxlength="${NAME_MAX}" data-inc-name="${_esc3(item.id)}" placeholder="e.g. Trip hoodie" value="${_esc3(item.name || "")}">
+                </div>
+                <div class="ec-row" style="margin-bottom:10px">
+                    <label class="ec-check">
+                        <input type="checkbox" data-inc-required="${_esc3(item.id)}" ${item.required ? "checked" : ""}>
+                        <span>Required at RSVP</span>
+                    </label>
+                </div>
+                <div class="ec-row" style="margin-bottom:10px">
+                    <label class="ec-label">Applies to</label>
+                    <select class="ec-input" data-inc-applies="${_esc3(item.id)}">${_appliesOptions(item.applies_to || "all")}</select>
+                </div>
+                <div class="ec-row" style="margin-bottom:0">
+                    <label class="ec-label">Option type</label>
+                    <select class="ec-input" data-inc-type="${_esc3(item.id)}">${_typeOptions(item.option_type || "size")}</select>
+                </div>
+                ${_choicesHtml(item)}
+            </div>
+        `).join("")}
+        <button type="button" id="ecIncAdd" class="ec-mini-btn" style="margin-top:12px">+ Add item</button>
+    `;
+  }
+  function _addChoice(item, raw, render) {
+    const value = String(raw || "").trim().slice(0, CHOICE_MAX);
+    if (!value) return;
+    if (!Array.isArray(item.choices)) item.choices = [];
+    const exists = item.choices.some((c) => c.toLowerCase() === value.toLowerCase());
+    if (exists) return;
+    if (item.choices.length >= CHOICES_MAX) {
+      window.alert(`At most ${CHOICES_MAX} choices per item.`);
+      return;
+    }
+    item.choices.push(value);
+    render();
+  }
+  function _addTripClothing(items, render) {
+    const names = new Set(items.map((i) => String(i.name || "").trim().toLowerCase()).filter(Boolean));
+    let added = false;
+    if (!names.has("clothing size")) {
+      const sizeItem = {
+        id: _newItemId(),
+        name: "Clothing size",
+        required: true,
+        option_type: "size",
+        applies_to: "all",
+        choices: []
+      };
+      _mergeChoices(sizeItem, SIZE_PRESET);
+      items.push(sizeItem);
+      added = true;
+    }
+    if (!names.has("clothing color")) {
+      const colorItem = {
+        id: _newItemId(),
+        name: "Clothing color",
+        required: true,
+        option_type: "color",
+        applies_to: "all",
+        choices: []
+      };
+      _mergeChoices(colorItem, COLOR_PRESET);
+      items.push(colorItem);
+      added = true;
+    }
+    if (!added) {
+      window.alert("Trip clothing items are already in the list.");
+      return;
+    }
+    render();
+  }
+  function wire3() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    const render = window.EventsCreateSteps.render;
+    const items = _items();
+    document.getElementById("ecIncAdd")?.addEventListener("click", () => {
+      items.push({
+        id: _newItemId(),
+        name: "",
+        required: true,
+        option_type: "size",
+        applies_to: "all",
+        choices: []
+      });
+      render();
+    });
+    document.getElementById("ecIncPackClothing")?.addEventListener("click", () => {
+      _addTripClothing(items, render);
+    });
+    document.querySelectorAll("[data-inc-name]").forEach((el) => {
+      el.addEventListener("input", () => {
+        const item = items.find((i) => i.id === el.getAttribute("data-inc-name"));
+        if (item) item.name = el.value.slice(0, NAME_MAX);
+      });
+    });
+    document.querySelectorAll("[data-inc-required]").forEach((el) => {
+      el.addEventListener("change", () => {
+        const item = items.find((i) => i.id === el.getAttribute("data-inc-required"));
+        if (item) item.required = !!el.checked;
+      });
+    });
+    document.querySelectorAll("[data-inc-applies]").forEach((el) => {
+      el.addEventListener("change", () => {
+        const item = items.find((i) => i.id === el.getAttribute("data-inc-applies"));
+        if (!item) return;
+        const v = el.value;
+        item.applies_to = v === "adult" || v === "kid" || v === "all" ? v : "all";
+      });
+    });
+    document.querySelectorAll("[data-inc-type]").forEach((el) => {
+      el.addEventListener("change", () => {
+        const item = items.find((i) => i.id === el.getAttribute("data-inc-type"));
+        if (!item) return;
+        item.option_type = el.value;
+        if (!_needsChoices(item.option_type)) item.choices = [];
+        else if (!Array.isArray(item.choices)) item.choices = [];
+        render();
+      });
+    });
+    document.querySelectorAll("[data-inc-preset]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-inc-preset-for");
+        const kind = btn.getAttribute("data-inc-preset");
+        const item = items.find((i) => i.id === id);
+        if (!item) return;
+        if (kind === "size") _mergeChoices(item, SIZE_PRESET);
+        if (kind === "color") _mergeChoices(item, COLOR_PRESET);
+        render();
+      });
+    });
+    document.querySelectorAll("[data-inc-choice-add]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-inc-choice-add");
+        const item = items.find((i) => i.id === id);
+        const input = document.querySelector(`[data-inc-choice-input="${CSS.escape(id)}"]`);
+        if (!item || !input) return;
+        _addChoice(item, input.value, render);
+      });
+    });
+    document.querySelectorAll("[data-inc-choice-input]").forEach((input) => {
+      input.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        const id = input.getAttribute("data-inc-choice-input");
+        const item = items.find((i) => i.id === id);
+        if (!item) return;
+        _addChoice(item, input.value, render);
+      });
+    });
+    document.querySelectorAll("[data-inc-choice-remove]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-inc-choice-remove");
+        const value = btn.getAttribute("data-inc-choice-value");
+        const item = items.find((i) => i.id === id);
+        if (!item || !Array.isArray(item.choices)) return;
+        item.choices = item.choices.filter((c) => c !== value);
+        render();
+      });
+    });
+    document.querySelectorAll("[data-inc-up]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-inc-up");
+        const i = items.findIndex((it) => it.id === id);
+        if (i <= 0) return;
+        const tmp = items[i - 1];
+        items[i - 1] = items[i];
+        items[i] = tmp;
+        render();
+      });
+    });
+    document.querySelectorAll("[data-inc-down]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-inc-down");
+        const i = items.findIndex((it) => it.id === id);
+        if (i < 0 || i >= items.length - 1) return;
+        const tmp = items[i + 1];
+        items[i + 1] = items[i];
+        items[i] = tmp;
+        render();
+      });
+    });
+    document.querySelectorAll("[data-inc-remove]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-inc-remove");
+        const item = items.find((i) => i.id === id);
+        if (item && ((item.name || "").trim() || (item.choices || []).length)) {
+          if (!confirm("Remove this included item?")) return;
+        }
+        STATE4.form.included_items = items.filter((i) => i.id !== id);
+        render();
+      });
+    });
+  }
+  function validateIncludedItems(form) {
+    const list = Array.isArray(form?.included_items) ? form.included_items : [];
+    for (let i = 0; i < list.length; i++) {
+      const item = list[i] || {};
+      const name = String(item.name || "").trim();
+      if (!name) return `Included item ${i + 1} needs a name.`;
+      if (name.length > NAME_MAX) return `Included item ${i + 1} name must be ${NAME_MAX} characters or fewer.`;
+      const type = item.option_type || "";
+      if (!OPTION_TYPES.some((t) => t.key === type)) {
+        return `Included item ${i + 1} needs a valid option type.`;
+      }
+      const applies = item.applies_to || "all";
+      if (!APPLIES_OPTIONS.some((a) => a.key === applies)) {
+        return `Included item ${i + 1} needs a valid Applies to setting.`;
+      }
+      if (_needsChoices(type)) {
+        const choices = (Array.isArray(item.choices) ? item.choices : []).map((c) => String(c || "").trim()).filter(Boolean);
+        if (!choices.length) return `Included item ${i + 1} needs at least one choice.`;
+      }
+    }
+    return null;
+  }
+  var createStepIncludedApi = { html: html3, wire: wire3, validateIncludedItems };
+  globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
+  globalThis.EventsCreateSteps.included = createStepIncludedApi;
+
+  // js/portal/events/create/step-when.js
+  var _locDebounce;
+  function _esc4(s) {
+    return window.EventsCreateSteps.esc(s);
+  }
+  function html4() {
     const STATE4 = window.EventsCreateSteps.getState();
     const TIMEZONES2 = window.EventsCreateSteps.TIMEZONES;
     const f = STATE4.form;
+    const showCapacityLimit = f.capacity_mode === "soft" || f.capacity_mode === "hard";
+    const capacityModes = [
+      { key: "none", label: "No limit", sub: "No capacity cap (e.g. open trips)." },
+      { key: "soft", label: "Soft cap + waitlist", sub: "At capacity, new RSVPs join a waitlist." },
+      { key: "hard", label: "Hard cap", sub: "At capacity, block new RSVPs." }
+    ];
     return `
         <div class="ec-grid-2">
             <div class="ec-row">
                 <label class="ec-label">Starts</label>
-                <input id="ecStart" class="ec-input" type="datetime-local" value="${_esc2(f.start_date)}">
+                <input id="ecStart" class="ec-input" type="datetime-local" value="${_esc4(f.start_date)}">
             </div>
             <div class="ec-row">
                 <label class="ec-label">Ends (optional)</label>
-                <input id="ecEnd" class="ec-input" type="datetime-local" value="${_esc2(f.end_date)}">
+                <input id="ecEnd" class="ec-input" type="datetime-local" value="${_esc4(f.end_date)}">
             </div>
         </div>
 
@@ -9415,36 +12506,84 @@ Type the event title to confirm:`);
 
         <div class="ec-row">
             <label class="ec-label">Location nickname</label>
-            <input id="ecLocNick" class="ec-input" type="text" maxlength="60" placeholder="e.g. Mom's house, Cabin in the woods" value="${_esc2(f.location_nickname)}">
+            <input id="ecLocNick" class="ec-input" type="text" maxlength="60" placeholder="e.g. Mom's house, Cabin in the woods" value="${_esc4(f.location_nickname)}">
             <p class="ec-help">Shown on the banner instead of the full address.</p>
         </div>
 
         <div class="ec-row">
             <label class="ec-label">Address</label>
-            <input id="ecLoc" class="ec-input" type="text" placeholder="123 Main St, City, ST" value="${_esc2(f.location_text)}">
-            <div id="ecLocStatus" class="ec-loc-status" style="color:#9ca3af">${STATE4.geocode ? `\u{1F4CD} ${_esc2(STATE4.geocode.display || "Located")}` : "Type an address to geocode (optional)."}</div>
+            <input id="ecLoc" class="ec-input" type="text" placeholder="123 Main St, City, ST" value="${_esc4(f.location_text)}">
+            <div id="ecLocStatus" class="ec-loc-status" style="color:#9ca3af">${STATE4.geocode ? `\u{1F4CD} ${_esc4(STATE4.geocode.display || "Located")}` : "Type an address to geocode (optional)."}</div>
         </div>
 
+        <div class="ec-row">
+            <label class="ec-label">Capacity</label>
+            <div style="display:flex;flex-direction:column;gap:8px">
+                ${capacityModes.map((m) => `
+                    <label class="ec-checkbox-row" style="cursor:pointer">
+                        <input type="radio" name="ecCapacityMode" value="${m.key}" ${f.capacity_mode === m.key ? "checked" : ""}>
+                        <div class="flex-1">
+                            <div class="text-sm font-bold text-gray-800">${m.label}</div>
+                            <div class="text-xs text-gray-500">${m.sub}</div>
+                        </div>
+                    </label>
+                `).join("")}
+            </div>
+        </div>
+
+        ${showCapacityLimit ? `
         <div class="ec-grid-2">
             <div class="ec-row">
-                <label class="ec-label">Max attendees (optional)</label>
-                <input id="ecMax" class="ec-input" type="number" min="1" placeholder="No limit" value="${_esc2(f.max_participants)}">
+                <label class="ec-label">Seat limit</label>
+                <input id="ecCapacityMax" class="ec-input" type="number" min="1" placeholder="e.g. 50" value="${_esc4(f.max_participants)}">
             </div>
             <div class="ec-row">
-                <label class="ec-label">RSVP deadline (optional)</label>
-                <input id="ecDeadline" class="ec-input" type="datetime-local" value="${_esc2(f.rsvp_deadline)}">
+                <label class="ec-label">Counts toward limit</label>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:2px">
+                    <label class="ec-checkbox-row" style="cursor:pointer">
+                        <input type="radio" name="ecCapacityCounts" value="adults" ${f.capacity_counts === "adults" ? "checked" : ""}>
+                        <div class="flex-1">
+                            <div class="text-sm font-bold text-gray-800">Adults only</div>
+                        </div>
+                    </label>
+                    <label class="ec-checkbox-row" style="cursor:pointer">
+                        <input type="radio" name="ecCapacityCounts" value="all" ${f.capacity_counts === "all" ? "checked" : ""}>
+                        <div class="flex-1">
+                            <div class="text-sm font-bold text-gray-800">Adults and kids</div>
+                        </div>
+                    </label>
+                </div>
             </div>
+        </div>
+        ` : ""}
+
+        <div class="ec-row">
+            <label class="ec-label">RSVP deadline (optional)</label>
+            <input id="ecDeadline" class="ec-input" type="datetime-local" value="${_esc4(f.rsvp_deadline)}">
         </div>
     `;
   }
-  function wire2() {
+  function wire4() {
     const STATE4 = window.EventsCreateSteps.getState();
+    const render = window.EventsCreateSteps.render;
     const get = (id) => document.getElementById(id);
     get("ecStart")?.addEventListener("input", (e) => STATE4.form.start_date = e.target.value);
     get("ecEnd")?.addEventListener("input", (e) => STATE4.form.end_date = e.target.value);
     get("ecTz")?.addEventListener("change", (e) => STATE4.form.timezone = e.target.value);
     get("ecLocNick")?.addEventListener("input", (e) => STATE4.form.location_nickname = e.target.value);
-    get("ecMax")?.addEventListener("input", (e) => STATE4.form.max_participants = e.target.value);
+    document.querySelectorAll('input[name="ecCapacityMode"]').forEach((el) => {
+      el.addEventListener("change", () => {
+        STATE4.form.capacity_mode = el.value;
+        if (STATE4.form.capacity_mode === "none") STATE4.form.max_participants = "";
+        render();
+      });
+    });
+    get("ecCapacityMax")?.addEventListener("input", (e) => STATE4.form.max_participants = e.target.value);
+    document.querySelectorAll('input[name="ecCapacityCounts"]').forEach((el) => {
+      el.addEventListener("change", () => {
+        STATE4.form.capacity_counts = el.value;
+      });
+    });
     get("ecDeadline")?.addEventListener("input", (e) => STATE4.form.rsvp_deadline = e.target.value);
     const loc = get("ecLoc");
     loc?.addEventListener("input", (e) => {
@@ -9493,32 +12632,106 @@ Type the event title to confirm:`);
       }
     }
   }
-  var createStepWhenApi = { html: html2, wire: wire2 };
+  var createStepWhenApi = { html: html4, wire: wire4 };
   globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
   globalThis.EventsCreateSteps.when = createStepWhenApi;
 
+  // js/portal/events/create/pricing-helpers.js
+  function monthsUntilFundDeadline(deadlineStr) {
+    if (!deadlineStr) return null;
+    const deadline = new Date(deadlineStr);
+    if (Number.isNaN(deadline.getTime())) return null;
+    const now = /* @__PURE__ */ new Date();
+    if (deadline <= now) return 0;
+    let months = (deadline.getFullYear() - now.getFullYear()) * 12 + (deadline.getMonth() - now.getMonth());
+    if (deadline.getDate() >= now.getDate()) months += 1;
+    return Math.max(1, months);
+  }
+  function monthlyEstimate(f) {
+    if (!f.fund_deadline || !f.adult_price_dollars || Number(f.adult_price_dollars) <= 0) return null;
+    const deadline = new Date(f.fund_deadline);
+    if (Number.isNaN(deadline.getTime())) return { error: "Enter a valid fund deadline." };
+    const now = /* @__PURE__ */ new Date();
+    if (deadline <= now) return { error: "Fund deadline must be in the future for monthly estimates." };
+    const months = monthsUntilFundDeadline(f.fund_deadline);
+    const monthly = (Number(f.adult_price_dollars) / months).toFixed(2);
+    const deadlineLabel = deadline.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return { months, monthly, deadlineLabel };
+  }
+  function formatDateTimeLocal(value) {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  }
+  function validateFundDeadline(f) {
+    if (!f.fund_deadline || String(f.fund_deadline).trim() === "") return null;
+    const deadline = new Date(f.fund_deadline);
+    if (Number.isNaN(deadline.getTime())) return "Fund deadline must be a valid date.";
+    if (deadline <= /* @__PURE__ */ new Date()) return "Fund deadline must be in the future.";
+    if (f.start_date) {
+      const start = new Date(f.start_date);
+      if (!Number.isNaN(start.getTime()) && deadline > start) {
+        return "Fund deadline must be on or before the event start date.";
+      }
+    }
+    return null;
+  }
+  function monthlyEstimateHtml(f, esc12) {
+    const est = monthlyEstimate(f);
+    if (!est) return "";
+    if (est.error) return `<p class="ec-help" style="color:#d97706">${esc12(est.error)}</p>`;
+    return `<p class="ec-help" id="ecMonthlyHelper">If someone starts paying monthly today, ~$${esc12(est.monthly)}/month per adult until ${esc12(est.deadlineLabel)}. Actual amounts recalculate at RSVP.</p>`;
+  }
+  function toDatetimeLocalValue(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function centsToDollars(cents) {
+    if (cents == null || cents === "") return "";
+    const n = Number(cents);
+    if (!Number.isFinite(n)) return "";
+    return (n / 100).toFixed(2);
+  }
+
   // js/portal/events/create/step-pricing.js
-  function _esc3(s) {
+  function _esc5(s) {
     return window.EventsCreateSteps.esc(s);
   }
-  function html3() {
+  function html5() {
     const STATE4 = window.EventsCreateSteps.getState();
     const f = STATE4.form;
-    const modes = [
+    const locked = !!STATE4.pricingLocked;
+    const isLlc = f.event_type === "llc";
+    if (isLlc && f.pricing_mode !== "paid") f.pricing_mode = "paid";
+    const disabledAttr = locked ? "disabled" : "";
+    const modes = isLlc ? [{ key: "paid", label: "Paid RSVP (buy-in)", sub: "LLC trips require a paid buy-in \u2014 set details on the LLC step" }] : [
       { key: "free", label: "Free", sub: "No payment required" },
       { key: "paid", label: "Paid RSVP", sub: "Stripe checkout on RSVP" },
       { key: "free_paid_raffle", label: "Free + paid raffle", sub: "Free entry, paid raffle entries" }
     ];
-    const showRsvpCost = f.pricing_mode === "paid";
-    const showRaffleConfig = f.raffle_enabled;
+    const showAdultPrice = f.pricing_mode === "paid";
+    const showRaffleConfig = f.raffle_enabled && !locked;
     const raffleBuilderHtml = window.EventsCreateSteps.raffleBuilderHtml;
+    const lockBanner = locked ? `<div class="ec-lock-banner">Pricing is locked after RSVPs. Changes aren\u2019t applied retroactively. You can still edit About, Included, When &amp; Where, and images.</div>` : "";
     return `
+        ${lockBanner}
         <div class="ec-row">
             <label class="ec-label">Pricing mode</label>
             <div style="display:flex;flex-direction:column;gap:8px">
                 ${modes.map((m) => `
-                    <label class="ec-checkbox-row" style="cursor:pointer">
-                        <input type="radio" name="ecMode" value="${m.key}" ${f.pricing_mode === m.key ? "checked" : ""}>
+                    <label class="ec-checkbox-row" style="cursor:${locked || isLlc ? "default" : "pointer"}">
+                        <input type="radio" name="ecMode" value="${m.key}" ${f.pricing_mode === m.key ? "checked" : ""} ${disabledAttr}${isLlc ? " disabled" : ""}>
                         <div class="flex-1">
                             <div class="text-sm font-bold text-gray-800">${m.label}</div>
                             <div class="text-xs text-gray-500">${m.sub}</div>
@@ -9526,18 +12739,73 @@ Type the event title to confirm:`);
                     </label>
                 `).join("")}
             </div>
+            ${isLlc ? '<p class="ec-help">Buy-in amount is calculated or overridden on the next LLC step.</p>' : ""}
         </div>
 
-        ${showRsvpCost ? `
+        ${showAdultPrice && !isLlc ? `
         <div class="ec-row">
-            <label class="ec-label">RSVP price (USD)</label>
-            <input id="ecCost" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc3(f.rsvp_cost_dollars)}">
+            <label class="ec-label">Adult price (USD)</label>
+            <input id="ecAdultPrice" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc5(f.adult_price_dollars)}" ${disabledAttr}>
+            <p class="ec-help">Price per paying adult.</p>
+        </div>
+
+        <div class="ec-row">
+            <label class="ec-checkbox-row" style="cursor:${locked ? "not-allowed" : "pointer"}">
+                <input type="checkbox" id="ecKidsFree" ${f.kids_free ? "checked" : ""} ${disabledAttr}>
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-800">Kids attend free</div>
+                    <div class="text-xs text-gray-500">Children are not billed for this event.</div>
+                </div>
+            </label>
+        </div>
+
+        ${!f.kids_free ? `
+        <div class="ec-row">
+            <label class="ec-label">Kid price (USD)</label>
+            <input id="ecKidPrice" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc5(f.kid_price_dollars)}" ${disabledAttr}>
+            <p class="ec-help">Price per paying child. Can differ from the adult price.</p>
         </div>
         ` : ""}
 
         <div class="ec-row">
-            <label class="ec-checkbox-row">
-                <input type="checkbox" id="ecRaffleEnabled" ${f.raffle_enabled ? "checked" : ""}>
+            <label class="ec-label">Fund deadline</label>
+            <input id="ecFundDeadline" class="ec-input" type="datetime-local" value="${_esc5(f.fund_deadline)}" ${disabledAttr}>
+            <p class="ec-help">Last date attendees must finish paying (full or monthly installments).</p>
+            ${f.start_date ? `<p class="ec-help">Event starts: ${_esc5(formatDateTimeLocal(f.start_date))}</p>` : '<p class="ec-help">Set a start date in When &amp; Where to compare payment deadline vs trip date.</p>'}
+            ${monthlyEstimateHtml(f, _esc5)}
+        </div>
+        ` : ""}
+
+        ${showAdultPrice && isLlc ? `
+        <div class="ec-row">
+            <label class="ec-checkbox-row" style="cursor:${locked ? "not-allowed" : "pointer"}">
+                <input type="checkbox" id="ecKidsFree" ${f.kids_free ? "checked" : ""} ${disabledAttr}>
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-800">Kids attend free</div>
+                    <div class="text-xs text-gray-500">Children are not billed for this trip.</div>
+                </div>
+            </label>
+        </div>
+
+        ${!f.kids_free ? `
+        <div class="ec-row">
+            <label class="ec-label">Kid price (USD)</label>
+            <input id="ecKidPrice" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc5(f.kid_price_dollars)}" ${disabledAttr}>
+        </div>
+        ` : ""}
+
+        <div class="ec-row">
+            <label class="ec-label">Fund deadline</label>
+            <input id="ecFundDeadline" class="ec-input" type="datetime-local" value="${_esc5(f.fund_deadline)}" ${disabledAttr}>
+            <p class="ec-help">Last date attendees must finish paying (full or monthly installments).</p>
+            ${f.start_date ? `<p class="ec-help">Event starts: ${_esc5(formatDateTimeLocal(f.start_date))}</p>` : '<p class="ec-help">Set a start date in When &amp; Where to compare payment deadline vs trip date.</p>'}
+            ${monthlyEstimateHtml(f, _esc5)}
+        </div>
+        ` : ""}
+
+        <div class="ec-row">
+            <label class="ec-checkbox-row" style="cursor:${locked ? "not-allowed" : "pointer"}">
+                <input type="checkbox" id="ecRaffleEnabled" ${f.raffle_enabled ? "checked" : ""} ${disabledAttr}>
                 <div class="flex-1">
                     <div class="text-sm font-bold text-gray-800">Add a raffle</div>
                     <div class="text-xs text-gray-500">Members can buy raffle entries for prizes.</div>
@@ -9560,42 +12828,1160 @@ Type the event title to confirm:`);
         </div>
     `;
   }
-  function wire3() {
+  function wire5() {
     const STATE4 = window.EventsCreateSteps.getState();
     const render = window.EventsCreateSteps.render;
     const ensureRaffleConfig2 = window.EventsCreateSteps.ensureRaffleConfig;
     const wireRaffleBuilder = window.EventsCreateSteps.wireRaffleBuilder;
-    document.querySelectorAll('input[name="ecMode"]').forEach((el) => {
-      el.addEventListener("change", () => {
-        STATE4.form.pricing_mode = el.value;
+    const locked = !!STATE4.pricingLocked;
+    if (!locked) {
+      document.querySelectorAll('input[name="ecMode"]').forEach((el) => {
+        el.addEventListener("change", () => {
+          STATE4.form.pricing_mode = el.value;
+          render();
+        });
+      });
+      document.getElementById("ecAdultPrice")?.addEventListener("input", (e) => {
+        STATE4.form.adult_price_dollars = e.target.value;
         render();
       });
-    });
-    document.getElementById("ecCost")?.addEventListener("input", (e) => STATE4.form.rsvp_cost_dollars = e.target.value);
-    document.getElementById("ecRaffleEnabled")?.addEventListener("change", (e) => {
-      STATE4.form.raffle_enabled = e.target.checked;
-      if (STATE4.form.raffle_enabled) ensureRaffleConfig2();
-      render();
-    });
-    document.getElementById("ecRafflePrice")?.addEventListener("input", (e) => STATE4.form.raffle_entry_cost_dollars = e.target.value);
-    if (typeof wireRaffleBuilder === "function") wireRaffleBuilder();
+      document.getElementById("ecKidsFree")?.addEventListener("change", (e) => {
+        STATE4.form.kids_free = e.target.checked;
+        if (STATE4.form.kids_free) STATE4.form.kid_price_dollars = "";
+        render();
+      });
+      document.getElementById("ecKidPrice")?.addEventListener("input", (e) => STATE4.form.kid_price_dollars = e.target.value);
+      document.getElementById("ecFundDeadline")?.addEventListener("input", (e) => {
+        STATE4.form.fund_deadline = e.target.value;
+        render();
+      });
+      document.getElementById("ecRaffleEnabled")?.addEventListener("change", (e) => {
+        STATE4.form.raffle_enabled = e.target.checked;
+        if (STATE4.form.raffle_enabled) ensureRaffleConfig2();
+        render();
+      });
+      document.getElementById("ecRafflePrice")?.addEventListener("input", (e) => STATE4.form.raffle_entry_cost_dollars = e.target.value);
+      if (typeof wireRaffleBuilder === "function") wireRaffleBuilder();
+    }
     document.getElementById("ecMemberOnly")?.addEventListener("change", (e) => STATE4.form.member_only = e.target.checked);
   }
-  var createStepPricingApi = { html: html3, wire: wire3 };
+  var createStepPricingApi = { html: html5, wire: wire5 };
   globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
   globalThis.EventsCreateSteps.pricing = createStepPricingApi;
 
-  // js/portal/events/create/step-review.js
-  function _esc4(s) {
+  // js/portal/events/create/step-llc.js
+  var LLC_COST_CATEGORIES = [
+    { value: "lodging", label: "Lodging" },
+    { value: "transportation", label: "Transportation" },
+    { value: "food", label: "Food" },
+    { value: "gear", label: "Gear / Rentals" },
+    { value: "entertainment", label: "Entertainment" },
+    { value: "other", label: "Other" }
+  ];
+  function _esc6(s) {
     return window.EventsCreateSteps.esc(s);
   }
-  function html4() {
+  function _newId() {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    return `cost-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+  function _money(cents) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format((cents || 0) / 100);
+  }
+  function computeLlcCostBreakdown(costItems, minParticipants, llcCutPct) {
+    const items = Array.isArray(costItems) ? costItems : [];
+    const minPart = Number(minParticipants) || 0;
+    const cutPct = Number(llcCutPct) || 0;
+    const totalIncluded = items.filter((i) => i.included_in_buyin !== false).reduce((sum, i) => sum + (Number(i.total_cost_cents) || 0), 0);
+    const totalOop = items.filter((i) => i.included_in_buyin === false).reduce((sum, i) => sum + (Number(i.avg_per_person_cents) || 0), 0);
+    if (!items.length || minPart <= 0) {
+      return {
+        total_included_cents: totalIncluded,
+        total_oop_per_person_cents: totalOop,
+        base_buyin_cents: 0,
+        llc_cut_cents: 0,
+        final_buyin_cents: 0
+      };
+    }
+    const baseBuyIn = Math.ceil(totalIncluded / minPart);
+    const llcCut = Math.round(baseBuyIn * cutPct / 100);
+    return {
+      total_included_cents: totalIncluded,
+      total_oop_per_person_cents: totalOop,
+      base_buyin_cents: baseBuyIn,
+      llc_cut_cents: llcCut,
+      final_buyin_cents: baseBuyIn + llcCut
+    };
+  }
+  function resolveLlcBuyInCents(form) {
+    const override = Number(form.llc_buyin_override_dollars);
+    if (Number.isFinite(override) && override > 0) {
+      return Math.round(override * 100);
+    }
+    const summary = computeLlcCostBreakdown(
+      form.cost_items,
+      form.min_participants,
+      form.llc_cut_pct
+    );
+    if (summary.final_buyin_cents > 0) return summary.final_buyin_cents;
+    const adult = Number(form.adult_price_dollars);
+    if (Number.isFinite(adult) && adult > 0) return Math.round(adult * 100);
+    return 0;
+  }
+  function validateLlc(form) {
+    if (form.event_type !== "llc") return null;
+    const minPart = Number(form.min_participants);
+    if (!minPart || minPart <= 0) return "LLC events need a minimum participant count.";
+    const cut = Number(form.llc_cut_pct);
+    if (Number.isNaN(cut) || cut < 0 || cut > 100) return "LLC cut % must be between 0 and 100.";
+    const items = Array.isArray(form.cost_items) ? form.cost_items : [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i] || {};
+      if (!String(item.name || "").trim()) return `Cost item ${i + 1} needs a name.`;
+      if ((Number(item.total_cost_cents) || 0) < 0) return `Cost item ${i + 1} cost cannot be negative.`;
+      if (item.included_in_buyin === false && (Number(item.avg_per_person_cents) || 0) < 0) {
+        return `Cost item ${i + 1} per-person amount cannot be negative.`;
+      }
+    }
+    const buyIn = resolveLlcBuyInCents(form);
+    if (buyIn <= 0 && !items.length) {
+      return "Add cost items or set a buy-in override greater than zero.";
+    }
+    if (buyIn <= 0) return "Buy-in must be greater than zero (check min participants and cost items, or set an override).";
+    if (form.transportation_enabled && form.transportation_mode === "llc_provides") {
+      if (form.transportation_method !== "car" && form.transportation_method !== "plane") {
+        return "Choose whether LLC provides car or plane transport.";
+      }
+    }
+    if (form.transportation_enabled && form.transportation_mode === "self_arranged") {
+      const est = form.transportation_estimate_dollars;
+      if (est !== "" && est != null && (Number.isNaN(Number(est)) || Number(est) < 0)) {
+        return "Transport estimate must be a valid non-negative amount.";
+      }
+    }
+    return null;
+  }
+  function _syncAdultFromBuyIn(STATE4) {
+    const cents = resolveLlcBuyInCents(STATE4.form);
+    if (cents > 0) {
+      STATE4.form.adult_price_dollars = (cents / 100).toFixed(2);
+      STATE4.form.pricing_mode = "paid";
+    }
+  }
+  function html6() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    const f = STATE4.form;
+    if (!Array.isArray(f.cost_items)) f.cost_items = [];
+    const summary = computeLlcCostBreakdown(f.cost_items, f.min_participants, f.llc_cut_pct);
+    const suggestedDollars = summary.final_buyin_cents > 0 ? Math.ceil(summary.final_buyin_cents / 100) : "";
+    const transportOn = !!f.transportation_enabled;
+    return `
+        <div class="ec-row">
+            <p class="text-sm text-gray-600 mb-2">LLC trip settings: minimum headcount, cost items, and buy-in. Detail and manage already show this data once saved.</p>
+        </div>
+
+        <div class="ec-grid-2">
+            <div class="ec-row">
+                <label class="ec-label">Min participants</label>
+                <input id="ecLlcMin" class="ec-input" type="number" min="1" step="1" placeholder="e.g. 10" value="${_esc6(f.min_participants)}">
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">LLC cut %</label>
+                <input id="ecLlcCut" class="ec-input" type="number" min="0" max="100" step="0.1" value="${_esc6(f.llc_cut_pct)}">
+            </div>
+        </div>
+
+        <div class="ec-row">
+            <label class="ec-checkbox-row">
+                <input type="checkbox" id="ecLlcInvestEligible" ${f.invest_eligible ? "checked" : ""}>
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-800">Invest-eligible</div>
+                    <div class="text-xs text-gray-500">Allow funds to be invested via Fidelity (events &gt;6 months out). RSVPs require a risk acknowledgment.</div>
+                </div>
+            </label>
+        </div>
+
+        <div class="ec-row">
+            <label class="ec-checkbox-row">
+                <input type="checkbox" id="ecLlcShowBreakdown" ${f.show_cost_breakdown ? "checked" : ""}>
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-800">Show cost breakdown to attendees</div>
+                    <div class="text-xs text-gray-500">Display itemized costs on the event page.</div>
+                </div>
+            </label>
+        </div>
+
+        <div class="ec-row">
+            <label class="ec-checkbox-row">
+                <input type="checkbox" id="ecLlcLocRequired" ${f.location_required ? "checked" : ""}>
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-800">Location required</div>
+                    <div class="text-xs text-gray-500">Attendees must have address details before trip logistics.</div>
+                </div>
+            </label>
+        </div>
+
+        <div class="ec-row">
+            <label class="ec-checkbox-row">
+                <input type="checkbox" id="ecLlcTransportOn" ${transportOn ? "checked" : ""}>
+                <div class="flex-1">
+                    <div class="text-sm font-bold text-gray-800">Transportation</div>
+                    <div class="text-xs text-gray-500">Track how travel is handled for this trip.</div>
+                </div>
+            </label>
+        </div>
+
+        ${transportOn ? `
+        <div class="ec-row">
+            <label class="ec-label">Transport mode</label>
+            <div style="display:flex;flex-direction:column;gap:8px">
+                <label class="ec-checkbox-row">
+                    <input type="radio" name="ecLlcTransportMode" value="llc_provides" ${f.transportation_mode === "llc_provides" ? "checked" : ""}>
+                    <span class="text-sm font-medium text-gray-800">LLC provides</span>
+                </label>
+                <label class="ec-checkbox-row">
+                    <input type="radio" name="ecLlcTransportMode" value="self_arranged" ${f.transportation_mode !== "llc_provides" ? "checked" : ""}>
+                    <span class="text-sm font-medium text-gray-800">Self-arranged</span>
+                </label>
+            </div>
+        </div>
+        ${f.transportation_mode === "llc_provides" ? `
+        <div class="ec-row">
+            <label class="ec-label">Transport method</label>
+            <div style="display:flex;flex-direction:column;gap:8px">
+                <label class="ec-checkbox-row">
+                    <input type="radio" name="ecLlcTransportMethod" value="car" ${f.transportation_method !== "plane" ? "checked" : ""}>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-800">Car</div>
+                        <div class="text-xs text-gray-500">Ground transport \u2014 no tickets required.</div>
+                    </div>
+                </label>
+                <label class="ec-checkbox-row">
+                    <input type="radio" name="ecLlcTransportMethod" value="plane" ${f.transportation_method === "plane" ? "checked" : ""}>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-800">Plane</div>
+                        <div class="text-xs text-gray-500">Flights \u2014 tickets appear in Docs when ready.</div>
+                    </div>
+                </label>
+            </div>
+        </div>` : `
+        <div class="ec-row">
+            <label class="ec-label">Estimate per person (USD)</label>
+            <input id="ecLlcTransportEst" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc6(f.transportation_estimate_dollars)}">
+        </div>`}
+        ` : ""}
+
+        <div class="ec-row">
+            <div class="ec-raffle-head">
+                <label class="ec-label" style="margin:0">Cost items</label>
+                <button type="button" id="ecLlcAddCost" class="ec-mini-btn">+ Add item</button>
+            </div>
+            ${f.cost_items.length ? f.cost_items.map((item, index) => `
+                <div class="ec-raffle-item-wrap" data-cost-id="${_esc6(item.id)}">
+                    <div class="ec-raffle-head">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Item ${index + 1}</span>
+                        <button type="button" class="ec-mini-btn" data-cost-remove="${_esc6(item.id)}" style="border-color:#fecaca;color:#dc2626">Remove</button>
+                    </div>
+                    <div class="ec-grid-2" style="margin-bottom:10px">
+                        <div>
+                            <label class="ec-label">Name</label>
+                            <input class="ec-input" type="text" maxlength="80" data-cost-name="${_esc6(item.id)}" value="${_esc6(item.name || "")}">
+                        </div>
+                        <div>
+                            <label class="ec-label">Category</label>
+                            <select class="ec-input" data-cost-cat="${_esc6(item.id)}">
+                                ${LLC_COST_CATEGORIES.map(
+      (c) => `<option value="${c.value}" ${item.category === c.value ? "selected" : ""}>${c.label}</option>`
+    ).join("")}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="ec-grid-2" style="margin-bottom:10px">
+                        <div>
+                            <label class="ec-label">Total cost (USD)</label>
+                            <input class="ec-input" type="number" min="0" step="0.01" data-cost-total="${_esc6(item.id)}" value="${item.total_cost_cents ? item.total_cost_cents / 100 : ""}">
+                        </div>
+                        <div>
+                            <label class="ec-label">Type</label>
+                            <select class="ec-input" data-cost-included="${_esc6(item.id)}">
+                                <option value="true" ${item.included_in_buyin !== false ? "selected" : ""}>Included in buy-in</option>
+                                <option value="false" ${item.included_in_buyin === false ? "selected" : ""}>Out of pocket</option>
+                            </select>
+                        </div>
+                    </div>
+                    ${item.included_in_buyin === false ? `
+                    <div class="ec-row" style="margin-bottom:0">
+                        <label class="ec-label">Avg per person (USD)</label>
+                        <input class="ec-input" type="number" min="0" step="0.01" data-cost-avg="${_esc6(item.id)}" value="${item.avg_per_person_cents ? item.avg_per_person_cents / 100 : ""}">
+                    </div>` : ""}
+                </div>
+            `).join("") : '<p class="text-xs text-gray-400 mb-2">No cost items yet. Add lodging, food, etc., or set a buy-in override below.</p>'}
+        </div>
+
+        ${f.cost_items.length ? `
+        <div class="ec-review-card">
+            <div class="ec-review-row"><span>Included total</span><span>${_money(summary.total_included_cents)}</span></div>
+            <div class="ec-review-row"><span>Base buy-in</span><span>${summary.base_buyin_cents ? _money(summary.base_buyin_cents) : "\u2014"}</span></div>
+            ${summary.llc_cut_cents ? `<div class="ec-review-row"><span>LLC cut</span><span>+${_money(summary.llc_cut_cents)}</span></div>` : ""}
+            <div class="ec-review-row"><span>Suggested buy-in</span><span>${summary.final_buyin_cents ? _money(summary.final_buyin_cents) + "/person" : "\u2014"}</span></div>
+            <div class="ec-review-row"><span>Out of pocket</span><span>~${_money(summary.total_oop_per_person_cents)}/person</span></div>
+        </div>` : ""}
+
+        <div class="ec-row">
+            <label class="ec-label">Buy-in override (USD / adult)</label>
+            <input id="ecLlcBuyInOverride" class="ec-input" type="number" min="0" step="0.01" placeholder="${suggestedDollars ? `Suggested: ${suggestedDollars}` : "0.00"}" value="${_esc6(f.llc_buyin_override_dollars)}">
+            <p class="ec-help">Leave blank to use the suggested buy-in from cost items. Saved as both adult and RSVP price.</p>
+        </div>
+    `;
+  }
+  function wire6() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    const render = window.EventsCreateSteps.render;
+    if (!Array.isArray(STATE4.form.cost_items)) STATE4.form.cost_items = [];
+    const list = STATE4.form.cost_items;
+    if (STATE4.form.transportation_enabled && STATE4.form.transportation_mode === "llc_provides") {
+      if (STATE4.form.transportation_method !== "car" && STATE4.form.transportation_method !== "plane") {
+        STATE4.form.transportation_method = "car";
+      }
+    }
+    document.getElementById("ecLlcMin")?.addEventListener("input", (e) => {
+      STATE4.form.min_participants = e.target.value;
+      _syncAdultFromBuyIn(STATE4);
+      render();
+    });
+    document.getElementById("ecLlcCut")?.addEventListener("input", (e) => {
+      STATE4.form.llc_cut_pct = e.target.value;
+      _syncAdultFromBuyIn(STATE4);
+      render();
+    });
+    document.getElementById("ecLlcInvestEligible")?.addEventListener("change", (e) => {
+      STATE4.form.invest_eligible = !!e.target.checked;
+    });
+    document.getElementById("ecLlcShowBreakdown")?.addEventListener("change", (e) => {
+      STATE4.form.show_cost_breakdown = !!e.target.checked;
+    });
+    document.getElementById("ecLlcLocRequired")?.addEventListener("change", (e) => {
+      STATE4.form.location_required = !!e.target.checked;
+    });
+    document.getElementById("ecLlcTransportOn")?.addEventListener("change", (e) => {
+      STATE4.form.transportation_enabled = !!e.target.checked;
+      if (!STATE4.form.transportation_enabled) {
+        STATE4.form.transportation_mode = "self_arranged";
+        STATE4.form.transportation_method = "";
+        STATE4.form.transportation_estimate_dollars = "";
+      }
+      render();
+    });
+    document.querySelectorAll('input[name="ecLlcTransportMode"]').forEach((el) => {
+      el.addEventListener("change", () => {
+        STATE4.form.transportation_mode = el.value;
+        if (el.value === "llc_provides") {
+          if (STATE4.form.transportation_method !== "car" && STATE4.form.transportation_method !== "plane") {
+            STATE4.form.transportation_method = "car";
+          }
+          STATE4.form.transportation_estimate_dollars = "";
+        } else {
+          STATE4.form.transportation_method = "";
+        }
+        render();
+      });
+    });
+    document.querySelectorAll('input[name="ecLlcTransportMethod"]').forEach((el) => {
+      el.addEventListener("change", () => {
+        STATE4.form.transportation_method = el.value;
+        render();
+      });
+    });
+    document.getElementById("ecLlcTransportEst")?.addEventListener("input", (e) => {
+      STATE4.form.transportation_estimate_dollars = e.target.value;
+    });
+    document.getElementById("ecLlcBuyInOverride")?.addEventListener("input", (e) => {
+      STATE4.form.llc_buyin_override_dollars = e.target.value;
+      _syncAdultFromBuyIn(STATE4);
+    });
+    document.getElementById("ecLlcAddCost")?.addEventListener("click", () => {
+      list.push({
+        id: _newId(),
+        name: "",
+        category: "other",
+        total_cost_cents: 0,
+        included_in_buyin: true,
+        avg_per_person_cents: 0,
+        notes: ""
+      });
+      render();
+    });
+    document.querySelectorAll("[data-cost-remove]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-cost-remove");
+        STATE4.form.cost_items = list.filter((i) => i.id !== id);
+        _syncAdultFromBuyIn(STATE4);
+        render();
+      });
+    });
+    document.querySelectorAll("[data-cost-name]").forEach((el) => {
+      el.addEventListener("input", () => {
+        const item = list.find((i) => i.id === el.getAttribute("data-cost-name"));
+        if (item) item.name = el.value.slice(0, 80);
+      });
+    });
+    document.querySelectorAll("[data-cost-cat]").forEach((el) => {
+      el.addEventListener("change", () => {
+        const item = list.find((i) => i.id === el.getAttribute("data-cost-cat"));
+        if (item) item.category = el.value;
+      });
+    });
+    document.querySelectorAll("[data-cost-total]").forEach((el) => {
+      el.addEventListener("input", () => {
+        const item = list.find((i) => i.id === el.getAttribute("data-cost-total"));
+        if (item) item.total_cost_cents = Math.round(Number(el.value || 0) * 100);
+        _syncAdultFromBuyIn(STATE4);
+      });
+      el.addEventListener("change", () => render());
+    });
+    document.querySelectorAll("[data-cost-included]").forEach((el) => {
+      el.addEventListener("change", () => {
+        const item = list.find((i) => i.id === el.getAttribute("data-cost-included"));
+        if (item) item.included_in_buyin = el.value === "true";
+        _syncAdultFromBuyIn(STATE4);
+        render();
+      });
+    });
+    document.querySelectorAll("[data-cost-avg]").forEach((el) => {
+      el.addEventListener("input", () => {
+        const item = list.find((i) => i.id === el.getAttribute("data-cost-avg"));
+        if (item) item.avg_per_person_cents = Math.round(Number(el.value || 0) * 100);
+      });
+    });
+  }
+  var createStepLlcApi = {
+    html: html6,
+    wire: wire6,
+    validateLlc,
+    computeLlcCostBreakdown,
+    resolveLlcBuyInCents,
+    LLC_COST_CATEGORIES
+  };
+  globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
+  globalThis.EventsCreateSteps.llc = createStepLlcApi;
+
+  // js/portal/events/create/step-competition.js
+  function _esc7(s) {
+    return window.EventsCreateSteps.esc(s);
+  }
+  function _tierTotal(form) {
+    return (Number(form.comp_tier1_pct) || 0) + (Number(form.comp_tier2_pct) || 0) + (Number(form.comp_tier3_pct) || 0);
+  }
+  function buildCompetitionConfig(form) {
+    return {
+      entry_type: form.comp_entry_type || "any",
+      entry_fee_cents: Math.round(Number(form.comp_entry_fee_dollars || 0) * 100),
+      house_pct: Number(form.comp_house_pct) || 0,
+      min_entries: Number(form.comp_min_entries) || 2,
+      extension_days: Number(form.comp_extension_days) || 3,
+      entries_visible_before_voting: form.comp_entries_visible !== false,
+      voter_eligibility: form.comp_voter_eligibility || "all_members",
+      vote_tally_visible: !!form.comp_vote_tally_visible,
+      max_file_size_mb: Number(form.comp_max_file_size_mb) > 0 ? Number(form.comp_max_file_size_mb) : 10
+    };
+  }
+  function buildWinnerTierConfig(form) {
+    const tiers = [];
+    const t1 = Number(form.comp_tier1_pct) || 0;
+    const t2 = Number(form.comp_tier2_pct) || 0;
+    const t3 = Number(form.comp_tier3_pct) || 0;
+    if (t1 > 0) tiers.push({ place: 1, pct: t1 });
+    if (t2 > 0) tiers.push({ place: 2, pct: t2 });
+    if (t3 > 0) tiers.push({ place: 3, pct: t3 });
+    return tiers.length ? tiers : [{ place: 1, pct: 100 }];
+  }
+  function buildInitialPhases(form, startISO, endISO) {
+    const start = startISO ? new Date(startISO) : null;
+    const p1End = form.comp_phase1_end ? new Date(form.comp_phase1_end) : null;
+    const p2End = form.comp_phase2_end ? new Date(form.comp_phase2_end) : null;
+    const p3End = form.comp_phase3_end ? new Date(form.comp_phase3_end) : null;
+    const eventEnd = endISO ? new Date(endISO) : p3End;
+    return [
+      {
+        phase_num: 1,
+        name: "Registration",
+        description: "Competitors register during this phase.",
+        starts_at: start?.toISOString() || null,
+        ends_at: p1End?.toISOString() || null,
+        status: "pending"
+      },
+      {
+        phase_num: 2,
+        name: "Submission",
+        description: "Submit GFX entries during this window.",
+        starts_at: p1End?.toISOString() || null,
+        ends_at: p2End?.toISOString() || null,
+        status: "pending"
+      },
+      {
+        phase_num: 3,
+        name: "Voting",
+        description: "Members vote on submitted entries.",
+        starts_at: p2End?.toISOString() || null,
+        ends_at: p3End?.toISOString() || null,
+        status: "pending"
+      },
+      {
+        phase_num: 4,
+        name: "Results",
+        description: "Winners announced and payouts processed.",
+        starts_at: p3End?.toISOString() || null,
+        ends_at: eventEnd?.toISOString() || p3End?.toISOString() || null,
+        status: "pending"
+      }
+    ];
+  }
+  function hydrateCompetitionFormFields(event, phases) {
+    const cfg = event.competition_config || {};
+    const tiers = Array.isArray(event.winner_tier_config) ? event.winner_tier_config : [];
+    const t1 = tiers.find((t) => Number(t.place) === 1)?.pct ?? 100;
+    const t2 = tiers.find((t) => Number(t.place) === 2)?.pct ?? 0;
+    const t3 = tiers.find((t) => Number(t.place) === 3)?.pct ?? 0;
+    const list = Array.isArray(phases) ? phases : [];
+    const p1 = list.find((p) => Number(p.phase_num) === 1);
+    const p2 = list.find((p) => Number(p.phase_num) === 2);
+    const p3 = list.find((p) => Number(p.phase_num) === 3);
+    return {
+      comp_entry_fee_dollars: cfg.entry_fee_cents ? String(cfg.entry_fee_cents / 100) : "",
+      comp_house_pct: String(cfg.house_pct ?? 0),
+      comp_min_entries: String(cfg.min_entries ?? 2),
+      comp_extension_days: String(cfg.extension_days ?? 3),
+      comp_entry_type: cfg.entry_type || "any",
+      comp_entries_visible: cfg.entries_visible_before_voting !== false,
+      comp_voter_eligibility: cfg.voter_eligibility || "all_members",
+      comp_vote_tally_visible: !!cfg.vote_tally_visible,
+      comp_max_file_size_mb: String(cfg.max_file_size_mb ?? 10),
+      comp_tier1_pct: String(t1),
+      comp_tier2_pct: String(t2),
+      comp_tier3_pct: String(t3),
+      comp_phase1_end: toDatetimeLocalValue(p1?.ends_at),
+      comp_phase2_end: toDatetimeLocalValue(p2?.ends_at),
+      comp_phase3_end: toDatetimeLocalValue(p3?.ends_at)
+    };
+  }
+  function validateCompetition(form, opts) {
+    const publish = !opts || opts.publish !== false;
+    const fee = Number(form.comp_entry_fee_dollars);
+    if (form.comp_entry_fee_dollars !== "" && (Number.isNaN(fee) || fee < 0 || fee > 500)) {
+      return "Entry fee must be between $0 and $500.";
+    }
+    const house = Number(form.comp_house_pct);
+    if (Number.isNaN(house) || house < 0 || house > 25) {
+      return "House % must be between 0 and 25.";
+    }
+    const minEntries = Number(form.comp_min_entries);
+    if (Number.isNaN(minEntries) || minEntries < 2 || minEntries > 100) {
+      return "Minimum entries must be between 2 and 100.";
+    }
+    const extDays = Number(form.comp_extension_days);
+    if (Number.isNaN(extDays) || extDays < 1 || extDays > 14) {
+      return "Extension days must be between 1 and 14.";
+    }
+    const maxMb = Number(form.comp_max_file_size_mb);
+    if (Number.isNaN(maxMb) || maxMb < 1 || maxMb > 100) {
+      return "Max file size must be between 1 and 100 MB.";
+    }
+    const total = _tierTotal(form);
+    if (total !== 100) {
+      return `Winner tiers must total 100% (currently ${total}%).`;
+    }
+    if (Number(form.comp_tier1_pct) <= 0) {
+      return "1st place tier must be at least 1%.";
+    }
+    if (!publish) return null;
+    if (!form.start_date) return "Event start date is required before setting competition phases.";
+    if (!form.comp_phase1_end) return "Registration end date is required.";
+    if (!form.comp_phase2_end) return "Submission end date is required.";
+    if (!form.comp_phase3_end) return "Voting end date is required.";
+    const start = new Date(form.start_date);
+    const p1 = new Date(form.comp_phase1_end);
+    const p2 = new Date(form.comp_phase2_end);
+    const p3 = new Date(form.comp_phase3_end);
+    if (p1 <= start) return "Registration must end after the event start.";
+    if (p2 <= p1) return "Submission must end after registration ends.";
+    if (p3 <= p2) return "Voting must end after submission ends.";
+    if (form.end_date && p3 > new Date(form.end_date)) {
+      return "Voting should end before or at the event end date.";
+    }
+    return null;
+  }
+  function _recalcTierTotal() {
+    const totalEl = document.getElementById("ecCompTierTotal");
+    if (!totalEl) return;
+    const STATE4 = window.EventsCreateSteps.getState();
+    const total = _tierTotal(STATE4.form);
+    totalEl.textContent = `Total: ${total}%`;
+    totalEl.classList.toggle("ec-error-text", total !== 100);
+  }
+  function html7() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    const f = STATE4.form;
+    const locked = !!STATE4.competitionLocked;
+    const disabledAttr = locked ? "disabled" : "";
+    const tierTotal = _tierTotal(f);
+    const lockBanner = locked ? '<div class="ec-lock-banner">Competition settings are locked after competitors register. Phase dates for active phases cannot be changed here.</div>' : "";
+    return `
+        ${lockBanner}
+        <div class="ec-row">
+            <p class="ec-help" style="margin-bottom:12px">Configure prize pool economics, competition rules, and initial phase schedule. Entry fee goes to the prize pool \u2014 not trip RSVP pricing.</p>
+        </div>
+
+        <div class="ec-review-card" style="margin-bottom:12px">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">Prizes</h3>
+            <div class="ec-row">
+                <label class="ec-label">Entry fee (USD)</label>
+                <input id="ecCompEntryFee" class="ec-input" type="number" min="0" max="500" step="1" placeholder="0 = free" value="${_esc7(f.comp_entry_fee_dollars)}" ${disabledAttr}>
+                <p class="ec-help">Optional \u2014 collected at registration and added to the prize pool.</p>
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">House %</label>
+                <input id="ecCompHousePct" class="ec-input" type="number" min="0" max="25" step="0.5" value="${_esc7(f.comp_house_pct)}" ${disabledAttr}>
+                <p class="ec-help">Taken from the prize pool before winner payouts (0\u201325%).</p>
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">Winner tiers</label>
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-amber-600 w-10">1st</span>
+                        <input id="ecCompTier1" type="number" min="1" max="100" class="ec-input" style="width:5rem" value="${_esc7(f.comp_tier1_pct)}" ${disabledAttr}>
+                        <span class="text-xs text-gray-400">%</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-gray-400 w-10">2nd</span>
+                        <input id="ecCompTier2" type="number" min="0" max="50" class="ec-input" style="width:5rem" value="${_esc7(f.comp_tier2_pct)}" ${disabledAttr}>
+                        <span class="text-xs text-gray-400">%</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-orange-300 w-10">3rd</span>
+                        <input id="ecCompTier3" type="number" min="0" max="30" class="ec-input" style="width:5rem" value="${_esc7(f.comp_tier3_pct)}" ${disabledAttr}>
+                        <span class="text-xs text-gray-400">%</span>
+                    </div>
+                </div>
+                <p id="ecCompTierTotal" class="ec-help ${tierTotal !== 100 ? "ec-error-text" : ""}">Total: ${tierTotal}%</p>
+            </div>
+        </div>
+
+        <div class="ec-review-card" style="margin-bottom:12px">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">Rules</h3>
+            <div class="ec-row">
+                <label class="ec-label">Entry type</label>
+                <select id="ecCompEntryType" class="ec-input" ${disabledAttr}>
+                    <option value="any" ${f.comp_entry_type === "any" ? "selected" : ""}>Any (file, link, or text)</option>
+                    <option value="file" ${f.comp_entry_type === "file" ? "selected" : ""}>File upload only (GFX)</option>
+                    <option value="link" ${f.comp_entry_type === "link" ? "selected" : ""}>External link only</option>
+                    <option value="text" ${f.comp_entry_type === "text" ? "selected" : ""}>Text description only</option>
+                </select>
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">Minimum entries</label>
+                <input id="ecCompMinEntries" class="ec-input" type="number" min="2" max="100" value="${_esc7(f.comp_min_entries)}" ${disabledAttr}>
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">Extension days</label>
+                <input id="ecCompExtensionDays" class="ec-input" type="number" min="1" max="14" value="${_esc7(f.comp_extension_days)}" ${disabledAttr}>
+                <p class="ec-help">If minimum entries aren't met, the host may extend registration.</p>
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">Max file size (MB)</label>
+                <input id="ecCompMaxFileMb" class="ec-input" type="number" min="1" max="100" value="${_esc7(f.comp_max_file_size_mb)}" ${disabledAttr}>
+            </div>
+            <label class="ec-checkbox-row">
+                <input type="checkbox" id="ecCompEntriesVisible" ${f.comp_entries_visible ? "checked" : ""} ${disabledAttr}>
+                <div><div class="text-sm font-bold text-gray-800">Show entries before voting</div></div>
+            </label>
+            <div class="ec-row">
+                <label class="ec-label">Who can vote</label>
+                <select id="ecCompVoterEligibility" class="ec-input" ${disabledAttr}>
+                    <option value="all_members" ${f.comp_voter_eligibility === "all_members" ? "selected" : ""}>All active members</option>
+                    <option value="rsvped_only" ${f.comp_voter_eligibility === "rsvped_only" ? "selected" : ""}>RSVPed members only</option>
+                    <option value="competitors_only" ${f.comp_voter_eligibility === "competitors_only" ? "selected" : ""}>Competitors only</option>
+                </select>
+            </div>
+            <label class="ec-checkbox-row">
+                <input type="checkbox" id="ecCompVoteTally" ${f.comp_vote_tally_visible ? "checked" : ""} ${disabledAttr}>
+                <div><div class="text-sm font-bold text-gray-800">Show live vote tally</div></div>
+            </label>
+        </div>
+
+        <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">Phase schedule</h3>
+            <p class="ec-help" style="margin-bottom:10px">Phase 1 starts at the event start date. Refine the submission window later in Manage \u2192 Comp if needed.</p>
+            <div class="ec-row">
+                <label class="ec-label">Registration ends</label>
+                <input id="ecCompPhase1End" class="ec-input" type="datetime-local" value="${_esc7(f.comp_phase1_end)}" ${disabledAttr}>
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">Submission ends</label>
+                <input id="ecCompPhase2End" class="ec-input" type="datetime-local" value="${_esc7(f.comp_phase2_end)}" ${disabledAttr}>
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">Voting ends</label>
+                <input id="ecCompPhase3End" class="ec-input" type="datetime-local" value="${_esc7(f.comp_phase3_end)}" ${disabledAttr}>
+            </div>
+        </div>
+    `;
+  }
+  function wire7() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    if (STATE4.competitionLocked) return;
+    const f = STATE4.form;
+    const bind = (id, key, parser) => {
+      document.getElementById(id)?.addEventListener("input", (e) => {
+        f[key] = parser ? parser(e.target) : e.target.value;
+        if (id.startsWith("ecCompTier")) _recalcTierTotal();
+      });
+      document.getElementById(id)?.addEventListener("change", (e) => {
+        f[key] = parser ? parser(e.target) : e.target.value;
+        if (id.startsWith("ecCompTier")) _recalcTierTotal();
+      });
+    };
+    bind("ecCompEntryFee", "comp_entry_fee_dollars");
+    bind("ecCompHousePct", "comp_house_pct");
+    bind("ecCompTier1", "comp_tier1_pct");
+    bind("ecCompTier2", "comp_tier2_pct");
+    bind("ecCompTier3", "comp_tier3_pct");
+    bind("ecCompMinEntries", "comp_min_entries");
+    bind("ecCompExtensionDays", "comp_extension_days");
+    bind("ecCompMaxFileMb", "comp_max_file_size_mb");
+    bind("ecCompPhase1End", "comp_phase1_end");
+    bind("ecCompPhase2End", "comp_phase2_end");
+    bind("ecCompPhase3End", "comp_phase3_end");
+    document.getElementById("ecCompEntryType")?.addEventListener("change", (e) => {
+      f.comp_entry_type = e.target.value;
+    });
+    document.getElementById("ecCompVoterEligibility")?.addEventListener("change", (e) => {
+      f.comp_voter_eligibility = e.target.value;
+    });
+    document.getElementById("ecCompEntriesVisible")?.addEventListener("change", (e) => {
+      f.comp_entries_visible = e.target.checked;
+    });
+    document.getElementById("ecCompVoteTally")?.addEventListener("change", (e) => {
+      f.comp_vote_tally_visible = e.target.checked;
+    });
+  }
+  var createStepCompetitionApi = {
+    html: html7,
+    wire: wire7,
+    validateCompetition,
+    buildCompetitionConfig,
+    buildWinnerTierConfig,
+    buildInitialPhases,
+    hydrateCompetitionFormFields
+  };
+  globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
+  globalThis.EventsCreateSteps.competition = createStepCompetitionApi;
+
+  // js/portal/events/create/step-disclaimers.js
+  var TITLE_MAX2 = 80;
+  var BODY_MAX2 = 4e3;
+  var DEFAULT_NO_REFUNDS_ID = "default-no-refunds";
+  var DEFAULT_FLYERS_ID = "default-flyers";
+  function seedDefaultDisclaimers() {
+    return [
+      {
+        id: DEFAULT_NO_REFUNDS_ID,
+        title: "No refunds",
+        body: "Payments for this event are non-refundable for the payment period unless the event is cancelled or rescheduled by organizers.",
+        required: true,
+        is_default: true
+      },
+      {
+        id: DEFAULT_FLYERS_ID,
+        title: "Flyers / tickets",
+        body: "Guests who book their own travel (flights, etc.) are responsible for those costs; the event fee does not reimburse tickets or travel.",
+        required: true,
+        is_default: true
+      }
+    ];
+  }
+  function _esc8(s) {
+    return window.EventsCreateSteps.esc(s);
+  }
+  function _newId2() {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    return `disc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+  function _list() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    if (!Array.isArray(STATE4.form.disclaimers) || !STATE4.form.disclaimers.length) {
+      STATE4.form.disclaimers = seedDefaultDisclaimers();
+    }
+    return STATE4.form.disclaimers;
+  }
+  function _ensureDefaults(list) {
+    const byId = new Map(list.map((d) => [d.id, d]));
+    const seeded = seedDefaultDisclaimers();
+    const out = [];
+    for (const def of seeded) {
+      const existing = byId.get(def.id);
+      if (existing) {
+        out.push({
+          ...existing,
+          id: def.id,
+          required: true,
+          is_default: true
+        });
+        byId.delete(def.id);
+      } else {
+        out.push({ ...def });
+      }
+    }
+    for (const d of list) {
+      if (d.is_default || d.id === DEFAULT_NO_REFUNDS_ID || d.id === DEFAULT_FLYERS_ID) continue;
+      out.push(d);
+    }
+    return out;
+  }
+  function ensureDefaultDisclaimers(list) {
+    return _ensureDefaults(Array.isArray(list) ? list : []);
+  }
+  function html8() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    STATE4.form.disclaimers = _ensureDefaults(_list());
+    const list = STATE4.form.disclaimers;
+    const locked = !!STATE4.disclaimersLocked;
+    if (locked) {
+      return `
+            <div class="ec-lock-banner">Disclaimers are locked after RSVPs. Acknowledgments already recorded stay as-is.</div>
+            ${list.map((item, index) => {
+        const isDefault = !!item.is_default;
+        return `
+                <div class="ec-raffle-item-wrap">
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">
+                        ${isDefault ? "Required default" : `Clause ${index + 1}`}${item.required ? " \xB7 Required" : ""}
+                    </span>
+                    <p class="text-sm font-bold text-gray-900 mt-1">${_esc8(item.title || "")}</p>
+                    <p class="text-xs text-gray-600 mt-1 whitespace-pre-wrap">${_esc8(item.body || "")}</p>
+                </div>`;
+      }).join("")}
+        `;
+    }
+    return `
+        <div class="ec-row">
+            <p class="text-sm text-gray-600 mb-2">Guests must acknowledge these clauses when they RSVP. Two defaults are required; you can edit them and add more. Editable until the first RSVP, then locked.</p>
+        </div>
+        ${list.map((item, index) => {
+      const isDefault = !!item.is_default;
+      return `
+            <div class="ec-raffle-item-wrap" data-disc-id="${_esc8(item.id)}">
+                <div class="ec-raffle-head">
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">
+                        ${isDefault ? "Required default" : `Clause ${index + 1}`}
+                    </span>
+                    <div class="flex items-center gap-1">
+                        <button type="button" class="ec-icon-btn" data-disc-up="${_esc8(item.id)}" ${index === 0 ? "disabled" : ""} aria-label="Move up">\u2191</button>
+                        <button type="button" class="ec-icon-btn" data-disc-down="${_esc8(item.id)}" ${index === list.length - 1 ? "disabled" : ""} aria-label="Move down">\u2193</button>
+                        ${isDefault ? '<span class="ec-help" style="margin:0">Locked</span>' : `<button type="button" class="ec-mini-btn" data-disc-remove="${_esc8(item.id)}" style="border-color:#fecaca;color:#dc2626">Remove</button>`}
+                    </div>
+                </div>
+                <div class="ec-row" style="margin-bottom:10px">
+                    <label class="ec-label">Title</label>
+                    <input class="ec-input" type="text" maxlength="${TITLE_MAX2}" data-disc-title="${_esc8(item.id)}" value="${_esc8(item.title || "")}">
+                </div>
+                <div class="ec-row" style="margin-bottom:10px">
+                    <label class="ec-label">Body</label>
+                    <textarea class="ec-input ec-textarea" maxlength="${BODY_MAX2}" data-disc-body="${_esc8(item.id)}" placeholder="Disclaimer text\u2026">${_esc8(item.body || "")}</textarea>
+                </div>
+                <div class="ec-row" style="margin-bottom:0">
+                    ${isDefault ? `<label class="ec-check"><input type="checkbox" checked disabled><span>Required at RSVP (default)</span></label>` : `<label class="ec-check"><input type="checkbox" data-disc-required="${_esc8(item.id)}" ${item.required ? "checked" : ""}><span>Required at RSVP</span></label>`}
+                </div>
+            </div>
+        `;
+    }).join("")}
+        <button type="button" id="ecDiscAdd" class="ec-mini-btn" style="margin-top:12px">+ Add clause</button>
+    `;
+  }
+  function wire8() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    if (STATE4.disclaimersLocked) return;
+    const render = window.EventsCreateSteps.render;
+    STATE4.form.disclaimers = _ensureDefaults(_list());
+    const list = STATE4.form.disclaimers;
+    document.getElementById("ecDiscAdd")?.addEventListener("click", () => {
+      list.push({
+        id: _newId2(),
+        title: "",
+        body: "",
+        required: true,
+        is_default: false
+      });
+      render();
+    });
+    document.querySelectorAll("[data-disc-title]").forEach((el) => {
+      el.addEventListener("input", () => {
+        const item = list.find((d) => d.id === el.getAttribute("data-disc-title"));
+        if (item) item.title = el.value.slice(0, TITLE_MAX2);
+      });
+    });
+    document.querySelectorAll("[data-disc-body]").forEach((el) => {
+      el.addEventListener("input", () => {
+        const item = list.find((d) => d.id === el.getAttribute("data-disc-body"));
+        if (item) item.body = el.value.slice(0, BODY_MAX2);
+      });
+    });
+    document.querySelectorAll("[data-disc-required]").forEach((el) => {
+      el.addEventListener("change", () => {
+        const item = list.find((d) => d.id === el.getAttribute("data-disc-required"));
+        if (item && !item.is_default) item.required = !!el.checked;
+      });
+    });
+    document.querySelectorAll("[data-disc-up]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-disc-up");
+        const i = list.findIndex((d) => d.id === id);
+        if (i <= 0) return;
+        const tmp = list[i - 1];
+        list[i - 1] = list[i];
+        list[i] = tmp;
+        render();
+      });
+    });
+    document.querySelectorAll("[data-disc-down]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-disc-down");
+        const i = list.findIndex((d) => d.id === id);
+        if (i < 0 || i >= list.length - 1) return;
+        const tmp = list[i + 1];
+        list[i + 1] = list[i];
+        list[i] = tmp;
+        render();
+      });
+    });
+    document.querySelectorAll("[data-disc-remove]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-disc-remove");
+        const item = list.find((d) => d.id === id);
+        if (!item || item.is_default) return;
+        if ((item.title || "").trim() || (item.body || "").trim()) {
+          if (!confirm("Remove this disclaimer clause?")) return;
+        }
+        STATE4.form.disclaimers = list.filter((d) => d.id !== id);
+        render();
+      });
+    });
+  }
+  function validateDisclaimers(form) {
+    let list = Array.isArray(form?.disclaimers) ? form.disclaimers : [];
+    list = _ensureDefaults(list);
+    if (form) form.disclaimers = list;
+    const hasNoRefunds = list.some((d) => d.id === DEFAULT_NO_REFUNDS_ID);
+    const hasFlyers = list.some((d) => d.id === DEFAULT_FLYERS_ID);
+    if (!hasNoRefunds || !hasFlyers) {
+      return "Required default disclaimers are missing. Re-open the Disclaimers step.";
+    }
+    for (let i = 0; i < list.length; i++) {
+      const item = list[i] || {};
+      const title = String(item.title || "").trim();
+      const body = String(item.body || "").trim();
+      if (!title) return `Disclaimer ${i + 1} needs a title.`;
+      if (title.length > TITLE_MAX2) return `Disclaimer ${i + 1} title must be ${TITLE_MAX2} characters or fewer.`;
+      if (!body) return `Disclaimer ${i + 1} needs body text.`;
+      if (body.length > BODY_MAX2) return `Disclaimer ${i + 1} body must be ${BODY_MAX2} characters or fewer.`;
+      if (item.is_default && !item.required) {
+        return `Default disclaimer "${title}" must stay required.`;
+      }
+    }
+    return null;
+  }
+  var createStepDisclaimersApi = {
+    html: html8,
+    wire: wire8,
+    validateDisclaimers,
+    seedDefaultDisclaimers,
+    ensureDefaultDisclaimers
+  };
+  globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
+  globalThis.EventsCreateSteps.disclaimers = createStepDisclaimersApi;
+  globalThis.EventsCreateSteps.seedDefaultDisclaimers = seedDefaultDisclaimers;
+
+  // js/portal/events/create/step-voting.js
+  var LABEL_MAX = 80;
+  var DESC_MAX = 240;
+  function _esc9(s) {
+    return window.EventsCreateSteps.esc(s);
+  }
+  function _newOptionId() {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    return `amenity-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+  function _cfg() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    if (!STATE4.form.amenity_voting || typeof STATE4.form.amenity_voting !== "object") {
+      STATE4.form.amenity_voting = window.EventsAmenityVoting && typeof window.EventsAmenityVoting.defaultConfig === "function" ? window.EventsAmenityVoting.defaultConfig() : { enabled: false, options: [], closes_at: null, results_visible: "after_close" };
+    }
+    return STATE4.form.amenity_voting;
+  }
+  function _toDatetimeLocal(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function _optionRow(opt, idx, locked) {
+    const dis = locked ? " disabled" : "";
+    return `
+        <div class="ec-amenity-row border border-gray-200 rounded-xl p-3 mb-2" data-amenity-idx="${idx}">
+            <div class="flex gap-2 mb-2">
+                <input type="text" class="ec-input flex-1 ec-amenity-label" placeholder="Option label" maxlength="${LABEL_MAX}" value="${_esc9(opt.label || "")}"${dis} aria-label="Option label">
+                ${locked ? "" : `<button type="button" class="ec-btn-ghost text-xs ec-amenity-remove" data-idx="${idx}">Remove</button>`}
+            </div>
+            <input type="text" class="ec-input w-full ec-amenity-desc" placeholder="Short description (optional)" maxlength="${DESC_MAX}" value="${_esc9(opt.description || "")}"${dis} aria-label="Option description">
+            ${locked ? "" : `<div class="flex gap-2 mt-2">
+                <button type="button" class="ec-btn-ghost text-xs ec-amenity-up" data-idx="${idx}" ${idx === 0 ? "disabled" : ""}>Up</button>
+                <button type="button" class="ec-btn-ghost text-xs ec-amenity-down" data-idx="${idx}">Down</button>
+            </div>`}
+        </div>`;
+  }
+  function html9() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    const cfg = _cfg();
+    if (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === "function") {
+      const norm = window.EventsAmenityVoting.normalizeConfig(cfg);
+      STATE4.form.amenity_voting = { ...norm, enabled: cfg.enabled === true && norm.options.length >= 2 ? true : !!cfg.enabled && norm.options.length >= 2 };
+    }
+    const locked = !!STATE4.votingLocked;
+    const av = STATE4.form.amenity_voting;
+    const options = Array.isArray(av.options) ? av.options : [];
+    const optionsHtml = options.length ? options.map((o, i) => _optionRow(o, i, locked)).join("") : '<p class="text-sm text-gray-500 mb-2">Add at least two options for attendees to choose from.</p>';
+    return `
+        <div>
+            <h2 class="text-lg font-bold text-gray-900 mb-1">Amenity voting</h2>
+            <p class="text-sm text-gray-600 mb-4">Let attendees vote on trip amenities (e.g. lodging style). Votes are cast during RSVP \u2014 results show on the event detail page.</p>
+            ${locked ? '<p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">Locked \u2014 at least one RSVP exists. Voting options cannot be changed.</p>' : ""}
+            <label class="flex items-start gap-3 mb-4 cursor-pointer">
+                <input type="checkbox" id="ecAmenityEnabled" class="mt-1" ${av.enabled ? "checked" : ""}${locked ? " disabled" : ""}>
+                <span><span class="text-sm font-semibold text-gray-800">Enable amenity voting</span><span class="block text-xs text-gray-500">Requires at least two options.</span></span>
+            </label>
+            <div id="ecAmenityFields" class="${av.enabled ? "" : "hidden"}">
+                <p class="text-sm font-semibold text-gray-800 mb-2">Options</p>
+                <div id="ecAmenityOptions">${optionsHtml}</div>
+                ${locked ? "" : '<button type="button" id="ecAmenityAdd" class="ec-btn-ghost text-sm mb-4">+ Add option</button>'}
+                <label class="ec-label">Voting closes (optional)</label>
+                <input type="datetime-local" id="ecAmenityCloses" class="ec-input mb-3" value="${_esc9(_toDatetimeLocal(av.closes_at))}"${locked ? " disabled" : ""}>
+                <label class="ec-label">Who can see results</label>
+                <select id="ecAmenityResultsVisible" class="ec-input mb-2"${locked ? " disabled" : ""}>
+                    <option value="after_close" ${av.results_visible === "after_close" ? "selected" : ""}>After voting closes</option>
+                    <option value="always" ${av.results_visible === "always" ? "selected" : ""}>Always (live tally)</option>
+                    <option value="host_only" ${av.results_visible === "host_only" ? "selected" : ""}>Hosts only</option>
+                </select>
+            </div>
+        </div>`;
+  }
+  function _syncFromDom() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    const cfg = _cfg();
+    const enabledEl = document.getElementById("ecAmenityEnabled");
+    cfg.enabled = !!(enabledEl && enabledEl.checked);
+    const closesEl = document.getElementById("ecAmenityCloses");
+    cfg.closes_at = closesEl && closesEl.value ? new Date(closesEl.value).toISOString() : null;
+    const visEl = document.getElementById("ecAmenityResultsVisible");
+    cfg.results_visible = visEl ? visEl.value : "after_close";
+    const rows = document.querySelectorAll("#ecAmenityOptions .ec-amenity-row");
+    cfg.options = Array.from(rows).map((row, idx) => {
+      const prev = (cfg.options || [])[idx] || {};
+      return {
+        id: prev.id || _newOptionId(),
+        label: row.querySelector(".ec-amenity-label")?.value?.trim() || "",
+        description: row.querySelector(".ec-amenity-desc")?.value?.trim() || ""
+      };
+    }).filter((o) => o.label);
+    if (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === "function") {
+      const norm = window.EventsAmenityVoting.normalizeConfig(cfg);
+      STATE4.form.amenity_voting = { ...norm, enabled: cfg.enabled && norm.options.length >= 2 };
+    }
+  }
+  function wire9() {
+    const STATE4 = window.EventsCreateSteps.getState();
+    const locked = !!STATE4.votingLocked;
+    const enabledEl = document.getElementById("ecAmenityEnabled");
+    const fieldsEl = document.getElementById("ecAmenityFields");
+    enabledEl?.addEventListener("change", () => {
+      _cfg().enabled = enabledEl.checked;
+      fieldsEl?.classList.toggle("hidden", !enabledEl.checked);
+    });
+    document.getElementById("ecAmenityCloses")?.addEventListener("change", _syncFromDom);
+    document.getElementById("ecAmenityResultsVisible")?.addEventListener("change", _syncFromDom);
+    document.getElementById("ecAmenityAdd")?.addEventListener("click", () => {
+      if (locked) return;
+      _syncFromDom();
+      _cfg().options.push({ id: _newOptionId(), label: "", description: "" });
+      window.EventsCreateSteps.render();
+    });
+    document.getElementById("ecAmenityOptions")?.addEventListener("click", (e) => {
+      if (locked) return;
+      const rm = e.target.closest(".ec-amenity-remove");
+      const up = e.target.closest(".ec-amenity-up");
+      const down = e.target.closest(".ec-amenity-down");
+      if (!rm && !up && !down) return;
+      _syncFromDom();
+      const opts = _cfg().options;
+      const idx = Number((rm || up || down).dataset.idx);
+      if (rm) opts.splice(idx, 1);
+      else if (up && idx > 0) {
+        [opts[idx - 1], opts[idx]] = [opts[idx], opts[idx - 1]];
+      } else if (down && idx < opts.length - 1) {
+        [opts[idx + 1], opts[idx]] = [opts[idx], opts[idx + 1]];
+      }
+      window.EventsCreateSteps.render();
+    });
+    document.getElementById("ecAmenityOptions")?.addEventListener("input", () => {
+      if (locked) return;
+      _syncFromDom();
+    });
+  }
+  function validateVoting(form) {
+    const av = form.amenity_voting;
+    if (!av || av.enabled !== true) return null;
+    const norm = window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === "function" ? window.EventsAmenityVoting.normalizeConfig(av) : av;
+    if (!norm.enabled) {
+      if ((av.options || []).filter((o) => o && String(o.label || "").trim()).length >= 2) {
+        return "Enable amenity voting or remove extra options.";
+      }
+      return null;
+    }
+    if ((norm.options || []).length < 2) return "Add at least two amenity options when voting is enabled.";
+    return null;
+  }
+  var createStepVotingApi = { html: html9, wire: wire9, validateVoting };
+  globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
+  globalThis.EventsCreateSteps.voting = createStepVotingApi;
+
+  // js/portal/events/create/step-review.js
+  function _esc10(s) {
+    return window.EventsCreateSteps.esc(s);
+  }
+  function _capacityReviewLabel(f) {
+    if (f.capacity_mode === "none") return "No limit";
+    const counts = f.capacity_counts === "all" ? "adults + kids" : "adults only";
+    const mode = f.capacity_mode === "soft" ? "Soft cap" : "Hard cap";
+    const n = f.max_participants || "\u2014";
+    return `${mode} \xB7 ${n} (${counts})`;
+  }
+  function html10() {
     const STATE4 = window.EventsCreateSteps.getState();
     const CATEGORIES2 = window.EventsCreateSteps.CATEGORIES;
     const f = STATE4.form;
     const cat = CATEGORIES2.find((c) => c.key === f.category)?.label || f.category;
     const start = f.start_date ? new Date(f.start_date).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "\u2014";
-    const pricingLabel = { free: "Free", paid: `Paid \xB7 $${f.rsvp_cost_dollars || "0.00"}`, free_paid_raffle: "Free + paid raffle" }[f.pricing_mode];
+    const pricingLabel = { free: "Free", paid: `Paid \xB7 $${f.adult_price_dollars || "0.00"} adult`, free_paid_raffle: "Free + paid raffle" }[f.pricing_mode];
+    const fundEst = f.pricing_mode === "paid" ? monthlyEstimate(f) : null;
     const raffleReviewHtml = window.EventsCreateSteps.raffleReviewHtml;
     return `
         <div id="ecError"></div>
@@ -9603,35 +13989,93 @@ Type the event title to confirm:`);
         ${STATE4.bannerPreviewUrl ? `<img src="${STATE4.bannerPreviewUrl}" class="ec-banner-preview mb-3" alt="">` : ""}
 
         <div class="ec-review-card">
-            <h3 class="font-bold text-gray-800 text-sm mb-2">${_esc4(f.title || "Untitled event")}</h3>
+            <h3 class="font-bold text-gray-800 text-sm mb-2">${_esc10(f.title || "Untitled event")}</h3>
             <div class="ec-review-row"><span>Type</span><span>${f.event_type}</span></div>
             <div class="ec-review-row"><span>Category</span><span>${cat}</span></div>
-            ${f.description ? `<div class="ec-review-row"><span>Description</span><span style="max-width:60%">${_esc4(f.description.slice(0, 120))}${f.description.length > 120 ? "\u2026" : ""}</span></div>` : ""}
+            ${f.description ? `<div class="ec-review-row"><span>Description</span><span style="max-width:60%">${_esc10(f.description.slice(0, 120))}${f.description.length > 120 ? "\u2026" : ""}</span></div>` : ""}
+        </div>
+
+        <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">About</h3>
+            <div class="ec-review-row"><span>Tabs</span><span>${(f.about_tabs || []).length ? _esc10((f.about_tabs || []).map((t) => (t.title || "").trim() || "Untitled").join(" \xB7 ")) : "None"}</span></div>
+        </div>
+
+        <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">Included</h3>
+            <div class="ec-review-row"><span>Items</span><span>${(f.included_items || []).length ? _esc10(`${(f.included_items || []).length} \xB7 ${(f.included_items || []).map((i) => (i.name || "").trim() || "Untitled").join(" \xB7 ")}`) : "None"}</span></div>
         </div>
 
         <div class="ec-review-card">
             <h3 class="font-bold text-gray-800 text-sm mb-2">When & Where</h3>
             <div class="ec-review-row"><span>Starts</span><span>${start}</span></div>
             <div class="ec-review-row"><span>Timezone</span><span>${f.timezone}</span></div>
-            ${f.location_nickname ? `<div class="ec-review-row"><span>Location</span><span>${_esc4(f.location_nickname)}</span></div>` : ""}
-            ${f.location_text ? `<div class="ec-review-row"><span>Address</span><span style="max-width:60%">${_esc4(f.location_text)}${STATE4.geocode ? " \u{1F4CD}" : ""}</span></div>` : ""}
-            ${f.max_participants ? `<div class="ec-review-row"><span>Max attendees</span><span>${f.max_participants}</span></div>` : ""}
+            ${f.location_nickname ? `<div class="ec-review-row"><span>Location</span><span>${_esc10(f.location_nickname)}</span></div>` : ""}
+            ${f.location_text ? `<div class="ec-review-row"><span>Address</span><span style="max-width:60%">${_esc10(f.location_text)}${STATE4.geocode ? " \u{1F4CD}" : ""}</span></div>` : ""}
+            <div class="ec-review-row"><span>Capacity</span><span>${_capacityReviewLabel(f)}</span></div>
         </div>
 
         <div class="ec-review-card">
             <h3 class="font-bold text-gray-800 text-sm mb-2">Pricing</h3>
+            ${f.event_type === "competition" ? `
+            <div class="ec-review-row"><span>Mode</span><span>Competition entry fee (no trip RSVP)</span></div>
+            ` : `
             <div class="ec-review-row"><span>Mode</span><span>${pricingLabel}</span></div>
+            ${f.pricing_mode === "paid" ? `<div class="ec-review-row"><span>Adult price</span><span>$${f.adult_price_dollars || "0.00"}</span></div>` : ""}
+            ${f.pricing_mode === "paid" ? `<div class="ec-review-row"><span>Kids</span><span>${f.kids_free ? "Free" : `$${f.kid_price_dollars || "0.00"} per child`}</span></div>` : ""}
+            ${f.pricing_mode === "paid" && f.fund_deadline ? `<div class="ec-review-row"><span>Fund deadline</span><span>${formatDateTimeLocal(f.fund_deadline)}</span></div>` : ""}
+            ${fundEst && !fundEst.error ? `<div class="ec-review-row"><span>Monthly estimate</span><span>~$${fundEst.monthly}/adult (${fundEst.months} mo.)</span></div>` : ""}
             <div class="ec-review-row"><span>Raffle</span><span>${f.raffle_enabled ? `Yes \xB7 $${f.raffle_entry_cost_dollars || "0.00"}/entry` : "No"}</span></div>
             ${f.raffle_enabled && typeof raffleReviewHtml === "function" ? raffleReviewHtml() : ""}
             <div class="ec-review-row"><span>Visibility</span><span>${f.member_only ? "Members only" : "Public"}</span></div>
+            `}
         </div>
 
-        <p class="text-xs text-gray-400 text-center">Tap <strong>Publish</strong> to go live, or <strong>Save draft</strong> to finish later.</p>
+        ${f.event_type === "llc" ? `
+        <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">LLC</h3>
+            <div class="ec-review-row"><span>Min participants</span><span>${_esc10(f.min_participants || "\u2014")}</span></div>
+            <div class="ec-review-row"><span>LLC cut</span><span>${_esc10(f.llc_cut_pct || "0")}%</span></div>
+            <div class="ec-review-row"><span>Invest-eligible</span><span>${f.invest_eligible ? "Yes" : "No"}</span></div>
+            <div class="ec-review-row"><span>Cost items</span><span>${(f.cost_items || []).length ? _esc10(`${(f.cost_items || []).length} \xB7 ${(f.cost_items || []).map((i) => (i.name || "").trim() || "Untitled").join(" \xB7 ")}`) : "None"}</span></div>
+            <div class="ec-review-row"><span>Show breakdown</span><span>${f.show_cost_breakdown ? "Yes" : "No"}</span></div>
+            <div class="ec-review-row"><span>Transport</span><span>${f.transportation_enabled ? f.transportation_mode === "llc_provides" ? `LLC provides \xB7 ${f.transportation_method === "plane" ? "plane" : "car"}` : `Self-arranged${f.transportation_estimate_dollars ? ` \xB7 ~$${f.transportation_estimate_dollars}` : ""}` : "Off"}</span></div>
+            <div class="ec-review-row"><span>Location required</span><span>${f.location_required ? "Yes" : "No"}</span></div>
+            ${f.llc_buyin_override_dollars ? `<div class="ec-review-row"><span>Buy-in override</span><span>$${f.llc_buyin_override_dollars}</span></div>` : ""}
+        </div>` : ""}
+
+        ${f.event_type === "competition" ? `
+        <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">Competition</h3>
+            <div class="ec-review-row"><span>Entry fee</span><span>${f.comp_entry_fee_dollars ? `$${f.comp_entry_fee_dollars}` : "Free"}</span></div>
+            <div class="ec-review-row"><span>House cut</span><span>${_esc10(f.comp_house_pct || "0")}%</span></div>
+            <div class="ec-review-row"><span>Winner tiers</span><span>${_esc10(`${f.comp_tier1_pct}/${f.comp_tier2_pct}/${f.comp_tier3_pct}`)}%</span></div>
+            <div class="ec-review-row"><span>Entry type</span><span>${_esc10(f.comp_entry_type || "any")}</span></div>
+            <div class="ec-review-row"><span>Min entries</span><span>${_esc10(f.comp_min_entries || "2")}</span></div>
+            <div class="ec-review-row"><span>Registration ends</span><span>${f.comp_phase1_end ? formatDateTimeLocal(f.comp_phase1_end) : "\u2014"}</span></div>
+            <div class="ec-review-row"><span>Submission ends</span><span>${f.comp_phase2_end ? formatDateTimeLocal(f.comp_phase2_end) : "\u2014"}</span></div>
+            <div class="ec-review-row"><span>Voting ends</span><span>${f.comp_phase3_end ? formatDateTimeLocal(f.comp_phase3_end) : "\u2014"}</span></div>
+            <div class="ec-review-row"><span>Visibility</span><span>Members only</span></div>
+        </div>` : ""}
+
+        <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">Disclaimers</h3>
+            <div class="ec-review-row"><span>Clauses</span><span>${(f.disclaimers || []).length ? _esc10(`${(f.disclaimers || []).length} \xB7 ${(f.disclaimers || []).map((d) => (d.title || "").trim() || "Untitled").join(" \xB7 ")}`) : "None"}</span></div>
+        </div>
+
+        ${f.event_type !== "competition" ? `
+        <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">Amenity voting</h3>
+            <div class="ec-review-row"><span>Status</span><span>${f.amenity_voting && f.amenity_voting.enabled ? _esc10(`${(f.amenity_voting.options || []).length} options`) : "Off"}</span></div>
+            ${f.amenity_voting && f.amenity_voting.enabled && f.amenity_voting.closes_at ? `<div class="ec-review-row"><span>Closes</span><span>${formatDateTimeLocal(f.amenity_voting.closes_at)}</span></div>` : ""}
+            ${f.amenity_voting && f.amenity_voting.enabled ? `<div class="ec-review-row"><span>Results</span><span>${_esc10(String(f.amenity_voting.results_visible || "after_close").replace(/_/g, " "))}</span></div>` : ""}
+        </div>` : ""}
+
+        <p class="text-xs text-gray-400 text-center">${typeof window.EventsCreateSteps.isEditMode === "function" && window.EventsCreateSteps.isEditMode() ? "Tap <strong>Save changes</strong> to update this event, or <strong>Save as draft</strong> to unpublish." : "Tap <strong>Publish</strong> to go live, or <strong>Save draft</strong> to finish later."}</p>
     `;
   }
-  function wire4() {
+  function wire10() {
   }
-  var createStepReviewApi = { html: html4, wire: wire4 };
+  var createStepReviewApi = { html: html10, wire: wire10 };
   globalThis.EventsCreateSteps = globalThis.EventsCreateSteps || {};
   globalThis.EventsCreateSteps.review = createStepReviewApi;
 
@@ -9645,7 +14089,7 @@ Type the event title to confirm:`);
   function _render() {
     _steps().render();
   }
-  function _esc5(s) {
+  function _esc11(s) {
     return _steps().esc(s);
   }
   function raffleModel() {
@@ -9683,7 +14127,7 @@ Type the event title to confirm:`);
     return `
         <div class="ec-row">
             <label class="ec-label">Raffle entry price (USD)</label>
-            <input id="ecRafflePrice" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc5(STATE4.form.raffle_entry_cost_dollars)}">
+            <input id="ecRafflePrice" class="ec-input" type="number" min="0" step="0.01" placeholder="0.00" value="${_esc11(STATE4.form.raffle_entry_cost_dollars)}">
             <p class="ec-help">Use 0.00 for a free raffle. Prize images come later; emoji fallbacks are available now.</p>
         </div>
 
@@ -9700,22 +14144,22 @@ Type the event title to confirm:`);
                     <div class="ec-raffle-grid">
                         <div>
                             <label class="ec-label">Category</label>
-                            <input class="ec-input" data-ec-category-field="label" data-ec-category-id="${_esc5(category.id)}" value="${_esc5(category.label)}" maxlength="80">
+                            <input class="ec-input" data-ec-category-field="label" data-ec-category-id="${_esc11(category.id)}" value="${_esc11(category.label)}" maxlength="80">
                         </div>
                         <div>
                             <label class="ec-label">Draw mode</label>
-                            <select class="ec-input" data-ec-category-field="draw_mode" data-ec-category-id="${_esc5(category.id)}">
+                            <select class="ec-input" data-ec-category-field="draw_mode" data-ec-category-id="${_esc11(category.id)}">
                                 ${_drawModeOptions(category.draw_mode)}
                             </select>
                         </div>
                         <div>
                             <label class="ec-label">Winners</label>
-                            <input class="ec-input" type="number" min="0" step="1" data-ec-category-field="winner_count" data-ec-category-id="${_esc5(category.id)}" value="${category.winner_count ?? ""}">
+                            <input class="ec-input" type="number" min="0" step="1" data-ec-category-field="winner_count" data-ec-category-id="${_esc11(category.id)}" value="${category.winner_count ?? ""}">
                         </div>
                         <div style="display:flex;gap:4px">
-                            <button type="button" class="ec-icon-btn" title="Move up" data-ec-category-move="up" data-ec-category-id="${_esc5(category.id)}">\u2191</button>
-                            <button type="button" class="ec-icon-btn" title="Move down" data-ec-category-move="down" data-ec-category-id="${_esc5(category.id)}">\u2193</button>
-                            <button type="button" class="ec-icon-btn" title="Remove" data-ec-category-remove="${_esc5(category.id)}">\xD7</button>
+                            <button type="button" class="ec-icon-btn" title="Move up" data-ec-category-move="up" data-ec-category-id="${_esc11(category.id)}">\u2191</button>
+                            <button type="button" class="ec-icon-btn" title="Move down" data-ec-category-move="down" data-ec-category-id="${_esc11(category.id)}">\u2193</button>
+                            <button type="button" class="ec-icon-btn" title="Remove" data-ec-category-remove="${_esc11(category.id)}">\xD7</button>
                         </div>
                     </div>
                 </div>
@@ -9738,37 +14182,37 @@ Type the event title to confirm:`);
                     <div class="ec-raffle-item-grid">
                         <div>
                             <label class="ec-label">Emoji</label>
-                            <input class="ec-input" data-ec-item-field="emoji" data-ec-item-id="${_esc5(item.id)}" value="${_esc5(item.emoji || "\u{1F381}")}" maxlength="4">
+                            <input class="ec-input" data-ec-item-field="emoji" data-ec-item-id="${_esc11(item.id)}" value="${_esc11(item.emoji || "\u{1F381}")}" maxlength="4">
                         </div>
                         <div>
                             <label class="ec-label">Item name</label>
-                            <input class="ec-input" data-ec-item-field="name" data-ec-item-id="${_esc5(item.id)}" value="${_esc5(item.name)}" maxlength="120">
+                            <input class="ec-input" data-ec-item-field="name" data-ec-item-id="${_esc11(item.id)}" value="${_esc11(item.name)}" maxlength="120">
                         </div>
                         <div>
                             <label class="ec-label">Category</label>
-                            <select class="ec-input" data-ec-item-field="category_id" data-ec-item-id="${_esc5(item.id)}">
-                                ${categories.map((category) => `<option value="${_esc5(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${_esc5(category.label)}</option>`).join("")}
+                            <select class="ec-input" data-ec-item-field="category_id" data-ec-item-id="${_esc11(item.id)}">
+                                ${categories.map((category) => `<option value="${_esc11(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${_esc11(category.label)}</option>`).join("")}
                             </select>
                         </div>
                         <div>
                             <label class="ec-label">Qty</label>
-                            <input class="ec-input" type="number" min="1" step="1" data-ec-item-field="quantity" data-ec-item-id="${_esc5(item.id)}" value="${item.quantity || 1}">
+                            <input class="ec-input" type="number" min="1" step="1" data-ec-item-field="quantity" data-ec-item-id="${_esc11(item.id)}" value="${item.quantity || 1}">
                         </div>
                         <div style="display:flex;gap:4px">
-                            <button type="button" class="ec-icon-btn" title="Move up" data-ec-item-move="up" data-ec-item-id="${_esc5(item.id)}">\u2191</button>
-                            <button type="button" class="ec-icon-btn" title="Move down" data-ec-item-move="down" data-ec-item-id="${_esc5(item.id)}">\u2193</button>
-                            <button type="button" class="ec-icon-btn" title="Remove" data-ec-item-remove="${_esc5(item.id)}">\xD7</button>
+                            <button type="button" class="ec-icon-btn" title="Move up" data-ec-item-move="up" data-ec-item-id="${_esc11(item.id)}">\u2191</button>
+                            <button type="button" class="ec-icon-btn" title="Move down" data-ec-item-move="down" data-ec-item-id="${_esc11(item.id)}">\u2193</button>
+                            <button type="button" class="ec-icon-btn" title="Remove" data-ec-item-remove="${_esc11(item.id)}">\xD7</button>
                         </div>
                     </div>
                     <div class="ec-prize-img-row">
-                        <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-ec-prize-file="${_esc5(item.id)}">
-                        <div class="ec-prize-img-drop" data-ec-prize-drop="${_esc5(item.id)}" title="Click or drag an image here">
-                            ${preview ? `<img src="${_esc5(preview)}" alt="Prize image">` : `<span style="font-size:18px">\u{1F4F7}</span>`}
+                        <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-ec-prize-file="${_esc11(item.id)}">
+                        <div class="ec-prize-img-drop" data-ec-prize-drop="${_esc11(item.id)}" title="Click or drag an image here">
+                            ${preview ? `<img src="${_esc11(preview)}" alt="Prize image">` : `<span style="font-size:18px">\u{1F4F7}</span>`}
                         </div>
                         <div class="ec-prize-img-label">
-                            ${preview ? `<strong>${fileName ? _esc5(fileName) : "Image set"}</strong><span>Drag a new image or click the thumbnail to replace</span>` : `<strong>Prize image</strong><span>Click or drag &amp; drop a photo (PNG/JPG/WebP \xB7 max 5 MB)</span>`}
+                            ${preview ? `<strong>${fileName ? _esc11(fileName) : "Image set"}</strong><span>Drag a new image or click the thumbnail to replace</span>` : `<strong>Prize image</strong><span>Click or drag &amp; drop a photo (PNG/JPG/WebP \xB7 max 5 MB)</span>`}
                         </div>
-                        ${preview ? `<button type="button" class="ec-prize-img-clear" data-ec-prize-clear="${_esc5(item.id)}">Remove</button>` : ""}
+                        ${preview ? `<button type="button" class="ec-prize-img-clear" data-ec-prize-clear="${_esc11(item.id)}">Remove</button>` : ""}
                     </div>
                 </div>`;
     }).join("") : `<div class="text-xs text-gray-500 bg-white border border-dashed border-gray-300 rounded-xl p-3">No prize items yet. Add at least one item before publishing.</div>`}
@@ -9778,7 +14222,7 @@ Type the event title to confirm:`);
                 <span class="ec-raffle-chip">${items.length} items</span>
                 <span class="ec-raffle-chip">${totalWinners} winners</span>
             </div>
-            ${validation.valid ? "" : `<div class="ec-error" style="margin-top:10px">${validation.errors.map(_esc5).join("<br>")}</div>`}
+            ${validation.valid ? "" : `<div class="ec-error" style="margin-top:10px">${validation.errors.map(_esc11).join("<br>")}</div>`}
         </div>
     `;
   }
@@ -9867,7 +14311,7 @@ Type the event title to confirm:`);
     normalizeRaffleConfig();
     _render();
   }
-  function wire5() {
+  function wire11() {
     const STATE4 = _state();
     if (!STATE4.form.raffle_enabled) return;
     document.querySelectorAll("[data-ec-category-field]").forEach((input) => {
@@ -9950,12 +14394,12 @@ Type the event title to confirm:`);
     return model.getOrderedCategories(config).map((category) => {
       const items = model.getItemsForCategory(config, category.id);
       const itemText = items.length ? items.map((item) => `${item.emoji || "\u{1F381}"} ${item.name}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "No items yet";
-      return `<div class="ec-review-row"><span>${_esc5(category.label)}</span><span style="max-width:60%">${_esc5(itemText)}</span></div>`;
+      return `<div class="ec-review-row"><span>${_esc11(category.label)}</span><span style="max-width:60%">${_esc11(itemText)}</span></div>`;
     }).join("");
   }
   var createRaffleBuilderApi = {
     builderHtml,
-    wire: wire5,
+    wire: wire11,
     reviewHtml,
     ensureRaffleConfig,
     normalizeRaffleConfig,
@@ -9971,13 +14415,78 @@ Type the event title to confirm:`);
   function _raffleApi() {
     return window.EventsCreateRaffleBuilder;
   }
+  function _compApi() {
+    return window.EventsCreateSteps?.competition;
+  }
+  async function upsertPendingCompetitionPhases(eventId2, form, startISO, endISO) {
+    const comp = _compApi();
+    if (!comp?.buildInitialPhases) return;
+    const phases = comp.buildInitialPhases(form, startISO, endISO);
+    const { data: existing, error: loadErr } = await supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2);
+    if (loadErr) throw loadErr;
+    for (const ph of phases) {
+      const ex = (existing || []).find((p) => Number(p.phase_num) === Number(ph.phase_num));
+      if (ex && ex.status !== "pending") continue;
+      const row = {
+        ...ph,
+        event_id: eventId2,
+        status: ex?.status || "pending",
+        extended_once: ex?.extended_once || false
+      };
+      const { error } = await supabaseClient.from("competition_phases").upsert(row, { onConflict: "event_id,phase_num" });
+      if (error) throw error;
+    }
+  }
+  async function insertCompetitionPhases(eventId2, form, startISO, endISO) {
+    const comp = _compApi();
+    if (!comp?.buildInitialPhases) return;
+    const phases = comp.buildInitialPhases(form, startISO, endISO).map((ph) => ({
+      ...ph,
+      event_id: eventId2
+    }));
+    const { error } = await supabaseClient.from("competition_phases").insert(phases);
+    if (error) throw error;
+  }
+  function _llcApi() {
+    return window.EventsCreateSteps?.llc;
+  }
+  async function countEventRsvps(eventId2) {
+    const [memberRes, guestRes] = await Promise.all([
+      supabaseClient.from("event_rsvps").select("id", { count: "exact", head: true }).eq("event_id", eventId2),
+      supabaseClient.from("event_guest_rsvps").select("id", { count: "exact", head: true }).eq("event_id", eventId2)
+    ]);
+    if (memberRes.error) throw memberRes.error;
+    if (guestRes.error) throw guestRes.error;
+    return (memberRes.count || 0) + (guestRes.count || 0);
+  }
+  async function replaceCostItems(eventId2, costItems) {
+    const { error: delErr } = await supabaseClient.from("event_cost_items").delete().eq("event_id", eventId2);
+    if (delErr) throw new Error("Failed to clear cost items: " + delErr.message);
+    const items = Array.isArray(costItems) ? costItems : [];
+    if (!items.length) return;
+    const costRows = items.map((item, idx) => ({
+      event_id: eventId2,
+      name: String(item.name || "").trim() || `Item ${idx + 1}`,
+      category: item.category || "other",
+      total_cost_cents: Number(item.total_cost_cents) || 0,
+      included_in_buyin: item.included_in_buyin !== false,
+      avg_per_person_cents: Number(item.avg_per_person_cents) || 0,
+      notes: item.notes || null,
+      sort_order: idx
+    }));
+    const { error: costErr } = await supabaseClient.from("event_cost_items").insert(costRows);
+    if (costErr) throw new Error("Failed to save cost items: " + costErr.message);
+  }
   async function submit(status) {
     if (_submitting) return;
     const steps = _steps2();
     const STATE4 = steps.getState();
     const validateStep = steps.validateStep;
-    const esc10 = steps.esc;
+    const esc12 = steps.esc;
     const close4 = steps.close;
+    const editing = !!STATE4.editEventId;
+    const isLlc = STATE4.form.event_type === "llc";
+    const isComp = STATE4.form.event_type === "competition";
     if (typeof validateStep === "function") {
       const err = validateStep();
       if (err && status === "open") return alert(err);
@@ -9985,6 +14494,14 @@ Type the event title to confirm:`);
     const f = STATE4.form;
     if (!f.title.trim()) return alert("Title is required to save.");
     if (status === "open" && !f.start_date) return alert("Start date is required to publish.");
+    if (isLlc && status === "open") {
+      const llcErr = _llcApi()?.validateLlc?.(f);
+      if (llcErr) return alert(llcErr);
+    }
+    if (isComp && status === "open") {
+      const compErr = _compApi()?.validateCompetition?.(f, { publish: true });
+      if (compErr) return alert(compErr);
+    }
     const errBox = document.getElementById("ecError");
     if (errBox) errBox.innerHTML = "";
     _submitting = true;
@@ -9995,12 +14512,12 @@ Type the event title to confirm:`);
     if (nextBtn) nextBtn.disabled = true;
     if (draftBtn) draftBtn.disabled = true;
     if (status === "draft" && draftBtn) draftBtn.textContent = "Saving\u2026";
-    if (status === "open" && nextBtn) nextBtn.textContent = "Publishing\u2026";
+    if (status === "open" && nextBtn) nextBtn.textContent = editing ? "Saving\u2026" : "Publishing\u2026";
     try {
       const userId = window.evtCurrentUser && window.evtCurrentUser.id || (await supabaseClient.auth.getUser()).data.user?.id;
       if (!userId) throw new Error("Not signed in.");
-      const slug = typeof globalThis.evtGenerateSlug === "function" ? window.evtGenerateSlug(f.title.trim()) : f.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60) + "-" + Date.now().toString(36);
-      let bannerUrl = null;
+      const slug = editing && STATE4.editSlug ? STATE4.editSlug : typeof globalThis.evtGenerateSlug === "function" ? window.evtGenerateSlug(f.title.trim()) : f.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60) + "-" + Date.now().toString(36);
+      let bannerUrl = editing ? STATE4.existingBannerUrl || null : null;
       if (STATE4.bannerFile) {
         const ext = STATE4.bannerFile.name.split(".").pop();
         const path = `${slug}-${Date.now()}.${ext}`;
@@ -10008,7 +14525,7 @@ Type the event title to confirm:`);
         if (up.error) throw new Error("Banner upload failed: " + up.error.message);
         bannerUrl = supabaseClient.storage.from("event-banners").getPublicUrl(path).data.publicUrl;
       }
-      let embedImageUrl = null;
+      let embedImageUrl = editing ? STATE4.existingEmbedUrl || null : null;
       if (STATE4.embedImageFile) {
         const ext = STATE4.embedImageFile.name.split(".").pop();
         const path = `embeds/${slug}-${Date.now()}.${ext}`;
@@ -10030,19 +14547,70 @@ Type the event title to confirm:`);
           item.image_url = supabaseClient.storage.from("event-raffle-prizes").getPublicUrl(path).data.publicUrl;
         }
       }
+      if (isLlc) f.pricing_mode = "paid";
+      if (isComp) {
+        f.pricing_mode = "free";
+        f.raffle_enabled = false;
+        f.member_only = true;
+      }
       const startISO = f.start_date ? new Date(f.start_date).toISOString() : null;
       const endISO = f.end_date ? new Date(f.end_date).toISOString() : null;
       const deadline = f.rsvp_deadline ? new Date(f.rsvp_deadline).toISOString() : null;
-      const rsvpCents = f.pricing_mode === "paid" ? Math.round(Number(f.rsvp_cost_dollars || 0) * 100) : 0;
+      let adultCents;
+      let costBreakdown = null;
+      if (isLlc) {
+        const llc = _llcApi();
+        adultCents = llc?.resolveLlcBuyInCents ? llc.resolveLlcBuyInCents(f) : Math.round(Number(f.adult_price_dollars || 0) * 100);
+        costBreakdown = llc?.computeLlcCostBreakdown ? llc.computeLlcCostBreakdown(f.cost_items, f.min_participants, f.llc_cut_pct) : null;
+        if (adultCents > 0) {
+          f.adult_price_dollars = (adultCents / 100).toFixed(2);
+        }
+      } else {
+        const adultDollars = f.adult_price_dollars ?? f.rsvp_cost_dollars ?? "";
+        adultCents = f.pricing_mode === "paid" ? Math.round(Number(adultDollars || 0) * 100) : 0;
+      }
+      const kidsFree = f.pricing_mode === "paid" ? !!f.kids_free : true;
+      const kidCents = f.pricing_mode === "paid" && !kidsFree ? Math.round(Number(f.kid_price_dollars || 0) * 100) : null;
+      const fundDeadlineISO = f.pricing_mode === "paid" && f.fund_deadline ? new Date(f.fund_deadline).toISOString() : null;
+      const capacityMode = f.capacity_mode || "none";
+      const capacityCounts = f.capacity_counts || "adults";
+      const maxParticipants = capacityMode === "none" ? null : f.max_participants ? Number(f.max_participants) : null;
       const raffleCents = f.raffle_enabled ? Math.round(Number(f.raffle_entry_cost_dollars || 0) * 100) : 0;
       const raffleWinnerCount = raffleConfig2 ? rb.raffleModel().getTotalWinnerCount(raffleConfig2) : 0;
+      const aboutTabs = window.EventsAboutTabs && typeof window.EventsAboutTabs.normalizeAboutTabs === "function" ? window.EventsAboutTabs.normalizeAboutTabs(f.about_tabs) : [];
+      const includedItems = window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === "function" ? window.EventsIncludedItems.normalizeIncludedItems(f.included_items) : [];
+      const disclaimers = window.EventsDisclaimers && typeof window.EventsDisclaimers.normalizeDisclaimers === "function" ? window.EventsDisclaimers.normalizeDisclaimers(f.disclaimers) : [];
+      const amenityVoting = window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === "function" ? window.EventsAmenityVoting.normalizeConfig(f.amenity_voting) : { enabled: false, options: [], closes_at: null, results_visible: "after_close" };
+      let lockPricing = !!STATE4.pricingLocked;
+      let lockDisclaimers = !!STATE4.disclaimersLocked;
+      let lockVoting = !!STATE4.votingLocked;
+      let lockCompetition = !!STATE4.competitionLocked;
+      if (editing) {
+        const rsvpCount = await countEventRsvps(STATE4.editEventId);
+        if (rsvpCount > 0) {
+          lockPricing = true;
+          lockDisclaimers = true;
+          lockVoting = true;
+          STATE4.pricingLocked = true;
+          STATE4.disclaimersLocked = true;
+          STATE4.votingLocked = true;
+        }
+        if (isComp) {
+          const { count: entryCount } = await supabaseClient.from("competition_entries").select("id", { count: "exact", head: true }).eq("event_id", STATE4.editEventId);
+          if ((entryCount || 0) > 0) {
+            lockCompetition = true;
+            STATE4.competitionLocked = true;
+          }
+        }
+      }
+      const eventType = isComp ? "competition" : isLlc ? "llc" : "member";
       const record = {
-        created_by: userId,
-        event_type: "member",
+        event_type: eventType,
         title: f.title.trim(),
-        slug,
         category: f.category,
         description: f.description.trim() || null,
+        about_tabs: aboutTabs,
+        included_items: includedItems,
         banner_url: bannerUrl,
         embed_image_url: embedImageUrl,
         start_date: startISO,
@@ -10052,31 +14620,127 @@ Type the event title to confirm:`);
         location_nickname: f.location_nickname.trim() || null,
         location_lat: STATE4.geocode?.lat || null,
         location_lng: STATE4.geocode?.lng || null,
-        max_participants: f.max_participants ? Number(f.max_participants) : null,
+        max_participants: maxParticipants,
         rsvp_deadline: deadline,
-        member_only: !!f.member_only,
-        pricing_mode: f.pricing_mode,
-        rsvp_cost_cents: rsvpCents,
-        raffle_enabled: !!f.raffle_enabled,
-        raffle_entry_cost_cents: raffleCents,
-        raffle_prizes: raffleConfig2,
-        raffle_winner_count: raffleWinnerCount,
+        member_only: isComp ? true : !!f.member_only,
+        capacity_mode: capacityMode,
+        capacity_counts: capacityCounts,
+        raffle_enabled: isComp ? false : !!f.raffle_enabled,
+        raffle_entry_cost_cents: isComp ? 0 : raffleCents,
+        raffle_prizes: isComp ? null : raffleConfig2,
+        raffle_winner_count: isComp ? 0 : raffleWinnerCount,
         status
       };
-      const { data, error } = await supabaseClient.from("events").insert(record).select().single();
-      if (error) throw error;
+      if (isComp) {
+        record.rsvp_enabled = false;
+        if (!lockCompetition) {
+          record.competition_config = _compApi()?.buildCompetitionConfig?.(f) || null;
+          record.winner_tier_config = _compApi()?.buildWinnerTierConfig?.(f) || null;
+        }
+        if (!editing) {
+          record.total_prize_pool_cents = 0;
+        }
+      }
+      if (isLlc) {
+        record.min_participants = f.min_participants ? Number(f.min_participants) : null;
+        record.llc_cut_pct = Number(f.llc_cut_pct) || 0;
+        record.invest_eligible = !!f.invest_eligible;
+        record.show_cost_breakdown = !!f.show_cost_breakdown;
+        record.location_required = !!f.location_required;
+        record.transportation_enabled = !!f.transportation_enabled;
+        if (f.transportation_enabled) {
+          record.transportation_mode = f.transportation_mode || "self_arranged";
+          if (record.transportation_mode === "llc_provides") {
+            record.transportation_method = f.transportation_method === "plane" || f.transportation_method === "car" ? f.transportation_method : "car";
+            record.transportation_estimate_cents = null;
+          } else {
+            record.transportation_method = null;
+            record.transportation_estimate_cents = f.transportation_estimate_dollars !== "" && f.transportation_estimate_dollars != null ? Math.round(Number(f.transportation_estimate_dollars || 0) * 100) : null;
+          }
+        } else {
+          record.transportation_mode = null;
+          record.transportation_method = null;
+          record.transportation_estimate_cents = null;
+        }
+        if (!lockPricing && costBreakdown) {
+          record.cost_breakdown = costBreakdown;
+        }
+      }
+      if (!lockPricing && !isComp) {
+        record.pricing_mode = f.pricing_mode;
+        record.adult_price_cents = adultCents;
+        record.rsvp_cost_cents = adultCents;
+        record.kids_free = kidsFree;
+        record.kid_price_cents = kidCents;
+        record.fund_deadline = fundDeadlineISO;
+      }
+      if (isComp && !lockPricing) {
+        record.pricing_mode = "free";
+        record.adult_price_cents = 0;
+        record.rsvp_cost_cents = 0;
+        record.kids_free = true;
+        record.kid_price_cents = null;
+        record.fund_deadline = null;
+      }
+      if (!lockDisclaimers) {
+        record.disclaimers = disclaimers;
+      }
+      if (!lockVoting && !isComp) {
+        record.amenity_voting = amenityVoting;
+      }
+      let data;
+      if (editing) {
+        const { data: updated, error } = await supabaseClient.from("events").update(record).eq("id", STATE4.editEventId).select().single();
+        if (error) throw error;
+        data = updated;
+      } else {
+        record.created_by = userId;
+        record.slug = slug;
+        if (!Object.prototype.hasOwnProperty.call(record, "disclaimers")) {
+          record.disclaimers = disclaimers;
+        }
+        if (!isComp && !Object.prototype.hasOwnProperty.call(record, "amenity_voting")) {
+          record.amenity_voting = amenityVoting;
+        }
+        if (!Object.prototype.hasOwnProperty.call(record, "pricing_mode")) {
+          record.pricing_mode = f.pricing_mode;
+          record.adult_price_cents = adultCents;
+          record.rsvp_cost_cents = adultCents;
+          record.kids_free = kidsFree;
+          record.kid_price_cents = kidCents;
+          record.fund_deadline = fundDeadlineISO;
+        }
+        const { data: created, error } = await supabaseClient.from("events").insert(record).select().single();
+        if (error) throw error;
+        data = created;
+      }
+      if (isLlc && !lockPricing) {
+        await replaceCostItems(data.id, f.cost_items);
+      }
+      if (isComp && !lockCompetition) {
+        if (editing) {
+          await upsertPendingCompetitionPhases(data.id, f, startISO, endISO);
+        } else {
+          await insertCompetitionPhases(data.id, f, startISO, endISO);
+        }
+      }
       if (typeof close4 === "function") close4();
-      document.dispatchEvent(new CustomEvent("events:created", { detail: { event: data, status } }));
-      if (status === "open" && data.slug && typeof globalThis.evtNavigateToEvent === "function") {
+      document.dispatchEvent(new CustomEvent(editing ? "events:updated" : "events:created", {
+        detail: { event: data, status }
+      }));
+      if (typeof globalThis.evtLoadEvents === "function") {
+        await window.evtLoadEvents();
+      }
+      if (data.slug && typeof globalThis.evtNavigateToEvent === "function") {
         window.evtNavigateToEvent(data.slug);
-      } else if (typeof globalThis.evtLoadEvents === "function") {
-        window.evtLoadEvents();
+      } else if (data.id && typeof globalThis.evtOpenDetail === "function") {
+        await window.evtOpenDetail(data.id);
       }
     } catch (e) {
       const msg = e && e.message ? e.message : String(e);
       const errBox2 = document.getElementById("ecError");
-      if (errBox2 && typeof esc10 === "function") {
-        errBox2.innerHTML = `<div class="ec-error">${esc10(msg)}</div>`;
+      if (errBox2 && typeof esc12 === "function") {
+        errBox2.innerHTML = `<div class="ec-error">${esc12(msg)}</div>`;
       } else {
         alert("Save failed: " + msg);
       }
@@ -10099,18 +14763,62 @@ Type the event title to confirm:`);
   function isFlagOn() {
     return true;
   }
-  var STEPS = [
-    { key: "basics", label: "Basics" },
-    { key: "when", label: "When & Where" },
-    { key: "pricing", label: "Pricing" },
-    { key: "review", label: "Review" }
-  ];
+  function getSteps() {
+    const steps = [
+      { key: "basics", label: "Basics" },
+      { key: "about", label: "About" },
+      { key: "included", label: "Included" },
+      { key: "when", label: "When & Where" }
+    ];
+    if (STATE2.form.event_type === "competition") {
+      steps.push({ key: "competition", label: "Competition" });
+    } else {
+      steps.push({ key: "pricing", label: "Pricing" });
+      if (STATE2.form.event_type === "llc") {
+        steps.push({ key: "llc", label: "LLC" });
+      }
+    }
+    steps.push({ key: "disclaimers", label: "Disclaimers" });
+    if (STATE2.form.event_type !== "competition") {
+      steps.push({ key: "voting", label: "Voting" });
+    }
+    steps.push({ key: "review", label: "Review" });
+    return steps;
+  }
+  function _competitionFormDefaults() {
+    return {
+      comp_entry_fee_dollars: "",
+      comp_house_pct: "0",
+      comp_min_entries: "2",
+      comp_extension_days: "3",
+      comp_entry_type: "any",
+      comp_entries_visible: true,
+      comp_voter_eligibility: "all_members",
+      comp_vote_tally_visible: false,
+      comp_max_file_size_mb: "10",
+      comp_tier1_pct: "100",
+      comp_tier2_pct: "0",
+      comp_tier3_pct: "0",
+      comp_phase1_end: "",
+      comp_phase2_end: "",
+      comp_phase3_end: ""
+    };
+  }
   var STATE2 = {
     step: 0,
+    editEventId: null,
+    editSlug: null,
+    editStatus: null,
+    pricingLocked: false,
+    disclaimersLocked: false,
+    votingLocked: false,
+    competitionLocked: false,
     bannerFile: null,
     bannerPreviewUrl: null,
+    existingBannerUrl: null,
     embedImageFile: null,
     embedImagePreviewUrl: null,
+    existingEmbedUrl: null,
     geocode: null,
     // { lat, lng, display } or null
     prizeImageFiles: {},
@@ -10122,19 +14830,41 @@ Type the event title to confirm:`);
       title: "",
       category: "other",
       description: "",
+      about_tabs: [],
+      included_items: [],
       start_date: "",
       end_date: "",
       timezone: "America/New_York",
       location_text: "",
       location_nickname: "",
       max_participants: "",
+      capacity_mode: "none",
+      capacity_counts: "adults",
       rsvp_deadline: "",
       pricing_mode: "free",
-      rsvp_cost_dollars: "",
+      adult_price_dollars: "",
+      kids_free: true,
+      kid_price_dollars: "",
+      fund_deadline: "",
       raffle_enabled: false,
       raffle_entry_cost_dollars: "",
       raffle_config: null,
-      member_only: false
+      member_only: false,
+      disclaimers: seedDefaultDisclaimers(),
+      amenity_voting: { enabled: false, options: [], closes_at: null, results_visible: "after_close" },
+      // LLC thin fields
+      min_participants: "",
+      llc_cut_pct: "0",
+      show_cost_breakdown: true,
+      transportation_enabled: false,
+      transportation_mode: "self_arranged",
+      transportation_method: "",
+      transportation_estimate_dollars: "",
+      location_required: false,
+      cost_items: [],
+      llc_buyin_override_dollars: "",
+      invest_eligible: false,
+      ..._competitionFormDefaults()
     }
   };
   var CATEGORIES = [
@@ -10157,6 +14887,183 @@ Type the event title to confirm:`);
     "America/Anchorage",
     "Pacific/Honolulu"
   ];
+  function _blankForm() {
+    return {
+      event_type: "member",
+      title: "",
+      category: "other",
+      description: "",
+      about_tabs: [],
+      included_items: [],
+      start_date: "",
+      end_date: "",
+      timezone: "America/New_York",
+      location_text: "",
+      location_nickname: "",
+      max_participants: "",
+      rsvp_deadline: "",
+      capacity_mode: "none",
+      capacity_counts: "adults",
+      pricing_mode: "free",
+      adult_price_dollars: "",
+      kids_free: true,
+      kid_price_dollars: "",
+      fund_deadline: "",
+      raffle_enabled: false,
+      raffle_entry_cost_dollars: "",
+      raffle_config: null,
+      member_only: false,
+      disclaimers: seedDefaultDisclaimers(),
+      amenity_voting: { enabled: false, options: [], closes_at: null, results_visible: "after_close" },
+      min_participants: "",
+      llc_cut_pct: "0",
+      show_cost_breakdown: true,
+      transportation_enabled: false,
+      transportation_mode: "self_arranged",
+      transportation_method: "",
+      transportation_estimate_dollars: "",
+      location_required: false,
+      cost_items: [],
+      llc_buyin_override_dollars: "",
+      invest_eligible: false,
+      ..._competitionFormDefaults()
+    };
+  }
+  function _resetTransientState() {
+    STATE2.step = 0;
+    STATE2.editEventId = null;
+    STATE2.editSlug = null;
+    STATE2.editStatus = null;
+    STATE2.pricingLocked = false;
+    STATE2.disclaimersLocked = false;
+    STATE2.votingLocked = false;
+    STATE2.competitionLocked = false;
+    STATE2.bannerFile = null;
+    STATE2.bannerPreviewUrl = null;
+    STATE2.existingBannerUrl = null;
+    STATE2.embedImageFile = null;
+    STATE2.embedImagePreviewUrl = null;
+    STATE2.existingEmbedUrl = null;
+    STATE2.geocode = null;
+    STATE2.prizeImageFiles = {};
+    STATE2.prizeImagePreviews = {};
+    STATE2._competitionPhases = null;
+    Object.assign(STATE2.form, _blankForm());
+  }
+  async function _countCompetitionEntries(eventId2) {
+    const { count, error } = await supabaseClient.from("competition_entries").select("id", { count: "exact", head: true }).eq("event_id", eventId2);
+    if (error) throw error;
+    return count || 0;
+  }
+  async function _loadPhasesForEdit(eventId2) {
+    const { data, error } = await supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true });
+    if (error) throw error;
+    return data || [];
+  }
+  async function _countEventRsvps(eventId2) {
+    const [memberRes, guestRes] = await Promise.all([
+      supabaseClient.from("event_rsvps").select("id", { count: "exact", head: true }).eq("event_id", eventId2),
+      supabaseClient.from("event_guest_rsvps").select("id", { count: "exact", head: true }).eq("event_id", eventId2)
+    ]);
+    if (memberRes.error) throw memberRes.error;
+    if (guestRes.error) throw guestRes.error;
+    return (memberRes.count || 0) + (guestRes.count || 0);
+  }
+  async function _loadEventForEdit(eventId2) {
+    const cached = (window.evtAllEvents || globalThis.evtAllEvents || []).find((e) => e.id === eventId2);
+    if (cached) return cached;
+    const { data, error } = await supabaseClient.from("events").select("*").eq("id", eventId2).single();
+    if (error || !data) throw new Error(error?.message || "Event not found.");
+    return data;
+  }
+  function _hydrateFromEvent(event) {
+    const adultCents = event.adult_price_cents != null && Number.isFinite(Number(event.adult_price_cents)) ? Number(event.adult_price_cents) : Number(event.rsvp_cost_cents || 0);
+    const aboutTabs = Array.isArray(event.about_tabs) ? event.about_tabs.map((t) => ({ ...t })) : [];
+    const includedItems = Array.isArray(event.included_items) ? event.included_items.map((i) => ({ ...i, choices: Array.isArray(i.choices) ? [...i.choices] : [] })) : [];
+    const discRaw = window.EventsDisclaimers && typeof window.EventsDisclaimers.normalizeDisclaimers === "function" ? window.EventsDisclaimers.normalizeDisclaimers(event.disclaimers) : Array.isArray(event.disclaimers) ? event.disclaimers : [];
+    const disclaimers = ensureDefaultDisclaimers(discRaw.length ? discRaw : seedDefaultDisclaimers()).map((d) => ({ ...d }));
+    const amenityVoting = window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === "function" ? window.EventsAmenityVoting.normalizeConfig(event.amenity_voting) : { enabled: false, options: [], closes_at: null, results_visible: "after_close" };
+    let raffleConfig2 = null;
+    if (event.raffle_enabled && event.raffle_prizes) {
+      const rb = _raffleApi2();
+      if (rb?.raffleModel?.()?.normalizeConfig) {
+        raffleConfig2 = rb.raffleModel().normalizeConfig(event.raffle_prizes);
+      } else {
+        raffleConfig2 = typeof event.raffle_prizes === "object" ? event.raffle_prizes : null;
+      }
+    }
+    const eventType = event.event_type === "llc" ? "llc" : event.event_type === "competition" ? "competition" : "member";
+    const pricingMode = eventType === "llc" ? "paid" : event.pricing_mode || "free";
+    Object.assign(STATE2.form, {
+      event_type: eventType,
+      title: event.title || "",
+      category: event.category || "other",
+      description: event.description || "",
+      about_tabs: aboutTabs,
+      included_items: includedItems,
+      start_date: toDatetimeLocalValue(event.start_date),
+      end_date: toDatetimeLocalValue(event.end_date),
+      timezone: event.timezone || "America/New_York",
+      location_text: event.location_text || "",
+      location_nickname: event.location_nickname || "",
+      max_participants: event.max_participants != null ? String(event.max_participants) : "",
+      capacity_mode: event.capacity_mode || "none",
+      capacity_counts: event.capacity_counts || "adults",
+      rsvp_deadline: toDatetimeLocalValue(event.rsvp_deadline),
+      pricing_mode: pricingMode,
+      adult_price_dollars: centsToDollars(adultCents),
+      kids_free: event.kids_free !== false,
+      kid_price_dollars: centsToDollars(event.kid_price_cents),
+      fund_deadline: toDatetimeLocalValue(event.fund_deadline),
+      raffle_enabled: !!event.raffle_enabled,
+      raffle_entry_cost_dollars: centsToDollars(event.raffle_entry_cost_cents),
+      raffle_config: raffleConfig2,
+      member_only: !!event.member_only,
+      disclaimers,
+      amenity_voting: amenityVoting,
+      min_participants: event.min_participants != null ? String(event.min_participants) : "",
+      llc_cut_pct: event.llc_cut_pct != null ? String(event.llc_cut_pct) : "0",
+      show_cost_breakdown: event.show_cost_breakdown !== false,
+      transportation_enabled: !!event.transportation_enabled,
+      transportation_mode: event.transportation_mode || "self_arranged",
+      transportation_method: event.transportation_method === "car" || event.transportation_method === "plane" ? event.transportation_method : "",
+      transportation_estimate_dollars: centsToDollars(event.transportation_estimate_cents),
+      location_required: !!event.location_required,
+      cost_items: [],
+      llc_buyin_override_dollars: eventType === "llc" && adultCents > 0 ? centsToDollars(adultCents) : "",
+      invest_eligible: eventType === "llc" ? !!event.invest_eligible : false,
+      ...eventType === "competition" ? window.EventsCreateSteps?.competition?.hydrateCompetitionFormFields ? window.EventsCreateSteps.competition.hydrateCompetitionFormFields(event, STATE2._competitionPhases || []) : _competitionFormDefaults() : _competitionFormDefaults()
+    });
+    STATE2.editEventId = event.id;
+    STATE2.editSlug = event.slug || null;
+    STATE2.editStatus = event.status || null;
+    STATE2.existingBannerUrl = event.banner_url || null;
+    STATE2.bannerPreviewUrl = event.banner_url || null;
+    STATE2.existingEmbedUrl = event.embed_image_url || null;
+    STATE2.embedImagePreviewUrl = event.embed_image_url || null;
+    if (event.location_lat != null && event.location_lng != null) {
+      STATE2.geocode = {
+        lat: Number(event.location_lat),
+        lng: Number(event.location_lng),
+        display: event.location_text || ""
+      };
+    } else {
+      STATE2.geocode = null;
+    }
+  }
+  async function _loadCostItemsForEdit(eventId2) {
+    const { data, error } = await supabaseClient.from("event_cost_items").select("*").eq("event_id", eventId2).order("sort_order", { ascending: true });
+    if (error) throw error;
+    STATE2.form.cost_items = (data || []).map((row) => ({
+      id: row.id || `cost-${row.sort_order}-${Date.now()}`,
+      name: row.name || "",
+      category: row.category || "other",
+      total_cost_cents: Number(row.total_cost_cents) || 0,
+      included_in_buyin: row.included_in_buyin !== false,
+      avg_per_person_cents: Number(row.avg_per_person_cents) || 0,
+      notes: row.notes || ""
+    }));
+  }
   function _ensureMounted() {
     if (document.getElementById("ecSheetRoot")) return;
     const root2 = document.createElement("div");
@@ -10167,7 +15074,7 @@ Type the event title to confirm:`);
             <div id="ecSheetPanel" class="bg-white w-full sm:max-w-2xl sm:max-h-[92vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-auto translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:92vh">
                 <header class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
                     <div class="flex-1 min-w-0">
-                        <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Create Event <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px]">BETA</span></p>
+                        <p id="ecSheetKicker" class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Create Event <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px]">BETA</span></p>
                         <h2 id="ecSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">New event</h2>
                         <p id="ecSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
                     </div>
@@ -10193,6 +15100,7 @@ Type the event title to confirm:`);
             .ec-label { display:block; font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
             .ec-input { width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; font-size:16px; color:#111827; background:#fff; }
             .ec-input:focus { outline:none; border-color:#4f46e5; box-shadow:0 0 0 3px rgba(79,70,229,.12); }
+            .ec-input:disabled, .ec-textarea:disabled { background:#f3f4f6; color:#6b7280; cursor:not-allowed; }
             .ec-textarea { min-height:90px; resize:vertical; font-family:inherit; }
             .ec-help { font-size:11px; color:#9ca3af; margin-top:4px; }
             .ec-row { margin-bottom:14px; }
@@ -10211,6 +15119,7 @@ Type the event title to confirm:`);
             .ec-pill.active { background:#4f46e5; color:#fff; }
             .ec-checkbox-row { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #e5e7eb; border-radius:10px; cursor:pointer; }
             .ec-checkbox-row input { margin-top:3px; }
+            .ec-lock-banner { margin-bottom:12px; border-radius:10px; border:1px solid #fde68a; background:#fffbeb; color:#92400e; padding:10px 12px; font-size:12px; }
             .ec-review-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:14px; margin-bottom:10px; }
             .ec-review-row { display:flex; justify-content:space-between; gap:10px; padding:6px 0; font-size:13px; border-bottom:1px solid #f1f5f9; }
             .ec-review-row:last-child { border-bottom:none; }
@@ -10225,8 +15134,34 @@ Type the event title to confirm:`);
             .ec-raffle-item-grid { display:grid; grid-template-columns:.45fr 1.1fr .9fr .55fr auto; gap:8px; align-items:end; margin-top:8px; }
             .ec-icon-btn { width:34px; height:34px; border-radius:9px; border:1px solid #e5e7eb; background:#fff; color:#4b5563; font-weight:800; display:inline-flex; align-items:center; justify-content:center; }
             .ec-icon-btn:hover { border-color:#c7d2fe; color:#4f46e5; background:#eef2ff; }
+            .ec-icon-btn:disabled { opacity:.4; cursor:not-allowed; }
             .ec-mini-btn { border:1px solid #e5e7eb; background:#fff; color:#374151; border-radius:9px; padding:7px 10px; font-size:12px; font-weight:700; }
             .ec-mini-btn:hover { border-color:#c7d2fe; color:#4f46e5; background:#eef2ff; }
+            .ec-mini-btn:disabled { opacity:.4; cursor:not-allowed; }
+            .ec-check { display:flex; align-items:center; gap:8px; font-size:14px; color:#0b2545; font-weight:600; cursor:pointer; }
+            .ec-check input { width:18px; height:18px; accent-color:#13366e; }
+            .ec-choice-list { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; min-height:8px; }
+            .ec-choice-chip {
+                display:inline-flex; align-items:center; gap:4px;
+                padding:5px 8px 5px 10px; border-radius:999px;
+                background:#eef2f6; border:1px solid #d5dfec; color:#0b2545;
+                font-size:12px; font-weight:600;
+            }
+            .ec-choice-chip-x {
+                border:none; background:transparent; color:#13366e; cursor:pointer;
+                font-size:16px; line-height:1; padding:0 2px; font-weight:700;
+            }
+            .ec-choice-add-row { display:flex; gap:8px; align-items:center; }
+            .ec-choice-add-row .ec-input { flex:1; min-width:0; }
+            .ec-md-toolbar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+            .ec-md-btn {
+                min-width:40px; min-height:40px; padding:6px 10px;
+                border:1px solid #d5dfec; background:#fff; color:#13366e;
+                border-radius:9px; font-size:13px; font-weight:700; font-family:inherit;
+                cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+            }
+            .ec-md-btn:hover { background:#eef2f6; border-color:#13366e; }
+            .ec-md-btn em { font-style:italic; font-weight:600; }
             .ec-raffle-summary { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
             .ec-raffle-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#4338ca; font-size:11px; font-weight:700; }
             .ec-raffle-item-wrap { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fff; margin-top:8px; }
@@ -10249,36 +15184,7 @@ Type the event title to confirm:`);
     document.getElementById("ecNextBtn").addEventListener("click", _next);
     document.getElementById("ecDraftBtn").addEventListener("click", () => _submit("draft"));
   }
-  function open3() {
-    _ensureMounted();
-    STATE2.step = 0;
-    STATE2.bannerFile = null;
-    STATE2.bannerPreviewUrl = null;
-    STATE2.embedImageFile = null;
-    STATE2.embedImagePreviewUrl = null;
-    STATE2.geocode = null;
-    STATE2.prizeImageFiles = {};
-    STATE2.prizeImagePreviews = {};
-    Object.assign(STATE2.form, {
-      event_type: "member",
-      title: "",
-      category: "other",
-      description: "",
-      start_date: "",
-      end_date: "",
-      timezone: "America/New_York",
-      location_text: "",
-      location_nickname: "",
-      max_participants: "",
-      rsvp_deadline: "",
-      pricing_mode: "free",
-      rsvp_cost_dollars: "",
-      raffle_enabled: false,
-      raffle_entry_cost_dollars: "",
-      raffle_config: null,
-      member_only: false
-    });
-    _render2();
+  function _showSheet() {
     const sheet = document.getElementById("ecSheet");
     const panel = document.getElementById("ecSheetPanel");
     const backdrop = document.getElementById("ecSheetBackdrop");
@@ -10290,6 +15196,41 @@ Type the event title to confirm:`);
       panel.classList.add("translate-y-0", "sm:opacity-100");
     });
     document.body.style.overflow = "hidden";
+  }
+  async function open3(opts) {
+    _ensureMounted();
+    _resetTransientState();
+    const eventId2 = opts && opts.eventId ? opts.eventId : null;
+    if (eventId2) {
+      try {
+        const event = await _loadEventForEdit(eventId2);
+        const type = event.event_type || "member";
+        if (type !== "member" && type !== "llc" && type !== "competition") {
+          alert("This event type cannot be edited in this sheet.");
+          return;
+        }
+        if (type === "competition") {
+          STATE2._competitionPhases = await _loadPhasesForEdit(eventId2);
+        }
+        _hydrateFromEvent(event);
+        if (type === "llc") {
+          await _loadCostItemsForEdit(eventId2);
+        }
+        const rsvpCount = await _countEventRsvps(eventId2);
+        STATE2.pricingLocked = rsvpCount > 0;
+        STATE2.disclaimersLocked = rsvpCount > 0;
+        STATE2.votingLocked = rsvpCount > 0;
+        if (type === "competition") {
+          const entryCount = await _countCompetitionEntries(eventId2);
+          STATE2.competitionLocked = entryCount > 0;
+        }
+      } catch (err) {
+        alert(err.message || "Could not load event for editing.");
+        return;
+      }
+    }
+    _render2();
+    _showSheet();
   }
   function close2() {
     const sheet = document.getElementById("ecSheet");
@@ -10304,37 +15245,79 @@ Type the event title to confirm:`);
     setTimeout(() => sheet.classList.remove("ec-open"), 250);
   }
   function _confirmClose() {
-    if (STATE2.form.title || STATE2.bannerFile || STATE2.embedImageFile) {
-      if (!confirm("Discard this event? Your draft will not be saved.")) return;
+    const dirty = STATE2.form.title || STATE2.bannerFile || STATE2.embedImageFile || STATE2.editEventId;
+    if (dirty) {
+      const msg = STATE2.editEventId ? "Discard changes to this event?" : "Discard this event? Your draft will not be saved.";
+      if (!confirm(msg)) return;
     }
     close2();
   }
   function _render2() {
+    const steps = getSteps();
+    if (STATE2.step >= steps.length) STATE2.step = Math.max(0, steps.length - 1);
+    const editing = !!STATE2.editEventId;
+    const kicker = document.getElementById("ecSheetKicker");
+    const titleEl = document.getElementById("ecSheetTitle");
+    if (kicker) {
+      kicker.innerHTML = editing ? 'Edit Event <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px]">BETA</span>' : 'Create Event <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px]">BETA</span>';
+    }
+    if (titleEl) titleEl.textContent = editing ? STATE2.form.title || "Edit event" : "New event";
     const dots = document.getElementById("ecSheetSteps");
-    dots.innerHTML = STEPS.map(
+    dots.innerHTML = steps.map(
       (s, i) => `<div class="ec-step-dot ${i === STATE2.step ? "active" : i < STATE2.step ? "done" : ""}" title="${s.label}"></div>`
     ).join("");
-    document.getElementById("ecSheetSub").textContent = `Step ${STATE2.step + 1} of ${STEPS.length} \xB7 ${STEPS[STATE2.step].label}`;
+    document.getElementById("ecSheetSub").textContent = `Step ${STATE2.step + 1} of ${steps.length} \xB7 ${steps[STATE2.step].label}`;
     document.getElementById("ecBackBtn").style.visibility = STATE2.step === 0 ? "hidden" : "visible";
-    document.getElementById("ecNextBtn").textContent = STATE2.step === STEPS.length - 1 ? "Publish" : "Next";
-    const key = STEPS[STATE2.step].key;
+    const draftBtn = document.getElementById("ecDraftBtn");
+    if (draftBtn) draftBtn.textContent = editing ? "Save as draft" : "Save draft";
+    const nextBtn = document.getElementById("ecNextBtn");
+    if (STATE2.step === steps.length - 1) {
+      nextBtn.textContent = editing ? "Save changes" : "Publish";
+    } else {
+      nextBtn.textContent = "Next";
+    }
+    const key = steps[STATE2.step].key;
     const c = document.getElementById("ecSheetContent");
-    const steps = window.EventsCreateSteps || {};
-    if (key === "basics" && steps.basics) {
-      c.innerHTML = steps.basics.html();
-      steps.basics.wire();
+    const stepApis = window.EventsCreateSteps || {};
+    if (key === "basics" && stepApis.basics) {
+      c.innerHTML = stepApis.basics.html();
+      stepApis.basics.wire();
     }
-    if (key === "when" && steps.when) {
-      c.innerHTML = steps.when.html();
-      steps.when.wire();
+    if (key === "about" && stepApis.about) {
+      c.innerHTML = stepApis.about.html();
+      stepApis.about.wire();
     }
-    if (key === "pricing" && steps.pricing) {
-      c.innerHTML = steps.pricing.html();
-      steps.pricing.wire();
+    if (key === "included" && stepApis.included) {
+      c.innerHTML = stepApis.included.html();
+      stepApis.included.wire();
     }
-    if (key === "review" && steps.review) {
-      c.innerHTML = steps.review.html();
-      steps.review.wire();
+    if (key === "when" && stepApis.when) {
+      c.innerHTML = stepApis.when.html();
+      stepApis.when.wire();
+    }
+    if (key === "pricing" && stepApis.pricing) {
+      c.innerHTML = stepApis.pricing.html();
+      stepApis.pricing.wire();
+    }
+    if (key === "llc" && stepApis.llc) {
+      c.innerHTML = stepApis.llc.html();
+      stepApis.llc.wire();
+    }
+    if (key === "competition" && stepApis.competition) {
+      c.innerHTML = stepApis.competition.html();
+      stepApis.competition.wire();
+    }
+    if (key === "disclaimers" && stepApis.disclaimers) {
+      c.innerHTML = stepApis.disclaimers.html();
+      stepApis.disclaimers.wire();
+    }
+    if (key === "voting" && stepApis.voting) {
+      c.innerHTML = stepApis.voting.html();
+      stepApis.voting.wire();
+    }
+    if (key === "review" && stepApis.review) {
+      c.innerHTML = stepApis.review.html();
+      stepApis.review.wire();
     }
   }
   function _raffleApi2() {
@@ -10342,25 +15325,81 @@ Type the event title to confirm:`);
   }
   function _validateStep() {
     const f = STATE2.form;
-    const key = STEPS[STATE2.step].key;
+    const steps = getSteps();
+    const key = steps[STATE2.step].key;
     if (key === "basics") {
       if (!f.title.trim()) return "Title is required.";
       if (f.title.trim().length < 3) return "Title must be at least 3 characters.";
-      if (f.event_type !== "member") return 'M4a only supports Member events. Use the legacy "Create Event" button for LLC or Competition.';
+      if (f.event_type !== "member" && f.event_type !== "llc" && f.event_type !== "competition") {
+        return "Choose Member, LLC, or Competition event type.";
+      }
+    }
+    if (key === "about") {
+      const aboutErr = validateAboutTabs(f);
+      if (aboutErr) return aboutErr;
+    }
+    if (key === "included") {
+      const incErr = validateIncludedItems(f);
+      if (incErr) return incErr;
     }
     if (key === "when") {
       if (!f.start_date) return "Start date is required.";
       if (f.end_date && f.end_date < f.start_date) return "End date must be after start date.";
-      if (f.rsvp_deadline && f.rsvp_deadline > f.start_date) return "RSVP deadline must be before the event starts.";
+      if (f.event_type !== "competition" && f.rsvp_deadline && f.rsvp_deadline > f.start_date) {
+        return "RSVP deadline must be before the event starts.";
+      }
+      if (f.capacity_mode === "soft" || f.capacity_mode === "hard") {
+        if (!f.max_participants || Number(f.max_participants) <= 0) return "Seat limit is required when using a capacity cap.";
+      }
     }
     if (key === "pricing") {
-      if (f.pricing_mode === "paid" && (!f.rsvp_cost_dollars || Number(f.rsvp_cost_dollars) <= 0)) return "Paid events need a price greater than zero.";
+      if (STATE2.pricingLocked) return null;
+      if (f.event_type === "llc") f.pricing_mode = "paid";
+      if (f.pricing_mode === "paid" && f.event_type !== "llc" && (!f.adult_price_dollars || Number(f.adult_price_dollars) <= 0)) {
+        return "Paid events need an adult price greater than zero.";
+      }
+      if (f.pricing_mode === "paid" && f.event_type === "llc" && f.adult_price_dollars !== "" && Number(f.adult_price_dollars) < 0) {
+        return "Adult price cannot be negative.";
+      }
+      if (f.pricing_mode === "paid" && !f.kids_free) {
+        if (f.kid_price_dollars === "" || Number.isNaN(Number(f.kid_price_dollars))) return "Kid price is required when kids are not free.";
+        if (Number(f.kid_price_dollars) < 0) return "Kid price cannot be negative.";
+      }
+      if (f.pricing_mode === "paid") {
+        const fundErr = validateFundDeadline(f);
+        if (fundErr) return fundErr;
+      }
       if (f.raffle_enabled && Number(f.raffle_entry_cost_dollars || 0) < 0) return "Raffle entry price cannot be negative.";
       if (f.raffle_enabled) {
         const rb = _raffleApi2();
         const result = rb.raffleModel().validateConfig(rb.ensureRaffleConfig());
         if (!result.valid) return result.errors[0];
       }
+    }
+    if (key === "llc") {
+      const llcApi = window.EventsCreateSteps?.llc;
+      if (llcApi && typeof llcApi.validateLlc === "function") {
+        const llcErr = llcApi.validateLlc(f);
+        if (llcErr) return llcErr;
+      }
+    }
+    if (key === "competition") {
+      if (STATE2.competitionLocked) return null;
+      const compApi = window.EventsCreateSteps?.competition;
+      if (compApi && typeof compApi.validateCompetition === "function") {
+        const compErr = compApi.validateCompetition(f, { publish: true });
+        if (compErr) return compErr;
+      }
+    }
+    if (key === "disclaimers") {
+      if (STATE2.disclaimersLocked) return null;
+      const discErr = validateDisclaimers(f);
+      if (discErr) return discErr;
+    }
+    if (key === "voting") {
+      if (STATE2.votingLocked) return null;
+      const voteErr = validateVoting(f);
+      if (voteErr) return voteErr;
     }
     return null;
   }
@@ -10372,7 +15411,8 @@ Type the event title to confirm:`);
   function _next() {
     const err = _validateStep();
     if (err) return alert(err);
-    if (STATE2.step < STEPS.length - 1) {
+    const steps = getSteps();
+    if (STATE2.step < steps.length - 1) {
       STATE2.step++;
       _render2();
     } else {
@@ -10382,7 +15422,7 @@ Type the event title to confirm:`);
   function _submit(status) {
     window.EventsCreateSubmit.submit(status);
   }
-  function _esc6(s) {
+  function _esc12(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -10393,9 +15433,10 @@ Type the event title to confirm:`);
     window.EventsCreateSteps.render = _render2;
     window.EventsCreateSteps.validateStep = _validateStep;
     window.EventsCreateSteps.close = close2;
-    window.EventsCreateSteps.esc = _esc6;
+    window.EventsCreateSteps.esc = _esc12;
     window.EventsCreateSteps.CATEGORIES = CATEGORIES;
     window.EventsCreateSteps.TIMEZONES = TIMEZONES;
+    window.EventsCreateSteps.isEditMode = () => !!STATE2.editEventId;
     const rb = _raffleApi2();
     window.EventsCreateSteps.raffleBuilderHtml = rb.builderHtml;
     window.EventsCreateSteps.raffleReviewHtml = rb.reviewHtml;
@@ -10922,8 +15963,8 @@ Type the event title to confirm:`);
       });
     });
   }
-  function renderContent2(html5) {
-    document.getElementById("emSheetContent").innerHTML = html5;
+  function renderContent2(html11) {
+    document.getElementById("emSheetContent").innerHTML = html11;
   }
   function setLoadingChrome2() {
     document.getElementById("emSheetTitle").textContent = "Loading event\u2026";
@@ -10975,8 +16016,7 @@ Type the event title to confirm:`);
   };
   globalThis.EventsManageShell = manageShellApi;
 
-  // js/portal/events/manage/overview.js
-  var PUBLIC_SITE_URL = "https://justicemcneal.com";
+  // js/portal/events/manage/pricing-editor.js
   function api9() {
     return window.EventsManageOverviewApi || {};
   }
@@ -10988,8 +16028,635 @@ Type the event title to confirm:`);
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
+  function centsToDollars2(cents) {
+    if (cents == null || cents === "") return "";
+    const n = Number(cents);
+    if (!Number.isFinite(n)) return "";
+    return (n / 100).toFixed(2);
+  }
+  function toDatetimeLocalValue2(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function pricingLocked(STATE4) {
+    const members = Array.isArray(STATE4?.rsvps) ? STATE4.rsvps.length : 0;
+    const guests = Array.isArray(STATE4?.guestRsvps) ? STATE4.guestRsvps.length : 0;
+    return members + guests > 0;
+  }
+  function adultCentsFromEvent(e) {
+    if (e?.adult_price_cents != null && Number.isFinite(Number(e.adult_price_cents))) {
+      return Number(e.adult_price_cents);
+    }
+    return Number(e?.rsvp_cost_cents || 0);
+  }
+  function readFormValues() {
+    const modePaid = document.querySelector('input[name="emPriceMode"]:checked')?.value === "paid";
+    const pricingMode = modePaid ? "paid" : "free";
+    const adultDollars = document.getElementById("emAdultPrice")?.value ?? "";
+    const kidsFree = !!document.getElementById("emKidsFree")?.checked;
+    const kidDollars = document.getElementById("emKidPrice")?.value ?? "";
+    const fundDeadline = document.getElementById("emFundDeadline")?.value ?? "";
+    const capacityMode = document.querySelector('input[name="emCapacityMode"]:checked')?.value || "none";
+    const capacityCounts = document.querySelector('input[name="emCapacityCounts"]:checked')?.value || "adults";
+    const maxParticipants = document.getElementById("emCapacityMax")?.value ?? "";
+    return {
+      pricing_mode: pricingMode,
+      adult_price_dollars: adultDollars,
+      kids_free: pricingMode === "paid" ? kidsFree : true,
+      kid_price_dollars: kidDollars,
+      fund_deadline: fundDeadline,
+      capacity_mode: capacityMode,
+      capacity_counts: capacityCounts,
+      max_participants: maxParticipants,
+      start_date: getState3().event?.start_date || ""
+    };
+  }
+  function validatePricingForm(f, existingMode) {
+    if (existingMode !== "free_paid_raffle" && f.pricing_mode === "paid") {
+      if (!f.adult_price_dollars || Number(f.adult_price_dollars) <= 0) {
+        return "Paid events need an adult price greater than zero.";
+      }
+      if (!f.kids_free) {
+        if (f.kid_price_dollars === "" || Number.isNaN(Number(f.kid_price_dollars))) {
+          return "Kid price is required when kids are not free.";
+        }
+        if (Number(f.kid_price_dollars) < 0) return "Kid price cannot be negative.";
+      }
+      const fundErr = validateFundDeadline(f);
+      if (fundErr) return fundErr;
+    }
+    if (f.capacity_mode === "soft" || f.capacity_mode === "hard") {
+      if (!f.max_participants || Number(f.max_participants) <= 0) {
+        return "Seat limit is required when using a capacity cap.";
+      }
+    }
+    return null;
+  }
+  function buildUpdatePayload(f, existingMode) {
+    const capacityMode = f.capacity_mode || "none";
+    const capacityCounts = f.capacity_counts || "adults";
+    const maxParticipants = capacityMode === "none" ? null : f.max_participants ? Number(f.max_participants) : null;
+    if (existingMode === "free_paid_raffle") {
+      return {
+        capacity_mode: capacityMode,
+        capacity_counts: capacityCounts,
+        max_participants: maxParticipants
+      };
+    }
+    const adultCents = f.pricing_mode === "paid" ? Math.round(Number(f.adult_price_dollars || 0) * 100) : 0;
+    const kidsFree = f.pricing_mode === "paid" ? !!f.kids_free : true;
+    const kidCents = f.pricing_mode === "paid" && !kidsFree ? Math.round(Number(f.kid_price_dollars || 0) * 100) : null;
+    const fundDeadlineISO = f.pricing_mode === "paid" && f.fund_deadline ? new Date(f.fund_deadline).toISOString() : null;
+    return {
+      pricing_mode: f.pricing_mode === "paid" ? "paid" : "free",
+      adult_price_cents: adultCents,
+      rsvp_cost_cents: adultCents,
+      kids_free: kidsFree,
+      kid_price_cents: kidCents,
+      fund_deadline: fundDeadlineISO,
+      capacity_mode: capacityMode,
+      capacity_counts: capacityCounts,
+      max_participants: maxParticipants
+    };
+  }
+  async function countEventRsvps2(eventId2) {
+    const [memberRes, guestRes] = await Promise.all([
+      supabaseClient.from("event_rsvps").select("id", { count: "exact", head: true }).eq("event_id", eventId2),
+      supabaseClient.from("event_guest_rsvps").select("id", { count: "exact", head: true }).eq("event_id", eventId2)
+    ]);
+    if (memberRes.error) throw memberRes.error;
+    if (guestRes.error) throw guestRes.error;
+    return (memberRes.count || 0) + (guestRes.count || 0);
+  }
+  function pricingEditorHtml(STATE4) {
+    const e = STATE4.event;
+    if (!e) return "";
+    const locked = pricingLocked(STATE4);
+    const isRaffleMode = e.pricing_mode === "free_paid_raffle";
+    const pricingMode = e.pricing_mode === "paid" ? "paid" : isRaffleMode ? "free_paid_raffle" : "free";
+    const showPaid = pricingMode === "paid";
+    const kidsFree = e.kids_free !== false;
+    const capacityMode = e.capacity_mode || "none";
+    const showCapacityLimit = capacityMode === "soft" || capacityMode === "hard";
+    const adultDollars = centsToDollars2(adultCentsFromEvent(e));
+    const kidDollars = centsToDollars2(e.kid_price_cents);
+    const fundLocal = toDatetimeLocalValue2(e.fund_deadline);
+    const disabledAttr = locked ? "disabled" : "";
+    const lockBanner = locked ? `<div class="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">Pricing and capacity are locked after RSVPs. Changes aren\u2019t applied retroactively, and refunds aren\u2019t available in the event system.</div>` : `<p class="em-section-sub mb-3">Edit before anyone RSVPs. After the first RSVP, these settings lock permanently.</p>`;
+    const modeRadios = isRaffleMode ? `<div class="text-sm text-gray-700 font-medium">Free + paid raffle <span class="text-xs text-gray-400 font-normal">(mode not editable here)</span></div>` : `
+        <div class="flex flex-col gap-2">
+            <label class="flex items-start gap-2 cursor-pointer">
+                <input type="radio" name="emPriceMode" value="free" ${pricingMode !== "paid" ? "checked" : ""} ${disabledAttr}>
+                <span class="text-sm text-gray-800 font-medium">Free</span>
+            </label>
+            <label class="flex items-start gap-2 cursor-pointer">
+                <input type="radio" name="emPriceMode" value="paid" ${pricingMode === "paid" ? "checked" : ""} ${disabledAttr}>
+                <span class="text-sm text-gray-800 font-medium">Paid</span>
+            </label>
+        </div>`;
+    return `
+        <div class="em-card mb-3" id="emPricingEditorCard">
+            <div class="em-section-head" style="margin-bottom:12px">
+                <div>
+                    <h3 class="em-section-title">Pricing &amp; capacity</h3>
+                    ${lockBanner}
+                </div>
+            </div>
+            <form id="emPricingForm" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Pricing mode</label>
+                    ${modeRadios}
+                </div>
+
+                <div id="emPaidFields" class="${showPaid ? "" : "hidden"} space-y-3">
+                    <div>
+                        <label for="emAdultPrice" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Adult price (USD)</label>
+                        <input id="emAdultPrice" class="em-input" type="number" min="0" step="0.01" placeholder="0.00" value="${esc(adultDollars)}" ${disabledAttr}>
+                    </div>
+                    <label class="flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" id="emKidsFree" ${kidsFree ? "checked" : ""} ${disabledAttr}>
+                        <span>
+                            <span class="block text-sm font-medium text-gray-800">Kids attend free</span>
+                            <span class="block text-xs text-gray-500">Children are not billed for this event.</span>
+                        </span>
+                    </label>
+                    <div id="emKidPriceRow" class="${!kidsFree && showPaid ? "" : "hidden"}">
+                        <label for="emKidPrice" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Kid price (USD)</label>
+                        <input id="emKidPrice" class="em-input" type="number" min="0" step="0.01" placeholder="0.00" value="${esc(kidDollars)}" ${disabledAttr}>
+                    </div>
+                    <div>
+                        <label for="emFundDeadline" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Fund deadline</label>
+                        <input id="emFundDeadline" class="em-input" type="datetime-local" value="${esc(fundLocal)}" ${disabledAttr}>
+                        <p class="text-xs text-gray-400 mt-1">Optional. Last date attendees must finish paying.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Capacity</label>
+                    <div class="flex flex-col gap-2">
+                        <label class="flex items-start gap-2 cursor-pointer">
+                            <input type="radio" name="emCapacityMode" value="none" ${capacityMode === "none" ? "checked" : ""} ${disabledAttr}>
+                            <span class="text-sm text-gray-800 font-medium">No limit</span>
+                        </label>
+                        <label class="flex items-start gap-2 cursor-pointer">
+                            <input type="radio" name="emCapacityMode" value="soft" ${capacityMode === "soft" ? "checked" : ""} ${disabledAttr}>
+                            <span class="text-sm text-gray-800 font-medium">Soft cap + waitlist</span>
+                        </label>
+                        <label class="flex items-start gap-2 cursor-pointer">
+                            <input type="radio" name="emCapacityMode" value="hard" ${capacityMode === "hard" ? "checked" : ""} ${disabledAttr}>
+                            <span class="text-sm text-gray-800 font-medium">Hard cap</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="emCapacityLimitFields" class="${showCapacityLimit ? "" : "hidden"} space-y-3">
+                    <div>
+                        <label for="emCapacityMax" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Seat limit</label>
+                        <input id="emCapacityMax" class="em-input" type="number" min="1" placeholder="e.g. 50" value="${esc(e.max_participants || "")}" ${disabledAttr}>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Counts toward limit</label>
+                        <div class="flex flex-col gap-2">
+                            <label class="flex items-start gap-2 cursor-pointer">
+                                <input type="radio" name="emCapacityCounts" value="adults" ${(e.capacity_counts || "adults") === "adults" ? "checked" : ""} ${disabledAttr}>
+                                <span class="text-sm text-gray-800 font-medium">Adults only</span>
+                            </label>
+                            <label class="flex items-start gap-2 cursor-pointer">
+                                <input type="radio" name="emCapacityCounts" value="all" ${e.capacity_counts === "all" ? "checked" : ""} ${disabledAttr}>
+                                <span class="text-sm text-gray-800 font-medium">Adults and kids</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                ${locked ? "" : `
+                <div class="flex flex-wrap items-center gap-2 pt-1">
+                    <button type="submit" id="emPricingSave" class="em-btn-primary">Save pricing</button>
+                    <button type="button" id="emPricingCancel" class="em-btn-ghost">Cancel</button>
+                    <span id="emPricingStatus" class="text-xs text-gray-400"></span>
+                </div>`}
+                ${locked ? '<span id="emPricingStatus" class="hidden"></span>' : ""}
+            </form>
+        </div>
+    `;
+  }
+  function syncPaidVisibility() {
+    const paid = document.querySelector('input[name="emPriceMode"]:checked')?.value === "paid";
+    const paidFields = document.getElementById("emPaidFields");
+    if (paidFields) paidFields.classList.toggle("hidden", !paid);
+    syncKidPriceVisibility();
+  }
+  function syncKidPriceVisibility() {
+    const paid = document.querySelector('input[name="emPriceMode"]:checked')?.value === "paid";
+    const kidsFree = !!document.getElementById("emKidsFree")?.checked;
+    const row = document.getElementById("emKidPriceRow");
+    if (row) row.classList.toggle("hidden", !(paid && !kidsFree));
+  }
+  function syncCapacityVisibility() {
+    const mode = document.querySelector('input[name="emCapacityMode"]:checked')?.value || "none";
+    const fields = document.getElementById("emCapacityLimitFields");
+    if (fields) fields.classList.toggle("hidden", mode === "none");
+    if (mode === "none") {
+      const max = document.getElementById("emCapacityMax");
+      if (max) max.value = "";
+    }
+  }
+  function wirePricingEditor() {
+    const STATE4 = getState3();
+    if (!STATE4.event) return;
+    const locked = pricingLocked(STATE4);
+    const form = document.getElementById("emPricingForm");
+    if (!form) return;
+    if (!locked) {
+      document.querySelectorAll('input[name="emPriceMode"]').forEach((el) => {
+        el.addEventListener("change", syncPaidVisibility);
+      });
+      document.getElementById("emKidsFree")?.addEventListener("change", syncKidPriceVisibility);
+      document.querySelectorAll('input[name="emCapacityMode"]').forEach((el) => {
+        el.addEventListener("change", syncCapacityVisibility);
+      });
+      form.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        saveEventPricing();
+      });
+      document.getElementById("emPricingCancel")?.addEventListener("click", () => {
+        api9().renderTab?.("overview");
+        setTimeout(() => {
+          const status = document.getElementById("emPricingStatus");
+          if (status) {
+            status.className = "text-xs text-gray-400";
+            status.textContent = "Changes discarded";
+            setTimeout(() => {
+              status.textContent = "";
+            }, 1800);
+          }
+        }, 0);
+      });
+    }
+  }
+  async function saveEventPricing() {
+    const STATE4 = getState3();
+    const e = STATE4.event;
+    const saveBtn = document.getElementById("emPricingSave");
+    const status = document.getElementById("emPricingStatus");
+    function setStatus(message, isError) {
+      if (!status) return;
+      status.className = isError ? "text-xs text-red-600" : "text-xs text-gray-400";
+      status.textContent = message;
+    }
+    if (!e) return;
+    if (pricingLocked(STATE4)) {
+      setStatus("Pricing is locked after RSVPs.", true);
+      return;
+    }
+    const formValues = readFormValues();
+    const validationError = validatePricingForm(formValues, e.pricing_mode);
+    if (validationError) {
+      setStatus(validationError, true);
+      return;
+    }
+    const payload = buildUpdatePayload(formValues, e.pricing_mode);
+    if (saveBtn) saveBtn.disabled = true;
+    setStatus("Saving\u2026", false);
+    try {
+      const rsvpCount = await countEventRsvps2(e.id);
+      if (rsvpCount > 0) {
+        throw new Error("Pricing is locked after RSVPs. Refresh manage to see the lock.");
+      }
+      const { data, error } = await supabaseClient.from("events").update(payload).eq("id", e.id).select("pricing_mode, adult_price_cents, rsvp_cost_cents, kids_free, kid_price_cents, fund_deadline, capacity_mode, capacity_counts, max_participants").single();
+      if (error) throw error;
+      Object.assign(STATE4.event, data || payload);
+      api9().renderHeader?.();
+      api9().renderTab?.("overview");
+      setTimeout(() => {
+        const refreshedStatus = document.getElementById("emPricingStatus");
+        if (refreshedStatus) {
+          refreshedStatus.className = "text-xs text-emerald-600";
+          refreshedStatus.textContent = "Saved pricing.";
+          setTimeout(() => {
+            refreshedStatus.textContent = "";
+          }, 2500);
+        }
+      }, 0);
+      api9().notifyParent?.("updated", e.id);
+    } catch (err) {
+      setStatus("Update failed: " + (err.message || "unknown error"), true);
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  }
+  var managePricingEditorApi = {
+    pricingLocked,
+    pricingEditorHtml,
+    wirePricingEditor,
+    saveEventPricing
+  };
+  globalThis.EventsManagePricingEditor = managePricingEditorApi;
+
+  // js/portal/events/manage/disclaimers-editor.js
+  var TITLE_MAX3 = 80;
+  var BODY_MAX3 = 4e3;
+  var _draft = null;
+  var _draftEventId = null;
+  function api10() {
+    return window.EventsManageOverviewApi || {};
+  }
+  function getState4() {
+    return api10().getState?.() || {};
+  }
+  function esc2(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function newId() {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    return `disc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+  function normalizeFromEvent(event) {
+    const raw = window.EventsDisclaimers && typeof window.EventsDisclaimers.normalizeDisclaimers === "function" ? window.EventsDisclaimers.normalizeDisclaimers(event?.disclaimers) : Array.isArray(event?.disclaimers) ? event.disclaimers : [];
+    const withDefaults = ensureDefaultDisclaimers(raw.length ? raw : seedDefaultDisclaimers());
+    return withDefaults.map((d) => ({ ...d }));
+  }
+  function resetDraft(STATE4) {
+    _draft = normalizeFromEvent(STATE4?.event);
+    _draftEventId = STATE4?.event?.id || null;
+    return _draft;
+  }
+  function getDraft(STATE4) {
+    if (!_draft || _draftEventId !== STATE4?.event?.id) {
+      return resetDraft(STATE4);
+    }
+    return _draft;
+  }
+  function disclaimersLocked(STATE4) {
+    const members = Array.isArray(STATE4?.rsvps) ? STATE4.rsvps.length : 0;
+    const guests = Array.isArray(STATE4?.guestRsvps) ? STATE4.guestRsvps.length : 0;
+    return members + guests > 0;
+  }
+  async function countEventRsvps3(eventId2) {
+    const [memberRes, guestRes] = await Promise.all([
+      supabaseClient.from("event_rsvps").select("id", { count: "exact", head: true }).eq("event_id", eventId2),
+      supabaseClient.from("event_guest_rsvps").select("id", { count: "exact", head: true }).eq("event_id", eventId2)
+    ]);
+    if (memberRes.error) throw memberRes.error;
+    if (guestRes.error) throw guestRes.error;
+    return (memberRes.count || 0) + (guestRes.count || 0);
+  }
+  function clauseCardHtml(item, index, listLength, locked) {
+    const isDefault = !!item.is_default;
+    if (locked) {
+      return `
+            <div class="rounded-lg border border-gray-200 bg-white px-3 py-3 mb-2">
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">
+                    ${isDefault ? "Required default" : `Clause ${index + 1}`}
+                    ${item.required ? " \xB7 Required" : ""}
+                </p>
+                <p class="text-sm font-semibold text-gray-900 mb-1">${esc2(item.title || "")}</p>
+                <p class="text-xs text-gray-600 whitespace-pre-wrap">${esc2(item.body || "")}</p>
+            </div>`;
+    }
+    return `
+        <div class="rounded-lg border border-gray-200 bg-white px-3 py-3 mb-2" data-em-disc-id="${esc2(item.id)}">
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">
+                    ${isDefault ? "Required default" : `Clause ${index + 1}`}
+                </span>
+                <div class="flex items-center gap-1">
+                    <button type="button" class="em-btn-ghost" style="padding:4px 8px" data-em-disc-up="${esc2(item.id)}" ${index === 0 ? "disabled" : ""} aria-label="Move up">\u2191</button>
+                    <button type="button" class="em-btn-ghost" style="padding:4px 8px" data-em-disc-down="${esc2(item.id)}" ${index === listLength - 1 ? "disabled" : ""} aria-label="Move down">\u2193</button>
+                    ${isDefault ? '<span class="text-xs text-gray-400">Locked</span>' : `<button type="button" class="em-btn-ghost" style="padding:4px 8px;color:#dc2626" data-em-disc-remove="${esc2(item.id)}">Remove</button>`}
+                </div>
+            </div>
+            <div class="mb-2">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Title</label>
+                <input class="em-input" type="text" maxlength="${TITLE_MAX3}" data-em-disc-title="${esc2(item.id)}" value="${esc2(item.title || "")}">
+            </div>
+            <div class="mb-2">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Body</label>
+                <textarea class="em-textarea" rows="3" maxlength="${BODY_MAX3}" data-em-disc-body="${esc2(item.id)}" placeholder="Disclaimer text\u2026">${esc2(item.body || "")}</textarea>
+            </div>
+            <div>
+                ${isDefault ? `<label class="flex items-start gap-2 text-sm text-gray-700"><input type="checkbox" checked disabled><span>Required at RSVP (default)</span></label>` : `<label class="flex items-start gap-2 text-sm text-gray-700"><input type="checkbox" data-em-disc-required="${esc2(item.id)}" ${item.required ? "checked" : ""}><span>Required at RSVP</span></label>`}
+            </div>
+        </div>`;
+  }
+  function disclaimersEditorHtml(STATE4) {
+    const e = STATE4.event;
+    if (!e) return "";
+    const locked = disclaimersLocked(STATE4);
+    const list = locked ? normalizeFromEvent(e) : getDraft(STATE4);
+    const lockBanner = locked ? `<div class="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">Disclaimers are locked after RSVPs. Acknowledgments already recorded stay as-is; changes aren\u2019t applied retroactively.</div>` : `<p class="em-section-sub mb-3">Edit before anyone RSVPs. After the first RSVP, these clauses lock permanently.</p>`;
+    return `
+        <div class="em-card mb-3" id="emDisclaimersEditorCard">
+            <div class="em-section-head" style="margin-bottom:12px">
+                <div>
+                    <h3 class="em-section-title">Disclaimers</h3>
+                    ${lockBanner}
+                </div>
+            </div>
+            <div id="emDisclaimersForm">
+                ${list.map((item, index) => clauseCardHtml(item, index, list.length, locked)).join("")}
+                ${locked ? "" : `
+                <button type="button" id="emDiscAdd" class="em-btn-ghost" style="margin-top:4px">+ Add clause</button>
+                <div class="flex flex-wrap items-center gap-2 pt-3">
+                    <button type="button" id="emDiscSave" class="em-btn-primary">Save disclaimers</button>
+                    <button type="button" id="emDiscCancel" class="em-btn-ghost">Cancel</button>
+                    <span id="emDiscStatus" class="text-xs text-gray-400"></span>
+                </div>`}
+                ${locked ? '<span id="emDiscStatus" class="hidden"></span>' : ""}
+            </div>
+        </div>
+    `;
+  }
+  function rerenderOverviewKeepingStatus(message, isError) {
+    api10().renderTab?.("overview");
+    setTimeout(() => {
+      const status = document.getElementById("emDiscStatus");
+      if (!status || !message) return;
+      status.className = isError ? "text-xs text-red-600" : "text-xs text-gray-400";
+      status.textContent = message;
+      if (!isError) {
+        setTimeout(() => {
+          if (status.textContent === message) status.textContent = "";
+        }, 2500);
+      }
+    }, 0);
+  }
+  function wireDisclaimersEditor() {
+    const STATE4 = getState4();
+    if (!STATE4.event) return;
+    if (disclaimersLocked(STATE4)) return;
+    const list = getDraft(STATE4);
+    document.getElementById("emDiscAdd")?.addEventListener("click", () => {
+      list.push({
+        id: newId(),
+        title: "",
+        body: "",
+        required: true,
+        is_default: false
+      });
+      api10().renderTab?.("overview");
+    });
+    document.querySelectorAll("[data-em-disc-title]").forEach((el) => {
+      el.addEventListener("input", () => {
+        const item = list.find((d) => d.id === el.getAttribute("data-em-disc-title"));
+        if (item) item.title = el.value.slice(0, TITLE_MAX3);
+      });
+    });
+    document.querySelectorAll("[data-em-disc-body]").forEach((el) => {
+      el.addEventListener("input", () => {
+        const item = list.find((d) => d.id === el.getAttribute("data-em-disc-body"));
+        if (item) item.body = el.value.slice(0, BODY_MAX3);
+      });
+    });
+    document.querySelectorAll("[data-em-disc-required]").forEach((el) => {
+      el.addEventListener("change", () => {
+        const item = list.find((d) => d.id === el.getAttribute("data-em-disc-required"));
+        if (item && !item.is_default) item.required = !!el.checked;
+      });
+    });
+    document.querySelectorAll("[data-em-disc-up]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-em-disc-up");
+        const i = list.findIndex((d) => d.id === id);
+        if (i <= 0) return;
+        const tmp = list[i - 1];
+        list[i - 1] = list[i];
+        list[i] = tmp;
+        api10().renderTab?.("overview");
+      });
+    });
+    document.querySelectorAll("[data-em-disc-down]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-em-disc-down");
+        const i = list.findIndex((d) => d.id === id);
+        if (i < 0 || i >= list.length - 1) return;
+        const tmp = list[i + 1];
+        list[i + 1] = list[i];
+        list[i] = tmp;
+        api10().renderTab?.("overview");
+      });
+    });
+    document.querySelectorAll("[data-em-disc-remove]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-em-disc-remove");
+        const item = list.find((d) => d.id === id);
+        if (!item || item.is_default) return;
+        if ((item.title || "").trim() || (item.body || "").trim()) {
+          if (!confirm("Remove this disclaimer clause?")) return;
+        }
+        _draft = list.filter((d) => d.id !== id);
+        api10().renderTab?.("overview");
+      });
+    });
+    document.getElementById("emDiscSave")?.addEventListener("click", () => {
+      saveEventDisclaimers();
+    });
+    document.getElementById("emDiscCancel")?.addEventListener("click", () => {
+      resetDraft(STATE4);
+      rerenderOverviewKeepingStatus("Changes discarded", false);
+    });
+  }
+  async function saveEventDisclaimers() {
+    const STATE4 = getState4();
+    const e = STATE4.event;
+    const saveBtn = document.getElementById("emDiscSave");
+    const status = document.getElementById("emDiscStatus");
+    function setStatus(message, isError) {
+      if (!status) return;
+      status.className = isError ? "text-xs text-red-600" : "text-xs text-gray-400";
+      status.textContent = message;
+    }
+    if (!e) return;
+    if (disclaimersLocked(STATE4)) {
+      setStatus("Disclaimers are locked after RSVPs.", true);
+      return;
+    }
+    const form = { disclaimers: getDraft(STATE4) };
+    const validationError = validateDisclaimers(form);
+    if (validationError) {
+      setStatus(validationError, true);
+      return;
+    }
+    const normalized = window.EventsDisclaimers && typeof window.EventsDisclaimers.normalizeDisclaimers === "function" ? window.EventsDisclaimers.normalizeDisclaimers(form.disclaimers) : form.disclaimers;
+    if (saveBtn) saveBtn.disabled = true;
+    setStatus("Saving\u2026", false);
+    try {
+      const rsvpCount = await countEventRsvps3(e.id);
+      if (rsvpCount > 0) {
+        throw new Error("Disclaimers are locked after RSVPs. Refresh manage to see the lock.");
+      }
+      const { data, error } = await supabaseClient.from("events").update({ disclaimers: normalized }).eq("id", e.id).select("disclaimers").single();
+      if (error) throw error;
+      STATE4.event.disclaimers = data?.disclaimers ?? normalized;
+      resetDraft(STATE4);
+      api10().renderHeader?.();
+      rerenderOverviewKeepingStatus("Saved disclaimers.", false);
+      setTimeout(() => {
+        const refreshed = document.getElementById("emDiscStatus");
+        if (refreshed) {
+          refreshed.className = "text-xs text-emerald-600";
+          refreshed.textContent = "Saved disclaimers.";
+          setTimeout(() => {
+            refreshed.textContent = "";
+          }, 2500);
+        }
+      }, 0);
+      api10().notifyParent?.("updated", e.id);
+    } catch (err) {
+      setStatus("Update failed: " + (err.message || "unknown error"), true);
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  }
+  var manageDisclaimersEditorApi = {
+    disclaimersLocked,
+    disclaimersEditorHtml,
+    wireDisclaimersEditor,
+    saveEventDisclaimers
+  };
+  globalThis.EventsManageDisclaimersEditor = manageDisclaimersEditorApi;
+
+  // js/portal/events/manage/overview.js
+  var PUBLIC_SITE_URL = "https://justicemcneal.com";
+  function api11() {
+    return window.EventsManageOverviewApi || {};
+  }
+  function getState5() {
+    return api11().getState?.() || {};
+  }
+  function esc3(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
   function money(cents) {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
+  }
+  function adultPriceCents(e) {
+    if (e?.adult_price_cents != null && Number.isFinite(Number(e.adult_price_cents))) {
+      return Number(e.adult_price_cents);
+    }
+    return Number(e?.rsvp_cost_cents || 0);
+  }
+  function capacityLabel(e) {
+    const mode = e?.capacity_mode || "none";
+    if (mode === "none") return "No limit";
+    const counts = e?.capacity_counts === "all" ? "adults + kids" : "adults only";
+    const cap = mode === "soft" ? "Soft cap" : "Hard cap";
+    const n = e?.max_participants || "\u2014";
+    return `${cap} \xB7 ${n} (${counts})`;
+  }
+  function pricingModeLabel(e) {
+    if (e?.pricing_mode === "paid") return "Paid";
+    if (e?.pricing_mode === "free_paid_raffle") return "Free + paid raffle";
+    return "Free";
   }
   function publicEventUrl(event) {
     const slug = event?.slug || "";
@@ -11028,14 +16695,15 @@ Type the event title to confirm:`);
     }
   }
   function overviewHtml() {
-    const STATE4 = getState3();
+    const STATE4 = getState5();
     const e = STATE4.event;
     const guestGoing = STATE4.guestRsvps.filter((r) => r.status === "going").length;
     const going = STATE4.rsvps.filter((r) => r.status === "going").length + guestGoing;
     const maybe = STATE4.rsvps.filter((r) => r.status === "maybe").length;
     const paid = STATE4.rsvps.filter((r) => r.paid).length + STATE4.guestRsvps.filter((r) => r.paid).length;
     const checked = STATE4.checkins.length;
-    const revenue = paid * (e.rsvp_cost_cents || 0);
+    const adultCents = adultPriceCents(e);
+    const revenue = paid * adultCents;
     const startLocal = new Date(e.start_date).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
     const isLlc = e.event_type === "llc";
     const minNeeded = Number(e.min_participants || 0);
@@ -11043,7 +16711,16 @@ Type the event title to confirm:`);
     const thresholdMet = minNeeded ? going >= minNeeded : false;
     const deadline = e.rsvp_deadline ? new Date(e.rsvp_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "";
     const transportMode = e.transportation_mode;
+    const transportMethod = e.transportation_method;
     const transportEstimate = e.transportation_estimate_cents ? money(e.transportation_estimate_cents) : "";
+    const ticketHelper = window.EventsManageTicketHandoff;
+    const goingMembers = STATE4.rsvps.filter((r) => r.status === "going");
+    const planeHandoff = isLlc && transportMethod === "plane" && ticketHelper ? ticketHelper.computePlaneTicketHandoff({
+      goingRsvps: goingMembers,
+      documents: STATE4.eventDocuments || []
+    }) : null;
+    const costBreakdown = e.cost_breakdown || {};
+    const budgetIncluded = Number(costBreakdown.total_included_cents) || 0;
     const thresholdCopy = thresholdMet ? `${going} confirmed RSVP${going === 1 ? "" : "s"}; minimum was ${minNeeded}${deadline ? ` by ${deadline}` : ""}. This event can stay confirmed.` : `${going} of ${minNeeded} required RSVP${minNeeded === 1 ? "" : "s"}${deadline ? ` by ${deadline}` : ""}. ${Math.max(0, minNeeded - going)} more RSVP${minNeeded - going === 1 ? "" : "s"} needed.`;
     const inviteUrl = publicEventUrl(e);
     const portalLink = `<a href="/pages/portal/events.html?event=${encodeURIComponent(e.slug || "")}" class="em-btn-ghost" style="text-decoration:none;display:inline-block">Open in portal \u2192</a>`;
@@ -11057,15 +16734,41 @@ Type the event title to confirm:`);
             <div class="em-op-progress"><span style="width:${thresholdPct}%"></span></div>
             <div class="em-op-meta"><span class="em-op-chip">${thresholdPct}% filled</span><button class="em-btn-ghost" data-overview-tab="rsvps">Review RSVPs</button></div>
         </div>` : "";
-    const transportCard = isLlc && transportMode ? `
+    let transportCard = "";
+    if (isLlc && transportMode) {
+      let title = "Self-arranged";
+      let icon = "\u{1F9F3}";
+      let copy = `Members book travel themselves${transportEstimate ? `, estimated around ${transportEstimate}` : ""}.`;
+      let chip = "Member-owned";
+      if (transportMode === "llc_provides") {
+        if (transportMethod === "plane") {
+          title = "LLC flights";
+          icon = "\u2708\uFE0F";
+          copy = planeHandoff ? `Tickets: ${planeHandoff.uploaded}/${planeHandoff.total} members uploaded.${planeHandoff.missingCount ? " Upload per-member plane tickets in Docs." : ""}` : "Upload tickets or boarding documents in Docs when they are ready for members.";
+          chip = "Ticket handoff";
+        } else if (transportMethod === "car") {
+          title = "LLC ground transport";
+          icon = "\u{1F697}";
+          copy = "Travel is by car. Docs can hold itineraries or seat lists if needed \u2014 no flight tickets.";
+          chip = "Ground travel";
+        } else {
+          title = "LLC provided";
+          icon = "\u{1F690}";
+          copy = "The LLC is arranging travel. Edit the event to specify car or plane.";
+          chip = "Transport";
+        }
+      }
+      transportCard = `
         <div class="em-card em-op-card">
             <div class="em-op-head">
-                <div><p class="em-op-kicker">Transportation</p><p class="em-op-title">${transportMode === "llc_provides" ? "LLC provided" : "Self-arranged"}</p></div>
-                <span class="em-op-icon">${transportMode === "llc_provides" ? "\u2708\uFE0F" : "\u{1F9F3}"}</span>
+                <div><p class="em-op-kicker">Transportation</p><p class="em-op-title">${title}</p></div>
+                <span class="em-op-icon">${icon}</span>
             </div>
-            <p class="em-op-copy">${transportMode === "llc_provides" ? "Upload tickets or travel documents in Docs when they are ready for members." : `Members book travel themselves${transportEstimate ? `, estimated around ${transportEstimate}` : ""}.`}</p>
-            <div class="em-op-meta"><button class="em-btn-ghost" data-overview-tab="docs">Open Docs</button><span class="em-op-chip">${transportMode === "llc_provides" ? "Document handoff" : "Member-owned"}</span></div>
-        </div>` : "";
+            <p class="em-op-copy">${copy}</p>
+            ${planeHandoff && planeHandoff.total ? `<div class="em-op-progress"><span style="width:${planeHandoff.ticketPct}%"></span></div>` : ""}
+            <div class="em-op-meta"><button class="em-btn-ghost" data-overview-tab="docs">Open Docs</button><span class="em-op-chip">${chip}</span></div>
+        </div>`;
+    }
     const documentsCard = isLlc ? `
         <div class="em-card em-op-card">
             <div class="em-op-head">
@@ -11077,7 +16780,9 @@ Type the event title to confirm:`);
         </div>` : "";
     const operationsHtml = [thresholdCard, transportCard, documentsCard].filter(Boolean).join("");
     const showFeaturedToggle = typeof canManageEventBanners === "function" && canManageEventBanners();
+    const llcBudgetLine = isLlc && budgetIncluded > 0 ? `<p class="text-xs text-gray-500 mb-4">Trip budget <strong>${money(budgetIncluded)}</strong> \xB7 Collected <strong>${money(revenue)}</strong> \xB7 <button type="button" class="text-brand-600 font-semibold hover:underline" data-overview-tab="money" style="background:none;border:none;padding:0;cursor:pointer">View Money</button></p>` : isLlc ? `<p class="text-xs text-gray-500 mb-4">Collected <strong>${money(revenue)}</strong> \xB7 <button type="button" class="text-brand-600 font-semibold hover:underline" data-overview-tab="money" style="background:none;border:none;padding:0;cursor:pointer">View Money budget</button></p>` : "";
     return `
+        ${llcBudgetLine}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
             <div class="em-card em-stat"><span class="em-stat-label">Going</span><span class="em-stat-num">${going}${e.max_participants ? `<span style="font-size:14px;color:#9ca3af;font-weight:500">/${e.max_participants}</span>` : ""}</span></div>
             <div class="em-card em-stat"><span class="em-stat-label">Interested</span><span class="em-stat-num" style="color:#db2777">${maybe}</span></div>
@@ -11088,15 +16793,33 @@ Type the event title to confirm:`);
         ${operationsHtml ? `<div class="em-op-grid">${operationsHtml}</div>` : ""}
 
         <div class="em-card mb-3">
+            <div class="em-section-head" style="margin-bottom:12px">
+                <div>
+                    <h3 class="em-section-title">Full event editor</h3>
+                    <p class="em-section-sub">Edit About, Included, When &amp; Where, pricing${(e.event_type || "member") === "llc" ? ", LLC settings," : ""}${e.event_type === "competition" ? " Competition settings," : ""} and disclaimers in the create sheet.</p>
+                </div>
+            </div>
+            ${(e.event_type || "member") === "member" || e.event_type === "llc" || e.event_type === "competition" ? `<button type="button" id="emEditEventBtn" class="em-btn-primary">Edit event</button>${e.event_type === "competition" ? '<p class="text-xs text-gray-500 mt-2">Competition prizes and rules lock after the first competitor registers.</p>' : ""}` : `<p class="text-xs text-gray-500">Sheet editing is available for member, LLC, and competition events.</p>`}
+        </div>
+
+        <div class="em-card mb-3">
             <h3 class="font-bold text-gray-800 text-sm mb-3">Details</h3>
             <div class="space-y-2 text-sm">
                 <div class="flex justify-between gap-3"><span class="text-gray-500">When</span><span class="text-gray-800 font-medium text-right">${startLocal}</span></div>
-                ${e.location_nickname ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Where</span><span class="text-gray-800 font-medium text-right truncate">${esc(e.location_nickname)}</span></div>` : ""}
+                ${e.location_nickname ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Where</span><span class="text-gray-800 font-medium text-right truncate">${esc3(e.location_nickname)}</span></div>` : ""}
                 <div class="flex justify-between gap-3"><span class="text-gray-500">Status</span><span class="text-gray-800 font-medium uppercase tracking-wide text-xs">${e.status}</span></div>
-                <div class="flex justify-between gap-3"><span class="text-gray-500">Pricing</span><span class="text-gray-800 font-medium">${e.pricing_mode === "paid" ? `Paid \xB7 ${money(e.rsvp_cost_cents)}` : "Free"}</span></div>
+                <div class="flex justify-between gap-3"><span class="text-gray-500">Pricing</span><span class="text-gray-800 font-medium">${pricingModeLabel(e)}</span></div>
+                ${e.pricing_mode === "paid" ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Adult price</span><span class="text-gray-800 font-medium">${money(adultCents)}</span></div>` : ""}
+                ${e.pricing_mode === "paid" ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Kids</span><span class="text-gray-800 font-medium">${e.kids_free !== false ? "Free" : `${money(e.kid_price_cents)} per child`}</span></div>` : ""}
+                ${e.fund_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Fund deadline</span><span class="text-gray-800 font-medium">${new Date(e.fund_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>` : ""}
+                <div class="flex justify-between gap-3"><span class="text-gray-500">Capacity</span><span class="text-gray-800 font-medium text-right">${esc3(capacityLabel(e))}</span></div>
                 ${e.rsvp_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">RSVP deadline</span><span class="text-gray-800 font-medium">${new Date(e.rsvp_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></div>` : ""}
             </div>
         </div>
+
+        ${pricingEditorHtml(STATE4)}
+
+        ${disclaimersEditorHtml(STATE4)}
 
         <div class="em-card mb-3" id="emCopyEditorCard">
             <div class="em-section-head" style="margin-bottom:12px">
@@ -11108,11 +16831,11 @@ Type the event title to confirm:`);
             <form id="emCopyForm" class="space-y-3">
                 <div>
                     <label for="emCopyTitle" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Title *</label>
-                    <input id="emCopyTitle" class="em-input" type="text" maxlength="120" required value="${esc(e.title || "")}">
+                    <input id="emCopyTitle" class="em-input" type="text" maxlength="120" required value="${esc3(e.title || "")}">
                 </div>
                 <div>
                     <label for="emCopyDescription" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Description</label>
-                    <textarea id="emCopyDescription" class="em-textarea" rows="4" maxlength="2000">${esc(e.description || "")}</textarea>
+                    <textarea id="emCopyDescription" class="em-textarea" rows="4" maxlength="2000">${esc3(e.description || "")}</textarea>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <button type="submit" id="emCopySave" class="em-btn-primary">Save changes</button>
@@ -11152,7 +16875,7 @@ Type the event title to confirm:`);
         <div class="em-card mt-3">
             <div class="em-section-head"><div><h3 class="em-section-title">Invitation QR</h3><p class="em-section-sub">Use this public event link on printed or digital invitations.</p></div></div>
             <canvas id="emInviteQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
-            <p class="text-xs text-gray-400 text-center mt-2 break-all">${esc(inviteUrl)}</p>
+            <p class="text-xs text-gray-400 text-center mt-2 break-all">${esc3(inviteUrl)}</p>
             <div class="flex flex-wrap justify-center gap-2 mt-3">
                 <button class="em-btn-primary" data-share-invite-url>Share invite</button>
                 <button class="em-btn-primary" data-download-invite-qr>Download QR</button>
@@ -11168,7 +16891,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireOverview() {
-    const STATE4 = getState3();
+    const STATE4 = getState5();
     const e = STATE4.event;
     if (!e) return;
     const inviteUrl = publicEventUrl(e);
@@ -11191,9 +16914,23 @@ Type the event title to confirm:`);
     document.getElementById("emSheetContent").querySelectorAll("[data-overview-tab]").forEach((btn) => {
       btn.addEventListener("click", () => {
         STATE4.activeTab = btn.dataset.overviewTab;
-        api9().renderTabs?.();
-        api9().renderTab?.(STATE4.activeTab);
+        api11().renderTabs?.();
+        api11().renderTab?.(STATE4.activeTab);
       });
+    });
+    wirePricingEditor();
+    wireDisclaimersEditor();
+    document.getElementById("emEditEventBtn")?.addEventListener("click", () => {
+      const eventId2 = STATE4.eventId || STATE4.event?.id;
+      if (!eventId2) return;
+      if (window.EventsManage && typeof window.EventsManage.close === "function") {
+        window.EventsManage.close();
+      }
+      setTimeout(() => {
+        if (window.EventsCreate && typeof window.EventsCreate.open === "function") {
+          window.EventsCreate.open({ eventId: eventId2 });
+        }
+      }, 200);
     });
     const copyForm = document.getElementById("emCopyForm");
     const copyTitle = document.getElementById("emCopyTitle");
@@ -11224,7 +16961,7 @@ Type the event title to confirm:`);
     }
   }
   async function saveEventCopy(form) {
-    const STATE4 = getState3();
+    const STATE4 = getState5();
     const e = STATE4.event;
     if (!e || !form) return;
     const titleInput = document.getElementById("emCopyTitle");
@@ -11250,8 +16987,8 @@ Type the event title to confirm:`);
       if (error) throw error;
       STATE4.event.title = data?.title || title;
       STATE4.event.description = data?.description || null;
-      api9().renderHeader?.();
-      api9().renderTab?.("overview");
+      api11().renderHeader?.();
+      api11().renderTab?.("overview");
       setTimeout(() => {
         const refreshedStatus = document.getElementById("emCopyStatus");
         if (refreshedStatus) {
@@ -11262,7 +16999,7 @@ Type the event title to confirm:`);
           }, 2500);
         }
       }, 0);
-      api9().notifyParent?.("updated", e.id);
+      api11().notifyParent?.("updated", e.id);
     } catch (err) {
       setStatus("Update failed: " + (err.message || "unknown error"), true);
     } finally {
@@ -11290,7 +17027,7 @@ Type the event title to confirm:`);
     }
   }
   async function toggleFeatured() {
-    const STATE4 = getState3();
+    const STATE4 = getState5();
     const btn = document.getElementById("emFeaturedToggle");
     if (!btn) return;
     const newVal = !STATE4.event.is_featured;
@@ -11302,7 +17039,7 @@ Type the event title to confirm:`);
       return;
     }
     STATE4.event.is_featured = newVal;
-    api9().renderTab?.("overview");
+    api11().renderTab?.("overview");
     document.dispatchEvent(new CustomEvent("events:manage:updated", { detail: { eventId: STATE4.event.id } }));
   }
   var manageOverviewApi = {
@@ -11317,22 +17054,22 @@ Type the event title to confirm:`);
   globalThis.EventsManageOverview = manageOverviewApi;
 
   // js/portal/events/manage/images.js
-  function api10() {
+  function api12() {
     return window.EventsManageImagesApi || {};
   }
-  function esc2(s) {
+  function esc4(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
   var imgFiles = { banner: null, embed: null };
   function imgDropZone(id, label, hint, currentUrl) {
-    const STATE4 = api10().getState?.() || {};
+    const STATE4 = api12().getState?.() || {};
     const hasImg = !!currentUrl;
     return `
         <div id="${id}Zone" class="em-img-zone${hasImg ? " em-img-zone--has" : ""}" data-zone="${id}">
             <input id="${id}FileInput" type="file" accept="image/*" style="display:none">
-            <img id="${id}Preview" src="${esc2(currentUrl)}" alt=""
+            <img id="${id}Preview" src="${esc4(currentUrl)}" alt=""
                  style="width:100%;border-radius:10px;object-fit:cover;max-height:200px;margin-bottom:10px;${hasImg ? "" : "display:none"}">
             <div id="${id}Prompt" style="${hasImg ? "display:none" : ""}">
                 <svg style="width:32px;height:32px;color:#9ca3af;margin-bottom:8px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4-4a3 3 0 014 0l4 4m-4-4l1.5-1.5a3 3 0 014 0L20 16M14 8h.01M4 19h16a1 1 0 001-1V6a1 1 0 00-1-1H4a1 1 0 00-1 1v12a1 1 0 001 1z"/></svg>
@@ -11343,11 +17080,11 @@ Type the event title to confirm:`);
             <button type="button" class="em-btn-ghost" style="font-size:12px;padding:6px 12px" data-pick="${id}">Choose file</button>
         </div>
         <p style="font-size:11px;color:#9ca3af;margin-top:6px">Or paste a URL:</p>
-        <input id="${id}UrlInput" class="em-input" type="url" placeholder="https://\u2026" value="${esc2(currentUrl)}" style="margin-top:4px">
+        <input id="${id}UrlInput" class="em-input" type="url" placeholder="https://\u2026" value="${esc4(currentUrl)}" style="margin-top:4px">
     `;
   }
   function imagesHtml() {
-    const STATE4 = api10().getState?.() || {};
+    const STATE4 = api12().getState?.() || {};
     const e = STATE4.event;
     return `
         <style>
@@ -11389,7 +17126,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireImages() {
-    const STATE4 = api10().getState?.() || {};
+    const STATE4 = api12().getState?.() || {};
     const e = STATE4.event;
     imgFiles.banner = null;
     imgFiles.embed = null;
@@ -11483,7 +17220,7 @@ Type the event title to confirm:`);
         setTimeout(() => {
           status.textContent = "";
         }, 2500);
-        api10().notifyParent?.("updated", e.id);
+        api12().notifyParent?.("updated", e.id);
       } catch (err) {
         status.textContent = "Error: " + (err.message || "save failed");
       } finally {
@@ -11497,23 +17234,68 @@ Type the event title to confirm:`);
   };
   globalThis.EventsManageImages = manageImagesApi;
 
+  // js/portal/events/manage/ticket-handoff.js
+  function computePlaneTicketHandoff({ goingRsvps, documents }) {
+    const going = (goingRsvps || []).filter((r) => r.status === "going");
+    const total = going.length;
+    const ticketDocs = (documents || []).filter(
+      (d) => d.doc_type === "plane_ticket" && d.target_user_id
+    );
+    const uploadedUserIds = new Set(ticketDocs.map((d) => d.target_user_id));
+    const missingUserIds = going.map((r) => r.user_id).filter((uid) => uid && !uploadedUserIds.has(uid));
+    const uploaded = Math.max(0, total - missingUserIds.length);
+    const ticketPct = total ? Math.round(uploaded / total * 100) : 0;
+    return {
+      uploaded,
+      total,
+      missingUserIds,
+      missingCount: missingUserIds.length,
+      ticketPct
+    };
+  }
+  function memberHasPlaneTicket(userId, documents) {
+    if (!userId) return false;
+    return (documents || []).some(
+      (d) => d.doc_type === "plane_ticket" && d.target_user_id === userId
+    );
+  }
+  var ticketHandoffApi = {
+    computePlaneTicketHandoff,
+    memberHasPlaneTicket
+  };
+  globalThis.EventsManageTicketHandoff = ticketHandoffApi;
+
   // js/portal/events/manage/docs.js
-  function api11() {
+  function api13() {
     return window.EventsManageDocsApi || {};
   }
-  function esc3(s) {
+  function esc5(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
   async function loadDocs() {
-    const STATE4 = api11().getState?.() || {};
+    const STATE4 = api13().getState?.() || {};
     const { data, error } = await supabaseClient.from("event_documents").select("id, doc_type, label, file_name, file_size_bytes, file_path, distributed, target_user_id, created_at, profiles:target_user_id(first_name, last_name, profile_picture_url)").eq("event_id", STATE4.eventId).order("created_at", { ascending: true });
     if (error) throw error;
-    return { docs: data || [] };
+    const docs = data || [];
+    if (STATE4.event?.event_type === "llc") {
+      STATE4.eventDocuments = docs.map((d) => ({
+        id: d.id,
+        doc_type: d.doc_type,
+        target_user_id: d.target_user_id,
+        distributed: d.distributed
+      }));
+    }
+    return { docs };
+  }
+  async function _syncEventDocuments(STATE4) {
+    if (STATE4.event?.event_type !== "llc" || !STATE4.eventId) return;
+    const { data } = await supabaseClient.from("event_documents").select("id, doc_type, target_user_id, distributed").eq("event_id", STATE4.eventId);
+    STATE4.eventDocuments = data || [];
   }
   function docTypeIcon(type) {
-    const STATE4 = api11().getState?.() || {};
+    const STATE4 = api13().getState?.() || {};
     return {
       plane_ticket: "\u2708\uFE0F",
       group_ticket: "\u{1F3AB}",
@@ -11523,14 +17305,14 @@ Type the event title to confirm:`);
     }[type] || "\u{1F4C4}";
   }
   function formatBytes(bytes) {
-    const STATE4 = api11().getState?.() || {};
+    const STATE4 = api13().getState?.() || {};
     if (!bytes) return "\u2014";
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / 1024 / 1024).toFixed(1) + " MB";
   }
   function docsHtml() {
-    const STATE4 = api11().getState?.() || {};
+    const STATE4 = api13().getState?.() || {};
     const docs = STATE4.tabData.docs.docs;
     const groupDocs = docs.filter((d) => !d.target_user_id);
     const memberDocs = docs.filter((d) => d.target_user_id);
@@ -11551,8 +17333,8 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:16px">${docTypeIcon(d.doc_type)}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc3(d.label || d.file_name || "Document")}</p>
-                    <p class="em-attendee-sub">${esc3(d.file_name || "")} \xB7 ${formatBytes(d.file_size_bytes)}</p>
+                    <p class="em-attendee-name">${esc5(d.label || d.file_name || "Document")}</p>
+                    <p class="em-attendee-sub">${esc5(d.file_name || "")} \xB7 ${formatBytes(d.file_size_bytes)}</p>
                     <div class="flex flex-wrap gap-1 mt-2">${distBtn}<span class="em-pill em-pill-going">${d.target_user_id ? "Member file" : "Group file"}</span></div>
                 </div>
                 <button data-doc-action="delete" data-id="${d.id}" class="text-xs text-red-600 font-semibold hover:underline" style="background:none;border:none;cursor:pointer">Delete</button>
@@ -11572,15 +17354,27 @@ Type the event title to confirm:`);
         const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
         return `
                 <div style="margin-bottom:14px">
-                    <div class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">${esc3(name)} <span class="text-gray-400 font-normal">\xB7 ${u.docs.length}</span></div>
+                    <div class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">${esc5(name)} <span class="text-gray-400 font-normal">\xB7 ${u.docs.length}</span></div>
                     ${u.docs.map(docRow).join("")}
                 </div>
             `;
       }).join("");
     }
-    const memberOptions = goingMembers.map((m) => `<option value="${esc3(m.id)}">${esc3(m.name)}</option>`).join("");
-    const typeOptions = (api11().getDocTypes?.() || []).map((t) => `<option value="${esc3(t.value)}">${esc3(t.label)}</option>`).join("");
+    const memberOptions = goingMembers.map((m) => `<option value="${esc5(m.id)}">${esc5(m.name)}</option>`).join("");
+    const typeOptions = (api13().getDocTypes?.() || []).map((t) => `<option value="${esc5(t.value)}">${esc5(t.label)}</option>`).join("");
+    const isPlaneLlc = STATE4.event?.event_type === "llc" && STATE4.event?.transportation_mode === "llc_provides" && STATE4.event?.transportation_method === "plane";
+    const ticketHelper = window.EventsManageTicketHandoff;
+    const planeHandoff = isPlaneLlc && ticketHelper ? ticketHelper.computePlaneTicketHandoff({
+      goingRsvps: STATE4.rsvps.filter((r) => r.status === "going"),
+      documents: docs
+    }) : null;
+    const firstMissingUserId = planeHandoff?.missingUserIds?.[0] || "";
     return `
+        ${planeHandoff && planeHandoff.missingCount ? `
+        <div class="em-card mb-4" style="border-color:#fcd34d;background:#fffbeb" data-doc-preset-member="${esc5(firstMissingUserId)}">
+            <p class="text-sm font-bold text-amber-900">${planeHandoff.missingCount} member${planeHandoff.missingCount === 1 ? "" : "s"} still need plane tickets</p>
+            <p class="text-xs text-amber-800 mt-1">Upload per-member plane tickets below. The form will preset the next member who needs a ticket.</p>
+        </div>` : ""}
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Document handoff</p>
             <h3 class="em-command-title">${pendingCount ? `${pendingCount} document${pendingCount === 1 ? "" : "s"} pending` : "Documents are caught up"}</h3>
@@ -11637,11 +17431,20 @@ Type the event title to confirm:`);
     `;
   }
   function wireDocs() {
-    const STATE4 = api11().getState?.() || {};
+    const STATE4 = api13().getState?.() || {};
     const targetMode = document.getElementById("emDocTargetMode");
     const memberWrap = document.getElementById("emDocMemberWrap");
     const type = document.getElementById("emDocType");
-    if (type) type.value = "itinerary";
+    const memberSelect = document.getElementById("emDocMember");
+    const presetMemberId = document.querySelector("[data-doc-preset-member]")?.getAttribute("data-doc-preset-member") || "";
+    const isPlaneLlc = STATE4.event?.event_type === "llc" && STATE4.event?.transportation_mode === "llc_provides" && STATE4.event?.transportation_method === "plane";
+    if (type) type.value = isPlaneLlc && presetMemberId ? "plane_ticket" : "itinerary";
+    if (presetMemberId && targetMode && memberSelect) {
+      targetMode.value = "member";
+      memberWrap?.classList.remove("hidden");
+      memberSelect.value = presetMemberId;
+      if (type) type.value = "plane_ticket";
+    }
     targetMode?.addEventListener("change", () => {
       memberWrap?.classList.toggle("hidden", targetMode.value !== "member");
       if (type) type.value = targetMode.value === "member" ? "plane_ticket" : "itinerary";
@@ -11662,13 +17465,14 @@ Type the event title to confirm:`);
           if (error) return alert("Update failed: " + error.message);
         }
         STATE4.tabData.docs = null;
-        api11().renderTab?.("docs");
-        api11().notifyParent?.("updated", STATE4.eventId);
+        await _syncEventDocuments(STATE4);
+        api13().renderTab?.("docs");
+        api13().notifyParent?.("updated", STATE4.eventId);
       });
     });
   }
   async function uploadDocFromManage() {
-    const STATE4 = api11().getState?.() || {};
+    const STATE4 = api13().getState?.() || {};
     const btn = document.getElementById("emDocUploadBtn");
     const mode = document.getElementById("emDocTargetMode")?.value || "group";
     const targetUserId = mode === "member" ? document.getElementById("emDocMember")?.value || "" : "";
@@ -11698,8 +17502,9 @@ Type the event title to confirm:`);
       });
       if (dbErr) throw dbErr;
       STATE4.tabData.docs = null;
-      api11().renderTab?.("docs");
-      api11().notifyParent?.("updated", STATE4.eventId);
+      await _syncEventDocuments(STATE4);
+      api13().renderTab?.("docs");
+      api13().notifyParent?.("updated", STATE4.eventId);
     } catch (err) {
       alert("Upload failed: " + (err.message || err));
     } finally {
@@ -11716,16 +17521,146 @@ Type the event title to confirm:`);
   globalThis.EventsManageDocs = manageDocsApi;
 
   // js/portal/events/manage/rsvps.js
-  function api12() {
+  function api14() {
     return window.EventsManageRsvpsApi || {};
   }
-  function esc4(s) {
+  function esc6(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
+  function buildPartyIndexes(STATE4) {
+    const parties = Array.isArray(STATE4.parties) ? STATE4.parties : [];
+    const seats = Array.isArray(STATE4.seats) ? STATE4.seats : [];
+    const rsvps = Array.isArray(STATE4.rsvps) ? STATE4.rsvps : [];
+    const guests = Array.isArray(STATE4.guestRsvps) ? STATE4.guestRsvps : [];
+    const partyById = new Map(parties.map((p) => [p.id, p]));
+    const seatsByParty = /* @__PURE__ */ new Map();
+    for (const seat of seats) {
+      const pid = seat.party_id;
+      if (!pid) continue;
+      if (!seatsByParty.has(pid)) seatsByParty.set(pid, []);
+      seatsByParty.get(pid).push(seat);
+    }
+    for (const list of seatsByParty.values()) {
+      list.sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+    }
+    function memberName(userId) {
+      const row = rsvps.find((r) => r.user_id === userId);
+      const p = row?.profiles || {};
+      return `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
+    }
+    function guestName(guestRsvpId) {
+      const g2 = guests.find((row) => row.id === guestRsvpId);
+      return (g2?.guest_name || "").trim() || "Guest";
+    }
+    function payerLabel(party) {
+      if (!party) return null;
+      if (party.payer_kind === "member" && party.payer_user_id) {
+        return memberName(party.payer_user_id);
+      }
+      if (party.payer_kind === "guest" && party.payer_guest_rsvp_id) {
+        return guestName(party.payer_guest_rsvp_id);
+      }
+      return "Payer";
+    }
+    function partyForMember(r) {
+      if (r.party_id && partyById.has(r.party_id)) return partyById.get(r.party_id);
+      return parties.find((p) => p.payer_kind === "member" && p.payer_user_id === r.user_id) || null;
+    }
+    function partyForGuest(g2) {
+      if (g2.party_id && partyById.has(g2.party_id)) return partyById.get(g2.party_id);
+      return parties.find((p) => p.payer_kind === "guest" && p.payer_guest_rsvp_id === g2.id) || null;
+    }
+    function seatsForParty(party) {
+      if (!party?.id) return [];
+      return seatsByParty.get(party.id) || [];
+    }
+    function isPayerMember(party, r) {
+      return !!(party && party.payer_kind === "member" && party.payer_user_id === r.user_id);
+    }
+    function isPayerGuest(party, g2) {
+      return !!(party && party.payer_kind === "guest" && party.payer_guest_rsvp_id === g2.id);
+    }
+    return {
+      partyForMember,
+      partyForGuest,
+      seatsForParty,
+      payerLabel,
+      isPayerMember,
+      isPayerGuest
+    };
+  }
+  function partyMetaHtml(opts) {
+    const {
+      party,
+      seats,
+      isPayer,
+      payerName,
+      awaitingAttach
+    } = opts || {};
+    if (!party) return { pills: [], subExtra: "", seatsBlock: "" };
+    const pills = [];
+    let subExtra = "";
+    const incomplete = seats.filter((s) => !s.options_complete);
+    const inviteTokens = incomplete.filter((s) => s.info_invite_token).map((s) => ({
+      seat_id: s.id,
+      display_name: s.display_name,
+      info_invite_token: s.info_invite_token,
+      options_complete: !!s.options_complete,
+      role: s.role
+    }));
+    if (awaitingAttach || party.status === "awaiting_attach") {
+      pills.push('<span class="em-pill em-pill-maybe">Waiting for payer</span>');
+    } else if (isPayer) {
+      const extras = seats.filter((s) => {
+        if (party.payer_kind === "member") return s.linked_user_id !== party.payer_user_id;
+        if (party.payer_kind === "guest") return s.linked_guest_rsvp_id !== party.payer_guest_rsvp_id;
+        return true;
+      });
+      if (seats.length > 1 || extras.length) {
+        pills.push('<span class="em-pill em-pill-going">Pays for party</span>');
+        const adults = seats.filter((s) => s.role !== "kid").length;
+        const kids = seats.filter((s) => s.role === "kid").length;
+        const bits = [];
+        if (adults) bits.push(`${adults} adult${adults === 1 ? "" : "s"}`);
+        if (kids) bits.push(`${kids} kid${kids === 1 ? "" : "s"}`);
+        if (bits.length) subExtra = ` \xB7 ${bits.join(" \xB7 ")}`;
+      } else {
+        pills.push('<span class="em-pill em-pill-going">Paid by: Self</span>');
+      }
+    } else if (payerName) {
+      pills.push(`<span class="em-pill em-pill-going">Paid by: ${esc6(payerName)}</span>`);
+    }
+    if (incomplete.length && !(awaitingAttach || party.status === "awaiting_attach")) {
+      pills.push('<span class="em-pill em-pill-not">Sizes pending</span>');
+    }
+    let seatsBlock = "";
+    const showSeatList = isPayer && !(awaitingAttach || party.status === "awaiting_attach") && seats.length > 0 && (seats.length > 1 || incomplete.length);
+    if (showSeatList) {
+      const rows = seats.map((s) => {
+        const role = s.role === "kid" ? "Kid" : "Adult";
+        const status = s.options_complete ? "Options complete" : "Sizes pending";
+        return `<li style="font-size:12px;color:#4b5563;margin:2px 0">${esc6(s.display_name || "Guest")} \xB7 ${role} \xB7 ${status}</li>`;
+      }).join("");
+      let invitesHtml = "";
+      if (inviteTokens.length && window.EventsHelpers?.seatInfoInvitesHtml) {
+        invitesHtml = window.EventsHelpers.seatInfoInvitesHtml(inviteTokens, {
+          title: "Seat invite links",
+          sub: "Copy and send so guests can finish sizes. Payer still covers payment."
+        });
+      }
+      seatsBlock = `
+            <div class="em-party-seats" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--color-border,#d5dfec)">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">Party seats</p>
+                <ul style="margin:0;padding-left:16px">${rows}</ul>
+                ${invitesHtml}
+            </div>`;
+    }
+    return { pills, subExtra, seatsBlock };
+  }
   function rsvpsHtml() {
-    const STATE4 = api12().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     const e = STATE4.event;
     const going = STATE4.rsvps.filter((r) => r.status === "going");
     const maybe = STATE4.rsvps.filter((r) => r.status === "maybe");
@@ -11740,18 +17675,47 @@ Type the event title to confirm:`);
     const minNeeded = Number(e.min_participants || 0);
     const thresholdLeft = minNeeded ? Math.max(0, minNeeded - totalGoing) : 0;
     const checkedPct = totalGoing ? Math.round(checkedTotal / totalGoing * 100) : 0;
+    const isLlcPlane = e.event_type === "llc" && e.transportation_mode === "llc_provides" && e.transportation_method === "plane";
+    const ticketHelper = window.EventsManageTicketHandoff;
+    const documents = STATE4.eventDocuments || STATE4.tabData?.docs?.docs || [];
+    const planeHandoff = isLlcPlane && ticketHelper ? ticketHelper.computePlaneTicketHandoff({ goingRsvps: going, documents }) : null;
+    const idx = buildPartyIndexes(STATE4);
     function memberRow(r) {
       const p = r.profiles || {};
       const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
       const initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?";
-      const avatar = p.profile_picture_url ? `<img src="${esc4(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
+      const avatar = p.profile_picture_url ? `<img src="${esc6(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
       const pills = [];
       if (r.status === "going") pills.push('<span class="em-pill em-pill-going">Going</span>');
       else if (r.status === "maybe") pills.push('<span class="em-pill em-pill-maybe">Maybe</span>');
       else pills.push('<span class="em-pill em-pill-not">Not going</span>');
       if (r.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
       if (checkedSet.has(r.user_id)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
-      return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${esc4(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? " \xB7 ticket ready" : ""}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="member" data-rsvp-id="${esc4(r.id)}" data-user-id="${esc4(r.user_id)}" data-paid="${r.paid ? "1" : "0"}" data-name="${esc4(name)}">Remove</button></div>`;
+      if (e.invest_eligible && r.status === "going" && r.paid) {
+        pills.push(r.invest_eligible_acknowledged ? '<span class="em-pill em-pill-checked">Invest ack \u2713</span>' : '<span class="em-pill em-pill-not">No invest ack</span>');
+      }
+      if (isLlcPlane && r.status === "going" && ticketHelper) {
+        const hasTicket = ticketHelper.memberHasPlaneTicket(r.user_id, documents);
+        pills.push(hasTicket ? '<span class="em-pill em-pill-checked">Ticket uploaded</span>' : '<span class="em-pill em-pill-not">Needs ticket</span>');
+      }
+      let subExtra = "";
+      let seatsBlock = "";
+      if (r.status === "going") {
+        const party = idx.partyForMember(r);
+        const seats = idx.seatsForParty(party);
+        const isPayer = idx.isPayerMember(party, r);
+        const meta = partyMetaHtml({
+          party,
+          seats,
+          isPayer,
+          payerName: idx.payerLabel(party),
+          awaitingAttach: false
+        });
+        pills.push(...meta.pills);
+        subExtra = meta.subExtra || "";
+        seatsBlock = meta.seatsBlock || "";
+      }
+      return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${esc6(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? " \xB7 ticket ready" : ""}${subExtra}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div>${seatsBlock}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="member" data-rsvp-id="${esc6(r.id)}" data-user-id="${esc6(r.user_id)}" data-paid="${r.paid ? "1" : "0"}" data-name="${esc6(name)}">Remove</button></div>`;
     }
     function guestRow(g2) {
       const initials = (g2.guest_name || "G").slice(0, 1).toUpperCase();
@@ -11759,7 +17723,19 @@ Type the event title to confirm:`);
       if (g2.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
       if (guestCheckedSet.has(g2.guest_token)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
       const name = g2.guest_name || "Guest";
-      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${esc4(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc4(name)}</p><p class="em-attendee-sub">${esc4(g2.guest_email || "Public guest")}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="guest" data-rsvp-id="${esc4(g2.id)}" data-guest-token="${esc4(g2.guest_token)}" data-paid="${g2.paid ? "1" : "0"}" data-name="${esc4(name)}">Remove</button></div>`;
+      const party = idx.partyForGuest(g2);
+      const seats = idx.seatsForParty(party);
+      const isPayer = idx.isPayerGuest(party, g2);
+      const awaitingAttach = !!(g2.attach_requested || party?.status === "awaiting_attach");
+      const meta = partyMetaHtml({
+        party,
+        seats,
+        isPayer,
+        payerName: idx.payerLabel(party),
+        awaitingAttach
+      });
+      pills.push(...meta.pills);
+      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${esc6(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc6(name)}</p><p class="em-attendee-sub">${esc6(g2.guest_email || "Public guest")}${meta.subExtra || ""}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div>${meta.seatsBlock || ""}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="guest" data-rsvp-id="${esc6(g2.id)}" data-guest-token="${esc6(g2.guest_token)}" data-paid="${g2.paid ? "1" : "0"}" data-name="${esc6(name)}">Remove</button></div>`;
     }
     function section(title, list, emptyText) {
       return `
@@ -11793,10 +17769,13 @@ Type the event title to confirm:`);
     `;
   }
   function wireRsvps() {
-    const STATE4 = api12().getState?.() || {};
-    document.getElementById("emSheetContent")?.querySelectorAll("[data-remove-rsvp]").forEach((btn) => {
-      btn.addEventListener("click", () => api12().removeParticipationPerson?.(btn));
+    const panel = document.getElementById("emSheetContent");
+    panel?.querySelectorAll("[data-remove-rsvp]").forEach((btn) => {
+      btn.addEventListener("click", () => api14().removeParticipationPerson?.(btn));
     });
+    if (panel && window.EventsHelpers && typeof window.EventsHelpers.wireSeatInfoInviteCopy === "function") {
+      window.EventsHelpers.wireSeatInfoInviteCopy(panel);
+    }
   }
   var manageRsvpsApi = {
     rsvpsHtml,
@@ -11825,10 +17804,10 @@ Type the event title to confirm:`);
     messageType: "manual",
     selectAllOptedInOnLoad: false
   };
-  function api13() {
+  function api15() {
     return window.EventsManageNotificationsApi || {};
   }
-  function esc5(s) {
+  function esc7(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -11871,7 +17850,7 @@ Type the event title to confirm:`);
     throw new Error(_smsSchemaMissingMessage(err) || err.message || fallback);
   }
   async function loadNotifications() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api15().getState?.() || {};
     const eventId2 = STATE4.eventId;
     if (!eventId2) return { recipients: [], messages: [], suppressedPhones: /* @__PURE__ */ new Set(), lastSentAt: null };
     const { data: recipients, error: recErr } = await supabaseClient.from("event_sms_recipients").select(`
@@ -11967,7 +17946,7 @@ Type the event title to confirm:`);
     };
   }
   function notificationsHtml() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api15().getState?.() || {};
     const data = STATE4.tabData?.notifications || { recipients: [], messages: [] };
     const metrics = summaryMetrics(data);
     const visible = getFilteredRecipients(data);
@@ -11979,17 +17958,17 @@ Type the event title to confirm:`);
     const recipientRows = visible.length ? visible.map((r) => {
       const checked = UI.selected.has(r.id) ? " checked" : "";
       const disabled = isEligibleToSend(r) ? "" : " disabled";
-      const delivery = r.latest_delivery?.status ? `<span class="em-pill">${esc5(r.latest_delivery.status)}</span>` : '<span class="text-xs text-gray-400">\u2014</span>';
+      const delivery = r.latest_delivery?.status ? `<span class="em-pill">${esc7(r.latest_delivery.status)}</span>` : '<span class="text-xs text-gray-400">\u2014</span>';
       const suppressed = r.globally_suppressed ? '<span class="em-pill em-pill-not">STOP</span>' : "";
       return `
-                <div class="em-row em-notif-row" data-recipient-id="${esc5(r.id)}">
-                    <input type="checkbox" class="em-notif-check" data-recipient-id="${esc5(r.id)}"${checked}${disabled} aria-label="Select ${esc5(r.display_name || "recipient")}">
+                <div class="em-row em-notif-row" data-recipient-id="${esc7(r.id)}">
+                    <input type="checkbox" class="em-notif-check" data-recipient-id="${esc7(r.id)}"${checked}${disabled} aria-label="Select ${esc7(r.display_name || "recipient")}">
                     <div class="flex-1 min-w-0">
-                        <p class="em-attendee-name">${esc5(r.display_name || "Unknown")}</p>
-                        <p class="em-attendee-sub">${esc5(r.phone_masked)}${r.email ? ` \xB7 ${esc5(r.email)}` : ""}</p>
+                        <p class="em-attendee-name">${esc7(r.display_name || "Unknown")}</p>
+                        <p class="em-attendee-sub">${esc7(r.phone_masked)}${r.email ? ` \xB7 ${esc7(r.email)}` : ""}</p>
                         <div class="flex flex-wrap gap-1 mt-1">
-                            <span class="em-pill ${optOutClass(r)}">${esc5(optOutLabel(r))}</span>
-                            <span class="em-pill">${esc5(SOURCE_LABELS[r.consent_source] || r.consent_source)}</span>
+                            <span class="em-pill ${optOutClass(r)}">${esc7(optOutLabel(r))}</span>
+                            <span class="em-pill">${esc7(SOURCE_LABELS[r.consent_source] || r.consent_source)}</span>
                             ${suppressed}
                             ${delivery}
                         </div>
@@ -12007,17 +17986,17 @@ Type the event title to confirm:`);
       const preview = (m.body || "").length > 120 ? `${m.body.slice(0, 120)}\u2026` : m.body || "";
       const detail2 = expanded ? `<div class="mt-2 space-y-1">${dels.map((d) => {
         const name = data.recipients.find((r) => r.id === d.event_sms_recipient_id)?.display_name;
-        return `<p class="text-xs text-gray-600">${esc5(name || maskPhone(d.phone_e164))} \xB7 ${esc5(d.status)}${d.error_message ? ` \u2014 ${esc5(d.error_message)}` : ""}</p>`;
+        return `<p class="text-xs text-gray-600">${esc7(name || maskPhone(d.phone_e164))} \xB7 ${esc7(d.status)}${d.error_message ? ` \u2014 ${esc7(d.error_message)}` : ""}</p>`;
       }).join("") || '<p class="text-xs text-gray-400">No per-recipient rows.</p>'}</div>` : "";
       return `
                 <div class="em-card mb-2">
-                    <button type="button" class="w-full text-left" data-toggle-message="${esc5(m.id)}">
+                    <button type="button" class="w-full text-left" data-toggle-message="${esc7(m.id)}">
                         <div class="flex justify-between gap-2">
-                            <strong class="text-sm text-gray-900">${esc5(m.message_type)}</strong>
+                            <strong class="text-sm text-gray-900">${esc7(m.message_type)}</strong>
                             <span class="text-xs text-gray-400">${new Date(m.created_at).toLocaleString()}</span>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">${esc5(preview)}</p>
-                        <p class="text-xs text-gray-400 mt-1">${m.recipient_count} recipients \xB7 ${esc5(summary)}</p>
+                        <p class="text-xs text-gray-500 mt-1">${esc7(preview)}</p>
+                        <p class="text-xs text-gray-400 mt-1">${m.recipient_count} recipients \xB7 ${esc7(summary)}</p>
                     </button>
                     ${detail2}
                 </div>`;
@@ -12033,7 +18012,7 @@ Type the event title to confirm:`);
             <div class="em-metric"><span>Recipients</span><strong>${metrics.total}</strong><small>All contacts</small></div>
             <div class="em-metric"><span>Opted in</span><strong>${metrics.optedIn}</strong><small>Eligible to send</small></div>
             <div class="em-metric"><span>Opted out</span><strong>${metrics.optedOut}</strong><small>Event preference</small></div>
-            <div class="em-metric"><span>Global STOP</span><strong>${metrics.suppressed}</strong><small>Last sent: ${esc5(lastSentLabel)}</small></div>
+            <div class="em-metric"><span>Global STOP</span><strong>${metrics.suppressed}</strong><small>Last sent: ${esc7(lastSentLabel)}</small></div>
         </div>
 
         <div class="em-card mb-4">
@@ -12047,10 +18026,10 @@ Type the event title to confirm:`);
             <select id="emNotifMessageType" class="em-input mb-2" aria-label="SMS message type">
                 ${MESSAGE_TYPES.map((t) => {
       const sel = UI.messageType === t.value ? " selected" : "";
-      return `<option value="${esc5(t.value)}"${sel}>${esc5(t.label)}</option>`;
+      return `<option value="${esc7(t.value)}"${sel}>${esc7(t.label)}</option>`;
     }).join("")}
             </select>
-            <textarea id="emNotifBody" class="em-textarea" maxlength="1600" placeholder="Write your event update\u2026">${esc5(UI.prefillBody || "")}</textarea>
+            <textarea id="emNotifBody" class="em-textarea" maxlength="1600" placeholder="Write your event update\u2026">${esc7(UI.prefillBody || "")}</textarea>
             <p class="text-xs text-gray-400 mt-1"><span id="emNotifCharCount">${(UI.prefillBody || "").length}</span> / 1600 characters</p>
             <div class="flex flex-wrap gap-2 mt-3">
                 <button type="button" class="em-btn-primary" id="emNotifSendBtn"${selectedEligible.length ? "" : " disabled"}>Send SMS</button>
@@ -12074,7 +18053,7 @@ Type the event title to confirm:`);
       return `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 10px;${active}" data-notif-filter="${f}">${label}</button>`;
     }).join("")}
             </div>
-            <input type="search" id="emNotifSearch" class="em-input mb-3" placeholder="Search name, email, or last 4 of phone" value="${esc5(UI.search)}">
+            <input type="search" id="emNotifSearch" class="em-input mb-3" placeholder="Search name, email, or last 4 of phone" value="${esc7(UI.search)}">
             <label class="text-xs text-gray-500 flex items-center gap-2 mb-2">
                 <input type="checkbox" id="emNotifSelectVisible"> Select all visible
             </label>
@@ -12093,12 +18072,12 @@ Type the event title to confirm:`);
     `;
   }
   async function refreshNotificationsTab() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api15().getState?.() || {};
     STATE4.tabData.notifications = await loadNotifications();
-    api13().renderTab?.("notifications");
+    api15().renderTab?.("notifications");
   }
   async function sendSelectedSms() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api15().getState?.() || {};
     const data = STATE4.tabData?.notifications;
     if (!data) return;
     const body = document.getElementById("emNotifBody")?.value?.trim() || "";
@@ -12155,21 +18134,21 @@ Type the event title to confirm:`);
     }
   }
   function wireNotifications() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api15().getState?.() || {};
     const data = STATE4.tabData?.notifications;
     const root2 = document.getElementById("emSheetContent");
     if (!root2 || !data) return;
     root2.querySelectorAll("[data-notif-filter]").forEach((btn) => {
       btn.addEventListener("click", () => {
         UI.filter = btn.dataset.notifFilter || "all";
-        api13().renderTab?.("notifications");
+        api15().renderTab?.("notifications");
       });
     });
     const search = document.getElementById("emNotifSearch");
     if (search) {
       search.addEventListener("input", () => {
         UI.search = search.value;
-        api13().renderTab?.("notifications");
+        api15().renderTab?.("notifications");
       });
     }
     const body = document.getElementById("emNotifBody");
@@ -12198,7 +18177,7 @@ Type the event title to confirm:`);
         if (!id || cb.disabled) return;
         if (cb.checked) UI.selected.add(id);
         else UI.selected.delete(id);
-        api13().renderTab?.("notifications");
+        api15().renderTab?.("notifications");
       });
     });
     document.getElementById("emNotifSelectVisible")?.addEventListener("change", (e) => {
@@ -12210,24 +18189,24 @@ Type the event title to confirm:`);
       } else {
         visible.forEach((r) => UI.selected.delete(r.id));
       }
-      api13().renderTab?.("notifications");
+      api15().renderTab?.("notifications");
     });
     document.getElementById("emNotifSelectOptedIn")?.addEventListener("click", () => {
       (data.recipients || []).forEach((r) => {
         if (isEligibleToSend(r)) UI.selected.add(r.id);
       });
-      api13().renderTab?.("notifications");
+      api15().renderTab?.("notifications");
     });
     document.getElementById("emNotifClearSelection")?.addEventListener("click", () => {
       UI.selected.clear();
-      api13().renderTab?.("notifications");
+      api15().renderTab?.("notifications");
     });
     document.getElementById("emNotifSendBtn")?.addEventListener("click", () => sendSelectedSms());
     root2.querySelectorAll("[data-toggle-message]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.toggleMessage;
         UI.expandedMessageId = UI.expandedMessageId === id ? null : id;
-        api13().renderTab?.("notifications");
+        api15().renderTab?.("notifications");
       });
     });
   }
@@ -12267,10 +18246,10 @@ Type the event title to confirm:`);
   globalThis.EventsManageNotifications = manageNotificationsApi;
 
   // js/portal/events/manage/money.js
-  function api14() {
+  function api16() {
     return window.EventsManageMoneyApi || {};
   }
-  function esc6(s) {
+  function esc8(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -12279,25 +18258,36 @@ Type the event title to confirm:`);
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
   }
   async function loadMoney() {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const eventId2 = STATE4.eventId;
-    const [rsvpsRes, guestRes, raffleRes, poolRes] = await Promise.all([
+    const isLlc = STATE4.event?.event_type === "llc";
+    const queries = [
       supabaseClient.from("event_rsvps").select("id, user_id, status, amount_paid_cents, paid, refunded, refund_amount_cents, stripe_payment_intent_id, profiles!event_rsvps_user_id_fkey(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
       supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, status, paid, amount_paid_cents, stripe_payment_intent_id").eq("event_id", eventId2),
       supabaseClient.from("event_raffle_entries").select("id, paid, amount_paid_cents").eq("event_id", eventId2),
       supabaseClient.from("prize_pool_contributions").select("id, amount_cents").eq("event_id", eventId2)
-    ]);
+    ];
+    if (isLlc) {
+      queries.push(
+        supabaseClient.from("event_cost_items").select("*").eq("event_id", eventId2).order("sort_order", { ascending: true })
+      );
+    }
+    const results = await Promise.all(queries);
+    const [rsvpsRes, guestRes, raffleRes, poolRes, costRes] = results;
     return {
       rsvps: rsvpsRes.data || [],
       guests: guestRes.data || [],
       raffle: raffleRes.data || [],
-      poolPays: poolRes.data || []
+      poolPays: poolRes.data || [],
+      costItems: isLlc ? costRes?.data || [] : [],
+      costBreakdown: isLlc ? STATE4.event?.cost_breakdown || null : null
     };
   }
   function moneyHtml() {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const d = STATE4.tabData.money;
-    const isPaidEvent = STATE4.event?.pricing_mode === "paid" || Number(STATE4.event?.rsvp_cost_cents || 0) > 0;
+    const adultCents = Number(STATE4.event?.adult_price_cents);
+    const isPaidEvent = STATE4.event?.pricing_mode === "paid" || Number.isFinite(adultCents) && adultCents > 0 || Number(STATE4.event?.rsvp_cost_cents || 0) > 0;
     const paidRsvps = d.rsvps.filter((r) => r.paid);
     const paidGuests = d.guests.filter((g2) => g2.paid);
     const refundedRsvps = d.rsvps.filter((r) => r.refunded);
@@ -12317,8 +18307,8 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ""}>${avatarHtml2}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc6(name)}</p>
-                    <p class="em-attendee-sub">${esc6(sub)}</p>
+                    <p class="em-attendee-name">${esc8(name)}</p>
+                    <p class="em-attendee-sub">${esc8(sub)}</p>
                     <div class="flex flex-wrap gap-1 mt-2">${refundPill}${isGuest ? '<span class="em-pill em-pill-going">Guest</span>' : ""}</div>
                 </div>
                 ${stripeId ? `<a href="https://dashboard.stripe.com/payments/${encodeURIComponent(stripeId)}" target="_blank" rel="noopener" class="text-xs text-brand-600 font-semibold hover:underline whitespace-nowrap">Stripe \u2197</a>` : ""}
@@ -12328,7 +18318,7 @@ Type the event title to confirm:`);
       const p = r.profiles || {};
       const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
       const initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?";
-      const avatar = p.profile_picture_url ? `<img src="${esc6(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
+      const avatar = p.profile_picture_url ? `<img src="${esc8(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
       return paymentRow({ name, sub: "Member RSVP payment", amount: r.amount_paid_cents || 0, refundedAmount: r.refund_amount_cents || 0, stripeId: r.stripe_payment_intent_id, avatarHtml: avatar });
     });
     const guestRows = paidGuests.map((g2) => paymentRow({
@@ -12337,10 +18327,39 @@ Type the event title to confirm:`);
       amount: g2.amount_paid_cents || 0,
       refundedAmount: 0,
       stripeId: g2.stripe_payment_intent_id,
-      avatarHtml: `<span>${esc6((g2.guest_name || "G").slice(0, 1).toUpperCase())}</span>`,
+      avatarHtml: `<span>${esc8((g2.guest_name || "G").slice(0, 1).toUpperCase())}</span>`,
       isGuest: true
     }));
     const paymentRows = [...memberRows, ...guestRows].join("") || `<p class="text-xs text-gray-400 italic py-2">No paid RSVPs yet.</p>`;
+    const isLlc = STATE4.event?.event_type === "llc";
+    const costItems = d.costItems || [];
+    const costBreakdown = d.costBreakdown || {};
+    const goingCount = STATE4.rsvps.filter((r) => r.status === "going").length + STATE4.guestRsvps.filter((g2) => g2.status === "going").length;
+    const buyInCents = Number(STATE4.event?.adult_price_cents ?? STATE4.event?.rsvp_cost_cents ?? 0);
+    const budgetIncluded = Number(costBreakdown.total_included_cents) || costItems.filter((i) => i.included_in_buyin !== false).reduce((s, i) => s + (Number(i.total_cost_cents) || 0), 0);
+    const projectedAtGoing = goingCount * buyInCents;
+    const budgetDelta = projectedAtGoing - budgetIncluded;
+    const budgetDeltaLabel = budgetDelta >= 0 ? `${fmt(budgetDelta)} over budget at current RSVPs` : `${fmt(Math.abs(budgetDelta))} under budget at current RSVPs`;
+    function llcBudgetHtml() {
+      if (!isLlc) return "";
+      const itemRows = costItems.length ? costItems.map((item) => {
+        const included = item.included_in_buyin !== false;
+        const amt = included ? Number(item.total_cost_cents) || 0 : Number(item.avg_per_person_cents) || 0;
+        const amtLabel = included ? fmt(amt) : `~${fmt(amt)}/person`;
+        return `<div class="em-money-row"><span>${esc8(item.name || "Item")}${included ? "" : " (OOP)"}</span><strong>${amtLabel}</strong></div>`;
+      }).join("") : `<p class="text-xs text-gray-400 italic py-2">No cost items on file. Budget totals use saved breakdown if available.</p>`;
+      return `
+            <div class="em-card">
+                <div class="em-section-head"><div><h3 class="em-section-title">Trip budget</h3><p class="em-section-sub">Planned costs vs RSVP revenue collected.</p></div></div>
+                ${itemRows}
+                <div class="em-money-row" style="margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb"><span>Included budget total</span><strong>${fmt(budgetIncluded)}</strong></div>
+                ${costBreakdown.final_buyin_cents ? `<div class="em-money-row"><span>Suggested buy-in</span><strong>${fmt(costBreakdown.final_buyin_cents)}/person</strong></div>` : ""}
+                ${costBreakdown.llc_cut_cents ? `<div class="em-money-row"><span>LLC cut (per person)</span><strong>+${fmt(costBreakdown.llc_cut_cents)}</strong></div>` : ""}
+                <div class="em-money-row"><span>Collected (net RSVP)</span><strong>${fmt(netRevenue)}</strong></div>
+                <div class="em-money-row"><span>Projected at ${goingCount} going</span><strong>${fmt(projectedAtGoing)}</strong></div>
+                ${budgetIncluded > 0 ? `<p class="text-xs text-gray-500 mt-2">${budgetDeltaLabel}.</p>` : ""}
+            </div>`;
+    }
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Money command</p>
@@ -12370,11 +18389,13 @@ Type the event title to confirm:`);
                 <div class="em-money-row"><span>Refunds recorded</span><strong>${fmt(refunded)}</strong></div>
                 <p class="text-xs text-gray-400 mt-3">Refunds are still handled through Stripe/dashboard tooling. This panel keeps the host-facing audit trail together.</p>
             </div>
+
+            ${llcBudgetHtml()}
         </div>
     `;
   }
   function wireMoney() {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
   }
   var manageMoneyApi = {
     loadMoney,
@@ -12384,10 +18405,10 @@ Type the event title to confirm:`);
   globalThis.EventsManageMoney = manageMoneyApi;
 
   // js/portal/events/manage/competition.js
-  function api15() {
+  function api17() {
     return window.EventsManageCompetitionApi || {};
   }
-  function esc7(s) {
+  function esc9(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -12395,16 +18416,26 @@ Type the event title to confirm:`);
   function money3(cents) {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
   }
+  function toDatetimeLocalValue3(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
   async function loadComp() {
-    const STATE4 = api15().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const [phasesRes, entriesRes, votesRes, winnersRes, contribRes] = await Promise.all([
       supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true }),
-      supabaseClient.from("competition_entries").select("id, user_id, title, moderated, vote_count, profiles:user_id(first_name, last_name)").eq("event_id", eventId2),
+      supabaseClient.from("competition_entries").select("id, user_id, title, moderated, vote_count, entry_type, file_url, external_url, profiles:user_id(first_name, last_name)").eq("event_id", eventId2),
       supabaseClient.from("competition_votes").select("id", { count: "exact", head: true }).eq("event_id", eventId2),
       supabaseClient.from("competition_winners").select("*, profiles:user_id(first_name, last_name), competition_entries!competition_winners_entry_id_fkey(title)").eq("event_id", eventId2).order("place", { ascending: true }),
       supabaseClient.from("prize_pool_contributions").select("amount_cents").eq("event_id", eventId2)
     ]);
+    const errors = [phasesRes, entriesRes, votesRes, winnersRes, contribRes].map((r) => r.error).filter(Boolean);
+    if (errors.length) {
+      throw new Error(errors[0].message || "Failed to load competition data");
+    }
     return {
       phases: phasesRes.data || [],
       entries: entriesRes.data || [],
@@ -12414,37 +18445,133 @@ Type the event title to confirm:`);
     };
   }
   function compHtml() {
-    const STATE4 = api15().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const e = STATE4.event;
     if (e.event_type !== "competition") {
-      return api15().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
+      return api17().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
     }
     const d = STATE4.tabData.comp;
     const fmt = window.formatCurrency || money3;
     const cfg = e.competition_config || {};
+    const compPh = window.EventsCompetitionPhases || {};
+    const phases = compPh.normalizePhases ? compPh.normalizePhases(d.phases) : d.phases || [];
+    const phase2 = compPh.getPhase ? compPh.getPhase(phases, 2) : null;
+    const phase3 = compPh.getPhase ? compPh.getPhase(phases, 3) : null;
+    const now = /* @__PURE__ */ new Date();
+    const windowLabel = compPh.submissionWindowLabel ? compPh.submissionWindowLabel(phase2, now) : { state: "not_configured", message: "" };
+    const votingLabel = compPh.votingWindowLabel ? compPh.votingWindowLabel(phase3, now) : { state: "not_configured", message: "" };
+    const submissionOpen = compPh.isSubmissionOpen ? compPh.isSubmissionOpen(phases, now) : false;
+    const votingOpen = compPh.isVotingOpen ? compPh.isVotingOpen(phases, now) : false;
+    const displayPhaseNum = compPh.resolveDisplayPhase ? compPh.resolveDisplayPhase(phases, now) : 0;
     const liveEntries = d.entries.filter((x) => !x.moderated);
-    const moderatedCount = d.entries.length - liveEntries.length;
-    const poolTotal = (e.total_prize_pool_cents || 0) + d.contribs.reduce((s, c) => s + (c.amount_cents || 0), 0);
+    const moderatedEntries = d.entries.filter((x) => x.moderated);
+    const moderatedCount = moderatedEntries.length;
+    const contribSum = d.contribs.reduce((s, c) => s + (c.amount_cents || 0), 0);
+    const poolTotal = (e.total_prize_pool_cents || 0) > 0 ? e.total_prize_pool_cents || 0 : contribSum;
     const housePct = Number(cfg.house_pct || 0);
     const netPool = Math.round(poolTotal * (1 - housePct / 100));
-    const activePhase = d.phases.find((ph) => ph.status === "active") || null;
+    const activePhase = phases.find((ph) => ph.status === "active" || ph.status === "extended") || null;
     const entryTarget = Number(cfg.min_entries || 0);
     const entryPct = entryTarget ? Math.min(100, Math.round(liveEntries.length / entryTarget * 100)) : 100;
+    const phase2Configured = !!(phase2 && phase2.starts_at && phase2.ends_at);
+    const defaultOpens = phase2?.starts_at || phases.find((p) => p.phase_num === 1)?.ends_at || e.start_date || "";
+    const defaultCloses = phase2?.ends_at || e.end_date || "";
+    const phase3Configured = !!(phase3 && phase3.starts_at && phase3.ends_at);
+    const defaultVoteOpens = phase3?.starts_at || phase2?.ends_at || e.start_date || "";
+    const defaultVoteCloses = phase3?.ends_at || e.end_date || "";
+    const detailUrl = e.slug ? `/pages/portal/events.html?event=${encodeURIComponent(e.slug)}` : `/pages/portal/events.html?event=${encodeURIComponent(STATE4.eventId)}`;
+    const windowStatusTitle = submissionOpen ? "Submissions open" : windowLabel.state === "upcoming" ? "Submissions upcoming" : windowLabel.state === "closed" ? "Submissions closed" : phase2Configured ? "Submission window scheduled" : "Configure submission window";
+    const submissionWindowCard = `
+        <div class="em-card mb-4">
+            <div class="em-section-head"><div><h3 class="em-section-title">Submission window</h3><p class="em-section-sub">Phase 2 GFX upload window \u2014 separate from the event date.</p></div></div>
+            <p class="text-sm font-semibold text-gray-800">${esc9(windowStatusTitle)}</p>
+            <p class="text-xs text-gray-500 mt-1">${esc9(windowLabel.message || (phase2Configured ? "" : "Set open and close times for competitor uploads."))}</p>
+            ${phase2Configured ? `
+                <div class="em-money-row mt-2"><span>Opens</span><strong>${esc9(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase2.starts_at) : new Date(phase2.starts_at).toLocaleString())}</strong></div>
+                <div class="em-money-row"><span>Closes</span><strong>${esc9(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase2.ends_at) : new Date(phase2.ends_at).toLocaleString())}</strong></div>
+            ` : ""}
+            <form id="emCompSubmissionWindowForm" class="grid sm:grid-cols-2 gap-3 mt-3">
+                <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Opens
+                    <input id="emCompSubOpens" type="datetime-local" class="em-input mt-1" value="${esc9(toDatetimeLocalValue3(defaultOpens))}">
+                </label>
+                <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Closes
+                    <input id="emCompSubCloses" type="datetime-local" class="em-input mt-1" value="${esc9(toDatetimeLocalValue3(defaultCloses))}">
+                </label>
+                <div class="sm:col-span-2 flex flex-wrap items-center gap-2">
+                    <button type="submit" id="emCompSubSave" class="em-btn-primary">Save submission window</button>
+                    <a href="${esc9(detailUrl)}" class="em-btn-ghost" style="text-decoration:none">Open event detail \u2192</a>
+                    <span id="emCompSubStatus" class="text-xs text-gray-400"></span>
+                </div>
+            </form>
+            <p class="text-xs text-gray-400 mt-2">After saving, start Phase 2 on the event detail page when you are ready for uploads.</p>
+        </div>`;
+    const voteStatusTitle = votingOpen ? "Voting open" : votingLabel.state === "upcoming" ? "Voting upcoming" : votingLabel.state === "closed" ? "Voting closed" : phase3Configured ? "Voting window scheduled" : "Configure voting window";
+    const votingWindowCard = `
+        <div class="em-card mb-4">
+            <div class="em-section-head"><div><h3 class="em-section-title">Voting window</h3><p class="em-section-sub">Phase 3 member voting \u2014 after submissions close.</p></div></div>
+            <p class="text-sm font-semibold text-gray-800">${esc9(voteStatusTitle)}</p>
+            <p class="text-xs text-gray-500 mt-1">${esc9(votingLabel.message || (phase3Configured ? "" : "Set open and close times for member voting."))}</p>
+            ${phase3Configured ? `
+                <div class="em-money-row mt-2"><span>Opens</span><strong>${esc9(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase3.starts_at) : new Date(phase3.starts_at).toLocaleString())}</strong></div>
+                <div class="em-money-row"><span>Closes</span><strong>${esc9(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase3.ends_at) : new Date(phase3.ends_at).toLocaleString())}</strong></div>
+            ` : ""}
+            <form id="emCompVotingWindowForm" class="grid sm:grid-cols-2 gap-3 mt-3">
+                <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Opens
+                    <input id="emCompVoteOpens" type="datetime-local" class="em-input mt-1" value="${esc9(toDatetimeLocalValue3(defaultVoteOpens))}">
+                </label>
+                <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Closes
+                    <input id="emCompVoteCloses" type="datetime-local" class="em-input mt-1" value="${esc9(toDatetimeLocalValue3(defaultVoteCloses))}">
+                </label>
+                <div class="sm:col-span-2 flex flex-wrap items-center gap-2">
+                    <button type="submit" id="emCompVoteSave" class="em-btn-primary">Save voting window</button>
+                    <a href="${esc9(detailUrl)}" class="em-btn-ghost" style="text-decoration:none">Open event detail \u2192</a>
+                    <span id="emCompVoteStatus" class="text-xs text-gray-400"></span>
+                </div>
+            </form>
+            <p class="text-xs text-gray-400 mt-2">After saving, start Phase 3 on the event detail page when submissions are closed.</p>
+        </div>`;
     const phaseStatusColor = { pending: "#9ca3af", active: "#4f46e5", completed: "#059669", extended: "#d97706", cancelled: "#dc2626" };
-    const phaseRows = d.phases.length ? d.phases.map((ph) => {
+    const phaseRows = phases.length ? phases.map((ph) => {
       const color = phaseStatusColor[ph.status] || "#6b7280";
       const dates = ph.starts_at || ph.ends_at ? `${ph.starts_at ? new Date(ph.starts_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "\u2014"} \u2192 ${ph.ends_at ? new Date(ph.ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "\u2014"}` : "";
       return `
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:${color}22;color:${color};font-weight:900">${ph.phase_num}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc7(ph.name || "Competition phase")}</p>
+                    <p class="em-attendee-name">${esc9(ph.name || "Competition phase")}</p>
                     <p class="em-attendee-sub">${dates || "Dates not set"}</p>
-                    <div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked" style="background:${color}22;color:${color}">${esc7(ph.status || "pending")}</span>${ph.extended_once ? '<span class="em-pill em-pill-paid">Extended</span>' : ""}</div>
+                    <div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked" style="background:${color}22;color:${color}">${esc9(ph.status || "pending")}</span>${ph.extended_once ? '<span class="em-pill em-pill-paid">Extended</span>' : ""}</div>
                 </div>
             </div>
         `;
     }).join("") : `<p class="text-xs text-gray-400 italic py-2">No phases configured yet.</p>`;
+    const sortedEntries = displayPhaseNum >= 3 || d.voteCount > 0 ? [...liveEntries].sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0)) : liveEntries;
+    const entryRows = sortedEntries.length ? sortedEntries.map((entry) => {
+      const p = entry.profiles || {};
+      const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
+      const hasFile = !!(entry.file_url || entry.external_url);
+      const filePill = hasFile ? '<span class="em-pill em-pill-checked">GFX uploaded</span>' : '<span class="em-pill em-pill-not">Needs upload</span>';
+      const votePill = displayPhaseNum >= 3 || d.voteCount > 0 ? `<span class="em-pill em-pill-going">${entry.vote_count || 0} vote${(entry.vote_count || 0) === 1 ? "" : "s"}</span>` : "";
+      return `
+            <div class="em-attendee-card">
+                <div class="em-attendee-main">
+                    <p class="em-attendee-name">${esc9(name)}</p>
+                    <p class="em-attendee-sub">${esc9(entry.title || "Registered")}</p>
+                    <div class="flex flex-wrap gap-1 mt-2">${filePill}${votePill}<span class="em-pill em-pill-going">${esc9(entry.entry_type || "text")}</span></div>
+                </div>
+            </div>`;
+    }).join("") : `<p class="text-xs text-gray-400 italic py-2">No competitor entries yet.</p>`;
+    const moderatedRows = moderatedEntries.length ? moderatedEntries.map((entry) => {
+      const p = entry.profiles || {};
+      const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
+      return `
+            <div class="em-attendee-card">
+                <div class="em-attendee-main">
+                    <p class="em-attendee-name">${esc9(name)}</p>
+                    <p class="em-attendee-sub">${esc9(entry.title || "Registered")} \xB7 removed from gallery</p>
+                </div>
+            </div>`;
+    }).join("") : "";
     const winnerRows = d.winners.length ? d.winners.map((w) => {
       const p = w.profiles || {};
       const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
@@ -12460,8 +18587,8 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:18px">${medal}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc7(name)}</p>
-                    <p class="em-attendee-sub">${esc7(entry.title || "Winning entry")} \xB7 ${fmt(w.prize_amount_cents)}${w.needs_1099 ? " \xB7 1099 needed" : ""}</p>
+                    <p class="em-attendee-name">${esc9(name)}</p>
+                    <p class="em-attendee-sub">${esc9(entry.title || "Winning entry")} \xB7 ${fmt(w.prize_amount_cents)}${w.needs_1099 ? " \xB7 1099 needed" : ""}</p>
                     <div class="flex flex-wrap gap-1 mt-2">${payoutBadge}</div>
                 </div>
             </div>
@@ -12470,7 +18597,7 @@ Type the event title to confirm:`);
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Competition command</p>
-            <h3 class="em-command-title">${activePhase ? `Phase ${activePhase.phase_num}: ${esc7(activePhase.name || "Active")}` : "Competition setup"}</h3>
+            <h3 class="em-command-title">${activePhase ? `Phase ${activePhase.phase_num}: ${esc9(activePhase.name || "Active")}` : "Competition setup"}</h3>
             <p class="em-command-copy">${liveEntries.length} live entr${liveEntries.length === 1 ? "y" : "ies"}${entryTarget ? ` toward ${entryTarget} minimum` : ""}. ${d.voteCount} vote${d.voteCount === 1 ? "" : "s"} recorded with ${fmt(netPool)} net payout available.</p>
             <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${entryPct}%;background:#a78bfa"></span></div>
         </div>
@@ -12478,33 +18605,149 @@ Type the event title to confirm:`);
         <div class="em-metric-grid mb-4">
             <div class="em-metric"><span>Entries</span><strong>${liveEntries.length}</strong><small>${entryTarget ? `${entryPct}% of minimum` : "No minimum set"}</small></div>
             <div class="em-metric"><span>Votes</span><strong>${d.voteCount}</strong><small>Submitted votes</small></div>
-            <div class="em-metric"><span>Pool</span><strong>${fmt(poolTotal)}</strong><small>Gross prize pool</small></div>
+            <div class="em-metric"><span>Pool</span><strong>${fmt(poolTotal)}</strong><small>${d.contribs.length} contribution${d.contribs.length === 1 ? "" : "s"}</small></div>
             <div class="em-metric"><span>Net payout</span><strong>${fmt(netPool)}</strong><small>${housePct}% house cut</small></div>
         </div>
 
+        ${submissionWindowCard}
+
+        ${votingWindowCard}
+
         <div class="em-card mb-3">
-            <div class="em-section-head"><div><h3 class="em-section-title">Phases <span class="text-gray-400 font-normal">\xB7 ${d.phases.length}</span></h3><p class="em-section-sub">Timeline and moderation state for the competition.</p></div></div>
+            <div class="em-section-head"><div><h3 class="em-section-title">Competitor entries <span class="text-gray-400 font-normal">\xB7 ${liveEntries.length}</span></h3><p class="em-section-sub">${displayPhaseNum >= 3 || d.voteCount > 0 ? "Sorted by vote count during voting/results." : "GFX upload status per registered competitor."}</p></div></div>
+            ${entryRows}
+        </div>
+
+        ${moderatedCount ? `
+        <div class="em-card mb-3">
+            <div class="em-section-head"><div><h3 class="em-section-title">Moderated entries <span class="text-gray-400 font-normal">\xB7 ${moderatedCount}</span></h3><p class="em-section-sub">Removed from the public gallery. Moderation actions happen on the event detail page.</p></div></div>
+            ${moderatedRows}
+        </div>` : ""}
+
+        <div class="em-card mb-3">
+            <div class="em-section-head"><div><h3 class="em-section-title">Phases <span class="text-gray-400 font-normal">\xB7 ${phases.length}</span></h3><p class="em-section-sub">Timeline and moderation state for the competition.</p></div></div>
             ${phaseRows}
         </div>
 
         <div class="em-card mb-3">
             <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving entries, voting, and payouts.</p></div></div>
-            <div class="em-money-row"><span>Entry type</span><strong>${esc7(cfg.entry_type || "any")}</strong></div>
+            <div class="em-money-row"><span>Entry type</span><strong>${esc9(cfg.entry_type || "any")}</strong></div>
             <div class="em-money-row"><span>Entry fee</span><strong>${cfg.entry_fee_cents ? fmt(cfg.entry_fee_cents) : "Free"}</strong></div>
             <div class="em-money-row"><span>House cut</span><strong>${housePct}%</strong></div>
-            <div class="em-money-row"><span>Voter eligibility</span><strong>${esc7(cfg.voter_eligibility || "all_members")}</strong></div>
+            <div class="em-money-row"><span>Voter eligibility</span><strong>${esc9(cfg.voter_eligibility || "all_members")}</strong></div>
             ${moderatedCount ? `<div class="em-money-row"><span>Moderated entries</span><strong style="color:#dc2626">${moderatedCount}</strong></div>` : ""}
         </div>
 
         <div class="em-card">
             <div class="em-section-head"><div><h3 class="em-section-title">Winners <span class="text-gray-400 font-normal">\xB7 ${d.winners.length}</span></h3><p class="em-section-sub">Final results and payout status.</p></div></div>
             ${winnerRows}
-            <p class="text-xs text-gray-400 mt-3">Phase advancement and winner finalization happen on the portal detail page. Per-tab controls land in M4.</p>
+            <p class="text-xs text-gray-400 mt-3">Manage tracks windows, standings, and payout status here. Start phases and finalize winners on the portal event detail page.</p>
         </div>
     `;
   }
+  async function saveSubmissionWindowFromManage() {
+    const STATE4 = api17().getState?.() || {};
+    const btn = document.getElementById("emCompSubSave");
+    const statusEl = document.getElementById("emCompSubStatus");
+    const opens = document.getElementById("emCompSubOpens")?.value;
+    const closes = document.getElementById("emCompSubCloses")?.value;
+    if (!opens || !closes) {
+      alert("Set both open and close times for the submission window.");
+      return;
+    }
+    const startsAt = new Date(opens);
+    const endsAt = new Date(closes);
+    if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
+      alert("Invalid date/time values.");
+      return;
+    }
+    if (endsAt <= startsAt) {
+      alert("Close time must be after open time.");
+      return;
+    }
+    const existing = (STATE4.tabData?.comp?.phases || []).find((p) => p.phase_num === 2);
+    if (btn) btn.disabled = true;
+    if (statusEl) statusEl.textContent = "Saving\u2026";
+    try {
+      const row = {
+        event_id: STATE4.eventId,
+        phase_num: 2,
+        name: "Submission",
+        description: "Submit GFX entries during this window.",
+        starts_at: startsAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+        status: existing?.status || "pending",
+        extended_once: existing?.extended_once || false
+      };
+      const { error } = await supabaseClient.from("competition_phases").upsert(row, { onConflict: "event_id,phase_num" });
+      if (error) throw error;
+      STATE4.tabData.comp = null;
+      api17().renderTab?.("comp");
+      api17().notifyParent?.("updated", STATE4.eventId);
+      if (statusEl) statusEl.textContent = "Saved \u2713";
+    } catch (err) {
+      alert("Failed to save submission window: " + (err.message || err));
+      if (statusEl) statusEl.textContent = "";
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+  async function saveVotingWindowFromManage() {
+    const STATE4 = api17().getState?.() || {};
+    const btn = document.getElementById("emCompVoteSave");
+    const statusEl = document.getElementById("emCompVoteStatus");
+    const opens = document.getElementById("emCompVoteOpens")?.value;
+    const closes = document.getElementById("emCompVoteCloses")?.value;
+    if (!opens || !closes) {
+      alert("Set both open and close times for the voting window.");
+      return;
+    }
+    const startsAt = new Date(opens);
+    const endsAt = new Date(closes);
+    if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
+      alert("Invalid date/time values.");
+      return;
+    }
+    if (endsAt <= startsAt) {
+      alert("Close time must be after open time.");
+      return;
+    }
+    const existing = (STATE4.tabData?.comp?.phases || []).find((p) => p.phase_num === 3);
+    if (btn) btn.disabled = true;
+    if (statusEl) statusEl.textContent = "Saving\u2026";
+    try {
+      const row = {
+        event_id: STATE4.eventId,
+        phase_num: 3,
+        name: "Voting",
+        description: "Members vote on entries during this window.",
+        starts_at: startsAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+        status: existing?.status || "pending",
+        extended_once: existing?.extended_once || false
+      };
+      const { error } = await supabaseClient.from("competition_phases").upsert(row, { onConflict: "event_id,phase_num" });
+      if (error) throw error;
+      STATE4.tabData.comp = null;
+      api17().renderTab?.("comp");
+      api17().notifyParent?.("updated", STATE4.eventId);
+      if (statusEl) statusEl.textContent = "Saved \u2713";
+    } catch (err) {
+      alert("Failed to save voting window: " + (err.message || err));
+      if (statusEl) statusEl.textContent = "";
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
   function wireComp() {
-    const STATE4 = api15().getState?.() || {};
+    document.getElementById("emCompSubmissionWindowForm")?.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      saveSubmissionWindowFromManage();
+    });
+    document.getElementById("emCompVotingWindowForm")?.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      saveVotingWindowFromManage();
+    });
   }
   var manageCompetitionApi = {
     loadComp,
@@ -12514,11 +18757,11 @@ Type the event title to confirm:`);
   globalThis.EventsManageCompetition = manageCompetitionApi;
 
   // js/portal/events/manage/participation.js
-  function api16() {
+  function api18() {
     return window.EventsManageParticipationApi || {};
   }
   async function getParticipationResetCounts() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const tables = [
       ["member RSVPs", "event_rsvps"],
@@ -12535,7 +18778,7 @@ Type the event title to confirm:`);
     return results;
   }
   async function resetParticipation() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const e = STATE4.event;
     if (!e) return;
     let counts = [];
@@ -12566,14 +18809,14 @@ Type RESET to continue.`
         action: "reset_participation",
         event_id: e.id
       });
-      await api16().refreshEventManager?.("danger");
+      await api18().refreshEventManager?.("danger");
       alert("Participation reset complete. The event is still intact.");
     } catch (err) {
       alert("Reset failed: " + (err.message || "unknown error"));
     }
   }
   async function removeParticipationPerson(btn) {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const kind = btn.dataset.removeRsvp;
     const name = btn.dataset.name || (kind === "guest" ? "this guest" : "this member");
     const isPaid = btn.dataset.paid === "1";
@@ -12603,10 +18846,10 @@ Type RESET to continue.`
           user_id: userId
         });
       }
-      await api16().refreshEventManager?.("rsvps");
+      await api18().refreshEventManager?.("rsvps");
     } catch (err) {
       alert("Remove failed: " + (err.message || "unknown error"));
-      api16().renderTab?.("rsvps");
+      api18().renderTab?.("rsvps");
     }
   }
   var manageParticipationApi = {
@@ -12617,10 +18860,10 @@ Type RESET to continue.`
   globalThis.EventsManageParticipation = manageParticipationApi;
 
   // js/portal/events/manage/raffle.js
-  function api17() {
+  function api19() {
     return window.EventsManageRaffleApi || {};
   }
-  function esc8(s) {
+  function esc10(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -12634,7 +18877,7 @@ Type RESET to continue.`
     return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
   }
   async function loadRaffle() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const [entriesRes, winnersRes, guestsRes] = await Promise.all([
       supabaseClient.from("event_raffle_entries").select("id, user_id, guest_token, paid, amount_paid_cents, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
@@ -12652,10 +18895,10 @@ Type RESET to continue.`
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
   function raffleHtml2() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const e = STATE4.event;
     if (!e.raffle_enabled) {
-      return api17().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
+      return api19().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
     }
     const d = STATE4.tabData.raffle;
     const fmt = window.formatCurrency || money4;
@@ -12685,8 +18928,8 @@ Type RESET to continue.`
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:#faf5ff;color:#7c3aed;font-size:18px">${medal}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc8(name)}</p>
-                    <p class="em-attendee-sub">${ord(w.place)} place \xB7 ${esc8(w.prize_description || "Prize pending")}</p>
+                    <p class="em-attendee-name">${esc10(name)}</p>
+                    <p class="em-attendee-sub">${ord(w.place)} place \xB7 ${esc10(w.prize_description || "Prize pending")}</p>
                     <div class="flex flex-wrap gap-1 mt-2">
                         <span class="em-pill em-pill-checked">${w.user_id ? "Member" : "Guest"}</span>
                         ${w.selection_status === "pending_choice" ? '<span class="em-pill em-pill-paid">Needs prize choice</span>' : '<span class="em-pill em-pill-going">Prize assigned</span>'}
@@ -12701,12 +18944,12 @@ Type RESET to continue.`
       const items = raffleItems(config, cat.id);
       const pendingSlots = drawQueue.filter((slot) => slot.category_id === cat.id).length;
       const drawnCount = Math.max(0, (cat.winner_count || 0) - pendingSlots);
-      const itemPreview = items.length ? items.slice(0, 3).map((item) => `${item.emoji || "\u{1F381}"} ${esc8(item.name)}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "Prize details pending";
+      const itemPreview = items.length ? items.slice(0, 3).map((item) => `${item.emoji || "\u{1F381}"} ${esc10(item.name)}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "Prize details pending";
       const extraItems = Math.max(0, items.length - 3);
       return `
             <div class="em-card em-op-card">
                 <div class="em-op-head">
-                    <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${esc8(cat.label || "Prize category")}</p></div>
+                    <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${esc10(cat.label || "Prize category")}</p></div>
                     <span class="em-op-icon">\u{1F381}</span>
                 </div>
                 <p class="em-op-copy">${drawModeLabel(cat.draw_mode)} \xB7 ${drawnCount}/${cat.winner_count || 0} drawn</p>
@@ -12722,7 +18965,7 @@ Type RESET to continue.`
             <div class="em-section-head">
                 <div>
                     <h3 class="em-section-title">Next draw</h3>
-                    <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc8(prizeSlotLabel(nextSlot)) : "Next available prize"}${nextSlot?.category_label ? ` \xB7 ${esc8(nextSlot.category_label)}` : ""}</p>
+                    <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc10(prizeSlotLabel(nextSlot)) : "Next available prize"}${nextSlot?.category_label ? ` \xB7 ${esc10(nextSlot.category_label)}` : ""}</p>
                 </div>
                 <span class="em-pill em-pill-paid">${remainingDraws} remaining</span>
             </div>
@@ -12734,15 +18977,15 @@ Type RESET to continue.`
       const guest = en.guest_token ? guestByToken.get(en.guest_token) : null;
       const name = en.user_id ? `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member" : guest?.guest_name || "Guest";
       const sub = en.user_id ? "Member raffle entry" : guest?.guest_email || "Guest raffle entry";
-      const tokenAttr = en.guest_token ? ` data-guest-token="${esc8(en.guest_token)}"` : "";
-      const userAttr = en.user_id ? ` data-user-id="${esc8(en.user_id)}"` : "";
-      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#f5f3ff;color:#6d28d9"><span>\u{1F39F}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc8(name)}</p><p class="em-attendee-sub">${esc8(sub)}</p><div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked">${en.user_id ? "Member" : "Guest"}</span>${en.paid ? '<span class="em-pill em-pill-paid">Paid</span>' : ""}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-raffle-entry="${esc8(en.id)}"${userAttr}${tokenAttr} data-paid="${en.paid ? "1" : "0"}" data-name="${esc8(name)}">Remove</button></div>`;
+      const tokenAttr = en.guest_token ? ` data-guest-token="${esc10(en.guest_token)}"` : "";
+      const userAttr = en.user_id ? ` data-user-id="${esc10(en.user_id)}"` : "";
+      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#f5f3ff;color:#6d28d9"><span>\u{1F39F}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc10(name)}</p><p class="em-attendee-sub">${esc10(sub)}</p><div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked">${en.user_id ? "Member" : "Guest"}</span>${en.paid ? '<span class="em-pill em-pill-paid">Paid</span>' : ""}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-raffle-entry="${esc10(en.id)}"${userAttr}${tokenAttr} data-paid="${en.paid ? "1" : "0"}" data-name="${esc10(name)}">Remove</button></div>`;
     }).join("") : `<p class="text-xs text-gray-400 italic py-2">No eligible entries yet.</p>`;
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Raffle command</p>
             <h3 class="em-command-title">${allDrawn ? "All winners drawn" : `${remainingDraws} draw${remainingDraws === 1 ? "" : "s"} remaining`}</h3>
-            <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? "y" : "ies"} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : "No eligible raffle entries yet."} ${nextSlot ? `Next up: ${esc8(prizeSlotLabel(nextSlot))}.` : ""}</p>
+            <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? "y" : "ies"} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : "No eligible raffle entries yet."} ${nextSlot ? `Next up: ${esc10(prizeSlotLabel(nextSlot))}.` : ""}</p>
             <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${drawPct}%;background:#a78bfa"></span></div>
         </div>
 
@@ -12767,14 +19010,14 @@ Type RESET to continue.`
 
             <div class="em-card">
                 <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving the draw.</p></div></div>
-                <div class="em-money-row"><span>Type</span><strong>${esc8(e.raffle_type || "digital")}</strong></div>
-                <div class="em-money-row"><span>Draw trigger</span><strong>${esc8(e.raffle_draw_trigger || "manual")}</strong></div>
+                <div class="em-money-row"><span>Type</span><strong>${esc10(e.raffle_type || "digital")}</strong></div>
+                <div class="em-money-row"><span>Draw trigger</span><strong>${esc10(e.raffle_draw_trigger || "manual")}</strong></div>
                 <div class="em-money-row"><span>Entry cost</span><strong>${e.raffle_entry_cost_cents ? fmt(e.raffle_entry_cost_cents) : "Free"}</strong></div>
                 <div style="margin:12px 0;padding:12px;border:1px solid #eef2ff;border-radius:12px;background:#f8fafc">
                     <label for="emRaffleEntryPrice" style="display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Raffle entry price</label>
                     <div style="display:flex;gap:8px;align-items:center">
                         <span style="font-size:13px;font-weight:800;color:#475569">$</span>
-                        <input id="emRaffleEntryPrice" class="em-input" type="number" min="0" max="500" step="0.01" value="${esc8(raffleEntryPriceDollars)}" ${paidEventRaffleIncluded ? "disabled" : ""} style="flex:1;min-width:0">
+                        <input id="emRaffleEntryPrice" class="em-input" type="number" min="0" max="500" step="0.01" value="${esc10(raffleEntryPriceDollars)}" ${paidEventRaffleIncluded ? "disabled" : ""} style="flex:1;min-width:0">
                         <button id="emRafflePriceSave" type="button" class="em-btn-primary" ${paidEventRaffleIncluded ? "disabled" : ""}>Save</button>
                     </div>
                     <p id="emRafflePriceStatus" class="text-xs text-gray-400 mt-2">${paidEventRaffleIncluded ? "Paid RSVP events include raffle entry with the RSVP, so separate raffle pricing is not used." : "Set 0 for a free raffle. Changes apply to future raffle checkouts only."}</p>
@@ -12793,7 +19036,7 @@ Type RESET to continue.`
     `;
   }
   function wireRaffle() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const drawBtn = document.getElementById("emRaffleDrawBtn");
     if (drawBtn) {
       drawBtn.onclick = () => window.evtOpenRaffleDraw?.(STATE4.eventId, STATE4.event);
@@ -12827,7 +19070,7 @@ Type RESET to continue.`
     wireRafflePrizeImages();
   }
   function rafflePrizeSetupHtml(config, winners = []) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const model = window.EventsRaffleModel;
     if (!model) {
       return `<div class="em-card mt-3"><div class="em-section-head"><div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Raffle editor unavailable because the raffle model helper did not load.</p></div></div></div>`;
@@ -12836,7 +19079,7 @@ Type RESET to continue.`
     const categories = model.getOrderedCategories(normalized);
     const items = normalized.items || [];
     const validation = model.validateConfig(normalized);
-    const categoryOptions = categories.map((category) => `<option value="${esc8(category.id)}">${esc8(category.label)}</option>`).join("");
+    const categoryOptions = categories.map((category) => `<option value="${esc10(category.id)}">${esc10(category.label)}</option>`).join("");
     const usedPrizeIds = new Set((winners || []).map((winner) => winner.prize_id).filter(Boolean));
     const drawModeOptions = (selected) => [
       ["specific_item", "Specific items"],
@@ -12844,10 +19087,10 @@ Type RESET to continue.`
       ["winner_choice", "Winner chooses later"]
     ].map(([value, label]) => `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`).join("");
     const categoryRows = categories.length ? categories.map((category, index) => `
-        <div class="em-raffle-edit-row" data-em-raffle-category-row="${esc8(category.id)}" data-sort-order="${(index + 1) * 10}">
+        <div class="em-raffle-edit-row" data-em-raffle-category-row="${esc10(category.id)}" data-sort-order="${(index + 1) * 10}">
             <div>
                 <label class="em-raffle-edit-label">Category</label>
-                <input class="em-input" data-em-raffle-category-field="label" value="${esc8(category.label)}" maxlength="80">
+                <input class="em-input" data-em-raffle-category-field="label" value="${esc10(category.label)}" maxlength="80">
             </div>
             <div>
                 <label class="em-raffle-edit-label">Draw mode</label>
@@ -12857,45 +19100,45 @@ Type RESET to continue.`
                 <label class="em-raffle-edit-label">Winners</label>
                 <input class="em-input" type="number" min="0" step="1" data-em-raffle-category-field="winner_count" value="${category.winner_count ?? ""}">
             </div>
-            <button type="button" class="em-btn-ghost" data-em-raffle-remove-category="${esc8(category.id)}" data-category-label="${esc8(category.label)}" ${categories.length <= 1 ? "disabled" : ""}>Remove</button>
+            <button type="button" class="em-btn-ghost" data-em-raffle-remove-category="${esc10(category.id)}" data-category-label="${esc10(category.label)}" ${categories.length <= 1 ? "disabled" : ""}>Remove</button>
         </div>
     `).join("") : `<p class="text-xs text-gray-400 italic py-2">No prize categories yet.</p>`;
     const itemRows = items.length ? items.map((item, index) => {
       const previewUrl = prizeImagePreviews[item.id] || item.image_url || "";
       const pendingName = prizeImageFiles[item.id]?.name || "";
       return `
-        <div class="em-raffle-item-wrap" data-em-raffle-item-row="${esc8(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${esc8(item.image_url || "")}">
+        <div class="em-raffle-item-wrap" data-em-raffle-item-row="${esc10(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${esc10(item.image_url || "")}">
             <div class="em-raffle-edit-row em-raffle-item-row">
                 <div>
                     <label class="em-raffle-edit-label">Emoji</label>
-                    <input class="em-input" data-em-raffle-item-field="emoji" value="${esc8(item.emoji || "\u{1F381}")}" maxlength="4">
+                    <input class="em-input" data-em-raffle-item-field="emoji" value="${esc10(item.emoji || "\u{1F381}")}" maxlength="4">
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Prize</label>
-                    <input class="em-input" data-em-raffle-item-field="name" value="${esc8(item.name)}" maxlength="120">
+                    <input class="em-input" data-em-raffle-item-field="name" value="${esc10(item.name)}" maxlength="120">
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Category</label>
                     <select class="em-input" data-em-raffle-item-field="category_id">
-                        ${categories.map((category) => `<option value="${esc8(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${esc8(category.label)}</option>`).join("")}
+                        ${categories.map((category) => `<option value="${esc10(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${esc10(category.label)}</option>`).join("")}
                     </select>
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Qty</label>
                     <input class="em-input" type="number" min="1" step="1" data-em-raffle-item-field="quantity" value="${item.quantity || 1}">
                 </div>
-                <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${esc8(item.id)}" data-item-label="${esc8(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ""}>Remove</button>
+                <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${esc10(item.id)}" data-item-label="${esc10(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ""}>Remove</button>
             </div>
             <div class="em-prize-img-row">
-                <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-em-prize-file="${esc8(item.id)}">
-                <div class="em-prize-img-drop" data-em-prize-drop="${esc8(item.id)}" title="Click or drag an image here">
-                    ${previewUrl ? `<img src="${esc8(previewUrl)}" alt="Prize image">` : "<span>\u{1F4F7}</span>"}
+                <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-em-prize-file="${esc10(item.id)}">
+                <div class="em-prize-img-drop" data-em-prize-drop="${esc10(item.id)}" title="Click or drag an image here">
+                    ${previewUrl ? `<img src="${esc10(previewUrl)}" alt="Prize image">` : "<span>\u{1F4F7}</span>"}
                 </div>
-                <div class="em-prize-img-copy" data-em-prize-copy="${esc8(item.id)}">
-                    <strong>${pendingName ? esc8(pendingName) : previewUrl ? "Image set" : "Prize image"}</strong>
+                <div class="em-prize-img-copy" data-em-prize-copy="${esc10(item.id)}">
+                    <strong>${pendingName ? esc10(pendingName) : previewUrl ? "Image set" : "Prize image"}</strong>
                     <span>${previewUrl ? "Click or drop to replace. Save prize setup to keep changes." : "Click or drag a PNG, JPG, or WebP image here."}</span>
                 </div>
-                ${previewUrl ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-em-prize-clear="${esc8(item.id)}">Remove image</button>` : ""}
+                ${previewUrl ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-em-prize-clear="${esc10(item.id)}">Remove image</button>` : ""}
             </div>
         </div>
     `;
@@ -12933,7 +19176,7 @@ Type RESET to continue.`
                 <button type="button" class="em-btn-ghost" data-em-raffle-add-item>Add prize</button>
             </div>
             ${itemRows}
-            ${validation.valid ? "" : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(esc8).join("<br>")}</div>`}
+            ${validation.valid ? "" : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(esc10).join("<br>")}</div>`}
             <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
                 <button type="button" id="emRafflePrizeSave" class="em-btn-primary">Save prize setup</button>
                 <span id="emRafflePrizeStatus" class="text-xs text-gray-400">${categories.length} categor${categories.length === 1 ? "y" : "ies"} \xB7 ${items.length} item${items.length === 1 ? "" : "s"}</span>
@@ -12942,7 +19185,7 @@ Type RESET to continue.`
     `;
   }
   function collectRafflePrizeConfigFromDom() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const model = window.EventsRaffleModel;
     if (!model) throw new Error("Raffle model helper is not loaded.");
     const categoryRows = Array.from(document.querySelectorAll("[data-em-raffle-category-row]"));
@@ -12976,7 +19219,7 @@ Type RESET to continue.`
     return model.normalizeConfig({ version: 2, categories, items });
   }
   function wireRafflePrizeImages() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     document.querySelectorAll("[data-em-prize-drop]").forEach((zone) => {
       const itemId = zone.dataset.emPrizeDrop;
       const fileInput = document.querySelector(`[data-em-prize-file="${CSS.escape(itemId)}"]`);
@@ -13005,7 +19248,7 @@ Type RESET to continue.`
     });
   }
   function setRafflePrizeImage(itemId, file) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
       alert("Please use a PNG, JPG, or WebP image.");
       return;
@@ -13019,16 +19262,16 @@ Type RESET to continue.`
     reader.onload = () => {
       prizeImagePreviews[itemId] = reader.result;
       const zone = document.querySelector(`[data-em-prize-drop="${CSS.escape(itemId)}"]`);
-      if (zone) zone.innerHTML = `<img src="${esc8(reader.result)}" alt="Prize image">`;
+      if (zone) zone.innerHTML = `<img src="${esc10(reader.result)}" alt="Prize image">`;
       const copy = document.querySelector(`[data-em-prize-copy="${CSS.escape(itemId)}"]`);
-      if (copy) copy.innerHTML = `<strong>${esc8(file.name)}</strong><span>Ready to upload. Save prize setup to keep this image.</span>`;
+      if (copy) copy.innerHTML = `<strong>${esc10(file.name)}</strong><span>Ready to upload. Save prize setup to keep this image.</span>`;
       const status = document.getElementById("emRafflePrizeStatus");
       if (status) status.textContent = "Image selected. Save prize setup to upload it.";
     };
     reader.readAsDataURL(file);
   }
   function clearRafflePrizeImage(itemId) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     if (!itemId) return;
     delete prizeImageFiles[itemId];
     delete prizeImagePreviews[itemId];
@@ -13044,7 +19287,7 @@ Type RESET to continue.`
     if (status) status.textContent = "Image removed. Save prize setup to keep this change.";
   }
   async function uploadPendingRafflePrizeImages(config) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const uploads = Object.entries(prizeImageFiles);
     if (!uploads.length) return config;
     const slug = safeFilename2(STATE4.event?.slug || STATE4.event?.title || STATE4.eventId || "event");
@@ -13061,7 +19304,7 @@ Type RESET to continue.`
     return config;
   }
   async function saveRafflePrizeSetup(action = {}) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const model = window.EventsRaffleModel;
     const status = document.getElementById("emRafflePrizeStatus");
     const saveBtn = document.getElementById("emRafflePrizeSave");
@@ -13106,7 +19349,7 @@ Type RESET to continue.`
       if (error) throw error;
       STATE4.event.raffle_prizes = config;
       STATE4.event.raffle_winner_count = winnerCount;
-      await api17().refreshEventManager?.("raffle");
+      await api19().refreshEventManager?.("raffle");
     } catch (err) {
       if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
       else alert("Prize setup save failed: " + (err.message || "unknown error"));
@@ -13117,18 +19360,18 @@ Type RESET to continue.`
     }
   }
   function categoryPrizeQuantity(config, categoryId) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     return (config.items || []).filter((item) => item.category_id === categoryId).reduce((sum, item) => sum + Math.max(1, Number(item.quantity || 1)), 0);
   }
   function capRaffleWinnerCounts(config) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     (config.categories || []).forEach((category) => {
       const quantity = categoryPrizeQuantity(config, category.id);
       category.winner_count = Math.min(Number(category.winner_count || 0), quantity);
     });
   }
   async function saveRaffleEntryPrice() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const input = document.getElementById("emRaffleEntryPrice");
     const btn = document.getElementById("emRafflePriceSave");
     const status = document.getElementById("emRafflePriceStatus");
@@ -13153,7 +19396,7 @@ Type RESET to continue.`
       const { error } = await supabaseClient.from("events").update({ raffle_entry_cost_cents: cents }).eq("id", STATE4.eventId);
       if (error) throw error;
       STATE4.event.raffle_entry_cost_cents = cents;
-      await api17().refreshEventManager?.("raffle");
+      await api19().refreshEventManager?.("raffle");
     } catch (err) {
       if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
       if (btn) {
@@ -13163,7 +19406,7 @@ Type RESET to continue.`
     }
   }
   async function removeRaffleEntry(btn) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const name = btn.dataset.name || "this entry";
     const isPaid = btn.dataset.paid === "1";
     const warning = isPaid ? "\n\nThis was marked paid. Removing the record does not refund Stripe payments." : "";
@@ -13177,33 +19420,33 @@ Type RESET to continue.`
         entry_id: btn.dataset.removeRaffleEntry
       });
       STATE4.tabData.raffle = null;
-      await api17().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
-      api17().notifyParent?.("updated", STATE4.eventId);
+      await api19().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+      api19().notifyParent?.("updated", STATE4.eventId);
     } catch (err) {
       alert("Raffle entry remove failed: " + (err.message || "unknown error"));
       STATE4.tabData.raffle = null;
-      await api17().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+      await api19().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
     }
   }
   function winnerChoiceHtml(winner, config, winners) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     if (winner.selection_status !== "pending_choice") return "";
     const items = availableChoiceItems(config, winners, winner);
     if (!items.length) {
       return `<div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">No unassigned items are available in this category.</div>`;
     }
-    const options = items.map((item) => `<option value="${esc8(item.id)}">${esc8(item.emoji || "\u{1F381}")} ${esc8(item.name)}${item.quantity > 1 ? ` (${item.quantity} total)` : ""}</option>`).join("");
+    const options = items.map((item) => `<option value="${esc10(item.id)}">${esc10(item.emoji || "\u{1F381}")} ${esc10(item.name)}${item.quantity > 1 ? ` (${item.quantity} total)` : ""}</option>`).join("");
     return `
         <div class="mt-3 flex flex-col sm:flex-row gap-2">
-            <select id="emWinnerChoice_${esc8(winner.id)}" class="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-200">
+            <select id="emWinnerChoice_${esc10(winner.id)}" class="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-200">
                 ${options}
             </select>
-            <button type="button" data-raffle-assign-choice="1" data-winner-id="${esc8(winner.id)}" class="rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition">Assign prize</button>
+            <button type="button" data-raffle-assign-choice="1" data-winner-id="${esc10(winner.id)}" class="rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition">Assign prize</button>
         </div>
     `;
   }
   function availableChoiceItems(config, winners, currentWinner) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const items = raffleItems(config, currentWinner.category_id);
     const used = /* @__PURE__ */ new Map();
     (winners || []).forEach((winner) => {
@@ -13214,7 +19457,7 @@ Type RESET to continue.`
     return items.filter((item) => (used.get(item.id) || 0) < item.quantity);
   }
   async function assignWinnerChoice(winnerId) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const winner = (STATE4.tabData.raffle?.winners || []).find((row) => row.id === winnerId);
     if (!winner) return;
     const select = document.getElementById(`emWinnerChoice_${winnerId}`);
@@ -13232,42 +19475,42 @@ Type RESET to continue.`
     }).eq("id", winnerId).eq("event_id", STATE4.eventId).eq("selection_status", "pending_choice");
     if (error) return alert("Prize assignment failed: " + error.message);
     STATE4.tabData.raffle = null;
-    await api17().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+    await api19().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
     document.dispatchEvent(new CustomEvent("events:raffle:drawn", { detail: { eventId: STATE4.eventId } }));
   }
   function raffleConfig(event) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
     return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
   }
   function raffleCategories(config) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getOrderedCategories(config);
   }
   function raffleItems(config, categoryId) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
   }
   function raffleTotalWinners(config) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     if (!window.EventsRaffleModel) return 0;
     return window.EventsRaffleModel.getTotalWinnerCount(config);
   }
   function raffleDrawQueue(config, winners) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getDrawQueue(config, winners || []);
   }
   function drawModeLabel(drawMode) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     if (drawMode === "random_item") return "Random prize assigned";
     if (drawMode === "winner_choice") return "Winner chooses later";
     return "Specific prize";
   }
   function prizeSlotLabel(slot) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     if (!slot) return "";
     if (slot.prize_name) return slot.prize_name;
     if (slot.draw_mode === "winner_choice") return `${slot.category_label || "Prize tier"} choice`;
@@ -13278,10 +19521,10 @@ Type RESET to continue.`
     Object.keys(prizeImagePreviews).forEach((key) => delete prizeImagePreviews[key]);
   }
   function refreshRaffle(eventId2) {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     if (eventId2 && eventId2 !== STATE4.eventId) return;
     STATE4.tabData.raffle = null;
-    if (STATE4.activeTab === "raffle") api17().renderTab?.("raffle");
+    if (STATE4.activeTab === "raffle") api19().renderTab?.("raffle");
   }
   document.addEventListener("events:raffle:drawn", (evt) => refreshRaffle(evt.detail?.eventId));
   var manageRaffleApi = {
@@ -13294,16 +19537,16 @@ Type RESET to continue.`
   globalThis.EventsManageRaffle = manageRaffleApi;
 
   // js/portal/events/manage/danger.js
-  function api18() {
+  function api20() {
     return window.EventsManageDangerApi || {};
   }
-  function esc9(s) {
+  function esc11(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
   function dangerHtml() {
-    const STATE4 = api18().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const e = STATE4.event;
     const isCancelled = e.status === "cancelled";
     const isCompleted = e.status === "completed";
@@ -13319,7 +19562,7 @@ Type RESET to continue.`
         </div>
 
         <div class="em-metric-grid mb-4">
-            <div class="em-metric"><span>Status</span><strong style="font-size:18px">${esc9(statusLabel)}</strong><small>Current lifecycle</small></div>
+            <div class="em-metric"><span>Status</span><strong style="font-size:18px">${esc11(statusLabel)}</strong><small>Current lifecycle</small></div>
             <div class="em-metric"><span>RSVP records</span><strong>${totalRsvps}</strong><small>Member + guest</small></div>
             <div class="em-metric"><span>Paid tickets</span><strong>${paidTickets}</strong><small>Refund review</small></div>
             <div class="em-metric"><span>Check-ins</span><strong>${checkins}</strong><small>Attendance history</small></div>
@@ -13328,7 +19571,7 @@ Type RESET to continue.`
         ${!isCancelled && !isCompleted ? `
         <div class="em-danger-card">
             <p class="em-danger-title">Cancel event</p>
-            <p class="em-danger-sub">Marks the event as cancelled. Paid RSVPs are NOT auto-refunded \u2014 handle refunds in M3b's Money tab or Stripe dashboard.</p>
+            <p class="em-danger-sub">Marks the event as cancelled. Paid RSVPs are NOT auto-refunded. Rare exceptions are manager-approved out-of-band via Stripe Dashboard only.</p>
             <button class="em-btn-danger" data-action="cancel">Cancel event</button>
         </div>` : ""}
 
@@ -13356,7 +19599,7 @@ Type RESET to continue.`
     `;
   }
   function wireDanger() {
-    const STATE4 = api18().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     document.getElementById("emSheetContent").querySelectorAll("[data-action]").forEach((btn) => {
       btn.addEventListener("click", () => runDangerAction(btn.dataset.action));
     });
@@ -13374,7 +19617,7 @@ Type RESET to continue.`
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-4" role="dialog" aria-labelledby="emCancelSmsTitle">
             <h3 id="emCancelSmsTitle" class="text-base font-semibold text-gray-900">Send cancellation text?</h3>
             <p class="text-sm text-gray-600 mt-1">Notify ${optedInCount} opted-in attendee${optedInCount === 1 ? "" : "s"}. You can edit the message below. Phone numbers stay masked.</p>
-            <textarea id="emCancelSmsBody" class="em-textarea mt-3" rows="4" maxlength="1600">${esc9(defaultBody)}</textarea>
+            <textarea id="emCancelSmsBody" class="em-textarea mt-3" rows="4" maxlength="1600">${esc11(defaultBody)}</textarea>
             <p id="emCancelSmsResult" class="text-xs mt-2" style="min-height:1rem"></p>
             <div class="flex flex-wrap gap-2 mt-3 justify-end">
                 <button type="button" class="em-btn-ghost" data-cancel-sms-skip>Skip</button>
@@ -13441,7 +19684,7 @@ Type RESET to continue.`
     });
   }
   async function runDangerAction(action) {
-    const STATE4 = api18().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const e = STATE4.event;
     if (!e) return;
     if (action === "delete") {
@@ -13456,8 +19699,8 @@ Type RESET to continue.`
         const { error } = await supabaseClient.from("events").delete().eq("id", e.id);
         if (error) throw error;
         alert("Event deleted.");
-        api18().close?.();
-        api18().notifyParent?.("deleted", e.id);
+        api20().close?.();
+        api20().notifyParent?.("deleted", e.id);
       } catch (err) {
         alert("Delete failed: " + (err.message || "unknown error"));
       }
@@ -13469,9 +19712,9 @@ Type RESET to continue.`
         const { error } = await supabaseClient.from("events").update({ status: "cancelled" }).eq("id", e.id);
         if (error) throw error;
         STATE4.event.status = "cancelled";
-        api18().renderHeader?.();
-        api18().renderTab?.("danger");
-        api18().notifyParent?.("updated", e.id);
+        api20().renderHeader?.();
+        api20().renderTab?.("danger");
+        api20().notifyParent?.("updated", e.id);
         try {
           const { count } = await supabaseClient.from("event_sms_recipients").select("id", { count: "exact", head: true }).eq("event_id", e.id).eq("opted_in", true).is("opted_out_at", null);
           if (count && count > 0) {
@@ -13486,7 +19729,7 @@ Type RESET to continue.`
       return;
     }
     if (action === "reset-participation") {
-      await api18().resetParticipation?.();
+      await api20().resetParticipation?.();
       return;
     }
     if (action === "complete") {
@@ -13495,9 +19738,9 @@ Type RESET to continue.`
         const { error } = await supabaseClient.from("events").update({ status: "completed" }).eq("id", e.id);
         if (error) throw error;
         STATE4.event.status = "completed";
-        api18().renderHeader?.();
-        api18().renderTab?.("danger");
-        api18().notifyParent?.("updated", e.id);
+        api20().renderHeader?.();
+        api20().renderTab?.("danger");
+        api20().notifyParent?.("updated", e.id);
       } catch (err) {
         alert("Complete failed: " + (err.message || "unknown error"));
       }
@@ -13569,13 +19812,16 @@ Type RESET to continue.`
     rsvps: [],
     guestRsvps: [],
     checkins: [],
+    parties: [],
+    seats: [],
     activeTab: "overview",
     source: "admin",
     // 'admin' | 'portal'
     editCopyOnOpen: false,
     tabData: {},
     // lazy per-tab cache: { money, docs, raffle, comp, notifications }
-    canManageNotifications: false
+    canManageNotifications: false,
+    eventDocuments: []
   };
   function getDocTypes() {
     const types = window.EventsConstants && window.EventsConstants.EVENT_DOC_TYPES;
@@ -13598,8 +19844,8 @@ Type RESET to continue.`
   function _renderTabs() {
     return Shell2.renderTabs();
   }
-  function _renderContent(html5) {
-    return Shell2.renderContent(html5);
+  function _renderContent(html11) {
+    return Shell2.renderContent(html11);
   }
   async function _canManageNotificationsForEvent(event) {
     if (typeof canManageEventNotifications === "function" && canManageEventNotifications()) return true;
@@ -13613,12 +19859,29 @@ Type RESET to continue.`
   async function _loadEventData(eventId2) {
     const { data: event } = await supabaseClient.from("events").select("*").eq("id", eventId2).single();
     STATE3.event = event;
-    const { data: rsvps } = await supabaseClient.from("event_rsvps").select("id, user_id, status, paid, qr_token, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)").eq("event_id", eventId2);
-    STATE3.rsvps = rsvps || [];
-    const { data: guestRsvps } = await supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at").eq("event_id", eventId2);
-    STATE3.guestRsvps = guestRsvps || [];
-    const { data: checkins } = await supabaseClient.from("event_checkins").select("user_id, guest_token, checked_in_at").eq("event_id", eventId2);
-    STATE3.checkins = checkins || [];
+    const [
+      rsvpsRes,
+      guestRes,
+      checkinsRes,
+      partiesRes,
+      seatsRes
+    ] = await Promise.all([
+      supabaseClient.from("event_rsvps").select("id, user_id, status, paid, qr_token, party_id, invest_eligible_acknowledged, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
+      supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at, party_id, attach_requested").eq("event_id", eventId2),
+      supabaseClient.from("event_checkins").select("user_id, guest_token, checked_in_at").eq("event_id", eventId2),
+      supabaseClient.from("event_parties").select("id, status, payer_kind, payer_user_id, payer_guest_rsvp_id").eq("event_id", eventId2),
+      supabaseClient.from("event_seats").select("id, party_id, role, display_name, options, options_complete, info_invite_token, linked_user_id, linked_guest_rsvp_id, sort_order").eq("event_id", eventId2).order("sort_order", { ascending: true })
+    ]);
+    STATE3.rsvps = rsvpsRes.data || [];
+    STATE3.guestRsvps = guestRes.data || [];
+    STATE3.checkins = checkinsRes.data || [];
+    STATE3.parties = partiesRes.data || [];
+    STATE3.seats = seatsRes.data || [];
+    STATE3.eventDocuments = [];
+    if (STATE3.event?.event_type === "llc") {
+      const { data: docs } = await supabaseClient.from("event_documents").select("id, doc_type, target_user_id, distributed").eq("event_id", eventId2);
+      STATE3.eventDocuments = docs || [];
+    }
   }
   async function open4(eventId2, opts = {}) {
     if (!eventId2) return;
@@ -13683,19 +19946,19 @@ Type RESET to continue.`
       return _renderTabAsync("comp", Comp.loadComp, Comp.compHtml, Comp.wireComp);
     }
   }
-  async function _renderTabAsync(key, loader, render, wire6) {
+  async function _renderTabAsync(key, loader, render, wire12) {
     if (!STATE3.tabData[key]) {
       _renderContent(`<div class="em-placeholder"><div style="font-size:13px">Loading\u2026</div></div>`);
       try {
         STATE3.tabData[key] = await loader();
       } catch (err) {
-        _renderContent(`<div class="em-placeholder"><p class="text-sm text-red-600">Failed to load: ${_esc7(err.message || err)}</p></div>`);
+        _renderContent(`<div class="em-placeholder"><p class="text-sm text-red-600">Failed to load: ${_esc13(err.message || err)}</p></div>`);
         return;
       }
     }
     if (STATE3.activeTab !== key) return;
     _renderContent(render());
-    if (wire6) wire6();
+    if (wire12) wire12();
   }
   async function _refreshEventManager(tab) {
     await _loadEventData(STATE3.eventId);
@@ -13713,12 +19976,12 @@ Type RESET to continue.`
     return `
         <div class="em-placeholder">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <p class="text-sm font-semibold text-gray-500">${_esc7(title)}</p>
-            ${sub ? `<p class="text-xs text-gray-400 mt-1">${_esc7(sub)}</p>` : ""}
+            <p class="text-sm font-semibold text-gray-500">${_esc13(title)}</p>
+            ${sub ? `<p class="text-xs text-gray-400 mt-1">${_esc13(sub)}</p>` : ""}
         </div>
     `;
   }
-  function _esc7(s) {
+  function _esc13(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -13815,16 +20078,6 @@ Type RESET to continue.`
       document.getElementById("createEventBtn")?.classList.remove("hidden");
       document.getElementById("createEventBtn")?.classList.add("flex");
     }
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const tzSel = document.getElementById("eventTimezone");
-    if (tzSel) {
-      for (const opt of tzSel.options) {
-        if (opt.value === tz) {
-          opt.selected = true;
-          break;
-        }
-      }
-    }
     evtSetupListeners();
     await loadEvents();
     globalThis.evtRouteByUrl();
@@ -13834,20 +20087,6 @@ Type RESET to continue.`
     }
   }
   document.addEventListener("DOMContentLoaded", initEventsPage);
-  function evtUpdateRaffleCostHint() {
-    const costGroup = document.getElementById("raffleEntryCostGroup");
-    const hint = document.getElementById("raffleCostHint");
-    const mode = document.getElementById("pricingMode")?.value || "free";
-    const raffleOn = document.getElementById("raffleEnabled")?.checked;
-    if (!costGroup) return;
-    if (mode === "paid") {
-      costGroup.classList.add("hidden");
-      if (hint) hint.textContent = "Raffle entry is included free with paid RSVP.";
-    } else {
-      costGroup.classList.remove("hidden");
-      if (hint) hint.textContent = "This is the price for a standalone raffle ticket.";
-    }
-  }
   function evtSetupListeners() {
     if (_eventsListenersBound) return;
     _eventsListenersBound = true;
@@ -13855,134 +20094,21 @@ Type RESET to continue.`
     setupSearch2();
     document.getElementById("typeFilter")?.addEventListener("change", renderEvents);
     function _openCreate() {
-      if (window.EventsCreate && window.EventsCreate.open) {
+      if (window.EventsCreate && typeof window.EventsCreate.open === "function") {
         window.EventsCreate.open();
       } else {
-        evtToggleModal("createModal", true);
+        alert("Create event is unavailable. Please refresh the page.");
       }
     }
     document.getElementById("createEventBtn")?.addEventListener("click", _openCreate);
     document.getElementById("emptyCreateBtn")?.addEventListener("click", _openCreate);
-    document.getElementById("closeCreateModal")?.addEventListener("click", () => evtToggleModal("createModal", false));
-    document.getElementById("createModalOverlay")?.addEventListener("click", () => evtToggleModal("createModal", false));
     document.addEventListener("events:created", () => loadEvents());
     document.getElementById("closeScannerModal")?.addEventListener("click", evtCloseScanner);
     document.getElementById("scannerModalOverlay")?.addEventListener("click", evtCloseScanner);
-    const dropzone = document.getElementById("bannerDropzone");
-    const fileInput = document.getElementById("bannerFile");
-    dropzone?.addEventListener("click", () => fileInput?.click());
-    fileInput?.addEventListener("change", evtHandleBannerSelect);
-    dropzone?.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropzone.classList.add("border-brand-400");
-    });
-    dropzone?.addEventListener("dragleave", () => dropzone.classList.remove("border-brand-400"));
-    dropzone?.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropzone.classList.remove("border-brand-400");
-      if (e.dataTransfer.files[0]) {
-        fileInput.files = e.dataTransfer.files;
-        evtHandleBannerSelect();
-      }
-    });
-    const embedDropzone = document.getElementById("embedImageDropzone");
-    const embedFileInput = document.getElementById("embedImageFile");
-    embedDropzone?.addEventListener("click", () => embedFileInput?.click());
-    embedFileInput?.addEventListener("change", evtHandleEmbedImageSelect);
-    embedDropzone?.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      embedDropzone.classList.add("border-brand-400");
-    });
-    embedDropzone?.addEventListener("dragleave", () => embedDropzone.classList.remove("border-brand-400"));
-    embedDropzone?.addEventListener("drop", (e) => {
-      e.preventDefault();
-      embedDropzone.classList.remove("border-brand-400");
-      if (e.dataTransfer.files[0]) {
-        embedFileInput.files = e.dataTransfer.files;
-        evtHandleEmbedImageSelect();
-      }
-    });
-    document.getElementById("createEventForm")?.addEventListener("submit", evtHandleCreate);
-    evtInitLocationValidation();
-    document.getElementById("previewEventBtn")?.addEventListener("click", evtHandlePreview);
-    const pricingModeEl = document.getElementById("pricingMode");
-    pricingModeEl?.addEventListener("change", () => {
-      const mode = pricingModeEl.value;
-      const rsvpCostGroup = document.getElementById("rsvpCostGroup");
-      if (rsvpCostGroup) rsvpCostGroup.classList.toggle("hidden", mode !== "paid");
-      evtUpdateRaffleCostHint();
-    });
-    const raffleToggle = document.getElementById("raffleEnabled");
-    raffleToggle?.addEventListener("change", () => {
-      const config = document.getElementById("raffleConfig");
-      if (config) config.classList.toggle("hidden", !raffleToggle.checked);
-      evtUpdateRaffleCostHint();
-    });
-    const winnerCountEl = document.getElementById("raffleWinnerCount");
-    winnerCountEl?.addEventListener("change", () => {
-      const count = parseInt(winnerCountEl.value) || 1;
-      const container = document.getElementById("rafflePrizesList");
-      if (!container) return;
-      let html5 = "";
-      for (let i = 1; i <= count; i++) {
-        const suffix = typeof globalThis.evtOrdinalSuffix === "function" ? globalThis.evtOrdinalSuffix(i) : "th";
-        html5 += `<div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-gray-500 w-6">#${i}</span>
-                <input type="text" name="rafflePrize" data-raffle-prize placeholder="Prize for ${i}${suffix} place" class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500">
-            </div>`;
-      }
-      container.innerHTML = html5;
-    });
     document.getElementById("closeRaffleDrawModal")?.addEventListener("click", () => evtToggleModal("raffleDrawModal", false));
     document.getElementById("raffleDrawOverlay")?.addEventListener("click", () => evtToggleModal("raffleDrawModal", false));
-    document.getElementById("eventType")?.addEventListener("change", evtToggleLlcFields);
-    document.getElementById("compTier1Pct")?.addEventListener("input", evtRecalcCompTiers);
-    document.getElementById("compTier2Pct")?.addEventListener("input", evtRecalcCompTiers);
-    document.getElementById("compTier3Pct")?.addEventListener("input", evtRecalcCompTiers);
-    document.getElementById("addCostItemBtn")?.addEventListener("click", evtAddCostItem);
-    document.getElementById("eventMax")?.addEventListener("change", evtRecalcCostSummary);
-    document.getElementById("eventMax")?.addEventListener("input", evtRecalcCostSummary);
-    document.getElementById("eventMinParticipants")?.addEventListener("change", evtRecalcCostSummary);
-    document.getElementById("eventMinParticipants")?.addEventListener("input", evtRecalcCostSummary);
-    document.getElementById("eventLlcCut")?.addEventListener("change", evtRecalcCostSummary);
-    document.getElementById("eventLlcCut")?.addEventListener("input", evtRecalcCostSummary);
-    const llcOverride = document.getElementById("llcRsvpOverride");
-    llcOverride?.addEventListener("input", () => {
-      llcOverride.dataset.userEdited = "true";
-    });
-    llcOverride?.addEventListener("change", () => {
-      llcOverride.dataset.userEdited = "true";
-    });
-    const transportEl = document.getElementById("eventTransportation");
-    transportEl?.addEventListener("change", () => {
-      const group = document.getElementById("transportEstimateGroup");
-      if (group) group.classList.toggle("hidden", transportEl.value !== "self_arranged");
-    });
-    const transportToggle = document.getElementById("transportationEnabled");
-    transportToggle?.addEventListener("change", () => {
-      const section = document.getElementById("transportationSection");
-      if (section) section.classList.toggle("hidden", !transportToggle.checked);
-    });
-    const rsvpToggle = document.getElementById("rsvpEnabled");
-    rsvpToggle?.addEventListener("change", () => {
-      const settings = document.getElementById("rsvpSettingsGroup");
-      if (settings) settings.classList.toggle("hidden", !rsvpToggle.checked);
-      if (!rsvpToggle.checked) {
-        ["gateTime", "gateLocation", "gateNotes"].forEach((id) => {
-          const el = document.getElementById(id);
-          if (el) el.checked = false;
-        });
-        const notes = document.getElementById("eventGatedNotes");
-        if (notes) notes.value = "";
-      }
-    });
-    const checkinToggle = document.getElementById("checkinEnabled");
-    checkinToggle?.addEventListener("change", () => {
-      const section = document.getElementById("checkinModeSection");
-      if (section) section.classList.toggle("hidden", !checkinToggle.checked);
-    });
   }
-  publishGlobals({ evtSetupListeners, evtUpdateRaffleCostHint });
+  publishGlobals({ evtSetupListeners });
   window.PortalEvents = window.PortalEvents || {};
   window.PortalEvents.initEventsPage = initEventsPage;
 })();

@@ -57,6 +57,17 @@
   padding-bottom: 2rem;
 }
 
+.portal-dashboard .dashboard-header {
+  padding-top: max(1.25rem, calc(env(safe-area-inset-top, 0px) + 0.5rem));
+  padding-bottom: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .portal-dashboard .dashboard-header {
+    padding-top: 1.25rem;
+  }
+}
+
 @media (min-width: 768px) {
   .portal-dashboard .dashboard-container {
     max-width: none;

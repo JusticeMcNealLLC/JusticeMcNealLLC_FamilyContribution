@@ -61,18 +61,49 @@ function pubOpenCtaPanel(kind, opts = {}) {
         : '';
     panel.innerHTML = `
         ${closeBtn}
-        <div class="evt-cta-panel-head"><strong>RSVP for this event</strong><span>No account needed. Your ticket appears here after RSVP.</span></div>
+        <div class="evt-cta-panel-head"><strong>RSVP for this event</strong><span>No account needed. Enter your name, email, and phone.</span></div>
         ${rafflePrompt}
         <div class="evt-cta-field-stack">
             <input type="text" id="ctaGuestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name">
             <input type="email" id="ctaGuestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address">
-            <input type="tel" id="ctaGuestPhoneInput" placeholder="Phone number (optional)" class="evt-input" aria-label="Phone number optional">
+            <input type="tel" id="ctaGuestPhoneInput" placeholder="Phone number" class="evt-input" required aria-label="Phone number">
+            <div id="ctaGuestSeatPicker"></div>
+            <div id="ctaGuestIncludedOptions">${typeof pubIncludedOptionsHtml === 'function' ? pubIncludedOptionsHtml(pubCurrentEvent, 'ctaGuestInc') : ''}</div>
+            <div id="ctaGuestDisclaimerAcks">${typeof pubDisclaimerAcksHtml === 'function' ? pubDisclaimerAcksHtml(pubCurrentEvent, 'ctaGuestDisc') : ''}</div>
+            <div id="ctaGuestAmenityVote">${typeof pubAmenityVoteHtml === 'function' ? pubAmenityVoteHtml(pubCurrentEvent, 'ctaGuestAmenity') : ''}</div>
+            <div id="ctaGuestPayIntent">${window.EventsAttachGuests ? window.EventsAttachGuests.guestIntentHtml(pubCurrentEvent, { idPrefix: 'ctaGuestPayIntent', forceShow: true }) : ''}</div>
+            <div id="ctaGuestPaymentChoice">${typeof pubPaymentChoiceHtml === 'function' ? pubPaymentChoiceHtml(pubCurrentEvent, pubReadSeatRole(panel)) : ''}</div>
             <label class="evt-checkbox-label"><input type="checkbox" id="ctaGuestSmsConsentCheck"><span>Text me event updates at this number. Message/data rates may apply. Reply STOP to opt out.</span></label>
-            <label class="evt-checkbox-label${pubCurrentEvent.pricing_mode === 'paid' && pubCurrentEvent.rsvp_cost_cents > 0 ? '' : ' hidden'}"><input type="checkbox" id="ctaGuestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label>
-            <button type="button" onclick="pubSubmitCtaGuestRsvp()" id="ctaGuestRsvpBtn" class="evt-rsvp-pay">${pubCurrentEvent.pricing_mode === 'paid' && pubCurrentEvent.rsvp_cost_cents > 0 ? `RSVP as Guest — ${pubFormatCurrency(pubCurrentEvent.rsvp_cost_cents)}` : 'RSVP as Guest'}</button>
+            <label class="evt-checkbox-label${(pubCurrentEvent.pricing_mode === 'paid' && pubCurrentEvent.rsvp_cost_cents > 0 && !(typeof pubHasRequiredDisclaimers === 'function' && pubHasRequiredDisclaimers(pubCurrentEvent))) ? '' : ' hidden'}"><input type="checkbox" id="ctaGuestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label>
+            <button type="button" onclick="pubSubmitCtaGuestRsvp()" id="ctaGuestRsvpBtn" class="evt-rsvp-pay">RSVP as Guest</button>
         </div>
         ${memberPrompt}`;
+    const ctaSeatPicker = document.getElementById('ctaGuestSeatPicker');
+    const ctaGuestName = document.getElementById('ctaGuestNameInput')?.value?.trim() || '';
+    if (ctaSeatPicker && window.EventsPartySeats && window.EventsPartySeats.shouldShow(pubCurrentEvent, {})) {
+        ctaSeatPicker.innerHTML = window.EventsPartySeats.formFieldsHtml(pubCurrentEvent, {
+            idPrefix: 'ctaGuestParty',
+            payerName: ctaGuestName,
+        });
+    } else if (ctaSeatPicker && window.EventsSeatPicker && window.EventsSeatPicker.shouldShow(pubCurrentEvent, {})) {
+        ctaSeatPicker.innerHTML = window.EventsSeatPicker.formFieldsHtml(pubCurrentEvent, { idPrefix: 'ctaGuestSeat' });
+    }
+    if (typeof pubWirePublicPartySeats === 'function') {
+        pubWirePublicPartySeats(pubCurrentEvent, panel, {
+            paymentWrapId: 'ctaGuestPaymentChoice',
+            paymentPrefix: 'ctaGuestPayment',
+        });
+    } else if (typeof pubWirePublicSeatPicker === 'function') {
+        pubWirePublicSeatPicker(pubCurrentEvent, panel, {
+            paymentWrapId: 'ctaGuestPaymentChoice',
+            paymentPrefix: 'ctaGuestPayment',
+        });
+    }
+    if (typeof pubUpdateGuestRsvpBtnLabel === 'function') {
+        pubUpdateGuestRsvpBtnLabel(pubCurrentEvent, panel);
+    }
     if (typeof pubWireGuestSmsFields === 'function') pubWireGuestSmsFields();
+    if (typeof pubWireGuestPaymentIntent === 'function') pubWireGuestPaymentIntent(pubCurrentEvent, panel);
 }
 
 function pubRenderCtaTicket(panel, closeBtn) {
@@ -139,6 +170,81 @@ async function pubSubmitCtaGuestRsvp() {
     if (targetPhone) targetPhone.value = phone;
     if (targetSmsConsent && smsConsent) targetSmsConsent.checked = smsConsent.checked;
     if (targetNoRefund && noRefund) targetNoRefund.checked = noRefund.checked;
+
+    const ctaRole = document.querySelector('#evtCtaPanel [data-seat-role-input="1"]:checked')
+        || document.querySelector('#ctaGuestSeatPicker [data-seat-role-input="1"]:checked');
+    if (ctaRole) {
+        const guestRole = document.querySelector('#guestSeatPicker [data-seat-role-input="1"][value="' + ctaRole.value + '"]');
+        if (guestRole) guestRole.checked = true;
+    }
+
+    // Copy included answers from CTA into guest form fields (same item ids)
+    if (pubCurrentEvent && window.EventsIncludedItems) {
+        const catalog = window.EventsIncludedItems.normalizeIncludedItems(pubCurrentEvent.included_items);
+        const ctaRoot = document.getElementById('ctaGuestIncludedOptions');
+        const guestRoot = document.getElementById('guestIncludedOptions');
+        if (ctaRoot && guestRoot && catalog.length) {
+            catalog.forEach((item) => {
+                const from = ctaRoot.querySelector(`[data-inc-answer="${CSS.escape(item.id)}"]`);
+                const to = guestRoot.querySelector(`[data-inc-answer="${CSS.escape(item.id)}"]`);
+                if (from && to) to.value = from.value;
+            });
+        }
+    }
+    // Copy disclaimer ack checkboxes from CTA into guest form
+    if (pubCurrentEvent && window.EventsDisclaimers) {
+        const discs = (window.EventsDisclaimers.effectiveDisclaimers)
+            ? window.EventsDisclaimers.effectiveDisclaimers(pubCurrentEvent)
+            : window.EventsDisclaimers.normalizeDisclaimers(pubCurrentEvent.disclaimers);
+        const ctaDisc = document.getElementById('ctaGuestDisclaimerAcks');
+        const guestDisc = document.getElementById('guestDisclaimerAcks');
+        if (ctaDisc && guestDisc && discs.length) {
+            discs.forEach((d) => {
+                const from = ctaDisc.querySelector(`[data-disc-ack="${CSS.escape(d.id)}"]`);
+                const to = guestDisc.querySelector(`[data-disc-ack="${CSS.escape(d.id)}"]`);
+                if (from && to) to.checked = from.checked;
+            });
+        }
+    }
+
+    // Copy amenity vote from CTA into guest form
+    if (pubCurrentEvent && window.EventsAmenityVoting && pubNeedsAmenityVote(pubCurrentEvent)) {
+        const ctaAmenity = document.getElementById('ctaGuestAmenityVote');
+        const guestAmenity = document.getElementById('guestAmenityVote');
+        if (ctaAmenity && guestAmenity) {
+            const selected = ctaAmenity.querySelector('[data-amenity-vote]:checked');
+            if (selected) {
+                const to = guestAmenity.querySelector(`[data-amenity-vote="${CSS.escape(selected.value)}"]`);
+                if (to) to.checked = true;
+            }
+        }
+    }
+
+    // Copy payment choice from CTA into guest form
+    if (pubCurrentEvent && typeof pubNeedsPaymentChoice === 'function') {
+        const guestRoot = document.getElementById('guestRsvpSection') || document;
+        const role = typeof pubReadSeatRole === 'function' ? pubReadSeatRole(guestRoot) : 'adult';
+        const seatPrice = typeof pubSeatPriceCents === 'function' ? pubSeatPriceCents(pubCurrentEvent, role) : 0;
+        if (pubNeedsPaymentChoice(pubCurrentEvent, seatPrice)) {
+            const ctaPay = document.getElementById('ctaGuestPaymentChoice');
+            const guestPay = document.getElementById('guestPaymentChoice');
+            if (ctaPay && guestPay) {
+                const plan = ctaPay.querySelector('[data-payment-plan]:checked, [data-payment-plan][type="hidden"]');
+                const method = ctaPay.querySelector('[data-payment-method]:checked, [data-payment-method][type="hidden"]');
+                if (plan) {
+                    const planVal = plan.getAttribute('data-payment-plan') || plan.value;
+                    const to = guestPay.querySelector(`[data-payment-plan="${CSS.escape(planVal)}"]`);
+                    if (to) to.checked = true;
+                }
+                if (method) {
+                    const methodVal = method.getAttribute('data-payment-method') || method.value;
+                    const to = guestPay.querySelector(`[data-payment-method="${CSS.escape(methodVal)}"]`);
+                    if (to) to.checked = true;
+                }
+            }
+        }
+    }
+
     await pubHandleGuestRsvp();
     if (pubGuestRsvp) pubOpenCtaPanel('ticket');
 }

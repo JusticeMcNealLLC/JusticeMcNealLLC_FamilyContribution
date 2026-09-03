@@ -45,8 +45,8 @@ serve(async (req) => {
     const { amount_dollars } = await req.json()
 
     // Validate amount
-    if (!amount_dollars || amount_dollars < 30 || amount_dollars > 250) {
-      throw new Error('Amount must be between $30 and $250')
+    if (!amount_dollars || amount_dollars < 10 || amount_dollars > 250) {
+      throw new Error('Amount must be between $10 and $250')
     }
 
     if (amount_dollars !== Math.floor(amount_dollars)) {

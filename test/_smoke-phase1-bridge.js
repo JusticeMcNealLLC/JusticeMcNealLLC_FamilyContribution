@@ -127,10 +127,10 @@ check(
     /window\.addEventListener\s*\(\s*['"]popstate['"]/.test(initJs)
 );
 
-// evtUpdateRaffleCostHint still defined (should not have been changed)
+// Create opens EventsCreate sheet only (legacy modal removed)
 check(
-    'evtUpdateRaffleCostHint still defined',
-    /function evtUpdateRaffleCostHint\s*\(\s*\)/.test(initJs)
+    'init opens EventsCreate sheet (no createModal fallback)',
+    /EventsCreate\.open/.test(initJs) && !/evtToggleModal\s*\(\s*['"]createModal['"]/.test(initJs)
 );
 
 // evtSetupListeners still defined

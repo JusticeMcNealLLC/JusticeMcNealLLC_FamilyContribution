@@ -16,11 +16,14 @@
         return div.innerHTML;
     }
 
-    // ─── miniMarkdown (bold / italic / links) ─────────────
+    // ─── miniMarkdown (images / links / bold / italic) ───
     // Set `escapeFirst=true` to escape raw text first (safe path).
+    // Images + links allow http(s) URLs only.
     function miniMarkdown(text, escapeFirst = false) {
         if (!text) return '';
         let html = escapeFirst ? escapeHtml(text) : text;
+        html = html.replace(/!\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g,
+            '<img src="$2" alt="$1" loading="lazy" class="ed-md-img">');
         html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
             '<a href="$2" target="_blank" rel="noopener">$1</a>');
         html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -297,6 +300,133 @@
             .filter(g => g.events.length > 0);
     }
 
+    // ─── Seat pricing (§13.8 adult/kid picker) ────────────
+    function normalizeSeatRole(raw) {
+        const v = String(raw || '').trim().toLowerCase();
+        return v === 'kid' ? 'kid' : 'adult';
+    }
+
+    function adultPriceCents(event) {
+        if (event?.adult_price_cents != null && Number.isFinite(Number(event.adult_price_cents))) {
+            return Math.max(0, Number(event.adult_price_cents));
+        }
+        return Math.max(0, Number(event?.rsvp_cost_cents || 0));
+    }
+
+    function seatPriceCents(event, role) {
+        const r = normalizeSeatRole(role);
+        if (r === 'kid') {
+            if (event?.kids_free !== false) return 0;
+            const kid = Number(event?.kid_price_cents);
+            return Number.isFinite(kid) && kid >= 0 ? kid : 0;
+        }
+        return adultPriceCents(event);
+    }
+
+    function partyBaseTotalCents(event, seats) {
+        let total = 0;
+        for (const seat of seats || []) {
+            total += seatPriceCents(event, seat.role);
+        }
+        return total;
+    }
+
+    function seatPriceLabel(event, role) {
+        const cents = seatPriceCents(event, role);
+        if (cents <= 0) return 'Free';
+        return formatMoney(cents);
+    }
+
+    function seatInfoInviteUrl(token) {
+        const t = String(token || '').trim();
+        if (!t) return '';
+        const origin = (typeof window !== 'undefined' && window.location && window.location.origin)
+            ? window.location.origin
+            : 'https://justicemcneal.com';
+        return `${origin}/events/seat-info/?t=${encodeURIComponent(t)}`;
+    }
+
+    function seatInfoInvitesHtml(tokens, opts) {
+        const list = Array.isArray(tokens) ? tokens.filter((row) => row && row.info_invite_token && !row.options_complete) : [];
+        if (!list.length) return '';
+        const title = (opts && opts.title) || 'Guest invite links';
+        const sub = (opts && opts.sub) || 'Send these so guests can fill their sizes. You still handle payment.';
+        const rows = list.map((row) => {
+            const name = escapeHtml(row.display_name || 'Guest');
+            const token = escapeHtml(row.info_invite_token);
+            return `
+                <div class="ed-seat-info-invite-row">
+                    <span class="ed-seat-info-invite-name">${name}</span>
+                    <button type="button" class="ed-seat-info-invite-copy" data-seat-info-copy="${token}">Copy invite link</button>
+                </div>`;
+        }).join('');
+        return `
+            <div class="ed-seat-info-invites" data-seat-info-invites="1">
+                <p class="ed-seat-info-invites-title">${escapeHtml(title)}</p>
+                <p class="ed-seat-info-invites-sub">${escapeHtml(sub)}</p>
+                ${rows}
+            </div>`;
+    }
+
+    function wireSeatInfoInviteCopy(root) {
+        const scope = root || document;
+        scope.querySelectorAll('[data-seat-info-copy]').forEach((btn) => {
+            if (btn.dataset.copyWired) return;
+            btn.dataset.copyWired = '1';
+            btn.addEventListener('click', async () => {
+                const token = btn.getAttribute('data-seat-info-copy') || '';
+                const url = seatInfoInviteUrl(token);
+                if (!url) return;
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(url);
+                    } else {
+                        const ta = document.createElement('textarea');
+                        ta.value = url;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        ta.remove();
+                    }
+                    const prev = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => { btn.textContent = prev || 'Copy invite link'; }, 1500);
+                } catch (_) {
+                    prompt('Copy this invite link:', url);
+                }
+            });
+        });
+    }
+
+    /** Pay CTA label for member/guest RSVP (§13.8 parity). opts.mode: 'rsvp' | 'complete'; opts.partyTotalCents for multi-seat */
+    function rsvpPayButtonLabel(event, role, opts) {
+        const options = opts && typeof opts === 'object' ? opts : {};
+        const mode = options.mode === 'complete' ? 'complete' : 'rsvp';
+        const audience = options.audience === 'guest' ? 'guest' : 'member';
+        const seatPrice = options.partyTotalCents != null
+            ? Math.max(0, Number(options.partyTotalCents) || 0)
+            : seatPriceCents(event, role);
+        const guestPrefix = audience === 'guest' ? 'RSVP as Guest' : 'RSVP as Member';
+        const prefix = mode === 'complete' ? 'Complete Payment' : guestPrefix;
+        if (event?.pricing_mode === 'paid') {
+            if (seatPrice > 0) return `${prefix} — ${formatMoney(seatPrice)}`;
+            return mode === 'complete' ? prefix : `${guestPrefix} — Free`;
+        }
+        return guestPrefix;
+    }
+
+    // ─── validatePhone (RSVP contact — §13.8) ─────────────
+    function validatePhone(raw) {
+        const trimmed = String(raw || '').trim();
+        if (!trimmed) return { error: 'Phone number is required.' };
+        const digits = trimmed.replace(/\D/g, '');
+        if (digits.length < 10) {
+            return { error: 'Enter a valid 10-digit US phone number (or include country code).' };
+        }
+        if (digits.length > 15) return { error: 'Phone number is too long.' };
+        return { value: trimmed };
+    }
+
     // ─── Toggle a modal (legacy parity) ───────────────────
     function toggleModal(id, show) {
         const modal = document.getElementById(id);
@@ -325,6 +455,16 @@
         startLiveCountdown,
         toast,
         toggleModal,
+        validatePhone,
+        normalizeSeatRole,
+        adultPriceCents,
+        seatPriceCents,
+        seatPriceLabel,
+        partyBaseTotalCents,
+        seatInfoInviteUrl,
+        seatInfoInvitesHtml,
+        wireSeatInfoInviteCopy,
+        rsvpPayButtonLabel,
     };
 
     window.EventsHelpers = EventsHelpers;

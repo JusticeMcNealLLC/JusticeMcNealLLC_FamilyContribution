@@ -39,22 +39,123 @@ function evtMaskPhoneLast4(phone) {
     return `***-***-${digits.slice(-4)}`;
 }
 
-/** Team/mobile RSVP has no SMS checkbox — confirm opt-in when profile has a phone. */
-async function evtConfirmMemberSmsOptIn() {
-    if (!globalThis.evtCurrentUser?.id) return false;
+function evtValidateMemberNoRefund(event, seatRole, hasRequiredDisclaimers) {
+    const root = document.getElementById('eventsDetailView') || document;
+    const noRefund = root.querySelector('#evtMemberNoRefundCheck');
+    if (!noRefund) return true;
+    const label = noRefund.closest('label');
+    if (label && label.classList.contains('hidden')) return true;
+    const seatPrice = evtSeatPriceCents(event, seatRole);
+    if (event.pricing_mode === 'paid' && seatPrice > 0 && !hasRequiredDisclaimers && !noRefund.checked) {
+        alert('Please accept the no-refund policy to continue.');
+        return false;
+    }
+    return true;
+}
+
+async function evtEnsureMemberPhoneForRsvp() {
+    if (!globalThis.evtCurrentUser?.id) return null;
     const { data: profile } = await supabaseClient
         .from('profiles')
         .select('phone')
         .eq('id', globalThis.evtCurrentUser.id)
         .maybeSingle();
-    const phone = (profile?.phone || '').trim();
-    if (!phone) {
-        alert('Add a mobile phone in Settings to receive event SMS updates.');
-        return false;
+    const existing = (profile?.phone || '').trim();
+    if (existing) return existing;
+
+    const inputEl = document.getElementById('evtMemberPhoneInput');
+    const raw = (inputEl?.value || '').trim();
+    const validated = (window.EventsHelpers && typeof window.EventsHelpers.validatePhone === 'function')
+        ? window.EventsHelpers.validatePhone(raw)
+        : (raw ? { value: raw } : { error: 'Phone number is required.' });
+    if (validated.error) {
+        alert(validated.error);
+        return null;
     }
+    const { error } = await supabaseClient
+        .from('profiles')
+        .update({ phone: validated.value })
+        .eq('id', globalThis.evtCurrentUser.id);
+    if (error) {
+        alert(error.message || 'Could not save phone number.');
+        return null;
+    }
+    return validated.value;
+}
+
+/** Team/mobile RSVP has no SMS checkbox — confirm opt-in when profile has a phone. */
+async function evtConfirmMemberSmsOptIn() {
+    if (!globalThis.evtCurrentUser?.id) return false;
+    const phone = await evtEnsureMemberPhoneForRsvp();
+    if (!phone) return false;
     return confirm(
         `Text you event updates at ${evtMaskPhoneLast4(phone)}? Message/data rates may apply. Reply STOP to opt out.`
     );
+}
+
+function evtReadSeatRoleFromDetail() {
+    const root = document.getElementById('eventsDetailView') || document;
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.readPayerRoleFromRoot === 'function') {
+        return window.EventsPartySeats.readPayerRoleFromRoot(root);
+    }
+    if (window.EventsSeatPicker && typeof window.EventsSeatPicker.readRoleFromRoot === 'function') {
+        return window.EventsSeatPicker.readRoleFromRoot(root);
+    }
+    return (window.EventsHelpers && window.EventsHelpers.normalizeSeatRole)
+        ? window.EventsHelpers.normalizeSeatRole('adult')
+        : 'adult';
+}
+
+function evtReadPartySeatsForSubmit(event) {
+    const root = document.getElementById('eventsDetailView') || document;
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.readSeatsFromRoot === 'function') {
+        return window.EventsPartySeats.readSeatsFromRoot(root, event);
+    }
+    const seatRole = evtReadSeatRoleFromDetail();
+    const catalog = (window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === 'function')
+        ? window.EventsIncludedItems.normalizeIncludedItems(event.included_items)
+        : [];
+    let seat_options = {};
+    if (window.EventsIncludedItems && catalog.length) {
+        seat_options = window.EventsIncludedItems.readAnswersFromRoot(root, catalog, seatRole);
+    }
+    const displayName = (typeof globalThis.evtMemberDisplayName === 'function')
+        ? globalThis.evtMemberDisplayName()
+        : 'Member';
+    return [{
+        role: seatRole,
+        display_name: displayName,
+        is_payer: true,
+        ...(Object.keys(seat_options).length ? { options: seat_options } : {}),
+    }];
+}
+
+function evtValidatePartySeatsForSubmit(event, seats) {
+    const catalog = (window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === 'function')
+        ? window.EventsIncludedItems.normalizeIncludedItems(event.included_items)
+        : [];
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.validatePartySeats === 'function') {
+        return window.EventsPartySeats.validatePartySeats(event, seats, catalog, {
+            allowIncompleteGuests: true,
+        });
+    }
+    return null;
+}
+
+function evtPartyTotalForSubmit(event) {
+    const root = document.getElementById('eventsDetailView') || document;
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.partyBaseTotalCents === 'function') {
+        const seats = window.EventsPartySeats.readSeatsFromRoot(root, event);
+        return window.EventsPartySeats.partyBaseTotalCents(event, seats);
+    }
+    return evtSeatPriceCents(event, evtReadSeatRoleFromDetail());
+}
+
+function evtSeatPriceCents(event, role) {
+    if (window.EventsHelpers && typeof window.EventsHelpers.seatPriceCents === 'function') {
+        return window.EventsHelpers.seatPriceCents(event, role);
+    }
+    return Number(event?.rsvp_cost_cents || 0);
 }
 
 async function evtHandleRsvp(eventId, status) {
@@ -73,31 +174,132 @@ async function evtHandleRsvp(eventId, status) {
             return;
         }
 
-        const isPaid = event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0;
+        const isPaidEvent = event.pricing_mode === 'paid';
         const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps;
         const existing = rsvpMap[eventId];
+        const catalog = (window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === 'function')
+            ? window.EventsIncludedItems.normalizeIncludedItems(event.included_items)
+            : [];
+        const seatRole = status === 'going' ? evtReadSeatRoleFromDetail() : 'adult';
+        const discCatalog = (window.EventsDisclaimers && typeof window.EventsDisclaimers.effectiveDisclaimers === 'function')
+            ? window.EventsDisclaimers.effectiveDisclaimers(event)
+            : ((window.EventsDisclaimers && typeof window.EventsDisclaimers.normalizeDisclaimers === 'function')
+                ? window.EventsDisclaimers.normalizeDisclaimers(event.disclaimers)
+                : []);
+        const hasRequiredDisclaimers = (window.EventsDisclaimers && typeof window.EventsDisclaimers.hasRequiredDisclaimers === 'function')
+            ? window.EventsDisclaimers.hasRequiredDisclaimers(discCatalog)
+            : discCatalog.some((d) => d.required);
+        const needsAmenityVote = (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.needsVote === 'function')
+            ? window.EventsAmenityVoting.needsVote(event)
+            : false;
+        const hasIncludedCatalog = window.EventsIncludedItems
+            && typeof window.EventsIncludedItems.hasCatalog === 'function'
+            && window.EventsIncludedItems.hasCatalog(event.included_items);
+        const root = document.getElementById('eventsDetailView') || document;
+        let seats = [];
+        if (status === 'going') {
+            seats = evtReadPartySeatsForSubmit(event);
+            const seatsErr = evtValidatePartySeatsForSubmit(event, seats);
+            if (seatsErr) {
+                alert(seatsErr);
+                return;
+            }
+        }
+        let disclaimer_acks = [];
+        if (status === 'going' && hasRequiredDisclaimers) {
+            disclaimer_acks = window.EventsDisclaimers.readAckIdsFromRoot(root, discCatalog);
+            const ackErr = window.EventsDisclaimers.validateAcks(discCatalog, disclaimer_acks);
+            if (ackErr) {
+                if (typeof window.EventsDisclaimers.scrollToAckField === 'function') {
+                    window.EventsDisclaimers.scrollToAckField(root);
+                }
+                alert(ackErr);
+                return;
+            }
+        }
+        let amenity_vote_option_id = null;
+        if (status === 'going' && needsAmenityVote) {
+            const amenityCfg = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
+            amenity_vote_option_id = window.EventsAmenityVoting.readVoteFromRoot(root) || '';
+            const voteErr = window.EventsAmenityVoting.validateVote(amenityCfg, amenity_vote_option_id);
+            if (voteErr) {
+                if (typeof window.EventsAmenityVoting.scrollToVoteField === 'function') {
+                    window.EventsAmenityVoting.scrollToVoteField(root);
+                }
+                alert(voteErr);
+                return;
+            }
+        }
+        if (status === 'going' && window.EventsInvestAck) {
+            const investErr = window.EventsInvestAck.validateAck(event, root);
+            if (investErr) {
+                alert(investErr);
+                return;
+            }
+        }
+        const investAcknowledged = window.EventsInvestAck
+            && window.EventsInvestAck.isRequired(event)
+            && window.EventsInvestAck.readAcknowledgedFromRoot(root);
+        const showPartySeats = !!(window.EventsPartySeats
+            && typeof window.EventsPartySeats.shouldShow === 'function'
+            && window.EventsPartySeats.shouldShow(event, { isHost: false }));
+        const needsPartyEdge = status === 'going'
+            && (hasIncludedCatalog || hasRequiredDisclaimers || showPartySeats || needsAmenityVote);
+        const partyTotal = status === 'going' ? evtPartyTotalForSubmit(event) : 0;
+        const needsPaidCheckout = isPaidEvent && status === 'going' && partyTotal > 0;
+        const needsPaymentChoice = window.EventsPaymentChoice
+            && typeof window.EventsPaymentChoice.needsChoice === 'function'
+            && window.EventsPaymentChoice.needsChoice(event, partyTotal);
+        let paymentChoice = null;
+        if (needsPaidCheckout && needsPaymentChoice) {
+            paymentChoice = window.EventsPaymentChoice.readFromRoot(root);
+            const payErr = window.EventsPaymentChoice.validateChoice(event, paymentChoice, partyTotal);
+            if (payErr) {
+                if (typeof window.EventsPaymentChoice.scrollToField === 'function') {
+                    window.EventsPaymentChoice.scrollToField(root);
+                }
+                alert(payErr);
+                return;
+            }
+        }
 
-        // ── Paid RSVP path ──────────────────────────────────
-        if (isPaid && status === 'going') {
+        let memberPhonePayload = {};
+        if (status === 'going') {
+            const phone = await evtEnsureMemberPhoneForRsvp();
+            if (!phone) return;
+            memberPhonePayload = { phone };
+        }
+
+        // ── Paid RSVP path (seat price > 0) ─────────────────
+        if (needsPaidCheckout) {
             // If already paid, don't re-charge
             if (existing?.paid) {
                 alert('You have already paid for this RSVP.');
                 return;
             }
 
-            // Show no-refund disclaimer before checkout
-            const confirmPay = confirm(
-                `RSVP costs ${formatCurrency(event.rsvp_cost_cents)}.\n\n` +
-                'By completing your RSVP, you agree that your payment is non-refundable ' +
-                'unless this event is cancelled or rescheduled by LLC staff.\n\n' +
-                'Proceed to checkout?'
-            );
-            if (!confirmPay) return;
+            if (!evtValidateMemberNoRefund(event, seatRole, hasRequiredDisclaimers)) return;
 
-            // Call edge function → Stripe checkout
+            const confirmMsg = (needsPaymentChoice && paymentChoice && window.EventsPaymentChoice.confirmMessage)
+                ? window.EventsPaymentChoice.confirmMessage(event, paymentChoice, partyTotal)
+                : (hasRequiredDisclaimers
+                    ? `RSVP costs ${formatCurrency(partyTotal)}.\n\nProceed to checkout?`
+                    : null);
+            if (confirmMsg && !confirm(confirmMsg)) return;
+
             const { url } = await callEdgeFunction('create-event-checkout', {
                 event_id: eventId,
                 type: 'rsvp',
+                seats,
+                seat_role: seatRole,
+                ...memberPhonePayload,
+                ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
+                ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
+                ...(needsPaymentChoice && paymentChoice ? {
+                    plan_kind: paymentChoice.plan_kind,
+                    method: paymentChoice.method,
+                } : {}),
+                ...(investAcknowledged ? { invest_eligible_acknowledged: true } : {}),
             });
 
             if (url) {
@@ -106,7 +308,110 @@ async function evtHandleRsvp(eventId, status) {
             return;
         }
 
+        // ── Going with party/seat (free kid on paid event, options, disclaimers, seat role) ─
+        if (status === 'going' && needsPartyEdge && !needsPaidCheckout) {
+            if (existing?.paid) {
+                alert('Paid RSVPs cannot be changed. Contact an admin for assistance.');
+                return;
+            }
+            if (existing?.status === 'going') {
+                const result = await callEdgeFunction('rsvp-member-party', {
+                    event_id: eventId,
+                    seats,
+                    seat_role: seatRole,
+                    ...memberPhonePayload,
+                    ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
+                    ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
+                });
+                if (result?.rsvp) {
+                    globalThis.evtAllRsvps[eventId] = result.rsvp;
+                    window.evtAllRsvps = window.evtAllRsvps || {};
+                    window.evtAllRsvps[eventId] = result.rsvp;
+                }
+                evtRenderEvents();
+                await globalThis.evtOpenDetail(eventId);
+                return;
+            }
+            const result = await callEdgeFunction('rsvp-member-party', {
+                event_id: eventId,
+                seats,
+                seat_role: seatRole,
+                ...memberPhonePayload,
+                ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
+                ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
+            });
+            if (result?.rsvp) {
+                globalThis.evtAllRsvps[eventId] = result.rsvp;
+                window.evtAllRsvps = window.evtAllRsvps || {};
+                window.evtAllRsvps[eventId] = result.rsvp;
+            }
+
+            let wantSmsOptIn = false;
+            const smsCheck = document.getElementById('evtSmsOptInCheck');
+            if (smsCheck?.checked) {
+                wantSmsOptIn = true;
+            } else if (!smsCheck) {
+                wantSmsOptIn = await evtConfirmMemberSmsOptIn();
+            }
+
+            evtRenderEvents();
+            await globalThis.evtOpenDetail(eventId);
+            if (wantSmsOptIn) {
+                await evtHandleEventSmsOptIn(eventId, true);
+            }
+            if (window.evtCtaRaffleIntent === eventId) {
+                window.evtCtaRaffleIntent = null;
+                evtOpenCtaPanel('raffle', eventId);
+            }
+            return;
+        }
+
         // ── Free RSVP path (original logic) ─────────────────
+        if (status === 'going' && hasRequiredDisclaimers) {
+            if (existing?.paid) {
+                alert('Paid RSVPs cannot be changed. Contact an admin for assistance.');
+                return;
+            }
+            const result = await callEdgeFunction('rsvp-member-party', {
+                event_id: eventId,
+                seats,
+                seat_role: seatRole,
+                ...memberPhonePayload,
+                disclaimer_acks,
+                ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
+            });
+            if (result?.rsvp) {
+                globalThis.evtAllRsvps[eventId] = result.rsvp;
+                window.evtAllRsvps = window.evtAllRsvps || {};
+                window.evtAllRsvps[eventId] = result.rsvp;
+            }
+            evtRenderEvents();
+            await globalThis.evtOpenDetail(eventId);
+            return;
+        }
+
+        if (status === 'going' && needsAmenityVote) {
+            if (existing?.paid) {
+                alert('Paid RSVPs cannot be changed. Contact an admin for assistance.');
+                return;
+            }
+            const result = await callEdgeFunction('rsvp-member-party', {
+                event_id: eventId,
+                seats,
+                seat_role: seatRole,
+                ...memberPhonePayload,
+                amenity_vote_option_id,
+            });
+            if (result?.rsvp) {
+                globalThis.evtAllRsvps[eventId] = result.rsvp;
+                window.evtAllRsvps = window.evtAllRsvps || {};
+                window.evtAllRsvps[eventId] = result.rsvp;
+            }
+            evtRenderEvents();
+            await globalThis.evtOpenDetail(eventId);
+            return;
+        }
+
         if (existing) {
             // Block toggle-off for paid RSVPs (no self-refund)
             if (existing.paid) {
@@ -369,14 +674,88 @@ async function evtClaimWaitlistSpot(eventId) {
         const event = globalThis.evtAllEvents.find(e => e.id === eventId);
         if (!event) return;
 
-        const confirmPay = confirm(
-            `A spot has opened up!\n\n` +
-            `RSVP costs ${formatCurrency(event.rsvp_cost_cents)}.\n\n` +
-            'By completing your RSVP, you agree that your payment is non-refundable ' +
-            'unless this event is cancelled or rescheduled by LLC staff.\n\n' +
-            'Proceed to checkout?'
-        );
-        if (!confirmPay) return;
+        const root = document.getElementById('eventsDetailView') || document;
+        const discCatalog = (window.EventsDisclaimers && typeof window.EventsDisclaimers.effectiveDisclaimers === 'function')
+            ? window.EventsDisclaimers.effectiveDisclaimers(event)
+            : [];
+        const hasRequiredDisclaimers = (window.EventsDisclaimers && typeof window.EventsDisclaimers.hasRequiredDisclaimers === 'function')
+            ? window.EventsDisclaimers.hasRequiredDisclaimers(discCatalog)
+            : discCatalog.some((d) => d.required);
+        const needsAmenityVote = (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.needsVote === 'function')
+            ? window.EventsAmenityVoting.needsVote(event)
+            : false;
+        const seatRole = evtReadSeatRoleFromDetail();
+        const seats = evtReadPartySeatsForSubmit(event);
+        const seatsErr = evtValidatePartySeatsForSubmit(event, seats);
+        if (seatsErr) {
+            alert(seatsErr);
+            return;
+        }
+        let disclaimer_acks = [];
+        if (hasRequiredDisclaimers) {
+            disclaimer_acks = window.EventsDisclaimers.readAckIdsFromRoot(root, discCatalog);
+            const ackErr = window.EventsDisclaimers.validateAcks(discCatalog, disclaimer_acks);
+            if (ackErr) {
+                if (typeof window.EventsDisclaimers.scrollToAckField === 'function') {
+                    window.EventsDisclaimers.scrollToAckField(root);
+                }
+                alert(ackErr);
+                return;
+            }
+        }
+        let amenity_vote_option_id = null;
+        if (needsAmenityVote) {
+            const amenityCfg = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
+            amenity_vote_option_id = window.EventsAmenityVoting.readVoteFromRoot(root) || '';
+            const voteErr = window.EventsAmenityVoting.validateVote(amenityCfg, amenity_vote_option_id);
+            if (voteErr) {
+                if (typeof window.EventsAmenityVoting.scrollToVoteField === 'function') {
+                    window.EventsAmenityVoting.scrollToVoteField(root);
+                }
+                alert(voteErr);
+                return;
+            }
+        }
+
+        const partyTotal = evtPartyTotalForSubmit(event);
+        const needsPaymentChoice = window.EventsPaymentChoice
+            && typeof window.EventsPaymentChoice.needsChoice === 'function'
+            && window.EventsPaymentChoice.needsChoice(event, partyTotal);
+        let paymentChoice = null;
+        if (needsPaymentChoice) {
+            paymentChoice = window.EventsPaymentChoice.readFromRoot(root);
+            const payErr = window.EventsPaymentChoice.validateChoice(event, paymentChoice, partyTotal);
+            if (payErr) {
+                if (typeof window.EventsPaymentChoice.scrollToField === 'function') {
+                    window.EventsPaymentChoice.scrollToField(root);
+                }
+                alert(payErr);
+                return;
+            }
+        }
+
+        const waitlistConfirm = (needsPaymentChoice && paymentChoice && window.EventsPaymentChoice.confirmMessage)
+            ? `A spot has opened up!\n\n${window.EventsPaymentChoice.confirmMessage(event, paymentChoice, partyTotal)}`
+            : (hasRequiredDisclaimers
+                ? `A spot has opened up!\n\nRSVP costs ${formatCurrency(partyTotal)}.\n\nProceed to checkout?`
+                : null);
+        if (waitlistConfirm && !confirm(waitlistConfirm)) return;
+
+        if (!evtValidateMemberNoRefund(event, seatRole, hasRequiredDisclaimers)) return;
+
+        if (window.EventsInvestAck) {
+            const investErr = window.EventsInvestAck.validateAck(event, root);
+            if (investErr) {
+                alert(investErr);
+                return;
+            }
+        }
+        const investAcknowledged = window.EventsInvestAck
+            && window.EventsInvestAck.isRequired(event)
+            && window.EventsInvestAck.readAcknowledgedFromRoot(root);
+
+        const phone = await evtEnsureMemberPhoneForRsvp();
+        if (!phone) return;
 
         // Update waitlist status to 'claimed' so the spot is held
         await supabaseClient
@@ -390,6 +769,16 @@ async function evtClaimWaitlistSpot(eventId) {
             event_id: eventId,
             type: 'rsvp',
             from_waitlist: true,
+            seats,
+            seat_role: seatRole,
+            phone,
+            ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
+            ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
+            ...(needsPaymentChoice && paymentChoice ? {
+                plan_kind: paymentChoice.plan_kind,
+                method: paymentChoice.method,
+            } : {}),
+            ...(investAcknowledged ? { invest_eligible_acknowledged: true } : {}),
         });
 
         if (url) {
@@ -401,48 +790,32 @@ async function evtClaimWaitlistSpot(eventId) {
     }
 }
 
-// ─── Cancel Event (with refund processing) ──────────────
+// ─── Cancel Event (status only — no in-app refunds) ─────
 
 async function evtCancelEvent(eventId) {
     const event = globalThis.evtAllEvents.find(e => e.id === eventId);
     if (!event) return;
 
     const isLlc = event.event_type === 'llc';
-    let nonRefundableCents = 0;
     let cancellationNote = '';
 
     if (isLlc) {
         cancellationNote = prompt('Cancellation reason (visible to attendees):');
-        if (cancellationNote === null) return; // user pressed Cancel
-
-        const nonRefundableStr = prompt(
-            'Enter the total non-refundable expenses already incurred (in dollars).\n' +
-            'This amount will be deducted from each refund proportionally.\n' +
-            'Enter 0 if fully refundable.',
-            '0'
-        );
-        if (nonRefundableStr === null) return;
-        nonRefundableCents = Math.round(parseFloat(nonRefundableStr || '0') * 100);
-        if (isNaN(nonRefundableCents) || nonRefundableCents < 0) nonRefundableCents = 0;
-
-        const msg = nonRefundableCents > 0
-            ? `Cancel this event?\n\nNon-refundable expenses: ${formatCurrency(nonRefundableCents)}\nThis will be deducted proportionally from each attendee's refund.`
-            : 'Cancel this event? All paid attendees will receive a full refund.';
-        if (!confirm(msg)) return;
-    } else {
-        if (!confirm('Are you sure you want to cancel this event?')) return;
+        if (cancellationNote === null) return;
     }
 
+    if (!confirm(
+        'Cancel this event?\n\nPaid attendees will NOT be auto-refunded. Rare exceptions are manager-approved out-of-band via Stripe Dashboard.',
+    )) return;
+
     try {
-        // Call edge function to process cancellation + refunds
         const result = await callEdgeFunction('process-event-cancellation', {
             event_id: eventId,
             reason: 'event_cancelled',
             cancellation_note: cancellationNote || 'Event cancelled by host',
-            non_refundable_expenses_cents: nonRefundableCents,
         });
 
-        alert(result.message || 'Event cancelled successfully.');
+        alert(result.message || 'Event cancelled. Payments were not refunded in-app.');
         await globalThis.evtLoadEvents();
         globalThis.evtNavigateToList();
     } catch (err) {
@@ -451,7 +824,7 @@ async function evtCancelEvent(eventId) {
     }
 }
 
-// ─── Reschedule Event (with 72h grace window) ───────────
+// ─── Reschedule Event (no grace refund window) ──────────
 
 async function evtRescheduleEvent(eventId) {
     const event = globalThis.evtAllEvents.find(e => e.id === eventId);
@@ -470,12 +843,11 @@ async function evtRescheduleEvent(eventId) {
         return;
     }
 
-    const confirmMsg = `Reschedule this event to ${parsed.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' })} at ${parsed.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' })}?\n\nAll attendees will receive a 72-hour grace window to request a full refund if the new date doesn't work for them.`;
+    const confirmMsg = `Reschedule this event to ${parsed.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' })} at ${parsed.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' })}?\n\nPayments remain non-refundable in-app.`;
     if (!confirm(confirmMsg)) return;
 
     try {
         const now = new Date();
-        const graceEnd = new Date(now.getTime() + 72 * 60 * 60 * 1000); // 72h from now
 
         const { error } = await supabaseClient
             .from('events')
@@ -483,19 +855,18 @@ async function evtRescheduleEvent(eventId) {
                 original_start_date: event.original_start_date || event.start_date,
                 start_date: parsed.toISOString(),
                 rescheduled_at: now.toISOString(),
-                grace_window_end: graceEnd.toISOString(),
+                grace_window_end: null,
             })
             .eq('id', eventId);
         if (error) throw error;
 
-        // Mark all paid RSVPs as grace-refund eligible
         await supabaseClient
             .from('event_rsvps')
-            .update({ grace_refund_eligible: true })
+            .update({ grace_refund_eligible: false })
             .eq('event_id', eventId)
-            .eq('paid', true);
+            .eq('grace_refund_eligible', true);
 
-        alert('Event rescheduled! Attendees have been notified and have 72 hours to request a refund.');
+        alert('Event rescheduled. Payments are not refunded in-app.');
         await globalThis.evtLoadEvents();
         await globalThis.evtOpenDetail(eventId);
     } catch (err) {
@@ -504,26 +875,10 @@ async function evtRescheduleEvent(eventId) {
     }
 }
 
-// ─── Request Grace Window Refund ────────────────────────
+// ─── Grace refund disabled (§13.10 line 442) ────────────
 
-async function evtRequestGraceRefund(eventId) {
-    if (!confirm('Request a full refund because the rescheduled date doesn\'t work for you?\n\nThis action cannot be undone.')) return;
-
-    try {
-        const result = await callEdgeFunction('process-event-cancellation', {
-            event_id: eventId,
-            reason: 'reschedule_grace',
-            user_id: globalThis.evtCurrentUser.id,
-            single_user_refund: true,
-        });
-
-        alert(result.message || 'Refund processed. You will receive it within 5-10 business days.');
-        await globalThis.evtLoadEvents();
-        await globalThis.evtOpenDetail(eventId);
-    } catch (err) {
-        console.error('Grace refund error:', err);
-        alert('Failed to process refund: ' + (err.message || 'Unknown error'));
-    }
+async function evtRequestGraceRefund(_eventId) {
+    alert('In-app refunds are disabled. Contact a host — rare exceptions are processed out-of-band in Stripe Dashboard.');
 }
 
 // ─── Duplicate Event ────────────────────────────────────

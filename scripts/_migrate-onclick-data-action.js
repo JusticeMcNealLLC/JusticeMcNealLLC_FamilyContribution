@@ -21,8 +21,6 @@ const FILES = [
     'detail/raffle-render.js',
     'team/tools.js',
     'team/chat.js',
-    'create/legacy-preview.js',
-    'create/legacy-costs.js',
     'engagement/raffle.js',
 ];
 

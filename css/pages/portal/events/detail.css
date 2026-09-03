@@ -271,6 +271,81 @@
 .ed-about-map-col { background:#fff; border-radius:20px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.03); }
 .ed-about-divider { border:none; border-top:1px solid #f3f4f6; margin:16px 0; }
 .ed-desc { font-size:15px; line-height:1.75; color:#484848; white-space:pre-line; }
+
+/* About tabs (creator sections) */
+.ed-about-tabs { margin-top:16px; }
+.ed-about-tablist { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.ed-about-tab {
+    border:1px solid #d5dfec; background:#fff; color:#0b2545;
+    border-radius:10px; padding:8px 12px; font-size:13px; font-weight:600;
+    font-family:var(--font-body, inherit); cursor:pointer;
+}
+.ed-about-tab.is-active {
+    background:#13366e; border-color:#13366e; color:#fff;
+}
+.ed-about-tab-panel.hidden { display:none; }
+.ed-about-tab-body {
+    font-size:14px; line-height:1.7; color:#374151;
+}
+.ed-about-tab-body a { color:#13366e; text-decoration:underline; }
+.ed-about-tab-body strong { font-weight:700; }
+.ed-about-tab-body em { font-style:italic; }
+.ed-about-tab-body img.ed-md-img {
+    display:block; max-width:100%; height:auto;
+}
+
+/* Price summary + included catalog (§13.7) */
+.ed-price-summary { margin-top:4px; }
+.ed-price-summary-row .ed-summary-main.ed-deadline-passed { color:#9ca3af; text-decoration:line-through; }
+.ed-included-catalog { margin-top:4px; }
+.ed-inc-catalog-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+.ed-inc-catalog-item {
+    background:#eef2f6; border:1px solid #d5dfec; border-radius:12px; padding:12px 14px;
+}
+.ed-inc-catalog-head { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:6px; }
+.ed-inc-catalog-name { font-size:14px; font-weight:700; color:#0b2545; }
+.ed-inc-catalog-badges { display:flex; flex-wrap:wrap; gap:6px; }
+.ed-inc-catalog-choices { display:flex; flex-wrap:wrap; gap:6px; }
+.ed-inc-catalog-note { font-size:12px; color:#6b7280; margin:0; }
+.ed-inc-pill {
+    display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px;
+    background:#fff; border:1px solid #d5dfec; color:#374151;
+}
+.ed-inc-pill-required { background:#fef2f2; border-color:#fecaca; color:#b91c1c; }
+
+/* Amenity voting results (§13.7 FINAL) */
+.ed-amenity-results {
+    margin-top:16px; padding:14px 16px;
+    background:#eef2f6; border:1px solid #d5dfec; border-radius:12px;
+}
+.ed-amenity-results-inner { display:flex; flex-direction:column; gap:10px; }
+.ed-amenity-results-heading {
+    font-family:var(--font-headline, serif); font-size:15px; font-weight:700;
+    color:#0b2545; margin:0;
+}
+.ed-amenity-results-sub { font-size:12px; color:#6b7280; margin:0; }
+.ed-amenity-rows { display:flex; flex-direction:column; gap:12px; }
+.ed-amenity-row { display:flex; flex-direction:column; gap:4px; }
+.ed-amenity-row-leader .ed-amenity-label { color:#0e8b8b; }
+.ed-amenity-row-head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:8px; }
+.ed-amenity-label { font-size:14px; font-weight:600; color:#0b2545; }
+.ed-amenity-count { font-size:12px; color:#6b7280; white-space:nowrap; }
+.ed-amenity-bar {
+    height:8px; background:#fff; border:1px solid #d5dfec; border-radius:999px; overflow:hidden;
+}
+.ed-amenity-bar-fill {
+    display:block; height:100%; background:#13366e; border-radius:999px; min-width:0;
+    transition:width .25s ease;
+}
+.ed-amenity-row-leader .ed-amenity-bar-fill { background:#0e8b8b; }
+.ed-amenity-desc { font-size:12px; color:#6b7280; margin:0; }
+.ed-amenity-pending { display:flex; flex-direction:column; gap:6px; }
+.ed-amenity-pending-title { font-size:14px; font-weight:600; color:#0b2545; margin:0; }
+.ed-amenity-rsvp-hint { margin-top:10px; margin-bottom:0; }
+.ed-inc-pill-applies { background:#eef2f6; color:#13366e; }
+.ed-inc-pill-type { background:#f0fdf4; border-color:#bbf7d0; color:#166534; }
+.ed-inc-pill-choice { background:#fff; color:#0b2545; }
+
 .ed-desc a { color:#4f46e5; text-decoration:underline; }
 .ed-desc strong { font-weight:700; }
 .ed-desc em { font-style:italic; }
@@ -358,7 +433,57 @@
 .ed-rsvp-sm { padding:8px 16px; border-radius:100px; font-size:13px; font-weight:600; border:1.5px solid #e5e7eb; background:#fff; color:#6b7280; cursor:pointer; transition:all .15s; }
 .ed-rsvp-sm:hover { border-color:#9ca3af; color:#374151; }
 .ed-rsvp-sm.active { border-color:#e11d48; background:#fff0f3; color:#e11d48; }
-.ed-action-disabled { opacity:.4; cursor:not-allowed; }
+.ed-rsvp-cta-block { margin-bottom:0; }
+.ed-rsvp-cta-block .ed-primary-btn + .ed-outline-btn { margin-top:10px; }
+.ed-rsvp-prep { margin-top:16px; padding-top:16px; border-top:1px solid #d5dfec; }
+.ed-rsvp-prep-label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#13366e; margin:0 0 12px; }
+.ed-payment-choice { margin:12px 0; }
+.ed-payment-heading { font-size:13px; font-weight:700; color:#0b2545; margin:0 0 6px; }
+.ed-payment-sub { margin:0 0 10px; }
+.ed-payment-fieldset { border:0; margin:0 0 12px; padding:0; }
+.ed-payment-legend { font-size:12px; font-weight:700; color:#13366e; margin:0 0 8px; padding:0; }
+.ed-payment-opt { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; margin-bottom:8px; border:1.5px solid #d5dfec; border-radius:12px; background:#fff; cursor:pointer; }
+.ed-payment-opt input { margin-top:3px; width:18px; height:18px; accent-color:#13366e; flex-shrink:0; }
+.ed-payment-opt-text { font-size:13px; line-height:1.45; color:#0b2545; }
+.ed-seat-picker-label { font-size:13px; font-weight:700; color:#0b2545; margin:0 0 10px; }
+.ed-seat-picker-options { display:flex; flex-direction:column; gap:8px; }
+.ed-seat-picker-option { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border:1.5px solid #d5dfec; border-radius:12px; background:#fff; cursor:pointer; transition:border-color .15s, background .15s; }
+.ed-seat-picker-option.is-selected { border-color:#13366e; background:#eef2f6; }
+.ed-seat-picker-option input { margin-top:3px; width:18px; height:18px; accent-color:#13366e; flex-shrink:0; }
+.ed-seat-picker-option-body { min-width:0; flex:1; }
+.ed-seat-picker-option-title { display:block; font-size:14px; font-weight:700; color:#0b2545; }
+.ed-seat-picker-option-price { display:block; font-size:12px; color:#6b7280; margin-top:2px; }
+
+/* §13.9 Flow A — payer-owned multi-guest party seats */
+.ed-party-seats { margin-bottom:12px; }
+.ed-party-seats-label { font-size:13px; font-weight:700; color:#0b2545; margin:0 0 10px; }
+.ed-party-seat-rows { display:flex; flex-direction:column; gap:12px; }
+.ed-party-seat-row { padding:12px 14px; border:1.5px solid #d5dfec; border-radius:12px; background:#fff; }
+.ed-party-seat-row.is-payer { border-color:#13366e; background:#eef2f6; }
+.ed-party-seat-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.ed-party-seat-title { font-size:13px; font-weight:700; color:#0b2545; }
+.ed-party-seat-remove { font-size:12px; color:#13366e; background:none; border:none; cursor:pointer; text-decoration:underline; padding:4px 0; }
+.ed-party-seat-roles { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+.ed-party-seat-role-badge { display:inline-block; font-size:12px; color:#6b7280; margin-top:6px; }
+.ed-party-seat-inc { margin-top:8px; }
+.ed-party-seat-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.ed-party-add-seat { font-size:13px; padding:8px 12px; }
+.ed-party-total { font-size:14px; color:#0b2545; margin:12px 0 0; }
+.ed-party-total strong { color:#13366e; }
+.ed-party-seat-invite-hint { font-size:12px; color:#6b7280; margin:8px 0 0; }
+.ed-seat-info-invites { margin-top:12px; padding:12px 14px; border:1.5px solid #d5dfec; border-radius:12px; background:#eef2f6; }
+.ed-seat-info-invites-title { font-size:13px; font-weight:700; color:#0b2545; margin:0 0 6px; }
+.ed-seat-info-invites-sub { font-size:12px; color:#6b7280; margin:0 0 10px; }
+.ed-seat-info-invite-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-top:1px solid #d5dfec; }
+.ed-seat-info-invite-row:first-of-type { border-top:none; padding-top:0; }
+.ed-seat-info-invite-name { font-size:13px; font-weight:600; color:#0b2545; }
+.ed-seat-info-invite-copy { font-size:13px; color:#13366e; background:none; border:1px solid #13366e; border-radius:8px; padding:6px 10px; cursor:pointer; min-height:44px; }
+.ed-rsvp-guest-hint { margin-top:14px; padding:12px 14px; border-radius:10px; background:#eef2f6; border:1px solid #d5dfec; }
+.ed-rsvp-guest-hint-text { font-size:13px; color:#0b2545; margin:0 0 8px; line-height:1.45; }
+.ed-rsvp-guest-hint-text a { color:#13366e; font-weight:600; text-decoration:none; }
+.ed-rsvp-guest-hint-text a:hover { text-decoration:underline; }
+.ed-rsvp-members-only-note { margin-top:14px; font-size:13px; color:#6b7280; font-style:italic; line-height:1.45; }
+.ed-share-subcopy { font-size:13px; color:#6b7280; margin:-6px 0 12px; line-height:1.4; }
 .ed-link-btn { font-size:14px; font-weight:600; color:#4f46e5; background:none; border:none; cursor:pointer; padding:0; }
 .ed-link-btn:hover { text-decoration:underline; }
 .ed-link-btn.danger { color:#dc2626; }

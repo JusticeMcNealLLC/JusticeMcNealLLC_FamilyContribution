@@ -8,6 +8,16 @@
 
 import '../../components/events/constants.js'; // EventsConstants (shared)
 import '../../components/events/helpers.js'; // EventsHelpers (shared)
+import '../../components/events/about-tabs.js'; // EventsAboutTabs (shared)
+import '../../components/events/included-items.js'; // EventsIncludedItems (shared)
+import '../../components/events/disclaimers.js'; // EventsDisclaimers (shared)
+import '../../components/events/amenity-voting.js'; // EventsAmenityVoting (shared)
+import '../../components/events/payment-choice.js'; // EventsPaymentChoice (shared)
+import '../../components/events/invest-ack.js'; // EventsInvestAck (shared)
+import '../../components/events/seat-picker.js'; // EventsSeatPicker (shared, legacy single-seat)
+import '../../components/events/party-seats.js'; // EventsPartySeats (§13.9 Flow A)
+import '../../components/events/attach-guests.js'; // EventsAttachGuests (§13.9 Flow E)
+import '../../components/events/competition-phases.js'; // EventsCompetitionPhases (shared)
 import '../../components/events/pills.js'; // EventsPills (shared)
 import '../../components/events/card.js'; // EventsCard (shared)
 import './index.js'; // PortalEvents namespace shell
@@ -49,21 +59,26 @@ import './detail/scrapbook.js';
 import './detail/scanner.js';
 import './engagement/rsvp.js';
 import './create/geocode.js';
-import './create/legacy-costs.js';
-import './create/legacy-location.js';
-import './create/legacy-preview.js';
-import './create/legacy-submit.js';
 import './create/step-basics.js';
+import './create/step-about.js';
+import './create/step-included.js';
 import './create/step-when.js';
 import './create/step-pricing.js';
+import './create/step-llc.js';
+import './create/step-competition.js';
+import './create/step-disclaimers.js';
+import './create/step-voting.js';
 import './create/step-review.js';
 import './create/raffle-builder.js';
 import './create/submit.js';
 import './create/sheet.js';
 import './engagement/raffle.js';
 import './manage/shell.js';
+import './manage/pricing-editor.js';
+import './manage/disclaimers-editor.js';
 import './manage/overview.js';
 import './manage/images.js';
+import './manage/ticket-handoff.js';
 import './manage/docs.js';
 import './manage/rsvps.js';
 import './manage/notifications.js';

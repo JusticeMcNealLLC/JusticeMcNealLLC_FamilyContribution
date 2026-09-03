@@ -1,0 +1,69 @@
+---
+description: Mobile / PWA layout — breakpoints, safe areas, bottom bar
+alwaysApply: true
+---
+
+# Mobile Layout
+
+Portal is **mobile-first** and installable as a PWA. Respect the phone chrome (notch, Dynamic Island, home indicator) and the bottom tab bar.
+
+## Viewport
+
+Portal / admin shell pages:
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+```
+
+`viewport-fit=cover` is required for `env(safe-area-inset-*)` to work on iPhone.
+
+## Breakpoints (project convention)
+
+| Width | Use |
+|-------|-----|
+| `< 640px` | Phone — single column, touch targets |
+| `< 768px` | Mobile shell — bottom tab bar, hide desktop sidebar |
+| `≥ 768px` | Desktop shell — sidebar, hide bottom tabs |
+| `≥ 1024px` | Wide layouts / multi-column where useful |
+
+Prefer mobile-first: base styles for phone, then `@media (min-width: …)`.
+
+## Safe areas
+
+Use CSS env vars — never hard-code notch/home-indicator height:
+
+- `env(safe-area-inset-top)`
+- `env(safe-area-inset-bottom)`
+- `env(safe-area-inset-left)` / `right` when full-bleed edge UI needs it
+
+Examples:
+
+```css
+padding-top: max(1rem, env(safe-area-inset-top, 0px));
+padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+```
+
+Fixed top chrome (mobile header) and fixed bottom chrome (tab bar / drawer) must include the matching inset.
+
+## Bottom tab bar
+
+- Portal pages with shell: `body` class `has-bottom-bar`
+- On `max-width: 767px`, `.has-bottom-bar` adds bottom padding for the tab bar + home indicator (`css/shared.css`)
+- Tab bar itself pads with `env(safe-area-inset-bottom)`
+- Do **not** put primary CTAs under the tab bar without extra clearance
+
+## Shell checklist (portal pages)
+
+- [ ] `viewport-fit=cover`
+- [ ] `has-bottom-bar` when using pageShell tabs
+- [ ] `#nav-placeholder`, `#footer-placeholder`, `#tabs-placeholder`
+- [ ] Content not trapped under notch or dock
+- [ ] Touch targets ≥ ~44px where possible
+- [ ] No hover-only critical actions on mobile
+
+## Anti-patterns
+
+- Missing `viewport-fit=cover` then using safe-area env vars
+- Fixed `bottom: 0` buttons that ignore tab bar + home indicator
+- Desktop-only hover menus with no tap equivalent
+- Horizontal overflow from fixed widths / large grids without wrapping

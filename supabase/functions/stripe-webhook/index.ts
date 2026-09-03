@@ -5,6 +5,27 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno&no-check'
 import { upsertEventSmsRecipient, trySendEventRsvpConfirmation } from '../_shared/sms.ts'
+import { ensurePartyAndSeat, normalizeIncludedItems, parseSeatOptionsMetadata } from '../_shared/included-items.ts'
+import {
+  acksPayload,
+  hasRequiredDisclaimers,
+  normalizeDisclaimers,
+  parseAcksMetadata,
+} from '../_shared/disclaimers.ts'
+import { normalizeSeatRole } from '../_shared/event-pricing.ts'
+import { completePaidRsvpAfterCheckout } from '../_shared/paid-rsvp-prep.ts'
+import {
+  applyCheckoutSessionExpired,
+  applyInstallmentFailed,
+  applyInstallmentProcessing,
+  applyInstallmentSucceeded,
+} from '../_shared/payment-schedule-webhook.ts'
+import { notifyPartyPaymentFailed } from '../_shared/event-payment-sms.ts'
+import {
+  claimStripeWebhookEvent,
+  extractWebhookMetaHints,
+  finalizeStripeWebhookEvent,
+} from '../_shared/stripe-webhook-events.ts'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   apiVersion: '2023-10-16',
@@ -22,20 +43,55 @@ serve(async (req) => {
     return new Response('No signature', { status: 400 })
   }
 
+  let claimedEventId: string | null = null
+  let supabase: ReturnType<typeof createClient> | null = null
+
   try {
     const body = await req.text()
-    
+
     // Verify webhook signature (use async version for Deno)
     const event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret)
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    console.log('Processing webhook event:', event.type)
+    const hints = extractWebhookMetaHints(event.type, event.data?.object)
+    const claim = await claimStripeWebhookEvent(supabase, {
+      stripeEventId: event.id,
+      eventType: event.type,
+      jmType: hints.jmType,
+    })
+
+    if (claim.duplicate) {
+      console.log('Duplicate Stripe event skipped:', event.id, event.type)
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        headers: { 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    }
+
+    claimedEventId = claim.stripe_event_id
+    console.log('Processing webhook event:', event.type, event.id)
 
     // Handle different event types
     switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutCompleted(supabase, event.data.object)
+        break
+
+      case 'checkout.session.expired':
+        await handleCheckoutExpired(supabase, event.data.object)
+        break
+
+      case 'payment_intent.succeeded':
+        await handlePaymentIntentSucceeded(supabase, event.data.object)
+        break
+
+      case 'payment_intent.payment_failed':
+        await handlePaymentIntentFailed(supabase, event.data.object)
+        break
+
+      case 'payment_intent.processing':
+        await handlePaymentIntentProcessing(supabase, event.data.object)
         break
 
       case 'customer.subscription.created':
@@ -71,16 +127,30 @@ serve(async (req) => {
         console.log('Unhandled event type:', event.type)
     }
 
+    await finalizeStripeWebhookEvent(supabase, {
+      stripeEventId: claimedEventId,
+      status: 'processed',
+      planId: hints.planId,
+      installmentId: hints.installmentId,
+      jmType: hints.jmType,
+    })
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { 'Content-Type': 'application/json' },
       status: 200,
     })
-
   } catch (error) {
     console.error('Webhook error:', error)
+    if (supabase && claimedEventId) {
+      await finalizeStripeWebhookEvent(supabase, {
+        stripeEventId: claimedEventId,
+        status: 'error',
+        errorMessage: (error as Error).message || String(error),
+      })
+    }
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 400 }
+      JSON.stringify({ error: (error as Error).message }),
+      { status: 400 },
     )
   }
 })
@@ -95,6 +165,17 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
     return
   }
 
+  // §13.10 — Update payment method (setup Checkout)
+  if (session.mode === 'setup') {
+    if (
+      session.metadata?.jm_type === 'event_party_plan'
+      && session.metadata?.kind === 'pm_update'
+    ) {
+      await handleEventPmUpdateCheckout(supabase, session)
+    }
+    return
+  }
+
   // Handle one-time payment (extra deposit)
   if (session.mode === 'payment') {
     const paymentType = session.metadata?.payment_type
@@ -102,6 +183,15 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
 
     // ── Event RSVP Payment ─────────────────────────────────
     if (paymentType === 'event_rsvp') {
+      // Early payoff / failed-installment retry — rollup only, do not re-run RSVP upsert
+      if (session.metadata?.kind === 'payoff' || session.metadata?.jm_payoff === '1') {
+        await handleEventPayoffCheckout(supabase, session)
+        return
+      }
+      if (session.metadata?.kind === 'retry') {
+        await handleEventRetryCheckout(supabase, session)
+        return
+      }
       await handleEventRsvpPayment(supabase, session)
       return
     }
@@ -194,6 +284,344 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
   }
 }
 
+// Resolve PaymentMethod id from Checkout Session (expand PI when needed) — §13.10 ACH
+async function resolveCheckoutPaymentMethodId(
+  session: Stripe.Checkout.Session,
+): Promise<string | null> {
+  const direct = (session as any).payment_method
+  if (typeof direct === 'string' && direct) return direct
+  if (direct && typeof direct === 'object' && direct.id) return String(direct.id)
+
+  const piRef = session.payment_intent
+  if (!piRef) return null
+
+  try {
+    if (typeof piRef === 'object' && piRef !== null) {
+      const pm = (piRef as Stripe.PaymentIntent).payment_method
+      if (typeof pm === 'string' && pm) return pm
+      if (pm && typeof pm === 'object' && (pm as Stripe.PaymentMethod).id) {
+        return String((pm as Stripe.PaymentMethod).id)
+      }
+    }
+
+    const piId = typeof piRef === 'string' ? piRef : (piRef as Stripe.PaymentIntent).id
+    if (!piId) return null
+    const pi = await stripe.paymentIntents.retrieve(piId)
+    const pm = pi.payment_method
+    if (typeof pm === 'string' && pm) return pm
+    if (pm && typeof pm === 'object' && (pm as Stripe.PaymentMethod).id) {
+      return String((pm as Stripe.PaymentMethod).id)
+    }
+  } catch (err) {
+    console.error('Failed to resolve PaymentMethod from checkout session:', err)
+  }
+  return null
+}
+
+// Resolve event-party installment from PI metadata / DB / Checkout session
+async function resolvePartyInstallmentFromPi(
+  supabase: any,
+  pi: Stripe.PaymentIntent,
+): Promise<{
+  installmentId: string | null
+  planId: string | null
+  customerId: string | null
+  paymentMethodId: string | null
+}> {
+  const meta = pi.metadata || {}
+  let installmentId = meta.installment_id ? String(meta.installment_id).trim() : ''
+  let planId = meta.plan_id ? String(meta.plan_id).trim() : ''
+  let customerId =
+    typeof pi.customer === 'string'
+      ? pi.customer
+      : pi.customer && typeof pi.customer === 'object'
+        ? (pi.customer as Stripe.Customer).id
+        : null
+  let paymentMethodId =
+    typeof pi.payment_method === 'string'
+      ? pi.payment_method
+      : pi.payment_method && typeof pi.payment_method === 'object'
+        ? (pi.payment_method as Stripe.PaymentMethod).id
+        : null
+
+  if (!installmentId) {
+    const { data: byPi } = await supabase
+      .from('event_payment_installments')
+      .select('id, plan_id')
+      .eq('stripe_payment_intent_id', pi.id)
+      .maybeSingle()
+    if (byPi?.id) {
+      installmentId = String(byPi.id)
+      if (!planId && byPi.plan_id) planId = String(byPi.plan_id)
+    }
+  }
+
+  if (!installmentId || !planId) {
+    try {
+      const sessions = await stripe.checkout.sessions.list({ payment_intent: pi.id, limit: 1 })
+      const session = sessions.data?.[0]
+      if (session?.metadata?.jm_type === 'event_party_plan') {
+        if (!planId && session.metadata.plan_id) planId = String(session.metadata.plan_id).trim()
+        if (!installmentId && session.metadata.installment_id) {
+          installmentId = String(session.metadata.installment_id).trim()
+        }
+        if (!customerId && session.customer) {
+          customerId = typeof session.customer === 'string'
+            ? session.customer
+            : (session.customer as Stripe.Customer).id
+        }
+        if (!paymentMethodId) {
+          paymentMethodId = await resolveCheckoutPaymentMethodId(session)
+        }
+      }
+    } catch (err) {
+      console.error('resolvePartyInstallmentFromPi: session lookup failed', err)
+    }
+  }
+
+  if (!installmentId && planId) {
+    const { data: first } = await supabase
+      .from('event_payment_installments')
+      .select('id')
+      .eq('plan_id', planId)
+      .eq('sequence', 1)
+      .maybeSingle()
+    if (first?.id) installmentId = String(first.id)
+  }
+
+  // Only treat as party-plan if we have installment or explicit jm_type
+  if (!installmentId && meta.jm_type !== 'event_party_plan' && meta.payment_type !== 'event_rsvp') {
+    return { installmentId: null, planId: null, customerId, paymentMethodId }
+  }
+
+  return {
+    installmentId: installmentId || null,
+    planId: planId || null,
+    customerId,
+    paymentMethodId,
+  }
+}
+
+async function handleCheckoutExpired(supabase: any, session: Stripe.Checkout.Session) {
+  if (session.metadata?.jm_type !== 'event_party_plan') return
+  const planId = session.metadata?.plan_id ? String(session.metadata.plan_id).trim() : ''
+  const installmentId = session.metadata?.installment_id
+    ? String(session.metadata.installment_id).trim()
+    : ''
+  if (!planId) return
+  console.log('Checkout expired for party plan:', planId)
+  await applyCheckoutSessionExpired(supabase, { planId, installmentId })
+}
+
+async function handleEventPayoffCheckout(supabase: any, session: Stripe.Checkout.Session) {
+  const installmentId = session.metadata?.installment_id
+    ? String(session.metadata.installment_id).trim()
+    : ''
+  if (!installmentId) {
+    console.error('Payoff checkout missing installment_id:', session.id)
+    return
+  }
+  const paymentIntentId =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent && typeof session.payment_intent === 'object'
+        ? (session.payment_intent as Stripe.PaymentIntent).id
+        : null
+  if (!paymentIntentId) {
+    console.error('Payoff checkout missing payment_intent:', session.id)
+    return
+  }
+  const customerId =
+    typeof session.customer === 'string'
+      ? session.customer
+      : session.customer && typeof session.customer === 'object'
+        ? (session.customer as Stripe.Customer).id
+        : null
+  const paymentMethodId = await resolveCheckoutPaymentMethodId(session)
+  const amountPaid = session.amount_total || 0
+
+  console.log('Payoff checkout completed:', session.id, installmentId)
+  await applyInstallmentSucceeded(supabase, {
+    installmentId,
+    paymentIntentId,
+    amountCents: amountPaid,
+    customerId,
+    paymentMethodId,
+  })
+}
+
+async function handleEventRetryCheckout(supabase: any, session: Stripe.Checkout.Session) {
+  const installmentId = session.metadata?.installment_id
+    ? String(session.metadata.installment_id).trim()
+    : ''
+  if (!installmentId) {
+    console.error('Retry checkout missing installment_id:', session.id)
+    return
+  }
+  const paymentIntentId =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent && typeof session.payment_intent === 'object'
+        ? (session.payment_intent as Stripe.PaymentIntent).id
+        : null
+  if (!paymentIntentId) {
+    console.error('Retry checkout missing payment_intent:', session.id)
+    return
+  }
+  const customerId =
+    typeof session.customer === 'string'
+      ? session.customer
+      : session.customer && typeof session.customer === 'object'
+        ? (session.customer as Stripe.Customer).id
+        : null
+  const paymentMethodId = await resolveCheckoutPaymentMethodId(session)
+  const amountPaid = session.amount_total || 0
+
+  console.log('Retry checkout completed:', session.id, installmentId)
+  await applyInstallmentSucceeded(supabase, {
+    installmentId,
+    paymentIntentId,
+    amountCents: amountPaid,
+    customerId,
+    paymentMethodId,
+  })
+}
+
+async function resolveSetupSessionPaymentMethodId(
+  session: Stripe.Checkout.Session,
+): Promise<string | null> {
+  const siRef = session.setup_intent
+  if (!siRef) return null
+  try {
+    if (typeof siRef === 'object' && siRef !== null) {
+      const pm = (siRef as Stripe.SetupIntent).payment_method
+      if (typeof pm === 'string' && pm) return pm
+      if (pm && typeof pm === 'object' && (pm as Stripe.PaymentMethod).id) {
+        return String((pm as Stripe.PaymentMethod).id)
+      }
+    }
+    const siId = typeof siRef === 'string' ? siRef : (siRef as Stripe.SetupIntent).id
+    if (!siId) return null
+    const si = await stripe.setupIntents.retrieve(siId)
+    const pm = si.payment_method
+    if (typeof pm === 'string' && pm) return pm
+    if (pm && typeof pm === 'object' && (pm as Stripe.PaymentMethod).id) {
+      return String((pm as Stripe.PaymentMethod).id)
+    }
+  } catch (err) {
+    console.error('Failed to resolve PaymentMethod from setup session:', err)
+  }
+  return null
+}
+
+async function handleEventPmUpdateCheckout(supabase: any, session: Stripe.Checkout.Session) {
+  const planId = session.metadata?.plan_id ? String(session.metadata.plan_id).trim() : ''
+  if (!planId) {
+    console.error('PM update checkout missing plan_id:', session.id)
+    return
+  }
+  const customerId =
+    typeof session.customer === 'string'
+      ? session.customer
+      : session.customer && typeof session.customer === 'object'
+        ? (session.customer as Stripe.Customer).id
+        : null
+  const paymentMethodId = await resolveSetupSessionPaymentMethodId(session)
+  if (!paymentMethodId) {
+    console.error('PM update checkout missing payment_method:', session.id)
+    return
+  }
+
+  if (customerId) {
+    try {
+      await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId })
+    } catch (attachErr: any) {
+      // Already attached is fine
+      if (attachErr?.code !== 'resource_already_exists') {
+        console.error('PM attach on update (non-fatal):', attachErr?.message || attachErr)
+      }
+    }
+    try {
+      await stripe.customers.update(customerId, {
+        invoice_settings: { default_payment_method: paymentMethodId },
+      })
+    } catch (custErr) {
+      console.error('Customer default PM update (non-fatal):', custErr)
+    }
+  }
+
+  const nowIso = new Date().toISOString()
+  const update: Record<string, unknown> = {
+    stripe_payment_method_id: paymentMethodId,
+    updated_at: nowIso,
+  }
+  if (customerId) update.stripe_customer_id = customerId
+
+  // Leave past_due as-is — payer still needs Retry for the failed installment
+  const { error } = await supabase
+    .from('event_payment_plans')
+    .update(update)
+    .eq('id', planId)
+  if (error) {
+    console.error('PM update plan persist failed:', error.message)
+    return
+  }
+  console.log('PM update persisted for plan:', planId, paymentMethodId)
+}
+
+// §13.10 — PI succeeded: PM persist + installment/plan rollup (idempotent)
+async function handlePaymentIntentSucceeded(supabase: any, pi: Stripe.PaymentIntent) {
+  const resolved = await resolvePartyInstallmentFromPi(supabase, pi)
+  if (!resolved.installmentId) {
+    // Legacy non-party PIs — ignore
+    return
+  }
+
+  const amountCents = typeof pi.amount_received === 'number' && pi.amount_received > 0
+    ? pi.amount_received
+    : (typeof pi.amount === 'number' ? pi.amount : null)
+
+  console.log('Party plan PI.succeeded:', pi.id, 'installment', resolved.installmentId)
+  await applyInstallmentSucceeded(supabase, {
+    installmentId: resolved.installmentId,
+    paymentIntentId: pi.id,
+    amountCents,
+    customerId: resolved.customerId,
+    paymentMethodId: resolved.paymentMethodId,
+  })
+}
+
+async function handlePaymentIntentFailed(supabase: any, pi: Stripe.PaymentIntent) {
+  const resolved = await resolvePartyInstallmentFromPi(supabase, pi)
+  if (!resolved.installmentId) return
+
+  const failureMessage = pi.last_payment_error?.message || null
+  console.log('Party plan PI.payment_failed:', pi.id, failureMessage)
+  const result = await applyInstallmentFailed(supabase, {
+    installmentId: resolved.installmentId,
+    paymentIntentId: pi.id,
+    failureMessage,
+    markPlanPastDue: true,
+  })
+  if (result.applied && result.planId) {
+    await notifyPartyPaymentFailed(supabase, {
+      planId: result.planId,
+      installmentId: resolved.installmentId,
+    })
+  }
+}
+
+async function handlePaymentIntentProcessing(supabase: any, pi: Stripe.PaymentIntent) {
+  const resolved = await resolvePartyInstallmentFromPi(supabase, pi)
+  if (!resolved.installmentId) return
+
+  console.log('Party plan PI.processing:', pi.id)
+  await applyInstallmentProcessing(supabase, {
+    installmentId: resolved.installmentId,
+    paymentIntentId: pi.id,
+  })
+}
+
 // Handler: Event RSVP payment completed
 async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Session) {
   const eventId = session.metadata?.event_id
@@ -203,8 +631,114 @@ async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Se
   }
 
   const amountPaid = session.amount_total || 0
-  const paymentIntentId = session.payment_intent as string || null
+  const paymentIntentId =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent && typeof session.payment_intent === 'object'
+        ? (session.payment_intent as Stripe.PaymentIntent).id
+        : null
   const isGuest = !session.metadata?.supabase_user_id
+  const customerId =
+    typeof session.customer === 'string'
+      ? session.customer
+      : session.customer && typeof session.customer === 'object'
+        ? (session.customer as Stripe.Customer).id
+        : null
+  const paymentMethodId = await resolveCheckoutPaymentMethodId(session)
+
+  const prepCompletion = await completePaidRsvpAfterCheckout(supabase, {
+    session,
+    eventId,
+    amountPaid,
+    paymentIntentId,
+    isGuest,
+    customerId,
+    paymentMethodId,
+  })
+
+  if (prepCompletion.usedPrepPath) {
+    if (isGuest) {
+      const guestName = session.metadata?.guest_name
+      const guestEmail = session.metadata?.guest_email?.trim().toLowerCase()
+      const guestToken = session.metadata?.guest_token
+      const guestRsvpId = prepCompletion.guestRsvpId
+
+      if (!prepCompletion.alreadyComplete && guestRsvpId) {
+        const guestPhone = session.metadata?.guest_phone
+        const smsOptIn = session.metadata?.sms_opt_in === 'true'
+        if (guestPhone && smsOptIn) {
+          const smsUpsert = await upsertEventSmsRecipient(supabase, {
+            event_id: eventId,
+            phone_raw: guestPhone,
+            sms_opt_in: true,
+            sms_consent_text_version: session.metadata?.sms_consent_text_version || 'event_sms_v1',
+            display_name: guestName,
+            email: guestEmail,
+            guest_rsvp_id: guestRsvpId,
+            consent_source: 'guest_rsvp',
+          })
+          await trySendEventRsvpConfirmation(supabase, { event_id: eventId, upsert_result: smsUpsert })
+        }
+      }
+
+      const { data: event } = await supabase
+        .from('events')
+        .select('pricing_mode, raffle_enabled')
+        .eq('id', eventId)
+        .single()
+
+      if (event?.raffle_enabled && event.pricing_mode === 'paid' && guestToken && !prepCompletion.alreadyComplete) {
+        const { error: raffleErr } = await supabase.from('event_raffle_entries').insert({
+          event_id: eventId,
+          guest_token: guestToken,
+          paid: true,
+          stripe_payment_intent_id: paymentIntentId,
+          amount_paid_cents: 0,
+        })
+        if (raffleErr) {
+          console.error('Error creating bundled guest raffle entry:', raffleErr)
+        }
+      }
+    } else {
+      const userId = session.metadata!.supabase_user_id
+      const { data: eventFull } = await supabase
+        .from('events')
+        .select('event_type, cost_breakdown_locked, pricing_mode, raffle_enabled')
+        .eq('id', eventId)
+        .single()
+
+      if (eventFull?.event_type === 'llc' && !eventFull.cost_breakdown_locked) {
+        await supabase.from('events').update({ cost_breakdown_locked: true }).eq('id', eventId)
+        console.log('Cost breakdown locked after first payment for event:', eventId)
+      }
+
+      if (session.metadata?.from_waitlist === 'true') {
+        await supabase
+          .from('event_waitlist')
+          .update({ status: 'claimed' })
+          .eq('event_id', eventId)
+          .eq('user_id', userId)
+          .in('status', ['offered', 'claimed'])
+        console.log('Waitlist spot claimed for user:', userId)
+      }
+
+      if (!prepCompletion.alreadyComplete && eventFull?.raffle_enabled && eventFull.pricing_mode === 'paid') {
+        const { error: raffleErr } = await supabase.from('event_raffle_entries').upsert({
+          event_id: eventId,
+          user_id: userId,
+          paid: true,
+          stripe_payment_intent_id: paymentIntentId,
+          amount_paid_cents: 0,
+        }, {
+          onConflict: 'event_id,user_id',
+        })
+        if (raffleErr) {
+          console.error('Error creating bundled raffle entry:', raffleErr)
+        }
+      }
+    }
+    return
+  }
 
   if (isGuest) {
     // ── Guest RSVP ────────────────────────────────────────
@@ -223,6 +757,7 @@ async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Se
       event_id: eventId,
       guest_name: guestName,
       guest_email: guestEmail,
+      guest_phone: session.metadata?.guest_phone || null,
       guest_token: guestToken,
       status: 'going',
       paid: true,
@@ -254,6 +789,41 @@ async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Se
         })
         await trySendEventRsvpConfirmation(supabase, { event_id: eventId, upsert_result: smsUpsert })
       }
+
+      try {
+        const { data: eventForOpts } = await supabase
+          .from('events')
+          .select('included_items, disclaimers')
+          .eq('id', eventId)
+          .single()
+        const catalog = normalizeIncludedItems(eventForOpts?.included_items)
+        const discCatalog = normalizeDisclaimers(eventForOpts?.disclaimers)
+        const seatRole = normalizeSeatRole(session.metadata?.seat_role)
+        if (guestRsvpRow?.id) {
+          const seatOptions = parseSeatOptionsMetadata(session.metadata?.seat_options)
+          const ackIds = parseAcksMetadata(session.metadata?.disclaimer_acks)
+          const disclaimerAcks = acksPayload(discCatalog, ackIds)
+          const amenityVoteOptionId = session.metadata?.amenity_vote_option_id
+            ? String(session.metadata.amenity_vote_option_id).trim()
+            : null
+          await ensurePartyAndSeat({
+            supabase,
+            eventId,
+            catalog,
+            seatOptions,
+            displayName: guestName,
+            partyStatus: 'active',
+            seatRole,
+            phone: session.metadata?.guest_phone || null,
+            disclaimerAcks: disclaimerAcks.length ? disclaimerAcks : undefined,
+            amenityVoteOptionId,
+            amenityVoteStatus: amenityVoteOptionId ? 'counted' : undefined,
+            payer: { kind: 'guest', guestRsvpId: guestRsvpRow.id },
+          })
+        }
+      } catch (partyErr) {
+        console.error('Guest party/seat attach failed:', partyErr)
+      }
     }
 
     // Check for bundled raffle
@@ -284,7 +854,7 @@ async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Se
 
     console.log(`Event RSVP payment: user=${userId}, event=${eventId}, amount=${amountPaid}`)
 
-    const { error } = await supabase.from('event_rsvps').upsert({
+    const { data: memberRsvpRow, error } = await supabase.from('event_rsvps').upsert({
       event_id: eventId,
       user_id: userId,
       status: 'going',
@@ -300,12 +870,56 @@ async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Se
       } : {}),
     }, {
       onConflict: 'event_id,user_id',
-    })
+    }).select('id').single()
 
     if (error) {
       console.error('Error upserting event RSVP:', error)
     } else {
       console.log('Event RSVP confirmed (paid) for user:', userId)
+
+      try {
+        const { data: eventForOpts } = await supabase
+          .from('events')
+          .select('included_items, disclaimers')
+          .eq('id', eventId)
+          .single()
+        const catalog = normalizeIncludedItems(eventForOpts?.included_items)
+        const discCatalog = normalizeDisclaimers(eventForOpts?.disclaimers)
+        const seatRole = normalizeSeatRole(session.metadata?.seat_role)
+        if (memberRsvpRow?.id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, phone')
+            .eq('id', userId)
+            .maybeSingle()
+          const displayName = (
+            [profile?.first_name, profile?.last_name].filter(Boolean).join(' ')
+            || 'Member'
+          ).trim()
+          const seatOptions = parseSeatOptionsMetadata(session.metadata?.seat_options)
+          const ackIds = parseAcksMetadata(session.metadata?.disclaimer_acks)
+          const disclaimerAcks = acksPayload(discCatalog, ackIds)
+          const amenityVoteOptionId = session.metadata?.amenity_vote_option_id
+            ? String(session.metadata.amenity_vote_option_id).trim()
+            : null
+          await ensurePartyAndSeat({
+            supabase,
+            eventId,
+            catalog,
+            seatOptions,
+            displayName,
+            partyStatus: 'active',
+            seatRole,
+            phone: profile?.phone || null,
+            disclaimerAcks: disclaimerAcks.length ? disclaimerAcks : undefined,
+            amenityVoteOptionId,
+            amenityVoteStatus: amenityVoteOptionId ? 'counted' : undefined,
+            payer: { kind: 'member', userId, rsvpId: memberRsvpRow.id },
+          })
+        }
+      } catch (partyErr) {
+        console.error('Member party/seat attach failed:', partyErr)
+      }
     }
 
     // Lock cost breakdown after first payment (LLC events)

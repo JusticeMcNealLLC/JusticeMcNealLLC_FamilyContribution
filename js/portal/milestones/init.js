@@ -32,7 +32,7 @@ async function loadMilestonesData() {
         const activeMembers = memberCountRes.count || 0;
         const minAmountCents = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.MIN_AMOUNT)
             ? APP_CONFIG.MIN_AMOUNT * 100
-            : 3000; // fallback $30
+            : 1000; // fallback $10
         const monthlyPaceCents = activeMembers * minAmountCents;
 
         // Render everything

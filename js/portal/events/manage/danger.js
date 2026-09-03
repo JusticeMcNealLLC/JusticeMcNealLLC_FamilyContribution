@@ -43,7 +43,7 @@ function dangerHtml() {
         ${!isCancelled && !isCompleted ? `
         <div class="em-danger-card">
             <p class="em-danger-title">Cancel event</p>
-            <p class="em-danger-sub">Marks the event as cancelled. Paid RSVPs are NOT auto-refunded — handle refunds in M3b's Money tab or Stripe dashboard.</p>
+            <p class="em-danger-sub">Marks the event as cancelled. Paid RSVPs are NOT auto-refunded. Rare exceptions are manager-approved out-of-band via Stripe Dashboard only.</p>
             <button class="em-btn-danger" data-action="cancel">Cancel event</button>
         </div>` : ''}
 

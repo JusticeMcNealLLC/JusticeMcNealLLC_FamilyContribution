@@ -23,11 +23,14 @@ const STATE = {
     rsvps:   [],
     guestRsvps: [],
     checkins: [],
+    parties: [],
+    seats: [],
     activeTab: 'overview',
     source:  'admin', // 'admin' | 'portal'
     editCopyOnOpen: false,
     tabData: {}, // lazy per-tab cache: { money, docs, raffle, comp, notifications }
     canManageNotifications: false,
+    eventDocuments: [],
 };
 
 const RAFFLE_PRIZE_IMAGE_FILES = {};
@@ -79,23 +82,50 @@ async function _loadEventData(eventId) {
         .single();
     STATE.event = event;
 
-    const { data: rsvps } = await supabaseClient
-        .from('event_rsvps')
-        .select('id, user_id, status, paid, qr_token, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)')
-        .eq('event_id', eventId);
-    STATE.rsvps = rsvps || [];
+    const [
+        rsvpsRes,
+        guestRes,
+        checkinsRes,
+        partiesRes,
+        seatsRes,
+    ] = await Promise.all([
+        supabaseClient
+            .from('event_rsvps')
+            .select('id, user_id, status, paid, qr_token, party_id, invest_eligible_acknowledged, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)')
+            .eq('event_id', eventId),
+        supabaseClient
+            .from('event_guest_rsvps')
+            .select('id, guest_name, guest_email, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at, party_id, attach_requested')
+            .eq('event_id', eventId),
+        supabaseClient
+            .from('event_checkins')
+            .select('user_id, guest_token, checked_in_at')
+            .eq('event_id', eventId),
+        supabaseClient
+            .from('event_parties')
+            .select('id, status, payer_kind, payer_user_id, payer_guest_rsvp_id')
+            .eq('event_id', eventId),
+        supabaseClient
+            .from('event_seats')
+            .select('id, party_id, role, display_name, options, options_complete, info_invite_token, linked_user_id, linked_guest_rsvp_id, sort_order')
+            .eq('event_id', eventId)
+            .order('sort_order', { ascending: true }),
+    ]);
 
-    const { data: guestRsvps } = await supabaseClient
-        .from('event_guest_rsvps')
-        .select('id, guest_name, guest_email, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at')
-        .eq('event_id', eventId);
-    STATE.guestRsvps = guestRsvps || [];
+    STATE.rsvps = rsvpsRes.data || [];
+    STATE.guestRsvps = guestRes.data || [];
+    STATE.checkins = checkinsRes.data || [];
+    STATE.parties = partiesRes.data || [];
+    STATE.seats = seatsRes.data || [];
 
-    const { data: checkins } = await supabaseClient
-        .from('event_checkins')
-        .select('user_id, guest_token, checked_in_at')
-        .eq('event_id', eventId);
-    STATE.checkins = checkins || [];
+    STATE.eventDocuments = [];
+    if (STATE.event?.event_type === 'llc') {
+        const { data: docs } = await supabaseClient
+            .from('event_documents')
+            .select('id, doc_type, target_user_id, distributed')
+            .eq('event_id', eventId);
+        STATE.eventDocuments = docs || [];
+    }
 }
 
 // ─── Open / Close ───────────────────────────────────────────────

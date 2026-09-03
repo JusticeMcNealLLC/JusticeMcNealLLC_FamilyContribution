@@ -2,6 +2,9 @@
 
 'use strict';
 
+import { pricingEditorHtml, wirePricingEditor } from './pricing-editor.js';
+import { disclaimersEditorHtml, wireDisclaimersEditor } from './disclaimers-editor.js';
+
 const PUBLIC_SITE_URL = 'https://justicemcneal.com';
 
 function api() {
@@ -19,6 +22,25 @@ function esc(s) {
 }
 function money(cents) {
     return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', minimumFractionDigits:0, maximumFractionDigits:2 }).format((cents || 0) / 100);
+}
+function adultPriceCents(e) {
+    if (e?.adult_price_cents != null && Number.isFinite(Number(e.adult_price_cents))) {
+        return Number(e.adult_price_cents);
+    }
+    return Number(e?.rsvp_cost_cents || 0);
+}
+function capacityLabel(e) {
+    const mode = e?.capacity_mode || 'none';
+    if (mode === 'none') return 'No limit';
+    const counts = e?.capacity_counts === 'all' ? 'adults + kids' : 'adults only';
+    const cap = mode === 'soft' ? 'Soft cap' : 'Hard cap';
+    const n = e?.max_participants || '—';
+    return `${cap} · ${n} (${counts})`;
+}
+function pricingModeLabel(e) {
+    if (e?.pricing_mode === 'paid') return 'Paid';
+    if (e?.pricing_mode === 'free_paid_raffle') return 'Free + paid raffle';
+    return 'Free';
 }
 function publicEventUrl(event) {
     const slug = event?.slug || '';
@@ -62,7 +84,8 @@ function overviewHtml() {
     const maybe = STATE.rsvps.filter(r => r.status === 'maybe').length;
     const paid  = STATE.rsvps.filter(r => r.paid).length + STATE.guestRsvps.filter(r => r.paid).length;
     const checked = STATE.checkins.length;
-    const revenue = paid * (e.rsvp_cost_cents || 0);
+    const adultCents = adultPriceCents(e);
+    const revenue = paid * adultCents;
     const startLocal = new Date(e.start_date).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
     const isLlc = e.event_type === 'llc';
     const minNeeded = Number(e.min_participants || 0);
@@ -70,7 +93,18 @@ function overviewHtml() {
     const thresholdMet = minNeeded ? going >= minNeeded : false;
     const deadline = e.rsvp_deadline ? new Date(e.rsvp_deadline).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '';
     const transportMode = e.transportation_mode;
+    const transportMethod = e.transportation_method;
     const transportEstimate = e.transportation_estimate_cents ? money(e.transportation_estimate_cents) : '';
+    const ticketHelper = window.EventsManageTicketHandoff;
+    const goingMembers = STATE.rsvps.filter((r) => r.status === 'going');
+    const planeHandoff = isLlc && transportMethod === 'plane' && ticketHelper
+        ? ticketHelper.computePlaneTicketHandoff({
+            goingRsvps: goingMembers,
+            documents: STATE.eventDocuments || [],
+        })
+        : null;
+    const costBreakdown = e.cost_breakdown || {};
+    const budgetIncluded = Number(costBreakdown.total_included_cents) || 0;
     const thresholdCopy = thresholdMet
         ? `${going} confirmed RSVP${going === 1 ? '' : 's'}; minimum was ${minNeeded}${deadline ? ` by ${deadline}` : ''}. This event can stay confirmed.`
         : `${going} of ${minNeeded} required RSVP${minNeeded === 1 ? '' : 's'}${deadline ? ` by ${deadline}` : ''}. ${Math.max(0, minNeeded - going)} more RSVP${minNeeded - going === 1 ? '' : 's'} needed.`;
@@ -87,15 +121,43 @@ function overviewHtml() {
             <div class="em-op-progress"><span style="width:${thresholdPct}%"></span></div>
             <div class="em-op-meta"><span class="em-op-chip">${thresholdPct}% filled</span><button class="em-btn-ghost" data-overview-tab="rsvps">Review RSVPs</button></div>
         </div>` : '';
-    const transportCard = isLlc && transportMode ? `
+    let transportCard = '';
+    if (isLlc && transportMode) {
+        let title = 'Self-arranged';
+        let icon = '🧳';
+        let copy = `Members book travel themselves${transportEstimate ? `, estimated around ${transportEstimate}` : ''}.`;
+        let chip = 'Member-owned';
+        if (transportMode === 'llc_provides') {
+            if (transportMethod === 'plane') {
+                title = 'LLC flights';
+                icon = '✈️';
+                copy = planeHandoff
+                    ? `Tickets: ${planeHandoff.uploaded}/${planeHandoff.total} members uploaded.${planeHandoff.missingCount ? ' Upload per-member plane tickets in Docs.' : ''}`
+                    : 'Upload tickets or boarding documents in Docs when they are ready for members.';
+                chip = 'Ticket handoff';
+            } else if (transportMethod === 'car') {
+                title = 'LLC ground transport';
+                icon = '🚗';
+                copy = 'Travel is by car. Docs can hold itineraries or seat lists if needed — no flight tickets.';
+                chip = 'Ground travel';
+            } else {
+                title = 'LLC provided';
+                icon = '🚐';
+                copy = 'The LLC is arranging travel. Edit the event to specify car or plane.';
+                chip = 'Transport';
+            }
+        }
+        transportCard = `
         <div class="em-card em-op-card">
             <div class="em-op-head">
-                <div><p class="em-op-kicker">Transportation</p><p class="em-op-title">${transportMode === 'llc_provides' ? 'LLC provided' : 'Self-arranged'}</p></div>
-                <span class="em-op-icon">${transportMode === 'llc_provides' ? '✈️' : '🧳'}</span>
+                <div><p class="em-op-kicker">Transportation</p><p class="em-op-title">${title}</p></div>
+                <span class="em-op-icon">${icon}</span>
             </div>
-            <p class="em-op-copy">${transportMode === 'llc_provides' ? 'Upload tickets or travel documents in Docs when they are ready for members.' : `Members book travel themselves${transportEstimate ? `, estimated around ${transportEstimate}` : ''}.`}</p>
-            <div class="em-op-meta"><button class="em-btn-ghost" data-overview-tab="docs">Open Docs</button><span class="em-op-chip">${transportMode === 'llc_provides' ? 'Document handoff' : 'Member-owned'}</span></div>
-        </div>` : '';
+            <p class="em-op-copy">${copy}</p>
+            ${planeHandoff && planeHandoff.total ? `<div class="em-op-progress"><span style="width:${planeHandoff.ticketPct}%"></span></div>` : ''}
+            <div class="em-op-meta"><button class="em-btn-ghost" data-overview-tab="docs">Open Docs</button><span class="em-op-chip">${chip}</span></div>
+        </div>`;
+    }
     const documentsCard = isLlc ? `
         <div class="em-card em-op-card">
             <div class="em-op-head">
@@ -107,8 +169,12 @@ function overviewHtml() {
         </div>` : '';
     const operationsHtml = [thresholdCard, transportCard, documentsCard].filter(Boolean).join('');
     const showFeaturedToggle = typeof canManageEventBanners === 'function' && canManageEventBanners();
+    const llcBudgetLine = isLlc && budgetIncluded > 0
+        ? `<p class="text-xs text-gray-500 mb-4">Trip budget <strong>${money(budgetIncluded)}</strong> · Collected <strong>${money(revenue)}</strong> · <button type="button" class="text-brand-600 font-semibold hover:underline" data-overview-tab="money" style="background:none;border:none;padding:0;cursor:pointer">View Money</button></p>`
+        : (isLlc ? `<p class="text-xs text-gray-500 mb-4">Collected <strong>${money(revenue)}</strong> · <button type="button" class="text-brand-600 font-semibold hover:underline" data-overview-tab="money" style="background:none;border:none;padding:0;cursor:pointer">View Money budget</button></p>` : '');
 
     return `
+        ${llcBudgetLine}
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
             <div class="em-card em-stat"><span class="em-stat-label">Going</span><span class="em-stat-num">${going}${e.max_participants ? `<span style="font-size:14px;color:#9ca3af;font-weight:500">/${e.max_participants}</span>` : ''}</span></div>
             <div class="em-card em-stat"><span class="em-stat-label">Interested</span><span class="em-stat-num" style="color:#db2777">${maybe}</span></div>
@@ -119,15 +185,35 @@ function overviewHtml() {
         ${operationsHtml ? `<div class="em-op-grid">${operationsHtml}</div>` : ''}
 
         <div class="em-card mb-3">
+            <div class="em-section-head" style="margin-bottom:12px">
+                <div>
+                    <h3 class="em-section-title">Full event editor</h3>
+                    <p class="em-section-sub">Edit About, Included, When &amp; Where, pricing${(e.event_type || 'member') === 'llc' ? ', LLC settings,' : ''}${e.event_type === 'competition' ? ' Competition settings,' : ''} and disclaimers in the create sheet.</p>
+                </div>
+            </div>
+            ${(e.event_type || 'member') === 'member' || e.event_type === 'llc' || e.event_type === 'competition'
+                ? `<button type="button" id="emEditEventBtn" class="em-btn-primary">Edit event</button>${e.event_type === 'competition' ? '<p class="text-xs text-gray-500 mt-2">Competition prizes and rules lock after the first competitor registers.</p>' : ''}`
+                : `<p class="text-xs text-gray-500">Sheet editing is available for member, LLC, and competition events.</p>`}
+        </div>
+
+        <div class="em-card mb-3">
             <h3 class="font-bold text-gray-800 text-sm mb-3">Details</h3>
             <div class="space-y-2 text-sm">
                 <div class="flex justify-between gap-3"><span class="text-gray-500">When</span><span class="text-gray-800 font-medium text-right">${startLocal}</span></div>
                 ${e.location_nickname ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Where</span><span class="text-gray-800 font-medium text-right truncate">${esc(e.location_nickname)}</span></div>` : ''}
                 <div class="flex justify-between gap-3"><span class="text-gray-500">Status</span><span class="text-gray-800 font-medium uppercase tracking-wide text-xs">${e.status}</span></div>
-                <div class="flex justify-between gap-3"><span class="text-gray-500">Pricing</span><span class="text-gray-800 font-medium">${e.pricing_mode === 'paid' ? `Paid · ${money(e.rsvp_cost_cents)}` : 'Free'}</span></div>
+                <div class="flex justify-between gap-3"><span class="text-gray-500">Pricing</span><span class="text-gray-800 font-medium">${pricingModeLabel(e)}</span></div>
+                ${e.pricing_mode === 'paid' ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Adult price</span><span class="text-gray-800 font-medium">${money(adultCents)}</span></div>` : ''}
+                ${e.pricing_mode === 'paid' ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Kids</span><span class="text-gray-800 font-medium">${e.kids_free !== false ? 'Free' : `${money(e.kid_price_cents)} per child`}</span></div>` : ''}
+                ${e.fund_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Fund deadline</span><span class="text-gray-800 font-medium">${new Date(e.fund_deadline).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span></div>` : ''}
+                <div class="flex justify-between gap-3"><span class="text-gray-500">Capacity</span><span class="text-gray-800 font-medium text-right">${esc(capacityLabel(e))}</span></div>
                 ${e.rsvp_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">RSVP deadline</span><span class="text-gray-800 font-medium">${new Date(e.rsvp_deadline).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span></div>` : ''}
             </div>
         </div>
+
+        ${pricingEditorHtml(STATE)}
+
+        ${disclaimersEditorHtml(STATE)}
 
         <div class="em-card mb-3" id="emCopyEditorCard">
             <div class="em-section-head" style="margin-bottom:12px">
@@ -224,6 +310,20 @@ function wireOverview() {
             api().renderTabs?.();
             api().renderTab?.(STATE.activeTab);
         });
+    });
+    wirePricingEditor();
+    wireDisclaimersEditor();
+    document.getElementById('emEditEventBtn')?.addEventListener('click', () => {
+        const eventId = STATE.eventId || STATE.event?.id;
+        if (!eventId) return;
+        if (window.EventsManage && typeof window.EventsManage.close === 'function') {
+            window.EventsManage.close();
+        }
+        setTimeout(() => {
+            if (window.EventsCreate && typeof window.EventsCreate.open === 'function') {
+                window.EventsCreate.open({ eventId });
+            }
+        }, 200);
     });
     const copyForm = document.getElementById('emCopyForm');
     const copyTitle = document.getElementById('emCopyTitle');

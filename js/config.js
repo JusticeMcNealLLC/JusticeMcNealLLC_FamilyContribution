@@ -10,7 +10,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 // App Configuration
 const APP_CONFIG = {
     // Contribution limits
-    MIN_AMOUNT: 30,
+    MIN_AMOUNT: 10,
     MAX_AMOUNT: 250,
     
     // URLs

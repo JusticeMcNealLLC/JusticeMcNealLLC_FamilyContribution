@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>My trip payments | Justice McNeal LLC</title>
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#13366E">
+    <link rel="stylesheet" href="../../theme/Theme_JMLLC001/Theme_JMLLC001.css">
+    <link rel="stylesheet" href="../../css/shared.css">
+    <style>
+        body.payments-page {
+            margin: 0;
+            font-family: var(--font-body, system-ui, sans-serif);
+            color: var(--color-text, #0B2545);
+            background: var(--color-background, #fff);
+            min-height: 100dvh;
+            padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+        }
+        .payments-wrap {
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        .payments-brand {
+            font-family: var(--font-headline, Georgia, serif);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-primary, #13366E);
+            margin: 0 0 1.25rem;
+        }
+        .payments-card {
+            border: 1.5px solid var(--color-border, #D5DFEC);
+            border-radius: 12px;
+            background: var(--color-surface, #EEF2F6);
+            padding: 1.25rem;
+        }
+        .payments-card h1 {
+            font-family: var(--font-headline, Georgia, serif);
+            font-size: 1.35rem;
+            margin: 0 0 0.35rem;
+            color: var(--color-text, #0B2545);
+        }
+        .payments-sub {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0 0 1rem;
+        }
+        .payments-banner {
+            border-radius: 10px;
+            padding: 0.75rem 0.9rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .payments-banner--warn {
+            background: #fff7ed;
+            border: 1px solid #fdba74;
+            color: #9a3412;
+        }
+        .payments-banner--ok {
+            background: #ecfdf5;
+            border: 1px solid #6ee7b7;
+            color: #065f46;
+        }
+        .payments-banner--info {
+            background: #fff;
+            border: 1px solid var(--color-border, #D5DFEC);
+            color: var(--color-text, #0B2545);
+            font-weight: 500;
+        }
+        .payments-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            font-size: 0.95rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--color-border, #D5DFEC);
+        }
+        .payments-row:last-of-type { border-bottom: none; }
+        .payments-row span:last-child { font-weight: 600; }
+        .payments-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            margin-top: 1.25rem;
+        }
+        .payments-btn {
+            width: 100%;
+            min-height: 44px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .payments-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .payments-btn--primary {
+            border: none;
+            background: var(--color-primary, #13366E);
+            color: #fff;
+        }
+        .payments-btn--secondary {
+            border: 1.5px solid var(--color-primary, #13366E);
+            background: #fff;
+            color: var(--color-primary, #13366E);
+        }
+        .payments-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--color-primary, #13366E);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .payments-error,
+        .payments-loading {
+            text-align: center;
+            padding: 2rem 0.5rem;
+            color: #6b7280;
+        }
+        .payments-error h1 {
+            font-family: var(--font-headline, Georgia, serif);
+            font-size: 1.35rem;
+            margin: 0 0 0.5rem;
+            color: var(--color-text, #0B2545);
+        }
+    </style>
+</head>
+<body class="payments-page antialiased">
+    <div class="payments-wrap">
+        <p class="payments-brand">Justice McNeal LLC</p>
+        <div id="paymentsRoot">
+            <p class="payments-loading">Loading your payments…</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../js/config.js"></script>
+    <script src="../../js/events/payments.js?v=174"></script>
+</body>
+</html>

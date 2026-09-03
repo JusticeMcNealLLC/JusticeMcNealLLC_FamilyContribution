@@ -62,6 +62,14 @@ function evtRunDetailPostRenderBasics(ctx) {
         window.evtLoadComments(eventId);
     }
 
+    if (window.EventsAboutTabs && typeof window.EventsAboutTabs.wireAboutTabs === 'function') {
+        window.EventsAboutTabs.wireAboutTabs(document.getElementById('eventsDetailView'));
+    }
+
+    if (typeof globalThis.evtWireSeatPickerPrep === 'function' && ctx && ctx.event && ctx.eventId) {
+        globalThis.evtWireSeatPickerPrep(ctx.eventId, ctx.event);
+    }
+
     _bindHostDropdownOutsideClick();
     _paintAttendeeAvatars(eventId);
 }
@@ -142,6 +150,9 @@ function evtRunDetailPostRenderUi(ctx) {
         isClosed,
         rsvp,
         myRaffleEntry,
+        myCompetitionEntry,
+        competitionPhases,
+        myCompVote,
         entriesClosed,
         eventIsFull,
         isHost,
@@ -182,7 +193,19 @@ function evtRunDetailPostRenderUi(ctx) {
         canCreateTeamChat,
     };
     if (typeof globalThis.evtInitBottomNav === 'function') {
-        window.evtInitBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, eventIsFull, isHost, canAccessTeamHub);
+        window.evtInitBottomNav(
+            event,
+            eventId,
+            rsvp,
+            myRaffleEntry,
+            entriesClosed,
+            eventIsFull,
+            isHost,
+            canAccessTeamHub,
+            myCompetitionEntry,
+            competitionPhases,
+            myCompVote,
+        );
     }
 }
 

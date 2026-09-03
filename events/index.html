@@ -25,9 +25,9 @@
     <meta name="theme-color" content="#4f46e5">
     <!-- Leaflet.js for event map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-    <link rel="stylesheet" href="../css/pages/events/detail.css">
-    <link rel="stylesheet" href="../css/pages/portal/events/detail.css">
-    <link rel="stylesheet" href="../css/pages/public-event.css">
+    <link rel="stylesheet" href="../css/pages/events/detail.css?v=164">
+    <link rel="stylesheet" href="../css/pages/portal/events/detail.css?v=164">
+    <link rel="stylesheet" href="../css/pages/public-event.css?v=164">
 </head>
 <body class="antialiased">
 
@@ -149,10 +149,17 @@
         <!-- Guest RSVP Form -->
         <div id="guestRsvpSection" class="hidden evt-section">
             <h3 class="evt-section-title" style="font-size:18px">RSVP as a Guest</h3>
-            <p style="font-size:14px;color:#717171;margin-bottom:16px">No account needed — just enter your name and email.</p>
+            <p style="font-size:14px;color:#717171;margin-bottom:16px">No account needed — enter your name, email, and phone.</p>
             <div style="display:flex;flex-direction:column;gap:12px">
                 <input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name">
                 <input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address">
+                <input type="tel" id="guestPhoneInput" placeholder="Phone number" class="evt-input" required aria-label="Phone number">
+                <div id="guestSeatPicker"></div>
+                <div id="guestIncludedOptions"></div>
+                <div id="guestDisclaimerAcks"></div>
+                <div id="guestAmenityVote"></div>
+                <div id="guestPayIntent"></div>
+                <div id="guestPaymentChoice"></div>
                 <label class="evt-checkbox-label hidden">
                     <input type="checkbox" id="guestNoRefundCheck">
                     <span>I understand this payment is non-refundable unless cancelled by staff.</span>
@@ -287,15 +294,24 @@
     <script src="../js/config.js"></script>
     <!-- Shared event modules (M0 — load first) -->
     <script src="../js/components/events/constants.js"></script>
-    <script src="../js/components/events/helpers.js"></script>
+    <script src="../js/components/events/helpers.js?v=172"></script>
+    <script src="../js/components/events/seat-picker.js?v=172"></script>
+    <script src="../js/components/events/party-seats.js?v=172"></script>
+    <script src="../js/components/events/included-items.js?v=172"></script>
+    <script src="../js/components/events/disclaimers.js?v=172"></script>
+    <script src="../js/components/events/amenity-voting.js?v=172"></script>
+    <script src="../js/components/events/payment-choice.js?v=172"></script>
+    <script src="../js/components/events/invest-ack.js?v=172"></script>
+    <script src="../js/components/events/attach-guests.js?v=172"></script>
+    <script src="../js/components/events/about-tabs.js?v=172"></script>
     <script src="../js/components/events/pills.js"></script>
     <script src="../js/components/events/card.js"></script>
     <script src="../js/portal/events/core/raffle-model.js"></script>
-    <script src="../js/events/index.js"></script>
-    <script src="../js/events/hero.js"></script>
-    <script src="../js/events/body.js"></script>
-    <script src="../js/events/rsvp.js"></script>
-    <script src="../js/events/raffle.js"></script>
-    <script src="../js/events/ticket.js"></script>
+    <script src="../js/events/index.js?v=172"></script>
+    <script src="../js/events/hero.js?v=172"></script>
+    <script src="../js/events/body.js?v=172"></script>
+    <script src="../js/events/rsvp.js?v=172"></script>
+    <script src="../js/events/raffle.js?v=172"></script>
+    <script src="../js/events/ticket.js?v=172"></script>
 </body>
 </html>

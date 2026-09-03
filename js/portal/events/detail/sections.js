@@ -12,6 +12,225 @@ const _edPill = window.evtEdPill;
 const _edNotice = window.evtEdNotice;
 const _edSectionHead = window.evtEdSectionHead;
 
+function evtDetailAdultPriceCents(event) {
+    if (event?.adult_price_cents != null && Number.isFinite(Number(event.adult_price_cents))) {
+        return Number(event.adult_price_cents);
+    }
+    return Number(event?.rsvp_cost_cents || 0);
+}
+
+function evtBuildDetailPriceSummaryHtml(ctx) {
+    const { event, deadlinePassed } = ctx;
+    if (!event || event.event_type === 'competition' || event.rsvp_enabled === false) {
+        return '';
+    }
+
+    const rows = [];
+    const pricingMode = event.pricing_mode || 'free';
+
+    if (pricingMode === 'paid') {
+        rows.push({
+            label: 'Adult',
+            main: formatCurrency(evtDetailAdultPriceCents(event)),
+            sub: 'Per adult seat',
+        });
+        if (event.kids_free !== false) {
+            rows.push({ label: 'Kids', main: 'Free', sub: 'Children included' });
+        } else {
+            rows.push({
+                label: 'Kids',
+                main: formatCurrency(event.kid_price_cents || 0),
+                sub: 'Per child seat',
+            });
+        }
+    } else if (pricingMode === 'free_paid_raffle') {
+        rows.push({ label: 'RSVP', main: 'Free', sub: 'Paid raffle optional' });
+    } else {
+        rows.push({ label: 'RSVP', main: 'Free', sub: 'No payment required' });
+    }
+
+    if (event.rsvp_deadline) {
+        const dl = new Date(event.rsvp_deadline);
+        const dlStr = dl.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+        rows.push({
+            label: 'RSVP by',
+            main: dlStr,
+            sub: deadlinePassed ? 'Deadline passed' : 'Reserve your spot',
+            passed: !!deadlinePassed,
+        });
+    }
+
+    if (!rows.length) return '';
+
+    const rowHtml = rows.map((row) => `
+        <div class="ed-summary-row ed-price-summary-row">
+            <div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+            <div>
+                <span class="ed-summary-main${row.passed ? ' ed-deadline-passed' : ''}">${evtEscapeHtml(row.main)}</span>
+                <span class="ed-summary-sub2">${evtEscapeHtml(row.label)}${row.sub ? ` · ${evtEscapeHtml(row.sub)}` : ''}</span>
+            </div>
+        </div>`).join('');
+
+    return `<div class="ed-price-summary">${rowHtml}</div>`;
+}
+
+function evtBuildDetailIncludedCatalogHtml(ctx) {
+    const { event } = ctx;
+    if (!event || !window.EventsIncludedItems || typeof window.EventsIncludedItems.catalogListHtml !== 'function') {
+        return '';
+    }
+    const listHtml = window.EventsIncludedItems.catalogListHtml(event.included_items);
+    if (!listHtml) return '';
+    return `
+        <div class="ed-included-catalog">
+            <p class="ed-about-heading" style="margin-top:16px">What&apos;s included</p>
+            <p class="ed-hint" style="margin-bottom:10px">Options you&apos;ll choose during RSVP.</p>
+            ${listHtml}
+        </div>`;
+}
+
+function evtBuildDetailAmenityResultsHtml(ctx) {
+    const { event, isComp, isHost, canManageEvent, amenityVoteConfig, amenityVoteTallies } = ctx;
+    if (isComp || !window.EventsAmenityVoting) return '';
+    const cfg = amenityVoteConfig || window.EventsAmenityVoting.normalizeConfig(event && event.amenity_voting);
+    if (!cfg.enabled) return '';
+    const hostLike = !!(isHost || canManageEvent);
+    const showCtx = { isHost: hostLike, canManageEvent: hostLike, now: new Date() };
+    const canShow = window.EventsAmenityVoting.canShowResults(cfg, showCtx);
+    const tallies = amenityVoteTallies || {};
+
+    if (!canShow) {
+        const pending = window.EventsAmenityVoting.pendingMessageHtml(cfg);
+        return pending ? `<div class="ed-amenity-results">${pending}</div>` : '';
+    }
+
+    const inner = window.EventsAmenityVoting.resultsHtml(cfg, tallies, { isHost: hostLike });
+    if (!inner) return '';
+    const hint = hostLike && window.EventsAmenityVoting.totalVotes(tallies) <= 0
+        ? ''
+        : '<p class="ed-hint ed-amenity-rsvp-hint">Cast your vote when you RSVP.</p>';
+    return `<div class="ed-amenity-results">${inner}${hint}</div>`;
+}
+
+function evtReadSeatRoleForDetail(eventId) {
+    const root = document.getElementById('eventsDetailView') || document;
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.readPayerRoleFromRoot === 'function') {
+        return window.EventsPartySeats.readPayerRoleFromRoot(root);
+    }
+    if (window.EventsSeatPicker && typeof window.EventsSeatPicker.readRoleFromRoot === 'function') {
+        return window.EventsSeatPicker.readRoleFromRoot(root);
+    }
+    return 'adult';
+}
+
+function evtReadPartySeatsFromDetail(event) {
+    const root = document.getElementById('eventsDetailView') || document;
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.readSeatsFromRoot === 'function') {
+        return window.EventsPartySeats.readSeatsFromRoot(root, event);
+    }
+    const role = evtReadSeatRoleForDetail();
+    const catalog = (window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === 'function')
+        ? window.EventsIncludedItems.normalizeIncludedItems(event?.included_items)
+        : [];
+    let seat_options = {};
+    if (window.EventsIncludedItems && catalog.length) {
+        seat_options = window.EventsIncludedItems.readAnswersFromRoot(root, catalog, role);
+    }
+    return [{
+        role,
+        display_name: evtMemberDisplayName(),
+        is_payer: true,
+        ...(Object.keys(seat_options).length ? { options: seat_options } : {}),
+    }];
+}
+
+function evtMemberDisplayName() {
+    const u = globalThis.evtCurrentUser;
+    if (u) {
+        const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
+        if (name) return name;
+        if (u.email) return String(u.email).split('@')[0];
+    }
+    return window.evtCurrentUserName || 'Member';
+}
+
+function evtPartyTotalCents(event, root) {
+    const scope = root || document.getElementById('eventsDetailView') || document;
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.partyBaseTotalCents === 'function') {
+        const seats = window.EventsPartySeats.readSeatsFromRoot(scope, event);
+        return window.EventsPartySeats.partyBaseTotalCents(event, seats);
+    }
+    const role = evtReadSeatRoleForDetail();
+    return (window.EventsHelpers && typeof window.EventsHelpers.seatPriceCents === 'function')
+        ? window.EventsHelpers.seatPriceCents(event, role)
+        : Number(event?.rsvp_cost_cents || 0);
+}
+
+function evtMemberNoRefundCheckVisible(event, seatRole, hasRequiredDisclaimers) {
+    if (!event || event.pricing_mode !== 'paid' || hasRequiredDisclaimers) return false;
+    const root = document.getElementById('eventsDetailView') || document;
+    const partyTotal = evtPartyTotalCents(event, root);
+    return partyTotal > 0;
+}
+
+function evtFeeAwarePartyTotal(event, root, partyTotal) {
+    const base = Math.max(0, Number(partyTotal) || 0);
+    if (!window.EventsPaymentChoice || typeof window.EventsPaymentChoice.displayTotalCents !== 'function') {
+        return base;
+    }
+    if (!window.EventsPaymentChoice.needsChoice(event, base)) return base;
+    const choice = window.EventsPaymentChoice.readFromRoot(root || document);
+    return window.EventsPaymentChoice.displayTotalCents(event, choice, base);
+}
+
+function evtUpdateMemberRsvpBtnLabels(eventId, event, opts) {
+    if (!eventId || !event) return;
+    const options = opts && typeof opts === 'object' ? opts : {};
+    const role = options.role || evtReadSeatRoleForDetail(eventId);
+    const root = document.getElementById('eventsDetailView') || document;
+    const partyTotal = evtPartyTotalCents(event, root);
+    const displayTotal = evtFeeAwarePartyTotal(event, root, partyTotal);
+    const rsvp = options.rsvp || (globalThis.evtAllRsvps || {})[eventId];
+    const unpaidGoing = !!(rsvp?.status === 'going' && !rsvp?.paid && event.pricing_mode === 'paid');
+    const labelOpts = unpaidGoing
+        ? { mode: 'complete', audience: 'member', partyTotalCents: displayTotal }
+        : { mode: 'rsvp', audience: 'member', partyTotalCents: displayTotal };
+    const label = (window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === 'function')
+        ? window.EventsHelpers.rsvpPayButtonLabel(event, role, labelOpts)
+        : `RSVP as Member — ${formatCurrency(displayTotal)}`;
+
+    const payBtn = document.getElementById(`evtMemberRsvpPayBtn-${eventId}`);
+    if (payBtn) payBtn.textContent = label;
+
+    const claimBtn = document.getElementById(`evtWaitlistClaimBtn-${eventId}`);
+    if (claimBtn) {
+        claimBtn.textContent = displayTotal > 0
+            ? `Claim Spot — ${formatCurrency(displayTotal)}`
+            : 'Claim Spot — Free';
+    }
+
+    const noRefundCheck = root.querySelector('#evtMemberNoRefundCheck');
+    if (noRefundCheck) {
+        const discCatalog = (window.EventsDisclaimers && typeof window.EventsDisclaimers.effectiveDisclaimers === 'function')
+            ? window.EventsDisclaimers.effectiveDisclaimers(event)
+            : [];
+        const hasRequiredDisclaimers = (window.EventsDisclaimers && typeof window.EventsDisclaimers.hasRequiredDisclaimers === 'function')
+            ? window.EventsDisclaimers.hasRequiredDisclaimers(discCatalog)
+            : discCatalog.some((d) => d.required);
+        const visible = evtMemberNoRefundCheckVisible(event, role, hasRequiredDisclaimers);
+        noRefundCheck.closest('label')?.classList.toggle('hidden', !visible);
+    }
+}
+
+function evtWireMemberPrepPhoneSms() {
+    const phoneEl = document.getElementById('evtMemberPhoneInput');
+    const smsCheck = document.getElementById('evtSmsOptInCheck');
+    if (!phoneEl || !smsCheck || phoneEl.dataset.smsWired) return;
+    phoneEl.dataset.smsWired = '1';
+    phoneEl.addEventListener('input', () => {
+        if (String(phoneEl.value || '').trim()) smsCheck.checked = true;
+    });
+}
 function evtBuildDetailSmsOptInHtml(ctx) {
     const { eventId, isHost, memberPhone, memberGoing, canRsvp, rsvpEnabled, eventSmsRecipient } = ctx;
     if (isHost || !memberPhone) return '';
@@ -26,7 +245,7 @@ function evtBuildDetailSmsOptInHtml(ctx) {
         </label>`;
 }
 
-function evtBuildDetailRsvpSectionHtml(ctx) {
+function evtBuildDetailRsvpCtaHtml(ctx) {
     const {
         eventId,
         event,
@@ -42,14 +261,14 @@ function evtBuildDetailRsvpSectionHtml(ctx) {
         deadlinePassed,
     } = ctx;
 
-    let rsvpButtons = '';
+    let ctaHtml = '';
     if (!rsvpEnabled) {
-        rsvpButtons = _edNotice('ℹ️', 'Informational Event', 'RSVP is not required for this event');
+        ctaHtml = _edNotice('ℹ️', 'Informational Event', 'RSVP is not required for this event');
     } else if (isHost) {
         const teamBtnHtml = canAccessTeamHub
             ? `<button type="button" ${evtDataAction('evtOpenTeamToolsPanel', eventId)} class="ed-outline-btn" aria-label="Open event team tools">Team</button>`
             : '';
-        rsvpButtons = `
+        ctaHtml = `
         <div class="ed-rsvp-confirmed">
             <div class="ed-rsvp-confirmed-row">
                 <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
@@ -63,22 +282,40 @@ function evtBuildDetailRsvpSectionHtml(ctx) {
         ${canAccessTeamHub ? '<p class="ed-hint">Use <strong>Team</strong> for RSVP as yourself, raffle entry, and your ticket.</p>' : ''}`;
     } else if (canRsvp && !eventIsFull && event.pricing_mode === 'paid') {
         if (rsvp?.paid) {
-            rsvpButtons = `
+            ctaHtml = `
             <div class="ed-rsvp-confirmed">
                 <div class="ed-rsvp-confirmed-row">
                     <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
                     <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">Non-refundable · Contact admin for changes</span></div>
                 </div>
             </div>`;
+        } else if (rsvp?.status === 'going') {
+            const payLabel = (window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === 'function')
+                ? window.EventsHelpers.rsvpPayButtonLabel(event, 'adult', { mode: 'complete', audience: 'member' })
+                : `Complete Payment — ${formatCurrency(evtDetailAdultPriceCents(event))}`;
+            ctaHtml = `
+            <div class="ed-notice ed-notice-highlight" style="margin-bottom:12px">
+                <span class="ed-notice-emoji">💳</span>
+                <div>
+                    <p class="ed-notice-title">Payment pending</p>
+                    <p class="ed-notice-sub">Complete checkout to confirm your RSVP.</p>
+                </div>
+            </div>
+            <button id="evtMemberRsvpPayBtn-${eventId}" ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-primary-btn">${payLabel}</button>
+            <button ${evtDataAction('evtMessageHost', eventId)} class="ed-outline-btn">Message Host</button>
+            <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' · Includes raffle entry' : ''}</p>`;
         } else {
-            rsvpButtons = `
-            <button ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-primary-btn">RSVP — ${formatCurrency(event.rsvp_cost_cents)}</button>
+            const payLabel = (window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === 'function')
+                ? window.EventsHelpers.rsvpPayButtonLabel(event, 'adult', { mode: 'rsvp', audience: 'member' })
+                : `RSVP as Member — ${formatCurrency(evtDetailAdultPriceCents(event))}`;
+            ctaHtml = `
+            <button id="evtMemberRsvpPayBtn-${eventId}" ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-primary-btn">${payLabel}</button>
             <button ${evtDataAction('evtMessageHost', eventId)} class="ed-outline-btn">Message Host</button>
             <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' · Includes raffle entry' : ''}</p>`;
         }
     } else if (canRsvp && !eventIsFull) {
         if (rsvp?.status === 'going') {
-            rsvpButtons = `
+            ctaHtml = `
             <div class="ed-rsvp-confirmed">
                 <div class="ed-rsvp-confirmed-row">
                     <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
@@ -88,15 +325,15 @@ function evtBuildDetailRsvpSectionHtml(ctx) {
             <button ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-outline-btn">Update RSVP</button>`;
         } else {
             const interestedActive = rsvp?.status === 'maybe' ? ' active' : '';
-            rsvpButtons = `
-            <button ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-primary-btn">RSVP</button>
+            ctaHtml = `
+            <button ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-primary-btn">RSVP as Member</button>
             <button ${evtDataAction('evtMessageHost', eventId)} class="ed-outline-btn">Message Host</button>
             <div class="ed-rsvp-secondary">
                 <button ${evtDataAction('evtHandleRsvp', eventId, 'maybe')} class="ed-rsvp-sm${interestedActive ? ' active' : ''}">❤️ Interested</button>
             </div>`;
         }
     }
-    if (rsvpEnabled && !isHost && entriesClosed && !rsvpButtons) {
+    if (rsvpEnabled && !isHost && entriesClosed && !ctaHtml) {
         let closedReason = '';
         if (isClosed) closedReason = event.status === 'cancelled' ? 'Event cancelled' : 'Event ended';
         else if (isPast) closedReason = 'Event has already started';
@@ -104,13 +341,266 @@ function evtBuildDetailRsvpSectionHtml(ctx) {
         if (rsvp) {
             const statusEmoji = rsvp.status === 'going' ? '✅' : rsvp.status === 'maybe' ? '❤️' : '❌';
             const statusLabel = rsvp.status === 'going' ? 'Going' : rsvp.status === 'maybe' ? 'Interested' : 'Not Going';
-            rsvpButtons = _edNotice(statusEmoji, `Your RSVP: ${statusLabel}`, closedReason);
+            ctaHtml = _edNotice(statusEmoji, `Your RSVP: ${statusLabel}`, closedReason);
         } else {
-            rsvpButtons = _edNotice('🔒', 'RSVP Closed', closedReason);
+            ctaHtml = _edNotice('🔒', 'RSVP Closed', closedReason);
         }
     }
+    return ctaHtml ? `<div class="ed-rsvp-cta-block">${ctaHtml}</div>` : '';
+}
+
+function evtBuildDetailRsvpPrepHtml(ctx) {
+    const {
+        eventId,
+        event,
+        rsvp,
+        isHost,
+        canRsvp,
+        eventIsFull,
+        memberPhone,
+    } = ctx;
+
+    const showPrep = !isHost && canRsvp && !eventIsFull
+        && !(event.pricing_mode === 'paid' && rsvp?.paid);
+
+    const showPartySeats = showPrep
+        && window.EventsPartySeats
+        && typeof window.EventsPartySeats.shouldShow === 'function'
+        && window.EventsPartySeats.shouldShow(event, { isHost });
+
+    const seatRole = (window.EventsIncludedItems && typeof window.EventsIncludedItems.defaultSeatRoleForCatalog === 'function')
+        ? window.EventsIncludedItems.defaultSeatRoleForCatalog(event.included_items)
+        : 'adult';
+    let partySeatsHtml = '';
+    if (showPartySeats && typeof window.EventsPartySeats.formFieldsHtml === 'function') {
+        partySeatsHtml = window.EventsPartySeats.formFieldsHtml(event, {
+            idPrefix: `portalParty-${eventId}`,
+            defaultRole: seatRole,
+            payerName: evtMemberDisplayName(),
+        });
+    }
+
+    const hasIncludedCatalog = window.EventsIncludedItems
+        && typeof window.EventsIncludedItems.hasCatalog === 'function'
+        && window.EventsIncludedItems.hasCatalog(event.included_items);
+    let includedOptsHtml = '';
+
+    const discCatalog = (window.EventsDisclaimers && typeof window.EventsDisclaimers.effectiveDisclaimers === 'function')
+        ? window.EventsDisclaimers.effectiveDisclaimers(event)
+        : ((window.EventsDisclaimers && typeof window.EventsDisclaimers.normalizeDisclaimers === 'function')
+            ? window.EventsDisclaimers.normalizeDisclaimers(event.disclaimers)
+            : []);
+    const hasDisclaimers = (window.EventsDisclaimers && typeof window.EventsDisclaimers.hasDisclaimers === 'function')
+        ? window.EventsDisclaimers.hasDisclaimers(discCatalog)
+        : discCatalog.length > 0;
+    const showDiscAcks = hasDisclaimers && showPrep;
+    let discAcksHtml = '';
+    if (showDiscAcks && typeof window.EventsDisclaimers.formFieldsHtml === 'function') {
+        discAcksHtml = window.EventsDisclaimers.formFieldsHtml(discCatalog, {
+            idPrefix: `portalDisc-${eventId}`,
+        });
+    }
+
+    const showInvestAck = event.invest_eligible && showPrep;
+    let investAckHtml = '';
+
+    const needsAmenityVote = window.EventsAmenityVoting
+        && typeof window.EventsAmenityVoting.needsVote === 'function'
+        && window.EventsAmenityVoting.needsVote(event);
+    let amenityVoteHtml = '';
+    if (needsAmenityVote && showPrep && typeof window.EventsAmenityVoting.formFieldsHtml === 'function') {
+        const cfg = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
+        amenityVoteHtml = `<div id="portalAmenityWrap-${eventId}">${window.EventsAmenityVoting.formFieldsHtml(cfg, {
+            idPrefix: `portalAmenity-${eventId}`,
+        })}</div>`;
+    }
+
+    const prepSeatPrice = evtPartyTotalCents(event);
+    let paymentChoiceHtml = '';
+    if (showPrep && window.EventsPaymentChoice
+        && typeof window.EventsPaymentChoice.needsChoice === 'function'
+        && window.EventsPaymentChoice.needsChoice(event, prepSeatPrice)
+        && typeof window.EventsPaymentChoice.formFieldsHtml === 'function') {
+        paymentChoiceHtml = `<div id="portalPaymentWrap-${eventId}">${window.EventsPaymentChoice.formFieldsHtml(event, {
+            seatPriceCents: prepSeatPrice,
+            idPrefix: `portalPayment-${eventId}`,
+        })}</div>`;
+    }
+
+    const hasRequiredDisclaimers = (window.EventsDisclaimers && typeof window.EventsDisclaimers.hasRequiredDisclaimers === 'function')
+        ? window.EventsDisclaimers.hasRequiredDisclaimers(discCatalog)
+        : discCatalog.some((d) => d.required);
+    const showNoRefundCheck = showPrep
+        && evtMemberNoRefundCheckVisible(event, seatRole, hasRequiredDisclaimers);
+    let noRefundHtml = '';
+    if (showNoRefundCheck) {
+        noRefundHtml = `
+            <label class="ed-checkbox-label evt-member-no-refund" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px">
+                <input type="checkbox" id="evtMemberNoRefundCheck">
+                <span class="ed-hint" style="margin:0">I understand this payment is non-refundable unless cancelled by staff.</span>
+            </label>`;
+    }
+
+    const showMemberPhone = showPrep && !memberPhone;
+    let memberPhoneHtml = '';
+    let memberSmsPrepHtml = '';
+    if (showMemberPhone) {
+        memberPhoneHtml = `
+            <div class="ed-rsvp-phone-field">
+                <label class="ec-label" for="evtMemberPhoneInput">Mobile phone</label>
+                <input type="tel" id="evtMemberPhoneInput" class="ec-input" placeholder="Phone number" required aria-label="Mobile phone">
+                <p class="ed-hint" style="margin-top:6px">Required for RSVP. Saved to your profile.</p>
+            </div>`;
+        memberSmsPrepHtml = `
+            <label class="ed-checkbox-label" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px">
+                <input type="checkbox" id="evtSmsOptInCheck">
+                <span class="ed-hint" style="margin:0">Text me event updates for this event. Message/data rates may apply. Reply STOP to opt out.</span>
+            </label>`;
+    }
+
+    if (showInvestAck && window.EventsInvestAck && typeof window.EventsInvestAck.formFieldHtml === 'function') {
+        investAckHtml = window.EventsInvestAck.formFieldHtml(event, {
+            idPrefix: `portalInvest-${eventId}`,
+        });
+    }
+
+    const attachGuestsHtml = showPrep
+        ? `<div id="portalAttachGuests-${eventId}" class="ed-attach-guests" data-attach-guests-root="1"></div>`
+        : '';
+
+    const inner = partySeatsHtml + attachGuestsHtml + memberPhoneHtml + memberSmsPrepHtml + includedOptsHtml + discAcksHtml
+        + amenityVoteHtml + paymentChoiceHtml + investAckHtml + noRefundHtml;
+    if (!inner) return '';
+    if (inner === partySeatsHtml && !attachGuestsHtml && !memberPhoneHtml && !memberSmsPrepHtml && !includedOptsHtml && !discAcksHtml && !amenityVoteHtml && !paymentChoiceHtml && !investAckHtml && !noRefundHtml) {
+        return `<div class="ed-rsvp-prep">${partySeatsHtml}</div>`;
+    }
+    if (memberPhoneHtml && !partySeatsHtml && !attachGuestsHtml && !includedOptsHtml && !discAcksHtml && !amenityVoteHtml && !paymentChoiceHtml && !investAckHtml && !noRefundHtml) {
+        return `<div class="ed-rsvp-prep">${memberPhoneHtml}${memberSmsPrepHtml}</div>`;
+    }
+    return `<div class="ed-rsvp-prep"><p class="ed-rsvp-prep-label">Before you RSVP</p>${inner}</div>`;
+}
+
+function evtWireSeatPickerPrep(eventId, event) {
+    if (!eventId || !event) return;
+    const root = document.getElementById('eventsDetailView') || document;
+
+    const refreshPaymentAndLabels = () => {
+        const payWrap = document.getElementById(`portalPaymentWrap-${eventId}`);
+        const partyTotal = evtPartyTotalCents(event, root);
+        if (payWrap && window.EventsPaymentChoice && window.EventsHelpers) {
+            if (window.EventsPaymentChoice.needsChoice(event, partyTotal)) {
+                payWrap.innerHTML = window.EventsPaymentChoice.formFieldsHtml(event, {
+                    seatPriceCents: partyTotal,
+                    idPrefix: `portalPayment-${eventId}`,
+                });
+                window.EventsPaymentChoice.wireForm(
+                    root,
+                    event,
+                    () => evtPartyTotalCents(event, root),
+                    () => {
+                        const role = evtReadSeatRoleForDetail(eventId);
+                        evtUpdateMemberRsvpBtnLabels(eventId, event, { role });
+                    },
+                );
+            } else {
+                payWrap.innerHTML = '';
+            }
+        }
+        const role = evtReadSeatRoleForDetail(eventId);
+        evtUpdateMemberRsvpBtnLabels(eventId, event, { role });
+    };
+
+    if (window.EventsPartySeats && typeof window.EventsPartySeats.wireForm === 'function') {
+        window.EventsPartySeats.wireForm(root, event, () => refreshPaymentAndLabels());
+    }
+
+    refreshPaymentAndLabels();
+    evtWireMemberPrepPhoneSms();
+    evtLoadSeatInfoInvites(eventId);
+    evtLoadAttachGuests(eventId, event);
+}
+
+async function evtLoadAttachGuests(eventId, event) {
+    if (!eventId || !window.EventsAttachGuests || typeof window.EventsAttachGuests.loadAndWire !== 'function') return;
+    const slot = document.getElementById(`portalAttachGuests-${eventId}`);
+    if (!slot) return;
+    const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps || {})[eventId];
+    const unpaid = !(rsvp && rsvp.paid);
+    await window.EventsAttachGuests.loadAndWire(slot, {
+        eventId,
+        payerUnpaid: unpaid,
+        callEdge: (name, body) => callEdgeFunction(name, body),
+        onAttached: async () => {
+            if (typeof globalThis.evtOpenDetail === 'function') {
+                await globalThis.evtOpenDetail(eventId);
+            } else {
+                await window.EventsAttachGuests.loadAndWire(slot, {
+                    eventId,
+                    payerUnpaid: unpaid,
+                    callEdge: (name, body) => callEdgeFunction(name, body),
+                });
+            }
+        },
+    });
+}
+
+async function evtLoadSeatInfoInvites(eventId) {
+    const slot = document.getElementById(`portalSeatInfoInvites-${eventId}`);
+    if (!slot || !eventId) return;
+    if (typeof callEdgeFunction !== 'function') return;
+    try {
+        const result = await callEdgeFunction('event-seat-info', {
+            action: 'list',
+            event_id: eventId,
+        });
+        const tokens = result?.seat_info_tokens || [];
+        if (!tokens.length) {
+            slot.innerHTML = '';
+            return;
+        }
+        if (window.EventsHelpers && typeof window.EventsHelpers.seatInfoInvitesHtml === 'function') {
+            slot.innerHTML = window.EventsHelpers.seatInfoInvitesHtml(tokens);
+            window.EventsHelpers.wireSeatInfoInviteCopy(slot);
+        }
+    } catch (_) {
+        slot.innerHTML = '';
+    }
+}
+
+function evtDetailPublicInviteUrl(slug) {
+    if (!slug) return '';
+    if (typeof globalThis.evtPublicEventInviteUrl === 'function') {
+        return globalThis.evtPublicEventInviteUrl(slug);
+    }
+    return `https://justicemcneal.com/events/?e=${encodeURIComponent(slug)}`;
+}
+
+function evtBuildDetailGuestRsvpHintHtml(ctx) {
+    const { event, rsvpEnabled } = ctx;
+    if (!event || event.event_type === 'competition' || !rsvpEnabled) {
+        return '';
+    }
+    if (event.member_only) {
+        return `<p class="ed-rsvp-members-only-note">Members-only event — guests cannot RSVP on the public page.</p>`;
+    }
+    if (!event.slug) return '';
+    const inviteUrl = evtDetailPublicInviteUrl(event.slug);
+    return `
+        <div class="ed-rsvp-guest-hint">
+            <p class="ed-rsvp-guest-hint-text">Guests RSVP on the <a href="${evtEscapeHtml(inviteUrl)}" target="_blank" rel="noopener">public event page</a>.</p>
+            <button type="button" class="ed-link-btn" ${evtDataAction('evtCopyShareUrl', event.slug)}>Copy public link</button>
+        </div>`;
+}
+
+function evtBuildDetailRsvpSectionHtml(ctx) {
+    const ctaHtml = evtBuildDetailRsvpCtaHtml(ctx);
+    const prepHtml = evtBuildDetailRsvpPrepHtml(ctx);
+    const guestHintHtml = evtBuildDetailGuestRsvpHintHtml(ctx);
     const smsOptInHtml = evtBuildDetailSmsOptInHtml(ctx);
-    return rsvpButtons + smsOptInHtml;
+    const seatInvitesPlaceholder = (!ctx.isHost && ctx.rsvp?.status === 'going')
+        ? `<div id="portalSeatInfoInvites-${ctx.eventId}" class="ed-seat-info-invites-slot"></div>`
+        : '';
+    return ctaHtml + prepHtml + seatInvitesPlaceholder + guestHintHtml + smsOptInHtml;
 }
 
 function evtBuildDetailRaffleSectionHtml(ctx) {
@@ -234,7 +724,11 @@ function evtBuildDetailWaitlistHtml(ctx) {
                     <div style="flex:1">
                         <p class="ed-notice-title">A spot opened up for you!</p>
                         <p class="ed-notice-sub">Complete your RSVP by ${expiresStr}</p>
-                        <button ${evtDataAction('evtClaimWaitlistSpot', eventId)} class="ed-primary-btn" style="margin-top:10px">Claim Spot — ${formatCurrency(event.rsvp_cost_cents)}</button>
+                        <button id="evtWaitlistClaimBtn-${eventId}" ${evtDataAction('evtClaimWaitlistSpot', eventId)} class="ed-primary-btn" style="margin-top:10px">Claim Spot — ${formatCurrency(
+                            (window.EventsHelpers && typeof window.EventsHelpers.seatPriceCents === 'function')
+                                ? window.EventsHelpers.seatPriceCents(event, 'adult')
+                                : (event.rsvp_cost_cents || 0),
+                        )}</button>
                     </div>
                 </div>`;
     } else if (isWaiting) {
@@ -252,17 +746,14 @@ function evtBuildDetailWaitlistHtml(ctx) {
 }
 
 function evtBuildDetailGraceNoticeHtml(ctx) {
-    const { eventId, event, rsvp } = ctx;
-    if (!event.rescheduled_at || !event.grace_window_end || new Date(event.grace_window_end) <= new Date()) {
-        return '';
-    }
-    const graceEnd = new Date(event.grace_window_end).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    const { event } = ctx;
+    if (!event.rescheduled_at) return '';
+    // In-app grace refunds disabled (§13.10 line 442) — informational only
     return `<div class="ed-notice ed-notice-warn">
         <span class="ed-notice-emoji">📅</span>
         <div>
             <p class="ed-notice-title">This event was rescheduled</p>
-            <p class="ed-notice-sub">Request a full refund until <strong>${graceEnd}</strong> if the new date doesn't work.</p>
-            ${rsvp?.paid ? `<button ${evtDataAction('evtRequestGraceRefund', eventId)} class="ed-link-btn danger" style="margin-top:8px">Request Full Refund</button>` : ''}
+            <p class="ed-notice-sub">Payments are non-refundable in-app. Contact a host if you cannot attend the new date.</p>
         </div>
     </div>`;
 }
@@ -340,7 +831,17 @@ function evtBuildDetailTransportNoticeHtml(ctx) {
         return '';
     }
     const isProvided = event.transportation_mode === 'llc_provides';
-    return `<div class="ed-context-row"><span>${isProvided ? '✈️' : '🧳'}</span><div><strong>${isProvided ? 'LLC provides transportation' : 'Self-arranged transportation'}</strong><p>${isProvided ? 'Tickets will appear in documents when available.' : `Members book their own travel${event.transportation_estimate_cents ? ` — est. ~${formatCurrency(event.transportation_estimate_cents)}` : ''}.`}</p></div></div>`;
+    if (!isProvided) {
+        return `<div class="ed-context-row"><span>🧳</span><div><strong>Self-arranged transportation</strong><p>Members book their own travel${event.transportation_estimate_cents ? ` — est. ~${formatCurrency(event.transportation_estimate_cents)}` : ''}.</p></div></div>`;
+    }
+    const method = event.transportation_method;
+    if (method === 'plane') {
+        return `<div class="ed-context-row"><span>✈️</span><div><strong>LLC provides flights</strong><p>Tickets will appear in documents when available.</p></div></div>`;
+    }
+    if (method === 'car') {
+        return `<div class="ed-context-row"><span>🚗</span><div><strong>LLC provides ground transport</strong><p>Travel is by car — no flight tickets required.</p></div></div>`;
+    }
+    return `<div class="ed-context-row"><span>🚐</span><div><strong>LLC provides transportation</strong><p>The LLC is arranging travel for this trip.</p></div></div>`;
 }
 
 function evtBuildDetailLocationNoticeHtml(ctx) {
@@ -395,17 +896,22 @@ function evtBuildDetailAttendeePreviewHtml(ctx) {
 }
 
 function evtBuildDetailShareCardHtml(ctx) {
-    const { event } = ctx;
+    const { event, rsvpEnabled } = ctx;
+    const inviteUrl = evtDetailPublicInviteUrl(event.slug);
+    const guestSubcopy = !event.member_only && rsvpEnabled !== false
+        ? '<p class="ed-share-subcopy">Public link for guest RSVPs</p>'
+        : '';
     return `
                     <p class="ed-summary-heading">Share This Event</p>
+                    ${guestSubcopy}
                     <div class="ed-share-row">
-                        <button class="ed-share-btn" title="Copy link" onclick="(function(){navigator.clipboard.writeText(window.location.href);const b=this;b.classList.add('ed-share-btn-copied');setTimeout(()=>b.classList.remove('ed-share-btn-copied'),1500)}).call(this)">
+                        <button type="button" class="ed-share-btn" title="Copy public link" ${event.slug ? evtDataAction('evtCopyShareUrl', event.slug) : ''}>
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                         </button>
-                        <a class="ed-share-btn" title="Share on Facebook" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}" target="_blank" rel="noopener">
+                        <a class="ed-share-btn" title="Share on Facebook" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(inviteUrl)}" target="_blank" rel="noopener">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                         </a>
-                        <a class="ed-share-btn" title="Share on X" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(event.title)}" target="_blank" rel="noopener">
+                        <a class="ed-share-btn" title="Share on X" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(event.title)}" target="_blank" rel="noopener">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                         </a>
                         <a class="ed-share-btn" title="Share on Instagram" href="https://instagram.com" target="_blank" rel="noopener">
@@ -560,6 +1066,18 @@ function evtBuildDetailAttendeeBreakdownHtml(ctx) {
 }
 
 globalThis.evtBuildDetailRsvpSectionHtml = evtBuildDetailRsvpSectionHtml;
+globalThis.evtBuildDetailRsvpCtaHtml = evtBuildDetailRsvpCtaHtml;
+globalThis.evtBuildDetailRsvpPrepHtml = evtBuildDetailRsvpPrepHtml;
+globalThis.evtMemberDisplayName = evtMemberDisplayName;
+globalThis.evtWireSeatPickerPrep = evtWireSeatPickerPrep;
+globalThis.evtLoadSeatInfoInvites = evtLoadSeatInfoInvites;
+globalThis.evtUpdateMemberRsvpBtnLabels = evtUpdateMemberRsvpBtnLabels;
+globalThis.evtWireMemberPrepPhoneSms = evtWireMemberPrepPhoneSms;
+globalThis.evtBuildDetailGuestRsvpHintHtml = evtBuildDetailGuestRsvpHintHtml;
+globalThis.evtBuildDetailPriceSummaryHtml = evtBuildDetailPriceSummaryHtml;
+globalThis.evtBuildDetailIncludedCatalogHtml = evtBuildDetailIncludedCatalogHtml;
+globalThis.evtBuildDetailAmenityResultsHtml = evtBuildDetailAmenityResultsHtml;
+globalThis.evtDetailAdultPriceCents = evtDetailAdultPriceCents;
 globalThis.evtBuildDetailRaffleSectionHtml = evtBuildDetailRaffleSectionHtml;
 globalThis.evtBuildDetailHostControlsHtml = evtBuildDetailHostControlsHtml;
 globalThis.evtBuildDetailWaitlistHtml = evtBuildDetailWaitlistHtml;
@@ -581,6 +1099,13 @@ globalThis.evtBuildDetailPageHeaderActionsHtml = evtBuildDetailPageHeaderActions
 
 export const detailSectionsApi = {
     buildRsvpSectionHtml: evtBuildDetailRsvpSectionHtml,
+    buildRsvpCtaHtml: evtBuildDetailRsvpCtaHtml,
+    buildRsvpPrepHtml: evtBuildDetailRsvpPrepHtml,
+    wireSeatPickerPrep: evtWireSeatPickerPrep,
+    buildGuestRsvpHintHtml: evtBuildDetailGuestRsvpHintHtml,
+    buildPriceSummaryHtml: evtBuildDetailPriceSummaryHtml,
+    buildIncludedCatalogHtml: evtBuildDetailIncludedCatalogHtml,
+    buildAmenityResultsHtml: evtBuildDetailAmenityResultsHtml,
     buildRaffleSectionHtml: evtBuildDetailRaffleSectionHtml,
     buildHostControlsHtml: evtBuildDetailHostControlsHtml,
     buildWaitlistHtml: evtBuildDetailWaitlistHtml,

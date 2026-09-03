@@ -38,3 +38,4 @@ Navigation labels, footer, and chrome copy should stay consistent across portal 
 - Business: `docs/business/` (`strategy/`, `ventures/`, `ideas/`)
 - Legal: `docs/legal/official/`
 - Index: `docs/README.md`
+- Visual theme reference: `pages/style-guide/index.html`

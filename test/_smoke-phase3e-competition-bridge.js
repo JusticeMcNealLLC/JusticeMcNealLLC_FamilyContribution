@@ -114,7 +114,81 @@ tablePatterns.forEach(([pattern, label]) => check(label, competition.includes(pa
 
 console.log('\n── production load (main.js manifest) ─────────────────────────────────');
 check('detail/competition.js in main.js imports', loader.includes('./detail/competition.js'));
+check('competition-phases.js in main.js imports', loader.includes('../../components/events/competition-phases.js'));
 check('No portal/events/* scripts use type="module" yet (correct)', !events.match(/<script[^>]+js\/portal\/events\/[^>]+type="module"/));
+
+console.log('\n── §13.6.395 submission window + GFX upload ─────────────────────────────');
+const compPhases = read('js/components/events/competition-phases.js');
+const manageComp = read('js/portal/events/manage/competition.js');
+check('EventsCompetitionPhases global export present', compPhases.includes('globalThis.EventsCompetitionPhases'));
+check('isSubmissionOpen helper present', compPhases.includes('function isSubmissionOpen('));
+check('resolveCompEntryFileUrl signed URL helper present', compPhases.includes('function resolveCompEntryFileUrl('));
+check('detail uses EventsCompetitionPhases', competition.includes('EventsCompetitionPhases'));
+check('detail submission window closed copy', competition.includes('Submission window closed'));
+check('detail re-checks isSubmissionOpen on submit', competition.includes('isSubmissionOpen(phases, new Date())'));
+check('detail stores storage path not public URL', competition.includes('fileUrl = path'));
+check('manage submission window card present', manageComp.includes('Submission window'));
+check('manage phase 2 upsert save handler', manageComp.includes("onConflict: 'event_id,phase_num'"));
+check('host RLS migration 103 present', exists('supabase/migrations/20260901120000_103_competition_phases_host_write.sql'));
+
+console.log('\n── §13.6.394 competition create sheet ───────────────────────────────────');
+const stepComp = read('js/portal/events/create/step-competition.js');
+const createSheet = read('js/portal/events/create/sheet.js');
+const createSubmit = read('js/portal/events/create/submit.js');
+const ctaBar = read('js/portal/events/team/cta-bar.js');
+check('step-competition.js in main.js imports', loader.includes('./create/step-competition.js'));
+check('step-competition exports validateCompetition', stepComp.includes('export function validateCompetition('));
+check('step-competition builds competition_config', stepComp.includes('export function buildCompetitionConfig('));
+check('basics enables competition type', read('js/portal/events/create/step-basics.js').includes("enabled:true"));
+check('sheet inserts competition step', createSheet.includes("{ key: 'competition', label: 'Competition' }"));
+check('sheet removed competition edit block', !createSheet.includes('Competition events cannot be edited'));
+check('submit persists competition_config', createSubmit.includes('competition_config'));
+check('submit inserts competition phases on create', createSubmit.includes('insertCompetitionPhases'));
+check('cta-bar competition join branch', ctaBar.includes('showCompJoin'));
+check('cta-bar Join as Competitor copy', ctaBar.includes('Join as Competitor'));
+
+console.log('\n── §13.6.396 voting window + winner by votes ─────────────────────────────');
+const detailData = read('js/portal/events/detail/data.js');
+const postRender = read('js/portal/events/detail/post-render.js');
+check('isVotingOpen helper present', compPhases.includes('function isVotingOpen('));
+check('isVotingClosed helper present', compPhases.includes('function isVotingClosed('));
+check('isVoterEligible helper present', compPhases.includes('function isVoterEligible('));
+check('votingWindowLabel helper present', compPhases.includes('function votingWindowLabel('));
+check('detail uses isVotingOpen for vote buttons', competition.includes('votingOpen && voterEligible'));
+check('detail voting window closed copy', competition.includes('Voting window closed'));
+check('detail competition-section anchor', competition.includes('id="competition-section"'));
+check('evtCastVote re-checks isVotingOpen', competition.includes('isVotingOpen(phases, new Date())'));
+check('evtCastVote checks isVoterEligible', competition.includes('isVoterEligible(config'));
+check('evtFinalizeCompetition checks isVotingClosed', competition.includes('isVotingClosed(phases, new Date())'));
+check('evtFinalizeCompetition zero-vote confirm', competition.includes('No votes were cast'));
+check('manage voting window card present', manageComp.includes('Voting window'));
+check('manage vote count pills on entries', manageComp.includes('vote${(entry.vote_count'));
+check('data.js fetches myCompVote', detailData.includes("from('competition_votes')") && detailData.includes('myCompVote'));
+check('post-render passes myCompVote to CTA bar', postRender.includes('myCompVote'));
+check('cta-bar Cast your vote copy', ctaBar.includes('Cast your vote'));
+check('host RLS migration 104 present', exists('supabase/migrations/20260901130000_104_competition_winners_host_write.sql'));
+check('migration 104 uses can_manage_event_competition', read('supabase/migrations/20260901130000_104_competition_winners_host_write.sql').includes('can_manage_event_competition'));
+
+console.log('\n── §13.6.397 manage/detail production-complete ────────────────────────────');
+const overview = read('js/portal/events/manage/overview.js');
+const mig105 = read('supabase/migrations/20260901140000_105_competition_winners_tie_support.sql');
+check('isRegistrationOpen helper present', compPhases.includes('function isRegistrationOpen('));
+check('migration 105 tie support present', exists('supabase/migrations/20260901140000_105_competition_winners_tie_support.sql'));
+check('migration 105 drops place unique', mig105.includes('competition_winners_event_id_place_key'));
+check('migration 105 adds entry unique index', mig105.includes('competition_winners_event_entry_unique'));
+check('manage pool uses single source (no double-sum)', manageComp.includes('total_prize_pool_cents || 0) > 0') && !manageComp.includes('total_prize_pool_cents || 0) + d.contribs'));
+check('loadComp throws on query errors', manageComp.includes('throw new Error(errors[0].message'));
+check('manage moderated entries section', manageComp.includes('Moderated entries'));
+check('overview competition edit button', overview.includes("e.event_type === 'competition'") && overview.includes('emEditEventBtn'));
+check('evtJoinCompetition checks isRegistrationOpen', competition.includes('isRegistrationOpen(phases, new Date())'));
+check('evtFinalizeCompetition duplicate guard', competition.includes('already been finalized'));
+check('evtAdvancePhase min entries warn', competition.includes('minimum ${minEntries}'));
+check('detail empty phase timeline message', competition.includes('Competition phases not configured'));
+check('detail hidden entries message', competition.includes('Entries hidden until voting'));
+check('detail load error card', competition.includes('Could not load competition'));
+check('submit button upload loading state', competition.includes('compSubmitBtn') && competition.includes('Uploading…'));
+check('cta-bar Submit your entry copy', ctaBar.includes('Submit your entry'));
+check('cta-bar showCompSubmit branch', ctaBar.includes('showCompSubmit'));
 
 console.log('\n── File split safety — no orphaned new competition/ subfiles ─────────────');
 const competitionDir = path.join(ROOT, 'js/portal/events/competition');
@@ -150,7 +224,6 @@ check('window.PortalEvents.manage safe-init still present', manage.includes('win
 check('window.EventsManage still preserved', manage.includes('window.EventsManage = { open, close, refreshRaffle }'));
 
 console.log('\n── Phase 3D bridge (create/sheet.js) — regression check ──────────────────');
-const createSheet = read('js/portal/events/create/sheet.js');
 check('window.PortalEvents.create safe-init still present', createSheet.includes('window.PortalEvents.create = window.PortalEvents.create || {}'));
 check('window.EventsCreate still preserved', createSheet.includes('window.EventsCreate = { open, close, isFlagOn }'));
 
