@@ -21,6 +21,15 @@ helpers.includes('function confirmDialog(')
 helpers.includes('confirmDialog,')
     ? pass('confirmDialog exported on EventsHelpers')
     : fail('confirmDialog not exported');
+helpers.includes('function alertDialog(')
+    ? pass('EventsHelpers.alertDialog defined')
+    : fail('alertDialog missing from helpers.js');
+helpers.includes('alertDialog,')
+    ? pass('alertDialog exported on EventsHelpers')
+    : fail('alertDialog not exported');
+helpers.includes('showCancel')
+    ? pass('confirmDialog supports showCancel for one-button alerts')
+    : fail('confirmDialog missing showCancel');
 helpers.includes('evtConfirmDialog')
     ? pass('uses #evtConfirmDialog root')
     : fail('missing evtConfirmDialog id');
@@ -53,11 +62,30 @@ const portalCss = read('css/pages/portal/events/base.css');
 portalCss.includes('.evt-confirm-dialog')
     ? pass('portal base.css has confirm dialog styles')
     : fail('portal CSS missing .evt-confirm-dialog');
+portalCss.includes('.evt-confirm-dialog__actions--single')
+    ? pass('portal CSS has single-button alert layout')
+    : fail('portal CSS missing single-button alert layout');
 
 const publicCss = read('css/pages/public-event.css');
 publicCss.includes('.evt-confirm-dialog')
     ? pass('public-event.css has confirm dialog styles')
     : fail('public CSS missing .evt-confirm-dialog');
+
+const sheet = read('js/portal/events/create/sheet.js');
+sheet.includes('alertDialog')
+    ? pass('create sheet uses alertDialog')
+    : fail('create sheet missing alertDialog');
+/if \(err\) return alert\(err\)/.test(sheet)
+    ? fail('create sheet still uses bare alert(err) on Next')
+    : pass('create Next no longer uses bare alert(err)');
+
+const submit = read('js/portal/events/create/submit.js');
+submit.includes('alertDialog')
+    ? pass('create submit uses alertDialog')
+    : fail('create submit missing alertDialog');
+/return alert\(/.test(submit)
+    ? fail('create submit still returns bare alert()')
+    : pass('create submit no longer returns bare alert()');
 
 console.log(failed ? `\n${failed} check(s) failed\n` : '\nAll checks passed\n');
 process.exit(failed ? 1 : 0);

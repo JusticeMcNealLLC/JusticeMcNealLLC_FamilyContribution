@@ -17,6 +17,17 @@ function _compApi() {
     return window.EventsCreateSteps?.competition;
 }
 
+function _alert(message, title) {
+    if (window.EventsHelpers?.alertDialog) {
+        return window.EventsHelpers.alertDialog({
+            title: title || 'Please check this step',
+            message: String(message || ''),
+        });
+    }
+    window.alert(String(message || ''));
+    return Promise.resolve();
+}
+
 async function upsertPendingCompetitionPhases(eventId, form, startISO, endISO) {
     const comp = _compApi();
     if (!comp?.buildInitialPhases) return;
@@ -104,19 +115,34 @@ async function submit(status) {
 
     if (typeof validateStep === 'function') {
         const err = validateStep();
-        if (err && status === 'open') return alert(err);
+        if (err && status === 'open') {
+            _alert(err);
+            return;
+        }
     }
 
     const f = STATE.form;
-    if (!f.title.trim()) return alert('Title is required to save.');
-    if (status === 'open' && !f.start_date) return alert('Start date is required to publish.');
+    if (!f.title.trim()) {
+        _alert('Title is required to save.');
+        return;
+    }
+    if (status === 'open' && !f.start_date) {
+        _alert('Start date is required to publish.');
+        return;
+    }
     if (isLlc && status === 'open') {
         const llcErr = _llcApi()?.validateLlc?.(f);
-        if (llcErr) return alert(llcErr);
+        if (llcErr) {
+            _alert(llcErr);
+            return;
+        }
     }
     if (isComp && status === 'open') {
         const compErr = _compApi()?.validateCompetition?.(f, { publish: true });
-        if (compErr) return alert(compErr);
+        if (compErr) {
+            _alert(compErr);
+            return;
+        }
     }
 
     const errBox = document.getElementById('ecError');
@@ -418,7 +444,7 @@ async function submit(status) {
         if (errBox2 && typeof esc === 'function') {
             errBox2.innerHTML = `<div class="ec-error">${esc(msg)}</div>`;
         } else {
-            alert('Save failed: ' + msg);
+            _alert('Save failed: ' + msg, 'Could not save');
         }
     } finally {
         _submitting = false;

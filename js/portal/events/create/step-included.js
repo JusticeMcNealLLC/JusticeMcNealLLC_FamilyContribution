@@ -23,6 +23,18 @@ function _esc(s) {
     return window.EventsCreateSteps.esc(s);
 }
 
+function _alert(message, title) {
+    if (window.EventsCreateSteps?.alert) return window.EventsCreateSteps.alert(message, title);
+    if (window.EventsHelpers?.alertDialog) {
+        return window.EventsHelpers.alertDialog({
+            title: title || 'Please check this step',
+            message: String(message || ''),
+        });
+    }
+    window.alert(String(message || ''));
+    return Promise.resolve();
+}
+
 function _newItemId() {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID();
@@ -67,10 +79,11 @@ function _mergeChoices(item, preset) {
     }
 }
 
-function _presetsBarHtml() {
+function _presetsBarHtml(showAdd) {
     return `
-        <div class="ec-md-toolbar" style="margin-bottom:12px" role="toolbar" aria-label="Included presets">
+        <div class="ec-actions-row" role="toolbar" aria-label="Included presets">
             <button type="button" id="ecIncPackClothing" class="ec-mini-btn">+ Trip clothing</button>
+            ${showAdd ? '<button type="button" id="ecIncAdd" class="ec-mini-btn">+ Add item</button>' : ''}
         </div>
         <p class="ec-help" style="margin-top:0;margin-bottom:10px">Trip clothing adds size + color items. Use Size / Color preset on each item to fill common choices.</p>
     `;
@@ -113,8 +126,7 @@ function html() {
                 <p class="text-sm text-gray-600">Optional catalog of what’s included — e.g. a hoodie with size and color choices collected at RSVP.</p>
                 <p class="ec-help">Skip if this event doesn’t need sizes, colors, or other per-person options.</p>
             </div>
-            ${_presetsBarHtml()}
-            <button type="button" id="ecIncAdd" class="ec-mini-btn">+ Add item</button>
+            ${_presetsBarHtml(true)}
         `;
     }
 
@@ -122,7 +134,7 @@ function html() {
         <div class="ec-row">
             <p class="text-sm text-gray-600 mb-2">Items guests will configure when they RSVP. Reorder with Up / Down. Scope adults vs kids per item.</p>
         </div>
-        ${_presetsBarHtml()}
+        ${_presetsBarHtml(true)}
         ${items.map((item, index) => `
             <div class="ec-raffle-item-wrap" data-inc-id="${_esc(item.id)}">
                 <div class="ec-raffle-head">
@@ -133,28 +145,31 @@ function html() {
                         <button type="button" class="ec-mini-btn" data-inc-remove="${_esc(item.id)}" style="border-color:#fecaca;color:#dc2626">Remove</button>
                     </div>
                 </div>
-                <div class="ec-row" style="margin-bottom:10px">
-                    <label class="ec-label">Name</label>
-                    <input class="ec-input" type="text" maxlength="${NAME_MAX}" data-inc-name="${_esc(item.id)}" placeholder="e.g. Trip hoodie" value="${_esc(item.name || '')}">
+                <div class="ec-grid-2 ec-grid-keep" style="margin-bottom:10px">
+                    <div>
+                        <label class="ec-label">Name</label>
+                        <input class="ec-input" type="text" maxlength="${NAME_MAX}" data-inc-name="${_esc(item.id)}" placeholder="e.g. Trip hoodie" value="${_esc(item.name || '')}">
+                    </div>
+                    <div>
+                        <label class="ec-label">Applies to</label>
+                        <select class="ec-input" data-inc-applies="${_esc(item.id)}">${_appliesOptions(item.applies_to || 'all')}</select>
+                    </div>
                 </div>
-                <div class="ec-row" style="margin-bottom:10px">
-                    <label class="ec-check">
-                        <input type="checkbox" data-inc-required="${_esc(item.id)}" ${item.required ? 'checked' : ''}>
-                        <span>Required at RSVP</span>
-                    </label>
-                </div>
-                <div class="ec-row" style="margin-bottom:10px">
-                    <label class="ec-label">Applies to</label>
-                    <select class="ec-input" data-inc-applies="${_esc(item.id)}">${_appliesOptions(item.applies_to || 'all')}</select>
-                </div>
-                <div class="ec-row" style="margin-bottom:0">
-                    <label class="ec-label">Option type</label>
-                    <select class="ec-input" data-inc-type="${_esc(item.id)}">${_typeOptions(item.option_type || 'size')}</select>
+                <div class="ec-grid-2 ec-grid-keep" style="margin-bottom:0">
+                    <div>
+                        <label class="ec-label">Option type</label>
+                        <select class="ec-input" data-inc-type="${_esc(item.id)}">${_typeOptions(item.option_type || 'size')}</select>
+                    </div>
+                    <div style="display:flex;align-items:flex-end;min-height:42px">
+                        <label class="ec-check">
+                            <input type="checkbox" data-inc-required="${_esc(item.id)}" ${item.required ? 'checked' : ''}>
+                            <span>Required at RSVP</span>
+                        </label>
+                    </div>
                 </div>
                 ${_choicesHtml(item)}
             </div>
         `).join('')}
-        <button type="button" id="ecIncAdd" class="ec-mini-btn" style="margin-top:12px">+ Add item</button>
     `;
 }
 
@@ -165,7 +180,7 @@ function _addChoice(item, raw, render) {
     const exists = item.choices.some((c) => c.toLowerCase() === value.toLowerCase());
     if (exists) return;
     if (item.choices.length >= CHOICES_MAX) {
-        window.alert(`At most ${CHOICES_MAX} choices per item.`);
+        _alert(`At most ${CHOICES_MAX} choices per item.`);
         return;
     }
     item.choices.push(value);
@@ -202,7 +217,7 @@ function _addTripClothing(items, render) {
         added = true;
     }
     if (!added) {
-        window.alert('Trip clothing items are already in the list.');
+        _alert('Trip clothing items are already in the list.');
         return;
     }
     render();
@@ -332,11 +347,19 @@ function wire() {
     });
 
     document.querySelectorAll('[data-inc-remove]').forEach((el) => {
-        el.addEventListener('click', () => {
+        el.addEventListener('click', async () => {
             const id = el.getAttribute('data-inc-remove');
             const item = items.find((i) => i.id === id);
             if (item && ((item.name || '').trim() || (item.choices || []).length)) {
-                if (!confirm('Remove this included item?')) return;
+                const ok = window.EventsHelpers?.confirmDialog
+                    ? await window.EventsHelpers.confirmDialog({
+                        title: 'Remove this item?',
+                        message: 'Remove this included item?',
+                        confirmLabel: 'Remove',
+                        cancelLabel: 'Keep',
+                    })
+                    : window.confirm('Remove this included item?');
+                if (!ok) return;
             }
             STATE.form.included_items = items.filter((i) => i.id !== id);
             render();

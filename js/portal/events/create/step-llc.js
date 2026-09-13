@@ -120,6 +120,34 @@ function _syncAdultFromBuyIn(STATE) {
     }
 }
 
+function _summaryCardHtml(summary, costItems) {
+    if (!Array.isArray(costItems) || !costItems.length) return '';
+    return `
+        <div class="ec-review-card">
+            <div class="ec-review-row"><span>Included total</span><span>${_money(summary.total_included_cents)}</span></div>
+            <div class="ec-review-row"><span>Base buy-in</span><span>${summary.base_buyin_cents ? _money(summary.base_buyin_cents) : '—'}</span></div>
+            ${summary.llc_cut_cents ? `<div class="ec-review-row"><span>LLC cut</span><span>+${_money(summary.llc_cut_cents)}</span></div>` : ''}
+            <div class="ec-review-row"><span>Suggested buy-in</span><span>${summary.final_buyin_cents ? _money(summary.final_buyin_cents) + '/person' : '—'}</span></div>
+            <div class="ec-review-row"><span>Out of pocket</span><span>~${_money(summary.total_oop_per_person_cents)}/person</span></div>
+        </div>`;
+}
+
+function _refreshLlcDerived() {
+    const STATE = window.EventsCreateSteps.getState();
+    const f = STATE.form;
+    _syncAdultFromBuyIn(STATE);
+    const summary = computeLlcCostBreakdown(f.cost_items, f.min_participants, f.llc_cut_pct);
+    const host = document.getElementById('ecLlcSummary');
+    if (host) host.innerHTML = _summaryCardHtml(summary, f.cost_items);
+    const override = document.getElementById('ecLlcBuyInOverride');
+    if (override) {
+        const suggestedDollars = summary.final_buyin_cents > 0
+            ? Math.ceil(summary.final_buyin_cents / 100)
+            : '';
+        override.placeholder = suggestedDollars ? `Suggested: ${suggestedDollars}` : '0.00';
+    }
+}
+
 function html() {
     const STATE = window.EventsCreateSteps.getState();
     const f = STATE.form;
@@ -273,14 +301,7 @@ function html() {
             `).join('') : '<p class="text-xs text-gray-400 mb-2">No cost items yet. Add lodging, food, etc., or set a buy-in override below.</p>'}
         </div>
 
-        ${f.cost_items.length ? `
-        <div class="ec-review-card">
-            <div class="ec-review-row"><span>Included total</span><span>${_money(summary.total_included_cents)}</span></div>
-            <div class="ec-review-row"><span>Base buy-in</span><span>${summary.base_buyin_cents ? _money(summary.base_buyin_cents) : '—'}</span></div>
-            ${summary.llc_cut_cents ? `<div class="ec-review-row"><span>LLC cut</span><span>+${_money(summary.llc_cut_cents)}</span></div>` : ''}
-            <div class="ec-review-row"><span>Suggested buy-in</span><span>${summary.final_buyin_cents ? _money(summary.final_buyin_cents) + '/person' : '—'}</span></div>
-            <div class="ec-review-row"><span>Out of pocket</span><span>~${_money(summary.total_oop_per_person_cents)}/person</span></div>
-        </div>` : ''}
+        <div id="ecLlcSummary">${_summaryCardHtml(summary, f.cost_items)}</div>
 
         <div class="ec-row">
             <label class="ec-label">Buy-in override (USD / adult)</label>
@@ -304,13 +325,11 @@ function wire() {
 
     document.getElementById('ecLlcMin')?.addEventListener('input', (e) => {
         STATE.form.min_participants = e.target.value;
-        _syncAdultFromBuyIn(STATE);
-        render();
+        _refreshLlcDerived();
     });
     document.getElementById('ecLlcCut')?.addEventListener('input', (e) => {
         STATE.form.llc_cut_pct = e.target.value;
-        _syncAdultFromBuyIn(STATE);
-        render();
+        _refreshLlcDerived();
     });
     document.getElementById('ecLlcInvestEligible')?.addEventListener('change', (e) => {
         STATE.form.invest_eligible = !!e.target.checked;
@@ -396,9 +415,8 @@ function wire() {
         el.addEventListener('input', () => {
             const item = list.find((i) => i.id === el.getAttribute('data-cost-total'));
             if (item) item.total_cost_cents = Math.round(Number(el.value || 0) * 100);
-            _syncAdultFromBuyIn(STATE);
+            _refreshLlcDerived();
         });
-        el.addEventListener('change', () => render());
     });
     document.querySelectorAll('[data-cost-included]').forEach((el) => {
         el.addEventListener('change', () => {
@@ -412,6 +430,7 @@ function wire() {
         el.addEventListener('input', () => {
             const item = list.find((i) => i.id === el.getAttribute('data-cost-avg'));
             if (item) item.avg_per_person_cents = Math.round(Number(el.value || 0) * 100);
+            _refreshLlcDerived();
         });
     });
 }

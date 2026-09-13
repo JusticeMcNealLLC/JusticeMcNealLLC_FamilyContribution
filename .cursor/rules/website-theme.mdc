@@ -34,6 +34,19 @@ CSS vars: `--font-headline`, `--font-body`, `--color-background`, `--color-text`
 - **Accent / positive:** accent bg, white text
 - **Cards:** surface (or white on surface page) + border; readable spacing
 - **Headings:** `font-headline`; body: `font-body`
+- **Dialogs:** centered themed modal — never the browser’s `alert()` / `confirm()` / `prompt()` for user-facing copy
+
+## Dialogs
+
+Notices sit in the middle of the screen (dimmed backdrop, theme panel, OK / Cancel). Same chrome as RSVP checkout.
+
+| Need | Use |
+|------|-----|
+| One-button notice (“Start date is required.”) | `EventsHelpers.alertDialog({ title, message })` |
+| Two-button choice (pay, discard, remove) | `EventsHelpers.confirmDialog({ title, message, confirmLabel, cancelLabel })` |
+| Brief non-blocking success (“Link copied”) | `EventsHelpers.toast(...)` |
+
+Implemented in `js/components/events/helpers.js` with `.evt-confirm-dialog` styles. Reuse that helper — do not add a second modal system or fall back to native dialogs unless Helpers are missing.
 
 ## Logo tones
 

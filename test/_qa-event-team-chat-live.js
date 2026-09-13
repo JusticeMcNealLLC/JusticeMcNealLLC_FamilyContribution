@@ -80,7 +80,7 @@ async function openEventDetail(page) {
 }
 
 async function clickTeam(page) {
-    const mobile = page.locator('#evtCtaBar .evt-cta-team').first();
+    const mobile = page.locator('#evtDetailFabs .evt-cta-team, #evtCtaBar .evt-cta-team').first();
     if (await mobile.isVisible().catch(() => false)) {
         await mobile.click({ timeout: 8000 });
         await page.waitForTimeout(800);

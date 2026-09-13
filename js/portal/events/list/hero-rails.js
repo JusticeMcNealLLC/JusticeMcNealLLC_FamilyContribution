@@ -52,7 +52,7 @@ function renderHero(event, rsvp) {
             : (window.EventsHelpers?.rsvpIsCommittedGoing?.(event, rsvp)
                 || (event.pricing_mode === 'paid' ? rsvp.paid === true : rsvp.status === 'going'))
     ))
-        ? '<div class="absolute top-3 left-3 z-10 inline-flex items-center gap-1 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md backdrop-blur-sm">✓ Going</div>'
+        ? '<div class="evt-hero-going-pill" aria-label="You are going">✓ Going</div>'
         : '';
     // E12 — Heart favorite (vlift hero only). Maps to RSVP status='maybe'
     // ↔ null since the rsvp_status enum is (going|maybe|not_going) — no
@@ -111,17 +111,12 @@ function renderHero(event, rsvp) {
               '</div>'
             : '';
 
-        // Going ribbon sits under FEATURED on the media; shift left if featured
-        const ribbonHtml = goingRibbon
-            ? goingRibbon.replace('top-3 left-3', event.is_featured ? 'top-10 left-3' : 'top-3 left-3')
-            : '';
-
         heroEl.innerHTML =
             '<div class="evt-hero-vlift evt-hero-vlift--panel">' +
                 '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '"' +
                 ' class="evt-hero-media block relative overflow-hidden focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"' +
                 ' style="' + heroBg(event, true) + '" aria-label="' + esc(event.title || 'Featured event') + '">' +
-                    ribbonHtml +
+                    goingRibbon +
                     (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : '') +
                     (quietDate
                         ? '<span class="evt-hero-date-quiet" aria-hidden="true">' + esc(quietDate) + '</span>'

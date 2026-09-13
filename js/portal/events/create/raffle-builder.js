@@ -18,6 +18,18 @@ function _esc(s) {
     return _steps().esc(s);
 }
 
+function _alert(message, title) {
+    if (_steps()?.alert) return _steps().alert(message, title);
+    if (window.EventsHelpers?.alertDialog) {
+        return window.EventsHelpers.alertDialog({
+            title: title || 'Please check this step',
+            message: String(message || ''),
+        });
+    }
+    window.alert(String(message || ''));
+    return Promise.resolve();
+}
+
 function raffleModel() {
     if (!window.EventsRaffleModel) throw new Error('Raffle model helper is not loaded.');
     return window.EventsRaffleModel;
@@ -162,8 +174,8 @@ function builderHtml() {
 
 function _setPrizeImage(itemId, file) {
     const STATE = _state();
-    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) { alert('Please use a PNG, JPG, or WebP image.'); return; }
-    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return; }
+    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) { _alert('Please use a PNG, JPG, or WebP image.'); return; }
+    if (file.size > 5 * 1024 * 1024) { _alert('Image must be under 5 MB.'); return; }
     STATE.prizeImageFiles[itemId] = file;
     const reader = new FileReader();
     reader.onload = () => { STATE.prizeImagePreviews[itemId] = reader.result; _render(); };
@@ -210,7 +222,7 @@ function _moveEntry(entries, id, direction) {
 function _removeCategory(categoryId) {
     const config = ensureRaffleConfig();
     if (config.categories.length <= 1) {
-        alert('Keep at least one raffle category.');
+        _alert('Keep at least one raffle category.');
         return;
     }
     config.categories = config.categories.filter(category => category.id !== categoryId);

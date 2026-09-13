@@ -202,12 +202,20 @@ function wire() {
     });
 
     document.querySelectorAll('[data-disc-remove]').forEach((el) => {
-        el.addEventListener('click', () => {
+        el.addEventListener('click', async () => {
             const id = el.getAttribute('data-disc-remove');
             const item = list.find((d) => d.id === id);
             if (!item || item.is_default) return;
             if ((item.title || '').trim() || (item.body || '').trim()) {
-                if (!confirm('Remove this disclaimer clause?')) return;
+                const ok = window.EventsHelpers?.confirmDialog
+                    ? await window.EventsHelpers.confirmDialog({
+                        title: 'Remove this clause?',
+                        message: 'Remove this disclaimer clause?',
+                        confirmLabel: 'Remove',
+                        cancelLabel: 'Keep',
+                    })
+                    : window.confirm('Remove this disclaimer clause?');
+                if (!ok) return;
             }
             STATE.form.disclaimers = list.filter((d) => d.id !== id);
             render();

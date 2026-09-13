@@ -88,6 +88,24 @@ body.evt-vlift .evt-hero-cta:active { transform: translateX(-50%) scale(.985); }
 /* Ensure meta text doesn't hide behind the button */
 body.evt-vlift .evt-hero-meta { padding-bottom: 80px !important; }
 
+/* ✓ Going status pill (legacy full-bleed hero) */
+.evt-hero-going-pill {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 999px;
+    background: #10b981;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(11, 37, 69, 0.18);
+}
+
 /* ============================================================
  * E7 � Hero attendee cluster pill
  * ============================================================ */
@@ -740,6 +758,29 @@ body.evt-vlift .evt-hero-vlift--panel .evt-hero-date-quiet {
     line-height: 1;
     pointer-events: none;
     box-shadow: 0 2px 8px rgba(11, 37, 69, 0.12);
+}
+
+/* ✓ Going — bottom-right of photo so it never collides with FEATURED */
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-going-pill {
+    position: absolute;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    left: auto;
+    top: auto;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.28rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(14, 139, 139, 0.94);
+    color: #fff;
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    box-shadow: 0 2px 8px rgba(11, 37, 69, 0.22);
+    pointer-events: none;
 }
 
 /* Kill legacy on-image chrome for panel hero */

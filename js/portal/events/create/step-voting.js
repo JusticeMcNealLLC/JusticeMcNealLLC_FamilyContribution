@@ -52,13 +52,8 @@ function _optionRow(opt, idx, locked) {
 
 function html() {
     const STATE = window.EventsCreateSteps.getState();
-    const cfg = _cfg();
-    if (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === 'function') {
-        const norm = window.EventsAmenityVoting.normalizeConfig(cfg);
-        STATE.form.amenity_voting = { ...norm, enabled: cfg.enabled === true && norm.options.length >= 2 ? true : !!cfg.enabled && norm.options.length >= 2 };
-    }
+    const av = _cfg();
     const locked = !!STATE.votingLocked;
-    const av = STATE.form.amenity_voting;
     const options = Array.isArray(av.options) ? av.options : [];
     const optionsHtml = options.length
         ? options.map((o, i) => _optionRow(o, i, locked)).join('')
@@ -90,7 +85,6 @@ function html() {
 }
 
 function _syncFromDom() {
-    const STATE = window.EventsCreateSteps.getState();
     const cfg = _cfg();
     const enabledEl = document.getElementById('ecAmenityEnabled');
     cfg.enabled = !!(enabledEl && enabledEl.checked);
@@ -106,11 +100,7 @@ function _syncFromDom() {
             label: row.querySelector('.ec-amenity-label')?.value?.trim() || '',
             description: row.querySelector('.ec-amenity-desc')?.value?.trim() || '',
         };
-    }).filter((o) => o.label);
-    if (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === 'function') {
-        const norm = window.EventsAmenityVoting.normalizeConfig(cfg);
-        STATE.form.amenity_voting = { ...norm, enabled: cfg.enabled && norm.options.length >= 2 };
-    }
+    });
 }
 
 function wire() {
@@ -119,8 +109,16 @@ function wire() {
     const enabledEl = document.getElementById('ecAmenityEnabled');
     const fieldsEl = document.getElementById('ecAmenityFields');
     enabledEl?.addEventListener('change', () => {
-        _cfg().enabled = enabledEl.checked;
+        const cfg = _cfg();
+        cfg.enabled = enabledEl.checked;
         fieldsEl?.classList.toggle('hidden', !enabledEl.checked);
+        if (cfg.enabled) {
+            if (!Array.isArray(cfg.options)) cfg.options = [];
+            while (cfg.options.length < 2) {
+                cfg.options.push({ id: _newOptionId(), label: '', description: '' });
+            }
+            window.EventsCreateSteps.render();
+        }
     });
     document.getElementById('ecAmenityCloses')?.addEventListener('change', _syncFromDom);
     document.getElementById('ecAmenityResultsVisible')?.addEventListener('change', _syncFromDom);
@@ -156,16 +154,8 @@ function wire() {
 export function validateVoting(form) {
     const av = form.amenity_voting;
     if (!av || av.enabled !== true) return null;
-    const norm = (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === 'function')
-        ? window.EventsAmenityVoting.normalizeConfig(av)
-        : av;
-    if (!norm.enabled) {
-        if ((av.options || []).filter((o) => o && String(o.label || '').trim()).length >= 2) {
-            return 'Enable amenity voting or remove extra options.';
-        }
-        return null;
-    }
-    if ((norm.options || []).length < 2) return 'Add at least two amenity options when voting is enabled.';
+    const labeled = (av.options || []).filter((o) => o && String(o.label || '').trim());
+    if (labeled.length < 2) return 'Add at least two amenity options when voting is enabled.';
     return null;
 }
 

@@ -152,7 +152,8 @@ async function scrapeCtaState(page) {
             footnote: footnote ? footnote.textContent.trim() : null,
             labels: buttons.map((b) => (b.textContent || '').replace(/\s+/g, ' ').trim()),
             team: !!document.querySelector('.evt-cta-team'),
-            manage: buttons.some((b) => /Manage Event/i.test(b.textContent || '')),
+            manage: !!document.querySelector('.evt-detail-fab--manage')
+                || buttons.some((b) => /Manage Event/i.test(b.textContent || '')),
             disabledEnterRaffle: (() => {
                 const btn = document.querySelector('.evt-cta-raffle-locked');
                 return btn ? !!(btn.disabled || btn.getAttribute('aria-disabled') === 'true') : false;
@@ -242,7 +243,7 @@ async function runHostFlow(browser) {
         cta = await scrapeCtaState(page);
         record('host', 'mobile Manage + Team', cta.manage && cta.team, cta.labels.join(' | '));
 
-        await page.locator('#evtCtaBar .evt-cta-team').click({ timeout: 8000 });
+        await page.locator('#evtDetailFabs .evt-cta-team, #evtCtaBar .evt-cta-team').click({ timeout: 8000 });
         await page.waitForTimeout(800);
         const teamOpen = await page.evaluate(() => {
             const panel = document.getElementById('evtCtaPanel');
@@ -255,7 +256,7 @@ async function runHostFlow(browser) {
             await page.waitForTimeout(2000);
             record('host', 'Team RSVP as Myself', true);
 
-            await page.locator('#evtCtaBar .evt-cta-team').click({ timeout: 5000 }).catch(() => null);
+            await page.locator('#evtDetailFabs .evt-cta-team, #evtCtaBar .evt-cta-team').click({ timeout: 5000 }).catch(() => null);
             await page.waitForTimeout(600);
             const raffleRow = page.locator('.evt-team-tool-btn').filter({ hasText: 'Enter Raffle' });
             const raffleDisabled = await raffleRow.getAttribute('disabled').catch(() => null);

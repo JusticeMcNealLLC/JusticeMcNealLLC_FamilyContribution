@@ -30,6 +30,7 @@ function html() {
 
         ${STATE.bannerPreviewUrl ? `<img src="${STATE.bannerPreviewUrl}" class="ec-banner-preview mb-3" alt="">` : ''}
 
+        <div class="ec-review-grid">
         <div class="ec-review-card">
             <h3 class="font-bold text-gray-800 text-sm mb-2">${_esc(f.title || 'Untitled event')}</h3>
             <div class="ec-review-row"><span>Type</span><span>${f.event_type}</span></div>
@@ -129,8 +130,9 @@ function html() {
                 ? `<div class="ec-review-row"><span>Results</span><span>${_esc(String(f.amenity_voting.results_visible || 'after_close').replace(/_/g, ' '))}</span></div>`
                 : ''}
         </div>` : ''}
+        </div>
 
-        <p class="text-xs text-gray-400 text-center">${(typeof window.EventsCreateSteps.isEditMode === 'function' && window.EventsCreateSteps.isEditMode())
+        <p class="text-xs text-gray-400 text-center ec-review-span" style="margin-top:12px">${(typeof window.EventsCreateSteps.isEditMode === 'function' && window.EventsCreateSteps.isEditMode())
             ? 'Tap <strong>Save changes</strong> to update this event, or <strong>Save as draft</strong> to unpublish.'
             : 'Tap <strong>Publish</strong> to go live, or <strong>Save draft</strong> to finish later.'}</p>
     `;

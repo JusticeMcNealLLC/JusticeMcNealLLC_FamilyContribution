@@ -1106,6 +1106,8 @@ body.public-event-detail .ed-amenity-bar-fill {
 .evt-confirm-dialog__actions {
     display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
 }
+.evt-confirm-dialog__actions--single { justify-content: stretch; }
+.evt-confirm-dialog__actions--single .evt-confirm-dialog__btn { flex: 1; }
 .evt-confirm-dialog__btn {
     min-height: 44px; padding: 10px 16px; border-radius: 12px;
     font-size: 14px; font-weight: 600; cursor: pointer;

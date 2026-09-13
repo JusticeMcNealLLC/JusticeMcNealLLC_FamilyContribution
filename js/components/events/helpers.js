@@ -622,7 +622,7 @@
 
     /**
      * Themed confirm dialog (replaces window.confirm for RSVP → Stripe).
-     * @param {{ title?: string, message?: string, confirmLabel?: string, cancelLabel?: string }} opts
+     * @param {{ title?: string, message?: string, confirmLabel?: string, cancelLabel?: string, showCancel?: boolean }} opts
      * @returns {Promise<boolean>}
      */
     function confirmDialog(opts = {}) {
@@ -630,6 +630,7 @@
         const message = opts.message == null ? '' : String(opts.message);
         const confirmLabel = opts.confirmLabel || 'Continue to checkout';
         const cancelLabel = opts.cancelLabel || 'Cancel';
+        const showCancel = opts.showCancel !== false;
 
         return new Promise((resolve) => {
             document.getElementById('evtConfirmDialog')?.remove();
@@ -648,13 +649,20 @@
                 ).join('')
                 : '<p class="evt-confirm-dialog__text">Proceed to checkout?</p>';
 
+            const actionsClass = showCancel
+                ? 'evt-confirm-dialog__actions'
+                : 'evt-confirm-dialog__actions evt-confirm-dialog__actions--single';
+            const cancelBtn = showCancel
+                ? `<button type="button" class="evt-confirm-dialog__btn evt-confirm-dialog__btn--cancel" data-evt-confirm-dismiss>${escapeHtml(cancelLabel)}</button>`
+                : '';
+
             root.innerHTML =
                 '<div class="evt-confirm-dialog__backdrop" data-evt-confirm-dismiss></div>' +
                 '<div class="evt-confirm-dialog__panel">' +
                   `<h2 id="evtConfirmDialogTitle" class="evt-confirm-dialog__title">${escapeHtml(title)}</h2>` +
                   `<div class="evt-confirm-dialog__body">${bodyHtml}</div>` +
-                  '<div class="evt-confirm-dialog__actions">' +
-                    `<button type="button" class="evt-confirm-dialog__btn evt-confirm-dialog__btn--cancel" data-evt-confirm-dismiss>${escapeHtml(cancelLabel)}</button>` +
+                  `<div class="${actionsClass}">` +
+                    cancelBtn +
                     `<button type="button" class="evt-confirm-dialog__btn evt-confirm-dialog__btn--confirm" data-evt-confirm-ok>${escapeHtml(confirmLabel)}</button>` +
                   '</div>' +
                 '</div>';
@@ -699,6 +707,21 @@
         });
     }
 
+    /**
+     * Themed one-button alert (replaces window.alert).
+     * @param {string|{ title?: string, message?: string, okLabel?: string }} opts
+     * @returns {Promise<boolean>}
+     */
+    function alertDialog(opts = {}) {
+        if (typeof opts === 'string') opts = { message: opts };
+        return confirmDialog({
+            title: opts.title || 'Please check this step',
+            message: opts.message == null ? '' : String(opts.message),
+            confirmLabel: opts.okLabel || opts.confirmLabel || 'OK',
+            showCancel: false,
+        });
+    }
+
     // ─── Public exports ───────────────────────────────────
     const EventsHelpers = {
         escapeHtml,
@@ -715,6 +738,7 @@
         toast,
         toggleModal,
         confirmDialog,
+        alertDialog,
         validatePhone,
         normalizeSeatRole,
         adultPriceCents,

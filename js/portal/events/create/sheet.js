@@ -129,16 +129,16 @@ const STATE = {
 };
 
 const CATEGORIES = [
-    { key:'party',         label:'?? Party' },
-    { key:'birthday',      label:'?? Birthday' },
-    { key:'trip',          label:'?? Trip' },
-    { key:'cookout',       label:'?? Cookout' },
-    { key:'game_night',    label:'?? Game Night' },
-    { key:'meeting',       label:'?? Meeting' },
-    { key:'fundraiser',    label:'?? Fundraiser' },
-    { key:'volunteer',     label:'?? Volunteer' },
-    { key:'celebration',   label:'?? Celebration' },
-    { key:'other',         label:'?? Other' },
+    { key:'party',         label:'Party' },
+    { key:'birthday',      label:'Birthday' },
+    { key:'trip',          label:'Trip' },
+    { key:'cookout',       label:'Cookout' },
+    { key:'game_night',    label:'Game Night' },
+    { key:'meeting',       label:'Meeting' },
+    { key:'fundraiser',    label:'Fundraiser' },
+    { key:'volunteer',     label:'Volunteer' },
+    { key:'celebration',   label:'Celebration' },
+    { key:'other',         label:'Other' },
 ];
 
 const TIMEZONES = [
@@ -362,7 +362,7 @@ function _ensureMounted() {
     root.innerHTML = `
         <div id="ecSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
         <div id="ecSheet" class="fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
-            <div id="ecSheetPanel" class="bg-white w-full sm:max-w-2xl sm:max-h-[92vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-auto translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:92vh">
+            <div id="ecSheetPanel" class="ec-sheet-panel bg-white w-full sm:max-w-3xl rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-auto translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col">
                 <header class="px-5 sm:px-6 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0" style="padding-top:max(1rem, env(safe-area-inset-top, 0px))">
                     <div class="flex-1 min-w-0">
                         <p id="ecSheetKicker" class="text-[11px] uppercase tracking-wide font-bold" style="color:var(--color-primary, #13366E)">Create Event <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px]">BETA</span></p>
@@ -374,7 +374,7 @@ function _ensureMounted() {
                     </button>
                 </header>
                 <div id="ecSheetSteps" class="flex items-center justify-center gap-2 px-5 py-2 border-b border-gray-100 flex-shrink-0"></div>
-                <div id="ecSheetContent" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5"></div>
+                <div id="ecSheetContent" class="ec-sheet-content flex-1 overflow-y-auto overflow-x-hidden px-5 sm:px-6 py-5"></div>
                 <footer id="ecSheetFooter" class="px-5 sm:px-6 py-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 flex-shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
                     <button id="ecBackBtn" class="text-sm font-semibold text-gray-600 hover:text-gray-800 px-3" style="min-height:44px">Back</button>
                     <div class="flex flex-wrap items-center gap-2">
@@ -389,28 +389,61 @@ function _ensureMounted() {
             .ec-step-dot.active { background:var(--color-primary, #13366E); width:24px; border-radius:4px; }
             .ec-step-dot.done { background:var(--color-border, #D5DFEC); }
             .ec-label { display:block; font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
-            .ec-input { width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; font-size:16px; color:#111827; background:#fff; }
+            .ec-sheet-content { min-width:0; }
+            .ec-input { width:100%; max-width:100%; min-width:0; box-sizing:border-box; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; font-size:16px; color:#111827; background:#fff; }
+            input[type="datetime-local"].ec-input { font-size:15px; }
             .ec-input:focus { outline:none; border-color:var(--color-primary, #13366E); box-shadow:0 0 0 3px var(--color-focus-ring, rgba(19, 54, 110, 0.35)); }
             .ec-input:disabled, .ec-textarea:disabled { background:#f3f4f6; color:#6b7280; cursor:not-allowed; }
             .ec-textarea { min-height:90px; resize:vertical; font-family:inherit; }
             .ec-help { font-size:11px; color:#9ca3af; margin-top:4px; }
             .ec-row { margin-bottom:14px; }
+            .ec-sheet-panel {
+                height: 92dvh;
+                height: 92vh;
+                max-height: 92dvh;
+                max-height: 92vh;
+            }
+            @media (min-width: 640px) {
+                .ec-sheet-panel {
+                    height: min(760px, 92vh);
+                    max-height: min(760px, 92vh);
+                }
+            }
             .ec-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-            @media(max-width:639px) { .ec-grid-2 { grid-template-columns:1fr; } }
-            .ec-grid-3 { display:grid; grid-template-columns:1fr; gap:12px; }
-            @media(min-width:640px) { .ec-grid-3 { grid-template-columns:1fr 1fr 1fr; } }
-            .ec-type-card { padding:14px; border:2px solid #e5e7eb; border-radius:12px; cursor:pointer; transition:border-color .15s,background .15s; min-height:44px; }
+            .ec-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+            .ec-grid-keep { grid-template-columns: 1fr 1fr !important; }
+            .ec-grid-2 > *, .ec-grid-3 > *, .ec-media-grid > * { min-width:0; }
+            .ec-seat-row { display:grid; grid-template-columns:minmax(0,0.9fr) minmax(0,1.4fr); gap:12px; align-items:start; }
+            .ec-review-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+            .ec-review-grid .ec-review-card { margin-bottom:0; }
+            .ec-review-span { grid-column:1 / -1; }
+            .ec-actions-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+            @media(max-width:639px) {
+                .ec-grid-2 { grid-template-columns:1fr; }
+                .ec-type-card { padding:8px 6px; }
+                .ec-choice-card .ec-choice-sub { display:none; }
+                .ec-seat-row, .ec-review-grid { grid-template-columns:1fr; }
+                .ec-grid-keep.ec-datetime-row { grid-template-columns:1fr !important; }
+            }
+            .ec-type-card { padding:10px 8px; border:2px solid #e5e7eb; border-radius:12px; cursor:pointer; transition:border-color .15s,background .15s; min-height:44px; text-align:center; }
             .ec-type-card.active { border-color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); }
             .ec-type-card.disabled { opacity:.45; cursor:not-allowed; }
-            .ec-type-emoji { font-size:24px; line-height:1; }
-            .ec-banner-drop { border:2px dashed #d1d5db; border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; }
+            .ec-type-emoji, .ec-pill-emoji { font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; font-size:22px; line-height:1; }
+            .ec-type-card .ec-type-label { font-size:12px; font-weight:700; color:#111827; margin-top:4px; line-height:1.2; }
+            .ec-type-card .ec-type-sub { font-size:10px; color:#6b7280; line-height:1.25; margin-top:2px; }
+            .ec-media-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+            .ec-banner-drop { border:2px dashed #d1d5db; border-radius:12px; padding:16px 10px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; }
             .ec-banner-drop:hover { border-color:var(--color-border, #D5DFEC); background:#fafafa; }
             .ec-banner-drop--over { border-color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); }
             .ec-banner-preview { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; }
-            .ec-embed-preview { width:100%; max-width:240px; aspect-ratio:4/5; object-fit:cover; border-radius:12px; display:block; }
+            .ec-embed-preview { width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:12px; display:block; }
             .ec-pill { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; background:#f3f4f6; color:#374151; cursor:pointer; border:1px solid transparent; }
+            .ec-pill .ec-pill-emoji { font-size:13px; text-transform:none; letter-spacing:0; }
             .ec-pill.active { background:var(--color-primary, #13366E); color:#fff; }
             .ec-checkbox-row { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #e5e7eb; border-radius:10px; cursor:pointer; }
+            .ec-choice-card { margin:0; min-width:0; flex-direction:column; align-items:flex-start; gap:6px; padding:8px; }
+            .ec-choice-title { font-size:13px; font-weight:700; color:#111827; line-height:1.2; }
+            .ec-choice-sub { font-size:11px; color:#6b7280; line-height:1.3; margin-top:2px; }
             .ec-checkbox-row input { margin-top:3px; }
             .ec-lock-banner { margin-bottom:12px; border-radius:10px; border:1px solid #fde68a; background:#fffbeb; color:#92400e; padding:10px 12px; font-size:12px; }
             .ec-review-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:14px; margin-bottom:10px; }
@@ -467,7 +500,9 @@ function _ensureMounted() {
             .ec-prize-img-clear { border:1px solid #fecaca; background:#fef2f2; color:#dc2626; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:700; white-space:nowrap; }
             .ec-prize-img-clear:hover { background:#fee2e2; }
             @media(max-width:560px) { .ec-raffle-grid, .ec-raffle-item-grid { grid-template-columns:1fr; } .ec-icon-btn { width:100%; } }
-            @media(max-width:639px){ #ecSheetPanel { max-height: 94vh; } }
+            @media(max-width:639px){
+                #ecSheetPanel, .ec-sheet-panel { height: 94dvh; height: 94vh; max-height: 94dvh; max-height: 94vh; }
+            }
         </style>
     `;
     document.body.appendChild(root);
@@ -504,7 +539,7 @@ async function open(opts) {
             const event = await _loadEventForEdit(eventId);
             const type = event.event_type || 'member';
             if (type !== 'member' && type !== 'llc' && type !== 'competition') {
-                alert('This event type cannot be edited in this sheet.');
+                _alert('This event type cannot be edited in this sheet.');
                 return;
             }
             if (type === 'competition') {
@@ -523,7 +558,7 @@ async function open(opts) {
                 STATE.competitionLocked = entryCount > 0;
             }
         } catch (err) {
-            alert(err.message || 'Could not load event for editing.');
+            _alert(err.message || 'Could not load event for editing.', 'Could not load event');
             return;
         }
     }
@@ -545,13 +580,21 @@ function close() {
     setTimeout(() => sheet.classList.remove('ec-open'), 250);
 }
 
-function _confirmClose() {
+async function _confirmClose() {
     const dirty = STATE.form.title || STATE.bannerFile || STATE.embedImageFile || STATE.editEventId;
     if (dirty) {
         const msg = STATE.editEventId
             ? 'Discard changes to this event?'
             : 'Discard this event? Your draft will not be saved.';
-        if (!confirm(msg)) return;
+        const ok = window.EventsHelpers?.confirmDialog
+            ? await window.EventsHelpers.confirmDialog({
+                title: STATE.editEventId ? 'Discard changes?' : 'Discard this event?',
+                message: msg,
+                confirmLabel: 'Discard',
+                cancelLabel: 'Keep editing',
+            })
+            : window.confirm(msg);
+        if (!ok) return;
     }
     close();
 }
@@ -575,7 +618,7 @@ function _render() {
     dots.innerHTML = steps.map((s, i) =>
         `<div class="ec-step-dot ${i === STATE.step ? 'active' : (i < STATE.step ? 'done' : '')}" title="${s.label}"></div>`
     ).join('');
-    document.getElementById('ecSheetSub').textContent = `Step ${STATE.step + 1} of ${steps.length} ? ${steps[STATE.step].label}`;
+    document.getElementById('ecSheetSub').textContent = 'Step ' + (STATE.step + 1) + ' of ' + steps.length + ' \u00B7 ' + steps[STATE.step].label;
 
     document.getElementById('ecBackBtn').style.visibility = STATE.step === 0 ? 'hidden' : 'visible';
     const draftBtn = document.getElementById('ecDraftBtn');
@@ -695,7 +738,10 @@ function _back() {
 
 function _next() {
     const err = _validateStep();
-    if (err) return alert(err);
+    if (err) {
+        _alert(err);
+        return;
+    }
     const steps = getSteps();
     if (STATE.step < steps.length - 1) {
         STATE.step++;
@@ -710,6 +756,17 @@ function _submit(status) {
 }
 
 // --- Helpers ----------------------------------------------------
+function _alert(message, title) {
+    if (window.EventsHelpers?.alertDialog) {
+        return window.EventsHelpers.alertDialog({
+            title: title || 'Please check this step',
+            message: String(message || ''),
+        });
+    }
+    window.alert(String(message || ''));
+    return Promise.resolve();
+}
+
 function _esc(s) {
     const el = document.createElement('span');
     el.textContent = s == null ? '' : String(s);
@@ -723,6 +780,7 @@ function _bindCreateStepsApi() {
     window.EventsCreateSteps.validateStep = _validateStep;
     window.EventsCreateSteps.close = close;
     window.EventsCreateSteps.esc = _esc;
+    window.EventsCreateSteps.alert = _alert;
     window.EventsCreateSteps.CATEGORIES = CATEGORIES;
     window.EventsCreateSteps.TIMEZONES = TIMEZONES;
     window.EventsCreateSteps.isEditMode = () => !!STATE.editEventId;

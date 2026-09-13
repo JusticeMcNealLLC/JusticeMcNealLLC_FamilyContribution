@@ -27,6 +27,10 @@
         holiday:    '🎄',
         investment: '💼',
         annual:     '📅',
+        meeting:    '📋',
+        fundraiser: '🎗️',
+        volunteer:  '🤲',
+        celebration:'🎊',
         other:      '📌',
     };
 

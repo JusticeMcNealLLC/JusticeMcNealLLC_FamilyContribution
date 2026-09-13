@@ -25,6 +25,8 @@ console.log('event team tools UI smoke\n');
 assert(/globalThis\.evtOpenTeamToolsPanel/.test(sheet), 'evtOpenTeamToolsPanel on globalThis via sheet.js');
 assert(/globalThis\.EventsTeam\s*=/.test(sheet), 'EventsTeam orchestrator in sheet.js');
 assert(/evt-cta-team|Open event team tools/.test(ctaBar), 'Team button with accessible label');
+assert(/function mountDetailFabs/.test(ctaBar) && /evt-detail-fab--manage/.test(ctaBar), 'host/team tools use circle FABs');
+assert(/if \(isHost \|\| teamHubAccess\)/.test(ctaBar), 'host/team skip the RSVP bar');
 assert(/Team Chat/.test(toolsList) && /EventsTeam\.open/.test(toolsList), 'Team Chat opens via EventsTeam sheet');
 assert(/RSVP as Myself/.test(toolsList), 'RSVP as Myself in team tools');
 assert(/Enter Raffle/.test(toolsList), 'Enter Raffle in team tools');

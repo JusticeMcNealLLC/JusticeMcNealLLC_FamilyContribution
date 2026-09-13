@@ -9,8 +9,6 @@ import {
     TW_CTA_ACTIONS,
     TW_CTA_RSVP,
     TW_CTA_RSVP_DONE,
-    TW_CTA_MANAGE,
-    TW_CTA_TEAM,
     TW_CTA_RAFFLE,
     TW_CTA_RAFFLE_OUTLINE,
     TW_CTA_RAFFLE_DONE,
@@ -26,6 +24,7 @@ const EVT_CTA_ICONS = {
     ticket: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>',
     lock:   '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
     manage: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
+    team:   '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',
 };
 
 const TW_CTA_PANEL = 'evt-cta-panel relative flex w-full flex-col min-h-0 flex-1 overflow-y-auto px-4 py-3 max-lg:border-0 max-lg:bg-transparent';
@@ -73,6 +72,31 @@ function collapseCtaBar(bar) {
     unlockCtaScroll();
 }
 
+function cleanupDetailFabs() {
+    document.getElementById('evtDetailFabs')?.remove();
+}
+
+function mountDetailFabs(eventId, { manage, team }) {
+    cleanupDetailFabs();
+    if (!manage && !team) return;
+
+    const manageBtn = manage
+        ? `<button type="button" class="evt-detail-fab evt-detail-fab--manage" aria-label="Manage event" onclick="window.EventsManage ? window.EventsManage.open('${eventId}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId}')">${EVT_CTA_ICONS.manage}</button>`
+        : '';
+    const teamBtn = team
+        ? `<button type="button" class="evt-detail-fab evt-detail-fab--team evt-cta-team" aria-label="Open event team tools" onclick="window.EventsTeam.open('${eventId}',{tab:'tools'})">${EVT_CTA_ICONS.team}</button>`
+        : '';
+
+    const wrap = document.createElement('div');
+    wrap.id = 'evtDetailFabs';
+    wrap.className = 'evt-detail-fabs';
+    wrap.setAttribute('role', 'group');
+    wrap.setAttribute('aria-label', 'Event tools');
+    // Team above, Manage closest to the thumb (same corner as Create).
+    wrap.innerHTML = teamBtn + manageBtn;
+    document.body.appendChild(wrap);
+}
+
 function raffleLockedCtaBtnHtml() {
     return `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_RAFFLE_LOCKED}" disabled aria-disabled="true">${EVT_CTA_ICONS.ticket} Enter Raffle</button>`;
 }
@@ -116,6 +140,7 @@ function openCtaPanel(kind, eventId) {
 function cleanupBottomNav() {
     closeCtaPanel();
     unlockCtaScroll();
+    cleanupDetailFabs();
     const el = document.getElementById('evtCtaBar');
     if (el) el.remove();
     const hint = document.querySelector('.bottom-tab-bar .swipe-hint');
@@ -136,6 +161,11 @@ function initBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, event
         || (typeof canAccessAdminDashboard === 'function' && canAccessAdminDashboard());
 
     if (!isHost && !teamHubAccess && !rsvpEnabled && !raffleEnabled && !isCompetition) return;
+
+    if (isHost || teamHubAccess) {
+        mountDetailFabs(eventId, { manage: !!isHost, team: !!teamHubAccess });
+        return;
+    }
 
     const isClosed = event.status === 'completed' || event.status === 'cancelled';
     const canRsvp = rsvpEnabled && ['open', 'confirmed', 'active'].includes(event.status) && !entriesClosed;
@@ -162,15 +192,7 @@ function initBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, event
     let secondaryBtn = '';
     let ctaFootnote = '';
 
-    const teamBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_TEAM}" onclick="window.EventsTeam.open('${eventId}',{tab:'tools'})" aria-label="Open event team tools">Team</button>`;
-
-    if (isHost) {
-        primaryBtn = `<button type="button" class="${TW_CTA_BTN} ${TW_CTA_MANAGE}" onclick="window.EventsManage ? window.EventsManage.open('${eventId}',{source:'portal'}) : (window.location='../admin/events.html?id=${eventId}')">${EVT_CTA_ICONS.manage} Manage Event</button>`;
-        if (teamHubAccess) secondaryBtn = teamBtn;
-    } else if (teamHubAccess) {
-        primaryBtn = teamBtn;
-    } else {
-        if (showCompJoin) {
+    if (showCompJoin) {
             if (myCompetitionEntry) {
                 primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_COMP_DONE}" disabled>${EVT_CTA_ICONS.check} Registered</button>`;
             } else if (entryFee > 0) {
@@ -257,7 +279,6 @@ function initBottomNav(event, eventId, rsvp, myRaffleEntry, entriesClosed, event
                 else primaryBtn = raffleSlot;
             }
         }
-    }
 
     if (!primaryBtn && !secondaryBtn) return;
 

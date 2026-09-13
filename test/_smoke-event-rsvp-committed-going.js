@@ -80,6 +80,14 @@ const rail = read('js/portal/events/list/hero-rails.js');
 rail.includes('evtIsCommittedGoing') || rail.includes('rsvpIsCommittedGoing')
     ? pass('hero ribbon / going rail committed')
     : fail('hero/rail still raw status=going');
+rail.includes('evt-hero-going-pill')
+    ? pass('featured hero uses evt-hero-going-pill')
+    : fail('hero going pill class missing');
+
+const heroCss = read('css/pages/portal/events/hero.css');
+/evt-hero-vlift--panel \.evt-hero-going-pill[\s\S]{0,180}bottom:\s*0\.6rem/.test(heroCss)
+    ? pass('panel Going pill sits bottom-right of banner')
+    : fail('panel Going pill not bottom-right');
 
 if (rail.includes("if (!r || r.status !== 'going') return false")) {
     fail('going rail still uses raw status === going');

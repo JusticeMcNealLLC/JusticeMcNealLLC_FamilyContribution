@@ -5,9 +5,13 @@
  * legacy detail-page host buttons, mobile CTA bar.
  * ============================================================ */
 
-/* Hide shell top nav on events (mobile only) — temporary layout test */
+/* Hide shell top nav on events (mobile only). List is full-bleed, so the
+   first content must clear the iPhone notch / Dynamic Island itself. */
 @media (max-width: 767px) {
     body[data-active-page="events"] #mobileHeader { display: none !important; }
+    body[data-active-page="events"]:not(.evt-detail-open) #evtShell {
+        padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+    }
 }
 @media (min-width: 768px) {
     #mainNav { position: fixed; top: 0; left: 0; right: 0; z-index: 40; }
@@ -63,6 +67,8 @@
 .evt-confirm-dialog__actions {
     display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
 }
+.evt-confirm-dialog__actions--single { justify-content: stretch; }
+.evt-confirm-dialog__actions--single .evt-confirm-dialog__btn { flex: 1; }
 .evt-confirm-dialog__btn {
     min-height: 44px; padding: 10px 16px; border-radius: 12px;
     font-size: 14px; font-weight: 600; cursor: pointer;

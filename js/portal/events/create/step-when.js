@@ -14,12 +14,12 @@ function html() {
     const f = STATE.form;
     const showCapacityLimit = f.capacity_mode === 'soft' || f.capacity_mode === 'hard';
     const capacityModes = [
-        { key: 'none', label: 'No limit', sub: 'No capacity cap (e.g. open trips).' },
-        { key: 'soft', label: 'Soft cap + waitlist', sub: 'At capacity, new RSVPs join a waitlist.' },
-        { key: 'hard', label: 'Hard cap', sub: 'At capacity, block new RSVPs.' },
+        { key: 'none', label: 'No limit', sub: 'No cap' },
+        { key: 'soft', label: 'Soft cap', sub: 'Waitlist at cap' },
+        { key: 'hard', label: 'Hard cap', sub: 'Block at cap' },
     ];
     return `
-        <div class="ec-grid-2">
+        <div class="ec-grid-2 ec-grid-keep ec-datetime-row">
             <div class="ec-row">
                 <label class="ec-label">Starts</label>
                 <input id="ecStart" class="ec-input" type="datetime-local" value="${_esc(f.start_date)}">
@@ -30,34 +30,41 @@ function html() {
             </div>
         </div>
 
-        <div class="ec-row">
-            <label class="ec-label">Timezone</label>
-            <select id="ecTz" class="ec-input">
-                ${TIMEZONES.map(tz => `<option value="${tz}" ${tz === f.timezone ? 'selected' : ''}>${tz.replace('_', ' ')}</option>`).join('')}
-            </select>
+        <div class="ec-grid-2 ec-grid-keep ec-datetime-row">
+            <div class="ec-row">
+                <label class="ec-label">Timezone</label>
+                <select id="ecTz" class="ec-input">
+                    ${TIMEZONES.map(tz => `<option value="${tz}" ${tz === f.timezone ? 'selected' : ''}>${tz.replace('_', ' ')}</option>`).join('')}
+                </select>
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">RSVP deadline (optional)</label>
+                <input id="ecDeadline" class="ec-input" type="datetime-local" value="${_esc(f.rsvp_deadline)}">
+            </div>
         </div>
 
-        <div class="ec-row">
-            <label class="ec-label">Location nickname</label>
-            <input id="ecLocNick" class="ec-input" type="text" maxlength="60" placeholder="e.g. Mom's house, Cabin in the woods" value="${_esc(f.location_nickname)}">
-            <p class="ec-help">Shown on the banner instead of the full address.</p>
-        </div>
-
-        <div class="ec-row">
-            <label class="ec-label">Address</label>
-            <input id="ecLoc" class="ec-input" type="text" placeholder="123 Main St, City, ST" value="${_esc(f.location_text)}">
-            <div id="ecLocStatus" class="ec-loc-status" style="color:#9ca3af">${STATE.geocode ? `📍 ${_esc(STATE.geocode.display || 'Located')}` : 'Type an address to geocode (optional).'}</div>
+        <div class="ec-grid-2 ec-grid-keep">
+            <div class="ec-row">
+                <label class="ec-label">Location nickname</label>
+                <input id="ecLocNick" class="ec-input" type="text" maxlength="60" placeholder="e.g. Mom's house" value="${_esc(f.location_nickname)}">
+                <p class="ec-help">Shown on the banner instead of the full address.</p>
+            </div>
+            <div class="ec-row">
+                <label class="ec-label">Address</label>
+                <input id="ecLoc" class="ec-input" type="text" placeholder="123 Main St, City, ST" value="${_esc(f.location_text)}">
+                <div id="ecLocStatus" class="ec-loc-status" style="color:#9ca3af">${STATE.geocode ? `📍 ${_esc(STATE.geocode.display || 'Located')}` : 'Type an address to geocode (optional).'}</div>
+            </div>
         </div>
 
         <div class="ec-row">
             <label class="ec-label">Capacity</label>
-            <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="ec-grid-3">
                 ${capacityModes.map(m => `
-                    <label class="ec-checkbox-row" style="cursor:pointer">
+                    <label class="ec-checkbox-row ec-choice-card">
                         <input type="radio" name="ecCapacityMode" value="${m.key}" ${f.capacity_mode === m.key ? 'checked' : ''}>
-                        <div class="flex-1">
-                            <div class="text-sm font-bold text-gray-800">${m.label}</div>
-                            <div class="text-xs text-gray-500">${m.sub}</div>
+                        <div class="min-w-0">
+                            <div class="ec-choice-title">${m.label}</div>
+                            <div class="ec-choice-sub">${m.sub}</div>
                         </div>
                     </label>
                 `).join('')}
@@ -65,35 +72,29 @@ function html() {
         </div>
 
         ${showCapacityLimit ? `
-        <div class="ec-grid-2">
-            <div class="ec-row">
-                <label class="ec-label">Seat limit</label>
-                <input id="ecCapacityMax" class="ec-input" type="number" min="1" placeholder="e.g. 50" value="${_esc(f.max_participants)}">
-            </div>
-            <div class="ec-row">
-                <label class="ec-label">Counts toward limit</label>
-                <div style="display:flex;flex-direction:column;gap:8px;margin-top:2px">
-                    <label class="ec-checkbox-row" style="cursor:pointer">
-                        <input type="radio" name="ecCapacityCounts" value="adults" ${f.capacity_counts === 'adults' ? 'checked' : ''}>
-                        <div class="flex-1">
-                            <div class="text-sm font-bold text-gray-800">Adults only</div>
-                        </div>
-                    </label>
-                    <label class="ec-checkbox-row" style="cursor:pointer">
-                        <input type="radio" name="ecCapacityCounts" value="all" ${f.capacity_counts === 'all' ? 'checked' : ''}>
-                        <div class="flex-1">
-                            <div class="text-sm font-bold text-gray-800">Adults and kids</div>
-                        </div>
-                    </label>
+        <div class="ec-row">
+            <div class="ec-seat-row">
+                <div>
+                    <label class="ec-label">Seat limit</label>
+                    <input id="ecCapacityMax" class="ec-input" type="number" min="1" placeholder="e.g. 50" value="${_esc(f.max_participants)}">
+                    <p class="ec-help">Max seats for this event.</p>
+                </div>
+                <div>
+                    <label class="ec-label">Counts toward limit</label>
+                    <div class="ec-grid-2 ec-grid-keep">
+                        <label class="ec-checkbox-row ec-choice-card">
+                            <input type="radio" name="ecCapacityCounts" value="adults" ${f.capacity_counts === 'adults' ? 'checked' : ''}>
+                            <div class="ec-choice-title">Adults only</div>
+                        </label>
+                        <label class="ec-checkbox-row ec-choice-card">
+                            <input type="radio" name="ecCapacityCounts" value="all" ${f.capacity_counts === 'all' ? 'checked' : ''}>
+                            <div class="ec-choice-title">Adults and kids</div>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
         ` : ''}
-
-        <div class="ec-row">
-            <label class="ec-label">RSVP deadline (optional)</label>
-            <input id="ecDeadline" class="ec-input" type="datetime-local" value="${_esc(f.rsvp_deadline)}">
-        </div>
     `;
 }
 

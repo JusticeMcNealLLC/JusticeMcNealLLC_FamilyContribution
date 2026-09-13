@@ -59,6 +59,69 @@
     #evtCreateFab.evt-fab--hidden { transform: none; }
 }
 
+/* Detail host/team FABs — same corner language as Create */
+.evt-detail-fabs {
+    position: fixed;
+    right: 1rem;
+    bottom: max(1rem, calc(72px + env(safe-area-inset-bottom, 0px)));
+    z-index: 45;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+.evt-detail-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(19, 54, 110, 0.22);
+    transition: transform .12s ease, opacity .18s ease, background-color .15s ease;
+    padding: 0;
+}
+.evt-detail-fab svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+.evt-detail-fab--manage {
+    background: var(--color-primary, #13366E);
+    color: #fff;
+    border: 0;
+}
+.evt-detail-fab--manage:hover { background: var(--color-primary-hover, #0f2d5c); }
+.evt-detail-fab--team {
+    background: #fff;
+    color: var(--color-primary, #13366E);
+    border: 1.5px solid var(--color-border, #D5DFEC);
+}
+.evt-detail-fab--team:hover { background: var(--color-surface, #EEF2F6); }
+.evt-detail-fab:active { transform: scale(0.95); }
+.evt-detail-fab:focus-visible { outline: 3px solid rgb(199 210 254); outline-offset: 3px; }
+@media (min-width: 768px) {
+    .evt-detail-fabs {
+        bottom: 1.5rem;
+        right: 1.5rem;
+    }
+}
+@media (min-width: 1024px) {
+    .evt-detail-fabs { display: none !important; }
+}
+body:has(#emSheet.em-open) .evt-detail-fabs,
+body:has(#etSheet.et-open) .evt-detail-fabs {
+    opacity: 0;
+    pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    .evt-detail-fab { transition: none; }
+    .evt-detail-fab:active { transform: none; }
+}
+
 /* List greeting / title header retired — keep IDs for legacy JS, never show */
 #evtPageHeader[hidden],
 #evtPageHeader.hidden {

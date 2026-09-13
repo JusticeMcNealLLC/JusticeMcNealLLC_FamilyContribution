@@ -9,6 +9,18 @@ function _esc(s) {
     return window.EventsCreateSteps.esc(s);
 }
 
+function _alert(message, title) {
+    if (window.EventsCreateSteps?.alert) return window.EventsCreateSteps.alert(message, title);
+    if (window.EventsHelpers?.alertDialog) {
+        return window.EventsHelpers.alertDialog({
+            title: title || 'Please check this step',
+            message: String(message || ''),
+        });
+    }
+    window.alert(String(message || ''));
+    return Promise.resolve();
+}
+
 function _newTabId() {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID();
@@ -123,7 +135,7 @@ function _applyMdAction(action, textarea, tab) {
         if (url == null) return;
         const trimmed = String(url).trim();
         if (!_isHttpUrl(trimmed)) {
-            window.alert('Enter a full http:// or https:// URL.');
+            _alert('Enter a full http:// or https:// URL.');
             return;
         }
         const start = textarea.selectionStart ?? 0;
@@ -139,7 +151,7 @@ function _applyMdAction(action, textarea, tab) {
         if (url == null) return;
         const trimmed = String(url).trim();
         if (!_isHttpUrl(trimmed)) {
-            window.alert('Enter a full http:// or https:// image URL.');
+            _alert('Enter a full http:// or https:// image URL.');
             return;
         }
         const alt = window.prompt('Image description (alt text)', 'Image') || 'Image';
@@ -209,11 +221,19 @@ function wire() {
     });
 
     document.querySelectorAll('[data-about-remove]').forEach((el) => {
-        el.addEventListener('click', () => {
+        el.addEventListener('click', async () => {
             const id = el.getAttribute('data-about-remove');
             const tab = tabs.find((t) => t.id === id);
             if (tab && ((tab.title || '').trim() || (tab.body || '').trim())) {
-                if (!confirm('Remove this About tab?')) return;
+                const ok = window.EventsHelpers?.confirmDialog
+                    ? await window.EventsHelpers.confirmDialog({
+                        title: 'Remove this tab?',
+                        message: 'Remove this About tab?',
+                        confirmLabel: 'Remove',
+                        cancelLabel: 'Keep',
+                    })
+                    : window.confirm('Remove this About tab?');
+                if (!ok) return;
             }
             STATE.form.about_tabs = tabs.filter((t) => t.id !== id);
             render();

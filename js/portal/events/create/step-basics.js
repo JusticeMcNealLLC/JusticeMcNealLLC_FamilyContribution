@@ -6,11 +6,23 @@ function _esc(s) {
     return window.EventsCreateSteps.esc(s);
 }
 
+function _alert(message, title) {
+    if (window.EventsCreateSteps?.alert) return window.EventsCreateSteps.alert(message, title);
+    if (window.EventsHelpers?.alertDialog) {
+        return window.EventsHelpers.alertDialog({
+            title: title || 'Please check this step',
+            message: String(message || ''),
+        });
+    }
+    window.alert(String(message || ''));
+    return Promise.resolve();
+}
+
 function _setImageFile(imageFile, fileKey, previewKey) {
     const STATE = window.EventsCreateSteps.getState();
     if (!imageFile) return;
-    if (!imageFile.type.match(/^image\/(png|jpeg|webp)$/)) { alert('Please choose a PNG, JPG, or WebP image.'); return; }
-    if (imageFile.size > 5 * 1024 * 1024) { alert('File must be under 5 MB.'); return; }
+    if (!imageFile.type.match(/^image\/(png|jpeg|webp)$/)) { _alert('Please choose a PNG, JPG, or WebP image.'); return; }
+    if (imageFile.size > 5 * 1024 * 1024) { _alert('File must be under 5 MB.'); return; }
     STATE[fileKey] = imageFile;
     const reader = new FileReader();
     reader.onload = () => {
@@ -60,6 +72,7 @@ function _wireImageUpload(dropId, fileId, clearId, fileKey, previewKey) {
 function html() {
     const STATE = window.EventsCreateSteps.getState();
     const CATEGORIES = window.EventsCreateSteps.CATEGORIES;
+    const catEmoji = (window.EventsConstants && window.EventsConstants.CATEGORY_EMOJI) || {};
     const f = STATE.form;
     const types = [
         { key:'member', emoji:'👥', label:'Member event', sub:'Anyone can RSVP', enabled:true },
@@ -73,8 +86,8 @@ function html() {
                 ${types.map(t => `
                     <div class="ec-type-card ${f.event_type === t.key ? 'active' : ''} ${!t.enabled ? 'disabled' : ''}" data-type="${t.key}" ${!t.enabled ? 'data-disabled="1"' : ''}>
                         <div class="ec-type-emoji">${t.emoji}</div>
-                        <div class="text-sm font-bold text-gray-800 mt-1">${t.label}</div>
-                        <div class="text-xs text-gray-500">${t.sub}</div>
+                        <div class="ec-type-label">${t.label}</div>
+                        <div class="ec-type-sub">${t.sub}</div>
                     </div>
                 `).join('')}
             </div>
@@ -90,7 +103,7 @@ function html() {
             <label class="ec-label">Category</label>
             <div style="display:flex;flex-wrap:wrap;gap:6px">
                 ${CATEGORIES.map(c =>
-                    `<button type="button" class="ec-pill ${f.category === c.key ? 'active' : ''}" data-cat="${c.key}">${c.label}</button>`
+                    `<button type="button" class="ec-pill ${f.category === c.key ? 'active' : ''}" data-cat="${c.key}"><span class="ec-pill-emoji" aria-hidden="true">${catEmoji[c.key] || ''}</span>${c.label}</button>`
                 ).join('')}
             </div>
         </div>
@@ -100,32 +113,33 @@ function html() {
             <textarea id="ecDesc" class="ec-input ec-textarea" maxlength="2000" placeholder="Tell members what to expect…">${_esc(f.description)}</textarea>
         </div>
 
-        <div class="ec-row">
-            <label class="ec-label">Banner image (optional)</label>
-            <input id="ecBannerFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
-            ${STATE.bannerPreviewUrl
-                ? `<div><img src="${STATE.bannerPreviewUrl}" class="ec-banner-preview" alt=""><button type="button" id="ecBannerClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>`
-                : `<div id="ecBannerDrop" class="ec-banner-drop">
-                        <div style="font-size:28px">🖼️</div>
-                        <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drag &amp; drop or click to upload</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
-                        <div class="text-xs text-gray-400">PNG / JPG / WebP · max 5 MB</div>
-                   </div>`
-            }
-            <p class="ec-help">Landscape image for event pages and cards.</p>
-        </div>
-
-        <div class="ec-row">
-            <label class="ec-label">Embed image (optional)</label>
-            <input id="ecEmbedImageFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
-            ${STATE.embedImagePreviewUrl
-                ? `<div><img src="${STATE.embedImagePreviewUrl}" class="ec-embed-preview" alt=""><button type="button" id="ecEmbedImageClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>`
-                : `<div id="ecEmbedImageDrop" class="ec-banner-drop">
-                        <div style="font-size:28px">▣</div>
-                        <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drag &amp; drop or click to upload</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
-                        <div class="text-xs text-gray-400">Portrait works best · PNG / JPG / WebP · max 5 MB</div>
-                   </div>`
-            }
-            <p class="ec-help">Used only for iMessage, Discord, and other link previews. Falls back to the banner if empty.</p>
+        <div class="ec-row ec-media-grid">
+            <div>
+                <label class="ec-label">Banner image (optional)</label>
+                <input id="ecBannerFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
+                ${STATE.bannerPreviewUrl
+                    ? `<div><img src="${STATE.bannerPreviewUrl}" class="ec-banner-preview" alt=""><button type="button" id="ecBannerClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>`
+                    : `<div id="ecBannerDrop" class="ec-banner-drop">
+                            <div class="ec-type-emoji">🖼️</div>
+                            <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drop or click</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
+                            <div class="text-xs text-gray-400">Landscape · 5 MB</div>
+                       </div>`
+                }
+                <p class="ec-help">Event pages and cards.</p>
+            </div>
+            <div>
+                <label class="ec-label">Embed image (optional)</label>
+                <input id="ecEmbedImageFile" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
+                ${STATE.embedImagePreviewUrl
+                    ? `<div><img src="${STATE.embedImagePreviewUrl}" class="ec-embed-preview" alt=""><button type="button" id="ecEmbedImageClear" class="text-xs text-red-600 font-semibold mt-1">Remove</button></div>`
+                    : `<div id="ecEmbedImageDrop" class="ec-banner-drop">
+                            <div class="ec-type-emoji">▣</div>
+                            <div class="text-sm font-semibold text-gray-700 mt-1"><span class="ec-drop-hint-desktop" style="display:none">Drop or click</span><span class="ec-drop-hint-touch">Tap to upload</span></div>
+                            <div class="text-xs text-gray-400">Portrait · 5 MB</div>
+                       </div>`
+                }
+                <p class="ec-help">iMessage / Discord preview. Falls back to the banner.</p>
+            </div>
         </div>
     `;
 }

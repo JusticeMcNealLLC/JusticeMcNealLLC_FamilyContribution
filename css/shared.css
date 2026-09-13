@@ -126,9 +126,12 @@
     gap: 8px;
 }
 
-/* ─── Safe-area top inset for PWA (iPhone Dynamic Island / notch) ─── */
+/* ─── Safe-area top inset (iPhone Dynamic Island / notch) ─── */
+#mobileHeader {
+    padding-top: env(safe-area-inset-top, 0px);
+}
 @supports (padding-top: env(safe-area-inset-top)) {
-    /* Standalone PWA mode */
+    /* Standalone PWA mode — any other sticky top nav */
     @media (display-mode: standalone) {
         nav.sticky {
             padding-top: env(safe-area-inset-top, 0px);
