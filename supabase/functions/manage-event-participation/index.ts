@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { cancelPartyParticipation } from '../_shared/cancel-party-participation.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
@@ -56,12 +57,14 @@ serve(async (req) => {
     if (!isManager) throw new Error('Only event hosts or admins can manage participation')
 
     if (action === 'reset_participation') {
+      // Soft-close payment-linked parties before deleting RSVP rows (no Stripe refunds)
+      await cancelPartyParticipation(supabase, { eventId, allForEvent: true })
       await deleteByEvent(supabase, 'event_raffle_winners', eventId)
       await deleteByEvent(supabase, 'event_raffle_entries', eventId)
       await deleteByEvent(supabase, 'event_checkins', eventId)
       await deleteByEvent(supabase, 'event_guest_rsvps', eventId)
       await deleteByEvent(supabase, 'event_rsvps', eventId)
-      return json({ ok: true, action })
+      return json({ ok: true, action, refunds: false })
     }
 
     if (action === 'remove_rsvp') {
@@ -70,21 +73,53 @@ serve(async (req) => {
         const guestToken = String(body.guest_token || '')
         const rsvpId = String(body.rsvp_id || '')
         if (!guestToken || !rsvpId) throw new Error('Missing guest RSVP details')
+
+        const { data: guestRow } = await supabase
+          .from('event_guest_rsvps')
+          .select('id, party_id')
+          .eq('id', rsvpId)
+          .eq('event_id', eventId)
+          .maybeSingle()
+
+        const partyIds: string[] = []
+        if (guestRow?.party_id) partyIds.push(String(guestRow.party_id))
+        await cancelPartyParticipation(supabase, {
+          eventId,
+          partyIds,
+          payerGuestRsvpId: rsvpId,
+        })
+
         await deleteByEventColumn(supabase, 'event_raffle_winners', eventId, 'guest_token', guestToken)
         await deleteByEventColumn(supabase, 'event_raffle_entries', eventId, 'guest_token', guestToken)
         await deleteByEventColumn(supabase, 'event_checkins', eventId, 'guest_token', guestToken)
         await deleteByIdAndEvent(supabase, 'event_guest_rsvps', eventId, rsvpId)
-        return json({ ok: true, action, kind })
+        return json({ ok: true, action, kind, refunds: false })
       }
 
       if (kind === 'member') {
         const userId = String(body.user_id || '')
         if (!userId) throw new Error('Missing member RSVP details')
+
+        const { data: memberRow } = await supabase
+          .from('event_rsvps')
+          .select('id, party_id')
+          .eq('event_id', eventId)
+          .eq('user_id', userId)
+          .maybeSingle()
+
+        const partyIds: string[] = []
+        if (memberRow?.party_id) partyIds.push(String(memberRow.party_id))
+        await cancelPartyParticipation(supabase, {
+          eventId,
+          partyIds,
+          payerUserId: userId,
+        })
+
         await deleteByEventColumn(supabase, 'event_raffle_winners', eventId, 'user_id', userId)
         await deleteByEventColumn(supabase, 'event_raffle_entries', eventId, 'user_id', userId)
         await deleteByEventColumn(supabase, 'event_checkins', eventId, 'user_id', userId)
         await deleteByEventColumn(supabase, 'event_rsvps', eventId, 'user_id', userId)
-        return json({ ok: true, action, kind })
+        return json({ ok: true, action, kind, refunds: false })
       }
 
       throw new Error('Unsupported RSVP kind')
@@ -109,7 +144,7 @@ serve(async (req) => {
       await deleteByEventColumn(supabase, 'event_raffle_winners', eventId, 'user_id', entry.user_id)
     }
     await deleteByIdAndEvent(supabase, 'event_raffle_entries', eventId, entryId)
-    return json({ ok: true, action })
+    return json({ ok: true, action, refunds: false })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     const status = message === 'Unauthorized' || message === 'Authorization required' ? 401 : 400

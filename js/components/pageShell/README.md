@@ -12,31 +12,51 @@ One ES module entry per page (portal: `pages/portal/`, admin: `admin/`):
 
 Place after `config.js`, before `auth/shared.js`. The page `<body>` must set `data-page-type` and `data-active-page`. Placeholders: `#nav-placeholder`, `#footer-placeholder`, `#tabs-placeholder`.
 
+## Mobile header slots
+
+`#mobileHeader` is one bar with three slots: `#mhSlotLeft`, `#mhSlotCenter`, `#mhSlotRight`.
+
+- **Default:** logo + “Justice McNeal” in center.
+- **Feed:** New Post (left) + brand (center) + notifications (right).
+- Pages may fill slots at runtime instead of adding a second top bar.
+
+```js
+window.PageShell.setMobileHeader({
+  left: '<button …>Back</button>',
+  center: '<!-- logo -->',
+  right: '<button …>Share</button>',
+});
+window.PageShell.resetMobileHeader(); // restore page preset after inject
+```
+
+Omit a key to leave that slot unchanged. Immersive pages (e.g. quests) may still hide `#mobileHeader` via CSS.
+
 ## Layout
 
 ```
 pageShell/
   index.js              ← entry: reads context, builds HTML, wires UI
   state/
-    icons.js            ← SVG path constants
-    pageContext.js      ← body dataset → { pageType, active, isAdmin }
-    portalNavIcons.js   ← Theme_JMLLC001 portal sidebar icons
+    icons.js
+    pageContext.js
+    portalNavIcons.js
   utils/
-    svgPath.js          ← path → <path> element
+    svgPath.js
   render/
-    links.js            ← link/tab builders
+    links.js
     portalSidebar.js
     adminSidebar.js
-    mobileHeader.js
+    mobileHeader.js     ← slotted left/center/right
     footer.js
     tabBar.js
     drawer.js
     notificationPanel.js
   ui/
-    inject.js           ← placeholders, body restructure, scroll restore
-    dropdowns.js        ← More / profile accordions
-    drawer.js           ← swipe drawer + dock customization
-    profileLoader.js    ← loadNavProfile (also on window for auth/shared.js)
+    inject.js
+    mobileHeaderSlots.js ← setMobileHeader / resetMobileHeader
+    dropdowns.js
+    drawer.js
+    profileLoader.js
     adminBadges.js
     reentrySplash.js
 ```

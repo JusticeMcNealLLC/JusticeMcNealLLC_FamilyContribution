@@ -83,17 +83,8 @@ function evtBuildDetailTemplate(templateCtx) {
             <!-- ─── Immersive Hero ─── -->
             <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `${evtDataAction('evtOpenLightbox', event.banner_url)}` : ''} role="img" aria-label="Event banner">
                 <div class="ed-hero-scrim"></div>
-                <div class="ed-hero-nav">
-                    ${heroStatusBadgeHtml}
-                    <div class="ed-hero-pill-row">
-                        <button onclick="event.stopPropagation();globalThis.evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-                        </button>
-                    </div>
-                </div>
                 <div class="ed-hero-bottom-content">
                     <h1 class="ed-hero-title">${evtEscapeHtml(event.title)}</h1>
-                    <p class="ed-hero-subtitle">${cpName ? `Hosted by ${evtEscapeHtml(cpName)}` : evtEscapeHtml(tc.label)}${event.category ? ` &bull; ${evtEscapeHtml((event.category || '').replace(/_/g,' '))}` : ''}</p>
                     <div class="ed-hero-info-bar">
                         <div class="ed-hero-info-item">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -152,10 +143,12 @@ function evtBuildDetailTemplate(templateCtx) {
                         </div>
                     </div>
                 </div>` : ''}
-                <!-- Mobile Attendees Card (S7) -->
-                ${mobileAttendeesHtml}
-                <!-- Mobile Hosted By Card (S8) -->
-                ${mobileHostedHtml}
+                <!-- Mobile Attendees + Host row (S7 / S8) -->
+                ${(mobileAttendeesHtml || mobileHostedHtml) ? `
+                <div class="ed-mobile-meta-row">
+                    ${mobileAttendeesHtml}
+                    ${mobileHostedHtml}
+                </div>` : ''}
                 <!-- About Card -->
                 <div class="ed-about-grid event-detail-card">
                     <div class="ed-about-left">

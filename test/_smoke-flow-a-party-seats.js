@@ -31,6 +31,17 @@ partySeatsJs.includes('EventsPartySeats')
 partySeatsJs.includes('readSeatsFromRoot')
     ? pass('readSeatsFromRoot')
     : fail('readSeatsFromRoot missing');
+partySeatsJs.includes('function resolvePartyRoot')
+    ? pass('resolvePartyRoot (self-or-descendant party root)')
+    : fail('resolvePartyRoot missing — party total can zero out');
+partySeatsJs.includes("Payer cannot be a child")
+    || partySeatsJs.includes("role: 'adult'")
+    ? pass('payer locked to adult seat')
+    : fail('payer should be adult-only');
+/isPayer\)[\s\S]{0,80}value="kid"/.test(partySeatsJs)
+    && !partySeatsJs.includes('Payer cannot be a child')
+    ? fail('payer still offered kid radio')
+    : pass('payer has no child radio option');
 
 const helpers = read('js/components/events/helpers.js');
 helpers.includes('partyBaseTotalCents')

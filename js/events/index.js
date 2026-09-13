@@ -47,28 +47,36 @@ function pubMemberRsvpPromptHtml(eventSlug) {
 }
 
 /**
- * Going count = member RSVPs (status going) + guest RSVPs (going or paid).
- * Aligns with portal Events (list.js / detail.js). Member rows need auth or RPC for anon.
+ * Going count for public pages.
+ * Paid events: paid attendees only (unpaid Checkout prep must not show as going).
+ * Free/other: member status=going + guest going OR paid.
+ * Prefers RPC public_event_going_count; falls back to client counts.
  */
-async function pubFetchGoingCount(eventId) {
-    const [{ count: memberCount }, { count: guestCount }, rpcRes] = await Promise.all([
-        supabaseClient
-            .from('event_rsvps')
-            .select('id', { count: 'exact', head: true })
-            .eq('event_id', eventId)
-            .eq('status', 'going'),
-        supabaseClient
-            .from('event_guest_rsvps')
-            .select('id', { count: 'exact', head: true })
-            .eq('event_id', eventId)
-            .or('status.eq.going,paid.eq.true'),
-        supabaseClient.rpc('public_event_going_count', { p_event_id: eventId }),
-    ]);
-
+async function pubFetchGoingCount(eventId, event) {
+    const isPaid = (event || pubCurrentEvent)?.pricing_mode === 'paid';
+    const rpcRes = await supabaseClient.rpc('public_event_going_count', { p_event_id: eventId });
     if (!rpcRes.error && rpcRes.data != null && !Number.isNaN(Number(rpcRes.data))) {
         return Number(rpcRes.data);
     }
 
+    let memberQ = supabaseClient
+        .from('event_rsvps')
+        .select('id', { count: 'exact', head: true })
+        .eq('event_id', eventId)
+        .eq('status', 'going');
+    if (isPaid) memberQ = memberQ.eq('paid', true);
+
+    let guestQ = supabaseClient
+        .from('event_guest_rsvps')
+        .select('id', { count: 'exact', head: true })
+        .eq('event_id', eventId);
+    if (isPaid) {
+        guestQ = guestQ.eq('paid', true);
+    } else {
+        guestQ = guestQ.or('status.eq.going,paid.eq.true');
+    }
+
+    const [{ count: memberCount }, { count: guestCount }] = await Promise.all([memberQ, guestQ]);
     return (memberCount || 0) + (guestCount || 0);
 }
 
@@ -78,7 +86,7 @@ function pubGenericAvatarStackHtml(count) {
     if (!shown) return '';
     let html = '<div class="ed-avatar-stack" style="margin-right:8px">';
     for (let i = 0; i < shown; i++) {
-        html += '<div class="ed-avatar ed-avatar-sm" style="background:#e0e7ff"><span style="font-size:11px;color:#4f46e5">👤</span></div>';
+        html += '<div class="ed-avatar ed-avatar-sm" style="background:#EEF2F6"><span style="font-size:11px;color:#13366E">👤</span></div>';
     }
     if (total > 5) {
         html += `<div class="ed-avatar ed-avatar-sm ed-avatar-overflow"><span>+${total - 5}</span></div>`;
@@ -100,11 +108,12 @@ function pubRenderPublicAttendance(goingCount, event) {
     const n = Math.max(0, Number(goingCount) || 0);
     const stack = n > 0 ? pubGenericAvatarStackHtml(n) : '';
     const primary = pubAttendanceLabel(n);
-    const sub = event.max_participants && n > 0
-        ? (event.max_participants - n > 0
-            ? `${event.max_participants - n} spots left`
-            : 'Sold out')
-        : (n === 0 ? 'RSVP to join this event' : '');
+    const Cap = window.EventsCapacity;
+    let sub = n === 0 ? 'RSVP to join this event' : '';
+    if (Cap?.eventHasCapacityLimit?.(event) && n > 0) {
+        const left = Cap.spotsRemaining(event, n);
+        sub = left > 0 ? `${left} spots left` : 'Sold out';
+    }
 
     countEl.innerHTML = `
         <div class="evt-info-row" style="align-items:center">
@@ -115,6 +124,50 @@ function pubRenderPublicAttendance(goingCount, event) {
             </div>
         </div>`;
     countEl.classList.remove('hidden');
+}
+
+async function pubRenderAmenityResults(event) {
+    const el = document.getElementById('amenityResultsSection');
+    if (!el || !window.EventsAmenityVoting || !event?.id) return;
+    const cfg = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
+    if (!cfg.enabled) {
+        el.classList.add('hidden');
+        el.innerHTML = '';
+        return;
+    }
+
+    let tallies = {};
+    let visible = false;
+    try {
+        const { data, error } = await supabaseClient.rpc('get_event_amenity_vote_tallies', {
+            p_event_id: event.id,
+        });
+        if (error) throw error;
+        visible = !!(data && data.visible);
+        const raw = (data && data.tallies) || {};
+        for (const opt of cfg.options) {
+            tallies[opt.id] = Number(raw[opt.id]) || 0;
+        }
+        for (const [id, n] of Object.entries(raw)) {
+            if (!(id in tallies)) tallies[id] = Number(n) || 0;
+        }
+    } catch (err) {
+        console.warn('Public amenity tallies failed', err);
+        visible = window.EventsAmenityVoting.canShowResults(cfg, { now: new Date() });
+    }
+
+    if (visible) {
+        const inner = window.EventsAmenityVoting.resultsHtml(cfg, tallies, { isHost: false });
+        if (inner) {
+            el.innerHTML = inner;
+            el.classList.remove('hidden');
+            return;
+        }
+    }
+
+    // No pending “Voting open” teaser on public About — vote is cast during RSVP
+    el.innerHTML = '';
+    el.classList.add('hidden');
 }
 
 function pubMiniMarkdown(text) {
@@ -161,6 +214,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (_) { /* not logged in */ }
 
     await pubLoadEvent(slug, isCheckin, ticketToken, paidType);
+
+    // Stash payment magic-link token from Checkout return (§13.11)
+    const inviteTok = (params.get('t') || '').trim();
+    if (paidType === 'rsvp' && inviteTok && window.EventsHelpers?.stashPaymentInviteToken && window.pubCurrentEvent?.id) {
+        window.EventsHelpers.stashPaymentInviteToken(window.pubCurrentEvent.id, inviteTok);
+    }
 });
 
 
@@ -176,7 +235,7 @@ async function pubLoadEvent(slug, isCheckin, ticketToken, paidType) {
 
     pubCurrentEvent = event;
 
-    const goingCount = await pubFetchGoingCount(event.id);
+    const goingCount = await pubFetchGoingCount(event.id, event);
 
     // If user is signed in, load their RSVP
     if (pubCurrentUser) {
@@ -246,7 +305,7 @@ function pubBuildPublicDetailShell(event, goingCount) {
     const categoryLabel = event.category ? (event.category || '').replace(/_/g, ' ') : '';
     const bannerStyle = event.banner_url
         ? `background-image:url('${event.banner_url}');background-size:cover;background-position:center;`
-        : 'background:linear-gradient(135deg,#312e81 0%,#6d28d9 52%,#a855f7 100%);';
+        : 'background:linear-gradient(135deg,#0B2545 0%,#13366E 55%,#0E8B8B 100%);';
     const mapsHref = event.location_text ? pubPublicMapsHref(event.location_text) : '#';
 
     content.innerHTML = `
@@ -322,6 +381,8 @@ function pubBuildPublicDetailShell(event, goingCount) {
                             </div>
                         </div>
 
+                        <div id="amenityResultsSection" class="hidden ed-card event-detail-card ed-amenity-results" role="region" aria-label="Amenity vote results"></div>
+
                         <div id="gatedSection" class="hidden ed-card event-detail-card evt-section"><div class="evt-info-card"><span class="evt-info-card-icon">🔓</span><div><p class="evt-info-card-title">Attendee Details</p><p id="gatedNotes" class="evt-info-card-sub" style="white-space:pre-line"></p></div></div></div>
                         <div id="raffleSection" class="ed-card event-detail-card"></div>
                         <div id="commentsSection" class="hidden ed-card event-detail-card" role="region" aria-label="Discussion">
@@ -349,7 +410,7 @@ function pubBuildPublicDetailShell(event, goingCount) {
                             <div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25"/></svg></div><div><span class="ed-summary-main">${dateLong}</span><span class="ed-summary-sub2">${weekday}</span></div></div>
                             ${showTime ? `<div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><span class="ed-summary-main">${timeStr}</span><span class="ed-summary-sub2">${endTimeStr ? `Ends ${endTimeStr}` : 'Start time'}</span></div></div>` : ''}
                             ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg></div><div><span class="ed-summary-main">${pubEscapeHtml(event.location_nickname || event.location_text || '')}</span>${event.location_text && event.location_nickname ? `<span class="ed-summary-sub2">${pubEscapeHtml(event.location_text)}</span>` : ''}${event.location_text ? `<a href="${mapsHref}" target="_blank" rel="noopener" class="ed-maps-link">View on Maps</a>` : ''}</div></div>` : ''}
-                            <div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857"/></svg></div><div><span class="ed-summary-main">${pubEscapeHtml(pubAttendanceLabel(goingCount))}</span>${event.max_participants && goingCount > 0 ? `<span class="ed-summary-sub2">${event.max_participants - goingCount > 0 ? `${event.max_participants - goingCount} spots left` : 'Sold out'}</span>` : ''}</div></div>
+                            <div class="ed-summary-row"><div class="ed-summary-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857"/></svg></div><div><span class="ed-summary-main">${pubEscapeHtml(pubAttendanceLabel(goingCount))}</span>${(window.EventsCapacity?.eventHasCapacityLimit?.(event) && goingCount > 0) ? `<span class="ed-summary-sub2">${(window.EventsCapacity.spotsRemaining(event, goingCount) > 0) ? `${window.EventsCapacity.spotsRemaining(event, goingCount)} spots left` : 'Sold out'}</span>` : ''}</div></div>
                         </div>
                     </div>
                     <div id="memberRsvpCard" class="hidden ed-card ed-card-rsvp event-detail-card-tight public-action-card"><p class="ed-summary-heading">Your RSVP</p><div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div></div>
@@ -479,7 +540,7 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     } else {
         hostEl.innerHTML = `
             <div class="evt-info-row">
-                <div class="evt-info-icon" style="background:#e0e7ff;color:#4f46e5;font-size:18px">📅</div>
+                <div class="evt-info-icon" style="background:#EEF2F6;color:#13366E;font-size:18px">📅</div>
                 <div>
                     <p class="evt-info-primary">${pubEscapeHtml(typeInfo.label)}</p>
                     <p class="evt-info-secondary">Hosted by a member</p>
@@ -553,11 +614,18 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     // Guest RSVP section (for non-members on non-member-only events)
     pubRenderGuestRsvpSection(event);
 
+    // Amenity vote results (as configured)
+    pubRenderAmenityResults(event);
+
     // Raffle section
     pubRenderRaffleSection(event);
 
     // Swipeable bottom nav (mobile)
     pubInitBottomNav(event);
+
+    if (typeof pubMaybeOpenRsvpDeepLink === 'function') {
+        pubMaybeOpenRsvpDeepLink();
+    }
 
     // QR Ticket — member
     if (pubCurrentRsvp && pubCurrentRsvp.status === 'going' && event.checkin_mode === 'attendee_ticket') {
@@ -669,11 +737,11 @@ function pubCallDeferred(name, args) {
     if (typeof fn === 'function' && fn !== window[`_${name}Wrapper`]) return fn.apply(window, args);
 }
 [
-    'pubHandleRsvp', 'pubHandlePaidRsvp', 'pubHandlePaidRaffle', 'pubHandleFreeRaffle',
+    'pubHandleRsvp', 'pubHandlePaidRsvp', 'pubOpenMemberRsvpFlow', 'pubOpenGuestRsvpWizard', 'pubHandlePaidRaffle', 'pubHandleFreeRaffle',
     'pubHandleGuestPaidRaffle', 'pubHandleGuestFreeRaffle', 'pubHandleGuestRsvp',
     'pubDoVenueCheckin', 'pubDoGuestVenueCheckin', 'pubToggleLookup', 'pubLookupGuestTicket',
     'pubOpenFullscreenMap', 'pubCloseFullscreenMap', 'pubRecenterFullscreenMap', 'pubDownloadIcs', 'pubPostComment',
-    'pubOpenLightbox', 'pubOpenRsvpSheet', 'pubCloseRsvpSheet'
+    'pubOpenLightbox', 'pubOpenRsvpSheet', 'pubCloseRsvpSheet', 'pubOpenCtaPanel'
 ].forEach(name => {
     window[`_${name}Wrapper`] = function () { return pubCallDeferred(name, arguments); };
     window[name] = window[`_${name}Wrapper`];

@@ -15,8 +15,29 @@ const MESSAGE_TYPES = [
     { value: 'update', label: 'Schedule / location update' },
 ];
 
+const TYPE_LABELS = {
+    event_invite: 'Event invite',
+    event_payment_link: 'Payment link',
+    event_payment_failed: 'Payment failed',
+    manual: 'Manual update',
+    cancellation: 'Cancellation',
+    update: 'Schedule / location update',
+    rsvp_confirmation: 'RSVP confirmation',
+    reminder_24h: '24h reminder',
+};
+
+const HISTORY_FILTERS = [
+    { key: 'all', label: 'All' },
+    { key: 'invites', label: 'Invites' },
+    { key: 'payment_links', label: 'Payment links' },
+    { key: 'manual', label: 'Manual' },
+];
+
+const MANUAL_HISTORY_TYPES = new Set(['manual', 'cancellation', 'update']);
+
 const UI = {
     filter: 'all',
+    historyFilter: 'all',
     search: '',
     selected: new Set(),
     expandedMessageId: null,
@@ -180,6 +201,22 @@ async function loadNotifications() {
     };
 }
 
+function messageTypeLabel(type) {
+    const t = String(type || '');
+    return TYPE_LABELS[t] || t || 'Message';
+}
+
+function getFilteredHistoryMessages(data) {
+    const list = data.messages || [];
+    const f = UI.historyFilter || 'all';
+    if (f === 'invites') return list.filter((m) => m.message_type === 'event_invite');
+    if (f === 'payment_links') {
+        return list.filter((m) => m.message_type === 'event_payment_link' || m.message_type === 'event_payment_failed');
+    }
+    if (f === 'manual') return list.filter((m) => MANUAL_HISTORY_TYPES.has(m.message_type));
+    return list;
+}
+
 function getFilteredRecipients(data) {
     const q = UI.search.trim().toLowerCase();
     return (data.recipients || []).filter((r) => {
@@ -259,8 +296,9 @@ function notificationsHtml() {
         }).join('')
         : '<p class="text-xs text-gray-400 italic py-3">No recipients match this filter.</p>';
 
-    const historyRows = (data.messages || []).length
-        ? data.messages.map((m) => {
+    const filteredMessages = getFilteredHistoryMessages(data);
+    const historyRows = filteredMessages.length
+        ? filteredMessages.map((m) => {
             const dels = data.deliveriesByMessage?.[m.id] || [];
             const counts = dels.reduce((acc, d) => {
                 acc[d.status] = (acc[d.status] || 0) + 1;
@@ -279,7 +317,7 @@ function notificationsHtml() {
                 <div class="em-card mb-2">
                     <button type="button" class="w-full text-left" data-toggle-message="${esc(m.id)}">
                         <div class="flex justify-between gap-2">
-                            <strong class="text-sm text-gray-900">${esc(m.message_type)}</strong>
+                            <strong class="text-sm text-gray-900">${esc(messageTypeLabel(m.message_type))}</strong>
                             <span class="text-xs text-gray-400">${new Date(m.created_at).toLocaleString()}</span>
                         </div>
                         <p class="text-xs text-gray-500 mt-1">${esc(preview)}</p>
@@ -288,10 +326,10 @@ function notificationsHtml() {
                     ${detail}
                 </div>`;
         }).join('')
-        : '<p class="text-xs text-gray-400 italic py-2">No messages sent for this event yet.</p>';
+        : `<p class="text-xs text-gray-400 italic py-2">${(data.messages || []).length ? 'No messages match this filter.' : 'No messages sent for this event yet.'}</p>`;
 
     return `
-        <div class="em-card em-command-card mb-4" style="background:linear-gradient(135deg,#0f172a,#4338ca)">
+        <div class="em-card em-command-card mb-4" style="background:linear-gradient(135deg,#0f172a,var(--color-primary, #13366E))">
             <p class="em-command-eyebrow">Notifications</p>
             <h3 class="em-command-title">Event SMS</h3>
             <p class="em-command-copy">Send manual updates to opted-in recipients. Phones are masked in this view.</p>
@@ -338,7 +376,7 @@ function notificationsHtml() {
             <div class="flex flex-wrap gap-2 mb-3">
                 ${['all', 'opted_in', 'opted_out', 'guests', 'members', 'failed'].map((f) => {
                     const label = { all: 'All', opted_in: 'Opted in', opted_out: 'Opted out', guests: 'Guests', members: 'Members', failed: 'Failed' }[f];
-                    const active = UI.filter === f ? 'background:#eef2ff;color:#4338ca' : 'background:#f3f4f6;color:#374151';
+                    const active = UI.filter === f ? 'background:var(--color-surface, #EEF2F6);color:var(--color-primary, #13366E)' : 'background:#f3f4f6;color:#374151';
                     return `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 10px;${active}" data-notif-filter="${f}">${label}</button>`;
                 }).join('')}
             </div>
@@ -353,8 +391,14 @@ function notificationsHtml() {
             <div class="em-section-head">
                 <div>
                     <h3 class="em-section-title">Message history</h3>
-                    <p class="em-section-sub">Tap a message to expand delivery details.</p>
+                    <p class="em-section-sub">Invites, payment links, and manual blasts. Tap a message to expand delivery details.</p>
                 </div>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-3">
+                ${HISTORY_FILTERS.map((f) => {
+                    const active = UI.historyFilter === f.key ? 'background:var(--color-surface, #EEF2F6);color:var(--color-primary, #13366E)' : 'background:#f3f4f6;color:#374151';
+                    return `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 10px;${active}" data-history-filter="${f.key}">${esc(f.label)}</button>`;
+                }).join('')}
             </div>
             ${historyRows}
         </div>
@@ -446,6 +490,13 @@ function wireNotifications() {
         });
     });
 
+    root.querySelectorAll('[data-history-filter]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            UI.historyFilter = btn.dataset.historyFilter || 'all';
+            api().renderTab?.('notifications');
+        });
+    });
+
     const search = document.getElementById('emNotifSearch');
     if (search) {
         search.addEventListener('input', () => {
@@ -522,6 +573,7 @@ function wireNotifications() {
 
 function resetNotificationsUi(prefill = '') {
     UI.filter = 'all';
+    UI.historyFilter = 'all';
     UI.search = '';
     UI.selected.clear();
     UI.expandedMessageId = null;

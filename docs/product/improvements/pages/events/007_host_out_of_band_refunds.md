@@ -6,7 +6,7 @@
 
 - Cancel or reschedule an event (status / date only)
 - View paid / remaining / failed on the Money tab
-- Remove participation records (does **not** refund Stripe)
+- Cancel participation / reset test participation — soft-cancels party + pending installments; does **not** refund Stripe (§13.12 line 462)
 
 ## Rare exceptions (out-of-band)
 
@@ -21,4 +21,5 @@ Disclaimers and RSVP copy state payments are non-refundable for the payment peri
 ## Related code
 
 - [`process-event-cancellation`](../../../../supabase/functions/process-event-cancellation/index.ts) — status-only cancel; rejects `single_user_refund`
+- [`manage-event-participation`](../../../../supabase/functions/manage-event-participation/index.ts) — host cancel/reset participation; cancels party/open plans without refunds
 - Edge contracts: [004](./004_event_edge_function_contracts.md)

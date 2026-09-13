@@ -69,7 +69,7 @@ function html() {
     return `
         <div class="ec-row">
             <label class="ec-label">Event type</label>
-            <div class="ec-grid-2" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="ec-grid-3">
                 ${types.map(t => `
                     <div class="ec-type-card ${f.event_type === t.key ? 'active' : ''} ${!t.enabled ? 'disabled' : ''}" data-type="${t.key}" ${!t.enabled ? 'data-disabled="1"' : ''}>
                         <div class="ec-type-emoji">${t.emoji}</div>

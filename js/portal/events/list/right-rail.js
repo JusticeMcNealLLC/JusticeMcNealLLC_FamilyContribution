@@ -136,7 +136,7 @@ function renderMyRsvps() {
         const hasBanner = !!ev.banner_url;
         const thumbStyle = hasBanner
             ? ('background: url(\'' + esc(ev.banner_url) + '\') center/cover;')
-            : 'background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);';
+            : 'background: linear-gradient(135deg,#0B2545 0%,#13366E 100%);';
         return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc(ev.id) + '">' +
             '<span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span>' +
             '<span class="evt-myrsvp-body">' +
@@ -192,7 +192,16 @@ function renderStatsCard() {
         return d.getFullYear() === y && d.getMonth() === m;
     }).length;
 
-    const going = Object.values(rsvps).filter(r => r && r.status === 'going').length;
+    const going = all.filter(ev => {
+        const r = rsvps[ev.id];
+        if (typeof globalThis.evtIsCommittedGoing === 'function') {
+            return window.evtIsCommittedGoing(ev, r);
+        }
+        if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+            return window.EventsHelpers.rsvpIsCommittedGoing(ev, r);
+        }
+        return !!(r && (ev.pricing_mode !== 'paid' ? r.status === 'going' : r.paid === true));
+    }).length;
 
     const communities = new Set();
     all.forEach(ev => { if (ev && ev.event_type) communities.add(ev.event_type); });

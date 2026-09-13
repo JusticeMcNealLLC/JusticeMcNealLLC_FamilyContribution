@@ -138,38 +138,116 @@
         return out;
     }
 
+    const COLOR_HEX = {
+        black: '#0B2545',
+        white: '#FFFFFF',
+        navy: '#13366E',
+        gray: '#9CA3AF',
+        grey: '#9CA3AF',
+        red: '#B91C1C',
+        green: '#166534',
+        blue: '#2563EB',
+        teal: '#0E8B8B',
+        cream: '#F5F0E8',
+        khaki: '#C3B091',
+        olive: '#6B8E23',
+        pink: '#DB2777',
+        purple: '#7C3AED',
+        orange: '#EA580C',
+        yellow: '#CA8A04',
+        brown: '#92400E',
+    };
+
+    function colorHexForLabel(label) {
+        const key = String(label || '').trim().toLowerCase();
+        if (COLOR_HEX[key]) return COLOR_HEX[key];
+        // CSS named color fallback for simple tokens
+        if (/^[a-z]+$/i.test(key) && typeof document !== 'undefined') {
+            return key;
+        }
+        return '#EEF2F6';
+    }
+
+    function isLightHex(hex) {
+        const h = String(hex || '').replace('#', '');
+        if (h.length !== 6 || /[^0-9a-f]/i.test(h)) return true;
+        const r = parseInt(h.slice(0, 2), 16);
+        const g = parseInt(h.slice(2, 4), 16);
+        const b = parseInt(h.slice(4, 6), 16);
+        return (r * 299 + g * 587 + b * 114) / 1000 > 180;
+    }
+
+    function choiceChipsHtml(item, fieldId, selectedValue) {
+        const selected = String(selectedValue || '').trim();
+        const chips = item.choices.map((c) => {
+            const safe = escapeHtml(c);
+            const pressed = selected && c === selected ? 'true' : 'false';
+            const selCls = pressed === 'true' ? ' is-selected' : '';
+            return `<button type="button" class="ed-inc-chip${selCls}" data-inc-choice="${safe}" aria-pressed="${pressed}">${safe}</button>`;
+        }).join('');
+        return `
+            <div class="ed-inc-chips" role="group" aria-label="${escapeHtml(item.name)}">
+                <input type="hidden" id="${escapeHtml(fieldId)}" class="ed-inc-input"
+                    data-inc-answer="${escapeHtml(item.id)}" value="${escapeHtml(selected)}" ${item.required ? 'required' : ''}>
+                ${chips}
+            </div>`;
+    }
+
+    function choiceSwatchesHtml(item, fieldId, selectedValue) {
+        const selected = String(selectedValue || '').trim();
+        const swatches = item.choices.map((c) => {
+            const safe = escapeHtml(c);
+            const hex = colorHexForLabel(c);
+            const light = isLightHex(hex) ? ' is-light' : '';
+            const pressed = selected && c === selected ? 'true' : 'false';
+            const selCls = pressed === 'true' ? ' is-selected' : '';
+            return `<button type="button" class="ed-inc-swatch${light}${selCls}" data-inc-choice="${safe}"
+                aria-pressed="${pressed}" aria-label="${safe}" title="${safe}"
+                style="--ed-inc-swatch:${escapeHtml(hex)}">
+                <span class="ed-inc-swatch-dot" aria-hidden="true"></span>
+                <span class="ed-inc-swatch-label">${safe}</span>
+            </button>`;
+        }).join('');
+        return `
+            <div class="ed-inc-swatches" role="group" aria-label="${escapeHtml(item.name)}">
+                <input type="hidden" id="${escapeHtml(fieldId)}" class="ed-inc-input"
+                    data-inc-answer="${escapeHtml(item.id)}" value="${escapeHtml(selected)}" ${item.required ? 'required' : ''}>
+                ${swatches}
+            </div>`;
+    }
+
     /**
      * @param {Array} catalog
-     * @param {{ idPrefix?: string, role?: string }} opts
+     * @param {{ idPrefix?: string, role?: string, answers?: Record<string, string> }} opts
      */
     function formFieldsHtml(catalog, opts) {
         const role = (opts && opts.role) || 'adult';
+        const answers = (opts && opts.answers && typeof opts.answers === 'object') ? opts.answers : {};
         const list = forRole(catalog, role);
         if (!list.length) return '';
         const prefix = (opts && opts.idPrefix) || 'incOpt';
         const fields = list.map((item) => {
             const fieldId = `${prefix}-${item.id}`;
             const req = item.required ? ' <span class="text-red-500">*</span>' : '';
+            const selected = String(answers[item.id] || '').trim().slice(0, ANSWER_MAX);
             let control = '';
-            if (needsChoices(item.option_type)) {
-                const optsHtml = [
-                    `<option value="">Select…</option>`,
-                    ...item.choices.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`),
-                ].join('');
-                control = `<select class="ec-input ed-inc-input" id="${escapeHtml(fieldId)}" data-inc-answer="${escapeHtml(item.id)}" ${item.required ? 'required' : ''}>${optsHtml}</select>`;
+            if (item.option_type === 'color') {
+                control = choiceSwatchesHtml(item, fieldId, selected);
+            } else if (item.option_type === 'size' || item.option_type === 'select') {
+                control = choiceChipsHtml(item, fieldId, selected);
             } else {
-                control = `<input class="ec-input ed-inc-input" type="text" id="${escapeHtml(fieldId)}" data-inc-answer="${escapeHtml(item.id)}" maxlength="${ANSWER_MAX}" placeholder="Your answer" ${item.required ? 'required' : ''}>`;
+                control = `<input class="ec-input ed-inc-input" type="text" id="${escapeHtml(fieldId)}" data-inc-answer="${escapeHtml(item.id)}" maxlength="${ANSWER_MAX}" placeholder="Your answer" value="${escapeHtml(selected)}" ${item.required ? 'required' : ''}>`;
             }
             return `
-                <div class="ed-inc-field" style="margin-bottom:10px">
-                    <label class="ec-label" for="${escapeHtml(fieldId)}" style="display:block;font-size:12px;font-weight:600;color:#0b2545;margin-bottom:4px">${escapeHtml(item.name)}${req}</label>
+                <div class="ed-inc-field">
+                    <label class="ec-label ed-inc-field-label" for="${escapeHtml(fieldId)}">${escapeHtml(item.name)}${req}</label>
                     ${control}
                 </div>
             `;
         }).join('');
         return `
             <div class="ed-inc-options" data-inc-options-root="${escapeHtml(prefix)}">
-                <p class="ed-inc-options-title" style="font-size:13px;font-weight:700;color:#0b2545;margin:0 0 8px">${escapeHtml(seatOptionsTitle(role))}</p>
+                <p class="ed-inc-options-title">${escapeHtml(seatOptionsTitle(role))}</p>
                 ${fields}
             </div>
         `;
@@ -186,6 +264,31 @@
             if (value) out[item.id] = value;
         }
         return out;
+    }
+
+    function wireChoiceControls(root) {
+        const scope = root || document;
+        scope.querySelectorAll('[data-inc-options-root]').forEach((groupRoot) => {
+            if (groupRoot.dataset.incChoicesWired === '1') return;
+            groupRoot.dataset.incChoicesWired = '1';
+            groupRoot.addEventListener('click', (ev) => {
+                const btn = ev.target.closest('[data-inc-choice]');
+                if (!btn || !groupRoot.contains(btn)) return;
+                const wrap = btn.closest('.ed-inc-chips, .ed-inc-swatches');
+                if (!wrap) return;
+                const hidden = wrap.querySelector('[data-inc-answer]');
+                if (!hidden) return;
+                const value = btn.getAttribute('data-inc-choice') || '';
+                const same = hidden.value === value;
+                hidden.value = same ? '' : value;
+                wrap.querySelectorAll('[data-inc-choice]').forEach((el) => {
+                    const on = !same && el === btn;
+                    el.classList.toggle('is-selected', on);
+                    el.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+                hidden.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        });
     }
 
     function optionTypeLabel(type) {
@@ -255,6 +358,7 @@
         sanitizeAnswers,
         formFieldsHtml,
         readAnswersFromRoot,
+        wireChoiceControls,
         catalogListHtml,
         optionTypeLabel,
         appliesToLabel,

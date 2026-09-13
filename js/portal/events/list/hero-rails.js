@@ -29,7 +29,7 @@ function heroBg(event, stripGradient) {
         return "background: linear-gradient(0deg, rgba(0,0,0,.65), rgba(0,0,0,.05) 55%), url('" + safe + "') center/cover;";
     }
     const grad = (C.CATEGORY_GRADIENT && (C.CATEGORY_GRADIENT[event.category] || C.CATEGORY_GRADIENT.default))
-               || 'linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)';
+               || 'linear-gradient(135deg,#0B2545 0%,#13366E 100%)';
     return "background: " + grad + ";";
 }
 
@@ -46,7 +46,12 @@ function renderHero(event, rsvp) {
     const loc = event.location_nickname || event.location_text || '';
     const stateP = (P.statePill ? P.statePill(event) : '') || '';
     const countP = (P.countdownChip ? P.countdownChip(event) : '') || '';
-    const goingRibbon = (rsvp && rsvp.status === 'going')
+    const goingRibbon = (rsvp && (
+        typeof globalThis.evtIsCommittedGoing === 'function'
+            ? window.evtIsCommittedGoing(event, rsvp)
+            : (window.EventsHelpers?.rsvpIsCommittedGoing?.(event, rsvp)
+                || (event.pricing_mode === 'paid' ? rsvp.paid === true : rsvp.status === 'going'))
+    ))
         ? '<div class="absolute top-3 left-3 z-10 inline-flex items-center gap-1 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md backdrop-blur-sm">✓ Going</div>'
         : '';
     // E12 — Heart favorite (vlift hero only). Maps to RSVP status='maybe'
@@ -73,26 +78,16 @@ function renderHero(event, rsvp) {
     const useVlift = document.body.classList.contains('evt-vlift');
 
     if (useVlift) {
-        // E6 — Festival hero: date/time row above title + bottom RSVP CTA bar
-        const dateLong = (() => {
-            try { return start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
-            catch (_) { return ''; }
-        })();
+        // F22 — Photo strip + white info panel (no mid-card overlays)
         const timeShort = time || (() => {
             try { return start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
             catch (_) { return ''; }
         })();
-        const calIcon = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 9h18M8 3v4M16 3v4"/></svg>';
         const clkIcon = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg>';
         const pinIcon = loc
             ? '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s7-7.58 7-13a7 7 0 10-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg>'
             : '';
 
-        // CTA — always "View Details"; navigates to the event detail page.
-
-        // F14 — Featured-event hero refresh (vlift): kicker label, vertical
-        // date chip, host line, right-side description block, solid View
-        // Details button. All new elements gated by CSS under body.evt-vlift.
         const _titleCase = (s) => {
             if (!s) return '';
             const str = String(s);
@@ -107,63 +102,40 @@ function renderHero(event, rsvp) {
         ].filter(Boolean).join(' \u00B7 ');
         const fDay = (() => { try { return start.getDate(); } catch(_) { return ''; } })();
         const fMon = (() => { try { return start.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(); } catch(_) { return ''; } })();
-        const fDow = (() => { try { return start.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(); } catch(_) { return ''; } })();
-        const descRaw = event.description ? String(event.description).trim() : '';
-        const descShort = descRaw.length > 180 ? (descRaw.slice(0, 177) + '\u2026') : descRaw;
+        const quietDate = [fMon, fDay !== '' ? String(fDay) : ''].filter(Boolean).join(' ');
+        const clusterHtml = attendeeCluster(event.id);
+        const timelocHtml = (timeShort || loc)
+            ? '<div class="evt-hero-panel__timeloc">' +
+                (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc(timeShort) + '</span>' : '') +
+                (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc(loc) + '</span>' : '') +
+              '</div>'
+            : '';
+
+        // Going ribbon sits under FEATURED on the media; shift left if featured
+        const ribbonHtml = goingRibbon
+            ? goingRibbon.replace('top-3 left-3', event.is_featured ? 'top-10 left-3' : 'top-3 left-3')
+            : '';
 
         heroEl.innerHTML =
-            '<div class="evt-hero-vlift relative">' +
-            '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '"' +
-            ' class="block relative rounded-3xl overflow-hidden text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300"' +
-            ' style="' + heroBg(event, true) + '">' +
-                goingRibbon +
-                '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div>' +
-                // F14 — FEATURED EVENT kicker (vlift only; only shown when admin-featured)
-                (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : '') +
-                // Bottom-edge dark fade for legibility
-                '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div>' +
-                '<div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6">' +
-                    // F20 — Date chip now INSIDE meta as a flex child so it
-                    // stretches to the same height as the text column beside it
-                    '<div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' +
-                        (fMon ? '<span class="evt-hero-datechip__mon">' + esc(fMon) + '</span>' : '') +
-                        (fDay !== '' ? '<span class="evt-hero-datechip__day">' + esc(fDay) + '</span>' : '') +
-                        (fDow ? '<span class="evt-hero-datechip__dow">' + esc(fDow) + '</span>' : '') +
-                    '</div>' +
-                    // Text column
-                    '<div class="evt-hero-meta-body">' +
-                        // E7 — Avatar cluster
-                        attendeeCluster(event.id) +
-                        '<h2 class="text-xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc(event.title || 'Untitled event') + '</h2>' +
-                        // F14 — Host line
-                        (hostLine
-                            ? '<p class="evt-hero-host" data-f14-host>' + esc(hostLine) + '</p>'
-                            : '') +
-                        // F20 — Time + location on the same line
-                        ((timeShort || loc)
-                            ? '<div class="evt-hero-timeloc" data-f14-timeloc>' +
-                                (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc(timeShort) + '</span>' : '') +
-                                (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc(loc) + '</span>' : '') +
-                              '</div>'
-                            : '') +
-                    '</div>' +
+            '<div class="evt-hero-vlift evt-hero-vlift--panel">' +
+                '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '"' +
+                ' class="evt-hero-media block relative overflow-hidden focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"' +
+                ' style="' + heroBg(event, true) + '" aria-label="' + esc(event.title || 'Featured event') + '">' +
+                    ribbonHtml +
+                    (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : '') +
+                    (quietDate
+                        ? '<span class="evt-hero-date-quiet" aria-hidden="true">' + esc(quietDate) + '</span>'
+                        : '') +
+                '</a>' +
+                '<div class="evt-hero-panel">' +
+                    '<h2 class="evt-hero-panel__title">' + esc(event.title || 'Untitled event') + '</h2>' +
+                    (hostLine ? '<p class="evt-hero-panel__host">' + esc(hostLine) + '</p>' : '') +
+                    timelocHtml +
+                    (clusterHtml ? '<div class="evt-hero-panel__going">' + clusterHtml + '</div>' : '') +
+                    '<button type="button" data-evt-hero-cta="' + esc(event.id) + '" class="evt-hero-panel__cta" aria-label="View details for ' + esc(event.title || 'this event') + '">' +
+                        'View Details' +
+                    '</button>' +
                 '</div>' +
-                // F14 — Right-side description block + solid View Details button (desktop only via CSS)
-                // NOTE: must NOT be an <a> — nested <a> inside the banner anchor causes
-                // the browser to auto-close the outer banner <a> early, breaking layout
-                // (DOM gets re-parented and the banner background ends up wrapping the
-                // description). Use a <span> styled as a button; the outer banner anchor
-                // already navigates to the same event detail page on click.
-                '<div class="evt-hero-side" data-f14-side>' +
-                    (descShort ? '<p class="evt-hero-side__desc">' + esc(descShort) + '</p>' : '') +
-                    '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc(event.id) + '" role="button" aria-hidden="true">View Details</span>' +
-                '</div>' +
-            '</a>' +
-            // View Details button — absolutely positioned at bottom center of
-            // the banner card (outside <a> to avoid nested interactive elements).
-            '<button type="button" data-evt-hero-cta="' + esc(event.id) + '" class="evt-hero-cta" aria-label="View details for ' + esc(event.title || 'this event') + '">' +
-                'View Details' +
-            '</button>' +
             '</div>';
 
         // Wire View Details CTA → navigate to event detail page
@@ -182,8 +154,7 @@ function renderHero(event, rsvp) {
             });
         }
 
-        // E7 — Wire cluster click → navigate to event detail (where the
-        // existing Interested/Attendees card lives). No new modal added.
+        // E7 — Wire cluster click → navigate to event detail
         const cluster = heroEl.querySelector('button[data-evt-hero-going]');
         if (cluster) {
             cluster.addEventListener('click', (e) => {
@@ -198,31 +169,10 @@ function renderHero(event, rsvp) {
                 }
             });
         }
-
-        // E12 — Heart favorite toggles RSVP status='maybe' (semantic
-        // "interested"; enum is going|maybe|not_going). evtHandleRsvp
-        // toggles off when called with the existing status, so calling
-        // it with 'maybe' when already maybe will clear it.
-        const heart = heroEl.querySelector('button[data-evt-hero-heart]');
-        if (heart) {
-            heart.addEventListener('click', async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (typeof window.evtHandleRsvp !== 'function') return;
-                try {
-                    heart.disabled = true;
-                    await window.evtHandleRsvp(event.id, 'maybe');
-                } catch (err) {
-                    console.error('Hero heart toggle failed', err);
-                } finally {
-                    heart.disabled = false;
-                }
-            });
-        }
     } else {
         heroEl.innerHTML =
             '<a href="' + href + '" data-evt-hero="' + esc(event.id) + '"' +
-            ' class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300"' +
+            ' class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(19,54,110,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300"' +
             ' style="' + heroBg(event) + '">' +
                 goingRibbon +
                 '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div>' +
@@ -338,7 +288,11 @@ function renderGoingRail(events, rsvps, attendees, heroId, eventsById) {
         if (e.status === 'cancelled' || e.status === 'draft') return false;
         if (api().notHidden && !api().notHidden(e)) return false;
         const r = rsvps[e.id];
-        if (!r || r.status !== 'going') return false;
+        const committed = (typeof globalThis.evtIsCommittedGoing === 'function')
+            ? window.evtIsCommittedGoing(e, r)
+            : (window.EventsHelpers?.rsvpIsCommittedGoing?.(e, r)
+                || !!(r && (e.pricing_mode !== 'paid' ? r.status === 'going' : r.paid === true)));
+        if (!committed) return false;
         return new Date(e.start_date) >= now;
     }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
@@ -381,7 +335,7 @@ function miniCard(event, attendees, goingCount) {
         bannerStyle = "background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55)), url('" + safe + "') center/cover;";
     } else {
         const grad = (C.CATEGORY_GRADIENT && (C.CATEGORY_GRADIENT[event.category] || C.DEFAULT_GRADIENT))
-                   || 'linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)';
+                   || 'linear-gradient(135deg,#0B2545 0%,#13366E 100%)';
         bannerStyle = 'background: ' + grad + ';';
     }
 
@@ -400,7 +354,7 @@ function miniCard(event, attendees, goingCount) {
                 '<div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' +
                     pin +
                     '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div>' +
-                    '<div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div>' +
+                    '<div class="text-[9px] tracking-wider font-bold text-primary mt-0.5">' + mon + '</div>' +
                 '</div>' +
             '</div>' +
             '<div class="p-3">' +

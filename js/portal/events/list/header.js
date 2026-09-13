@@ -39,7 +39,16 @@ function renderHeaderCount() {
         e.status !== 'cancelled' && e.status !== 'draft' &&
         new Date(e.start_date) >= now
     ).length;
-    const going = Object.values(rsvps).filter(r => r.status === 'going').length;
+    const going = all.filter(e => {
+        const r = rsvps[e.id];
+        if (typeof globalThis.evtIsCommittedGoing === 'function') {
+            return window.evtIsCommittedGoing(e, r);
+        }
+        if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+            return window.EventsHelpers.rsvpIsCommittedGoing(e, r);
+        }
+        return !!(r && (e.pricing_mode !== 'paid' ? r.status === 'going' : r.paid === true));
+    }).length;
     const parts = [];
     if (going) parts.push(going + ' going');
     parts.push(upcoming + ' upcoming');

@@ -1,6 +1,11 @@
 // Stripe webhook rollups for event payment installments / plans (§13.10 line 438)
 
 import {
+  commitPartyAmenityVote,
+  removePartyAmenityVoteIfUncommitted,
+} from './amenity-voting.ts'
+import { cancelPartyParticipation } from './cancel-party-participation.ts'
+import {
   enforceFullPlanCompleted,
   persistPlanStripeIds,
 } from './paid-rsvp-prep.ts'
@@ -79,13 +84,14 @@ export async function applyInstallmentSucceeded(
 
   const { data: plan } = await supabase
     .from('event_payment_plans')
-    .select('id, plan_kind, total_due_cents, amount_paid_cents, status')
+    .select('id, party_id, plan_kind, total_due_cents, amount_paid_cents, status, amenity_vote_committed_at')
     .eq('id', planId)
     .maybeSingle()
   if (!plan?.id) return { applied: true, planId }
 
   const instKind = String(inst.kind || '').trim()
   const planKind = String(plan.plan_kind || 'full').trim() === 'monthly' ? 'monthly' : 'full'
+  const partyId = plan.party_id ? String(plan.party_id) : ''
 
   // Full plans and early payoff both terminate the schedule
   if (planKind === 'full' || instKind === 'payoff') {
@@ -94,6 +100,7 @@ export async function applyInstallmentSucceeded(
       amountPaidFallback: creditAmount,
       customerId: args.customerId,
       paymentMethodId: args.paymentMethodId,
+      amenityVoteCommitted: !plan.amenity_vote_committed_at,
     })
     await supabase
       .from('event_payment_installments')
@@ -101,6 +108,9 @@ export async function applyInstallmentSucceeded(
       .eq('plan_id', planId)
       .eq('status', 'pending')
       .neq('id', installmentId)
+    if (partyId) {
+      await commitPartyAmenityVote(supabase, { partyId })
+    }
     return { applied: true, planId }
   }
 
@@ -120,6 +130,10 @@ export async function applyInstallmentSucceeded(
     next_debit_at: nextDebit,
     updated_at: nowIso,
   }).eq('id', planId)
+
+  if (partyId && (!plan.amenity_vote_committed_at || String(plan.status) === 'setup')) {
+    await commitPartyAmenityVote(supabase, { partyId })
+  }
 
   return { applied: true, planId }
 }
@@ -229,7 +243,7 @@ export async function applyCheckoutSessionExpired(
 
   const { data: plan } = await supabase
     .from('event_payment_plans')
-    .select('id, status')
+    .select('id, status, party_id, event_id, amount_paid_cents, amenity_vote_committed_at')
     .eq('id', planId)
     .maybeSingle()
   if (!plan?.id) return { applied: false }
@@ -252,5 +266,52 @@ export async function applyCheckoutSessionExpired(
     installmentId,
     markPlanPastDue: markPastDue,
   })
+
+  // Never-pay: drop provisional amenity vote + cancel unpaid prep so Manage roster
+  // does not keep forever-abandoned going stubs (public going count is paid-only).
+  const partyId = plan.party_id ? String(plan.party_id) : ''
+  const eventId = plan.event_id ? String(plan.event_id) : ''
+  const neverCommitted = !plan.amenity_vote_committed_at
+    && (Number(plan.amount_paid_cents) || 0) <= 0
+    && String(plan.status) !== 'active'
+    && String(plan.status) !== 'completed'
+    && String(plan.status) !== 'past_due'
+  if (partyId && neverCommitted) {
+    await removePartyAmenityVoteIfUncommitted(supabase, { partyId, planId })
+    if (eventId) {
+      const { data: party } = await supabase
+        .from('event_parties')
+        .select('id, payer_user_id, payer_guest_rsvp_id')
+        .eq('id', partyId)
+        .eq('event_id', eventId)
+        .maybeSingle()
+
+      await cancelPartyParticipation(supabase, {
+        eventId,
+        partyIds: [partyId],
+        payerUserId: party?.payer_user_id || null,
+        payerGuestRsvpId: party?.payer_guest_rsvp_id || null,
+      })
+
+      const nowIso = new Date().toISOString()
+      if (party?.payer_guest_rsvp_id) {
+        await supabase
+          .from('event_guest_rsvps')
+          .update({ status: 'not_going' })
+          .eq('id', String(party.payer_guest_rsvp_id))
+          .eq('event_id', eventId)
+          .eq('paid', false)
+      }
+      if (party?.payer_user_id) {
+        await supabase
+          .from('event_rsvps')
+          .update({ status: 'not_going' })
+          .eq('event_id', eventId)
+          .eq('user_id', String(party.payer_user_id))
+          .eq('paid', false)
+      }
+    }
+  }
+
   return { applied: true }
 }

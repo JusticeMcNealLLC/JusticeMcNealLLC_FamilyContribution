@@ -131,26 +131,39 @@ function pubInitBottomNav(event) {
 
     let rsvpBtn = '';
     if (rsvpEnabled) {
+        const hasDraft = !!(window.EventsRsvpWizard?.hasDraft?.(event.id, pubCurrentUser ? 'member' : 'guest'));
+        const cta = (window.EventsHelpers?.rsvpCtaState && pubCurrentUser)
+            ? window.EventsHelpers.rsvpCtaState(event, {
+                rsvp: pubCurrentRsvp,
+                plan: (window.pubMyPaymentPlan || null),
+                hasDraft,
+            })
+            : null;
+
         if (pubGuestRsvp) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="pubOpenCtaPanel('ticket')">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel('Going · View Ticket')}</button>`;
-        } else if (pubCurrentRsvp?.paid) {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="pubOpenCtaPanel('ticket')">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel('RSVP\'d · View Ticket')}</button>`;
-        } else if (pubCurrentRsvp?.status === 'going') {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="pubOpenCtaPanel('ticket')">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel('Going · View Ticket')}</button>`;
+        } else if (cta?.kind === 'going') {
+            const sub = cta.subLabel ? ` · ${cta.subLabel}` : '';
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp-done" onclick="pubOpenCtaPanel('ticket')">${PUB_CTA_ICONS.ticket} ${pubPublicCtaLabel(`${cta.label}${sub}`)}</button>`;
+        } else if (cta?.kind === 'continue' || (hasDraft && !pubCurrentRsvp?.paid && !entriesClosed)) {
+            const openFn = pubCurrentUser ? 'pubOpenMemberRsvpFlow()' : 'pubOpenGuestRsvpWizard() || pubOpenCtaPanel(\'rsvp\')';
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="${openFn}">Continue RSVP</button>`;
         } else if (pubCurrentRsvp?.status === 'not_going') {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>Not going</button>`;
         } else if (entriesClosed) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-disabled" disabled>${PUB_CTA_ICONS.lock} ${isClosed ? 'Closed' : 'RSVP Closed'}</button>`;
-        } else if (pubCurrentUser && event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubHandlePaidRsvp()">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
+        } else if (pubCurrentUser && event.pricing_mode === 'paid' && (typeof pubEventPaidCents === 'function' ? pubEventPaidCents(event) : event.rsvp_cost_cents) > 0) {
+            const paidCents = typeof pubEventPaidCents === 'function' ? pubEventPaidCents(event) : event.rsvp_cost_cents;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenMemberRsvpFlow()">RSVP — ${pubFormatCurrency(paidCents)}</button>`;
         } else if (pubCurrentUser) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubHandleRsvp('going')">RSVP</button>`;
         } else if (event.member_only) {
             rsvpBtn = `<a href="${typeof pubPortalLoginHref === 'function' ? pubPortalLoginHref(event.slug) : '/pages/login/'}" class="evt-cta-btn evt-cta-rsvp">Sign In to RSVP</a>`;
-        } else if (event.pricing_mode === 'paid' && event.rsvp_cost_cents > 0) {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenCtaPanel('rsvp')">RSVP — ${pubFormatCurrency(event.rsvp_cost_cents)}</button>`;
+        } else if (event.pricing_mode === 'paid' && (typeof pubEventPaidCents === 'function' ? pubEventPaidCents(event) : event.rsvp_cost_cents) > 0) {
+            const paidCents = typeof pubEventPaidCents === 'function' ? pubEventPaidCents(event) : event.rsvp_cost_cents;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenGuestRsvpWizard() || pubOpenCtaPanel('rsvp')">RSVP — ${pubFormatCurrency(paidCents)}</button>`;
         } else {
-            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenCtaPanel('rsvp')">RSVP</button>`;
+            rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenGuestRsvpWizard() || pubOpenCtaPanel('rsvp')">RSVP</button>`;
         }
     }
 
@@ -164,7 +177,13 @@ function pubInitBottomNav(event) {
         } else if (pubGuestRaffleEntry) {
             raffleBtn = `<button class="evt-cta-btn evt-cta-raffle-done" disabled>${PUB_CTA_ICONS.check} Entered</button>`;
         } else {
-            const hasRsvp = pubCurrentUser ? (pubCurrentRsvp?.status === 'going' || !!pubCurrentRsvp?.paid) : !!pubGuestRsvp;
+            const hasRsvp = typeof pubHasRaffleEligibleRsvp === 'function'
+                ? pubHasRaffleEligibleRsvp()
+                : (pubCurrentUser
+                    ? (window.EventsHelpers?.rsvpIsCommittedGoing?.(event, pubCurrentRsvp)
+                        || (event.pricing_mode === 'paid' ? !!pubCurrentRsvp?.paid : (pubCurrentRsvp?.status === 'going' || !!pubCurrentRsvp?.paid)))
+                    : (window.EventsHelpers?.rsvpIsCommittedGoing?.(event, pubGuestRsvp)
+                        || (event.pricing_mode === 'paid' ? !!pubGuestRsvp?.paid : !!pubGuestRsvp)));
             if (!hasRsvp) {
                 raffleBtn = pubRaffleLockedCtaBtnHtml();
                 ctaFootnote = '<p class="evt-cta-footnote">RSVP first to enter the raffle</p>';

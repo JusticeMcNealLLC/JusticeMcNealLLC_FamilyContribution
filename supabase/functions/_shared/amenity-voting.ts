@@ -163,3 +163,135 @@ export async function upsertPendingPartyAmenityVote(
   if (insErr) throw new Error(insErr.message)
   return created.id as string
 }
+
+export type CommitPartyAmenityVoteResult = {
+  committed: boolean
+  alreadyCounted?: boolean
+  skipped?: boolean
+  reason?: string
+}
+
+/** Idempotent: provisional → counted on plan commit; backfill amenity_vote_committed_at. */
+export async function commitPartyAmenityVote(
+  supabase: any,
+  args: { partyId: string; optionId?: string | null },
+): Promise<CommitPartyAmenityVoteResult> {
+  const partyId = String(args.partyId || '').trim()
+  if (!partyId) return { committed: false, skipped: true, reason: 'no_party' }
+
+  const { data: party, error: partyErr } = await supabase
+    .from('event_parties')
+    .select('id, amenity_vote_option_id, amenity_vote_status')
+    .eq('id', partyId)
+    .maybeSingle()
+  if (partyErr) throw new Error(partyErr.message)
+  if (!party?.id) return { committed: false, skipped: true, reason: 'party_not_found' }
+
+  const optionId = String(args.optionId || party.amenity_vote_option_id || '').trim() || null
+  if (!optionId) return { committed: false, skipped: true, reason: 'no_option' }
+
+  const nowIso = new Date().toISOString()
+  const status = String(party.amenity_vote_status || '')
+  const alreadyCounted = status === 'counted'
+
+  if (!alreadyCounted) {
+    const { error: upErr } = await supabase
+      .from('event_parties')
+      .update({
+        amenity_vote_option_id: optionId,
+        amenity_vote_status: 'counted' as AmenityVoteStatus,
+        updated_at: nowIso,
+      })
+      .eq('id', partyId)
+    if (upErr) throw new Error(upErr.message)
+  }
+
+  await supabase
+    .from('event_payment_plans')
+    .update({ amenity_vote_committed_at: nowIso, updated_at: nowIso })
+    .eq('party_id', partyId)
+    .is('amenity_vote_committed_at', null)
+    .neq('status', 'cancelled')
+
+  return { committed: true, alreadyCounted }
+}
+
+export type RemovePartyAmenityVoteResult = {
+  removed: boolean
+  skipped?: boolean
+  reason?: string
+}
+
+/**
+ * Never-pay / abandon: provisional → removed only when plan never committed.
+ * Keeps amenity_vote_option_id for audit.
+ */
+export async function removePartyAmenityVoteIfUncommitted(
+  supabase: any,
+  args: { partyId: string; planId?: string | null },
+): Promise<RemovePartyAmenityVoteResult> {
+  const partyId = String(args.partyId || '').trim()
+  if (!partyId) return { removed: false, skipped: true, reason: 'no_party' }
+
+  const { data: party, error: partyErr } = await supabase
+    .from('event_parties')
+    .select('id, amenity_vote_option_id, amenity_vote_status')
+    .eq('id', partyId)
+    .maybeSingle()
+  if (partyErr) throw new Error(partyErr.message)
+  if (!party?.id) return { removed: false, skipped: true, reason: 'party_not_found' }
+
+  const status = String(party.amenity_vote_status || '')
+  if (status === 'removed') return { removed: false, skipped: true, reason: 'already_removed' }
+  if (status === 'counted') return { removed: false, skipped: true, reason: 'already_counted' }
+  if (status !== 'provisional' && !(status === 'none' && party.amenity_vote_option_id)) {
+    return { removed: false, skipped: true, reason: 'not_provisional' }
+  }
+
+  const planId = args.planId ? String(args.planId).trim() : ''
+  let planQuery = supabase
+    .from('event_payment_plans')
+    .select('id, status, amount_paid_cents, amenity_vote_committed_at')
+    .eq('party_id', partyId)
+  if (planId) planQuery = planQuery.eq('id', planId)
+
+  const { data: plans, error: planErr } = await planQuery
+  if (planErr) throw new Error(planErr.message)
+
+  const rows = plans || []
+  for (const plan of rows) {
+    const planStatus = String(plan.status || '')
+    if (planStatus === 'active' || planStatus === 'completed' || planStatus === 'past_due') {
+      return { removed: false, skipped: true, reason: 'plan_committed' }
+    }
+    if (plan.amenity_vote_committed_at) {
+      return { removed: false, skipped: true, reason: 'vote_committed_at' }
+    }
+    if ((Number(plan.amount_paid_cents) || 0) > 0) {
+      return { removed: false, skipped: true, reason: 'amount_paid' }
+    }
+
+    const { data: succeeded } = await supabase
+      .from('event_payment_installments')
+      .select('id')
+      .eq('plan_id', plan.id)
+      .eq('status', 'succeeded')
+      .limit(1)
+      .maybeSingle()
+    if (succeeded?.id) {
+      return { removed: false, skipped: true, reason: 'succeeded_installment' }
+    }
+  }
+
+  const nowIso = new Date().toISOString()
+  const { error: upErr } = await supabase
+    .from('event_parties')
+    .update({
+      amenity_vote_status: 'removed' as AmenityVoteStatus,
+      updated_at: nowIso,
+    })
+    .eq('id', partyId)
+  if (upErr) throw new Error(upErr.message)
+
+  return { removed: true }
+}

@@ -36,7 +36,7 @@ function dangerHtml() {
         <div class="em-metric-grid mb-4">
             <div class="em-metric"><span>Status</span><strong style="font-size:18px">${esc(statusLabel)}</strong><small>Current lifecycle</small></div>
             <div class="em-metric"><span>RSVP records</span><strong>${totalRsvps}</strong><small>Member + guest</small></div>
-            <div class="em-metric"><span>Paid tickets</span><strong>${paidTickets}</strong><small>Refund review</small></div>
+            <div class="em-metric"><span>Paid tickets</span><strong>${paidTickets}</strong><small>Paid records (no in-app refund)</small></div>
             <div class="em-metric"><span>Check-ins</span><strong>${checkins}</strong><small>Attendance history</small></div>
         </div>
 
@@ -59,7 +59,7 @@ function dangerHtml() {
 
         <div class="em-danger-card" style="background:#fff7ed;border-color:#fed7aa">
             <p class="em-danger-title" style="color:#9a3412">Reset test participation</p>
-            <p class="em-danger-sub" style="color:#7c2d12">Keeps the event, images, date, pricing, location, and public URL. Removes RSVPs, guest RSVPs, check-ins, raffle entries, and drawn raffle winners. This does not refund Stripe payments.</p>
+            <p class="em-danger-sub" style="color:#7c2d12">Keeps the event, images, date, pricing, location, and public URL. Cancels parties/open payment plans (no Stripe refund), then removes RSVPs, guest RSVPs, check-ins, raffle entries, and drawn raffle winners.</p>
             <button class="em-btn-danger" data-action="reset-participation" style="background:#ea580c">Reset participation</button>
         </div>
 
@@ -191,14 +191,17 @@ async function runDangerAction(action) {
     }
 
     if (action === 'cancel') {
-        if (!confirm(`Mark "${e.title}" as cancelled?`)) return;
+        if (!confirm(`Mark "${e.title}" as cancelled?\n\nPaid attendees will NOT be auto-refunded. Rare exceptions are manager-approved out-of-band via Stripe Dashboard.`)) return;
         try {
-            const { error } = await supabaseClient.from('events').update({ status: 'cancelled' }).eq('id', e.id);
-            if (error) throw error;
+            const result = await callEdgeFunction('process-event-cancellation', {
+                event_id: e.id,
+                reason: 'manual',
+            });
             STATE.event.status = 'cancelled';
             api().renderHeader?.();
             api().renderTab?.('danger');
             api().notifyParent?.('updated', e.id);
+            if (result?.message) alert(result.message);
 
             try {
                 const { count } = await supabaseClient

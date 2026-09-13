@@ -15,7 +15,10 @@
             color: var(--color-text, #0B2545);
             background: var(--color-background, #fff);
             min-height: 100dvh;
-            padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+            padding-top: max(1rem, env(safe-area-inset-top, 0px));
+            padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+            padding-left: max(1rem, env(safe-area-inset-left, 0px));
+            padding-right: max(1rem, env(safe-area-inset-right, 0px));
         }
         .payments-wrap {
             max-width: 420px;
@@ -26,29 +29,29 @@
             font-size: 1.25rem;
             font-weight: 600;
             color: var(--color-primary, #13366E);
-            margin: 0 0 1.25rem;
+            margin: 0 0 var(--space-lg, 1.25rem);
         }
         .payments-card {
             border: 1.5px solid var(--color-border, #D5DFEC);
-            border-radius: 12px;
+            border-radius: var(--radius-md, 12px);
             background: var(--color-surface, #EEF2F6);
-            padding: 1.25rem;
+            padding: var(--space-lg, 1.25rem);
         }
         .payments-card h1 {
             font-family: var(--font-headline, Georgia, serif);
             font-size: 1.35rem;
-            margin: 0 0 0.35rem;
+            margin: 0 0 var(--space-xs, 0.35rem);
             color: var(--color-text, #0B2545);
         }
         .payments-sub {
             font-size: 0.875rem;
-            color: #6b7280;
-            margin: 0 0 1rem;
+            color: var(--color-text-muted, #3d5a7a);
+            margin: 0 0 var(--space-md, 1rem);
         }
         .payments-banner {
-            border-radius: 10px;
+            border-radius: var(--radius-sm, 8px);
             padding: 0.75rem 0.9rem;
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-md, 1rem);
             font-size: 0.9rem;
             font-weight: 600;
         }
@@ -58,20 +61,22 @@
             color: #9a3412;
         }
         .payments-banner--ok {
-            background: #ecfdf5;
-            border: 1px solid #6ee7b7;
-            color: #065f46;
+            background: var(--color-accent-soft, rgba(14, 139, 139, 0.12));
+            border: 1px solid var(--color-accent, #0E8B8B);
+            color: var(--color-accent, #0E8B8B);
         }
         .payments-banner--info {
-            background: #fff;
+            background: var(--color-background, #fff);
             border: 1px solid var(--color-border, #D5DFEC);
             color: var(--color-text, #0B2545);
             font-weight: 500;
         }
         .payments-row {
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
-            gap: 1rem;
+            align-items: baseline;
+            gap: var(--space-sm, 0.5rem) var(--space-md, 1rem);
             font-size: 0.95rem;
             padding: 0.4rem 0;
             border-bottom: 1px solid var(--color-border, #D5DFEC);
@@ -82,12 +87,12 @@
             display: flex;
             flex-direction: column;
             gap: 0.65rem;
-            margin-top: 1.25rem;
+            margin-top: var(--space-lg, 1.25rem);
         }
         .payments-btn {
             width: 100%;
             min-height: 44px;
-            border-radius: 10px;
+            border-radius: var(--radius-sm, 8px);
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
@@ -100,32 +105,53 @@
         .payments-btn--primary {
             border: none;
             background: var(--color-primary, #13366E);
-            color: #fff;
+            color: var(--color-on-primary, #fff);
+        }
+        .payments-btn--primary:hover:not(:disabled) {
+            background: var(--color-primary-hover, #0f2d5c);
         }
         .payments-btn--secondary {
             border: 1.5px solid var(--color-primary, #13366E);
-            background: #fff;
+            background: var(--color-background, #fff);
             color: var(--color-primary, #13366E);
+        }
+        .payments-btn:focus-visible,
+        .payments-link:focus-visible {
+            outline: 2px solid var(--color-primary, #13366E);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px var(--color-focus-ring, rgba(19, 54, 110, 0.35));
+        }
+        .payments-hint {
+            margin: var(--space-sm, 0.5rem) 0 0;
+            font-size: 0.8rem;
+            color: var(--color-text-muted, #3d5a7a);
+            text-align: center;
         }
         .payments-link {
             display: inline-block;
-            margin-top: 1rem;
+            margin-top: var(--space-md, 1rem);
             color: var(--color-primary, #13366E);
             font-size: 0.9rem;
             font-weight: 600;
             text-decoration: none;
+            min-height: 44px;
+            line-height: 44px;
         }
         .payments-error,
         .payments-loading {
             text-align: center;
-            padding: 2rem 0.5rem;
-            color: #6b7280;
+            padding: var(--space-xl, 2rem) var(--space-sm, 0.5rem);
+            color: var(--color-text-muted, #3d5a7a);
         }
         .payments-error h1 {
             font-family: var(--font-headline, Georgia, serif);
             font-size: 1.35rem;
-            margin: 0 0 0.5rem;
+            margin: 0 0 var(--space-sm, 0.5rem);
             color: var(--color-text, #0B2545);
+        }
+        @media (min-width: 768px) {
+            .payments-wrap { max-width: 480px; }
+            .payments-card { padding: var(--space-xl, 2rem); }
         }
     </style>
 </head>
@@ -139,6 +165,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../../js/config.js"></script>
-    <script src="../../js/events/payments.js?v=174"></script>
+    <script src="../../js/events/payments.js?v=179"></script>
 </body>
 </html>

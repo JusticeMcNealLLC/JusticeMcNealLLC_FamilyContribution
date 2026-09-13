@@ -45,7 +45,7 @@
     color: #1e293b;
     box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
 }
-.evt-seg__btn:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+.evt-seg__btn:focus-visible { outline: 2px solid var(--color-primary, #13366E); outline-offset: 2px; }
 @media (min-width: 640px) {
     .evt-seg__btn { flex: 0 0 auto; padding: 8px 18px; }
 }
@@ -68,8 +68,8 @@
     cursor: pointer;
 }
 .evt-type-opt:hover { background: #f9fafb; }
-.evt-type-opt--active { color: #4f46e5; font-weight: 600; }
-.evt-type-opt:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+.evt-type-opt--active { color: var(--color-primary, #13366E); font-weight: 600; }
+.evt-type-opt:focus-visible { outline: 2px solid var(--color-primary, #13366E); outline-offset: -2px; }
 
 /* ── Filter chips (M1: scrollable horizontal row) ── */
 .evt-chip-row {
@@ -96,8 +96,8 @@
 }
 .evt-chip:hover { border-color: #cbd5e1; }
 .evt-chip:active { transform: scale(.97); }
-.evt-chip--active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
-.evt-chip--active:hover { background: #4338ca; border-color: #4338ca; }
+.evt-chip--active { background: var(--color-primary, #13366E); color: #fff; border-color: var(--color-primary, #13366E); }
+.evt-chip--active:hover { background: var(--color-primary-hover, #0f2d5c); border-color: var(--color-primary-hover, #0f2d5c); }
 .evt-chip--ghost {
     background: transparent;
     border-color: transparent;
@@ -106,8 +106,8 @@
     font-size: 12px;
 }
 .evt-chip--ghost:hover { background: rgba(0, 0, 0, .04); border-color: transparent; }
-.evt-chip--ghost.evt-chip--active { background: #eef2ff; color: #4338ca; border-color: transparent; }
-.evt-chip--ghost.evt-chip--active:hover { background: #e0e7ff; }
+.evt-chip--ghost.evt-chip--active { background: var(--color-surface, #EEF2F6); color: var(--color-primary-hover, #0f2d5c); border-color: transparent; }
+.evt-chip--ghost.evt-chip--active:hover { background: var(--color-surface, #EEF2F6); }
 
 /* ── Filter chip (also used as search-suggest chip) ── */
 .evt-filter-chip {
@@ -131,66 +131,92 @@
 
 /* ── C2 tappable category chip + active dismiss pill ── */
 .evt-cat-chip { cursor: pointer; }
-.evt-cat-chip:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+.evt-cat-chip:focus-visible { outline: 2px solid var(--color-primary, #13366E); outline-offset: 2px; }
 .evt-active-pill { cursor: pointer; transition: background-color .15s ease; }
-.evt-active-pill:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+.evt-active-pill:focus-visible { outline: 2px solid var(--color-primary, #13366E); outline-offset: 2px; }
 
-/* ── Phase E2 — Mobile hero-visible search pill (vlift, <640px) ── */
+/* Theme sets input[type=search]{padding:...} which overrides Tailwind pl-9/pr-9
+   (attribute selector beats utility class). Keep room for the leading icon + clear. */
+#evtSearchExpand #evtSearchInput {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+}
+
+/* ── Search always visible on strip row 1 ── */
+#evtSearchExpand {
+    display: block;
+    margin-top: 0;
+}
 @media (max-width: 639px) {
     body.evt-vlift #evtSearchToggle { display: none !important; }
-    body.evt-vlift #evtSearchExpand {
-        display: block !important;
-        margin-top: 0;
-        order: -1;
-    }
     body.evt-vlift #evtSearchExpand input {
         height: 44px;
         border-radius: 14px;
         box-shadow: 0 1px 3px rgba(15, 23, 42, .06), 0 4px 12px rgba(15, 23, 42, .04);
         font-size: 15px;
+        padding-left: 2.5rem;
+        padding-right: 2.5rem;
     }
 }
-/* Note: evtSearchExpand is moved by JS into evtMobileSearchHost on mobile; no strip-level flex rules needed. */
 /* iOS Safari zooms into inputs with font-size < 16px. Pin to 16px on mobile to suppress that behaviour. */
 @media (max-width: 639px) {
     #evtSearchInput { font-size: 16px; }
 }
 
-/* ── E3 — Inline category chip rail (vlift only) ── */
+/* Type chip rail retired */
+#evtTypeChips,
 body.evt-vlift #evtTypeChips {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    display: none !important;
 }
-body.evt-vlift #evtTypeChips::-webkit-scrollbar { display: none; }
-.evt-type-chips {
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-}
-.evt-type-chips::-webkit-scrollbar { display: none; }
 
-/* ── G2 — Mobile filter button (icon-only square when relocated to mobile row) ── */
-.evt-filter-btn--mobile #evtTypeMenuBtn {
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    justify-content: center;
-    gap: 0;
+/* ── Filters button: desktop label + icon; mobile icon-only ── */
+.evt-filter-btn {
+    position: relative;
 }
-.evt-filter-btn--mobile #evtTypeMenuBtn [data-type-label],
-.evt-filter-btn--mobile #evtTypeMenuBtn > svg:last-child,
-.evt-filter-btn--mobile #evtTypeMenuBtn::after {
-    display: none;
+.evt-filter-btn [data-f4-filters-icon] {
+    display: block;
+    flex-shrink: 0;
 }
-.evt-filter-btn--mobile #evtTypeMenuBtn [data-f4-filters-icon] {
-    display: block !important;
-    width: 18px;
-    height: 18px;
-    color: #4b5563;
+.evt-filter-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--color-accent, #0E8B8B);
+    box-shadow: 0 0 0 2px #fff;
+}
+.evt-filter-btn--active {
+    border-color: var(--color-primary, #13366E) !important;
+    color: var(--color-primary, #13366E);
+    background: var(--color-surface, #EEF2F6);
+}
+.evt-filter-btn--active [data-f4-filters-icon] {
+    color: var(--color-primary, #13366E);
+}
+@media (max-width: 639px) {
+    #evtTypeMenuBtn {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        justify-content: center;
+        gap: 0;
+    }
+    #evtTypeMenuBtn [data-type-label],
+    #evtTypeMenuBtn .evt-filter-chevron,
+    #evtTypeMenuBtn::after {
+        display: none !important;
+    }
+    #evtTypeMenuBtn [data-f4-filters-icon] {
+        display: block !important;
+        width: 18px;
+        height: 18px;
+    }
+    #evtTypeMenuBtn .evt-filter-dot {
+        top: 8px;
+        right: 8px;
+    }
 }
 .evt-type-chip {
     flex: 0 0 auto;
@@ -214,10 +240,10 @@ body.evt-vlift #evtTypeChips::-webkit-scrollbar { display: none; }
 .evt-type-chip:hover { border-color: #d1d5db; }
 .evt-type-chip:active { transform: scale(.96); }
 .evt-type-chip--active {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    background: linear-gradient(135deg, var(--color-primary, #13366E) 0%, var(--color-primary, #13366E) 100%);
     color: #ffffff;
     border-color: transparent;
-    box-shadow: 0 1px 2px rgba(79, 70, 229, .25);
+    box-shadow: 0 1px 2px rgba(19, 54, 110, .25);
 }
 .evt-type-chip--active:hover { border-color: transparent; }
 @media (prefers-reduced-motion: reduce) {
@@ -245,8 +271,8 @@ body.evt-vlift .evt-type-opt:active { transform: scale(0.97); }
     letter-spacing: 0.02em;
     transition: background-color .15s ease, color .15s ease;
 }
-.evt-bucket-seeall:hover { background: rgba(99, 102, 241, .08); }
-.evt-bucket-seeall:active { background: rgba(99, 102, 241, .14); }
+.evt-bucket-seeall:hover { background: rgba(19, 54, 110, .08); }
+.evt-bucket-seeall:active { background: rgba(19, 54, 110, .14); }
 @media (prefers-reduced-motion: reduce) {
     .evt-bucket-seeall { transition: none; }
 }
@@ -258,7 +284,7 @@ body.evt-vlift #evtLifecycleSeg {
     background: transparent;
     padding: 0;
     border-radius: 0;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: none;
 }
 body.evt-vlift #evtLifecycleSeg .evt-seg__btn {
     background: transparent !important;
@@ -268,14 +294,14 @@ body.evt-vlift #evtLifecycleSeg .evt-seg__btn {
     border-radius: 0;
     border: 0;
     border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
+    margin-bottom: 0;
     transition: color .15s ease, border-color .15s ease;
     box-shadow: none !important;
 }
 body.evt-vlift #evtLifecycleSeg .evt-seg__btn:hover { color: #111827; }
 body.evt-vlift #evtLifecycleSeg .evt-seg__btn--active {
-    color: #4f46e5 !important;
-    border-bottom-color: #4f46e5 !important;
+    color: var(--color-primary, #13366E) !important;
+    border-bottom-color: var(--color-primary, #13366E) !important;
     background: transparent !important;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -310,12 +336,10 @@ body.evt-vlift #evtTypeMenuBtn { display: inline-flex !important; }
     body.evt-vlift #evtSearchExpand { display: block !important; flex: 1 1 160px; min-width: 0; margin-top: 0; }
     body.evt-vlift #evtSearchToggle { display: none !important; }
 }
-body.evt-vlift #evtTypeMenuBtn [data-type-label] { display: none; }
-body.evt-vlift #evtTypeMenuBtn::after {
-    content: "Filters";
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #374151;
+/* Desktop: show Filters label; mobile rules above hide it */
+@media (min-width: 640px) {
+    body.evt-vlift #evtTypeMenuBtn [data-type-label] { display: inline; }
+    body.evt-vlift #evtTypeMenuBtn::after { content: none; }
 }
 .evt-date-opt {
     display: block;
@@ -329,23 +353,14 @@ body.evt-vlift #evtTypeMenuBtn::after {
     cursor: pointer;
 }
 .evt-date-opt:hover { background: #f3f4f6; }
-.evt-date-opt.evt-date-opt--active { background: #eef2ff; color: #4f46e5; font-weight: 600; }
+.evt-date-opt.evt-date-opt--active { background: var(--color-surface, #EEF2F6); color: var(--color-primary, #13366E); font-weight: 600; }
 
 /* ── F5 — Icon chips: swap emoji for outline SVG (vlift) ── */
-body.evt-vlift #evtTypeChips [data-f5-emoji] { display: none !important; }
-body.evt-vlift #evtTypeChips [data-f5-icon] {
-    display: inline-block !important;
-    vertical-align: middle;
-    margin-right: .25rem;
-}
-body.evt-vlift #evtTypeChips .evt-type-chip { gap: .25rem; }
+/* F5 chip icon swaps retired with chip rail */
 
-/* ── F13 -- Filter row reflow (vlift, ≥640px) ── */
-/* Row layout now driven by HTML structure:
-   Row 1 → #evtLifecycleSeg  (block, full width)
-   Row 2 → #evtFilterRow2    (scrollable flex strip)
-   Row 3 → #evtTypeChips     (block, full width)
-   No display:contents or order tricks needed. */
+/* ── F13 — Filter row reflow ── */
+/* Row 1 → #evtFilterRow2    (search + Filters + Date/view)
+   Row 2 → #evtLifecycleSeg  (Upcoming / Past / Going / Saved) */
 
 /* ── D3 — Search history & suggestions ── */
 .evt-search-suggest { animation: evtSuggestIn .12s ease-out both; }
@@ -359,7 +374,7 @@ body.evt-vlift #evtTypeChips .evt-type-chip { gap: .25rem; }
 .evt-suggest-row:focus-visible,
 .evt-suggest-chip:focus-visible,
 .evt-suggest-clear:focus-visible {
-    outline: 2px solid #6366f1;
+    outline: 2px solid var(--color-primary, #13366E);
     outline-offset: -2px;
 }
 .evt-suggest-chip { cursor: pointer; transition: transform .12s ease; }

@@ -4,6 +4,9 @@
 
 import { pricingEditorHtml, wirePricingEditor } from './pricing-editor.js';
 import { disclaimersEditorHtml, wireDisclaimersEditor } from './disclaimers-editor.js';
+import { smsInvitesHtml, wireSmsInvites } from './sms-invites.js';
+import { hostsHtml, wireHosts } from './hosts.js';
+import { amenityVotingHtml, wireAmenityVoting } from './amenity-voting.js';
 
 const PUBLIC_SITE_URL = 'https://justicemcneal.com';
 
@@ -79,8 +82,11 @@ async function shareInviteUrl(url, event, btn) {
 function overviewHtml() {
     const STATE = getState();
     const e = STATE.event;
-    const guestGoing = STATE.guestRsvps.filter(r => r.status === 'going').length;
-    const going = STATE.rsvps.filter(r => r.status === 'going').length + guestGoing;
+    const isCommitted = (row) => (window.EventsHelpers?.rsvpIsCommittedGoing
+        ? window.EventsHelpers.rsvpIsCommittedGoing(e, row)
+        : (e.pricing_mode === 'paid' ? row?.paid === true : !!(row && (row.status === 'going' || row.paid === true))));
+    const guestGoing = STATE.guestRsvps.filter(isCommitted).length;
+    const going = STATE.rsvps.filter(isCommitted).length + guestGoing;
     const maybe = STATE.rsvps.filter(r => r.status === 'maybe').length;
     const paid  = STATE.rsvps.filter(r => r.paid).length + STATE.guestRsvps.filter(r => r.paid).length;
     const checked = STATE.checkins.length;
@@ -96,11 +102,12 @@ function overviewHtml() {
     const transportMethod = e.transportation_method;
     const transportEstimate = e.transportation_estimate_cents ? money(e.transportation_estimate_cents) : '';
     const ticketHelper = window.EventsManageTicketHandoff;
-    const goingMembers = STATE.rsvps.filter((r) => r.status === 'going');
+    const goingMembers = STATE.rsvps.filter(isCommitted);
     const planeHandoff = isLlc && transportMethod === 'plane' && ticketHelper
         ? ticketHelper.computePlaneTicketHandoff({
             goingRsvps: goingMembers,
             documents: STATE.eventDocuments || [],
+            event: e,
         })
         : null;
     const costBreakdown = e.cost_breakdown || {};
@@ -184,6 +191,19 @@ function overviewHtml() {
 
         ${operationsHtml ? `<div class="em-op-grid">${operationsHtml}</div>` : ''}
 
+        ${e.slug ? `
+        <div class="em-card mb-3" id="emAnnounceCard">
+            <div class="em-section-head"><div><h3 class="em-section-title">Announce</h3><p class="em-section-sub">Share the invite and send SMS invites before opening the full editor.</p></div></div>
+            <canvas id="emInviteQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
+            <p class="text-xs text-gray-400 text-center mt-2 break-all">${esc(inviteUrl)}</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-3 mb-1">
+                <button class="em-btn-primary" data-share-invite-url>Share invite</button>
+                <button class="em-btn-primary" data-download-invite-qr>Download QR</button>
+                <button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>
+            </div>
+        </div>
+        ${smsInvitesHtml(e)}` : ''}
+
         <div class="em-card mb-3">
             <div class="em-section-head" style="margin-bottom:12px">
                 <div>
@@ -265,17 +285,8 @@ function overviewHtml() {
             </div>
             <p class="text-xs text-gray-400 mt-3">Tap any tab above for Money, Docs, Raffle, or Comp details.</p>
         </div>
-        ${e.slug ? `
-        <div class="em-card mt-3">
-            <div class="em-section-head"><div><h3 class="em-section-title">Invitation QR</h3><p class="em-section-sub">Use this public event link on printed or digital invitations.</p></div></div>
-            <canvas id="emInviteQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
-            <p class="text-xs text-gray-400 text-center mt-2 break-all">${esc(inviteUrl)}</p>
-            <div class="flex flex-wrap justify-center gap-2 mt-3">
-                <button class="em-btn-primary" data-share-invite-url>Share invite</button>
-                <button class="em-btn-primary" data-download-invite-qr>Download QR</button>
-                <button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>
-            </div>
-        </div>` : ''}
+        ${hostsHtml(e)}
+        ${amenityVotingHtml(e)}
         ${e.checkin_enabled !== false && e.checkin_mode === 'venue_scan' && e.venue_qr_token ? `
         <div class="em-card mt-3">
             <h3 class="font-bold text-gray-800 text-sm mb-3">📍 Venue QR Code</h3>
@@ -304,6 +315,9 @@ function wireOverview() {
     document.getElementById('emSheetContent').querySelectorAll('[data-download-invite-qr]').forEach(btn => {
         btn.addEventListener('click', () => downloadCanvasPng('emInviteQR', `${safeFilename(e.slug || e.title || 'event')}-invite-qr.png`));
     });
+    wireSmsInvites(e);
+    wireHosts(e);
+    wireAmenityVoting(e);
     document.getElementById('emSheetContent').querySelectorAll('[data-overview-tab]').forEach(btn => {
         btn.addEventListener('click', () => {
             STATE.activeTab = btn.dataset.overviewTab;

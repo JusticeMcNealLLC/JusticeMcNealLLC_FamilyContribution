@@ -1,29 +1,29 @@
 /* ============================================================
  * portal/events/hero.css
  * Featured-event hero (vlift only). Built up across phases:
- *   E6  — base aspect + bottom fade (now overridden by F18 overlay)
- *   E7  — attendee cluster pill
- *   E12 — heart favorite button
- *   F6  — desktop horizontal hero (aspect 16/6 — overridden by F18)
- *   F14 — kicker label, vertical date chip, host line, right-side block
- *   F18 — compact 240/220px strip + dark overlay + meta reorder
- *   F19 — datechip moved bottom-left, side scrim removed
- *   F20 — datechip inline in meta (flex-row), time+location combined row
- *   F21 — meta block pinned under kicker (top: 2.5rem)
- *   F21b— left-align right side description + CTA
+ *   E6  � base aspect + bottom fade (now overridden by F18 overlay)
+ *   E7  � attendee cluster pill
+ *   E12 � heart favorite button
+ *   F6  � desktop horizontal hero (aspect 16/6 � overridden by F18)
+ *   F14 � kicker label, vertical date chip, host line, right-side block
+ *   F18 � compact 240/220px strip + dark overlay + meta reorder
+ *   F19 � datechip moved bottom-left, side scrim removed
+ *   F20 � datechip inline in meta (flex-row), time+location combined row
+ *   F21 � meta block pinned under kicker (top: 2.5rem)
+ *   F21b� left-align right side description + CTA
  *
  * Cascade order matters: F-phases are kept in time order so latest
  * (F21b) wins. Removing F18+ would restore the F14 layout.
  * ============================================================ */
 
 /* ============================================================
- * events_006 — Hide hero container when empty (no featured event).
+ * events_006 � Hide hero container when empty (no featured event).
  * ============================================================ */
 #evtHero:empty { display: none; }
 
 /* ============================================================
- * E6 — Base hero geometry (mobile festival aspect, desktop landscape).
- * NOTE: F18 below caps to 240/220px strict — these aspects only matter
+ * E6 � Base hero geometry (mobile festival aspect, desktop landscape).
+ * NOTE: F18 below caps to 240/220px strict � these aspects only matter
  * if F18 is disabled.
  * ============================================================ */
 body.evt-vlift .evt-hero-vlift > a {
@@ -89,7 +89,7 @@ body.evt-vlift .evt-hero-cta:active { transform: translateX(-50%) scale(.985); }
 body.evt-vlift .evt-hero-meta { padding-bottom: 80px !important; }
 
 /* ============================================================
- * E7 — Hero attendee cluster pill
+ * E7 � Hero attendee cluster pill
  * ============================================================ */
 body.evt-vlift .evt-hero-cluster {
     display: inline-flex;
@@ -117,7 +117,7 @@ body.evt-vlift .evt-hero-cluster-bub {
     border-radius: 999px;
     overflow: hidden;
     border: 2px solid #ffffff;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--color-primary, #13366E) 0%, var(--color-primary-hover, #0f2d5c) 100%);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -136,7 +136,7 @@ body.evt-vlift .evt-hero-cluster-label { white-space: nowrap; letter-spacing: 0.
 }
 
 /* ============================================================
- * E12 — Hero heart favorite (kept; JS render currently hides it)
+ * E12 � Hero heart favorite (kept; JS render currently hides it)
  * Maps to RSVP status='maybe'
  * ============================================================ */
 body.evt-vlift .evt-hero-heart {
@@ -166,7 +166,7 @@ body.evt-vlift .evt-hero-heart--on:hover { background: #ffffff; }
 }
 
 /* ============================================================
- * F6 -- Horizontal hero (vlift, ≥1024px). F18 overrides height.
+ * F6 -- Horizontal hero (vlift, ?1024px). F18 overrides height.
  * ============================================================ */
 @media (min-width: 1024px) {
     body.evt-vlift .evt-hero-vlift > a {
@@ -260,7 +260,7 @@ body.evt-vlift .evt-hero-host {
     line-height: 1.35;
 }
 
-/* Right-side description + CTA block (hidden on mobile; shown ≥1024px) */
+/* Right-side description + CTA block (hidden on mobile; shown ?1024px) */
 body.evt-vlift .evt-hero-side { display: none; }
 @media (min-width: 1024px) {
     body.evt-vlift .evt-hero-side {
@@ -412,7 +412,7 @@ body.evt-vlift .evt-hero-datechip__day { font-size: 1.25rem !important; }
     }
 }
 
-/* Top-right pills (Live + heart + countdown) — push below kicker */
+/* Top-right pills (Live + heart + countdown) � push below kicker */
 body.evt-vlift .evt-hero-vlift .absolute.top-3.right-3 {
     top: .75rem !important;
     right: 1rem !important;
@@ -489,7 +489,7 @@ body.evt-vlift .evt-hero-vlift .evt-hero-datechip {
 }
 
 /* ============================================================
- * F20 — Datechip inline in meta (flex-row), time+location row
+ * F20 � Datechip inline in meta (flex-row), time+location row
  * ============================================================ */
 body.evt-vlift .evt-hero-meta {
     display: flex !important;
@@ -541,7 +541,7 @@ body.evt-vlift .evt-hero-meta > p { order: unset !important; }
 body.evt-vlift .evt-hero-meta > [data-f14-dtrow] { display: none !important; }
 
 /* ============================================================
- * F21 — Pin meta block under kicker (top: 2.5rem)
+ * F21 � Pin meta block under kicker (top: 2.5rem)
  * ============================================================ */
 body.evt-vlift .evt-hero-meta {
     bottom: auto !important;
@@ -550,7 +550,7 @@ body.evt-vlift .evt-hero-meta {
 }
 
 /* ============================================================
- * F21b — Left-align right side description + CTA
+ * F21b � Left-align right side description + CTA
  * ============================================================ */
 @media (min-width: 1024px) {
     body.evt-vlift .evt-hero-side {
@@ -563,7 +563,7 @@ body.evt-vlift .evt-hero-meta {
 }
 
 /* ============================================================
- * F22 — Phone featured hero compaction
+ * F22 � Phone featured hero compaction
  * ============================================================ */
 @media (max-width: 639px) {
     body.evt-vlift #evtShell {
@@ -658,5 +658,241 @@ body.evt-vlift .evt-hero-meta {
         border-radius: 14px;
         font-size: 14px;
         box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
+    }
+}
+
+/* ============================================================
+ * F22 � Photo strip + white info panel (panel hero)
+ * Wins over F14�F21 when .evt-hero-vlift--panel is present.
+ * F22b � Compact height: shorter media, denser panel, 1-line title.
+ * ============================================================ */
+body.evt-vlift .evt-hero-vlift--panel {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 1.15rem;
+    overflow: hidden;
+    background: var(--color-background, #FFFFFF);
+    border: 1px solid var(--color-border, #D5DFEC);
+    box-shadow: 0 1px 3px rgba(11, 37, 69, 0.06), 0 8px 24px rgba(19, 54, 110, 0.08);
+}
+
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-media {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 148px;
+    min-height: 148px;
+    aspect-ratio: auto !important;
+    border-radius: 0 !important;
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+}
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-media::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(11, 37, 69, 0.35) 0%, rgba(11, 37, 69, 0.08) 45%, rgba(11, 37, 69, 0.2) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+@media (min-width: 640px) {
+    body.evt-vlift .evt-hero-vlift--panel .evt-hero-media {
+        height: 176px;
+        min-height: 176px;
+    }
+}
+@media (min-width: 1024px) {
+    body.evt-vlift .evt-hero-vlift--panel .evt-hero-media {
+        height: 200px;
+        min-height: 200px;
+    }
+}
+
+/* Quiet chrome on photo */
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-kicker,
+body.evt-vlift .evt-hero-vlift--panel [data-f14-kicker] {
+    position: absolute;
+    top: 0.7rem;
+    left: 0.7rem;
+    z-index: 3;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+}
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-date-quiet {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    z-index: 3;
+    padding: 0.3rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--color-text, #0B2545);
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(11, 37, 69, 0.12);
+}
+
+/* Kill legacy on-image chrome for panel hero */
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-fade,
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-meta,
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-datechip,
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-side,
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-cta {
+    display: none !important;
+}
+body.evt-vlift .evt-hero-vlift--panel::after {
+    content: none !important;
+}
+
+/* White info panel � dense */
+body.evt-vlift .evt-hero-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3rem;
+    padding: 0.75rem 0.9rem 0.85rem;
+    background: var(--color-background, #FFFFFF);
+}
+@media (min-width: 640px) {
+    body.evt-vlift .evt-hero-panel {
+        padding: 0.85rem 1.1rem 1rem;
+        gap: 0.35rem;
+    }
+}
+
+body.evt-vlift .evt-hero-panel__title {
+    margin: 0;
+    font-family: var(--font-headline, 'Source Serif 4', Georgia, serif);
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--color-text, #0B2545);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    -webkit-line-clamp: unset;
+}
+@media (min-width: 640px) {
+    body.evt-vlift .evt-hero-panel__title {
+        font-size: 1.25rem;
+    }
+}
+
+body.evt-vlift .evt-hero-panel__host {
+    margin: 0;
+    font-family: var(--font-body, 'Atkinson Hyperlegible Next', system-ui, sans-serif);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #5b6b7c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.evt-vlift .evt-hero-panel__timeloc {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.55rem 0.85rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #6b7c8f;
+    overflow: hidden;
+}
+body.evt-vlift .evt-hero-panel__timeloc > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+body.evt-vlift .evt-hero-panel__timeloc svg {
+    color: #8a9aab;
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+body.evt-vlift .evt-hero-panel__going {
+    margin-top: 0.1rem;
+}
+
+/* Going cluster � compact on light panel */
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-cluster {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 !important;
+    padding: 2px 8px 2px 2px !important;
+    border-radius: 999px;
+    background: var(--color-surface, #EEF2F6) !important;
+    border: 1px solid var(--color-border, #D5DFEC);
+    color: var(--color-text, #0B2545) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-cluster:hover {
+    background: #e4ebf3 !important;
+}
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-cluster-bub {
+    width: 22px !important;
+    height: 22px !important;
+    border-width: 1.5px;
+    border-color: #fff;
+    margin-left: -6px !important;
+}
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-cluster-bub:first-child {
+    margin-left: 0 !important;
+}
+body.evt-vlift .evt-hero-vlift--panel .evt-hero-cluster-label {
+    color: var(--color-text, #0B2545);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+body.evt-vlift .evt-hero-panel__cta {
+    margin-top: 0.25rem;
+    width: 100%;
+    height: 40px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--color-primary, #13366E);
+    color: #fff;
+    font-family: var(--font-body, 'Atkinson Hyperlegible Next', system-ui, sans-serif);
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, transform 0.12s ease;
+}
+body.evt-vlift .evt-hero-panel__cta:hover {
+    background: var(--color-primary-hover, #0f2d5c);
+}
+body.evt-vlift .evt-hero-panel__cta:active {
+    transform: scale(0.985);
+}
+@media (prefers-reduced-motion: reduce) {
+    body.evt-vlift .evt-hero-panel__cta {
+        transition: none;
+    }
+    body.evt-vlift .evt-hero-panel__cta:active {
+        transform: none;
     }
 }

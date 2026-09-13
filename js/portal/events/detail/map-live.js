@@ -148,7 +148,7 @@ function evtAddMapMarker(loc) {
     // Create custom icon
     const iconHtml = `<div style="
         width:32px;height:32px;border-radius:50%;
-        background:${isMe ? '#10b981' : '#6366f1'};
+        background:${isMe ? '#10b981' : '#13366E'};
         color:white;display:flex;align-items:center;justify-content:center;
         font-weight:700;font-size:13px;border:2px solid white;
         box-shadow:0 2px 8px rgba(0,0,0,.2);

@@ -430,6 +430,86 @@ function pubSeatPriceCents(event, role) {
     return Number(event?.rsvp_cost_cents || 0);
 }
 
+/** Paid event display/gate cents — prefer adult_price_cents, fall back to legacy rsvp_cost_cents. */
+function pubEventPaidCents(event) {
+    if (!event || event.pricing_mode !== 'paid') return 0;
+    const adult = Number(event.adult_price_cents);
+    if (Number.isFinite(adult) && adult > 0) return adult;
+    const legacy = Number(event.rsvp_cost_cents);
+    return Number.isFinite(legacy) && legacy > 0 ? legacy : 0;
+}
+
+/**
+ * Sticky CTA for signed-in members: open RSVP wizard when prep is needed,
+ * otherwise reveal the simple RSVP card.
+ */
+function pubOpenMemberRsvpFlow() {
+    const event = pubCurrentEvent;
+    if (event && window.EventsRsvpWizard) {
+        // null = not loaded yet → treat as missing so wizard asks for phone
+        const phoneMissing = pubMemberProfilePhone == null || !String(pubMemberProfilePhone || '').trim();
+        if (window.EventsRsvpWizard.needsPrep(event, { mode: 'member', memberPhoneMissing: phoneMissing })) {
+            window.EventsRsvpWizard.open({
+                event,
+                mode: 'member',
+                memberName: pubMemberProfileName || '',
+                memberPhoneMissing: phoneMissing,
+                memberPhone: phoneMissing ? '' : (pubMemberProfilePhone || ''),
+                onComplete: async () => {
+                    if (event.slug) await pubLoadEvent(event.slug, false);
+                },
+            });
+            return true;
+        }
+    }
+    const card = document.getElementById('memberRsvpCard')
+        || document.getElementById('rsvpSection');
+    if (!card) return false;
+    card.classList.remove('hidden');
+    try {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (_) {
+        card.scrollIntoView(true);
+    }
+    return true;
+}
+
+function pubOpenGuestRsvpWizard() {
+    const event = pubCurrentEvent;
+    if (!event || !window.EventsRsvpWizard) return false;
+    if (!window.EventsRsvpWizard.needsPrep(event, { mode: 'guest' })) return false;
+    window.EventsRsvpWizard.open({
+        event,
+        mode: 'guest',
+        guestName: document.getElementById('guestNameInput')?.value || '',
+        guestEmail: document.getElementById('guestEmailInput')?.value || '',
+        guestPhone: document.getElementById('guestPhoneInput')?.value || '',
+        onComplete: async () => {
+            if (event.slug) await pubLoadEvent(event.slug, false);
+        },
+    });
+    return true;
+}
+
+function pubMaybeOpenRsvpDeepLink() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('rsvp') !== '1' || !pubCurrentEvent || !window.EventsRsvpWizard) return;
+        if (pubGuestRsvp || (pubCurrentRsvp && (pubCurrentRsvp.status === 'going' || pubCurrentRsvp.paid))) return;
+        if (pubCurrentUser) {
+            pubOpenMemberRsvpFlow();
+        } else {
+            if (!pubOpenGuestRsvpWizard()) {
+                if (typeof pubOpenCtaPanel === 'function') pubOpenCtaPanel('rsvp');
+            }
+        }
+        params.delete('rsvp');
+        const qs = params.toString();
+        const next = `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash || ''}`;
+        window.history.replaceState({}, '', next);
+    } catch (_) { /* ignore */ }
+}
+
 function pubCatalogForRole(event, role) {
     if (!window.EventsIncludedItems) return [];
     if (typeof window.EventsIncludedItems.forRole === 'function') {
@@ -714,6 +794,7 @@ async function pubHandlePaidRsvp() {
             allowIncompleteGuests: true,
         });
         if (seatsErr) {
+            pubOpenMemberRsvpFlow();
             alert(seatsErr);
             return;
         }
@@ -722,6 +803,7 @@ async function pubHandlePaidRsvp() {
     const disclaimer_acks = pubReadDisclaimerAcks(pubCurrentEvent, memberRoot);
     const ackErr = pubValidateDisclaimerAcks(pubCurrentEvent, disclaimer_acks);
     if (ackErr) {
+        pubOpenMemberRsvpFlow();
         if (window.EventsDisclaimers?.scrollToAckField) {
             window.EventsDisclaimers.scrollToAckField(memberRoot);
         }
@@ -731,6 +813,7 @@ async function pubHandlePaidRsvp() {
     const amenity_vote_option_id = pubReadAmenityVote(pubCurrentEvent, memberRoot);
     const voteErr = pubValidateAmenityVote(pubCurrentEvent, amenity_vote_option_id);
     if (voteErr) {
+        pubOpenMemberRsvpFlow();
         if (window.EventsAmenityVoting?.scrollToVoteField) {
             window.EventsAmenityVoting.scrollToVoteField(memberRoot);
         }
@@ -740,6 +823,7 @@ async function pubHandlePaidRsvp() {
     if (window.EventsInvestAck) {
         const investErr = window.EventsInvestAck.validateAck(pubCurrentEvent, memberRoot);
         if (investErr) {
+            pubOpenMemberRsvpFlow();
             alert(investErr);
             return;
         }
@@ -762,6 +846,7 @@ async function pubHandlePaidRsvp() {
         paymentChoice = pubReadPaymentChoice(pubCurrentEvent, memberRoot, partyTotal);
         const payErr = pubValidatePaymentChoice(pubCurrentEvent, paymentChoice, partyTotal);
         if (payErr) {
+            pubOpenMemberRsvpFlow();
             if (window.EventsPaymentChoice?.scrollToField) {
                 window.EventsPaymentChoice.scrollToField(memberRoot);
             }
@@ -791,21 +876,22 @@ async function pubHandlePaidRsvp() {
         return;
     }
 
-    const confirmPay = confirm(
-        (needsPaymentChoice && paymentChoice && window.EventsPaymentChoice?.confirmMessage)
-            ? window.EventsPaymentChoice.confirmMessage(pubCurrentEvent, paymentChoice, partyTotal)
-            : (hasRequiredDisclaimers
-                ? `RSVP costs ${pubFormatCurrency(partyTotal)}.\n\nProceed to checkout?`
-                : `RSVP costs ${pubFormatCurrency(partyTotal)}.\n\n` +
-                  'By completing your RSVP, you agree that your payment is non-refundable ' +
-                  'unless this event is cancelled or rescheduled by LLC staff.\n\n' +
-                  'Proceed to checkout?')
-    );
+    const confirmPayMsg = (needsPaymentChoice && paymentChoice && window.EventsPaymentChoice?.confirmMessage)
+        ? window.EventsPaymentChoice.confirmMessage(pubCurrentEvent, paymentChoice, partyTotal)
+        : (hasRequiredDisclaimers
+            ? `RSVP costs ${pubFormatCurrency(partyTotal)}.\n\nProceed to checkout?`
+            : `RSVP costs ${pubFormatCurrency(partyTotal)}.\n\n` +
+              'By completing your RSVP, you agree that your payment is non-refundable ' +
+              'unless this event is cancelled or rescheduled by LLC staff.\n\n' +
+              'Proceed to checkout?');
+    const confirmPay = window.EventsHelpers?.confirmDialog
+        ? await window.EventsHelpers.confirmDialog({ message: confirmPayMsg })
+        : confirm(confirmPayMsg);
     if (!confirmPay) return;
 
     try {
         await pubMaybeMemberSmsOptIn(pubCurrentEvent.id);
-        const { url } = await callEdgeFunction('create-event-checkout', {
+        const checkout = await callEdgeFunction('create-event-checkout', {
             event_id: pubCurrentEvent.id,
             type: 'rsvp',
             seats,
@@ -819,7 +905,10 @@ async function pubHandlePaidRsvp() {
             } : {}),
             ...(investAcknowledged ? { invest_eligible_acknowledged: true } : {}),
         });
-        if (url) window.location.href = url;
+        if (checkout?.invite_token && window.EventsHelpers?.stashPaymentInviteToken) {
+            window.EventsHelpers.stashPaymentInviteToken(pubCurrentEvent.id, checkout.invite_token);
+        }
+        if (checkout?.url) window.location.href = checkout.url;
     } catch (err) {
         console.error('Paid RSVP error:', err);
         alert(err.message || 'Failed to start checkout. Please try again.');
@@ -872,6 +961,7 @@ async function pubHandleRsvp(status) {
                     allowIncompleteGuests: true,
                 });
                 if (seatsErr) {
+                    pubOpenMemberRsvpFlow();
                     alert(seatsErr);
                     return;
                 }
@@ -882,6 +972,7 @@ async function pubHandleRsvp(status) {
                 disclaimer_acks = pubReadDisclaimerAcks(pubCurrentEvent, memberRoot);
                 const ackErr = pubValidateDisclaimerAcks(pubCurrentEvent, disclaimer_acks);
                 if (ackErr) {
+                    pubOpenMemberRsvpFlow();
                     if (window.EventsDisclaimers?.scrollToAckField) {
                         window.EventsDisclaimers.scrollToAckField(memberRoot);
                     }
@@ -893,6 +984,7 @@ async function pubHandleRsvp(status) {
                 amenity_vote_option_id = pubReadAmenityVote(pubCurrentEvent, memberRoot);
                 const voteErr = pubValidateAmenityVote(pubCurrentEvent, amenity_vote_option_id);
                 if (voteErr) {
+                    pubOpenMemberRsvpFlow();
                     if (window.EventsAmenityVoting?.scrollToVoteField) {
                         window.EventsAmenityVoting.scrollToVoteField(memberRoot);
                     }
@@ -1072,6 +1164,12 @@ function pubRenderGuestRsvpSection(event) {
             && Array.isArray(window.pubSeatInfoTokens) && window.pubSeatInfoTokens.length)
             ? window.EventsHelpers.seatInfoInvitesHtml(window.pubSeatInfoTokens)
             : '<div id="pubGuestSeatInfoInvites"></div>';
+        const payTok = (window.EventsHelpers && typeof window.EventsHelpers.readPaymentInviteToken === 'function')
+            ? window.EventsHelpers.readPaymentInviteToken(event.id)
+            : '';
+        const paymentLinkHtml = (isPaidGuest && !waiting && payTok && window.EventsHelpers?.paymentMagicLinkHtml)
+            ? window.EventsHelpers.paymentMagicLinkHtml(payTok)
+            : '';
         const copy = pubGuestConfirmCopy(pubGuestRsvp, pubGuestRsvp.guest_name, pubGuestRsvp.guest_email, false);
         section.innerHTML = `
             <div class="evt-info-card">
@@ -1081,9 +1179,13 @@ function pubRenderGuestRsvpSection(event) {
                     <p class="evt-info-card-sub">${copy.sub}${isPaidGuest && !waiting ? ' · Non-refundable' : ''}</p>
                 </div>
             </div>
+            ${paymentLinkHtml}
             ${invitesHtml}`;
         if (window.EventsHelpers && typeof window.EventsHelpers.wireSeatInfoInviteCopy === 'function') {
             window.EventsHelpers.wireSeatInfoInviteCopy(section);
+        }
+        if (window.EventsHelpers && typeof window.EventsHelpers.wirePaymentMagicLinkCopy === 'function') {
+            window.EventsHelpers.wirePaymentMagicLinkCopy(section);
         }
         if (!window.pubSeatInfoTokens?.length && pubGuestToken) {
             pubLoadGuestSeatInfoInvites(event.id, pubGuestToken, section);
@@ -1094,6 +1196,21 @@ function pubRenderGuestRsvpSection(event) {
     // Default: show the unified tab card
     section.classList.remove('hidden');
 
+    // Prep-heavy events: prompt opens stepped sheet (no long inline form)
+    if (window.EventsRsvpWizard && window.EventsRsvpWizard.needsPrep(event, { mode: 'guest' })) {
+        const paidCents = typeof pubEventPaidCents === 'function' ? pubEventPaidCents(event) : (event.rsvp_cost_cents || 0);
+        const btnLabel = (event.pricing_mode === 'paid' && paidCents > 0)
+            ? `Continue RSVP — ${typeof pubFormatCurrency === 'function' ? pubFormatCurrency(paidCents) : ''}`
+            : 'Continue RSVP';
+        section.innerHTML = `
+            <p class="ed-summary-heading">RSVP for This Event</p>
+            <div class="er-wizard-prompt">
+                <p>A few quick steps — party, options, and payment — then you're set.</p>
+                <button type="button" class="evt-rsvp-pay" onclick="pubOpenGuestRsvpWizard()">${btnLabel}</button>
+            </div>`;
+        return;
+    }
+
     const guestRoot = section;
     const seatPickerEl = document.getElementById('guestSeatPicker');
     const guestName = document.getElementById('guestNameInput')?.value?.trim() || '';
@@ -1101,6 +1218,7 @@ function pubRenderGuestRsvpSection(event) {
         seatPickerEl.innerHTML = window.EventsPartySeats.formFieldsHtml(event, {
             idPrefix: 'pubGuestParty',
             payerName: guestName,
+            hidePayerName: true,
         });
     } else if (seatPickerEl && window.EventsSeatPicker && window.EventsSeatPicker.shouldShow(event, {})) {
         seatPickerEl.innerHTML = window.EventsSeatPicker.formFieldsHtml(event, { idPrefix: 'pubGuestSeat' });
@@ -1145,6 +1263,11 @@ function pubRenderGuestRsvpSection(event) {
         paymentPrefix: 'pubGuestPayment',
     });
 
+    pubSyncGuestContactToPayerName(guestRoot);
+    if (window.EventsIncludedItems && typeof window.EventsIncludedItems.wireChoiceControls === 'function') {
+        window.EventsIncludedItems.wireChoiceControls(guestRoot);
+    }
+
     // Show/hide no-refund checkbox
     const noRefundCheck = document.getElementById('guestNoRefundCheck');
     if (noRefundCheck) {
@@ -1158,6 +1281,25 @@ function pubRenderGuestRsvpSection(event) {
 }
 
 /* ── Guest SMS consent helpers ───────────── */
+
+function pubSyncGuestContactToPayerName(root) {
+    const scope = root || document;
+    const sync = () => {
+        const name = (document.getElementById('guestNameInput')?.value
+            || document.getElementById('ctaGuestNameInput')?.value
+            || '').trim();
+        if (window.EventsPartySeats && typeof window.EventsPartySeats.syncPayerNameFromContact === 'function') {
+            window.EventsPartySeats.syncPayerNameFromContact(scope, name);
+        }
+    };
+    sync();
+    ['guestNameInput', 'ctaGuestNameInput'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el || el.dataset.payerNameWired === '1') return;
+        el.dataset.payerNameWired = '1';
+        el.addEventListener('input', sync);
+    });
+}
 
 function pubSyncGuestSmsConsent() {
     const phone = (document.getElementById('guestPhoneInput')?.value
@@ -1353,7 +1495,7 @@ async function pubHandleGuestRsvp() {
         const smsPayload = pubGetGuestSmsPayload();
 
         if (needsPaidCheckout) {
-            const { url } = await callEdgeFunctionPublic('create-event-checkout', {
+            const checkout = await callEdgeFunctionPublic('create-event-checkout', {
                 event_id: pubCurrentEvent.id,
                 type: 'rsvp',
                 guest_name: name,
@@ -1368,7 +1510,10 @@ async function pubHandleGuestRsvp() {
                     method: paymentChoice.method,
                 } : {}),
             });
-            if (url) window.location.href = url;
+            if (checkout?.invite_token && window.EventsHelpers?.stashPaymentInviteToken) {
+                window.EventsHelpers.stashPaymentInviteToken(pubCurrentEvent.id, checkout.invite_token);
+            }
+            if (checkout?.url) window.location.href = checkout.url;
         } else {
             const result = await callEdgeFunctionPublic('rsvp-guest-free', {
                 event_id: pubCurrentEvent.id,

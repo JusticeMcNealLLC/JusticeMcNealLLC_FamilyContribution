@@ -6,6 +6,8 @@ import {
   validateAnswers,
 } from './included-items.ts'
 import {
+  eventHasCapacityLimit,
+  eventMaxParticipants,
   normalizeSeatRole,
   seatCountsTowardCapacity,
   seatPriceCents,
@@ -51,6 +53,79 @@ export function countCapacitySeats(
     if (seatCountsTowardCapacity(event, seat.role)) count += 1
   }
   return count
+}
+
+/**
+ * Occupied capacity for an event: seats on active/pending_payment parties,
+ * filtered by capacity_counts. Falls back to going RSVP rows if no seats.
+ */
+export async function countOccupiedCapacity(
+  supabase: any,
+  event: Record<string, unknown>,
+): Promise<number> {
+  if (!eventHasCapacityLimit(event)) return 0
+  const eventId = String(event.id || '').trim()
+  if (!eventId) return 0
+
+  const { data: parties } = await supabase
+    .from('event_parties')
+    .select('id')
+    .eq('event_id', eventId)
+    .in('status', ['active', 'pending_payment'])
+
+  const partyIds = (parties || []).map((p: { id: string }) => p.id).filter(Boolean)
+  if (partyIds.length) {
+    const { data: seats } = await supabase
+      .from('event_seats')
+      .select('id, role, party_id')
+      .eq('event_id', eventId)
+      .in('party_id', partyIds)
+
+    let count = 0
+    for (const seat of seats || []) {
+      const role = normalizeSeatRole(seat.role)
+      if (seatCountsTowardCapacity(event, role)) count += 1
+    }
+    if (count > 0 || (seats || []).length > 0) return count
+  }
+
+  // Legacy fallback: RSVP rows (cannot split adults/kids without seats)
+  // Paid events: count committed (paid) only so abandoned Stripe prep does not fill capacity.
+  const isPaidEvent = String(event.pricing_mode || '') === 'paid'
+  let memberQuery = supabase
+    .from('event_rsvps')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_id', eventId)
+    .eq('status', 'going')
+  let guestQuery = supabase
+    .from('event_guest_rsvps')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_id', eventId)
+    .eq('status', 'going')
+  if (isPaidEvent) {
+    memberQuery = memberQuery.eq('paid', true)
+    guestQuery = guestQuery.eq('paid', true)
+  }
+  const { count: memberCount } = await memberQuery
+  const { count: guestCount } = await guestQuery
+
+  return (memberCount || 0) + (guestCount || 0)
+}
+
+/** Throw if incoming seats would exceed soft/hard capacity. */
+export async function assertCapacityForIncomingSeats(
+  supabase: any,
+  event: Record<string, unknown>,
+  seats: PartySeatInput[],
+): Promise<void> {
+  if (!eventHasCapacityLimit(event)) return
+  const newCapSeats = countCapacitySeats(event, seats)
+  if (!newCapSeats) return
+  const occupied = await countOccupiedCapacity(supabase, event)
+  const max = eventMaxParticipants(event)
+  if (occupied + newCapSeats > max) {
+    throw new Error('This event is full')
+  }
 }
 
 export function normalizePartySeats(

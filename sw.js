@@ -2,7 +2,7 @@
 // Cache-first for statics, network-first for API calls.
 // Push notification handler for native OS notifications.
 
-const CACHE_NAME = 'jm-portal-v135';
+const CACHE_NAME = 'jm-portal-v180';
 
 // Shell assets to pre-cache on install
 const SHELL_ASSETS = [
@@ -29,8 +29,8 @@ const SHELL_ASSETS = [
     '/js/portal/quests/config.js',
     '/js/portal/quests/renders.js',
     '/js/portal/quests/init.js',
-    '/theme/Theme_JMLLC001/Theme_JMLLC001.css?v=118',
-    '/css/tailwind.Theme_JMLLC001.css?v=118',
+    '/theme/Theme_JMLLC001/Theme_JMLLC001.css?v=190',
+    '/css/tailwind.Theme_JMLLC001.css?v=190',
     '/css/shared.css?v=118',
     '/css/pages/portal/index.css?v=118',
     '/js/components/pageShell/index.js',
@@ -59,8 +59,8 @@ const SHELL_ASSETS = [
     '/assets/banner/founder1.webp',
     '/assets/banner/cat1.webp',
     '/pages/portal/events.html',
-    '/css/pages/portal/events/index.css?v=167',
-    '/js/portal/events/events.bundle.js?v=173',
+    '/css/pages/portal/events/index.css?v=190',
+    '/js/portal/events/events.bundle.js?v=190',
     '/manifest.json',
 ];
 

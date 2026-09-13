@@ -172,15 +172,18 @@
         const prefix = (opts && opts.idPrefix) || 'paymentChoice';
         const planKinds = enabledPlanKinds(event);
         const methods = enabledMethods(event);
-        const defaultPlan = defaultPlanKind(event);
-        const defaultMeth = defaultMethod(event);
-        const q = quote(event, { seatPriceCents, planKind: defaultPlan, method: defaultMeth });
+        const choice = opts?.choice || {};
+        const defaultPlan = (choice.plan_kind || opts?.planKind || defaultPlanKind(event));
+        const defaultMeth = (choice.method || opts?.method || defaultMethod(event));
+        const selectedPlan = planKinds.includes(defaultPlan) ? defaultPlan : defaultPlanKind(event);
+        const selectedMeth = methods.includes(defaultMeth) ? defaultMeth : defaultMethod(event);
+        const q = quote(event, { seatPriceCents, planKind: selectedPlan, method: selectedMeth });
 
         const planName = `${prefix}-plan`;
         const methodName = `${prefix}-method`;
 
         const planFields = planKinds.map((kind) => {
-            const checked = kind === defaultPlan ? ' checked' : '';
+            const checked = kind === selectedPlan ? ' checked' : '';
             const label = planOptionLabel(event, kind, quote(event, { seatPriceCents, planKind: kind, method: 'ach' }));
             return `
                 <label class="ed-payment-opt">
@@ -190,8 +193,8 @@
         }).join('');
 
         const methodFields = methods.map((meth) => {
-            const checked = meth === defaultMeth ? ' checked' : '';
-            const label = methodOptionLabel(meth, q, defaultPlan);
+            const checked = meth === selectedMeth ? ' checked' : '';
+            const label = methodOptionLabel(meth, q, selectedPlan);
             return `
                 <label class="ed-payment-opt">
                     <input type="radio" name="${escapeHtml(methodName)}" value="${meth}" data-payment-method="${meth}"${checked} required>
@@ -207,12 +210,12 @@
                     <fieldset class="ed-payment-fieldset">
                         <legend class="ed-payment-legend">Payment schedule</legend>
                         ${planFields}
-                    </fieldset>` : `<input type="hidden" data-payment-plan="${defaultPlan}" value="${defaultPlan}">`}
+                    </fieldset>` : `<input type="hidden" data-payment-plan="${selectedPlan}" value="${selectedPlan}">`}
                 ${methods.length > 1 ? `
                     <fieldset class="ed-payment-fieldset">
                         <legend class="ed-payment-legend">Payment method</legend>
                         ${methodFields}
-                    </fieldset>` : `<input type="hidden" data-payment-method="${defaultMeth}" value="${defaultMeth}">`}
+                    </fieldset>` : `<input type="hidden" data-payment-method="${selectedMeth}" value="${selectedMeth}">`}
             </div>`;
     }
 

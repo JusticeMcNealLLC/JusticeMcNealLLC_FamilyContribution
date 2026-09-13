@@ -14,7 +14,7 @@ import {
 } from '../_shared/disclaimers.ts'
 import { requirePhone } from '../_shared/rsvp-contact.ts'
 import {
-  countCapacitySeats,
+  assertCapacityForIncomingSeats,
   ensurePartyAndSeats,
   normalizePartySeats,
   partyBaseTotalCents,
@@ -87,25 +87,7 @@ async function maybeAttachPartySeats(
 }
 
 async function assertCapacityForParty(supabase: any, event: any, seats: ReturnType<typeof normalizePartySeats>) {
-  if (!event.max_participants) return
-  const newCapSeats = countCapacitySeats(event, seats)
-  if (!newCapSeats) return
-
-  const { count: memberCount } = await supabase
-    .from('event_rsvps')
-    .select('id', { count: 'exact', head: true })
-    .eq('event_id', event.id)
-    .eq('status', 'going')
-
-  const { count: guestCount } = await supabase
-    .from('event_guest_rsvps')
-    .select('id', { count: 'exact', head: true })
-    .eq('event_id', event.id)
-
-  const totalGoing = (memberCount || 0) + (guestCount || 0)
-  if (totalGoing + newCapSeats > event.max_participants) {
-    throw new Error('This event is full')
-  }
+  await assertCapacityForIncomingSeats(supabase, event, seats)
 }
 
 serve(async (req) => {

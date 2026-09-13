@@ -23,17 +23,18 @@
 
     /**
      * @param {object} event
-     * @param {{ idPrefix?: string }} opts
+     * @param {{ idPrefix?: string, acknowledged?: boolean }} opts
      */
     function formFieldHtml(event, opts) {
         if (!isRequired(event)) return '';
         const prefix = (opts && opts.idPrefix) || 'investAck';
         const fieldId = `${prefix}-checkbox`;
+        const checked = opts?.acknowledged ? ' checked' : '';
         return `
             <div class="ed-disc-acks" data-invest-ack-root="${escapeHtml(prefix)}" style="margin:12px 0">
                 <p style="font-size:13px;font-weight:700;color:#0b2545;margin:0 0 8px">Investment acknowledgment</p>
                 <label class="ed-disc-ack" style="display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #d5dfec;border-radius:12px;background:#fff;cursor:pointer">
-                    <input type="checkbox" id="${escapeHtml(fieldId)}" data-invest-ack="1" required style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
+                    <input type="checkbox" id="${escapeHtml(fieldId)}" data-invest-ack="1" required${checked} style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
                     <span style="min-width:0">
                         <span style="display:block;font-size:13px;font-weight:700;color:#0b2545;margin-bottom:4px">Fidelity investment risk <span class="text-red-500">*</span></span>
                         <span style="display:block;font-size:12px;line-height:1.5;color:#374151">${escapeHtml(ACK_COPY)}</span>

@@ -33,10 +33,27 @@ async function evtLoadDetailContext(eventId) {
             .select('id, guest_name, guest_email, status, paid')
             .eq('event_id', eventId),
     ]);
-    const goingList = (rsvps || []).filter(r => (typeof globalThis.evtIsGoingRsvp === 'function' ? window.evtIsGoingRsvp(r) : (r.status === 'going' || r.paid === true)));
+    const goingList = (rsvps || []).filter((r) => {
+        if (typeof globalThis.evtIsCommittedGoing === 'function') {
+            return window.evtIsCommittedGoing(event, r);
+        }
+        if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+            return window.EventsHelpers.rsvpIsCommittedGoing(event, r);
+        }
+        return event.pricing_mode === 'paid'
+            ? r.paid === true
+            : (r.status === 'going' || r.paid === true);
+    });
     const maybeList = (rsvps || []).filter(r => r.status === 'maybe');
     const notGoingList = (rsvps || []).filter(r => r.status === 'not_going');
-    const guestGoingList = (guestRsvps || []).filter(g => g.status === 'going' || g.paid === true);
+    const guestGoingList = (guestRsvps || []).filter((g) => {
+        if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+            return window.EventsHelpers.rsvpIsCommittedGoing(event, g);
+        }
+        return event.pricing_mode === 'paid'
+            ? g.paid === true
+            : (g.status === 'going' || g.paid === true);
+    });
 
     const { data: checkins, count: checkinCount } = await supabaseClient
         .from('event_checkins')
@@ -153,7 +170,13 @@ async function evtLoadDetailContext(eventId) {
     const cpBadge = creatorProfile ? evtBadgeChip(creatorProfile.displayed_badge) : '';
     const cpTitle = creatorProfile ? (creatorProfile.title || 'Member') : '';
 
-    const memberGoing = typeof globalThis.evtIsGoingRsvp === 'function' ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
+    const memberGoing = typeof globalThis.evtIsCommittedGoing === 'function'
+        ? window.evtIsCommittedGoing(event, rsvp)
+        : (window.EventsHelpers?.rsvpIsCommittedGoing
+            ? window.EventsHelpers.rsvpIsCommittedGoing(event, rsvp)
+            : (event.pricing_mode === 'paid'
+                ? !!(rsvp && rsvp.paid === true)
+                : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true))));
     const hasRsvp = rsvp && (memberGoing || rsvp.status === 'maybe');
 
     let memberPhone = null;
@@ -188,23 +211,69 @@ async function evtLoadDetailContext(eventId) {
     const entriesClosed = isClosed || isPast || deadlinePassed;
     const rsvpEnabled = event.rsvp_enabled !== false;
     const canRsvp = rsvpEnabled && ['open', 'confirmed', 'active'].includes(event.status) && !entriesClosed;
-    const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
+    const Cap = window.EventsCapacity;
+    const occupiedForCap = Cap && typeof Cap.countOccupiedCapacity === 'function'
+        ? Cap.countOccupiedCapacity(event, { goingList })
+        : goingList.length;
+    const eventIsFull = Cap && typeof Cap.eventIsAtCapacity === 'function'
+        ? Cap.eventIsAtCapacity(event, occupiedForCap)
+        : false;
 
     let amenityVoteConfig = null;
     let amenityVoteTallies = null;
     if (!isComp && window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === 'function') {
         amenityVoteConfig = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
         if (amenityVoteConfig.enabled) {
-            const { data: voteRows } = await supabaseClient
-                .from('event_parties')
-                .select('amenity_vote_option_id, amenity_vote_status')
-                .eq('event_id', eventId)
-                .eq('amenity_vote_status', 'counted');
-            amenityVoteTallies = window.EventsAmenityVoting.tallyCounts(
-                voteRows || [],
-                amenityVoteConfig.options.map((o) => o.id),
-            );
+            const { data: tallyPayload, error: tallyErr } = await supabaseClient
+                .rpc('get_event_amenity_vote_tallies', { p_event_id: eventId });
+            if (tallyErr) {
+                console.warn('Amenity tallies RPC failed', tallyErr);
+            }
+            const rawTallies = (tallyPayload && tallyPayload.tallies) || {};
+            const mapped = {};
+            for (const opt of amenityVoteConfig.options) {
+                mapped[opt.id] = Number(rawTallies[opt.id]) || 0;
+            }
+            for (const [id, n] of Object.entries(rawTallies)) {
+                if (!(id in mapped)) mapped[id] = Number(n) || 0;
+            }
+            amenityVoteTallies = mapped;
         }
+    }
+
+    let myPaymentPlan = null;
+    let myInstallmentsPaid = null;
+    let myInstallmentsTotal = null;
+    if (event.pricing_mode === 'paid' && globalThis.evtCurrentUser?.id) {
+        const { data: parties } = await supabaseClient
+            .from('event_parties')
+            .select('id, status')
+            .eq('event_id', eventId)
+            .eq('payer_user_id', globalThis.evtCurrentUser.id)
+            .neq('status', 'cancelled')
+            .order('created_at', { ascending: false })
+            .limit(1);
+        const partyId = parties?.[0]?.id;
+        if (partyId) {
+            const { data: plan } = await supabaseClient
+                .from('event_payment_plans')
+                .select('id, party_id, plan_kind, method, status, amount_paid_cents, remaining_cents, total_due_cents, next_debit_at')
+                .eq('party_id', partyId)
+                .maybeSingle();
+            myPaymentPlan = plan || null;
+            if (plan?.id) {
+                const { data: instRows } = await supabaseClient
+                    .from('event_payment_installments')
+                    .select('id, status, sequence')
+                    .eq('plan_id', plan.id);
+                const rows = instRows || [];
+                const countable = rows.filter((r) => r.status !== 'cancelled');
+                myInstallmentsTotal = countable.length || null;
+                myInstallmentsPaid = countable.filter((r) => r.status === 'succeeded').length;
+            }
+        }
+        globalThis.evtMyPaymentPlans = globalThis.evtMyPaymentPlans || {};
+        globalThis.evtMyPaymentPlans[eventId] = myPaymentPlan;
     }
 
     return {
@@ -263,6 +332,9 @@ async function evtLoadDetailContext(eventId) {
         eventSmsRecipient,
         amenityVoteConfig,
         amenityVoteTallies,
+        myPaymentPlan,
+        myInstallmentsPaid,
+        myInstallmentsTotal,
     };
 }
 

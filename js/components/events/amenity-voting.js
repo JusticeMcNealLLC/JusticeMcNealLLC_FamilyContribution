@@ -156,6 +156,13 @@
         const closeLabel = cfg.closes_at
             ? new Date(cfg.closes_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
             : '';
+        if (cfg.results_visible === 'host_only') {
+            return `
+            <div class="ed-amenity-pending">
+                <p class="ed-amenity-pending-title">${closed ? 'Voting closed' : 'Voting open'}</p>
+                <p class="ed-hint">Results are visible to hosts only.</p>
+            </div>`;
+        }
         return `
             <div class="ed-amenity-pending">
                 <p class="ed-amenity-pending-title">${closed ? 'Voting closed' : 'Voting open'}</p>
@@ -175,12 +182,14 @@
         const cfg = normalizeConfig(config);
         if (!cfg.enabled || isVotingClosed(cfg)) return '';
         const prefix = (opts && opts.idPrefix) || 'amenityVote';
+        const selected = String(opts?.selectedOptionId || '').trim();
         const name = `${prefix}-group`;
         const fields = cfg.options.map((opt) => {
             const fieldId = `${prefix}-${opt.id}`;
+            const checked = selected && selected === String(opt.id) ? ' checked' : '';
             return `
                 <label class="ed-amenity-vote-opt" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px;border:1px solid #d5dfec;border-radius:12px;background:#fff;cursor:pointer">
-                    <input type="radio" name="${escapeHtml(name)}" id="${escapeHtml(fieldId)}" value="${escapeHtml(opt.id)}" data-amenity-vote="${escapeHtml(opt.id)}" required style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
+                    <input type="radio" name="${escapeHtml(name)}" id="${escapeHtml(fieldId)}" value="${escapeHtml(opt.id)}" data-amenity-vote="${escapeHtml(opt.id)}" required${checked} style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
                     <span style="min-width:0">
                         <span style="display:block;font-size:13px;font-weight:700;color:#0b2545;margin-bottom:4px">${escapeHtml(opt.label)}</span>
                         ${opt.description ? `<span style="display:block;font-size:12px;line-height:1.5;color:#374151">${escapeHtml(opt.description)}</span>` : ''}

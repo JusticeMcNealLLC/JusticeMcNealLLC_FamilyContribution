@@ -25,7 +25,7 @@ function ensureMounted() {
             <div id="etSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
                 <header id="etSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
                     <div class="flex-1 min-w-0">
-                        <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Event Team</p>
+                        <p class="text-[11px] uppercase tracking-wide font-bold" style="color:var(--color-primary, #13366E)">Event Team</p>
                         <h2 id="etSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">…</h2>
                         <p id="etSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
                     </div>
@@ -43,7 +43,7 @@ function ensureMounted() {
             #etSheetContent.et-sheet-content-chat { overflow:hidden; display:flex; flex-direction:column; min-height:0; padding-bottom:0; }
             .et-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; background:none; border-top:none; border-left:none; border-right:none; }
             .et-tab:hover { color:#374151; }
-            .et-tab.active { color:#4f46e5; border-bottom-color:#4f46e5; }
+            .et-tab.active { color:var(--color-primary, #13366E); border-bottom-color:var(--color-primary, #13366E); }
             .em-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; }
             .em-op-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
             .em-op-card { min-height:120px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:box-shadow .15s,border-color .15s; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; background:#fff; text-align:left; width:100%; }
@@ -54,8 +54,8 @@ function ensureMounted() {
             .em-section-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
             .em-section-title { margin:0; color:#111827; font-size:14px; font-weight:850; }
             .em-section-sub { margin:3px 0 0; color:#94a3b8; font-size:12px; line-height:1.4; }
-            .em-btn-primary { background:#4f46e5; color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; width:100%; }
-            .em-btn-primary:hover { background:#4338ca; }
+            .em-btn-primary { background:var(--color-primary, #13366E); color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; width:100%; }
+            .em-btn-primary:hover { background:var(--color-primary-hover, #0f2d5c); }
             .em-btn-ghost { background:#f3f4f6; color:#374151; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
             .em-btn-ghost:hover { background:#e5e7eb; }
             .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }

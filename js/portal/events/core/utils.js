@@ -95,6 +95,63 @@ function evtNavigateToList() {
     globalThis.evtRouteByUrl();
 }
 
+function evtDownloadIcsBySlug(slug) {
+    const key = String(slug || '').trim();
+    if (!key) return;
+    const e = (globalThis.evtAllEvents || []).find((ev) => ev.slug === key || ev.id === key);
+    if (e && typeof globalThis.evtDownloadIcs === 'function') {
+        globalThis.evtDownloadIcs(e.id);
+    }
+}
+
+function evtDetailMobileHeaderHtml(slug) {
+    const safeSlug = String(slug || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const center =
+        '<a href="../dashboard.html" class="mh-logo-link mh-frost-pill" aria-label="Justice McNeal home">' +
+        '<span class="mh-logo-mark flex items-center justify-center overflow-hidden" data-brand-logo>' +
+        '<span class="mh-logo-fallback font-bold text-sm" data-brand-fallback>jm</span>' +
+        '<img class="w-full h-full object-contain hidden" alt="" data-brand-img>' +
+        '</span></a>';
+    const right =
+        '<div class="mh-slot-actions flex items-center gap-2">' +
+        `<button type="button" class="mh-icon-btn mh-circle-btn mh-frost-pill" onclick="globalThis.evtCopyShareUrl('${safeSlug}')" aria-label="Share event">` +
+        '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>' +
+        '</button>' +
+        `<button type="button" class="mh-icon-btn mh-circle-btn mh-frost-pill" onclick="globalThis.evtDownloadIcsBySlug('${safeSlug}')" aria-label="Save event">` +
+        '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>' +
+        '</button></div>';
+    const left =
+        '<button type="button" class="mh-icon-btn mh-circle-btn mh-frost-pill" onclick="globalThis.evtNavigateToList()" aria-label="Back to events">' +
+        '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>' +
+        '</button>';
+    return { left, center, right };
+}
+
+function evtApplyDetailMobileHeader(slug) {
+    const html = evtDetailMobileHeaderHtml(slug);
+    const tryApply = (attempt) => {
+        const api = window.PageShell;
+        if (api && typeof api.setMobileHeader === 'function' && document.getElementById('mhSlotLeft')) {
+            api.setMobileHeader(html);
+            return;
+        }
+        if (attempt < 40) setTimeout(() => tryApply(attempt + 1), 25);
+    };
+    tryApply(0);
+}
+
+function evtResetDetailMobileHeader() {
+    const tryReset = (attempt) => {
+        const api = window.PageShell;
+        if (api && typeof api.resetMobileHeader === 'function' && document.getElementById('mhSlotLeft')) {
+            api.resetMobileHeader();
+            return;
+        }
+        if (attempt < 40) setTimeout(() => tryReset(attempt + 1), 25);
+    };
+    tryReset(0);
+}
+
 function evtRouteByUrl() {
     const slug = new URLSearchParams(window.location.search).get('event');
     const listView = document.getElementById('eventsListView');
@@ -103,12 +160,16 @@ function evtRouteByUrl() {
 
     if (slug) {
         // Show detail, hide list
+        document.body.classList.add('evt-detail-open');
+        evtApplyDetailMobileHeader(slug);
         listView.classList.add('hidden');
         detailView.classList.remove('hidden');
         detailView.innerHTML = '<div class="flex items-center justify-center py-20"><div class="animate-spin rounded-full h-8 w-8 border-2 border-brand-600 border-t-transparent"></div></div>';
         globalThis.evtLoadDetailBySlug(slug);
     } else {
         // Show list, hide detail
+        document.body.classList.remove('evt-detail-open');
+        evtResetDetailMobileHeader();
         detailView.classList.add('hidden');
         detailView.innerHTML = '';
         listView.classList.remove('hidden');
@@ -120,18 +181,35 @@ function evtRouteByUrl() {
 }
 
 async function evtLoadDetailBySlug(slug) {
-    // Find event in cache first, otherwise query by slug
-    let event = globalThis.evtAllEvents.find(e => e.slug === slug);
+    const key = String(slug || '').trim();
+    if (!key) return;
+    // Find event in cache first (slug or id — Stripe cancel links may use UUID)
+    let event = globalThis.evtAllEvents.find(e => e.slug === key || e.id === key);
     if (event) {
+        // Normalize URL to slug when we resolved by id
+        if (event.slug && event.slug !== key) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('event', event.slug);
+            history.replaceState({ view: 'detail', slug: event.slug }, '', url);
+        }
         globalThis.evtOpenDetail(event.id);
         return;
     }
-    // Not in cache — fetch full event data
-    const { data, error } = await supabaseClient
+    // Not in cache — fetch by slug, then by id
+    let data = null;
+    let error = null;
+    ({ data, error } = await supabaseClient
         .from('events')
         .select('*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)')
-        .eq('slug', slug)
-        .maybeSingle();
+        .eq('slug', key)
+        .maybeSingle());
+    if ((!data || error) && /^[0-9a-f-]{36}$/i.test(key)) {
+        ({ data, error } = await supabaseClient
+            .from('events')
+            .select('*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)')
+            .eq('id', key)
+            .maybeSingle());
+    }
     if (error || !data) {
         const detailView = document.getElementById('eventsDetailView');
         if (detailView) {
@@ -154,6 +232,12 @@ async function evtLoadDetailBySlug(slug) {
     // Merge into cache so globalThis.evtOpenDetail can find it
     if (!globalThis.evtAllEvents.find(e => e.id === data.id)) {
         globalThis.evtAllEvents.push(data);
+    }
+    if (data.slug && data.slug !== key) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('event', data.slug);
+        history.replaceState({ view: 'detail', slug: data.slug }, '', url);
+        evtApplyDetailMobileHeader(data.slug);
     }
     globalThis.evtOpenDetail(data.id);
 }
@@ -236,6 +320,9 @@ export {
     evtPublicEventInviteUrl,
     evtCopyShareUrl,
     evtDownloadIcs,
+    evtDownloadIcsBySlug,
+    evtApplyDetailMobileHeader,
+    evtResetDetailMobileHeader,
 };
 
 const _utilsGlobal = {
@@ -252,6 +339,9 @@ const _utilsGlobal = {
     evtPublicEventInviteUrl,
     evtCopyShareUrl,
     evtDownloadIcs,
+    evtDownloadIcsBySlug,
+    evtApplyDetailMobileHeader,
+    evtResetDetailMobileHeader,
 };
 for (const [name, fn] of Object.entries(_utilsGlobal)) {
     globalThis[name] = fn;

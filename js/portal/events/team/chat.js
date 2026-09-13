@@ -14,7 +14,7 @@ const CHAT_ALERT = 'mx-4 my-4 rounded-xl border border-amber-200 bg-amber-50 px-
 const CHAT_ROW_SENT = 'mb-0.5 flex max-w-[78%] flex-col items-end self-end';
 const CHAT_ROW_RECV = 'mb-1 flex max-w-[88%] items-end gap-1.5 self-start';
 const CHAT_RECV_COL = 'flex min-w-0 flex-1 flex-col items-start';
-const CHAT_AVATAR = 'evt-chat-avatar flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 [&_img]:h-full [&_img]:w-full [&_img]:object-cover';
+const CHAT_AVATAR = 'evt-chat-avatar flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 [&_img]:h-full [&_img]:w-full [&_img]:object-cover';
 const CHAT_AVATAR_HIDDEN = 'invisible pointer-events-none';
 const CHAT_SENDER = 'mb-0.5 px-3 text-[11px] font-semibold leading-tight text-gray-400';
 const CHAT_BUBBLE = 'break-words whitespace-pre-wrap px-3 py-2 text-base leading-snug rounded-[18px]';
@@ -63,7 +63,7 @@ function avatarHtml(profile, { spacer = false } = {}) {
     const url = profile?.profile_picture_url;
     const inner = url
         ? `<img src="${evtEscapeHtml(url)}" alt="" loading="lazy">`
-        : `<span class="text-[11px] font-bold leading-none text-indigo-600">${initials}</span>`;
+        : `<span class="text-[11px] font-bold leading-none text-primary">${initials}</span>`;
     const spacerCls = spacer ? ` ${CHAT_AVATAR_HIDDEN}` : '';
     return `<div class="${CHAT_AVATAR}${spacerCls}" aria-hidden="${spacer ? 'true' : 'false'}" title="${name}">${inner}</div>`;
 }

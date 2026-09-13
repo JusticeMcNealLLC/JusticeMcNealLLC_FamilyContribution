@@ -30,8 +30,10 @@ async function initEventsPage() {
     window.evtCurrentUserInitials = ((profile?.first_name?.[0] || '') + (profile?.last_name?.[0] || '')).toUpperCase() || '?';
 
     if (typeof canCreateEvents === 'function' && canCreateEvents()) {
-        document.getElementById('createEventBtn')?.classList.remove('hidden');
-        document.getElementById('createEventBtn')?.classList.add('flex');
+        // Create lives on the FAB (header button retired).
+        const fab = document.getElementById('evtCreateFab');
+        fab?.classList.remove('hidden');
+        fab?.classList.add('flex');
     }
 
     evtSetupListeners();
@@ -62,7 +64,9 @@ function evtSetupListeners() {
             alert('Create event is unavailable. Please refresh the page.');
         }
     }
+    // Header create retired — FAB + empty-state / create-tile still open create.
     document.getElementById('createEventBtn')?.addEventListener('click', _openCreate);
+    document.getElementById('evtCreateFab')?.addEventListener('click', _openCreate);
     document.getElementById('emptyCreateBtn')?.addEventListener('click', _openCreate);
 
     document.addEventListener('events:created', () => loadEvents());

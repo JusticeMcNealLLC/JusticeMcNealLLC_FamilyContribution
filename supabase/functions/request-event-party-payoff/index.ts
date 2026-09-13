@@ -108,13 +108,13 @@ serve(async (req) => {
 
     const pmTypes = prep.method === 'card' ? ['card'] : ['us_bank_account']
     const origin = req.headers.get('origin') || 'https://justicemcneal.com'
-    const slug = prep.event_slug || ''
-    const successUrl = slug
-      ? `${origin}/events/?e=${encodeURIComponent(slug)}&paid=payoff`
-      : `${origin}/portal/events.html?paid=payoff&event=${prep.event_id}`
-    const cancelUrl = slug
-      ? `${origin}/events/?e=${encodeURIComponent(slug)}&canceled=payoff`
-      : `${origin}/portal/events.html?canceled=payoff&event=${prep.event_id}`
+    const inviteTok = String(party!.invite_token || '').trim()
+    const partyIdForUrl = String(party!.id || prep.party_id)
+    const paymentsBase = inviteTok
+      ? `${origin}/events/payments/?t=${encodeURIComponent(inviteTok)}`
+      : `${origin}/events/payments/?party=${encodeURIComponent(partyIdForUrl)}`
+    const successUrl = `${paymentsBase}&paid=payoff`
+    const cancelUrl = `${paymentsBase}&canceled=payoff`
 
     // Prefer off-session charge when Customer + PM are on file
     if (prep.stripe_customer_id && prep.stripe_payment_method_id) {

@@ -46,7 +46,7 @@ function imagesHtml() {
     return `
         <style>
             .em-img-zone { border:2px dashed #e5e7eb; border-radius:14px; padding:24px 16px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; display:flex; flex-direction:column; align-items:center; gap:4px; }
-            .em-img-zone:hover, .em-img-zone.em-drag-over { border-color:#818cf8; background:#f5f3ff; }
+            .em-img-zone:hover, .em-img-zone.em-drag-over { border-color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); }
             .em-img-zone--has { padding:14px 16px; }
         </style>
 

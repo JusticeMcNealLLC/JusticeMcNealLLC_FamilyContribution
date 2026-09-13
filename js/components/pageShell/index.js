@@ -12,9 +12,16 @@ import { initDrawer } from './ui/drawer.js';
 import { loadNavProfile } from './ui/profileLoader.js';
 import { initAdminBadges } from './ui/adminBadges.js';
 import { initReentrySplash } from './ui/reentrySplash.js';
+import {
+    captureMobileHeaderSnapshot,
+    attachPageShellMobileHeaderApi,
+} from './ui/mobileHeaderSlots.js';
 
 /** Global hook for auth/shared.js (classic script). */
 window.loadNavProfile = loadNavProfile;
+
+/** Shared chrome API for page scripts (events bundle, etc.). */
+window.PageShell = attachPageShellMobileHeaderApi(window.PageShell || {});
 
 function init() {
     const { active, isAdmin } = readPageContext();
@@ -32,6 +39,14 @@ function init() {
         drawerHTML: buildDrawer({ isAdmin, active }),
         notifPanelHTML: isAdmin ? '' : buildNotificationPanel(),
     });
+
+    captureMobileHeaderSnapshot();
+
+    // Events detail may route before this module finishes; re-apply slotted chrome if needed.
+    const eventSlug = new URLSearchParams(window.location.search).get('event');
+    if (eventSlug && typeof window.evtApplyDetailMobileHeader === 'function') {
+        window.evtApplyDetailMobileHeader(eventSlug);
+    }
 
     initDrawer();
     initAdminBadges(isAdmin);

@@ -2,10 +2,16 @@
 
 'use strict';
 
-function memberGoing(rsvp) {
-    return typeof globalThis.evtIsGoingRsvp === 'function'
-        ? window.evtIsGoingRsvp(rsvp)
-        : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
+function memberCommittedGoing(event, rsvp) {
+    if (typeof globalThis.evtIsCommittedGoing === 'function') {
+        return window.evtIsCommittedGoing(event, rsvp);
+    }
+    if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+        return window.EventsHelpers.rsvpIsCommittedGoing(event, rsvp);
+    }
+    if (!rsvp) return false;
+    if (event?.pricing_mode === 'paid') return rsvp.paid === true;
+    return !!(rsvp.status === 'going' || rsvp.paid === true);
 }
 
 function backBtnHtml(variant) {
@@ -15,9 +21,32 @@ function backBtnHtml(variant) {
 
 function ticketHtml(event, rsvp, opts = {}) {
     const { variant = 'sheet', canvasId = 'evtTeamTicketQR' } = opts;
-    const going = memberGoing(rsvp);
+    const going = memberCommittedGoing(event, rsvp);
+    const unpaidPrep = !!(event?.pricing_mode === 'paid' && rsvp?.status === 'going' && !going);
     const hasQr = going && rsvp?.qr_token && event.checkin_mode === 'attendee_ticket';
     const title = evtEscapeHtml(event.title || 'Event');
+    if (unpaidPrep) {
+        return `
+        ${backBtnHtml(variant)}
+        <div class="em-section-head">
+            <div>
+                <p class="em-section-title">Continue RSVP</p>
+                <p class="em-section-sub">${title}</p>
+            </div>
+        </div>
+        <div class="ed-notice"><span class="ed-notice-emoji">💳</span><div><p class="ed-notice-title">Payment not finished</p><p class="ed-notice-sub">Complete checkout to confirm your spot and unlock your ticket.</p></div></div>`;
+    }
+    if (!going) {
+        return `
+        ${backBtnHtml(variant)}
+        <div class="em-section-head">
+            <div>
+                <p class="em-section-title">Not going yet</p>
+                <p class="em-section-sub">${title}</p>
+            </div>
+        </div>
+        <div class="ed-notice"><span class="ed-notice-emoji">🎟️</span><div><p class="ed-notice-title">RSVP first</p><p class="ed-notice-sub">Your ticket appears here once you are confirmed going.</p></div></div>`;
+    }
     const qrBlock = hasQr
         ? `<canvas id="${canvasId}"></canvas><p class="text-xs text-gray-500 mt-2">Show this QR code at check-in</p>`
         : `<div class="ed-notice"><span class="ed-notice-emoji">✅</span><div><p class="ed-notice-title">You are on the RSVP list</p><p class="ed-notice-sub">No QR ticket is required for this event.</p></div></div>`;
@@ -35,7 +64,7 @@ function ticketHtml(event, rsvp, opts = {}) {
 function raffleHtml(event, eventId, rsvp, opts = {}) {
     const { variant = 'sheet' } = opts;
     const back = backBtnHtml(variant);
-    const going = memberGoing(rsvp);
+    const going = memberCommittedGoing(event, rsvp);
     const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === 'function'
         ? window.evtIsRaffleBundledWithPaidRsvp(event)
         : (event.pricing_mode === 'paid' && event.rsvp_enabled !== false);
@@ -83,7 +112,7 @@ function raffleHtml(event, eventId, rsvp, opts = {}) {
 
 async function wireTicketQr(event, rsvp, opts = {}) {
     const { canvasId = 'evtTeamTicketQR' } = opts;
-    const going = memberGoing(rsvp);
+    const going = memberCommittedGoing(event, rsvp);
     const hasQr = going && rsvp?.qr_token && event.checkin_mode === 'attendee_ticket';
     if (!hasQr) return;
     const canvas = document.getElementById(canvasId);

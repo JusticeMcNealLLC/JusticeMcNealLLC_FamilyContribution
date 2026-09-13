@@ -51,7 +51,7 @@ async function resetParticipation() {
     const paidTickets = STATE.rsvps.filter(r => r.paid).length + STATE.guestRsvps.filter(r => r.paid).length;
     const summary = counts.map(item => `${item.count} ${item.label}`).join('\n');
     const typed = prompt(
-        `Reset participation for "${e.title}"?\n\nThis will delete:\n${summary}\n\nThe event itself, images, links, pricing, and settings stay in place. Stripe payments are NOT refunded${paidTickets ? ` (${paidTickets} paid RSVP record${paidTickets === 1 ? '' : 's'} found)` : ''}.\n\nType RESET to continue.`
+        `Reset participation for "${e.title}"?\n\nThis will cancel open parties/payment plans (pending installments stop; no Stripe refund), then delete:\n${summary}\n\nThe event itself, images, links, pricing, and settings stay in place.${paidTickets ? ` ${paidTickets} paid RSVP record${paidTickets === 1 ? '' : 's'} found — succeeded charges are not refunded.` : ''}\n\nType RESET to continue.`
     );
     if (!typed || typed.trim().toUpperCase() !== 'RESET') {
         if (typed !== null) alert('Reset cancelled.');
@@ -75,11 +75,15 @@ async function removeParticipationPerson(btn) {
     const kind = btn.dataset.removeRsvp;
     const name = btn.dataset.name || (kind === 'guest' ? 'this guest' : 'this member');
     const isPaid = btn.dataset.paid === '1';
-    const warning = isPaid ? '\n\nThis was marked paid. Removing the record does not refund Stripe payments.' : '';
-    if (!confirm(`Remove ${name} from this event? This also clears their check-in and raffle entry.${warning}`)) return;
+    const hasParty = btn.dataset.hasParty === '1';
+    const cancelLabel = isPaid || hasParty;
+    const warning = cancelLabel
+        ? '\n\nThis cancels their party and any open payment plan (pending installments stop). Succeeded Stripe charges are NOT refunded.'
+        : '';
+    if (!confirm(`Cancel participation for ${name}? This also clears their check-in and raffle entry.${warning}`)) return;
 
     btn.disabled = true;
-    btn.textContent = 'Removing...';
+    btn.textContent = cancelLabel ? 'Cancelling...' : 'Removing...';
     try {
         if (kind === 'guest') {
             const guestToken = btn.dataset.guestToken;
@@ -104,7 +108,7 @@ async function removeParticipationPerson(btn) {
         }
         await api().refreshEventManager?.('rsvps');
     } catch (err) {
-        alert('Remove failed: ' + (err.message || 'unknown error'));
+        alert('Cancel participation failed: ' + (err.message || 'unknown error'));
         api().renderTab?.('rsvps');
     }
 }

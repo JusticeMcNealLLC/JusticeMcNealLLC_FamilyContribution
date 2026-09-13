@@ -53,7 +53,7 @@
     // saturated, cartoony feel of the previous palette.
     const CATEGORY_GRADIENT = {
         birthday:   'linear-gradient(135deg,#831843,#ec4899)',  // wine → rose
-        party:      'linear-gradient(135deg,#1e1b4b,#6366f1)',  // deep indigo → brand
+        party:      'linear-gradient(135deg,#0B2545,#13366E)',  // navy → primary
         hangout:    'linear-gradient(135deg,#14532d,#4ade80)',  // forest → light green
         game_night: 'linear-gradient(135deg,#0f172a,#475569)',  // slate
         cookout:    'linear-gradient(135deg,#7c2d12,#f97316)',  // rust → amber
@@ -62,7 +62,7 @@
         dinner:     'linear-gradient(135deg,#422006,#d97706)',  // umber → amber
         holiday:    'linear-gradient(135deg,#052e16,#16a34a)',  // forest → green
         investment: 'linear-gradient(135deg,#0f172a,#475569)',  // slate
-        annual:     'linear-gradient(135deg,#1e1b4b,#6366f1)',  // deep indigo → brand
+        annual:     'linear-gradient(135deg,#0B2545,#13366E)',  // navy → primary
         celebration:'linear-gradient(135deg,#4a044e,#d946ef)',  // deep purple → fuchsia
         competition:'linear-gradient(135deg,#052e16,#16a34a)',  // forest → green
         fundraiser: 'linear-gradient(135deg,#422006,#d97706)',  // umber → amber
@@ -76,7 +76,7 @@
     // Portal flavor (Tailwind classes) and Public flavor (raw colors).
     const TYPE_COLORS_PORTAL = {
         llc:         { bg: 'bg-amber-100', text: 'text-amber-700', label: 'LLC' },
-        member:      { bg: 'bg-brand-100', text: 'text-brand-700', label: 'Member' },
+        member:      { bg: 'bg-primary-100', text: 'text-primary-700', label: 'Member' },
         competition: { bg: 'bg-rose-100',  text: 'text-rose-700',  label: 'Competition' },
     };
     const TYPE_COLORS_PUBLIC = {

@@ -38,13 +38,22 @@ function restoreState() {
     } catch (_) { /* corrupt payload — ignore */ }
 }
 
-function syncTypeChips(type) {
-    const t = type || 'all';
-    document.querySelectorAll('#evtTypeChips .evt-type-chip').forEach(c => {
-        const on = (c.dataset.type || 'all') === t;
-        c.classList.toggle('evt-type-chip--active', on);
-        c.setAttribute('aria-selected', on ? 'true' : 'false');
-    });
+function syncTypeChips(_type) {
+    // Type chip rail retired — menu + #typeFilter are source of truth.
+}
+
+function syncFilterBtnActiveState() {
+    const menuBtn = document.getElementById('evtTypeMenuBtn');
+    if (!menuBtn) return;
+    const active = _activeType !== 'all';
+    menuBtn.classList.toggle('evt-filter-btn--active', active);
+    menuBtn.dataset.type = _activeType || 'all';
+    const labelEl = menuBtn.querySelector('[data-type-label]');
+    if (labelEl) labelEl.textContent = 'Filters';
+    const dot = menuBtn.querySelector('.evt-filter-dot');
+    if (dot) dot.classList.toggle('hidden', !active);
+    const sel = document.getElementById('typeFilter');
+    if (sel) sel.value = _activeType || 'all';
 }
 
 function applyRestoredUi() {
@@ -56,30 +65,22 @@ function applyRestoredUi() {
     });
     const menuBtn = document.getElementById('evtTypeMenuBtn');
     if (menuBtn) {
-        menuBtn.dataset.type = _activeType;
         const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + _activeType + '"]');
         if (opt) {
-            const label = opt.textContent.replace(/\s+events?$/i, '').trim();
-            const labelEl = menuBtn.querySelector('[data-type-label]');
-            if (labelEl) labelEl.textContent = label;
             document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
                 o.classList.toggle('evt-type-opt--active', o === opt)
             );
         }
-        const sel = document.getElementById('typeFilter');
-        if (sel) sel.value = _activeType;
     }
-    syncTypeChips(_activeType);
+    syncFilterBtnActiveState();
     const q = api().getSearchQuery?.() ?? '';
     if (q) {
         const input  = document.getElementById('evtSearchInput');
         const clear  = document.getElementById('evtSearchClear');
         const expand = document.getElementById('evtSearchExpand');
-        const toggle = document.getElementById('evtSearchToggle');
         if (input) input.value = q;
         if (clear) clear.classList.remove('hidden');
         if (expand) expand.classList.remove('hidden');
-        if (toggle) toggle.setAttribute('aria-expanded', 'true');
     }
     api().applyViewChrome?.();
 }
@@ -98,21 +99,34 @@ function matchesLifecycle(ev) {
     const tab = window.evtActiveTab || 'upcoming';
     const now = new Date();
     const start = new Date(ev.start_date);
+    const endRaw = ev.end_date || ev.end_at || ev.ends_at;
+    const end = endRaw ? new Date(endRaw) : null;
+    const hasEnded = !!(end && !isNaN(end) && end < now);
+    const isLive = !isNaN(start) && start <= now && (!end || isNaN(end) || end >= now);
     const rsvps = window.evtAllRsvps || {};
     if (tab === 'upcoming') {
-        if (ev.status === 'completed') return false;
+        if (ev.status === 'completed' || ev.status === 'cancelled') return false;
+        // Fully ended events belong on Past — not Upcoming/Tonight.
+        if (hasEnded) return false;
         return start >= now ||
+            isLive ||
             ev.status === 'active' ||
             ev.status === 'open' ||
             ev.status === 'confirmed' ||
             ev.status === 'draft';
     }
     if (tab === 'past') {
-        return ev.status === 'completed' || start < now;
+        return ev.status === 'completed' || hasEnded || start < now;
     }
     if (tab === 'going') {
         const r = rsvps[ev.id];
-        return r && r.status === 'going';
+        if (typeof globalThis.evtIsCommittedGoing === 'function') {
+            return window.evtIsCommittedGoing(ev, r);
+        }
+        if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+            return window.EventsHelpers.rsvpIsCommittedGoing(ev, r);
+        }
+        return !!(r && (ev.pricing_mode !== 'paid' ? r.status === 'going' : r.paid === true));
     }
     if (tab === 'saved') {
         const r = rsvps[ev.id];
@@ -172,10 +186,10 @@ function renderActiveFilterPill() {
     const label = (C.CATEGORY_TAG && C.CATEGORY_TAG[_activeCategory]?.label) || _activeCategory;
     host.innerHTML =
         '<button type="button" data-clear-cat ' +
-        'class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100">' +
+        'class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-50 border border-primary-200 text-primary-700 text-xs font-semibold hover:bg-primary-100">' +
             '<span aria-hidden="true">' + emoji + '</span>' +
             '<span>' + esc(label) + '</span>' +
-            '<span aria-hidden="true" class="text-brand-500">×</span>' +
+            '<span aria-hidden="true" class="text-primary-500">×</span>' +
             '<span class="sr-only">Clear ' + esc(label) + ' filter</span>' +
         '</button>';
     host.querySelector('[data-clear-cat]')?.addEventListener('click', () => {
@@ -200,16 +214,10 @@ function clearFiltersForEmptySearch() {
     api().setSearchQuery?.('');
     _activeType = 'all';
     _activeCategory = '';
-    const menuBtn = document.getElementById('evtTypeMenuBtn');
-    if (menuBtn) {
-        menuBtn.dataset.type = 'all';
-        const labelEl = menuBtn.querySelector('[data-type-label]');
-        if (labelEl) labelEl.textContent = 'All';
-    }
     document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
         o.classList.toggle('evt-type-opt--active', o.dataset.type === 'all')
     );
-    syncTypeChips('all');
+    syncFilterBtnActiveState();
     persistState();
     api().renderEvents?.();
 }
@@ -277,6 +285,7 @@ function initFilterChips() {
 
     const menuBtn = document.getElementById('evtTypeMenuBtn');
     const menu    = document.getElementById('evtTypeMenu');
+    const menuWrap = document.getElementById('evtTypeMenuBtnWrap');
     if (menuBtn && menu) {
         const closeMenu = () => {
             menu.classList.add('hidden');
@@ -289,7 +298,8 @@ function initFilterChips() {
             menuBtn.setAttribute('aria-expanded', String(willOpen));
         });
         document.addEventListener('click', e => {
-            if (!menu.contains(e.target) && e.target !== menuBtn) closeMenu();
+            if (menuWrap?.contains(e.target)) return;
+            closeMenu();
         });
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') closeMenu();
@@ -297,51 +307,19 @@ function initFilterChips() {
         menu.querySelectorAll('.evt-type-opt').forEach(opt => {
             opt.addEventListener('click', () => {
                 _activeType = opt.dataset.type || 'all';
-                menuBtn.dataset.type = _activeType;
-                const label = opt.textContent.replace(/\s+events?$/i, '').trim();
-                const labelEl = menuBtn.querySelector('[data-type-label]');
-                if (labelEl) labelEl.textContent = label;
                 menu.querySelectorAll('.evt-type-opt').forEach(o =>
                     o.classList.toggle('evt-type-opt--active', o === opt)
                 );
-                const sel = document.getElementById('typeFilter');
-                if (sel) sel.value = _activeType;
-                syncTypeChips(_activeType);
+                syncFilterBtnActiveState();
                 closeMenu();
                 persistState();
                 api().renderEvents?.();
             });
         });
+        syncFilterBtnActiveState();
     }
 
-    const chipRail = document.getElementById('evtTypeChips');
-    if (chipRail) {
-        chipRail.querySelectorAll('.evt-type-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                const t = chip.dataset.type || 'all';
-                if (t === _activeType) return;
-                _activeType = t;
-                syncTypeChips(t);
-                const mBtn = document.getElementById('evtTypeMenuBtn');
-                if (mBtn) {
-                    mBtn.dataset.type = t;
-                    const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + t + '"]');
-                    if (opt) {
-                        const label = opt.textContent.replace(/\s+events?$/i, '').trim();
-                        const labelEl = mBtn.querySelector('[data-type-label]');
-                        if (labelEl) labelEl.textContent = label;
-                        document.querySelectorAll('#evtTypeMenu .evt-type-opt').forEach(o =>
-                            o.classList.toggle('evt-type-opt--active', o === opt)
-                        );
-                    }
-                }
-                const sel = document.getElementById('typeFilter');
-                if (sel) sel.value = t;
-                persistState();
-                api().renderEvents?.();
-            });
-        });
-    }
+    // Type chip rail retired — no chip listeners.
 
     document.getElementById('emptyCreateBtn')?.addEventListener('click', () => {
         document.getElementById('createEventBtn')?.click();

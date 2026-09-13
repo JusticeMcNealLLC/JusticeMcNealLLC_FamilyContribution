@@ -10,7 +10,7 @@ import {
   parseAckIds,
   parseAcksMetadata,
 } from './disclaimers.ts'
-import { needsVote, resolveVoteStatus } from './amenity-voting.ts'
+import { commitPartyAmenityVote, needsVote, resolveVoteStatus } from './amenity-voting.ts'
 import {
   type PayMethod,
   type PlanKind,
@@ -58,6 +58,64 @@ export type PreparePaidRsvpResult = {
   rsvp_id: string
   guest_token?: string
   seat_info_tokens?: SeatInfoTokenRow[]
+  fully_credited?: boolean
+  credited_cents?: number
+  remaining_cents?: number
+}
+
+/**
+ * Sum succeeded payments already taken for this payer+event across cancelled/completed plans.
+ * Used so rejoin does not charge again for money already collected (no double-count by plan id).
+ */
+export async function sumPriorPaymentCredit(
+  supabase: any,
+  args: {
+    eventId: string
+    payerUserId?: string | null
+    payerGuestRsvpId?: string | null
+    excludePartyId?: string | null
+  },
+): Promise<number> {
+  const eventId = String(args.eventId || '').trim()
+  if (!eventId) return 0
+
+  let partyQuery = supabase
+    .from('event_parties')
+    .select('id')
+    .eq('event_id', eventId)
+
+  if (args.payerUserId) {
+    partyQuery = partyQuery.eq('payer_user_id', String(args.payerUserId))
+  } else if (args.payerGuestRsvpId) {
+    partyQuery = partyQuery.eq('payer_guest_rsvp_id', String(args.payerGuestRsvpId))
+  } else {
+    return 0
+  }
+
+  const { data: parties, error: partyErr } = await partyQuery
+  if (partyErr) throw new Error(partyErr.message)
+  const partyIds = (parties || [])
+    .map((p: { id?: string }) => String(p.id || ''))
+    .filter((id: string) => id && id !== String(args.excludePartyId || ''))
+  if (!partyIds.length) return 0
+
+  const { data: plans, error: planErr } = await supabase
+    .from('event_payment_plans')
+    .select('id, amount_paid_cents, status')
+    .eq('event_id', eventId)
+    .in('party_id', partyIds)
+    .in('status', ['cancelled', 'completed'])
+  if (planErr) throw new Error(planErr.message)
+
+  let credited = 0
+  const seen = new Set<string>()
+  for (const plan of plans || []) {
+    const id = String(plan?.id || '')
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    credited += Math.max(0, Number(plan?.amount_paid_cents) || 0)
+  }
+  return credited
 }
 
 function snapshotFundDeadline(event: Record<string, unknown>, anchorAt: Date): string {
@@ -141,8 +199,9 @@ async function ensurePaymentPlanStub(
     totalDueCents: number
     fundDeadline: string
     anchorAt: string
+    creditedCents?: number
   },
-): Promise<{ plan_id: string; installment_id: string }> {
+): Promise<{ plan_id: string; installment_id: string; remaining_cents: number; fully_credited: boolean }> {
   const {
     partyId,
     eventId,
@@ -155,12 +214,16 @@ async function ensurePaymentPlanStub(
     anchorAt,
   } = args
 
+  const creditedCents = Math.max(0, Math.min(totalDueCents, Number(args.creditedCents) || 0))
+  const remainingCents = Math.max(0, totalDueCents - creditedCents)
+  const fullyCredited = remainingCents <= 0
+
   let monthlyRows: ReturnType<typeof buildMonthlyInstallmentRows> | null = null
   let nextDebitAt: string | null = null
 
-  if (planKind === 'monthly') {
+  if (!fullyCredited && planKind === 'monthly') {
     monthlyRows = buildMonthlyInstallmentRows({
-      totalDueCents,
+      totalDueCents: remainingCents,
       anchorAt,
       fundDeadline,
     })
@@ -176,12 +239,12 @@ async function ensurePaymentPlanStub(
     base_total_cents: baseCents,
     fee_cents: feeCents,
     total_due_cents: totalDueCents,
-    amount_paid_cents: 0,
-    remaining_cents: totalDueCents,
+    amount_paid_cents: creditedCents,
+    remaining_cents: remainingCents,
     fund_deadline: fundDeadline,
     anchor_at: anchorAt,
-    next_debit_at: nextDebitAt,
-    status: 'setup',
+    next_debit_at: fullyCredited ? null : nextDebitAt,
+    status: fullyCredited ? 'completed' : 'setup',
     updated_at: new Date().toISOString(),
   }
 
@@ -219,6 +282,52 @@ async function ensurePaymentPlanStub(
     .update({ status: 'cancelled', updated_at: nowIso })
     .eq('plan_id', planId)
     .eq('status', 'pending')
+
+  if (fullyCredited) {
+    // Credit-only plan: no pending Stripe installment
+    const { data: existingInst } = await supabase
+      .from('event_payment_installments')
+      .select('id')
+      .eq('plan_id', planId)
+      .eq('sequence', 1)
+      .maybeSingle()
+
+    const creditInst = {
+      plan_id: planId,
+      event_id: eventId,
+      party_id: partyId,
+      sequence: 1,
+      kind: 'full' as const,
+      due_at: nowIso,
+      amount_cents: totalDueCents,
+      status: 'succeeded',
+      updated_at: nowIso,
+    }
+
+    let installmentId: string
+    if (existingInst?.id) {
+      const { error: instUpErr } = await supabase
+        .from('event_payment_installments')
+        .update(creditInst)
+        .eq('id', existingInst.id)
+      if (instUpErr) throw new Error(instUpErr.message)
+      installmentId = existingInst.id as string
+    } else {
+      const { data: inst, error: instErr } = await supabase
+        .from('event_payment_installments')
+        .insert(creditInst)
+        .select('id')
+        .single()
+      if (instErr) throw new Error(instErr.message)
+      installmentId = inst.id as string
+    }
+    return {
+      plan_id: planId,
+      installment_id: installmentId,
+      remaining_cents: 0,
+      fully_credited: true,
+    }
+  }
 
   if (planKind === 'monthly' && monthlyRows) {
     // Cancel any leftover pending after rebuild; insert/upsert each sequence
@@ -277,10 +386,15 @@ async function ensurePaymentPlanStub(
       .eq('status', 'pending')
       .gt('sequence', maxSeq)
 
-    return { plan_id: planId, installment_id: firstInstallmentId }
+    return {
+      plan_id: planId,
+      installment_id: firstInstallmentId,
+      remaining_cents: remainingCents,
+      fully_credited: false,
+    }
   }
 
-  // Full pay: single installment
+  // Full pay: single installment for remaining balance
   const { data: existingInst } = await supabase
     .from('event_payment_installments')
     .select('id')
@@ -295,7 +409,7 @@ async function ensurePaymentPlanStub(
     sequence: 1,
     kind: 'full' as const,
     due_at: nowIso,
-    amount_cents: totalDueCents,
+    amount_cents: remainingCents,
     status: 'pending',
     updated_at: nowIso,
   }
@@ -325,7 +439,12 @@ async function ensurePaymentPlanStub(
     .eq('status', 'pending')
     .neq('id', installmentId)
 
-  return { plan_id: planId, installment_id: installmentId }
+  return {
+    plan_id: planId,
+    installment_id: installmentId,
+    remaining_cents: remainingCents,
+    fully_credited: false,
+  }
 }
 
 /**
@@ -441,7 +560,14 @@ export async function preparePaidRsvpForCheckout(
     .eq('id', party.party_id)
     .neq('status', 'active')
 
-  const { plan_id, installment_id } = await ensurePaymentPlanStub(supabase, {
+  const creditedCents = await sumPriorPaymentCredit(supabase, {
+    eventId,
+    payerUserId: payer.kind === 'member' ? payer.userId : null,
+    payerGuestRsvpId: payer.kind === 'guest' ? rsvpId : null,
+    excludePartyId: party.party_id,
+  })
+
+  const { plan_id, installment_id, remaining_cents, fully_credited } = await ensurePaymentPlanStub(supabase, {
     partyId: party.party_id,
     eventId,
     planKind,
@@ -451,7 +577,27 @@ export async function preparePaidRsvpForCheckout(
     totalDueCents: checkoutTotals.checkoutTotalCents,
     fundDeadline,
     anchorAt: anchorAt.toISOString(),
+    creditedCents,
   })
+
+  if (fully_credited) {
+    const nowIso = new Date().toISOString()
+    if (payer.kind === 'member') {
+      await supabase
+        .from('event_rsvps')
+        .update({ paid: true, status: 'going', updated_at: nowIso })
+        .eq('id', rsvpId)
+    } else {
+      await supabase
+        .from('event_guest_rsvps')
+        .update({ paid: true, status: 'going', updated_at: nowIso })
+        .eq('id', rsvpId)
+    }
+    await supabase
+      .from('event_parties')
+      .update({ status: 'active', updated_at: nowIso })
+      .eq('id', party.party_id)
+  }
 
   return {
     party_id: party.party_id,
@@ -459,6 +605,9 @@ export async function preparePaidRsvpForCheckout(
     installment_id,
     rsvp_id: rsvpId,
     seat_info_tokens: party.seat_info_tokens || [],
+    fully_credited: !!fully_credited,
+    credited_cents: creditedCents,
+    remaining_cents,
     ...(guestToken ? { guest_token: guestToken } : {}),
   }
 }
@@ -628,9 +777,9 @@ export async function completePaidRsvpAfterCheckout(
 
   const nowIso = new Date().toISOString()
   const planKind = String(meta.plan_kind || 'full').trim() === 'monthly' ? 'monthly' : 'full'
-  const amenityVoteOptionId = meta.amenity_vote_option_id
-    ? String(meta.amenity_vote_option_id).trim()
-    : null
+  const amenityVoteOptionId = (
+    meta.amenity_vote_option_id || party.amenity_vote_option_id || ''
+  ).trim() || null
 
   let rsvpId: string | undefined
   let guestRsvpId: string | undefined
@@ -699,11 +848,11 @@ export async function completePaidRsvpAfterCheckout(
     status: 'active',
     updated_at: nowIso,
   }
-  if (amenityVoteOptionId) {
-    partyUpdate.amenity_vote_option_id = amenityVoteOptionId
-    partyUpdate.amenity_vote_status = 'counted'
-  }
   await supabase.from('event_parties').update(partyUpdate).eq('id', partyId)
+  await commitPartyAmenityVote(supabase, {
+    partyId,
+    optionId: amenityVoteOptionId,
+  })
 
   if (planId) {
     const { data: plan } = await supabase

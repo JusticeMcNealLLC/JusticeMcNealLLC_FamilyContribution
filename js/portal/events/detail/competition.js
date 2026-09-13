@@ -76,9 +76,12 @@ async function evtBuildCompetitionHtml(event, isHost) {
         : { state: 'not_configured', message: '' };
     const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps || {};
     const rsvp = rsvpMap[eventId];
-    const hasRsvp = typeof globalThis.evtIsGoingRsvp === 'function'
-        ? window.evtIsGoingRsvp(rsvp)
-        : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
+    const hasRsvp = typeof globalThis.evtIsCommittedGoing === 'function'
+        ? window.evtIsCommittedGoing(event, rsvp)
+        : (window.EventsHelpers?.rsvpIsCommittedGoing?.(event, rsvp)
+            || (event?.pricing_mode === 'paid'
+                ? !!(rsvp && rsvp.paid === true)
+                : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true))));
     const voterCtx = { hasRsvp, hasCompEntry: !!myEntry };
     const voterEligible = compPh.isVoterEligible ? compPh.isVoterEligible(config, voterCtx) : true;
     const voterIneligibleMsg = compPh.voterEligibilityMessage
@@ -255,7 +258,7 @@ async function evtBuildCompetitionHtml(event, isHost) {
                 if (entry.mime_type?.startsWith('image/') && resolvedUrl) {
                     contentPreview = `<img src="${resolvedUrl}" class="w-full h-32 object-cover rounded-lg mt-2" alt="">`;
                 } else if (resolvedUrl) {
-                    contentPreview = `<a href="${resolvedUrl}" target="_blank" rel="noopener" class="mt-2 inline-block text-xs text-brand-600 font-semibold hover:underline">📎 Download ${evtEscapeHtml(entry.file_name || 'file')}</a>`;
+                    contentPreview = `<a href="${resolvedUrl}" target="_blank" rel="noopener" class="mt-2 inline-block text-xs text-primary font-semibold hover:underline">📎 Download ${evtEscapeHtml(entry.file_name || 'file')}</a>`;
                 } else {
                     contentPreview = `<div class="mt-2 p-2 bg-gray-50 rounded-lg text-xs text-gray-500">📎 ${evtEscapeHtml(entry.file_name || 'File')}</div>`;
                 }
@@ -732,9 +735,12 @@ async function evtCastVote(eventId, entryId) {
             .maybeSingle();
 
         const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps || {})[eventId];
-        const hasRsvp = typeof globalThis.evtIsGoingRsvp === 'function'
-            ? window.evtIsGoingRsvp(rsvp)
-            : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
+        const hasRsvp = typeof globalThis.evtIsCommittedGoing === 'function'
+            ? window.evtIsCommittedGoing(event, rsvp)
+            : (window.EventsHelpers?.rsvpIsCommittedGoing?.(event, rsvp)
+                || (event?.pricing_mode === 'paid'
+                    ? !!(rsvp && rsvp.paid === true)
+                    : !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true))));
 
         if (compPh.isVoterEligible && !compPh.isVoterEligible(config, { hasRsvp, hasCompEntry: !!myEntry })) {
             alert(compPh.voterEligibilityMessage ? compPh.voterEligibilityMessage(config) : 'You are not eligible to vote in this competition.');

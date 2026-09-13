@@ -21,7 +21,18 @@ function pubCloseCtaPanel() {
 }
 
 function pubHasRaffleEligibleRsvp() {
-    if (pubCurrentUser) return pubCurrentRsvp?.status === 'going' || !!pubCurrentRsvp?.paid;
+    const event = typeof pubCurrentEvent !== 'undefined' ? pubCurrentEvent : null;
+    if (pubCurrentUser) {
+        if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+            return window.EventsHelpers.rsvpIsCommittedGoing(event, pubCurrentRsvp);
+        }
+        if (event?.pricing_mode === 'paid') return !!pubCurrentRsvp?.paid;
+        return pubCurrentRsvp?.status === 'going' || !!pubCurrentRsvp?.paid;
+    }
+    if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+        return window.EventsHelpers.rsvpIsCommittedGoing(event, pubGuestRsvp);
+    }
+    if (event?.pricing_mode === 'paid') return !!pubGuestRsvp?.paid;
     return !!pubGuestRsvp;
 }
 
@@ -34,6 +45,14 @@ function pubOpenCtaPanel(kind, opts = {}) {
     const panel = document.getElementById('evtCtaPanel');
     const bar = document.getElementById('evtCtaBar');
     if (!panel || !bar || !pubCurrentEvent) return;
+
+    if (kind !== 'ticket' && kind !== 'raffle'
+        && window.EventsRsvpWizard
+        && window.EventsRsvpWizard.needsPrep(pubCurrentEvent, { mode: 'guest' })
+        && typeof pubOpenGuestRsvpWizard === 'function'
+        && pubOpenGuestRsvpWizard()) {
+        return;
+    }
 
     const closeBtn = '<button type="button" class="evt-cta-panel-close" onclick="pubCloseCtaPanel()" aria-label="Close">×</button>';
     bar.classList.add('evt-cta-bar-expanded');
@@ -84,7 +103,10 @@ function pubOpenCtaPanel(kind, opts = {}) {
         ctaSeatPicker.innerHTML = window.EventsPartySeats.formFieldsHtml(pubCurrentEvent, {
             idPrefix: 'ctaGuestParty',
             payerName: ctaGuestName,
+            hidePayerName: true,
         });
+        const ctaInc = document.getElementById('ctaGuestIncludedOptions');
+        if (ctaInc) ctaInc.innerHTML = '';
     } else if (ctaSeatPicker && window.EventsSeatPicker && window.EventsSeatPicker.shouldShow(pubCurrentEvent, {})) {
         ctaSeatPicker.innerHTML = window.EventsSeatPicker.formFieldsHtml(pubCurrentEvent, { idPrefix: 'ctaGuestSeat' });
     }
@@ -98,6 +120,12 @@ function pubOpenCtaPanel(kind, opts = {}) {
             paymentWrapId: 'ctaGuestPaymentChoice',
             paymentPrefix: 'ctaGuestPayment',
         });
+    }
+    if (typeof pubSyncGuestContactToPayerName === 'function') {
+        pubSyncGuestContactToPayerName(panel);
+    }
+    if (window.EventsIncludedItems && typeof window.EventsIncludedItems.wireChoiceControls === 'function') {
+        window.EventsIncludedItems.wireChoiceControls(panel);
     }
     if (typeof pubUpdateGuestRsvpBtnLabel === 'function') {
         pubUpdateGuestRsvpBtnLabel(pubCurrentEvent, panel);

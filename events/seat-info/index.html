@@ -8,7 +8,6 @@
     <meta name="theme-color" content="#13366E">
     <link rel="stylesheet" href="../../theme/Theme_JMLLC001/Theme_JMLLC001.css">
     <link rel="stylesheet" href="../../css/shared.css">
-    <link rel="stylesheet" href="../../css/pages/portal/events/detail.css?v=167">
     <style>
         body.seat-info-page {
             margin: 0;
@@ -43,7 +42,7 @@
         }
         .seat-info-sub {
             font-size: 0.875rem;
-            color: #6b7280;
+            color: var(--color-text-muted, #64748b);
             margin: 0 0 1rem;
         }
         .seat-info-badge {
@@ -56,6 +55,31 @@
             border-radius: 999px;
             padding: 4px 10px;
             margin-bottom: 1rem;
+        }
+        .ec-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--color-text, #0B2545);
+            margin: 0 0 0.35rem;
+        }
+        .ec-input {
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 44px;
+            padding: 0.6rem 0.75rem;
+            border: 1.5px solid var(--color-border, #D5DFEC);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--color-text, #0B2545);
+            font-family: inherit;
+            font-size: 1rem;
+            margin-bottom: 0.85rem;
+        }
+        .ec-input:focus {
+            outline: none;
+            border-color: var(--color-primary, #13366E);
+            box-shadow: 0 0 0 3px var(--color-focus-ring, rgba(19, 54, 110, 0.35));
         }
         .seat-info-actions {
             margin-top: 1.25rem;
@@ -87,8 +111,8 @@
             font-size: 1.35rem;
             margin: 0 0 0.5rem;
         }
-        .seat-info-muted { color: #6b7280; font-size: 0.9rem; }
-        .seat-info-loading { text-align: center; padding: 3rem 1rem; color: #6b7280; }
+        .seat-info-muted { color: var(--color-text-muted, #64748b); font-size: 0.9rem; }
+        .seat-info-loading { text-align: center; padding: 3rem 1rem; color: var(--color-text-muted, #64748b); }
     </style>
 </head>
 <body class="seat-info-page antialiased">
@@ -101,8 +125,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../../js/config.js"></script>
-    <script src="../../js/components/events/helpers.js?v=167"></script>
-    <script src="../../js/components/events/included-items.js?v=167"></script>
-    <script src="../../js/events/seat-info.js?v=167"></script>
+    <script src="../../js/components/events/helpers.js?v=189"></script>
+    <script src="../../js/components/events/included-items.js?v=189"></script>
+    <script src="../../js/events/seat-info.js?v=189"></script>
 </body>
 </html>

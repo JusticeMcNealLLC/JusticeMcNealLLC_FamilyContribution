@@ -20,7 +20,7 @@ import {
   applyInstallmentProcessing,
   applyInstallmentSucceeded,
 } from '../_shared/payment-schedule-webhook.ts'
-import { notifyPartyPaymentFailed } from '../_shared/event-payment-sms.ts'
+import { notifyPartyPaymentFailed, notifyPartyPaymentLink } from '../_shared/event-payment-sms.ts'
 import {
   claimStripeWebhookEvent,
   extractWebhookMetaHints,
@@ -557,6 +557,16 @@ async function handleEventPmUpdateCheckout(supabase: any, session: Stripe.Checko
   }
   if (customerId) update.stripe_customer_id = customerId
 
+  // Sync plan.method so retry/payoff use the correct Stripe rail after card ↔ ACH switch
+  try {
+    const pm = await stripe.paymentMethods.retrieve(paymentMethodId)
+    const pmType = String(pm?.type || '')
+    if (pmType === 'card') update.method = 'card'
+    else if (pmType === 'us_bank_account') update.method = 'ach'
+  } catch (pmErr) {
+    console.error('PM type retrieve on update (non-fatal):', pmErr)
+  }
+
   // Leave past_due as-is — payer still needs Retry for the failed installment
   const { error } = await supabase
     .from('event_payment_plans')
@@ -566,7 +576,7 @@ async function handleEventPmUpdateCheckout(supabase: any, session: Stripe.Checko
     console.error('PM update plan persist failed:', error.message)
     return
   }
-  console.log('PM update persisted for plan:', planId, paymentMethodId)
+  console.log('PM update persisted for plan:', planId, paymentMethodId, update.method || '(method unchanged)')
 }
 
 // §13.10 — PI succeeded: PM persist + installment/plan rollup (idempotent)
@@ -736,6 +746,14 @@ async function handleEventRsvpPayment(supabase: any, session: Stripe.Checkout.Se
           console.error('Error creating bundled raffle entry:', raffleErr)
         }
       }
+    }
+
+    // §13.11 payment magic-link SMS (first commit only)
+    if (!prepCompletion.alreadyComplete && session.metadata?.party_id) {
+      await notifyPartyPaymentLink(supabase, {
+        partyId: String(session.metadata.party_id),
+        origin: Deno.env.get('PUBLIC_SITE_ORIGIN') || undefined,
+      })
     }
     return
   }

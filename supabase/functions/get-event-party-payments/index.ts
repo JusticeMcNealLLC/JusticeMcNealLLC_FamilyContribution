@@ -3,7 +3,13 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno&no-check'
 import { resolveEventPartyByInviteOrJwt } from '../_shared/event-party-token.ts'
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
+  apiVersion: '2023-10-16',
+  httpClient: Stripe.createFetchHttpClient(),
+})
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
@@ -18,6 +24,31 @@ function json(data: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
+}
+
+async function methodDisplayHints(paymentMethodId: string | null | undefined): Promise<{
+  method_last4?: string
+  method_brand?: string
+}> {
+  const pmId = String(paymentMethodId || '').trim()
+  if (!pmId) return {}
+  try {
+    const pm = await stripe.paymentMethods.retrieve(pmId)
+    if (pm.type === 'card' && pm.card) {
+      return {
+        method_last4: pm.card.last4 || undefined,
+        method_brand: pm.card.brand || undefined,
+      }
+    }
+    if (pm.type === 'us_bank_account' && pm.us_bank_account) {
+      return {
+        method_last4: pm.us_bank_account.last4 || undefined,
+      }
+    }
+  } catch (err) {
+    console.error('PM display hints retrieve failed (non-fatal):', (err as Error).message)
+  }
+  return {}
 }
 
 serve(async (req) => {
@@ -50,7 +81,8 @@ serve(async (req) => {
         id, plan_kind, method, status,
         base_total_cents, fee_cents, total_due_cents,
         amount_paid_cents, remaining_cents,
-        next_debit_at, fund_deadline, anchor_at
+        next_debit_at, fund_deadline, anchor_at,
+        stripe_payment_method_id
       `)
       .eq('party_id', party.id)
       .maybeSingle()
@@ -79,6 +111,7 @@ serve(async (req) => {
 
     const hasFailed = (installments || []).some((i: any) => String(i.status) === 'failed')
     const planStatus = String(plan.status || '')
+    const hints = await methodDisplayHints(plan.stripe_payment_method_id as string | null)
 
     return json({
       event: {
@@ -101,6 +134,8 @@ serve(async (req) => {
         next_debit_at: plan.next_debit_at,
         fund_deadline: plan.fund_deadline,
         anchor_at: plan.anchor_at,
+        ...(hints.method_last4 ? { method_last4: hints.method_last4 } : {}),
+        ...(hints.method_brand ? { method_brand: hints.method_brand } : {}),
       },
       has_failed_installment: hasFailed,
       past_due: planStatus === 'past_due' || hasFailed,

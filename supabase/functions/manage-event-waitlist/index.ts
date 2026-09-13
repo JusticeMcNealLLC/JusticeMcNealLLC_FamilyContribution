@@ -4,6 +4,12 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import {
+  eventCapacityMode,
+  eventHasCapacityLimit,
+  eventMaxParticipants,
+} from '../_shared/event-pricing.ts'
+import { countOccupiedCapacity } from '../_shared/party-seats.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
@@ -72,25 +78,20 @@ serve(async (req) => {
 
     // ─── Advance All Events ────────────────────────────────
     if (action === 'advance_all') {
-      // Find all active events with waitlists that have capacity
+      // Soft-cap events only
       const { data: events } = await supabase
         .from('events')
-        .select('id, max_participants')
+        .select('id, max_participants, capacity_mode, capacity_counts')
         .in('status', ['open', 'confirmed', 'active'])
+        .eq('capacity_mode', 'soft')
         .not('max_participants', 'is', null)
 
       let advanced = 0
       for (const evt of events || []) {
-        // Count current going RSVPs
-        const { count: goingCount } = await supabase
-          .from('event_rsvps')
-          .select('id', { count: 'exact', head: true })
-          .eq('event_id', evt.id)
-          .eq('status', 'going')
-
-        // Check if there's capacity
-        if ((goingCount || 0) < evt.max_participants) {
-          // Check if there's anyone waiting (not already offered)
+        if (!eventHasCapacityLimit(evt)) continue
+        const occupied = await countOccupiedCapacity(supabase, evt)
+        const max = eventMaxParticipants(evt)
+        if (occupied < max) {
           const { data: hasWaiting } = await supabase
             .from('event_waitlist')
             .select('id')
@@ -125,6 +126,21 @@ serve(async (req) => {
 // ─── Helper: Offer spot to next waitlisted user ──────────
 
 async function offerNextSpot(supabase: any, eventId: string) {
+  const { data: event } = await supabase
+    .from('events')
+    .select('id, title, max_participants, capacity_mode, capacity_counts')
+    .eq('id', eventId)
+    .maybeSingle()
+
+  if (!event || eventCapacityMode(event) !== 'soft' || !eventHasCapacityLimit(event)) {
+    return { offered: false, reason: 'not_soft_capacity' }
+  }
+
+  const occupied = await countOccupiedCapacity(supabase, event)
+  if (occupied >= eventMaxParticipants(event)) {
+    return { offered: false, reason: 'still_full' }
+  }
+
   // Check if there's already an active offer
   const { data: activeOffer } = await supabase
     .from('event_waitlist')
@@ -166,20 +182,12 @@ async function offerNextSpot(supabase: any, eventId: string) {
 
   // Send push notification
   try {
-    const { data: event } = await supabase
-      .from('events')
-      .select('title')
-      .eq('id', eventId)
-      .single()
-
-    // Get user's push subscriptions
     const { data: subs } = await supabase
       .from('push_subscriptions')
       .select('*')
       .eq('user_id', next.user_id)
 
     if (subs && subs.length > 0) {
-      // Trigger push notification via edge function
       await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-push-notification`, {
         method: 'POST',
         headers: {
@@ -196,7 +204,6 @@ async function offerNextSpot(supabase: any, eventId: string) {
     }
   } catch (pushErr) {
     console.error('Failed to send waitlist notification:', pushErr)
-    // Non-fatal — continue
   }
 
   return { offered: true, user_id: next.user_id, expires_at: offerExpires }

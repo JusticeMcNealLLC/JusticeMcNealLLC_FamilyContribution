@@ -69,7 +69,9 @@ function docsHtml() {
     const groupDocs = docs.filter(d => !d.target_user_id);
     const memberDocs = docs.filter(d => d.target_user_id);
     const goingMembers = STATE.rsvps
-        .filter(r => r.status === 'going')
+        .filter((r) => (window.EventsHelpers?.rsvpIsCommittedGoing
+            ? window.EventsHelpers.rsvpIsCommittedGoing(STATE.event, r)
+            : (STATE.event?.pricing_mode === 'paid' ? r.paid === true : r.status === 'going')))
         .map(r => {
             const profile = r.profiles || {};
             return {
@@ -129,8 +131,9 @@ function docsHtml() {
     const ticketHelper = window.EventsManageTicketHandoff;
     const planeHandoff = isPlaneLlc && ticketHelper
         ? ticketHelper.computePlaneTicketHandoff({
-            goingRsvps: STATE.rsvps.filter((r) => r.status === 'going'),
+            goingRsvps: STATE.rsvps,
             documents: docs,
+            event: STATE.event,
         })
         : null;
     const firstMissingUserId = planeHandoff?.missingUserIds?.[0] || '';

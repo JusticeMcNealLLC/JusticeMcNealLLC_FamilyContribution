@@ -8,6 +8,16 @@ function evtIsGoingRsvp(rsvp) {
     return !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
 }
 
+/** Committed Going (excludes paid-event Stripe prep / abandoned checkout). */
+function evtIsCommittedGoing(event, rsvp, plan) {
+    if (window.EventsHelpers && typeof window.EventsHelpers.rsvpIsCommittedGoing === 'function') {
+        return window.EventsHelpers.rsvpIsCommittedGoing(event, rsvp, plan);
+    }
+    if (!rsvp) return false;
+    if (event?.pricing_mode === 'paid') return rsvp.paid === true;
+    return evtIsGoingRsvp(rsvp);
+}
+
 function evtIsRaffleEntriesOpen(event) {
     if (!event) return false;
     const now = new Date();
@@ -25,10 +35,11 @@ function evtIsRaffleBundledWithPaidRsvp(event) {
 function evtCanEnterMemberRaffle(event, rsvp, myRaffleEntry) {
     if (!event?.raffle_enabled || !evtIsRaffleEntriesOpen(event) || myRaffleEntry) return false;
     if (evtIsRaffleBundledWithPaidRsvp(event)) return !!(rsvp && rsvp.paid === true);
-    return evtIsGoingRsvp(rsvp);
+    return evtIsCommittedGoing(event, rsvp);
 }
 
 window.evtIsGoingRsvp = evtIsGoingRsvp;
+window.evtIsCommittedGoing = evtIsCommittedGoing;
 window.evtIsRaffleEntriesOpen = evtIsRaffleEntriesOpen;
 window.evtIsRaffleBundledWithPaidRsvp = evtIsRaffleBundledWithPaidRsvp;
 window.evtCanEnterMemberRaffle = evtCanEnterMemberRaffle;
@@ -53,7 +64,7 @@ function evtValidateMemberNoRefund(event, seatRole, hasRequiredDisclaimers) {
     return true;
 }
 
-async function evtEnsureMemberPhoneForRsvp() {
+async function evtEnsureMemberPhoneForRsvp(eventId) {
     if (!globalThis.evtCurrentUser?.id) return null;
     const { data: profile } = await supabaseClient
         .from('profiles')
@@ -65,6 +76,36 @@ async function evtEnsureMemberPhoneForRsvp() {
 
     const inputEl = document.getElementById('evtMemberPhoneInput');
     const raw = (inputEl?.value || '').trim();
+
+    // Wizard-only prep: inline phone field is not on the page — reopen wizard
+    if (!inputEl && window.EventsRsvpWizard) {
+        const id = eventId
+            || document.getElementById('eventsDetailView')?.dataset?.eventId
+            || globalThis.evtDetailEventId
+            || null;
+        const event = id && Array.isArray(globalThis.evtAllEvents)
+            ? globalThis.evtAllEvents.find((e) => e.id === id)
+            : null;
+        if (event) {
+            const displayName = (typeof globalThis.evtMemberDisplayName === 'function')
+                ? globalThis.evtMemberDisplayName()
+                : 'Member';
+            window.EventsRsvpWizard.open({
+                event,
+                mode: 'member',
+                memberName: displayName,
+                memberPhoneMissing: true,
+                memberPhone: '',
+                onComplete: async () => {
+                    if (typeof globalThis.evtOpenDetail === 'function') {
+                        await globalThis.evtOpenDetail(event.id);
+                    }
+                },
+            });
+            return null;
+        }
+    }
+
     const validated = (window.EventsHelpers && typeof window.EventsHelpers.validatePhone === 'function')
         ? window.EventsHelpers.validatePhone(raw)
         : (raw ? { value: raw } : { error: 'Phone number is required.' });
@@ -174,6 +215,46 @@ async function evtHandleRsvp(eventId, status) {
             return;
         }
 
+        if (status === 'going' && window.EventsRsvpWizard) {
+            // Unknown/unloadable profile phone → treat as missing so wizard shows Phone step
+            let memberPhoneMissing = true;
+            let memberPhone = '';
+            if (globalThis.evtCurrentUser?.id && window.supabaseClient) {
+                try {
+                    const { data: profile, error: profErr } = await supabaseClient
+                        .from('profiles')
+                        .select('phone, first_name, last_name')
+                        .eq('id', globalThis.evtCurrentUser.id)
+                        .maybeSingle();
+                    if (!profErr) {
+                        memberPhone = (profile?.phone || '').trim();
+                        memberPhoneMissing = !memberPhone;
+                    }
+                } catch (_) {
+                    memberPhoneMissing = true;
+                    memberPhone = '';
+                }
+            }
+            if (window.EventsRsvpWizard.needsPrep(event, { mode: 'member', memberPhoneMissing })) {
+                const displayName = (typeof globalThis.evtMemberDisplayName === 'function')
+                    ? globalThis.evtMemberDisplayName()
+                    : 'Member';
+                window.EventsRsvpWizard.open({
+                    event,
+                    mode: 'member',
+                    memberName: displayName,
+                    memberPhoneMissing,
+                    memberPhone,
+                    onComplete: async () => {
+                        if (typeof globalThis.evtOpenDetail === 'function') {
+                            await globalThis.evtOpenDetail(eventId);
+                        }
+                    },
+                });
+                return;
+            }
+        }
+
         const isPaidEvent = event.pricing_mode === 'paid';
         const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps;
         const existing = rsvpMap[eventId];
@@ -265,7 +346,7 @@ async function evtHandleRsvp(eventId, status) {
 
         let memberPhonePayload = {};
         if (status === 'going') {
-            const phone = await evtEnsureMemberPhoneForRsvp();
+            const phone = await evtEnsureMemberPhoneForRsvp(eventId);
             if (!phone) return;
             memberPhonePayload = { phone };
         }
@@ -285,9 +366,14 @@ async function evtHandleRsvp(eventId, status) {
                 : (hasRequiredDisclaimers
                     ? `RSVP costs ${formatCurrency(partyTotal)}.\n\nProceed to checkout?`
                     : null);
-            if (confirmMsg && !confirm(confirmMsg)) return;
+            if (confirmMsg) {
+                const ok = window.EventsHelpers?.confirmDialog
+                    ? await window.EventsHelpers.confirmDialog({ message: confirmMsg })
+                    : confirm(confirmMsg);
+                if (!ok) return;
+            }
 
-            const { url } = await callEdgeFunction('create-event-checkout', {
+            const checkout = await callEdgeFunction('create-event-checkout', {
                 event_id: eventId,
                 type: 'rsvp',
                 seats,
@@ -302,8 +388,19 @@ async function evtHandleRsvp(eventId, status) {
                 ...(investAcknowledged ? { invest_eligible_acknowledged: true } : {}),
             });
 
-            if (url) {
-                window.location.href = url;
+            if (checkout?.invite_token && window.EventsHelpers?.stashPaymentInviteToken) {
+                window.EventsHelpers.stashPaymentInviteToken(eventId, checkout.invite_token);
+            }
+            if (checkout?.fully_credited || checkout?.paid) {
+                if (window.EventsRsvpWizard?.clearDraft) {
+                    window.EventsRsvpWizard.clearDraft(eventId, 'member');
+                }
+                evtRenderEvents();
+                await globalThis.evtOpenDetail(eventId);
+                return;
+            }
+            if (checkout?.url) {
+                window.location.href = checkout.url;
             }
             return;
         }
@@ -413,9 +510,14 @@ async function evtHandleRsvp(eventId, status) {
         }
 
         if (existing) {
-            // Block toggle-off for paid RSVPs (no self-refund)
+            // Paid / schedule: use dedicated cancel path (Cancel / Remove RSVP)
             if (existing.paid) {
-                alert('Paid RSVPs cannot be cancelled. Contact an admin for assistance.');
+                alert('Use Remove RSVP next to Going to leave this event. Payments already made are non-refundable.');
+                return;
+            }
+            const plan = (globalThis.evtMyPaymentPlans || {})[eventId];
+            if (plan && ['active', 'past_due', 'completed', 'setup'].includes(String(plan.status || ''))) {
+                alert('Use Cancel next to Going to leave this event. Payments already made are non-refundable.');
                 return;
             }
 
@@ -619,6 +721,18 @@ async function evtUpdateStatus(eventId, newStatus) {
 
 async function evtJoinWaitlist(eventId) {
     try {
+        const { data: eventRow, error: evtErr } = await supabaseClient
+            .from('events')
+            .select('id, capacity_mode, max_participants, capacity_counts')
+            .eq('id', eventId)
+            .maybeSingle();
+        if (evtErr) throw evtErr;
+        const Cap = window.EventsCapacity;
+        if (!Cap?.eventHasCapacityLimit?.(eventRow) || Cap.eventCapacityMode(eventRow) !== 'soft') {
+            alert('Waitlist is only available for soft-capacity events.');
+            return;
+        }
+
         // Get the next position
         const { data: maxPos } = await supabaseClient
             .from('event_waitlist')
@@ -739,7 +853,12 @@ async function evtClaimWaitlistSpot(eventId) {
             : (hasRequiredDisclaimers
                 ? `A spot has opened up!\n\nRSVP costs ${formatCurrency(partyTotal)}.\n\nProceed to checkout?`
                 : null);
-        if (waitlistConfirm && !confirm(waitlistConfirm)) return;
+        if (waitlistConfirm) {
+            const ok = window.EventsHelpers?.confirmDialog
+                ? await window.EventsHelpers.confirmDialog({ message: waitlistConfirm })
+                : confirm(waitlistConfirm);
+            if (!ok) return;
+        }
 
         if (!evtValidateMemberNoRefund(event, seatRole, hasRequiredDisclaimers)) return;
 
@@ -754,7 +873,7 @@ async function evtClaimWaitlistSpot(eventId) {
             && window.EventsInvestAck.isRequired(event)
             && window.EventsInvestAck.readAcknowledgedFromRoot(root);
 
-        const phone = await evtEnsureMemberPhoneForRsvp();
+        const phone = await evtEnsureMemberPhoneForRsvp(eventId);
         if (!phone) return;
 
         // Update waitlist status to 'claimed' so the spot is held
@@ -765,7 +884,7 @@ async function evtClaimWaitlistSpot(eventId) {
             .eq('user_id', globalThis.evtCurrentUser.id);
 
         // Redirect to Stripe checkout
-        const { url } = await callEdgeFunction('create-event-checkout', {
+        const checkout = await callEdgeFunction('create-event-checkout', {
             event_id: eventId,
             type: 'rsvp',
             from_waitlist: true,
@@ -781,8 +900,16 @@ async function evtClaimWaitlistSpot(eventId) {
             ...(investAcknowledged ? { invest_eligible_acknowledged: true } : {}),
         });
 
-        if (url) {
-            window.location.href = url;
+        if (checkout?.invite_token && window.EventsHelpers?.stashPaymentInviteToken) {
+            window.EventsHelpers.stashPaymentInviteToken(eventId, checkout.invite_token);
+        }
+        if (checkout?.fully_credited || checkout?.paid) {
+            evtRenderEvents();
+            await globalThis.evtOpenDetail(eventId);
+            return;
+        }
+        if (checkout?.url) {
+            window.location.href = checkout.url;
         }
     } catch (err) {
         console.error('Claim waitlist error:', err);
@@ -1007,13 +1134,61 @@ async function evtDuplicateEvent(eventId) {
     }
 }
 
+async function evtCancelMyParticipation(eventId) {
+    try {
+        if (!eventId || !globalThis.evtCurrentUser?.id) return;
+        const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps || {})[eventId];
+        const plan = (globalThis.evtMyPaymentPlans || {})[eventId] || null;
+        const paidFull = !!(rsvp?.paid || plan?.status === 'completed');
+        const title = paidFull ? 'Remove RSVP?' : 'Cancel RSVP?';
+        const confirmLabel = paidFull ? 'Remove RSVP' : 'Cancel RSVP';
+        const message = paidFull
+            ? 'Are you sure you want to remove your RSVP?\n\nPayments already made are non-refundable. If you rejoin later, prior payments may be credited toward a new RSVP.'
+            : 'Are you sure you want to cancel your RSVP and stop future installment charges?\n\nPayments already made are non-refundable. If you rejoin later, you can pick up where you left off with prior payments credited.';
+
+        const ok = window.EventsHelpers?.confirmDialog
+            ? await window.EventsHelpers.confirmDialog({
+                title,
+                message,
+                confirmLabel,
+                cancelLabel: 'Keep RSVP',
+            })
+            : confirm(message);
+        if (!ok) return;
+
+        await callEdgeFunction('cancel-my-event-participation', { event_id: eventId });
+        delete (globalThis.evtAllRsvps || {})[eventId];
+        if (window.evtAllRsvps) delete window.evtAllRsvps[eventId];
+        if (globalThis.evtMyPaymentPlans) delete globalThis.evtMyPaymentPlans[eventId];
+        if (window.EventsRsvpWizard?.clearDraft) {
+            window.EventsRsvpWizard.clearDraft(
+                eventId,
+                'member',
+                String(globalThis.evtCurrentUser?.id || 'member'),
+            );
+        }
+        if (window.EventsHelpers?.toast) {
+            window.EventsHelpers.toast(paidFull ? 'RSVP removed.' : 'RSVP cancelled.');
+        }
+        if (typeof evtRenderEvents === 'function') evtRenderEvents();
+        if (typeof globalThis.evtOpenDetail === 'function') {
+            await globalThis.evtOpenDetail(eventId);
+        }
+    } catch (err) {
+        console.error('Cancel participation error:', err);
+        alert(err?.message || 'Could not cancel RSVP.');
+    }
+}
+
 // ESM surface (Phase 7); window.* kept for onclick / classic callers until full import migration.
 export {
     evtIsGoingRsvp,
+    evtIsCommittedGoing,
     evtIsRaffleEntriesOpen,
     evtIsRaffleBundledWithPaidRsvp,
     evtCanEnterMemberRaffle,
     evtHandleRsvp,
+    evtCancelMyParticipation,
     evtHandleEventSmsOptIn,
     evtHandleRaffleEntry,
     evtHandleFreeRaffleEntry,
@@ -1031,10 +1206,12 @@ export {
 import { publishGlobals } from '../compat/publish-globals.js';
 publishGlobals({
     evtIsGoingRsvp,
+    evtIsCommittedGoing,
     evtIsRaffleEntriesOpen,
     evtIsRaffleBundledWithPaidRsvp,
     evtCanEnterMemberRaffle,
     evtHandleRsvp,
+    evtCancelMyParticipation,
     evtHandleEventSmsOptIn,
     evtHandleRaffleEntry,
     evtHandleFreeRaffleEntry,

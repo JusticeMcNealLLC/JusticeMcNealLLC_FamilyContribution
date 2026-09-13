@@ -444,41 +444,41 @@ Nothing material left open for announce. Implementation details (exact Stripe fe
 ### 13.11 Magic-link “My trip payments” page
 
 - [x] **MVP** — Public page route auth’d by `guest_token` (and member equivalent)
-- [ ] **MVP** — Show total, paid, remaining, next debit, plan type, method (ACH/card)
-- [ ] **MVP** — Pay off early CTA
-- [ ] **MVP** — **SMS** magic link on RSVP/pay setup + resend from manage; **on-screen show/copy**
-- [ ] **FINAL** — Update payment method from this page
-- [ ] **FINAL** — Theme/mobile polish; safe-area; no tab-bar collision on portal embeds if any
+- [x] **MVP** — Show total, paid, remaining, next debit, plan type, method (ACH/card)
+- [x] **MVP** — Pay off early CTA
+- [x] **MVP** — **SMS** magic link on RSVP/pay setup + resend from manage; **on-screen show/copy**
+- [x] **FINAL** — Update payment method from this page
+- [x] **FINAL** — Theme/mobile polish; safe-area; no tab-bar collision on portal embeds if any
 
 ### 13.12 Manage / admin / team + SMS invites
 
-- [ ] **MVP** — RSVPs tab: adults/kids, options, disclaimer ack, payer links, vote status
-- [ ] **MVP** — Money tab: per-payer paid/remaining/next/failed (Stripe-backed)
-- [ ] **MVP** — **Host SMS invites:** pick members with phones and/or add numbers; send event name + public link
-- [ ] **MVP** — Resend payment magic-link SMS; basic export or copy roster
-- [ ] **MVP** — Capacity behavior matches create setting (Colorado: none)
-- [ ] **FINAL** — Invite send log / resent history (thin)
-- [ ] **FINAL** — Team/coordinator tools aligned with moderation plans
-- [ ] **FINAL** — Danger-zone safe for payment-linked RSVPs (**no refund button**; cancel participation only as product allows)
+- [x] **MVP** — RSVPs tab: adults/kids, options, disclaimer ack, payer links, vote status
+- [x] **MVP** — Money tab: per-payer paid/remaining/next/failed (Stripe-backed)
+- [x] **MVP** — **Host SMS invites:** pick members with phones and/or add numbers; send event name + public link
+- [x] **MVP** — Resend payment magic-link SMS; basic export or copy roster
+- [x] **MVP** — Capacity behavior matches create setting (Colorado: none)
+- [x] **FINAL** — Invite send log / resent history (thin)
+- [x] **FINAL** — Team/coordinator tools aligned with moderation plans
+- [x] **FINAL** — Danger-zone safe for payment-linked RSVPs (**no refund button**; cancel participation only as product allows)
 
 ### 13.13 Voting (amenities)
 
 - [x] **MVP** — Create: enable voting + option list
 - [x] **MVP** — RSVP: cast vote before payment; store provisional vs counted
-- [ ] **MVP** — On plan commit → count vote; on cancel/never-pay → remove vote
-- [ ] **FINAL** — Close voting; show results to attendees as configured; host results view polished
+- [x] **MVP** — On plan commit → count vote; on cancel/never-pay → remove vote
+- [x] **FINAL** — Close voting; show results to attendees as configured; host results view polished
 
 ### 13.14 Theme, mobile, style-guide
 
-- [ ] **MVP** — Public event + RSVP + magic-link: Theme_JMLLC001 tokens, mobile-first, `viewport-fit=cover`, safe areas
-- [ ] **MVP** — Create/manage sheets usable on phone for host tasks needed at announce (incl. SMS invite)
-- [ ] **FINAL** — Style-guide checklist pass for all new surfaces
-- [ ] **FINAL** — Portal events list/detail visual parity with dashboard reference where applicable
+- [x] **MVP** — Public event + RSVP + magic-link: Theme_JMLLC001 tokens, mobile-first, `viewport-fit=cover`, safe areas
+- [x] **MVP** — Create/manage sheets usable on phone for host tasks needed at announce (incl. SMS invite)
+- [x] **FINAL** — Style-guide checklist pass for all new surfaces
+- [x] **FINAL** — Portal events list/detail visual parity with dashboard reference where applicable
 
 ### 13.15 Colorado launch package
 
-- [ ] **MVP** — Create Colorado event with $1000 adult, kids free, no capacity cap, Oct/Nov 2027 deadline, Jan 2028 date
-- [ ] **MVP** — About tabs + included clothing options + no-refund disclaimers filled
+- [x] **MVP** — Create Colorado event with $1000 adult, kids free, no capacity cap, Oct/Nov 2027 deadline, Jan 2028 date
+- [x] **MVP** — About tabs + included clothing options + no-refund disclaimers filled
 - [ ] **MVP** — End-to-end dry run: SMS invite → guest RSVP → vote → ACH/card setup → magic-link SMS → host roster/money
 - [ ] **MVP** — Host sends real SMS invites to family; cache/SW bump
 - [ ] **FINAL** — Live family rollout support notes (resend links, failure playbook, out-of-band refund policy reminder)

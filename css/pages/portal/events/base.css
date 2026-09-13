@@ -5,9 +5,9 @@
  * legacy detail-page host buttons, mobile CTA bar.
  * ============================================================ */
 
-/* Hide the bottom mobile nav on the events page (it has its own header) */
+/* Hide shell top nav on events (mobile only) — temporary layout test */
 @media (max-width: 767px) {
-    body[data-active-page="events"] > nav { display: none !important; }
+    body[data-active-page="events"] #mobileHeader { display: none !important; }
 }
 @media (min-width: 768px) {
     #mainNav { position: fixed; top: 0; left: 0; right: 0; z-index: 40; }
@@ -22,6 +22,66 @@
 @media (max-width: 640px) {
     .modal-panel { max-height: 100dvh; max-height: -webkit-fill-available; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
     #eventsDetailView { padding-bottom: env(safe-area-inset-bottom, 0px); }
+}
+
+/* Branded confirm (RSVP → Stripe) — EventsHelpers.confirmDialog */
+.evt-confirm-dialog {
+    position: fixed; inset: 0; z-index: 10050;
+    display: flex; align-items: center; justify-content: center;
+    padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px));
+    opacity: 0; transition: opacity .18s ease; pointer-events: none;
+}
+.evt-confirm-dialog.is-open { opacity: 1; pointer-events: auto; }
+.evt-confirm-dialog__backdrop {
+    position: absolute; inset: 0;
+    background: rgba(11, 37, 69, .45);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.evt-confirm-dialog__panel {
+    position: relative; z-index: 1;
+    width: min(100%, 400px);
+    background: var(--color-background, #FFFFFF);
+    border: 1px solid var(--color-border, #D5DFEC);
+    border-radius: 20px;
+    box-shadow: 0 24px 64px rgba(11, 37, 69, .22);
+    padding: 22px 22px 18px;
+    font-family: var(--font-body, 'Atkinson Hyperlegible Next', system-ui, sans-serif);
+    color: var(--color-text, #0B2545);
+}
+.evt-confirm-dialog__title {
+    margin: 0 0 10px;
+    font-family: var(--font-headline, 'Source Serif 4', Georgia, serif);
+    font-size: 22px; font-weight: 700; line-height: 1.2;
+    color: var(--color-text, #0B2545);
+}
+.evt-confirm-dialog__body { margin: 0 0 18px; }
+.evt-confirm-dialog__text {
+    margin: 0 0 10px; font-size: 15px; line-height: 1.5;
+    color: var(--color-text, #0B2545);
+}
+.evt-confirm-dialog__text:last-child { margin-bottom: 0; }
+.evt-confirm-dialog__actions {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
+}
+.evt-confirm-dialog__btn {
+    min-height: 44px; padding: 10px 16px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: background .15s, border-color .15s, color .15s;
+}
+.evt-confirm-dialog__btn--cancel {
+    background: var(--color-surface, #EEF2F6);
+    color: var(--color-primary, #13366E);
+    border: 1px solid var(--color-border, #D5DFEC);
+}
+.evt-confirm-dialog__btn--cancel:hover { background: #fff; }
+.evt-confirm-dialog__btn--confirm {
+    background: var(--color-primary, #13366E);
+    color: #fff; border: 1px solid var(--color-primary, #13366E);
+}
+.evt-confirm-dialog__btn--confirm:hover { background: var(--color-primary-hover, #0f2d5c); }
+.evt-confirm-dialog__btn:focus-visible {
+    outline: 2px solid var(--color-accent, #0E8B8B);
+    outline-offset: 2px;
 }
 
 #scannerVideo { width: 100%; border-radius: 12px; }
@@ -52,7 +112,7 @@
 
 /* Generic event tag color variants */
 .evt-tag { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 3px 9px; border-radius: 9999px; white-space: nowrap; }
-.evt-tag--purple { background: #ede9fe; color: #6d28d9; }
+.evt-tag--purple { background: var(--color-surface, #EEF2F6); color: #0f2d5c; }
 .evt-tag--blue { background: #dbeafe; color: #1d4ed8; }
 .evt-tag--green { background: #d1fae5; color: #065f46; }
 .evt-tag--pink { background: #fce7f3; color: #9d174d; }
@@ -112,7 +172,7 @@
 .evt-comment-reactions { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
 .evt-comment-react-btn { font-size: 12px; padding: 2px 8px; border-radius: 20px; border: 1px solid #ebebeb; background: #fff; cursor: pointer; display: flex; align-items: center; gap: 3px; transition: all .15s; }
 .evt-comment-react-btn:hover { border-color: #c7c7c7; background: #f7f7f7; }
-.evt-comment-react-btn.active { border-color: #4f46e5; background: #ede9fe; }
+.evt-comment-react-btn.active { border-color: var(--color-primary, #13366E); background: var(--color-surface, #EEF2F6); }
 .evt-comment-react-btn .count { font-weight: 600; color: #717171; }
 .evt-comment-add-react { font-size: 14px; padding: 2px 6px; border-radius: 20px; border: 1px dashed #ddd; background: none; cursor: pointer; color: #b0b0b0; }
 .evt-comment-add-react:hover { border-color: #999; color: #717171; }

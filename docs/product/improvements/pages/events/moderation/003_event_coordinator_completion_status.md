@@ -5,6 +5,8 @@
 **Date:** May 2026  
 **Environment validated:** Staging (`jcrsfzcabzdeqixbewgf`)
 
+**Follow-up (2026-09-03):** Events overhaul Manage → Overview **Team hosts** strip (`event_hosts` / `co_host`) aligns per-event team tools with this v1 model — global Event Coordinators still gate via `events.manage_all` / `canManageEvents()`; see brainstorm §13.12 line 461.
+
 ---
 
 ## 1. Completion summary

@@ -577,13 +577,17 @@ async function loadEvents() {
         // Cap 5 avatars / event client-side. Never N+1.
         // evtAttendees      = up-to-5 profile objects (for avatar stack)
         // evtAttendeeCounts = true total including guests (for "N going" label)
+        // Committed Going only: paid events require paid=true (exclude Stripe prep).
         globalThis.evtAttendees = {};
         globalThis.evtAttendeeCounts = {};
         if (ids.length) {
+            const pricingById = Object.fromEntries(
+                (window.evtAllEvents || []).map((e) => [e.id, e.pricing_mode === 'paid']),
+            );
             const [{ data: going, error: aErr }, { data: guestGoing, error: gErr }] = await Promise.all([
                 supabaseClient
                     .from('event_rsvps')
-                    .select('event_id, profiles:user_id(profile_picture_url, first_name)')
+                    .select('event_id, status, paid, profiles:user_id(profile_picture_url, first_name)')
                     .eq('status', 'going')
                     .in('event_id', ids),
                 supabaseClient
@@ -592,18 +596,27 @@ async function loadEvents() {
                     .in('event_id', ids),
             ]);
             if (!aErr && going) {
-                going.forEach(row => {
-                    if (!row.profiles) return;
-                    const list = (window.evtAttendees[row.event_id] ||= []);
-                    if (list.length < 5) list.push(row.profiles);
+                going.forEach((row) => {
+                    const isPaidEvent = !!pricingById[row.event_id];
+                    const committed = isPaidEvent
+                        ? row.paid === true
+                        : (row.status === 'going' || row.paid === true);
+                    if (!committed) return;
+                    if (row.profiles) {
+                        const list = (window.evtAttendees[row.event_id] ||= []);
+                        if (list.length < 5) list.push(row.profiles);
+                    }
                     window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
                 });
             }
             if (!gErr && guestGoing) {
-                guestGoing.forEach(row => {
-                    if (row.status === 'going' || row.paid === true) {
-                        window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
-                    }
+                guestGoing.forEach((row) => {
+                    const isPaidEvent = !!pricingById[row.event_id];
+                    const committed = isPaidEvent
+                        ? row.paid === true
+                        : (row.status === 'going' || row.paid === true);
+                    if (!committed) return;
+                    window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
                 });
             }
         }
@@ -1101,9 +1114,7 @@ function _initMobileFab() {
     if (!canCreate) return;
     fab.classList.remove('hidden');
     fab.classList.add('flex');
-    fab.addEventListener('click', () => {
-        document.getElementById('createEventBtn')?.click();
-    });
+    // Click handler lives in init.js (EventsCreate.open).
 
     // B3 — scroll-hide (hide on scroll-down, show on scroll-up)
     let lastY = window.scrollY || 0;
@@ -1343,49 +1354,13 @@ export const portalEventsListApi = {
     initMobileFab:     _initMobileFab,
 };
 
-// Mobile-only: relocate the search input row + filter button next to it,
-// above the chip rail. On desktop, restore them to their original DOM
-// homes so the existing search-toggle expand UX keeps working unchanged.
+// Search always stays on #evtFilterRow2 (no mobile relocate).
 function _initMobileFilterStrip() {
     const searchExpand = document.getElementById('evtSearchExpand');
-    const mSearchHost  = document.getElementById('evtMobileSearchHost');
-    const filterRow2   = document.getElementById('evtFilterRow2');
-    if (!searchExpand || !mSearchHost) return;
-
-    // Remember original parent so we can restore on resize-up
-    if (!searchExpand.dataset.dHome) {
-        searchExpand.dataset.dHome = '1';
-        searchExpand._dHomeParent = searchExpand.parentElement;
-        searchExpand._dHomeNext   = searchExpand.nextSibling;
-    }
-
-    const mq = window.matchMedia('(max-width: 639px)');
-    const apply = () => {
-        if (mq.matches) {
-            // Mobile: move search into mobile row, hide the desktop filter row
-            if (searchExpand.parentElement !== mSearchHost) {
-                mSearchHost.appendChild(searchExpand);
-            }
-            searchExpand.classList.remove('hidden', 'mt-2');
-            if (filterRow2) filterRow2.classList.add('hidden');
-        } else {
-            // Desktop: restore search to filterRow2
-            if (searchExpand.parentElement !== searchExpand._dHomeParent) {
-                searchExpand._dHomeParent.insertBefore(
-                    searchExpand,
-                    searchExpand._dHomeNext && searchExpand._dHomeNext.parentElement === searchExpand._dHomeParent
-                        ? searchExpand._dHomeNext : null
-                );
-                // Re-hide unless user has an active search
-                if (!_searchQuery) searchExpand.classList.add('hidden');
-                searchExpand.classList.add('mt-2');
-            }
-            if (filterRow2) filterRow2.classList.remove('hidden');
-        }
-    };
-    apply();
-    if (mq.addEventListener) mq.addEventListener('change', apply);
-    else if (mq.addListener) mq.addListener(apply);
+    const filterRow2 = document.getElementById('evtFilterRow2');
+    if (!searchExpand || !filterRow2) return;
+    searchExpand.classList.remove('hidden');
+    filterRow2.classList.remove('hidden');
 }
 
 // Show skeletons ASAP, init sticky header + FAB once DOM is ready

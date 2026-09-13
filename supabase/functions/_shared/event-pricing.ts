@@ -29,6 +29,31 @@ export function seatCountsTowardCapacity(event: Record<string, unknown>, role: S
   return counts === 'all'
 }
 
+export type CapacityMode = 'none' | 'soft' | 'hard'
+
+/** Normalized capacity_mode; unknown → none. */
+export function eventCapacityMode(event: Record<string, unknown> | null | undefined): CapacityMode {
+  const mode = String(event?.capacity_mode || 'none').trim().toLowerCase()
+  if (mode === 'soft' || mode === 'hard') return mode
+  return 'none'
+}
+
+/**
+ * Soft/hard with a positive max. Mode `none` ignores stale max_participants.
+ */
+export function eventHasCapacityLimit(event: Record<string, unknown> | null | undefined): boolean {
+  if (!event) return false
+  const mode = eventCapacityMode(event)
+  if (mode !== 'soft' && mode !== 'hard') return false
+  const max = Number(event.max_participants)
+  return Number.isFinite(max) && max > 0
+}
+
+export function eventMaxParticipants(event: Record<string, unknown> | null | undefined): number {
+  if (!eventHasCapacityLimit(event)) return 0
+  return Math.max(0, Number(event?.max_participants) || 0)
+}
+
 export function validateSeatRoleForEvent(event: Record<string, unknown>, role: SeatRole): void {
   if (role !== 'kid') return
   if (event?.kids_free === false) {

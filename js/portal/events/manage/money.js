@@ -1,4 +1,4 @@
-// Portal Events — Manage money tab (Phase 5M.3B)
+// Portal Events — Manage money tab (Phase 5M.3B + §13.12 payment plans)
 
 'use strict';
 
@@ -15,8 +15,38 @@ function money(cents) {
     return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', minimumFractionDigits:0, maximumFractionDigits:2 }).format((cents || 0) / 100);
 }
 
-// ═══════════════════════════════════════════════════════════════
-// M3b — MONEY TAB
+function formatDebitAt(iso, planStatus) {
+    if (String(planStatus || '') === 'completed') return 'None';
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function planStatusPill(status) {
+    const s = String(status || '');
+    if (s === 'past_due') return '<span class="em-pill em-pill-not">Past due</span>';
+    if (s === 'active') return '<span class="em-pill em-pill-going">Active</span>';
+    if (s === 'completed') return '<span class="em-pill em-pill-checked">Completed</span>';
+    if (s === 'setup') return '<span class="em-pill em-pill-maybe">Setup</span>';
+    if (s === 'cancelled') return '<span class="em-pill em-pill-not">Cancelled</span>';
+    return s ? `<span class="em-pill em-pill-maybe">${esc(s)}</span>` : '';
+}
+
+function methodLabel(method) {
+    const m = String(method || '').toLowerCase();
+    if (m === 'ach') return 'Bank (ACH)';
+    if (m === 'card') return 'Card';
+    return method || '—';
+}
+
+function planKindLabel(kind) {
+    const k = String(kind || '').toLowerCase();
+    if (k === 'full') return 'Full pay';
+    if (k === 'monthly') return 'Monthly';
+    return kind || '—';
+}
+
 // ═══════════════════════════════════════════════════════════════
 async function loadMoney() {
     const STATE = api().getState?.() || {};
@@ -39,6 +69,19 @@ async function loadMoney() {
             .from('prize_pool_contributions')
             .select('id, amount_cents')
             .eq('event_id', eventId),
+        supabaseClient
+            .from('event_payment_plans')
+            .select('id, party_id, plan_kind, method, status, amount_paid_cents, remaining_cents, total_due_cents, next_debit_at')
+            .eq('event_id', eventId),
+        supabaseClient
+            .from('event_parties')
+            .select('id, payer_kind, payer_user_id, payer_guest_rsvp_id, invite_token, status')
+            .eq('event_id', eventId),
+        supabaseClient
+            .from('event_payment_installments')
+            .select('id, plan_id')
+            .eq('event_id', eventId)
+            .eq('status', 'failed'),
     ];
     if (isLlc) {
         queries.push(
@@ -50,39 +93,70 @@ async function loadMoney() {
         );
     }
     const results = await Promise.all(queries);
-    const [rsvpsRes, guestRes, raffleRes, poolRes, costRes] = results;
+    const [rsvpsRes, guestRes, raffleRes, poolRes, plansRes, partiesRes, failedInstRes, costRes] = results;
+    const failedPlanIds = [...new Set((failedInstRes?.data || []).map((r) => r.plan_id).filter(Boolean))];
     return {
         rsvps:    rsvpsRes.data    || [],
         guests:   guestRes.data    || [],
         raffle:   raffleRes.data   || [],
         poolPays: poolRes.data     || [],
+        plans:    plansRes?.data   || [],
+        parties:  partiesRes?.data || [],
+        failedPlanIds,
         costItems: isLlc ? (costRes?.data || []) : [],
         costBreakdown: isLlc ? (STATE.event?.cost_breakdown || null) : null,
     };
 }
 
+function payerNameFromParty(party, rsvps, guests) {
+    if (!party) return 'Payer';
+    if (party.payer_kind === 'member' && party.payer_user_id) {
+        const row = (rsvps || []).find((r) => r.user_id === party.payer_user_id);
+        const p = row?.profiles || {};
+        return `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Member';
+    }
+    if (party.payer_kind === 'guest' && party.payer_guest_rsvp_id) {
+        const g = (guests || []).find((row) => row.id === party.payer_guest_rsvp_id);
+        return (g?.guest_name || '').trim() || 'Guest';
+    }
+    return 'Payer';
+}
+
 function moneyHtml() {
     const STATE = api().getState?.() || {};
-    const d = STATE.tabData.money;
+    const d = STATE.tabData.money || {};
     const adultCents = Number(STATE.event?.adult_price_cents);
     const isPaidEvent = STATE.event?.pricing_mode === 'paid'
         || (Number.isFinite(adultCents) && adultCents > 0)
         || Number(STATE.event?.rsvp_cost_cents || 0) > 0;
-    const paidRsvps = d.rsvps.filter(r => r.paid);
-    const paidGuests = d.guests.filter(g => g.paid);
-    const refundedRsvps = d.rsvps.filter(r => r.refunded);
-    const unpaidGoing = isPaidEvent ? STATE.rsvps.filter(r => r.status === 'going' && !r.paid).length + STATE.guestRsvps.filter(g => g.status === 'going' && !g.paid).length : 0;
+    const paidRsvps = (d.rsvps || []).filter(r => r.paid);
+    const paidGuests = (d.guests || []).filter(g => g.paid);
+    const refundedRsvps = (d.rsvps || []).filter(r => r.refunded);
+    const unpaidGoing = isPaidEvent
+        ? STATE.rsvps.filter(r => r.status === 'going' && !r.paid).length
+            + STATE.guestRsvps.filter(g => g.status === 'going' && !g.paid).length
+        : 0;
 
     const rsvpRevenue   = paidRsvps.reduce((s, r) => s + (r.amount_paid_cents || 0), 0);
     const guestRevenue  = paidGuests.reduce((s, g) => s + (g.amount_paid_cents || 0), 0);
-    const raffleRevenue = d.raffle.filter(e => e.paid).reduce((s, e) => s + (e.amount_paid_cents || 0), 0);
-    const poolRevenue   = d.poolPays.reduce((s, p) => s + (p.amount_cents || 0), 0);
+    const raffleRevenue = (d.raffle || []).filter(e => e.paid).reduce((s, e) => s + (e.amount_paid_cents || 0), 0);
+    const poolRevenue   = (d.poolPays || []).reduce((s, p) => s + (p.amount_cents || 0), 0);
     const refunded      = refundedRsvps.reduce((s, r) => s + (r.refund_amount_cents || 0), 0);
     const grossRevenue  = rsvpRevenue + guestRevenue + raffleRevenue + poolRevenue;
     const netRevenue    = grossRevenue - refunded;
 
+    const plans = Array.isArray(d.plans) ? d.plans : [];
+    const parties = Array.isArray(d.parties) ? d.parties : [];
+    const partyById = new Map(parties.map((p) => [p.id, p]));
+    const failedPlanSet = new Set(d.failedPlanIds || []);
+    const openPlans = plans.filter((p) => {
+        const st = String(p.status || '');
+        return st === 'active' || st === 'past_due';
+    });
+    const pastDueCount = plans.filter((p) => String(p.status) === 'past_due' || failedPlanSet.has(p.id)).length;
+    const remainingDue = openPlans.reduce((s, p) => s + (Number(p.remaining_cents) || 0), 0);
+
     const fmt = window.formatCurrency || money;
-    const ticketLabel = isPaidEvent ? 'Paid RSVPs' : 'Ticketed RSVPs';
 
     function paymentRow({ name, sub, amount, refundedAmount, stripeId, avatarHtml, isGuest }) {
         const refundPill = refundedAmount
@@ -118,11 +192,50 @@ function moneyHtml() {
     }));
     const paymentRows = [...memberRows, ...guestRows].join('') || `<p class="text-xs text-gray-400 italic py-2">No paid RSVPs yet.</p>`;
 
+    const planRows = plans.length
+        ? plans.map((plan) => {
+            const party = partyById.get(plan.party_id);
+            const name = payerNameFromParty(party, d.rsvps, d.guests);
+            const isGuest = party?.payer_kind === 'guest';
+            const initials = (name || 'P').slice(0, 1).toUpperCase();
+            const failed = String(plan.status) === 'past_due' || failedPlanSet.has(plan.id);
+            const pills = [
+                planStatusPill(plan.status),
+                failed ? '<span class="em-pill em-pill-not">Failed charge</span>' : '',
+                `<span class="em-pill em-pill-going">${esc(planKindLabel(plan.plan_kind))}</span>`,
+                `<span class="em-pill em-pill-maybe">${esc(methodLabel(plan.method))}</span>`,
+                isGuest ? '<span class="em-pill em-pill-going">Guest</span>' : '',
+            ].filter(Boolean).join('');
+            const inviteTok = party?.invite_token ? esc(party.invite_token) : '';
+            const copyBtn = inviteTok
+                ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-money-copy-pay-link="${inviteTok}">Copy payment link</button>`
+                : '';
+            return `
+                <div class="em-attendee-card">
+                    <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ''}><span>${esc(initials)}</span></div>
+                    <div class="em-attendee-main">
+                        <p class="em-attendee-name">${esc(name)}</p>
+                        <p class="em-attendee-sub">Paid ${fmt(plan.amount_paid_cents || 0)} · Remaining ${fmt(plan.remaining_cents || 0)} · Next debit ${esc(formatDebitAt(plan.next_debit_at, plan.status))}</p>
+                        <div class="flex flex-wrap gap-1 mt-2">${pills}</div>
+                        ${copyBtn ? `<div style="margin-top:8px">${copyBtn}</div>` : ''}
+                    </div>
+                </div>`;
+        }).join('')
+        : `<p class="text-xs text-gray-400 italic py-2">No payment plans yet.</p>`;
+
     const isLlc = STATE.event?.event_type === 'llc';
     const costItems = d.costItems || [];
     const costBreakdown = d.costBreakdown || {};
-    const goingCount = STATE.rsvps.filter((r) => r.status === 'going').length
-        + STATE.guestRsvps.filter((g) => g.status === 'going').length;
+    const goingCount = (STATE.rsvps || []).filter((r) => (
+        window.EventsHelpers?.rsvpIsCommittedGoing
+            ? window.EventsHelpers.rsvpIsCommittedGoing(STATE.event, r)
+            : (STATE.event?.pricing_mode === 'paid' ? r.paid === true : r.status === 'going')
+    )).length
+        + (STATE.guestRsvps || []).filter((g) => (
+            window.EventsHelpers?.rsvpIsCommittedGoing
+                ? window.EventsHelpers.rsvpIsCommittedGoing(STATE.event, g)
+                : (STATE.event?.pricing_mode === 'paid' ? g.paid === true : g.status === 'going')
+        )).length;
     const buyInCents = Number(STATE.event?.adult_price_cents ?? STATE.event?.rsvp_cost_cents ?? 0);
     const budgetIncluded = Number(costBreakdown.total_included_cents)
         || costItems
@@ -159,23 +272,31 @@ function moneyHtml() {
             </div>`;
     }
 
+    const plansSection = isPaidEvent || plans.length ? `
+            <div class="em-card mb-4" style="grid-column:1/-1">
+                <div class="em-section-head"><div><h3 class="em-section-title">Payment plans <span class="text-gray-400 font-normal">· ${plans.length}</span></h3><p class="em-section-sub">Per-payer paid, remaining, next debit, and failed charges (Stripe-backed schedule).</p></div></div>
+                ${planRows}
+            </div>` : '';
+
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Money command</p>
             <h3 class="em-command-title">${fmt(netRevenue)} net collected</h3>
-            <p class="em-command-copy">${grossRevenue ? `${fmt(grossRevenue)} gross across RSVP, guest, raffle, and prize-pool activity.` : (isPaidEvent ? 'No paid activity has landed yet.' : 'This free event has no RSVP revenue to collect.')} ${unpaidGoing ? `${unpaidGoing} going attendee${unpaidGoing === 1 ? '' : 's'} still show unpaid.` : (isPaidEvent ? 'No unpaid going attendees are currently flagged.' : 'Ticketed attendees are tracked for access and check-in.')}</p>
+            <p class="em-command-copy">${grossRevenue ? `${fmt(grossRevenue)} gross across RSVP, guest, raffle, and prize-pool activity.` : (isPaidEvent ? 'No paid activity has landed yet.' : 'This free event has no RSVP revenue to collect.')} ${unpaidGoing ? `${unpaidGoing} going attendee${unpaidGoing === 1 ? '' : 's'} still show unpaid.` : (isPaidEvent ? 'No unpaid going attendees are currently flagged.' : 'Ticketed attendees are tracked for access and check-in.')}${pastDueCount ? ` ${pastDueCount} plan${pastDueCount === 1 ? '' : 's'} past due.` : ''}</p>
         </div>
 
         <div class="em-metric-grid mb-4">
             <div class="em-metric"><span>Gross</span><strong>${fmt(grossRevenue)}</strong><small>All sources</small></div>
             <div class="em-metric"><span>Net</span><strong>${fmt(netRevenue)}</strong><small>After refunds</small></div>
-            <div class="em-metric"><span>Refunded</span><strong>${fmt(refunded)}</strong><small>${refundedRsvps.length} member RSVP${refundedRsvps.length === 1 ? '' : 's'}</small></div>
-            <div class="em-metric"><span>${ticketLabel}</span><strong>${paidRsvps.length + paidGuests.length}</strong><small>${paidRsvps.length} member · ${paidGuests.length} guest</small></div>
+            <div class="em-metric"><span>Past due</span><strong>${pastDueCount}</strong><small>Plans / failed</small></div>
+            <div class="em-metric"><span>Remaining due</span><strong>${fmt(remainingDue)}</strong><small>Open plans</small></div>
         </div>
+
+        ${plansSection}
 
         <div class="em-money-layout">
             <div class="em-card">
-                <div class="em-section-head"><div><h3 class="em-section-title">${isPaidEvent ? 'Paid attendees' : 'Ticketed attendees'} <span class="text-gray-400 font-normal">· ${paidRsvps.length + paidGuests.length}</span></h3><p class="em-section-sub">${isPaidEvent ? 'Member and public guest RSVP payments.' : 'Members and public guests with issued event tickets.'}</p></div></div>
+                <div class="em-section-head"><div><h3 class="em-section-title">${isPaidEvent ? 'One-shot / ticketed' : 'Ticketed attendees'} <span class="text-gray-400 font-normal">· ${paidRsvps.length + paidGuests.length}</span></h3><p class="em-section-sub">${isPaidEvent ? 'Legacy RSVP payment rows (audit). Prefer Payment plans above for schedules.' : 'Members and public guests with issued event tickets.'}</p></div></div>
                 ${paymentRows}
             </div>
 
@@ -195,7 +316,35 @@ function moneyHtml() {
 }
 
 function wireMoney() {
-    const STATE = api().getState?.() || {}; /* read-only in M3b */ }
+    const panel = document.getElementById('emSheetContent');
+    panel?.querySelectorAll('[data-money-copy-pay-link]').forEach((btn) => {
+        if (btn.dataset.copyWired) return;
+        btn.dataset.copyWired = '1';
+        btn.addEventListener('click', async () => {
+            const token = btn.getAttribute('data-money-copy-pay-link') || '';
+            const url = window.EventsHelpers?.paymentMagicLinkUrl
+                ? window.EventsHelpers.paymentMagicLinkUrl(token)
+                : `${window.location.origin}/events/payments/?t=${encodeURIComponent(token)}`;
+            if (!url) return;
+            try {
+                if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(url);
+                else {
+                    const ta = document.createElement('textarea');
+                    ta.value = url;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    ta.remove();
+                }
+                const prev = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = prev || 'Copy payment link'; }, 1500);
+            } catch (_) {
+                prompt('Copy this payment link:', url);
+            }
+        });
+    });
+}
 
 export const manageMoneyApi = {
     loadMoney,

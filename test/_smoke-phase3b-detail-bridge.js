@@ -951,15 +951,16 @@ detailSections.includes('function evtBuildDetailRsvpPrepHtml(')
 detailSections.includes('function evtBuildDetailGuestRsvpHintHtml(')
     ? pass('evtBuildDetailGuestRsvpHintHtml present')
     : fail('evtBuildDetailGuestRsvpHintHtml missing from sections.js');
-detailSections.includes('RSVP as Member')
-    ? pass('member RSVP CTA label present')
-    : fail('RSVP as Member label missing');
+detailSections.includes('ed-rsvp-stack-btn')
+    && detailSections.includes('function evtMemberRsvpStackBtnHtml')
+    ? pass('member RSVP stacked CTA present')
+    : fail('stacked RSVP CTA missing');
 detailSections.includes('ed-rsvp-cta-block') && detailSections.includes('ed-rsvp-prep')
     ? pass('RSVP section orders CTA before prep wrapper')
     : fail('RSVP CTA/prep structure missing');
 detailSections.includes('/events/?e=') || detailSections.includes('evtDetailPublicInviteUrl')
-    ? pass('guest hint uses public invite URL')
-    : fail('guest hint missing public invite URL');
+    ? pass('public invite URL helper present for share')
+    : fail('public invite URL helper missing');
 (function () {
     const shareFn = detailSections.match(/function evtBuildDetailShareCardHtml[\s\S]*?^}/m);
     shareFn && shareFn[0].includes('evtDetailPublicInviteUrl') && !shareFn[0].includes('window.location.href')

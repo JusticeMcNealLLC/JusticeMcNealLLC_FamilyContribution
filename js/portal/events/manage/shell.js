@@ -30,13 +30,13 @@ function getState() {
         <div id="emSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
         <div id="emSheet" class="em-sheet-hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
             <div id="emSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
-                <header id="emSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
+                <header id="emSheetHeader" class="px-5 sm:px-6 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0" style="padding-top:max(1rem, env(safe-area-inset-top, 0px))">
                     <div class="flex-1 min-w-0">
-                        <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Manage Event</p>
+                        <p class="text-[11px] uppercase tracking-wide font-bold" style="color:var(--color-primary, #13366E)">Manage Event</p>
                         <h2 id="emSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">…</h2>
                         <p id="emSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
                     </div>
-                    <button id="emSheetClose" class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" aria-label="Close">
+                    <button id="emSheetClose" class="rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" style="min-width:44px;min-height:44px" aria-label="Close">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </header>
@@ -49,7 +49,7 @@ function getState() {
             #emSheetTabs::-webkit-scrollbar { display: none; }
             .em-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; }
             .em-tab:hover { color:#374151; }
-            .em-tab.active { color:#4f46e5; border-bottom-color:#4f46e5; }
+            .em-tab.active { color:var(--color-primary, #13366E); border-bottom-color:var(--color-primary, #13366E); }
             .em-tab.placeholder { color:#cbd5e1; }
             .em-tab.placeholder.active { color:#9ca3af; border-bottom-color:#cbd5e1; }
             .em-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; }
@@ -63,10 +63,10 @@ function getState() {
             .em-op-meta { margin-top:auto; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
             .em-op-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#f8fafc; color:#475569; font-size:11px; font-weight:700; }
             .em-op-progress { height:7px; border-radius:999px; overflow:hidden; background:#eef2f7; margin-top:auto; }
-            .em-op-progress span { display:block; height:100%; width:0; border-radius:inherit; background:#4f46e5; }
+            .em-op-progress span { display:block; height:100%; width:0; border-radius:inherit; background:var(--color-primary, #13366E); }
             .em-command-card { background:linear-gradient(135deg,#111827,#312e81); color:#fff; border:0; overflow:hidden; position:relative; }
             .em-command-card:after { content:""; position:absolute; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,.08); right:-70px; top:-80px; }
-            .em-command-eyebrow { font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#c7d2fe; margin:0 0 6px; }
+            .em-command-eyebrow { font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--color-border, #D5DFEC); margin:0 0 6px; }
             .em-command-title { font-size:20px; font-weight:850; margin:0; line-height:1.15; }
             .em-command-copy { font-size:12px; line-height:1.5; color:#dbeafe; margin:8px 0 0; max-width:560px; }
             .em-metric-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
@@ -92,7 +92,7 @@ function getState() {
             .em-stat-num { font-size:24px; font-weight:800; color:#111827; }
             .em-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f1f5f9; }
             .em-row:last-child { border-bottom:none; }
-            .em-avatar { width:32px; height:32px; border-radius:50%; background:#e0e7ff; color:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; overflow:hidden; }
+            .em-avatar { width:32px; height:32px; border-radius:50%; background:var(--color-surface, #EEF2F6); color:var(--color-primary, #13366E); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; overflow:hidden; }
             .em-avatar img { width:100%; height:100%; object-fit:cover; }
             .em-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
             .em-pill-going { background:#d1fae5; color:#065f46; }
@@ -107,13 +107,18 @@ function getState() {
             .em-btn-danger:hover { background:#b91c1c; }
             .em-btn-ghost { background:#f3f4f6; color:#374151; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
             .em-btn-ghost:hover { background:#e5e7eb; }
-            .em-btn-primary { background:#4f46e5; color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; }
-            .em-btn-primary:hover { background:#4338ca; }
+            .em-btn-primary { background:var(--color-primary, #13366E); color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; }
+            .em-btn-primary:hover { background:#0f2d5c; }
             .em-btn-primary:disabled { opacity:.55; cursor:not-allowed; }
             .em-input { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; }
-            .em-input:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
+            .em-input:focus { outline:none; border-color:var(--color-primary, #13366E); box-shadow:0 0 0 3px rgba(19,54,110,.18); }
             .em-textarea { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; resize:vertical; min-height:92px; }
-            .em-textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
+            .em-textarea:focus { outline:none; border-color:var(--color-primary, #13366E); box-shadow:0 0 0 3px rgba(19,54,110,.18); }
+            @media (max-width:639px) {
+                .em-btn-primary, .em-btn-ghost, .em-btn-danger { min-height:44px; padding:10px 14px; }
+                .em-tab { min-height:44px; display:inline-flex; align-items:center; padding:12px 14px; }
+                .em-input, .em-textarea { font-size:16px; padding:11px 12px; }
+            }
             .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
             .em-placeholder svg { width:48px; height:48px; margin-bottom:12px; opacity:.4; }
             .em-notif-row { align-items:flex-start; }

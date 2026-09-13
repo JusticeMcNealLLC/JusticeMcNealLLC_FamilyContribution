@@ -67,6 +67,65 @@
     -webkit-backdrop-filter: blur(12px);
 }
 
+/* ─── Mobile header slots (#mobileHeader left | center | right) ─── */
+#mobileHeader .mh-bar {
+    display: flex;
+    align-items: center;
+    min-height: 56px;
+    gap: 8px;
+}
+#mobileHeader .mh-slot {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+#mobileHeader .mh-slot--left,
+#mobileHeader .mh-slot--right {
+    flex: 0 0 auto;
+}
+#mobileHeader .mh-slot--center {
+    flex: 1 1 auto;
+    justify-content: center;
+    overflow: hidden;
+}
+#mobileHeader .mh-slot--left:empty,
+#mobileHeader .mh-slot--right:empty {
+    min-width: 0;
+}
+/* Default brand row: when left is empty, keep brand left-aligned like before */
+#mobileHeader .mh-slot--left:empty + .mh-slot--center {
+    justify-content: flex-start;
+}
+#mobileHeader .mh-icon-btn,
+#mobileHeader .mh-circle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    min-height: 36px;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-text, #0B2545);
+    flex-shrink: 0;
+}
+#mobileHeader .mh-circle-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-border, #D5DFEC);
+    background: #fff;
+}
+#mobileHeader .mh-logo-link {
+    display: inline-flex;
+    text-decoration: none;
+}
+#mobileHeader .mh-slot-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 /* ─── Safe-area top inset for PWA (iPhone Dynamic Island / notch) ─── */
 @supports (padding-top: env(safe-area-inset-top)) {
     /* Standalone PWA mode */

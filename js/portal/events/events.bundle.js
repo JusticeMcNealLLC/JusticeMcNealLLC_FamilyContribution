@@ -298,7 +298,7 @@
           const number = Number(value);
           return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : null;
         }
-        const api21 = {
+        const api22 = {
           VERSION,
           DEFAULT_EMOJI,
           normalizeConfig,
@@ -311,10 +311,10 @@
           getDrawQueue,
           validateConfig
         };
-        root2.EventsRaffleModel = api21;
-        if (typeof module !== "undefined" && module.exports) module.exports = api21;
+        root2.EventsRaffleModel = api22;
+        if (typeof module !== "undefined" && module.exports) module.exports = api22;
         if (typeof root2.PortalEvents === "undefined") root2.PortalEvents = {};
-        root2.PortalEvents.raffleModel = api21;
+        root2.PortalEvents.raffleModel = api22;
       })(typeof globalThis !== "undefined" ? globalThis : window);
     }
   });
@@ -353,8 +353,8 @@
     const CATEGORY_GRADIENT = {
       birthday: "linear-gradient(135deg,#831843,#ec4899)",
       // wine → rose
-      party: "linear-gradient(135deg,#1e1b4b,#6366f1)",
-      // deep indigo → brand
+      party: "linear-gradient(135deg,#0B2545,#13366E)",
+      // navy → primary
       hangout: "linear-gradient(135deg,#14532d,#4ade80)",
       // forest → light green
       game_night: "linear-gradient(135deg,#0f172a,#475569)",
@@ -371,8 +371,8 @@
       // forest → green
       investment: "linear-gradient(135deg,#0f172a,#475569)",
       // slate
-      annual: "linear-gradient(135deg,#1e1b4b,#6366f1)",
-      // deep indigo → brand
+      annual: "linear-gradient(135deg,#0B2545,#13366E)",
+      // navy → primary
       celebration: "linear-gradient(135deg,#4a044e,#d946ef)",
       // deep purple → fuchsia
       competition: "linear-gradient(135deg,#052e16,#16a34a)",
@@ -389,7 +389,7 @@
     const DEFAULT_GRADIENT = "linear-gradient(135deg,#1f2937,#6b7280)";
     const TYPE_COLORS_PORTAL = {
       llc: { bg: "bg-amber-100", text: "text-amber-700", label: "LLC" },
-      member: { bg: "bg-brand-100", text: "text-brand-700", label: "Member" },
+      member: { bg: "bg-primary-100", text: "text-primary-700", label: "Member" },
       competition: { bg: "bg-rose-100", text: "text-rose-700", label: "Competition" }
     };
     const TYPE_COLORS_PUBLIC = {
@@ -633,9 +633,9 @@
       const now = /* @__PURE__ */ new Date();
       const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const schema = {
-        upcoming: ["Tonight", "This week", "This month", "Later"],
+        upcoming: ["Tonight", "This week", "This month", "Later", "Earlier"],
         past: ["Last week", "Last month", "Earlier"],
-        going: ["Tonight", "This week", "Later"]
+        going: ["Tonight", "This week", "Later", "Earlier"]
       };
       const labels = schema[mode] || schema.upcoming;
       const buckets = Object.fromEntries(labels.map((l) => [l, []]));
@@ -644,13 +644,15 @@
         if (!raw) return labels[labels.length - 1];
         const d = new Date(raw);
         if (isNaN(d)) return labels[labels.length - 1];
-        const dayDiff = Math.round((d - startOfToday) / 864e5);
+        const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const dayDiff = Math.round((startOfDay - startOfToday) / 864e5);
         if (mode === "past") {
           if (dayDiff >= -7) return "Last week";
           if (dayDiff >= -30) return "Last month";
           return "Earlier";
         }
-        if (dayDiff <= 0) return "Tonight";
+        if (dayDiff < 0) return "Earlier";
+        if (dayDiff === 0) return "Tonight";
         if (dayDiff <= 7) return "This week";
         if (mode === "going") return "Later";
         if (dayDiff <= 30) return "This month";
@@ -751,6 +753,83 @@
         });
       });
     }
+    function paymentMagicLinkUrl(token) {
+      const t = String(token || "").trim();
+      if (!t) return "";
+      const origin = typeof window !== "undefined" && window.location && window.location.origin ? window.location.origin : "https://justicemcneal.com";
+      return `${origin}/events/payments/?t=${encodeURIComponent(t)}`;
+    }
+    function stashPaymentInviteToken(eventId2, token) {
+      const t = String(token || "").trim();
+      const id = String(eventId2 || "").trim();
+      if (!t || !id) return;
+      try {
+        sessionStorage.setItem(`event_pay_link_${id}`, t);
+      } catch (_) {
+      }
+    }
+    function readPaymentInviteToken(eventId2) {
+      const params = new URLSearchParams(window.location.search || "");
+      const fromQuery = (params.get("t") || params.get("token") || "").trim();
+      if (fromQuery) return fromQuery;
+      const id = String(eventId2 || "").trim();
+      if (!id) return "";
+      try {
+        return String(sessionStorage.getItem(`event_pay_link_${id}`) || "").trim();
+      } catch (_) {
+        return "";
+      }
+    }
+    function paymentMagicLinkHtml(tokenOrUrl, opts) {
+      const options = opts && typeof opts === "object" ? opts : {};
+      let url = String(tokenOrUrl || "").trim();
+      if (url && !/^https?:\/\//i.test(url)) {
+        url = paymentMagicLinkUrl(url);
+      }
+      if (!url) return "";
+      const title = options.title || "Your payment link";
+      const sub = options.sub || "We also texted this link when SMS is enabled. Save it to manage payments anytime.";
+      const safeUrl = escapeHtml(url);
+      return `
+            <div class="ed-seat-info-invites ed-payment-magic-link" data-payment-magic-link="1">
+                <p class="ed-seat-info-invites-title">${escapeHtml(title)}</p>
+                <p class="ed-seat-info-invites-sub">${escapeHtml(sub)}</p>
+                <div class="ed-seat-info-invite-row">
+                    <a class="ed-seat-info-invite-name" href="${safeUrl}" style="word-break:break-all;text-decoration:underline;color:var(--color-primary,#13366E)">Open My trip payments</a>
+                    <button type="button" class="ed-seat-info-invite-copy" data-payment-link-copy="${safeUrl}">Copy payment link</button>
+                </div>
+            </div>`;
+    }
+    function wirePaymentMagicLinkCopy(root2) {
+      const scope = root2 || document;
+      scope.querySelectorAll("[data-payment-link-copy]").forEach((btn) => {
+        if (btn.dataset.copyWired) return;
+        btn.dataset.copyWired = "1";
+        btn.addEventListener("click", async () => {
+          const url = btn.getAttribute("data-payment-link-copy") || "";
+          if (!url) return;
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(url);
+            } else {
+              const ta = document.createElement("textarea");
+              ta.value = url;
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand("copy");
+              ta.remove();
+            }
+            const prev = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(() => {
+              btn.textContent = prev || "Copy payment link";
+            }, 1500);
+          } catch (_) {
+            prompt("Copy this payment link:", url);
+          }
+        });
+      });
+    }
     function rsvpPayButtonLabel(event, role, opts) {
       const options = opts && typeof opts === "object" ? opts : {};
       const mode = options.mode === "complete" ? "complete" : "rsvp";
@@ -763,6 +842,81 @@
         return mode === "complete" ? prefix : `${guestPrefix} \u2014 Free`;
       }
       return guestPrefix;
+    }
+    function rsvpIsCommittedGoing(event, rsvp, plan) {
+      if (!rsvp) return false;
+      const pricingPaid = event?.pricing_mode === "paid";
+      const paidFlag = rsvp.paid === true;
+      const statusGoing = rsvp.status === "going";
+      if (!pricingPaid) {
+        return !!(statusGoing || paidFlag);
+      }
+      if (paidFlag) return true;
+      const planStatus = String(plan?.status || "").trim();
+      if (planStatus === "active" || planStatus === "past_due" || planStatus === "completed") {
+        return true;
+      }
+      return false;
+    }
+    function rsvpCtaState(event, opts) {
+      const options = opts && typeof opts === "object" ? opts : {};
+      const rsvp = options.rsvp || null;
+      const plan = options.plan || null;
+      const hasDraft = !!options.hasDraft;
+      const pricingPaid = event?.pricing_mode === "paid";
+      const isGoing = !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+      const committed = rsvpIsCommittedGoing(event, rsvp, plan);
+      const amountPaid = Math.max(0, Number(plan?.amount_paid_cents) || Number(rsvp?.amount_paid_cents) || 0);
+      const totalDue = Math.max(0, Number(plan?.total_due_cents) || 0);
+      const remaining = plan != null ? Math.max(0, Number(plan.remaining_cents != null ? plan.remaining_cents : totalDue - amountPaid) || 0) : null;
+      const planStatus = String(plan?.status || "").trim();
+      const paidFull = !!(rsvp?.paid || planStatus === "completed" || remaining === 0 && amountPaid > 0);
+      const unpaidGoing = !!(pricingPaid && isGoing && !committed);
+      if (committed) {
+        let subLabel = "";
+        if (!pricingPaid) {
+          subLabel = "";
+        } else if (paidFull) {
+          subLabel = "Paid in full";
+        } else {
+          const paidCount = options.installmentsPaid;
+          const totalCount = options.installmentsTotal;
+          if (paidCount != null && totalCount != null && Number(totalCount) > 0) {
+            subLabel = `Paid ${Number(paidCount)}/${Number(totalCount)}`;
+          } else if (totalDue > 0) {
+            subLabel = `Paid ${formatMoney(amountPaid)} / ${formatMoney(totalDue)}`;
+          } else {
+            subLabel = "Payment in progress";
+          }
+        }
+        const cancelMode = pricingPaid ? paidFull ? "remove" : planStatus === "active" || planStatus === "past_due" ? "cancel" : rsvp?.paid ? "remove" : null : null;
+        return {
+          kind: "going",
+          label: "Going",
+          subLabel,
+          showCancel: !!cancelMode,
+          cancelMode,
+          cancelLabel: cancelMode === "remove" ? "Remove RSVP" : cancelMode === "cancel" ? "Cancel" : null
+        };
+      }
+      if (hasDraft || unpaidGoing || pricingPaid && planStatus === "setup" && amountPaid <= 0 && isGoing) {
+        return {
+          kind: "continue",
+          label: "Continue RSVP",
+          subLabel: "",
+          showCancel: false,
+          cancelMode: null,
+          cancelLabel: null
+        };
+      }
+      return {
+        kind: "rsvp",
+        label: "RSVP",
+        subLabel: "",
+        showCancel: false,
+        cancelMode: null,
+        cancelLabel: null
+      };
     }
     function validatePhone(raw) {
       const trimmed = String(raw || "").trim();
@@ -785,6 +939,60 @@
         document.body.style.overflow = "";
       }
     }
+    function confirmDialog(opts = {}) {
+      const title = opts.title || "Confirm payment";
+      const message = opts.message == null ? "" : String(opts.message);
+      const confirmLabel = opts.confirmLabel || "Continue to checkout";
+      const cancelLabel = opts.cancelLabel || "Cancel";
+      return new Promise((resolve) => {
+        document.getElementById("evtConfirmDialog")?.remove();
+        const root2 = document.createElement("div");
+        root2.id = "evtConfirmDialog";
+        root2.className = "evt-confirm-dialog";
+        root2.setAttribute("role", "dialog");
+        root2.setAttribute("aria-modal", "true");
+        root2.setAttribute("aria-labelledby", "evtConfirmDialogTitle");
+        const paragraphs = message.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
+        const bodyHtml = paragraphs.length ? paragraphs.map(
+          (p) => `<p class="evt-confirm-dialog__text">${escapeHtml(p).replace(/\n/g, "<br>")}</p>`
+        ).join("") : '<p class="evt-confirm-dialog__text">Proceed to checkout?</p>';
+        root2.innerHTML = `<div class="evt-confirm-dialog__backdrop" data-evt-confirm-dismiss></div><div class="evt-confirm-dialog__panel"><h2 id="evtConfirmDialogTitle" class="evt-confirm-dialog__title">${escapeHtml(title)}</h2><div class="evt-confirm-dialog__body">${bodyHtml}</div><div class="evt-confirm-dialog__actions"><button type="button" class="evt-confirm-dialog__btn evt-confirm-dialog__btn--cancel" data-evt-confirm-dismiss>${escapeHtml(cancelLabel)}</button><button type="button" class="evt-confirm-dialog__btn evt-confirm-dialog__btn--confirm" data-evt-confirm-ok>${escapeHtml(confirmLabel)}</button></div></div>`;
+        const prevOverflow = document.body.style.overflow;
+        let settled = false;
+        const finish = (ok) => {
+          if (settled) return;
+          settled = true;
+          document.removeEventListener("keydown", onKey, true);
+          document.body.style.overflow = prevOverflow;
+          root2.remove();
+          resolve(!!ok);
+        };
+        const onKey = (e) => {
+          if (e.key === "Escape") {
+            e.preventDefault();
+            e.stopPropagation();
+            finish(false);
+          }
+        };
+        root2.addEventListener("click", (e) => {
+          if (e.target.closest("[data-evt-confirm-ok]")) {
+            e.preventDefault();
+            finish(true);
+          } else if (e.target.closest("[data-evt-confirm-dismiss]")) {
+            e.preventDefault();
+            finish(false);
+          }
+        });
+        document.addEventListener("keydown", onKey, true);
+        document.body.style.overflow = "hidden";
+        document.body.appendChild(root2);
+        requestAnimationFrame(() => {
+          root2.classList.add("is-open");
+          const okBtn = root2.querySelector("[data-evt-confirm-ok]");
+          if (okBtn) okBtn.focus();
+        });
+      });
+    }
     const EventsHelpers = {
       escapeHtml,
       miniMarkdown,
@@ -799,6 +1007,7 @@
       startLiveCountdown,
       toast,
       toggleModal,
+      confirmDialog,
       validatePhone,
       normalizeSeatRole,
       adultPriceCents: adultPriceCents2,
@@ -808,9 +1017,81 @@
       seatInfoInviteUrl,
       seatInfoInvitesHtml,
       wireSeatInfoInviteCopy,
-      rsvpPayButtonLabel
+      paymentMagicLinkUrl,
+      paymentMagicLinkHtml,
+      wirePaymentMagicLinkCopy,
+      stashPaymentInviteToken,
+      readPaymentInviteToken,
+      rsvpPayButtonLabel,
+      rsvpIsCommittedGoing,
+      rsvpCtaState
     };
     window.EventsHelpers = EventsHelpers;
+  })();
+
+  // js/components/events/capacity.js
+  (function() {
+    "use strict";
+    function eventCapacityMode(event) {
+      const mode = String(event?.capacity_mode || "none").trim().toLowerCase();
+      if (mode === "soft" || mode === "hard") return mode;
+      return "none";
+    }
+    function eventHasCapacityLimit(event) {
+      if (!event) return false;
+      const mode = eventCapacityMode(event);
+      if (mode !== "soft" && mode !== "hard") return false;
+      const max = Number(event.max_participants);
+      return Number.isFinite(max) && max > 0;
+    }
+    function eventMaxParticipants(event) {
+      if (!eventHasCapacityLimit(event)) return 0;
+      return Math.max(0, Number(event.max_participants) || 0);
+    }
+    function seatCountsTowardCapacity(event, role) {
+      if (String(role || "").toLowerCase() === "adult" || !role) return true;
+      return String(event?.capacity_counts || "adults").trim() === "all";
+    }
+    function countOccupiedCapacity(event, opts) {
+      if (!eventHasCapacityLimit(event)) return 0;
+      const seats = Array.isArray(opts?.seats) ? opts.seats : [];
+      const parties = Array.isArray(opts?.parties) ? opts.parties : [];
+      const goingList = Array.isArray(opts?.goingList) ? opts.goingList : [];
+      const activePartyIds = new Set(
+        parties.filter((p) => p && (p.status === "active" || p.status === "pending_payment")).map((p) => p.id)
+      );
+      if (seats.length) {
+        let count = 0;
+        let any = 0;
+        for (const seat of seats) {
+          if (parties.length && activePartyIds.size && !activePartyIds.has(seat.party_id)) continue;
+          any += 1;
+          if (seatCountsTowardCapacity(event, seat.role)) count += 1;
+        }
+        if (any > 0) return count;
+      }
+      return goingList.length;
+    }
+    function eventIsAtCapacity(event, occupiedCount) {
+      if (!eventHasCapacityLimit(event)) return false;
+      const occ = Number(occupiedCount);
+      const occupied = Number.isFinite(occ) ? occ : 0;
+      return occupied >= eventMaxParticipants(event);
+    }
+    function spotsRemaining(event, occupiedCount) {
+      if (!eventHasCapacityLimit(event)) return null;
+      return Math.max(0, eventMaxParticipants(event) - (Number(occupiedCount) || 0));
+    }
+    const EventsCapacity = {
+      eventCapacityMode,
+      eventHasCapacityLimit,
+      eventMaxParticipants,
+      seatCountsTowardCapacity,
+      countOccupiedCapacity,
+      eventIsAtCapacity,
+      spotsRemaining
+    };
+    window.EventsCapacity = EventsCapacity;
   })();
 
   // js/components/events/about-tabs.js
@@ -1023,34 +1304,106 @@
       }
       return out;
     }
+    const COLOR_HEX = {
+      black: "#0B2545",
+      white: "#FFFFFF",
+      navy: "#13366E",
+      gray: "#9CA3AF",
+      grey: "#9CA3AF",
+      red: "#B91C1C",
+      green: "#166534",
+      blue: "#2563EB",
+      teal: "#0E8B8B",
+      cream: "#F5F0E8",
+      khaki: "#C3B091",
+      olive: "#6B8E23",
+      pink: "#DB2777",
+      purple: "#7C3AED",
+      orange: "#EA580C",
+      yellow: "#CA8A04",
+      brown: "#92400E"
+    };
+    function colorHexForLabel(label) {
+      const key = String(label || "").trim().toLowerCase();
+      if (COLOR_HEX[key]) return COLOR_HEX[key];
+      if (/^[a-z]+$/i.test(key) && typeof document !== "undefined") {
+        return key;
+      }
+      return "#EEF2F6";
+    }
+    function isLightHex(hex) {
+      const h = String(hex || "").replace("#", "");
+      if (h.length !== 6 || /[^0-9a-f]/i.test(h)) return true;
+      const r = parseInt(h.slice(0, 2), 16);
+      const g2 = parseInt(h.slice(2, 4), 16);
+      const b = parseInt(h.slice(4, 6), 16);
+      return (r * 299 + g2 * 587 + b * 114) / 1e3 > 180;
+    }
+    function choiceChipsHtml(item, fieldId, selectedValue) {
+      const selected = String(selectedValue || "").trim();
+      const chips = item.choices.map((c) => {
+        const safe = escapeHtml(c);
+        const pressed = selected && c === selected ? "true" : "false";
+        const selCls = pressed === "true" ? " is-selected" : "";
+        return `<button type="button" class="ed-inc-chip${selCls}" data-inc-choice="${safe}" aria-pressed="${pressed}">${safe}</button>`;
+      }).join("");
+      return `
+            <div class="ed-inc-chips" role="group" aria-label="${escapeHtml(item.name)}">
+                <input type="hidden" id="${escapeHtml(fieldId)}" class="ed-inc-input"
+                    data-inc-answer="${escapeHtml(item.id)}" value="${escapeHtml(selected)}" ${item.required ? "required" : ""}>
+                ${chips}
+            </div>`;
+    }
+    function choiceSwatchesHtml(item, fieldId, selectedValue) {
+      const selected = String(selectedValue || "").trim();
+      const swatches = item.choices.map((c) => {
+        const safe = escapeHtml(c);
+        const hex = colorHexForLabel(c);
+        const light = isLightHex(hex) ? " is-light" : "";
+        const pressed = selected && c === selected ? "true" : "false";
+        const selCls = pressed === "true" ? " is-selected" : "";
+        return `<button type="button" class="ed-inc-swatch${light}${selCls}" data-inc-choice="${safe}"
+                aria-pressed="${pressed}" aria-label="${safe}" title="${safe}"
+                style="--ed-inc-swatch:${escapeHtml(hex)}">
+                <span class="ed-inc-swatch-dot" aria-hidden="true"></span>
+                <span class="ed-inc-swatch-label">${safe}</span>
+            </button>`;
+      }).join("");
+      return `
+            <div class="ed-inc-swatches" role="group" aria-label="${escapeHtml(item.name)}">
+                <input type="hidden" id="${escapeHtml(fieldId)}" class="ed-inc-input"
+                    data-inc-answer="${escapeHtml(item.id)}" value="${escapeHtml(selected)}" ${item.required ? "required" : ""}>
+                ${swatches}
+            </div>`;
+    }
     function formFieldsHtml(catalog, opts) {
       const role = opts && opts.role || "adult";
+      const answers = opts && opts.answers && typeof opts.answers === "object" ? opts.answers : {};
       const list = forRole(catalog, role);
       if (!list.length) return "";
       const prefix = opts && opts.idPrefix || "incOpt";
       const fields = list.map((item) => {
         const fieldId = `${prefix}-${item.id}`;
         const req = item.required ? ' <span class="text-red-500">*</span>' : "";
+        const selected = String(answers[item.id] || "").trim().slice(0, ANSWER_MAX);
         let control = "";
-        if (needsChoices(item.option_type)) {
-          const optsHtml = [
-            `<option value="">Select\u2026</option>`,
-            ...item.choices.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`)
-          ].join("");
-          control = `<select class="ec-input ed-inc-input" id="${escapeHtml(fieldId)}" data-inc-answer="${escapeHtml(item.id)}" ${item.required ? "required" : ""}>${optsHtml}</select>`;
+        if (item.option_type === "color") {
+          control = choiceSwatchesHtml(item, fieldId, selected);
+        } else if (item.option_type === "size" || item.option_type === "select") {
+          control = choiceChipsHtml(item, fieldId, selected);
         } else {
-          control = `<input class="ec-input ed-inc-input" type="text" id="${escapeHtml(fieldId)}" data-inc-answer="${escapeHtml(item.id)}" maxlength="${ANSWER_MAX}" placeholder="Your answer" ${item.required ? "required" : ""}>`;
+          control = `<input class="ec-input ed-inc-input" type="text" id="${escapeHtml(fieldId)}" data-inc-answer="${escapeHtml(item.id)}" maxlength="${ANSWER_MAX}" placeholder="Your answer" value="${escapeHtml(selected)}" ${item.required ? "required" : ""}>`;
         }
         return `
-                <div class="ed-inc-field" style="margin-bottom:10px">
-                    <label class="ec-label" for="${escapeHtml(fieldId)}" style="display:block;font-size:12px;font-weight:600;color:#0b2545;margin-bottom:4px">${escapeHtml(item.name)}${req}</label>
+                <div class="ed-inc-field">
+                    <label class="ec-label ed-inc-field-label" for="${escapeHtml(fieldId)}">${escapeHtml(item.name)}${req}</label>
                     ${control}
                 </div>
             `;
       }).join("");
       return `
             <div class="ed-inc-options" data-inc-options-root="${escapeHtml(prefix)}">
-                <p class="ed-inc-options-title" style="font-size:13px;font-weight:700;color:#0b2545;margin:0 0 8px">${escapeHtml(seatOptionsTitle(role))}</p>
+                <p class="ed-inc-options-title">${escapeHtml(seatOptionsTitle(role))}</p>
                 ${fields}
             </div>
         `;
@@ -1066,6 +1419,30 @@
         if (value) out[item.id] = value;
       }
       return out;
+    }
+    function wireChoiceControls(root2) {
+      const scope = root2 || document;
+      scope.querySelectorAll("[data-inc-options-root]").forEach((groupRoot) => {
+        if (groupRoot.dataset.incChoicesWired === "1") return;
+        groupRoot.dataset.incChoicesWired = "1";
+        groupRoot.addEventListener("click", (ev) => {
+          const btn = ev.target.closest("[data-inc-choice]");
+          if (!btn || !groupRoot.contains(btn)) return;
+          const wrap = btn.closest(".ed-inc-chips, .ed-inc-swatches");
+          if (!wrap) return;
+          const hidden = wrap.querySelector("[data-inc-answer]");
+          if (!hidden) return;
+          const value = btn.getAttribute("data-inc-choice") || "";
+          const same = hidden.value === value;
+          hidden.value = same ? "" : value;
+          wrap.querySelectorAll("[data-inc-choice]").forEach((el) => {
+            const on = !same && el === btn;
+            el.classList.toggle("is-selected", on);
+            el.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+          hidden.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+      });
     }
     function optionTypeLabel(type) {
       if (type === "size") return "Size";
@@ -1125,6 +1502,7 @@
       sanitizeAnswers,
       formFieldsHtml,
       readAnswersFromRoot,
+      wireChoiceControls,
       catalogListHtml,
       optionTypeLabel,
       appliesToLabel
@@ -1238,12 +1616,14 @@
       const list = normalizeDisclaimers(catalog);
       if (!list.length) return "";
       const prefix = opts && opts.idPrefix || "discAck";
+      const acked = new Set(Array.isArray(opts?.ackedIds) ? opts.ackedIds.map(String) : []);
       const fields = list.map((d) => {
         const fieldId = `${prefix}-${d.id}`;
         const req = d.required ? ' <span class="text-red-500">*</span>' : "";
+        const checked = acked.has(String(d.id)) ? " checked" : "";
         return `
                 <label class="ed-disc-ack" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;border:1px solid #d5dfec;border-radius:12px;background:#fff;cursor:pointer">
-                    <input type="checkbox" id="${escapeHtml(fieldId)}" data-disc-ack="${escapeHtml(d.id)}" ${d.required ? "required" : ""} style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
+                    <input type="checkbox" id="${escapeHtml(fieldId)}" data-disc-ack="${escapeHtml(d.id)}" ${d.required ? "required" : ""}${checked} style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
                     <span style="min-width:0">
                         <span style="display:block;font-size:13px;font-weight:700;color:#0b2545;margin-bottom:4px">${escapeHtml(d.title)}${req}</span>
                         <span style="display:block;font-size:12px;line-height:1.5;color:#374151">${escapeHtml(d.body)}</span>
@@ -1423,6 +1803,13 @@
       if (!cfg.enabled) return "";
       const closed = isVotingClosed(cfg);
       const closeLabel = cfg.closes_at ? new Date(cfg.closes_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+      if (cfg.results_visible === "host_only") {
+        return `
+            <div class="ed-amenity-pending">
+                <p class="ed-amenity-pending-title">${closed ? "Voting closed" : "Voting open"}</p>
+                <p class="ed-hint">Results are visible to hosts only.</p>
+            </div>`;
+      }
       return `
             <div class="ed-amenity-pending">
                 <p class="ed-amenity-pending-title">${closed ? "Voting closed" : "Voting open"}</p>
@@ -1438,12 +1825,14 @@
       const cfg = normalizeConfig(config);
       if (!cfg.enabled || isVotingClosed(cfg)) return "";
       const prefix = opts && opts.idPrefix || "amenityVote";
+      const selected = String(opts?.selectedOptionId || "").trim();
       const name = `${prefix}-group`;
       const fields = cfg.options.map((opt) => {
         const fieldId = `${prefix}-${opt.id}`;
+        const checked = selected && selected === String(opt.id) ? " checked" : "";
         return `
                 <label class="ed-amenity-vote-opt" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px;border:1px solid #d5dfec;border-radius:12px;background:#fff;cursor:pointer">
-                    <input type="radio" name="${escapeHtml(name)}" id="${escapeHtml(fieldId)}" value="${escapeHtml(opt.id)}" data-amenity-vote="${escapeHtml(opt.id)}" required style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
+                    <input type="radio" name="${escapeHtml(name)}" id="${escapeHtml(fieldId)}" value="${escapeHtml(opt.id)}" data-amenity-vote="${escapeHtml(opt.id)}" required${checked} style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
                     <span style="min-width:0">
                         <span style="display:block;font-size:13px;font-weight:700;color:#0b2545;margin-bottom:4px">${escapeHtml(opt.label)}</span>
                         ${opt.description ? `<span style="display:block;font-size:12px;line-height:1.5;color:#374151">${escapeHtml(opt.description)}</span>` : ""}
@@ -1487,7 +1876,7 @@
         if (first && typeof first.focus === "function") first.focus();
       }
     }
-    const api21 = {
+    const api22 = {
       defaultConfig,
       normalizeConfig,
       normalizeOptions,
@@ -1504,7 +1893,7 @@
       voteStatusForRsvp,
       scrollToVoteField
     };
-    globalThis.EventsAmenityVoting = api21;
+    globalThis.EventsAmenityVoting = api22;
   })();
 
   // js/components/events/payment-choice.js
@@ -1656,13 +2045,16 @@
       const prefix = opts && opts.idPrefix || "paymentChoice";
       const planKinds = enabledPlanKinds(event);
       const methods = enabledMethods(event);
-      const defaultPlan = defaultPlanKind(event);
-      const defaultMeth = defaultMethod(event);
-      const q = quote(event, { seatPriceCents, planKind: defaultPlan, method: defaultMeth });
+      const choice = opts?.choice || {};
+      const defaultPlan = choice.plan_kind || opts?.planKind || defaultPlanKind(event);
+      const defaultMeth = choice.method || opts?.method || defaultMethod(event);
+      const selectedPlan = planKinds.includes(defaultPlan) ? defaultPlan : defaultPlanKind(event);
+      const selectedMeth = methods.includes(defaultMeth) ? defaultMeth : defaultMethod(event);
+      const q = quote(event, { seatPriceCents, planKind: selectedPlan, method: selectedMeth });
       const planName = `${prefix}-plan`;
       const methodName = `${prefix}-method`;
       const planFields = planKinds.map((kind) => {
-        const checked = kind === defaultPlan ? " checked" : "";
+        const checked = kind === selectedPlan ? " checked" : "";
         const label = planOptionLabel(event, kind, quote(event, { seatPriceCents, planKind: kind, method: "ach" }));
         return `
                 <label class="ed-payment-opt">
@@ -1671,8 +2063,8 @@
                 </label>`;
       }).join("");
       const methodFields = methods.map((meth) => {
-        const checked = meth === defaultMeth ? " checked" : "";
-        const label = methodOptionLabel(meth, q, defaultPlan);
+        const checked = meth === selectedMeth ? " checked" : "";
+        const label = methodOptionLabel(meth, q, selectedPlan);
         return `
                 <label class="ed-payment-opt">
                     <input type="radio" name="${escapeHtml(methodName)}" value="${meth}" data-payment-method="${meth}"${checked} required>
@@ -1687,12 +2079,12 @@
                     <fieldset class="ed-payment-fieldset">
                         <legend class="ed-payment-legend">Payment schedule</legend>
                         ${planFields}
-                    </fieldset>` : `<input type="hidden" data-payment-plan="${defaultPlan}" value="${defaultPlan}">`}
+                    </fieldset>` : `<input type="hidden" data-payment-plan="${selectedPlan}" value="${selectedPlan}">`}
                 ${methods.length > 1 ? `
                     <fieldset class="ed-payment-fieldset">
                         <legend class="ed-payment-legend">Payment method</legend>
                         ${methodFields}
-                    </fieldset>` : `<input type="hidden" data-payment-method="${defaultMeth}" value="${defaultMeth}">`}
+                    </fieldset>` : `<input type="hidden" data-payment-method="${selectedMeth}" value="${selectedMeth}">`}
             </div>`;
     }
     function readFromRoot(root2) {
@@ -1820,13 +2212,13 @@
         planKind: choice?.plan_kind || defaultPlanKind(event),
         method: choice?.method || defaultMethod(event)
       });
-      const methodLabel = q.method === "card" ? "card" : "bank (ACH)";
+      const methodLabel2 = q.method === "card" ? "card" : "bank (ACH)";
       const amountLabel = q.planKind === "monthly" && q.monthlyCents != null ? `~${formatMoney(q.monthlyCents)}/month` : formatMoney(q.totalCents);
-      return `RSVP payment: ${amountLabel} via ${methodLabel}.
+      return `RSVP payment: ${amountLabel} via ${methodLabel2}.
 
 Proceed to checkout?`;
     }
-    const api21 = {
+    const api22 = {
       PLATFORM_CARD_FEE_BPS,
       needsChoice,
       enabledPlanKinds,
@@ -1850,7 +2242,7 @@ Proceed to checkout?`;
       defaultPlanKind,
       defaultMethod
     };
-    globalThis.EventsPaymentChoice = api21;
+    globalThis.EventsPaymentChoice = api22;
   })();
 
   // js/components/events/invest-ack.js
@@ -1873,11 +2265,12 @@ Proceed to checkout?`;
       if (!isRequired(event)) return "";
       const prefix = opts && opts.idPrefix || "investAck";
       const fieldId = `${prefix}-checkbox`;
+      const checked = opts?.acknowledged ? " checked" : "";
       return `
             <div class="ed-disc-acks" data-invest-ack-root="${escapeHtml(prefix)}" style="margin:12px 0">
                 <p style="font-size:13px;font-weight:700;color:#0b2545;margin:0 0 8px">Investment acknowledgment</p>
                 <label class="ed-disc-ack" style="display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #d5dfec;border-radius:12px;background:#fff;cursor:pointer">
-                    <input type="checkbox" id="${escapeHtml(fieldId)}" data-invest-ack="1" required style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
+                    <input type="checkbox" id="${escapeHtml(fieldId)}" data-invest-ack="1" required${checked} style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
                     <span style="min-width:0">
                         <span style="display:block;font-size:13px;font-weight:700;color:#0b2545;margin-bottom:4px">Fidelity investment risk <span class="text-red-500">*</span></span>
                         <span style="display:block;font-size:12px;line-height:1.5;color:#374151">${escapeHtml(ACK_COPY)}</span>
@@ -2088,7 +2481,7 @@ Proceed to checkout?`;
       }
       return "adult";
     }
-    function seatRowIncludedHtml(event, prefix, index, role) {
+    function seatRowIncludedHtml(event, prefix, index, role, answers) {
       if (!window.EventsIncludedItems || typeof window.EventsIncludedItems.formFieldsHtml !== "function") {
         return "";
       }
@@ -2096,28 +2489,33 @@ Proceed to checkout?`;
       if (!window.EventsIncludedItems.hasCatalogForRole(catalog, role)) return "";
       return window.EventsIncludedItems.formFieldsHtml(catalog, {
         idPrefix: `${prefix}-seat-${index}`,
-        role
+        role,
+        answers: answers || {}
       });
     }
     function seatRoleRadiosHtml(event, prefix, index, role, isPayer) {
+      if (isPayer) {
+        return `
+                <input type="hidden" data-party-seat-fixed-role="${index}" value="adult">
+                <span class="ed-party-seat-role-badge">Adult \xB7 ${escapeHtml(seatPriceLabel(event, "adult"))}</span>`;
+      }
       const adultLabel = seatPriceLabel(event, "adult");
       const kidLabel = seatPriceLabel(event, "kid");
       const name = `${prefix}-role-${index}`;
+      const r = normalizeSeatRole(role);
       return `
             <div class="ed-party-seat-roles" role="radiogroup" aria-label="Seat type">
-                <label class="ed-seat-picker-option${role === "adult" ? " is-selected" : ""}">
+                <label class="ed-seat-picker-option${r === "adult" ? " is-selected" : ""}">
                     <input type="radio" name="${escapeHtml(name)}" value="adult" data-party-seat-role="1"
-                        data-party-seat-index="${index}" ${role === "adult" ? "checked" : ""}
-                        ${!isPayer ? "disabled" : ""}>
+                        data-party-seat-index="${index}" ${r === "adult" ? "checked" : ""}>
                     <span class="ed-seat-picker-option-body">
                         <span class="ed-seat-picker-option-title">Adult</span>
                         <span class="ed-seat-picker-option-price">${escapeHtml(adultLabel)}</span>
                     </span>
                 </label>
-                <label class="ed-seat-picker-option${role === "kid" ? " is-selected" : ""}">
+                <label class="ed-seat-picker-option${r === "kid" ? " is-selected" : ""}">
                     <input type="radio" name="${escapeHtml(name)}" value="kid" data-party-seat-role="1"
-                        data-party-seat-index="${index}" ${role === "kid" ? "checked" : ""}
-                        ${!isPayer ? "disabled" : ""}>
+                        data-party-seat-index="${index}" ${r === "kid" ? "checked" : ""}>
                     <span class="ed-seat-picker-option-body">
                         <span class="ed-seat-picker-option-title">Child</span>
                         <span class="ed-seat-picker-option-price">${escapeHtml(kidLabel)}</span>
@@ -2127,47 +2525,81 @@ Proceed to checkout?`;
     }
     function seatRowHtml(event, prefix, index, seat, opts) {
       const isPayer = !!seat.is_payer;
-      const role = normalizeSeatRole(seat.role);
+      const hidePayerName = !!(opts && opts.hidePayerName);
+      const role = isPayer ? "adult" : normalizeSeatRole(seat.role);
       const title = isPayer ? "You (payer)" : `Guest ${index}`;
       const removeBtn = isPayer ? "" : `
             <button type="button" class="ed-party-seat-remove" data-party-seat-remove="${index}"
                 aria-label="Remove guest">Remove</button>`;
       const roleBlock = isPayer ? seatRoleRadiosHtml(event, prefix, index, role, true) : `<input type="hidden" data-party-seat-fixed-role="${index}" value="${escapeHtml(role)}">
                <span class="ed-party-seat-role-badge">${role === "kid" ? "Child" : "Adult"} \xB7 ${escapeHtml(seatPriceLabel(event, role))}</span>`;
+      const nameId = `${prefix}-name-${index}`;
+      const nameValue = escapeHtml(seat.display_name || "");
+      const nameField = isPayer && hidePayerName ? `<input type="hidden" class="ed-party-seat-name" id="${escapeHtml(nameId)}"
+                    data-party-seat-name="${index}" data-party-seat-payer="1"
+                    maxlength="${DISPLAY_NAME_MAX}" value="${nameValue}">` : `<label class="ec-label" for="${escapeHtml(nameId)}">Name</label>
+                <input type="text" class="ec-input ed-party-seat-name" id="${escapeHtml(nameId)}"
+                    data-party-seat-name="${index}" maxlength="${DISPLAY_NAME_MAX}"
+                    value="${nameValue}" ${isPayer ? 'data-party-seat-payer="1"' : ""}
+                    placeholder="${isPayer ? "Your name" : "Guest name"}" required>`;
       return `
             <div class="ed-party-seat-row${isPayer ? " is-payer" : ""}" data-party-seat-row="${index}">
                 <div class="ed-party-seat-header">
                     <span class="ed-party-seat-title">${escapeHtml(title)}</span>
                     ${removeBtn}
                 </div>
-                <label class="ec-label" for="${escapeHtml(prefix)}-name-${index}">Name</label>
-                <input type="text" class="ec-input ed-party-seat-name" id="${escapeHtml(prefix)}-name-${index}"
-                    data-party-seat-name="${index}" maxlength="${DISPLAY_NAME_MAX}"
-                    value="${escapeHtml(seat.display_name || "")}" ${isPayer ? 'data-party-seat-payer="1"' : ""}
-                    placeholder="${isPayer ? "Your name" : "Guest name"}" required>
+                ${nameField}
                 ${roleBlock}
                 <div class="ed-party-seat-inc" data-party-seat-inc="${index}">
-                    ${seatRowIncludedHtml(event, prefix, index, role)}
+                    ${seatRowIncludedHtml(event, prefix, index, role, seat.options || {})}
                 </div>
                 ${!isPayer && window.EventsIncludedItems && typeof window.EventsIncludedItems.hasCatalogForRole === "function" && window.EventsIncludedItems.hasCatalogForRole(event.included_items, role) ? '<p class="ed-party-seat-invite-hint">Leave blank to send an invite link after RSVP.</p>' : ""}
             </div>`;
     }
+    function syncPayerNameFromContact(root2, name) {
+      const scope = root2 || document;
+      const partyRoot = scope.querySelector ? scope.querySelector("[data-party-seats-root]") || scope : document;
+      const payerNameEl = partyRoot.querySelector ? partyRoot.querySelector('[data-party-seat-payer="1"]') : null;
+      if (!payerNameEl) return;
+      payerNameEl.value = String(name || "").trim().slice(0, DISPLAY_NAME_MAX);
+    }
     function formFieldsHtml(event, opts) {
       if (!event) return "";
       const prefix = opts && opts.idPrefix || "partySeats";
+      const hidePayerName = !!(opts && opts.hidePayerName);
+      const hideLabel = !!(opts && opts.hideLabel);
       const payerName = String(opts && opts.payerName || "").trim();
-      const payerRole = normalizeSeatRole(opts && opts.defaultRole || defaultPayerRole(event));
-      const payerSeat = {
-        role: payerRole,
-        display_name: payerName,
-        is_payer: true
-      };
-      const total = partyBaseTotalCents(event, [payerSeat]);
+      const initial = Array.isArray(opts?.initialSeats) ? opts.initialSeats.filter(Boolean) : [];
+      let seats;
+      if (initial.length) {
+        seats = initial.map((s, i) => {
+          const isPayer = i === 0 || !!s.is_payer;
+          return {
+            role: isPayer ? "adult" : normalizeSeatRole(s.role),
+            display_name: String(s.display_name || (isPayer ? payerName : "")).trim(),
+            is_payer: isPayer,
+            options: s.options && typeof s.options === "object" ? s.options : {}
+          };
+        });
+        seats.forEach((s, i) => {
+          s.is_payer = i === 0;
+        });
+        if (seats[0] && !seats[0].display_name && payerName) seats[0].display_name = payerName;
+      } else {
+        seats = [{
+          role: "adult",
+          display_name: payerName,
+          is_payer: true,
+          options: {}
+        }];
+      }
+      const total = partyBaseTotalCents(event, seats);
       return `
-            <div class="ed-party-seats" data-party-seats-root="${escapeHtml(prefix)}">
-                <p class="ed-party-seats-label">Who's coming?</p>
+            <div class="ed-party-seats" data-party-seats-root="${escapeHtml(prefix)}"
+                data-hide-payer-name="${hidePayerName ? "1" : "0"}">
+                ${hideLabel ? "" : `<p class="ed-party-seats-label">Who's coming?</p>`}
                 <div class="ed-party-seat-rows" data-party-seat-rows="1">
-                    ${seatRowHtml(event, prefix, 0, payerSeat, opts)}
+                    ${seats.map((seat, i) => seatRowHtml(event, prefix, i, seat, opts)).join("")}
                 </div>
                 <div class="ed-party-seat-actions">
                     <button type="button" class="ed-btn-secondary ed-party-add-seat" data-party-add-role="adult">+ Add Adult</button>
@@ -2188,19 +2620,29 @@ Proceed to checkout?`;
       }
       return {};
     }
-    function readSeatsFromRoot(root2, event) {
+    function resolvePartyRoot(root2) {
       const scope = root2 || document;
-      const partyRoot = scope.querySelector("[data-party-seats-root]");
+      if (scope.getAttribute && scope.getAttribute("data-party-seats-root") != null) {
+        return scope;
+      }
+      if (scope.querySelector) {
+        return scope.querySelector("[data-party-seats-root]");
+      }
+      return null;
+    }
+    function readSeatsFromRoot(root2, event) {
+      const partyRoot = resolvePartyRoot(root2);
       if (!partyRoot) return [];
       const prefix = partyRoot.getAttribute("data-party-seats-root") || "partySeats";
       const rows = partyRoot.querySelectorAll("[data-party-seat-row]");
-      const catalog = window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === "function" ? window.EventsIncludedItems.normalizeIncludedItems(event.included_items) : [];
+      const catalog = window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === "function" ? window.EventsIncludedItems.normalizeIncludedItems(event && event.included_items) : [];
       const seats = [];
       rows.forEach((row) => {
         const index = Number(row.getAttribute("data-party-seat-row"));
         const nameEl = row.querySelector(`[data-party-seat-name="${index}"]`);
         const isPayer = !!row.querySelector('[data-party-seat-payer="1"]');
-        const role = readRoleFromRow(row, index);
+        let role = readRoleFromRow(row, index);
+        if (isPayer) role = "adult";
         const display_name = String(nameEl?.value || "").trim().slice(0, DISPLAY_NAME_MAX);
         const options = readAnswersFromRow(row, catalog, role);
         seats.push({
@@ -2225,9 +2667,20 @@ Proceed to checkout?`;
       const total = partyBaseTotalCents(event, seats);
       totalEl.innerHTML = `Party total: <strong>${escapeHtml(formatMoney(total))}</strong>`;
     }
+    function partyRowOpts(partyRoot) {
+      return {
+        hidePayerName: partyRoot.getAttribute("data-hide-payer-name") === "1"
+      };
+    }
+    function wireIncludedChoices(scope) {
+      if (window.EventsIncludedItems && typeof window.EventsIncludedItems.wireChoiceControls === "function") {
+        window.EventsIncludedItems.wireChoiceControls(scope);
+      }
+    }
     function reindexRows(partyRoot, event, prefix) {
       const rowsWrap = partyRoot.querySelector('[data-party-seat-rows="1"]');
       if (!rowsWrap) return;
+      const rowOpts = partyRowOpts(partyRoot);
       const rows = Array.from(rowsWrap.querySelectorAll("[data-party-seat-row]"));
       rows.forEach((row, i) => {
         const isPayer = row.classList.contains("is-payer");
@@ -2236,7 +2689,7 @@ Proceed to checkout?`;
         const role = readRoleFromRow(row, Number(row.getAttribute("data-party-seat-row")));
         const seat = { role, display_name, is_payer: isPayer };
         const tmp = document.createElement("div");
-        tmp.innerHTML = seatRowHtml(event, prefix, i, seat, {});
+        tmp.innerHTML = seatRowHtml(event, prefix, i, seat, rowOpts);
         const newRow = tmp.firstElementChild;
         rowsWrap.replaceChild(newRow, row);
       });
@@ -2244,6 +2697,7 @@ Proceed to checkout?`;
     }
     function wireRowEvents(partyRoot, event, prefix) {
       const onChange = partyRoot._partyOnChange;
+      const rowOpts = partyRowOpts(partyRoot);
       partyRoot.querySelectorAll('[data-party-seat-role="1"]').forEach((input) => {
         if (input.dataset.wired) return;
         input.dataset.wired = "1";
@@ -2259,6 +2713,7 @@ Proceed to checkout?`;
           const incWrap = row.querySelector(`[data-party-seat-inc="${index}"]`);
           if (incWrap) {
             incWrap.innerHTML = seatRowIncludedHtml(event, prefix, index, role);
+            wireIncludedChoices(incWrap);
           }
           updateTotalLabel(partyRoot, event);
           if (typeof onChange === "function") onChange(readSeatsFromRoot(partyRoot, event), event);
@@ -2299,17 +2754,18 @@ Proceed to checkout?`;
           const addRole = normalizeSeatRole(btn.getAttribute("data-party-add-role"));
           const seat = { role: addRole, display_name: "", is_payer: false };
           const tmp = document.createElement("div");
-          tmp.innerHTML = seatRowHtml(event, prefix, count, seat, {});
+          tmp.innerHTML = seatRowHtml(event, prefix, count, seat, rowOpts);
           rowsWrap.appendChild(tmp.firstElementChild);
           reindexRows(partyRoot, event, prefix);
           updateTotalLabel(partyRoot, event);
           if (typeof onChange === "function") onChange(readSeatsFromRoot(partyRoot, event), event);
         });
       });
+      wireIncludedChoices(partyRoot);
     }
     function wireForm(root2, event, onChange) {
       const scope = root2 || document;
-      const partyRoot = scope.querySelector("[data-party-seats-root]");
+      const partyRoot = resolvePartyRoot(scope);
       if (!partyRoot || !event) return;
       const prefix = partyRoot.getAttribute("data-party-seats-root") || "partySeats";
       partyRoot._partyOnChange = onChange;
@@ -2324,6 +2780,7 @@ Proceed to checkout?`;
       readPayerRoleFromRoot,
       validatePartySeats,
       partyBaseTotalCents,
+      syncPayerNameFromContact,
       wireForm
     };
     globalThis.EventsPartySeats = EventsPartySeats;
@@ -2485,6 +2942,967 @@ Proceed to checkout?`;
       renderPendingList,
       loadAndWire,
       formatMoney
+    };
+  })();
+
+  // js/components/events/rsvp-wizard.js
+  (function() {
+    "use strict";
+    const ROOT_ID = "erSheetRoot";
+    const DRAFT_PREFIX = "jm:er-rsvp-draft:v1:";
+    const STATE4 = {
+      step: 0,
+      event: null,
+      mode: "guest",
+      // guest | member
+      memberName: "",
+      memberPhoneMissing: false,
+      submitting: false,
+      onComplete: null,
+      form: blankForm(),
+      _draftTimer: null,
+      _draftCleared: false
+    };
+    function blankForm() {
+      return {
+        guest_name: "",
+        guest_email: "",
+        guest_phone: "",
+        sms_opt_in: false,
+        member_phone: "",
+        member_sms_opt_in: false,
+        seats: null,
+        disclaimer_acks: [],
+        amenity_vote_option_id: "",
+        invest_acknowledged: false,
+        no_refund_accepted: false,
+        payment_choice: null,
+        attach_intent: null
+      };
+    }
+    function draftUserKey() {
+      if (STATE4.mode === "member") {
+        return String(globalThis.evtCurrentUser?.id || window.pubCurrentUser?.id || "member").trim() || "member";
+      }
+      const email = String(STATE4.form?.guest_email || "").trim().toLowerCase();
+      return email || "anon";
+    }
+    function draftStorageKey(eventId2, mode, userKey) {
+      return `${DRAFT_PREFIX}${eventId2}:${mode}:${userKey}`;
+    }
+    function saveDraft() {
+      try {
+        if (STATE4._draftCleared) return;
+        const eventId2 = STATE4.event?.id;
+        if (!eventId2 || typeof localStorage === "undefined") return;
+        const key = draftStorageKey(eventId2, STATE4.mode, draftUserKey());
+        const payload = {
+          v: 1,
+          eventId: eventId2,
+          mode: STATE4.mode,
+          step: STATE4.step,
+          form: STATE4.form,
+          savedAt: Date.now()
+        };
+        localStorage.setItem(key, JSON.stringify(payload));
+      } catch (_) {
+      }
+    }
+    function scheduleSaveDraft() {
+      if (STATE4._draftTimer) clearTimeout(STATE4._draftTimer);
+      STATE4._draftTimer = setTimeout(() => {
+        STATE4._draftTimer = null;
+        saveDraft();
+      }, 300);
+    }
+    function loadDraft(eventId2, mode, userKey) {
+      try {
+        if (!eventId2 || typeof localStorage === "undefined") return null;
+        const key = draftStorageKey(eventId2, mode, userKey);
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (!data || data.v !== 1 || data.eventId !== eventId2 || data.mode !== mode) return null;
+        return data;
+      } catch (_) {
+        return null;
+      }
+    }
+    function clearDraft(eventId2, mode, userKey) {
+      try {
+        if (typeof localStorage === "undefined") return;
+        const id = eventId2 || STATE4.event?.id;
+        const m = mode || STATE4.mode;
+        if (!id) return;
+        localStorage.removeItem(draftStorageKey(id, m, userKey || draftUserKey()));
+        if (m === "guest" && userKey && userKey !== "anon") {
+          localStorage.removeItem(draftStorageKey(id, m, "anon"));
+        }
+        STATE4._draftCleared = true;
+        if (STATE4._draftTimer) {
+          clearTimeout(STATE4._draftTimer);
+          STATE4._draftTimer = null;
+        }
+      } catch (_) {
+      }
+    }
+    function flushCurrentStep() {
+      const steps = getSteps2();
+      const cur = steps[STATE4.step];
+      if (!cur || !STATE4.event) return;
+      if (cur.key === "contact") {
+        if (STATE4.mode === "member") {
+          STATE4.form.member_phone = document.getElementById("erMemberPhone")?.value || STATE4.form.member_phone || "";
+          STATE4.form.member_sms_opt_in = !!document.getElementById("erMemberSms")?.checked;
+        } else {
+          STATE4.form.guest_name = document.getElementById("erGuestName")?.value || STATE4.form.guest_name || "";
+          STATE4.form.guest_email = document.getElementById("erGuestEmail")?.value || STATE4.form.guest_email || "";
+          STATE4.form.guest_phone = document.getElementById("erGuestPhone")?.value || STATE4.form.guest_phone || "";
+          STATE4.form.sms_opt_in = !!document.getElementById("erGuestSms")?.checked;
+        }
+      } else if (cur.key === "party") {
+        const root2 = document.getElementById("erPartyRoot") || document.getElementById("erSheetContent");
+        if (window.EventsPartySeats?.readSeatsFromRoot && root2) {
+          const seats = window.EventsPartySeats.readSeatsFromRoot(root2, STATE4.event);
+          if (seats && seats.length) STATE4.form.seats = seats;
+        }
+      } else if (cur.key === "legal") {
+        const root2 = document.getElementById("erLegalRoot") || document.getElementById("erSheetContent");
+        const catalog = discCatalog(STATE4.event);
+        if (window.EventsDisclaimers?.readAckIdsFromRoot) {
+          STATE4.form.disclaimer_acks = window.EventsDisclaimers.readAckIdsFromRoot(root2, catalog);
+        }
+        if (window.EventsAmenityVoting?.readVoteFromRoot) {
+          STATE4.form.amenity_vote_option_id = window.EventsAmenityVoting.readVoteFromRoot(root2) || STATE4.form.amenity_vote_option_id || "";
+        }
+        if (window.EventsInvestAck?.readAcknowledgedFromRoot) {
+          STATE4.form.invest_acknowledged = !!window.EventsInvestAck.readAcknowledgedFromRoot(root2);
+        }
+        const nr = document.getElementById("erNoRefund");
+        if (nr) STATE4.form.no_refund_accepted = !!nr.checked;
+      } else if (cur.key === "pay") {
+        const root2 = document.getElementById("erPayRoot") || document.getElementById("erSheetContent");
+        if (window.EventsPaymentChoice?.readFromRoot) {
+          const choice = window.EventsPaymentChoice.readFromRoot(root2);
+          if (choice) STATE4.form.payment_choice = choice;
+        }
+      }
+      saveDraft();
+    }
+    function esc15(str) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === "function") {
+        return window.EventsHelpers.escapeHtml(str);
+      }
+      if (str == null) return "";
+      const div = document.createElement("div");
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+    function formatMoney(cents) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.formatMoney === "function") {
+        return window.EventsHelpers.formatMoney(cents);
+      }
+      return `$${((Number(cents) || 0) / 100).toFixed(2)}`;
+    }
+    function discCatalog(event) {
+      if (!window.EventsDisclaimers) return [];
+      if (typeof window.EventsDisclaimers.effectiveDisclaimers === "function") {
+        return window.EventsDisclaimers.effectiveDisclaimers(event);
+      }
+      if (typeof window.EventsDisclaimers.normalizeDisclaimers === "function") {
+        return window.EventsDisclaimers.normalizeDisclaimers(event.disclaimers);
+      }
+      return [];
+    }
+    function hasRequiredDisclaimers(event) {
+      const catalog = discCatalog(event);
+      if (window.EventsDisclaimers && typeof window.EventsDisclaimers.hasRequiredDisclaimers === "function") {
+        return window.EventsDisclaimers.hasRequiredDisclaimers(catalog);
+      }
+      return catalog.some((d) => d && d.required);
+    }
+    function hasIncludedCatalog(event) {
+      return !!(window.EventsIncludedItems && typeof window.EventsIncludedItems.hasCatalog === "function" && window.EventsIncludedItems.hasCatalog(event?.included_items));
+    }
+    function needsAmenityVote(event) {
+      return !!(window.EventsAmenityVoting && typeof window.EventsAmenityVoting.needsVote === "function" && window.EventsAmenityVoting.needsVote(event));
+    }
+    function adultPriceCents2(event) {
+      if (window.EventsHelpers && typeof window.EventsHelpers.seatPriceCents === "function") {
+        return window.EventsHelpers.seatPriceCents(event, "adult");
+      }
+      if (event?.adult_price_cents != null) return Number(event.adult_price_cents) || 0;
+      return Number(event?.rsvp_cost_cents || 0);
+    }
+    function estimatedPartyTotal(event) {
+      const seats = STATE4.form.seats;
+      if (seats && seats.length && window.EventsPartySeats?.partyBaseTotalCents) {
+        return window.EventsPartySeats.partyBaseTotalCents(event, seats);
+      }
+      return adultPriceCents2(event);
+    }
+    function needsPaymentChoice(event, totalCents) {
+      return !!(window.EventsPaymentChoice && typeof window.EventsPaymentChoice.needsChoice === "function" && window.EventsPaymentChoice.needsChoice(event, totalCents));
+    }
+    function needsInvestAck(event) {
+      return !!(window.EventsInvestAck && typeof window.EventsInvestAck.isRequired === "function" && window.EventsInvestAck.isRequired(event));
+    }
+    function showPartySeats(event) {
+      return !!(window.EventsPartySeats && typeof window.EventsPartySeats.shouldShow === "function" && window.EventsPartySeats.shouldShow(event, { isHost: false }));
+    }
+    function needsPrep(event, ctx) {
+      if (!event || event.rsvp_enabled === false) return false;
+      if (event.event_type === "competition") return false;
+      const mode = ctx && ctx.mode || "guest";
+      const total = adultPriceCents2(event);
+      const paidWithAmount = event.pricing_mode === "paid" && total > 0;
+      if (paidWithAmount) return true;
+      if (hasRequiredDisclaimers(event)) return true;
+      if (needsAmenityVote(event)) return true;
+      if (hasIncludedCatalog(event)) return true;
+      if (needsInvestAck(event)) return true;
+      if (mode === "member" && ctx && ctx.memberPhoneMissing) return true;
+      if (mode === "guest") {
+      }
+      return false;
+    }
+    function getSteps2() {
+      const event = STATE4.event;
+      if (!event) return [{ key: "review", label: "Review" }];
+      const steps = [];
+      const total = estimatedPartyTotal(event);
+      if (STATE4.mode === "guest") {
+        steps.push({ key: "contact", label: "Contact" });
+      } else if (STATE4.memberPhoneMissing || !(STATE4.form.member_phone || "").trim()) {
+        steps.push({ key: "contact", label: "Phone" });
+      }
+      if (showPartySeats(event) || hasIncludedCatalog(event)) {
+        steps.push({ key: "party", label: "Party" });
+      }
+      const needLegal = hasRequiredDisclaimers(event) || needsAmenityVote(event) || needsInvestAck(event) || event.pricing_mode === "paid" && total > 0 && !hasRequiredDisclaimers(event);
+      if (needLegal) {
+        steps.push({ key: "legal", label: "Agree" });
+      }
+      if (needsPaymentChoice(event, total)) {
+        steps.push({ key: "pay", label: "Pay" });
+      }
+      steps.push({ key: "review", label: "Review" });
+      return steps;
+    }
+    function stepContactHtml() {
+      if (STATE4.mode === "member") {
+        return `
+                <div class="er-step">
+                    <p class="er-lead">Add a mobile number so we can text event updates.</p>
+                    <div class="er-row">
+                        <label class="er-label" for="erMemberPhone">Mobile phone</label>
+                        <input id="erMemberPhone" class="er-input" type="tel" inputmode="tel"
+                            value="${esc15(STATE4.form.member_phone)}" placeholder="Phone number" required>
+                    </div>
+                    <label class="er-check">
+                        <input type="checkbox" id="erMemberSms" ${STATE4.form.member_sms_opt_in ? "checked" : ""}>
+                        <span>Text me event updates. Message/data rates may apply. Reply STOP to opt out.</span>
+                    </label>
+                </div>`;
+      }
+      return `
+            <div class="er-step">
+                <p class="er-lead">Your contact info for this RSVP.</p>
+                <div class="er-row">
+                    <label class="er-label" for="erGuestName">Full name</label>
+                    <input id="erGuestName" class="er-input" type="text" autocomplete="name"
+                        value="${esc15(STATE4.form.guest_name)}" placeholder="Your full name" required>
+                </div>
+                <div class="er-row">
+                    <label class="er-label" for="erGuestEmail">Email</label>
+                    <input id="erGuestEmail" class="er-input" type="email" autocomplete="email"
+                        value="${esc15(STATE4.form.guest_email)}" placeholder="Email address" required>
+                </div>
+                <div class="er-row">
+                    <label class="er-label" for="erGuestPhone">Phone</label>
+                    <input id="erGuestPhone" class="er-input" type="tel" inputmode="tel" autocomplete="tel"
+                        value="${esc15(STATE4.form.guest_phone)}" placeholder="Phone number" required>
+                </div>
+                <label class="er-check">
+                    <input type="checkbox" id="erGuestSms" ${STATE4.form.sms_opt_in ? "checked" : ""}>
+                    <span>Text me event updates at this number. Message/data rates may apply. Reply STOP to opt out.</span>
+                </label>
+            </div>`;
+    }
+    function stepContactWire() {
+      const sync = () => {
+        if (STATE4.mode === "member") {
+          STATE4.form.member_phone = document.getElementById("erMemberPhone")?.value || "";
+          STATE4.form.member_sms_opt_in = !!document.getElementById("erMemberSms")?.checked;
+        } else {
+          STATE4.form.guest_name = document.getElementById("erGuestName")?.value || "";
+          STATE4.form.guest_email = document.getElementById("erGuestEmail")?.value || "";
+          STATE4.form.guest_phone = document.getElementById("erGuestPhone")?.value || "";
+          STATE4.form.sms_opt_in = !!document.getElementById("erGuestSms")?.checked;
+          if (window.EventsPartySeats?.syncPayerNameFromContact) {
+            window.EventsPartySeats.syncPayerNameFromContact(
+              document.getElementById("erSheetContent"),
+              STATE4.form.guest_name
+            );
+          }
+        }
+        scheduleSaveDraft();
+      };
+      ["erGuestName", "erGuestEmail", "erGuestPhone", "erGuestSms", "erMemberPhone", "erMemberSms"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", sync);
+        el.addEventListener("change", sync);
+      });
+    }
+    function stepContactValidate() {
+      if (STATE4.mode === "member") {
+        const raw = (STATE4.form.member_phone || "").trim();
+        const validated = window.EventsHelpers?.validatePhone ? window.EventsHelpers.validatePhone(raw) : raw ? { value: raw } : { error: "Phone number is required." };
+        if (validated.error) return validated.error;
+        STATE4.form.member_phone = validated.value;
+        return null;
+      }
+      const name = (STATE4.form.guest_name || "").trim();
+      const email = (STATE4.form.guest_email || "").trim().toLowerCase();
+      if (!name) return "Please enter your name.";
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Please enter a valid email.";
+      const phoneRaw = (STATE4.form.guest_phone || "").trim();
+      const phoneOk = window.EventsHelpers?.validatePhone ? window.EventsHelpers.validatePhone(phoneRaw) : phoneRaw ? { value: phoneRaw } : { error: "Phone number is required." };
+      if (phoneOk.error) return phoneOk.error;
+      STATE4.form.guest_name = name;
+      STATE4.form.guest_email = email;
+      STATE4.form.guest_phone = phoneOk.value;
+      return null;
+    }
+    function stepPartyHtml() {
+      const event = STATE4.event;
+      const payerName = STATE4.mode === "guest" ? STATE4.form.guest_name : STATE4.memberName || "";
+      if (!window.EventsPartySeats?.formFieldsHtml) {
+        return '<p class="er-lead">Party seats unavailable.</p>';
+      }
+      const initialSeats = Array.isArray(STATE4.form.seats) && STATE4.form.seats.length ? STATE4.form.seats : void 0;
+      return `
+            <div class="er-step" id="erPartyRoot">
+                ${window.EventsPartySeats.formFieldsHtml(event, {
+        idPrefix: "erParty",
+        payerName,
+        hidePayerName: STATE4.mode === "guest",
+        hideLabel: true,
+        defaultRole: window.EventsIncludedItems?.defaultSeatRoleForCatalog?.(event.included_items) || "adult",
+        initialSeats
+      })}
+            </div>`;
+    }
+    function stepPartyWire() {
+      const root2 = document.getElementById("erPartyRoot") || document.getElementById("erSheetContent");
+      if (!root2 || !STATE4.event) return;
+      if (!STATE4.form.seats || !STATE4.form.seats.length) {
+        STATE4.form.seats = defaultSeats();
+      }
+      const syncSeats = () => {
+        if (window.EventsPartySeats?.readSeatsFromRoot) {
+          const seats = window.EventsPartySeats.readSeatsFromRoot(root2, STATE4.event);
+          if (seats && seats.length) STATE4.form.seats = seats;
+        }
+        _refreshFooterLabels();
+        scheduleSaveDraft();
+      };
+      if (window.EventsPartySeats?.wireForm) {
+        window.EventsPartySeats.wireForm(root2, STATE4.event, syncSeats);
+      }
+      if (window.EventsIncludedItems?.wireChoiceControls) {
+        window.EventsIncludedItems.wireChoiceControls(root2);
+      }
+      if (STATE4.mode === "guest" && window.EventsPartySeats?.syncPayerNameFromContact) {
+        window.EventsPartySeats.syncPayerNameFromContact(root2, STATE4.form.guest_name);
+      }
+      if (window.EventsPartySeats?.readSeatsFromRoot) {
+        const seats = window.EventsPartySeats.readSeatsFromRoot(root2, STATE4.event);
+        if (seats && seats.length) STATE4.form.seats = seats;
+      }
+      if (!STATE4.form.seats || !STATE4.form.seats.length) {
+        STATE4.form.seats = defaultSeats();
+      }
+      _refreshFooterLabels();
+    }
+    function stepPartyValidate() {
+      const event = STATE4.event;
+      const root2 = document.getElementById("erPartyRoot") || document.getElementById("erSheetContent");
+      if (STATE4.mode === "guest" && window.EventsPartySeats?.syncPayerNameFromContact) {
+        window.EventsPartySeats.syncPayerNameFromContact(root2, STATE4.form.guest_name);
+      }
+      const seats = window.EventsPartySeats?.readSeatsFromRoot ? window.EventsPartySeats.readSeatsFromRoot(root2, event) : [];
+      if (STATE4.mode === "guest" && seats.length && seats[0]?.is_payer) {
+        seats[0].display_name = STATE4.form.guest_name || seats[0].display_name;
+      }
+      STATE4.form.seats = seats;
+      const catalog = window.EventsIncludedItems?.normalizeIncludedItems?.(event.included_items) || [];
+      if (window.EventsPartySeats?.validatePartySeats) {
+        return window.EventsPartySeats.validatePartySeats(event, seats, catalog, {
+          allowIncompleteGuests: true
+        });
+      }
+      return null;
+    }
+    function stepLegalHtml() {
+      const event = STATE4.event;
+      const catalog = discCatalog(event);
+      const total = estimatedPartyTotal(event);
+      const ackedIds = Array.isArray(STATE4.form.disclaimer_acks) ? STATE4.form.disclaimer_acks : [];
+      const hasDisc = !!(window.EventsDisclaimers?.formFieldsHtml && catalog.length);
+      const hasAmenity = !!(needsAmenityVote(event) && window.EventsAmenityVoting?.formFieldsHtml);
+      const hasInvest = !!(needsInvestAck(event) && window.EventsInvestAck?.formFieldHtml);
+      let html11 = '<div class="er-step" id="erLegalRoot">';
+      if (!hasDisc && !hasAmenity && !hasInvest) {
+        html11 += '<p class="er-lead">Please review and acknowledge.</p>';
+      }
+      if (hasDisc) {
+        html11 += window.EventsDisclaimers.formFieldsHtml(catalog, { idPrefix: "erDisc", ackedIds });
+      }
+      if (hasAmenity) {
+        const cfg = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
+        html11 += window.EventsAmenityVoting.formFieldsHtml(cfg, {
+          idPrefix: "erAmenity",
+          selectedOptionId: STATE4.form.amenity_vote_option_id || ""
+        });
+      }
+      if (hasInvest) {
+        html11 += window.EventsInvestAck.formFieldHtml(event, {
+          idPrefix: "erInvest",
+          acknowledged: !!STATE4.form.invest_acknowledged
+        });
+      }
+      if (event.pricing_mode === "paid" && total > 0 && !hasRequiredDisclaimers(event)) {
+        html11 += `
+                <label class="er-check" style="margin-top:12px">
+                    <input type="checkbox" id="erNoRefund" ${STATE4.form.no_refund_accepted ? "checked" : ""}>
+                    <span>I understand this payment is non-refundable unless cancelled by staff.</span>
+                </label>`;
+      }
+      html11 += "</div>";
+      return html11;
+    }
+    function stepLegalWire() {
+      const root2 = document.getElementById("erLegalRoot") || document.getElementById("erSheetContent");
+      const sync = () => {
+        const catalog = discCatalog(STATE4.event);
+        if (window.EventsDisclaimers?.readAckIdsFromRoot) {
+          STATE4.form.disclaimer_acks = window.EventsDisclaimers.readAckIdsFromRoot(root2, catalog);
+        }
+        if (window.EventsAmenityVoting?.readVoteFromRoot) {
+          STATE4.form.amenity_vote_option_id = window.EventsAmenityVoting.readVoteFromRoot(root2) || "";
+        }
+        if (window.EventsInvestAck?.readAcknowledgedFromRoot) {
+          STATE4.form.invest_acknowledged = !!window.EventsInvestAck.readAcknowledgedFromRoot(root2);
+        }
+        STATE4.form.no_refund_accepted = !!document.getElementById("erNoRefund")?.checked;
+        scheduleSaveDraft();
+      };
+      root2?.addEventListener("change", sync);
+      sync();
+    }
+    function stepLegalValidate() {
+      const event = STATE4.event;
+      const root2 = document.getElementById("erLegalRoot") || document.getElementById("erSheetContent");
+      const catalog = discCatalog(event);
+      if (hasRequiredDisclaimers(event) && window.EventsDisclaimers) {
+        const acks = window.EventsDisclaimers.readAckIdsFromRoot(root2, catalog);
+        STATE4.form.disclaimer_acks = acks;
+        const err = window.EventsDisclaimers.validateAcks(catalog, acks);
+        if (err) return err;
+      }
+      if (needsAmenityVote(event) && window.EventsAmenityVoting) {
+        const cfg = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
+        const vote = window.EventsAmenityVoting.readVoteFromRoot(root2) || "";
+        STATE4.form.amenity_vote_option_id = vote;
+        const err = window.EventsAmenityVoting.validateVote(cfg, vote);
+        if (err) return err;
+      }
+      if (needsInvestAck(event) && window.EventsInvestAck) {
+        const err = window.EventsInvestAck.validateAck(event, root2);
+        if (err) return err;
+        STATE4.form.invest_acknowledged = !!window.EventsInvestAck.readAcknowledgedFromRoot(root2);
+      }
+      const total = estimatedPartyTotal(event);
+      if (event.pricing_mode === "paid" && total > 0 && !hasRequiredDisclaimers(event)) {
+        STATE4.form.no_refund_accepted = !!document.getElementById("erNoRefund")?.checked;
+        if (!STATE4.form.no_refund_accepted) {
+          return "Please accept the no-refund policy to continue.";
+        }
+      }
+      return null;
+    }
+    function stepPayHtml() {
+      const event = STATE4.event;
+      const total = estimatedPartyTotal(event);
+      if (!window.EventsPaymentChoice?.formFieldsHtml) {
+        return '<p class="er-lead">Payment options unavailable.</p>';
+      }
+      return `
+            <div class="er-step" id="erPayRoot">
+                ${window.EventsPaymentChoice.formFieldsHtml(event, {
+        seatPriceCents: total,
+        idPrefix: "erPay",
+        choice: STATE4.form.payment_choice || void 0
+      })}
+            </div>`;
+    }
+    function stepPayWire() {
+      const root2 = document.getElementById("erPayRoot") || document.getElementById("erSheetContent");
+      const event = STATE4.event;
+      const total = estimatedPartyTotal(event);
+      if (window.EventsPaymentChoice?.wireForm) {
+        window.EventsPaymentChoice.wireForm(root2, event, () => total, () => {
+          if (window.EventsPaymentChoice.readFromRoot) {
+            STATE4.form.payment_choice = window.EventsPaymentChoice.readFromRoot(root2);
+          }
+          scheduleSaveDraft();
+        });
+      }
+      if (window.EventsPaymentChoice?.readFromRoot) {
+        STATE4.form.payment_choice = window.EventsPaymentChoice.readFromRoot(root2);
+      }
+    }
+    function stepPayValidate() {
+      const event = STATE4.event;
+      const root2 = document.getElementById("erPayRoot") || document.getElementById("erSheetContent");
+      const total = estimatedPartyTotal(event);
+      if (!needsPaymentChoice(event, total)) return null;
+      const choice = window.EventsPaymentChoice?.readFromRoot?.(root2);
+      STATE4.form.payment_choice = choice;
+      return window.EventsPaymentChoice?.validateChoice?.(event, choice, total) || null;
+    }
+    function stepReviewHtml() {
+      const event = STATE4.event;
+      const seats = STATE4.form.seats || [];
+      const total = estimatedPartyTotal(event);
+      const seatLines = seats.map((s) => {
+        const role = s.role === "kid" ? "Child" : "Adult";
+        const opts = s.options && Object.keys(s.options).length ? ` \xB7 ${Object.values(s.options).join(", ")}` : "";
+        return `<div class="er-review-row"><span>${esc15(s.display_name || "Guest")}</span><span>${role}${esc15(opts)}</span></div>`;
+      }).join("") || '<div class="er-review-row"><span>Party</span><span>1 adult</span></div>';
+      const contact = STATE4.mode === "guest" ? `<div class="er-review-row"><span>Name</span><span>${esc15(STATE4.form.guest_name)}</span></div>
+               <div class="er-review-row"><span>Email</span><span>${esc15(STATE4.form.guest_email)}</span></div>
+               <div class="er-review-row"><span>Phone</span><span>${esc15(STATE4.form.guest_phone)}</span></div>` : STATE4.form.member_phone ? `<div class="er-review-row"><span>Phone</span><span>${esc15(STATE4.form.member_phone)}</span></div>` : "";
+      const pay = STATE4.form.payment_choice ? `<div class="er-review-row"><span>Plan</span><span>${esc15(STATE4.form.payment_choice.plan_kind || "")}</span></div>
+               <div class="er-review-row"><span>Method</span><span>${esc15(STATE4.form.payment_choice.method || "")}</span></div>` : "";
+      const totalRow = total > 0 ? `<div class="er-review-row"><span>Total</span><span>${esc15(formatMoney(total))}</span></div>` : "";
+      return `
+            <div class="er-step">
+                <p class="er-lead">Confirm your RSVP for <strong>${esc15(event.title || "this event")}</strong>.</p>
+                <div class="er-review-card">${contact}${seatLines}${pay}${totalRow}</div>
+            </div>`;
+    }
+    function stepReviewWire() {
+    }
+    function stepReviewValidate() {
+      return null;
+    }
+    const STEPS = {
+      contact: { html: stepContactHtml, wire: stepContactWire, validate: stepContactValidate },
+      party: { html: stepPartyHtml, wire: stepPartyWire, validate: stepPartyValidate },
+      legal: { html: stepLegalHtml, wire: stepLegalWire, validate: stepLegalValidate },
+      pay: { html: stepPayHtml, wire: stepPayWire, validate: stepPayValidate },
+      review: { html: stepReviewHtml, wire: stepReviewWire, validate: stepReviewValidate }
+    };
+    function _ensureMounted2() {
+      if (document.getElementById(ROOT_ID)) return;
+      const root2 = document.createElement("div");
+      root2.id = ROOT_ID;
+      root2.innerHTML = `
+            <div id="erSheetBackdrop" class="er-backdrop"></div>
+            <div id="erSheet" class="er-sheet" aria-hidden="true">
+                <div id="erSheetPanel" class="er-panel" role="dialog" aria-modal="true" aria-labelledby="erSheetTitle">
+                    <header class="er-header">
+                        <div class="er-header-text">
+                            <p class="er-kicker" id="erSheetKicker">RSVP</p>
+                            <h2 class="er-title" id="erSheetTitle">RSVP</h2>
+                            <p class="er-sub" id="erSheetSub"></p>
+                        </div>
+                        <button type="button" id="erSheetClose" class="er-icon-btn" aria-label="Close">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </header>
+                    <div id="erSheetSteps" class="er-dots"></div>
+                    <div id="erSheetContent" class="er-content"></div>
+                    <div id="erSheetError" class="er-error hidden"></div>
+                    <footer class="er-footer">
+                        <button type="button" id="erBackBtn" class="er-btn-secondary">Back</button>
+                        <button type="button" id="erNextBtn" class="er-btn-primary">Next</button>
+                    </footer>
+                </div>
+            </div>`;
+      document.body.appendChild(root2);
+      document.getElementById("erSheetClose").addEventListener("click", close4);
+      document.getElementById("erSheetBackdrop").addEventListener("click", close4);
+      document.getElementById("erBackBtn").addEventListener("click", _back2);
+      document.getElementById("erNextBtn").addEventListener("click", _next2);
+    }
+    function _showError(msg) {
+      const el = document.getElementById("erSheetError");
+      if (!el) return;
+      if (!msg) {
+        el.classList.add("hidden");
+        el.textContent = "";
+        return;
+      }
+      el.textContent = msg;
+      el.classList.remove("hidden");
+    }
+    function _refreshFooterLabels() {
+      const steps = getSteps2();
+      const nextBtn = document.getElementById("erNextBtn");
+      if (!nextBtn) return;
+      const last = STATE4.step >= steps.length - 1;
+      const total = estimatedPartyTotal(STATE4.event);
+      if (last) {
+        nextBtn.textContent = total > 0 ? `Pay ${formatMoney(total)}` : "Confirm RSVP";
+      } else {
+        nextBtn.textContent = "Next";
+      }
+    }
+    function _render3() {
+      const steps = getSteps2();
+      if (STATE4.step >= steps.length) STATE4.step = Math.max(0, steps.length - 1);
+      const cur = steps[STATE4.step];
+      const titleEl = document.getElementById("erSheetTitle");
+      const subEl = document.getElementById("erSheetSub");
+      const kicker = document.getElementById("erSheetKicker");
+      if (titleEl) titleEl.textContent = STATE4.event?.title || "RSVP";
+      if (kicker) kicker.textContent = "RSVP";
+      if (subEl) subEl.textContent = `Step ${STATE4.step + 1} of ${steps.length} \u2014 ${cur.label}`;
+      const dots = document.getElementById("erSheetSteps");
+      if (dots) {
+        dots.innerHTML = steps.map(
+          (s, i) => `<div class="er-dot${i === STATE4.step ? " is-active" : ""}${i < STATE4.step ? " is-done" : ""}" title="${esc15(s.label)}"></div>`
+        ).join("");
+      }
+      const backBtn = document.getElementById("erBackBtn");
+      if (backBtn) backBtn.style.visibility = STATE4.step === 0 ? "hidden" : "visible";
+      _showError("");
+      const content = document.getElementById("erSheetContent");
+      const api22 = STEPS[cur.key];
+      if (content && api22) {
+        content.innerHTML = api22.html();
+        api22.wire();
+      }
+      _refreshFooterLabels();
+      if (content) content.scrollTop = 0;
+    }
+    function _back2() {
+      const steps = getSteps2();
+      const cur = steps[STATE4.step];
+      if (!cur || STATE4.step <= 0) return;
+      flushCurrentStep();
+      const prevKey = steps[STATE4.step - 1]?.key;
+      const refreshed = getSteps2();
+      const idx = prevKey ? refreshed.findIndex((s) => s.key === prevKey) : STATE4.step - 1;
+      STATE4.step = idx >= 0 ? idx : Math.max(0, STATE4.step - 1);
+      saveDraft();
+      _render3();
+    }
+    async function _next2() {
+      const steps = getSteps2();
+      const cur = steps[STATE4.step];
+      if (!cur) return;
+      const curKey = cur.key;
+      const api22 = STEPS[curKey];
+      flushCurrentStep();
+      if (api22?.validate) {
+        const err = api22.validate();
+        if (err) {
+          _showError(err);
+          return;
+        }
+      }
+      _showError("");
+      saveDraft();
+      const afterValidate = getSteps2();
+      const curIdx = afterValidate.findIndex((s) => s.key === curKey);
+      const atLast = curIdx < 0 || curIdx >= afterValidate.length - 1;
+      if (atLast) {
+        await _submit2();
+        return;
+      }
+      const nextKey = afterValidate[curIdx + 1].key;
+      const nextSteps = getSteps2();
+      const nextIdx = nextSteps.findIndex((s) => s.key === nextKey);
+      STATE4.step = nextIdx >= 0 ? nextIdx : Math.min(curIdx + 1, nextSteps.length - 1);
+      saveDraft();
+      _render3();
+    }
+    function defaultSeats() {
+      const name = STATE4.mode === "guest" ? STATE4.form.guest_name : STATE4.memberName || "Member";
+      return [{
+        role: "adult",
+        display_name: name,
+        is_payer: true
+      }];
+    }
+    async function _submit2() {
+      if (STATE4.submitting) return;
+      STATE4.submitting = true;
+      const nextBtn = document.getElementById("erNextBtn");
+      if (nextBtn) {
+        nextBtn.disabled = true;
+        nextBtn.textContent = "Processing\u2026";
+      }
+      try {
+        if (STATE4.mode === "guest") {
+          await _submitGuest();
+        } else {
+          await _submitMember();
+        }
+        close4();
+        if (typeof STATE4.onComplete === "function") {
+          await STATE4.onComplete();
+        }
+      } catch (err) {
+        _showError(err?.message || "Something went wrong. Please try again.");
+        _refreshFooterLabels();
+        if (nextBtn) nextBtn.disabled = false;
+      } finally {
+        STATE4.submitting = false;
+      }
+    }
+    async function _submitGuest() {
+      const event = STATE4.event;
+      const seats = STATE4.form.seats && STATE4.form.seats.length ? STATE4.form.seats : defaultSeats();
+      if (seats[0]) seats[0].display_name = STATE4.form.guest_name || seats[0].display_name;
+      const partyTotal = window.EventsPartySeats?.partyBaseTotalCents ? window.EventsPartySeats.partyBaseTotalCents(event, seats) : adultPriceCents2(event);
+      const needsPaid = event.pricing_mode === "paid" && partyTotal > 0;
+      const seatRole = seats.find((s) => s.is_payer)?.role || "adult";
+      const sms = {
+        guest_phone: STATE4.form.guest_phone,
+        sms_opt_in: !!(STATE4.form.guest_phone && STATE4.form.sms_opt_in),
+        sms_consent_text_version: "event_sms_v1"
+      };
+      const hasDisc = hasRequiredDisclaimers(event);
+      const amenity = needsAmenityVote(event);
+      const payChoice = STATE4.form.payment_choice;
+      if (needsPaid) {
+        if (typeof callEdgeFunctionPublic !== "function") {
+          throw new Error("Checkout is unavailable right now.");
+        }
+        const checkout = await callEdgeFunctionPublic("create-event-checkout", {
+          event_id: event.id,
+          type: "rsvp",
+          guest_name: STATE4.form.guest_name,
+          guest_email: STATE4.form.guest_email,
+          seats,
+          seat_role: seatRole,
+          ...sms,
+          ...hasDisc ? { disclaimer_acks: STATE4.form.disclaimer_acks } : {},
+          ...amenity ? { amenity_vote_option_id: STATE4.form.amenity_vote_option_id } : {},
+          ...payChoice ? { plan_kind: payChoice.plan_kind, method: payChoice.method } : {}
+        });
+        if (checkout?.invite_token && window.EventsHelpers?.stashPaymentInviteToken) {
+          window.EventsHelpers.stashPaymentInviteToken(event.id, checkout.invite_token);
+        }
+        if (checkout?.fully_credited || checkout?.paid) {
+          clearDraft(event.id, "guest", draftUserKey());
+          return;
+        }
+        if (checkout?.url) {
+          clearDraft(event.id, "guest", draftUserKey());
+          window.location.href = checkout.url;
+          return;
+        }
+        throw new Error("Checkout did not return a payment link.");
+      }
+      if (typeof callEdgeFunctionPublic !== "function") {
+        throw new Error("RSVP is unavailable right now.");
+      }
+      await callEdgeFunctionPublic("rsvp-guest-free", {
+        event_id: event.id,
+        guest_name: STATE4.form.guest_name,
+        guest_email: STATE4.form.guest_email,
+        seats,
+        seat_role: seatRole,
+        ...sms,
+        ...hasDisc ? { disclaimer_acks: STATE4.form.disclaimer_acks } : {},
+        ...amenity ? { amenity_vote_option_id: STATE4.form.amenity_vote_option_id } : {}
+      });
+      clearDraft(event.id, "guest", draftUserKey());
+    }
+    async function _submitMember() {
+      const event = STATE4.event;
+      const userId = window.pubCurrentUser?.id || globalThis.evtCurrentUser?.id;
+      if (!userId) throw new Error("Please sign in to RSVP.");
+      const phoneCheck = stepContactValidate();
+      if (STATE4.mode === "member" && (!(STATE4.form.member_phone || "").trim() || phoneCheck)) {
+        const steps = getSteps2();
+        const contactIdx = steps.findIndex((s) => s.key === "contact");
+        if (contactIdx >= 0) STATE4.step = contactIdx;
+        else {
+          STATE4.memberPhoneMissing = true;
+          STATE4.step = 0;
+        }
+        _render3();
+        throw new Error(phoneCheck || "Phone number is required. Add a mobile number to continue.");
+      }
+      if (STATE4.form.member_phone && window.supabaseClient) {
+        await supabaseClient.from("profiles").update({ phone: STATE4.form.member_phone }).eq("id", userId);
+      }
+      const seats = STATE4.form.seats && STATE4.form.seats.length ? STATE4.form.seats : defaultSeats();
+      const partyTotal = window.EventsPartySeats?.partyBaseTotalCents ? window.EventsPartySeats.partyBaseTotalCents(event, seats) : adultPriceCents2(event);
+      const needsPaid = event.pricing_mode === "paid" && partyTotal > 0;
+      const seatRole = seats.find((s) => s.is_payer)?.role || "adult";
+      const hasDisc = hasRequiredDisclaimers(event);
+      const amenity = needsAmenityVote(event);
+      const payChoice = STATE4.form.payment_choice;
+      const callEdge = typeof callEdgeFunction === "function" ? callEdgeFunction : null;
+      if (!callEdge) throw new Error("RSVP is unavailable right now.");
+      const phonePayload = { phone: STATE4.form.member_phone };
+      if (needsPaid) {
+        if (payChoice && window.EventsPaymentChoice?.confirmMessage) {
+          const msg = window.EventsPaymentChoice.confirmMessage(event, payChoice, partyTotal);
+          if (msg) {
+            const ok = window.EventsHelpers?.confirmDialog ? await window.EventsHelpers.confirmDialog({ message: msg }) : confirm(msg);
+            if (!ok) throw new Error("Checkout cancelled.");
+          }
+        }
+        const checkout = await callEdge("create-event-checkout", {
+          event_id: event.id,
+          type: "rsvp",
+          seats,
+          seat_role: seatRole,
+          ...phonePayload,
+          ...hasDisc ? { disclaimer_acks: STATE4.form.disclaimer_acks } : {},
+          ...amenity ? { amenity_vote_option_id: STATE4.form.amenity_vote_option_id } : {},
+          ...payChoice ? { plan_kind: payChoice.plan_kind, method: payChoice.method } : {},
+          ...STATE4.form.invest_acknowledged ? { invest_eligible_acknowledged: true } : {}
+        });
+        if (checkout?.invite_token && window.EventsHelpers?.stashPaymentInviteToken) {
+          window.EventsHelpers.stashPaymentInviteToken(event.id, checkout.invite_token);
+        }
+        if (checkout?.fully_credited || checkout?.paid) {
+          clearDraft(event.id, "member", draftUserKey());
+          return;
+        }
+        if (checkout?.url) {
+          clearDraft(event.id, "member", draftUserKey());
+          window.location.href = checkout.url;
+          return;
+        }
+        throw new Error("Checkout did not return a payment link.");
+      }
+      await callEdge("rsvp-member-party", {
+        event_id: event.id,
+        status: "going",
+        seats,
+        seat_role: seatRole,
+        ...phonePayload,
+        ...hasDisc ? { disclaimer_acks: STATE4.form.disclaimer_acks } : {},
+        ...amenity ? { amenity_vote_option_id: STATE4.form.amenity_vote_option_id } : {},
+        ...STATE4.form.invest_acknowledged ? { invest_eligible_acknowledged: true } : {}
+      });
+      clearDraft(event.id, "member", draftUserKey());
+    }
+    function open5(opts) {
+      const event = opts?.event;
+      if (!event) return;
+      _ensureMounted2();
+      STATE4.event = event;
+      STATE4.mode = opts.mode === "member" ? "member" : "guest";
+      STATE4.memberName = opts.memberName || "";
+      const openedPhone = String(opts.memberPhone || "").trim();
+      STATE4.memberPhoneMissing = STATE4.mode === "member" ? !openedPhone || !!opts.memberPhoneMissing : !!opts.memberPhoneMissing;
+      STATE4.onComplete = opts.onComplete || null;
+      STATE4.submitting = false;
+      STATE4._draftCleared = false;
+      const memberUserKey = String(globalThis.evtCurrentUser?.id || window.pubCurrentUser?.id || "member").trim() || "member";
+      const guestEmailKey = String(opts.guestEmail || "").trim().toLowerCase();
+      let userKey = STATE4.mode === "member" ? memberUserKey : guestEmailKey || "anon";
+      let draft = loadDraft(event.id, STATE4.mode, userKey);
+      if (!draft && STATE4.mode === "guest" && userKey !== "anon") {
+        draft = loadDraft(event.id, STATE4.mode, "anon");
+      }
+      Object.assign(STATE4.form, blankForm());
+      if (draft?.form && typeof draft.form === "object") {
+        Object.assign(STATE4.form, draft.form);
+      }
+      if (opts.guestName && !STATE4.form.guest_name) STATE4.form.guest_name = opts.guestName;
+      if (opts.guestEmail && !STATE4.form.guest_email) STATE4.form.guest_email = opts.guestEmail;
+      if (opts.guestPhone && !STATE4.form.guest_phone) STATE4.form.guest_phone = opts.guestPhone;
+      if (openedPhone) STATE4.form.member_phone = openedPhone;
+      if (STATE4.mode === "member" && !(STATE4.form.member_phone || "").trim()) {
+        STATE4.memberPhoneMissing = true;
+      }
+      const steps = getSteps2();
+      let step = typeof draft?.step === "number" ? draft.step : 0;
+      if (step < 0) step = 0;
+      if (step >= steps.length) step = Math.max(0, steps.length - 1);
+      STATE4.step = step;
+      const sheet = document.getElementById("erSheet");
+      const panel = document.getElementById("erSheetPanel");
+      const backdrop = document.getElementById("erSheetBackdrop");
+      sheet.classList.add("is-open");
+      sheet.setAttribute("aria-hidden", "false");
+      backdrop.classList.add("is-open");
+      requestAnimationFrame(() => panel.classList.add("is-open"));
+      document.body.style.overflow = "hidden";
+      _render3();
+    }
+    function close4() {
+      const sheet = document.getElementById("erSheet");
+      if (!sheet || !sheet.classList.contains("is-open")) return;
+      if (!STATE4._draftCleared) {
+        try {
+          flushCurrentStep();
+        } catch (_) {
+        }
+        saveDraft();
+      }
+      const panel = document.getElementById("erSheetPanel");
+      const backdrop = document.getElementById("erSheetBackdrop");
+      panel.classList.remove("is-open");
+      backdrop.classList.remove("is-open");
+      document.body.style.overflow = "";
+      setTimeout(() => {
+        sheet.classList.remove("is-open");
+        sheet.setAttribute("aria-hidden", "true");
+      }, 250);
+    }
+    function isOpen() {
+      return !!document.getElementById("erSheet")?.classList.contains("is-open");
+    }
+    function hasDraft(eventId2, mode, userKey) {
+      try {
+        const id = String(eventId2 || "").trim();
+        if (!id || typeof localStorage === "undefined") return false;
+        const m = mode === "member" ? "member" : "guest";
+        let key = userKey;
+        if (!key) {
+          if (m === "member") {
+            key = String(globalThis.evtCurrentUser?.id || window.pubCurrentUser?.id || "member").trim() || "member";
+          } else {
+            key = "anon";
+          }
+        }
+        if (loadDraft(id, m, key)) return true;
+        if (m === "guest" && key !== "anon" && loadDraft(id, m, "anon")) return true;
+        return false;
+      } catch (_) {
+        return false;
+      }
+    }
+    function openIfNeeded(opts) {
+      if (!needsPrep(opts?.event, opts)) return false;
+      open5(opts);
+      return true;
+    }
+    globalThis.EventsRsvpWizard = {
+      needsPrep,
+      getSteps: getSteps2,
+      open: open5,
+      openIfNeeded,
+      close: close4,
+      isOpen,
+      hasDraft,
+      clearDraft,
+      getState: () => STATE4
     };
   })();
 
@@ -2807,10 +4225,10 @@ Proceed to checkout?`;
       if (!event || !event.category) return "";
       const emoji = C7.CATEGORY_EMOJI && C7.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
       const label = C7.CATEGORY_TAG && C7.CATEGORY_TAG[event.category]?.label || event.category;
-      const esc12 = H6.escapeHtml || ((s) => String(s == null ? "" : s));
-      return `<button type="button" data-evt-cat="${esc12(event.category)}"
+      const esc15 = H6.escapeHtml || ((s) => String(s == null ? "" : s));
+      return `<button type="button" data-evt-cat="${esc15(event.category)}"
             class="evt-cat-chip absolute top-2 left-2 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-base leading-none hover:scale-110 active:scale-95 transition-transform"
-            aria-label="Filter by ${esc12(label)}" title="Filter by ${esc12(label)}">${emoji}</button>`;
+            aria-label="Filter by ${esc15(label)}" title="Filter by ${esc15(label)}">${emoji}</button>`;
     }
     function _dateStamp(event) {
       const d = _startDate(event);
@@ -2823,7 +4241,7 @@ Proceed to checkout?`;
       return `<div class="relative shrink-0 text-center min-w-[44px]">
             ${pin}
             <div class="text-[20px] leading-none font-extrabold text-gray-900">${day}</div>
-            <div class="text-[10px] tracking-wider font-bold text-brand-600 mt-0.5">${mon}</div>
+            <div class="text-[10px] tracking-wider font-bold text-primary mt-0.5">${mon}</div>
             <div class="evt-date-stamp-dow text-[9px] tracking-wider font-semibold text-gray-400 mt-0.5">${dow}</div>
         </div>`;
     }
@@ -2859,15 +4277,16 @@ Proceed to checkout?`;
           return `<img src="${url}" alt="${name}" loading="lazy" class="w-7 h-7 rounded-full ring-2 ring-white object-cover bg-gray-100">`;
         }
         const initial = (a.first_name || "?").trim().charAt(0).toUpperCase() || "?";
-        return `<span class="w-7 h-7 rounded-full ring-2 ring-white bg-brand-100 text-brand-700 text-[11px] font-bold inline-flex items-center justify-center">${initial}</span>`;
+        return `<span class="w-7 h-7 rounded-full ring-2 ring-white bg-primary-100 text-primary-700 text-[11px] font-bold inline-flex items-center justify-center">${initial}</span>`;
       });
       if (overflow > 0) {
         pieces.push(`<span class="w-7 h-7 rounded-full ring-2 ring-white bg-gray-100 text-gray-600 text-[11px] font-bold inline-flex items-center justify-center">+${overflow}</span>`);
       }
       return `<div class="flex -space-x-2">${pieces.join("")}</div>`;
     }
-    function _goingRibbon(rsvp) {
-      if (!rsvp || rsvp.status !== "going") return "";
+    function _goingRibbon(event, rsvp) {
+      const committed = window.EventsHelpers && typeof window.EventsHelpers.rsvpIsCommittedGoing === "function" ? window.EventsHelpers.rsvpIsCommittedGoing(event, rsvp) : !!(rsvp && (event?.pricing_mode !== "paid" ? rsvp.status === "going" : rsvp.paid === true));
+      if (!committed) return "";
       return `<div class="evt-going-ribbon bg-emerald-50 text-emerald-700 text-[11px] font-bold uppercase tracking-wider px-4 py-1 flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
@@ -2892,7 +4311,7 @@ Proceed to checkout?`;
       const title = H6.escapeHtml ? H6.escapeHtml(event.title || "Untitled event") : event.title || "";
       const stateP = P3.statePill ? P3.statePill(event) : "";
       const countP = variant === "portal" && P3.countdownChip ? P3.countdownChip(event) : "";
-      const ribbon = variant === "portal" ? _goingRibbon(opts.rsvp) : "";
+      const ribbon = variant === "portal" ? _goingRibbon(event, opts.rsvp) : "";
       const stack = variant === "portal" ? _avatarStack(opts.attendees) : "";
       const _d = _startDate(event);
       const _day = _d ? _d.getDate() : "";
@@ -2900,7 +4319,7 @@ Proceed to checkout?`;
       const _dow = _d ? _d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase() : "";
       const dataDate = _d ? ` data-evt-day="${_day}" data-evt-mon="${_mon}"` : "";
       const dateChipOverlay = _d ? `<div class="evt-card-date-chip" aria-hidden="true"><span class="evt-card-date-mon">${_mon}</span><span class="evt-card-date-day">${_day}</span><span class="evt-card-date-dow" data-f15-dow>${_dow}</span></div>` : "";
-      const isGoing = !!(opts.rsvp && opts.rsvp.status === "going");
+      const isGoing = window.EventsHelpers && typeof window.EventsHelpers.rsvpIsCommittedGoing === "function" ? window.EventsHelpers.rsvpIsCommittedGoing(event, opts.rsvp) : !!(opts.rsvp && (event.pricing_mode !== "paid" ? opts.rsvp.status === "going" : opts.rsvp.paid === true));
       const rsvpFooter = variant === "portal" ? `<button type="button" data-evt-card-rsvp="${event.id}" class="evt-card-rsvp${isGoing ? " evt-card-rsvp--on" : ""}" aria-pressed="${isGoing ? "true" : "false"}">${isGoing ? "\u2713 Going" : "Details"}</button>` : "";
       const _tcLabel = C7.TYPE_COLORS_PORTAL && C7.TYPE_COLORS_PORTAL[event.event_type]?.label || "";
       const _catLabel = C7.CATEGORY_TAG && C7.CATEGORY_TAG[event.category]?.label || "";
@@ -3073,17 +4492,59 @@ Proceed to checkout?`;
     history.pushState({ view: "list" }, "", url);
     globalThis.evtRouteByUrl();
   }
+  function evtDownloadIcsBySlug(slug) {
+    const key = String(slug || "").trim();
+    if (!key) return;
+    const e = (globalThis.evtAllEvents || []).find((ev) => ev.slug === key || ev.id === key);
+    if (e && typeof globalThis.evtDownloadIcs === "function") {
+      globalThis.evtDownloadIcs(e.id);
+    }
+  }
+  function evtDetailMobileHeaderHtml(slug) {
+    const safeSlug = String(slug || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const center = '<a href="../dashboard.html" class="mh-logo-link mh-frost-pill" aria-label="Justice McNeal home"><span class="mh-logo-mark flex items-center justify-center overflow-hidden" data-brand-logo><span class="mh-logo-fallback font-bold text-sm" data-brand-fallback>jm</span><img class="w-full h-full object-contain hidden" alt="" data-brand-img></span></a>';
+    const right = `<div class="mh-slot-actions flex items-center gap-2"><button type="button" class="mh-icon-btn mh-circle-btn mh-frost-pill" onclick="globalThis.evtCopyShareUrl('${safeSlug}')" aria-label="Share event"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg></button><button type="button" class="mh-icon-btn mh-circle-btn mh-frost-pill" onclick="globalThis.evtDownloadIcsBySlug('${safeSlug}')" aria-label="Save event"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg></button></div>`;
+    const left = '<button type="button" class="mh-icon-btn mh-circle-btn mh-frost-pill" onclick="globalThis.evtNavigateToList()" aria-label="Back to events"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>';
+    return { left, center, right };
+  }
+  function evtApplyDetailMobileHeader(slug) {
+    const html11 = evtDetailMobileHeaderHtml(slug);
+    const tryApply = (attempt) => {
+      const api22 = window.PageShell;
+      if (api22 && typeof api22.setMobileHeader === "function" && document.getElementById("mhSlotLeft")) {
+        api22.setMobileHeader(html11);
+        return;
+      }
+      if (attempt < 40) setTimeout(() => tryApply(attempt + 1), 25);
+    };
+    tryApply(0);
+  }
+  function evtResetDetailMobileHeader() {
+    const tryReset = (attempt) => {
+      const api22 = window.PageShell;
+      if (api22 && typeof api22.resetMobileHeader === "function" && document.getElementById("mhSlotLeft")) {
+        api22.resetMobileHeader();
+        return;
+      }
+      if (attempt < 40) setTimeout(() => tryReset(attempt + 1), 25);
+    };
+    tryReset(0);
+  }
   function evtRouteByUrl() {
     const slug = new URLSearchParams(window.location.search).get("event");
     const listView = document.getElementById("eventsListView");
     const detailView = document.getElementById("eventsDetailView");
     if (!listView || !detailView) return;
     if (slug) {
+      document.body.classList.add("evt-detail-open");
+      evtApplyDetailMobileHeader(slug);
       listView.classList.add("hidden");
       detailView.classList.remove("hidden");
       detailView.innerHTML = '<div class="flex items-center justify-center py-20"><div class="animate-spin rounded-full h-8 w-8 border-2 border-brand-600 border-t-transparent"></div></div>';
       globalThis.evtLoadDetailBySlug(slug);
     } else {
+      document.body.classList.remove("evt-detail-open");
+      evtResetDetailMobileHeader();
       detailView.classList.add("hidden");
       detailView.innerHTML = "";
       listView.classList.remove("hidden");
@@ -3093,12 +4554,24 @@ Proceed to checkout?`;
     }
   }
   async function evtLoadDetailBySlug(slug) {
-    let event = globalThis.evtAllEvents.find((e) => e.slug === slug);
+    const key = String(slug || "").trim();
+    if (!key) return;
+    let event = globalThis.evtAllEvents.find((e) => e.slug === key || e.id === key);
     if (event) {
+      if (event.slug && event.slug !== key) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("event", event.slug);
+        history.replaceState({ view: "detail", slug: event.slug }, "", url);
+      }
       globalThis.evtOpenDetail(event.id);
       return;
     }
-    const { data, error } = await supabaseClient.from("events").select("*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)").eq("slug", slug).maybeSingle();
+    let data = null;
+    let error = null;
+    ({ data, error } = await supabaseClient.from("events").select("*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)").eq("slug", key).maybeSingle());
+    if ((!data || error) && /^[0-9a-f-]{36}$/i.test(key)) {
+      ({ data, error } = await supabaseClient.from("events").select("*, creator:created_by(id, first_name, last_name, profile_picture_url, displayed_badge)").eq("id", key).maybeSingle());
+    }
     if (error || !data) {
       const detailView = document.getElementById("eventsDetailView");
       if (detailView) {
@@ -3120,6 +4593,12 @@ Proceed to checkout?`;
     }
     if (!globalThis.evtAllEvents.find((e) => e.id === data.id)) {
       globalThis.evtAllEvents.push(data);
+    }
+    if (data.slug && data.slug !== key) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("event", data.slug);
+      history.replaceState({ view: "detail", slug: data.slug }, "", url);
+      evtApplyDetailMobileHeader(data.slug);
     }
     globalThis.evtOpenDetail(data.id);
   }
@@ -3194,7 +4673,10 @@ Proceed to checkout?`;
     evtLoadDetailBySlug,
     evtPublicEventInviteUrl,
     evtCopyShareUrl,
-    evtDownloadIcs
+    evtDownloadIcs,
+    evtDownloadIcsBySlug,
+    evtApplyDetailMobileHeader,
+    evtResetDetailMobileHeader
   };
   for (const [name, fn] of Object.entries(_utilsGlobal)) {
     globalThis[name] = fn;
@@ -3373,7 +4855,7 @@ Proceed to checkout?`;
       hist.forEach((q) => {
         const qa = _escapeAttr(q);
         parts.push(
-          '<li class="evt-suggest-row flex items-center gap-2 px-3 py-2 hover:bg-brand-50 cursor-pointer" data-suggest-q="' + qa + '" role="option"><span class="text-gray-400" aria-hidden="true">\u{1F550}</span><span class="flex-1 min-w-0 truncate text-sm text-gray-800">' + qa + '</span><button type="button" class="evt-suggest-remove p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100" data-suggest-rm="' + qa + '" aria-label="Remove from history" title="Remove"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></li>'
+          '<li class="evt-suggest-row flex items-center gap-2 px-3 py-2 hover:bg-primary-50 cursor-pointer" data-suggest-q="' + qa + '" role="option"><span class="text-gray-400" aria-hidden="true">\u{1F550}</span><span class="flex-1 min-w-0 truncate text-sm text-gray-800">' + qa + '</span><button type="button" class="evt-suggest-remove p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100" data-suggest-rm="' + qa + '" aria-label="Remove from history" title="Remove"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></li>'
         );
       });
       parts.push(
@@ -3387,7 +4869,7 @@ Proceed to checkout?`;
       const emoji = C2.CATEGORY_EMOJI && C2.CATEGORY_EMOJI[cat] || "\u{1F4C5}";
       const label = C2.CATEGORY_TAG && C2.CATEGORY_TAG[cat]?.label || cat;
       parts.push(
-        '<button type="button" class="evt-suggest-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-brand-50 border border-gray-200 text-sm text-gray-700" data-suggest-cat="' + cat + '"><span aria-hidden="true">' + emoji + "</span><span>" + label + "</span></button>"
+        '<button type="button" class="evt-suggest-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-primary-50 border border-gray-200 text-sm text-gray-700" data-suggest-cat="' + cat + '"><span aria-hidden="true">' + emoji + "</span><span>" + label + "</span></button>"
       );
     });
     parts.push("</div>");
@@ -3525,11 +5007,9 @@ Proceed to checkout?`;
         e.preventDefault();
         if (input.value) {
           clear?.click();
-        } else if (expand) {
-          expand.classList.add("hidden");
-          toggle?.setAttribute("aria-expanded", "false");
-          toggle?.focus();
+        } else {
           hideSearchSuggest();
+          input.blur();
         }
       }
     });
@@ -3631,7 +5111,7 @@ Proceed to checkout?`;
     }
     const all = window.evtAllEvents || [];
     const rsvps = window.evtAllRsvps || {};
-    const esc12 = H.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc15 = H.escapeHtml || ((s) => String(s == null ? "" : s));
     const now = Date.now();
     const mine = all.filter((ev) => {
       const r = rsvps[ev.id];
@@ -3649,8 +5129,8 @@ Proceed to checkout?`;
       const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
       const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
       const hasBanner = !!ev.banner_url;
-      const thumbStyle = hasBanner ? "background: url('" + esc12(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);";
-      return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc12(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc12(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc12(dateStr) + ", " + esc12(timeStr) + "</span></span></button>";
+      const thumbStyle = hasBanner ? "background: url('" + esc15(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#0B2545 0%,#13366E 100%);";
+      return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc15(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc15(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc15(dateStr) + ", " + esc15(timeStr) + "</span></span></button>";
     }).join("");
     mount.innerHTML = '<div class="evt-myrsvps"><div class="evt-myrsvps-head"><h3 class="evt-myrsvps-title">Your Upcoming RSVPs</h3><span class="evt-myrsvps-count">' + total + '</span></div><div class="evt-myrsvps-list">' + rows + '</div><button type="button" class="evt-myrsvps-all" data-evt-myrsvps-all>View All My Events</button></div>';
     mount.querySelectorAll("[data-evt-myrsvp]").forEach((btn) => {
@@ -3686,7 +5166,16 @@ Proceed to checkout?`;
       const d = new Date(ev.start_date);
       return d.getFullYear() === y && d.getMonth() === m;
     }).length;
-    const going = Object.values(rsvps).filter((r) => r && r.status === "going").length;
+    const going = all.filter((ev) => {
+      const r = rsvps[ev.id];
+      if (typeof globalThis.evtIsCommittedGoing === "function") {
+        return window.evtIsCommittedGoing(ev, r);
+      }
+      if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+        return window.EventsHelpers.rsvpIsCommittedGoing(ev, r);
+      }
+      return !!(r && (ev.pricing_mode !== "paid" ? r.status === "going" : r.paid === true));
+    }).length;
     const communities = /* @__PURE__ */ new Set();
     all.forEach((ev) => {
       if (ev && ev.event_type) communities.add(ev.event_type);
@@ -3731,8 +5220,8 @@ Proceed to checkout?`;
       g2.className = "evt-header-greeting block text-xs text-gray-400 mb-1";
       title.parentNode.insertBefore(g2, title);
     }
-    const esc12 = H2.escapeHtml || ((s) => String(s == null ? "" : s));
-    g2.textContent = "Hey " + esc12(name) + " \u{1F44B}";
+    const esc15 = H2.escapeHtml || ((s) => String(s == null ? "" : s));
+    g2.textContent = "Hey " + esc15(name) + " \u{1F44B}";
   }
   function renderHeaderCount() {
     const el = document.getElementById("evtHeaderCount");
@@ -3743,7 +5232,16 @@ Proceed to checkout?`;
     const upcoming = all.filter(
       (e) => e.status !== "cancelled" && e.status !== "draft" && new Date(e.start_date) >= now
     ).length;
-    const going = Object.values(rsvps).filter((r) => r.status === "going").length;
+    const going = all.filter((e) => {
+      const r = rsvps[e.id];
+      if (typeof globalThis.evtIsCommittedGoing === "function") {
+        return window.evtIsCommittedGoing(e, r);
+      }
+      if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+        return window.EventsHelpers.rsvpIsCommittedGoing(e, r);
+      }
+      return !!(r && (e.pricing_mode !== "paid" ? r.status === "going" : r.paid === true));
+    }).length;
     const parts = [];
     if (going) parts.push(going + " going");
     parts.push(upcoming + " upcoming");
@@ -3840,13 +5338,20 @@ Proceed to checkout?`;
     } catch (_) {
     }
   }
-  function syncTypeChips(type) {
-    const t = type || "all";
-    document.querySelectorAll("#evtTypeChips .evt-type-chip").forEach((c) => {
-      const on = (c.dataset.type || "all") === t;
-      c.classList.toggle("evt-type-chip--active", on);
-      c.setAttribute("aria-selected", on ? "true" : "false");
-    });
+  function syncTypeChips(_type) {
+  }
+  function syncFilterBtnActiveState() {
+    const menuBtn = document.getElementById("evtTypeMenuBtn");
+    if (!menuBtn) return;
+    const active = _activeType !== "all";
+    menuBtn.classList.toggle("evt-filter-btn--active", active);
+    menuBtn.dataset.type = _activeType || "all";
+    const labelEl = menuBtn.querySelector("[data-type-label]");
+    if (labelEl) labelEl.textContent = "Filters";
+    const dot = menuBtn.querySelector(".evt-filter-dot");
+    if (dot) dot.classList.toggle("hidden", !active);
+    const sel = document.getElementById("typeFilter");
+    if (sel) sel.value = _activeType || "all";
   }
   function applyRestoredUi() {
     const tab = window.evtActiveTab || "upcoming";
@@ -3857,30 +5362,22 @@ Proceed to checkout?`;
     });
     const menuBtn = document.getElementById("evtTypeMenuBtn");
     if (menuBtn) {
-      menuBtn.dataset.type = _activeType;
       const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + _activeType + '"]');
       if (opt) {
-        const label = opt.textContent.replace(/\s+events?$/i, "").trim();
-        const labelEl = menuBtn.querySelector("[data-type-label]");
-        if (labelEl) labelEl.textContent = label;
         document.querySelectorAll("#evtTypeMenu .evt-type-opt").forEach(
           (o) => o.classList.toggle("evt-type-opt--active", o === opt)
         );
       }
-      const sel = document.getElementById("typeFilter");
-      if (sel) sel.value = _activeType;
     }
-    syncTypeChips(_activeType);
+    syncFilterBtnActiveState();
     const q = api3().getSearchQuery?.() ?? "";
     if (q) {
       const input = document.getElementById("evtSearchInput");
       const clear = document.getElementById("evtSearchClear");
       const expand = document.getElementById("evtSearchExpand");
-      const toggle = document.getElementById("evtSearchToggle");
       if (input) input.value = q;
       if (clear) clear.classList.remove("hidden");
       if (expand) expand.classList.remove("hidden");
-      if (toggle) toggle.setAttribute("aria-expanded", "true");
     }
     api3().applyViewChrome?.();
   }
@@ -3896,17 +5393,28 @@ Proceed to checkout?`;
     const tab = window.evtActiveTab || "upcoming";
     const now = /* @__PURE__ */ new Date();
     const start = new Date(ev.start_date);
+    const endRaw = ev.end_date || ev.end_at || ev.ends_at;
+    const end = endRaw ? new Date(endRaw) : null;
+    const hasEnded = !!(end && !isNaN(end) && end < now);
+    const isLive = !isNaN(start) && start <= now && (!end || isNaN(end) || end >= now);
     const rsvps = window.evtAllRsvps || {};
     if (tab === "upcoming") {
-      if (ev.status === "completed") return false;
-      return start >= now || ev.status === "active" || ev.status === "open" || ev.status === "confirmed" || ev.status === "draft";
+      if (ev.status === "completed" || ev.status === "cancelled") return false;
+      if (hasEnded) return false;
+      return start >= now || isLive || ev.status === "active" || ev.status === "open" || ev.status === "confirmed" || ev.status === "draft";
     }
     if (tab === "past") {
-      return ev.status === "completed" || start < now;
+      return ev.status === "completed" || hasEnded || start < now;
     }
     if (tab === "going") {
       const r = rsvps[ev.id];
-      return r && r.status === "going";
+      if (typeof globalThis.evtIsCommittedGoing === "function") {
+        return window.evtIsCommittedGoing(ev, r);
+      }
+      if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+        return window.EventsHelpers.rsvpIsCommittedGoing(ev, r);
+      }
+      return !!(r && (ev.pricing_mode !== "paid" ? r.status === "going" : r.paid === true));
     }
     if (tab === "saved") {
       const r = rsvps[ev.id];
@@ -3960,10 +5468,10 @@ Proceed to checkout?`;
       host.innerHTML = "";
       return;
     }
-    const esc12 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc15 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
     const emoji = C3.CATEGORY_EMOJI && C3.CATEGORY_EMOJI[_activeCategory] || "\u{1F4C5}";
     const label = C3.CATEGORY_TAG && C3.CATEGORY_TAG[_activeCategory]?.label || _activeCategory;
-    host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold hover:bg-brand-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc12(label) + '</span><span aria-hidden="true" class="text-brand-500">\xD7</span><span class="sr-only">Clear ' + esc12(label) + " filter</span></button>";
+    host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-50 border border-primary-200 text-primary-700 text-xs font-semibold hover:bg-primary-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc15(label) + '</span><span aria-hidden="true" class="text-primary-500">\xD7</span><span class="sr-only">Clear ' + esc15(label) + " filter</span></button>";
     host.querySelector("[data-clear-cat]")?.addEventListener("click", () => {
       _activeCategory = "";
       persistState();
@@ -3984,16 +5492,10 @@ Proceed to checkout?`;
     api3().setSearchQuery?.("");
     _activeType = "all";
     _activeCategory = "";
-    const menuBtn = document.getElementById("evtTypeMenuBtn");
-    if (menuBtn) {
-      menuBtn.dataset.type = "all";
-      const labelEl = menuBtn.querySelector("[data-type-label]");
-      if (labelEl) labelEl.textContent = "All";
-    }
     document.querySelectorAll("#evtTypeMenu .evt-type-opt").forEach(
       (o) => o.classList.toggle("evt-type-opt--active", o.dataset.type === "all")
     );
-    syncTypeChips("all");
+    syncFilterBtnActiveState();
     persistState();
     api3().renderEvents?.();
   }
@@ -4056,6 +5558,7 @@ Proceed to checkout?`;
     });
     const menuBtn = document.getElementById("evtTypeMenuBtn");
     const menu = document.getElementById("evtTypeMenu");
+    const menuWrap = document.getElementById("evtTypeMenuBtnWrap");
     if (menuBtn && menu) {
       const closeMenu = () => {
         menu.classList.add("hidden");
@@ -4068,7 +5571,8 @@ Proceed to checkout?`;
         menuBtn.setAttribute("aria-expanded", String(willOpen));
       });
       document.addEventListener("click", (e) => {
-        if (!menu.contains(e.target) && e.target !== menuBtn) closeMenu();
+        if (menuWrap?.contains(e.target)) return;
+        closeMenu();
       });
       document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeMenu();
@@ -4076,49 +5580,16 @@ Proceed to checkout?`;
       menu.querySelectorAll(".evt-type-opt").forEach((opt) => {
         opt.addEventListener("click", () => {
           _activeType = opt.dataset.type || "all";
-          menuBtn.dataset.type = _activeType;
-          const label = opt.textContent.replace(/\s+events?$/i, "").trim();
-          const labelEl = menuBtn.querySelector("[data-type-label]");
-          if (labelEl) labelEl.textContent = label;
           menu.querySelectorAll(".evt-type-opt").forEach(
             (o) => o.classList.toggle("evt-type-opt--active", o === opt)
           );
-          const sel = document.getElementById("typeFilter");
-          if (sel) sel.value = _activeType;
-          syncTypeChips(_activeType);
+          syncFilterBtnActiveState();
           closeMenu();
           persistState();
           api3().renderEvents?.();
         });
       });
-    }
-    const chipRail = document.getElementById("evtTypeChips");
-    if (chipRail) {
-      chipRail.querySelectorAll(".evt-type-chip").forEach((chip) => {
-        chip.addEventListener("click", () => {
-          const t = chip.dataset.type || "all";
-          if (t === _activeType) return;
-          _activeType = t;
-          syncTypeChips(t);
-          const mBtn = document.getElementById("evtTypeMenuBtn");
-          if (mBtn) {
-            mBtn.dataset.type = t;
-            const opt = document.querySelector('#evtTypeMenu .evt-type-opt[data-type="' + t + '"]');
-            if (opt) {
-              const label = opt.textContent.replace(/\s+events?$/i, "").trim();
-              const labelEl = mBtn.querySelector("[data-type-label]");
-              if (labelEl) labelEl.textContent = label;
-              document.querySelectorAll("#evtTypeMenu .evt-type-opt").forEach(
-                (o) => o.classList.toggle("evt-type-opt--active", o === opt)
-              );
-            }
-          }
-          const sel = document.getElementById("typeFilter");
-          if (sel) sel.value = t;
-          persistState();
-          api3().renderEvents?.();
-        });
-      });
+      syncFilterBtnActiveState();
     }
     document.getElementById("emptyCreateBtn")?.addEventListener("click", () => {
       document.getElementById("createEventBtn")?.click();
@@ -4264,7 +5735,7 @@ Proceed to checkout?`;
   function renderCalendar() {
     const mount = document.getElementById("evtCalendarMount");
     if (!mount) return;
-    const esc12 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc15 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
     let calMonth = api4().getCalMonth?.();
     if (!calMonth) {
       const now = /* @__PURE__ */ new Date();
@@ -4282,7 +5753,7 @@ Proceed to checkout?`;
     const byDay = groupEventsByDay(all);
     const parts = [];
     parts.push(
-      '<div class="evt-cal-header flex items-center justify-between mb-3"><div class="flex items-center gap-1"><button type="button" class="evt-cal-nav" data-cal-nav="prev" aria-label="Previous month"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button><button type="button" class="evt-cal-nav" data-cal-nav="next" aria-label="Next month"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button></div><h3 class="evt-cal-title text-base font-semibold text-gray-900">' + MONTH_NAMES[month] + " " + year + '</h3><button type="button" class="evt-cal-today text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-1 rounded-md hover:bg-brand-50" data-cal-nav="today">Today</button></div>'
+      '<div class="evt-cal-header flex items-center justify-between mb-3"><div class="flex items-center gap-1"><button type="button" class="evt-cal-nav" data-cal-nav="prev" aria-label="Previous month"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></button><button type="button" class="evt-cal-nav" data-cal-nav="next" aria-label="Next month"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button></div><h3 class="evt-cal-title text-base font-semibold text-gray-900">' + MONTH_NAMES[month] + " " + year + '</h3><button type="button" class="evt-cal-today text-xs font-semibold text-primary hover:text-primary-700 px-2 py-1 rounded-md hover:bg-primary-50" data-cal-nav="today">Today</button></div>'
     );
     parts.push('<div class="evt-cal-weekdays grid grid-cols-7 gap-1 mb-1">');
     DAY_SHORT.forEach((d) => {
@@ -4304,15 +5775,15 @@ Proceed to checkout?`;
       if (hasEv) {
         const shown = dayEvents.slice(0, 3);
         dots = '<div class="evt-cal-dots">' + shown.map((ev) => {
-          const grad = C4.CATEGORY_GRADIENT && C4.CATEGORY_GRADIENT[ev.category] || C4.DEFAULT_GRADIENT || "linear-gradient(135deg,#6366f1,#8b5cf6)";
+          const grad = C4.CATEGORY_GRADIENT && C4.CATEGORY_GRADIENT[ev.category] || C4.DEFAULT_GRADIENT || "linear-gradient(135deg,#0B2545,#13366E)";
           const m = /#([0-9a-f]{3,6})/i.exec(grad);
-          const color = m ? "#" + m[1] : "#6366f1";
+          const color = m ? "#" + m[1] : "#13366E";
           return '<span class="evt-cal-dot" style="background:' + color + '"></span>';
         }).join("") + (count > 3 ? '<span class="evt-cal-dot-more">+' + (count - 3) + "</span>" : "") + "</div>";
       }
       const clsCell = "evt-cal-cell" + (hasEv ? " evt-cal-cell--has" : "") + (isToday ? " evt-cal-cell--today" : "");
       parts.push(
-        '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc12(dateObj.toDateString()) + '"' : 'aria-label="' + esc12(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
+        '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc15(dateObj.toDateString()) + '"' : 'aria-label="' + esc15(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
       );
     }
     parts.push("</div>");
@@ -4350,7 +5821,7 @@ Proceed to checkout?`;
       }
       return "background: linear-gradient(0deg, rgba(0,0,0,.65), rgba(0,0,0,.05) 55%), url('" + safe + "') center/cover;";
     }
-    const grad = C5.CATEGORY_GRADIENT && (C5.CATEGORY_GRADIENT[event.category] || C5.CATEGORY_GRADIENT.default) || "linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)";
+    const grad = C5.CATEGORY_GRADIENT && (C5.CATEGORY_GRADIENT[event.category] || C5.CATEGORY_GRADIENT.default) || "linear-gradient(135deg,#0B2545 0%,#13366E 100%)";
     return "background: " + grad + ";";
   }
   function renderHero(event, rsvp) {
@@ -4360,7 +5831,7 @@ Proceed to checkout?`;
       heroEl.innerHTML = "";
       return;
     }
-    const esc12 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc15 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const start = new Date(event.start_date);
     const rel = H3.relativeDate ? H3.relativeDate(start) : "";
     const time = H3.formatDate ? H3.formatDate(event.start_date, "time") : "";
@@ -4368,21 +5839,14 @@ Proceed to checkout?`;
     const loc = event.location_nickname || event.location_text || "";
     const stateP = (P.statePill ? P.statePill(event) : "") || "";
     const countP = (P.countdownChip ? P.countdownChip(event) : "") || "";
-    const goingRibbon = rsvp && rsvp.status === "going" ? '<div class="absolute top-3 left-3 z-10 inline-flex items-center gap-1 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md backdrop-blur-sm">\u2713 Going</div>' : "";
+    const goingRibbon = rsvp && (typeof globalThis.evtIsCommittedGoing === "function" ? window.evtIsCommittedGoing(event, rsvp) : window.EventsHelpers?.rsvpIsCommittedGoing?.(event, rsvp) || (event.pricing_mode === "paid" ? rsvp.paid === true : rsvp.status === "going")) ? '<div class="absolute top-3 left-3 z-10 inline-flex items-center gap-1 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md backdrop-blur-sm">\u2713 Going</div>' : "";
     const isFav = !!(rsvp && rsvp.status === "maybe");
     const heartCls = "evt-hero-heart" + (isFav ? " evt-hero-heart--on" : "");
     const heartPath = isFav ? '<path d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z" fill="currentColor"/>' : '<path stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none" d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z"/>';
-    const heartBtn = '<button type="button" data-evt-hero-heart="' + esc12(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
+    const heartBtn = '<button type="button" data-evt-hero-heart="' + esc15(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
     const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
     const useVlift = document.body.classList.contains("evt-vlift");
     if (useVlift) {
-      const dateLong = (() => {
-        try {
-          return start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-        } catch (_) {
-          return "";
-        }
-      })();
       const timeShort = time || (() => {
         try {
           return start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -4390,7 +5854,6 @@ Proceed to checkout?`;
           return "";
         }
       })();
-      const calIcon = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M3 9h18M8 3v4M16 3v4"/></svg>';
       const clkIcon = '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 2"/></svg>';
       const pinIcon = loc ? '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s7-7.58 7-13a7 7 0 10-14 0c0 5.42 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg>' : "";
       const _titleCase = (s) => {
@@ -4419,21 +5882,11 @@ Proceed to checkout?`;
           return "";
         }
       })();
-      const fDow = (() => {
-        try {
-          return start.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
-        } catch (_) {
-          return "";
-        }
-      })();
-      const descRaw = event.description ? String(event.description).trim() : "";
-      const descShort = descRaw.length > 180 ? descRaw.slice(0, 177) + "\u2026" : descRaw;
-      heroEl.innerHTML = '<div class="evt-hero-vlift relative"><a href="' + href + '" data-evt-hero="' + esc12(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event, true) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + "</div>" + // F14 — FEATURED EVENT kicker (vlift only; only shown when admin-featured)
-      (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : "") + // Bottom-edge dark fade for legibility
-      '<div class="evt-hero-fade absolute inset-x-0 bottom-0 pointer-events-none" aria-hidden="true"></div><div class="evt-hero-meta absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="evt-hero-datechip" data-f14-datechip aria-hidden="true">' + (fMon ? '<span class="evt-hero-datechip__mon">' + esc12(fMon) + "</span>" : "") + (fDay !== "" ? '<span class="evt-hero-datechip__day">' + esc12(fDay) + "</span>" : "") + (fDow ? '<span class="evt-hero-datechip__dow">' + esc12(fDow) + "</span>" : "") + '</div><div class="evt-hero-meta-body">' + // E7 — Avatar cluster
-      attendeeCluster(event.id) + '<h2 class="text-xl sm:text-4xl font-extrabold tracking-tight drop-shadow-md line-clamp-2">' + esc12(event.title || "Untitled event") + "</h2>" + // F14 — Host line
-      (hostLine ? '<p class="evt-hero-host" data-f14-host>' + esc12(hostLine) + "</p>" : "") + // F20 — Time + location on the same line
-      (timeShort || loc ? '<div class="evt-hero-timeloc" data-f14-timeloc>' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc12(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc12(loc) + "</span>" : "") + "</div>" : "") + '</div></div><div class="evt-hero-side" data-f14-side>' + (descShort ? '<p class="evt-hero-side__desc">' + esc12(descShort) + "</p>" : "") + '<span class="evt-hero-side__cta" data-f14-cta data-evt-hero-details="' + esc12(event.id) + '" role="button" aria-hidden="true">View Details</span></div></a><button type="button" data-evt-hero-cta="' + esc12(event.id) + '" class="evt-hero-cta" aria-label="View details for ' + esc12(event.title || "this event") + '">View Details</button></div>';
+      const quietDate = [fMon, fDay !== "" ? String(fDay) : ""].filter(Boolean).join(" ");
+      const clusterHtml = attendeeCluster(event.id);
+      const timelocHtml = timeShort || loc ? '<div class="evt-hero-panel__timeloc">' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc15(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc15(loc) + "</span>" : "") + "</div>" : "";
+      const ribbonHtml = goingRibbon ? goingRibbon.replace("top-3 left-3", event.is_featured ? "top-10 left-3" : "top-3 left-3") : "";
+      heroEl.innerHTML = '<div class="evt-hero-vlift evt-hero-vlift--panel"><a href="' + href + '" data-evt-hero="' + esc15(event.id) + '" class="evt-hero-media block relative overflow-hidden focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300" style="' + heroBg(event, true) + '" aria-label="' + esc15(event.title || "Featured event") + '">' + ribbonHtml + (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : "") + (quietDate ? '<span class="evt-hero-date-quiet" aria-hidden="true">' + esc15(quietDate) + "</span>" : "") + '</a><div class="evt-hero-panel"><h2 class="evt-hero-panel__title">' + esc15(event.title || "Untitled event") + "</h2>" + (hostLine ? '<p class="evt-hero-panel__host">' + esc15(hostLine) + "</p>" : "") + timelocHtml + (clusterHtml ? '<div class="evt-hero-panel__going">' + clusterHtml + "</div>" : "") + '<button type="button" data-evt-hero-cta="' + esc15(event.id) + '" class="evt-hero-panel__cta" aria-label="View details for ' + esc15(event.title || "this event") + '">View Details</button></div></div>';
       const ctaBtn = heroEl.querySelector("button[data-evt-hero-cta]");
       if (ctaBtn) {
         ctaBtn.addEventListener("click", (e) => {
@@ -4462,24 +5915,8 @@ Proceed to checkout?`;
           }
         });
       }
-      const heart = heroEl.querySelector("button[data-evt-hero-heart]");
-      if (heart) {
-        heart.addEventListener("click", async (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof window.evtHandleRsvp !== "function") return;
-          try {
-            heart.disabled = true;
-            await window.evtHandleRsvp(event.id, "maybe");
-          } catch (err) {
-            console.error("Hero heart toggle failed", err);
-          } finally {
-            heart.disabled = false;
-          }
-        });
-      }
     } else {
-      heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc12(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(79,70,229,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc12(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc12(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc12(loc) + "</p>" : "") + "</div></a>";
+      heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc15(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(19,54,110,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc15(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc15(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc15(loc) + "</p>" : "") + "</div></a>";
     }
     const link = heroEl.querySelector("a[data-evt-hero]");
     if (link) {
@@ -4497,18 +5934,18 @@ Proceed to checkout?`;
   function attendeeCluster(eventId2) {
     const list = window.evtAttendees && window.evtAttendees[eventId2] || [];
     if (!list.length) return "";
-    const esc12 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc15 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const bubs = list.slice(0, 5).map((p, i) => {
       const pic = p && p.profile_picture_url;
       const first = p && p.first_name || "";
       const initial = (first.trim().charAt(0) || "?").toUpperCase();
       const ml = i === 0 ? "" : " -ml-2";
-      const inner = pic ? '<img src="' + esc12(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc12(initial) + "</span>";
-      return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc12(first) + '">' + inner + "</span>";
+      const inner = pic ? '<img src="' + esc15(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc15(initial) + "</span>";
+      return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc15(first) + '">' + inner + "</span>";
     }).join("");
     const trueCount = window.evtAttendeeCounts && window.evtAttendeeCounts[eventId2] || list.length;
     const labelN = String(trueCount);
-    return '<button type="button" data-evt-hero-going="' + esc12(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
+    return '<button type="button" data-evt-hero-going="' + esc15(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
   }
   function renderLiveBanner(events) {
     const el = document.getElementById("evtLiveBanner");
@@ -4527,12 +5964,12 @@ Proceed to checkout?`;
       el.innerHTML = "";
       return;
     }
-    const esc12 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc15 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const first = live[0];
-    const label = live.length === 1 ? esc12(first.title || "An event") + " is happening now" : live.length + " events happening now";
+    const label = live.length === 1 ? esc15(first.title || "An event") + " is happening now" : live.length + " events happening now";
     const href = live.length === 1 && first.slug ? "?event=" + encodeURIComponent(first.slug) : "javascript:void(0)";
     el.classList.remove("hidden");
-    el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc12(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
+    el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc15(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
     const link = el.querySelector("a[data-evt-live]");
     if (link && live.length === 1) {
       link.addEventListener("click", (e) => {
@@ -4556,7 +5993,8 @@ Proceed to checkout?`;
       if (e.status === "cancelled" || e.status === "draft") return false;
       if (api5().notHidden && !api5().notHidden(e)) return false;
       const r = rsvps[e.id];
-      if (!r || r.status !== "going") return false;
+      const committed = typeof globalThis.evtIsCommittedGoing === "function" ? window.evtIsCommittedGoing(e, r) : window.EventsHelpers?.rsvpIsCommittedGoing?.(e, r) || !!(r && (e.pricing_mode !== "paid" ? r.status === "going" : r.paid === true));
+      if (!committed) return false;
       return new Date(e.start_date) >= now;
     }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
     if (!going.length) {
@@ -4583,27 +6021,27 @@ Proceed to checkout?`;
     });
   }
   function miniCard(event, attendees, goingCount) {
-    const esc12 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc15 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const d = new Date(event.start_date);
     const day = d.getDate();
     const mon = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
     const rel = H3.relativeDate ? H3.relativeDate(d) : "";
     const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
-    const title = esc12(event.title || "Untitled event");
+    const title = esc15(event.title || "Untitled event");
     const loc = event.location_nickname || event.location_text || "";
     let bannerStyle;
     if (event.banner_url) {
       const safe = String(event.banner_url).replace(/'/g, "%27");
       bannerStyle = "background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55)), url('" + safe + "') center/cover;";
     } else {
-      const grad = C5.CATEGORY_GRADIENT && (C5.CATEGORY_GRADIENT[event.category] || C5.DEFAULT_GRADIENT) || "linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)";
+      const grad = C5.CATEGORY_GRADIENT && (C5.CATEGORY_GRADIENT[event.category] || C5.DEFAULT_GRADIENT) || "linear-gradient(135deg,#0B2545 0%,#13366E 100%)";
       bannerStyle = "background: " + grad + ";";
     }
     const attCount = goingCount != null ? goingCount : (attendees || []).length;
     const attLine = attCount ? '<span class="text-[11px] text-gray-500 truncate">' + attCount + " going</span>" : "";
     const isPinnedLlc = event.is_pinned && event.event_type === "llc";
     const pin = isPinnedLlc ? '<span class="evt-date-pin evt-date-pin--mini" aria-label="Pinned LLC event" title="Pinned">\u{1F4CC}</span>' : "";
-    return '<a href="' + href + '" data-evt-mini="' + esc12(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-brand-600 mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc12(rel) : "") + (loc && rel ? " \xB7 " : "") + esc12(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
+    return '<a href="' + href + '" data-evt-mini="' + esc15(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-primary mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc15(rel) : "") + (loc && rel ? " \xB7 " : "") + esc15(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
   }
   function renderTopPicks(events, attendees, heroId, eventsById) {
     const rail = document.getElementById("evtTopPicks");
@@ -4736,9 +6174,9 @@ Proceed to checkout?`;
     let headerLink = "";
     if (useVlift && total > E_BUCKET_TRUNCATE) {
       if (truncated) {
-        headerLink = '<button type="button" data-evt-bucket-toggle="' + slug + '" class="evt-bucket-seeall text-xs font-semibold text-brand-600 hover:text-brand-700">See all (' + total + ") \u2192</button>";
+        headerLink = '<button type="button" data-evt-bucket-toggle="' + slug + '" class="evt-bucket-seeall text-xs font-semibold text-primary hover:text-primary-700">See all (' + total + ") \u2192</button>";
       } else {
-        headerLink = '<button type="button" data-evt-bucket-toggle="' + slug + '" class="evt-bucket-seeall text-xs font-semibold text-brand-600 hover:text-brand-700">Show less \u2191</button>';
+        headerLink = '<button type="button" data-evt-bucket-toggle="' + slug + '" class="evt-bucket-seeall text-xs font-semibold text-primary hover:text-primary-700">Show less \u2191</button>';
       }
     }
     const headerCls = useVlift ? "evt-bucket-head flex items-end justify-between mb-3" : "";
@@ -5249,24 +6687,32 @@ Proceed to checkout?`;
       globalThis.evtAttendees = {};
       globalThis.evtAttendeeCounts = {};
       if (ids.length) {
+        const pricingById = Object.fromEntries(
+          (window.evtAllEvents || []).map((e) => [e.id, e.pricing_mode === "paid"])
+        );
         const [{ data: going, error: aErr }, { data: guestGoing, error: gErr }] = await Promise.all([
-          supabaseClient.from("event_rsvps").select("event_id, profiles:user_id(profile_picture_url, first_name)").eq("status", "going").in("event_id", ids),
+          supabaseClient.from("event_rsvps").select("event_id, status, paid, profiles:user_id(profile_picture_url, first_name)").eq("status", "going").in("event_id", ids),
           supabaseClient.from("event_guest_rsvps").select("event_id, status, paid").in("event_id", ids)
         ]);
         if (!aErr && going) {
           going.forEach((row) => {
             var _a, _b;
-            if (!row.profiles) return;
-            const list = (_a = window.evtAttendees)[_b = row.event_id] || (_a[_b] = []);
-            if (list.length < 5) list.push(row.profiles);
+            const isPaidEvent = !!pricingById[row.event_id];
+            const committed = isPaidEvent ? row.paid === true : row.status === "going" || row.paid === true;
+            if (!committed) return;
+            if (row.profiles) {
+              const list = (_a = window.evtAttendees)[_b = row.event_id] || (_a[_b] = []);
+              if (list.length < 5) list.push(row.profiles);
+            }
             window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
           });
         }
         if (!gErr && guestGoing) {
           guestGoing.forEach((row) => {
-            if (row.status === "going" || row.paid === true) {
-              window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
-            }
+            const isPaidEvent = !!pricingById[row.event_id];
+            const committed = isPaidEvent ? row.paid === true : row.status === "going" || row.paid === true;
+            if (!committed) return;
+            window.evtAttendeeCounts[row.event_id] = (window.evtAttendeeCounts[row.event_id] || 0) + 1;
           });
         }
       }
@@ -5642,9 +7088,6 @@ Proceed to checkout?`;
     if (!canCreate) return;
     fab.classList.remove("hidden");
     fab.classList.add("flex");
-    fab.addEventListener("click", () => {
-      document.getElementById("createEventBtn")?.click();
-    });
     let lastY = window.scrollY || 0;
     let ticking = false;
     const TH = 8;
@@ -5875,37 +7318,10 @@ Proceed to checkout?`;
   };
   function _initMobileFilterStrip() {
     const searchExpand = document.getElementById("evtSearchExpand");
-    const mSearchHost = document.getElementById("evtMobileSearchHost");
     const filterRow2 = document.getElementById("evtFilterRow2");
-    if (!searchExpand || !mSearchHost) return;
-    if (!searchExpand.dataset.dHome) {
-      searchExpand.dataset.dHome = "1";
-      searchExpand._dHomeParent = searchExpand.parentElement;
-      searchExpand._dHomeNext = searchExpand.nextSibling;
-    }
-    const mq = window.matchMedia("(max-width: 639px)");
-    const apply = () => {
-      if (mq.matches) {
-        if (searchExpand.parentElement !== mSearchHost) {
-          mSearchHost.appendChild(searchExpand);
-        }
-        searchExpand.classList.remove("hidden", "mt-2");
-        if (filterRow2) filterRow2.classList.add("hidden");
-      } else {
-        if (searchExpand.parentElement !== searchExpand._dHomeParent) {
-          searchExpand._dHomeParent.insertBefore(
-            searchExpand,
-            searchExpand._dHomeNext && searchExpand._dHomeNext.parentElement === searchExpand._dHomeParent ? searchExpand._dHomeNext : null
-          );
-          if (!_searchQuery) searchExpand.classList.add("hidden");
-          searchExpand.classList.add("mt-2");
-        }
-        if (filterRow2) filterRow2.classList.remove("hidden");
-      }
-    };
-    apply();
-    if (mq.addEventListener) mq.addEventListener("change", apply);
-    else if (mq.addListener) mq.addListener(apply);
+    if (!searchExpand || !filterRow2) return;
+    searchExpand.classList.remove("hidden");
+    filterRow2.classList.remove("hidden");
   }
   function _onReady() {
     const groupsEl = document.getElementById("evtGroups");
@@ -5967,10 +7383,10 @@ Proceed to checkout?`;
     "max-lg:backdrop-blur-sm"
   ].join(" ");
   var TW_CTA_ACTIONS = "evt-cta-actions max-lg:flex max-lg:shrink-0 max-lg:items-center max-lg:justify-center max-lg:gap-2.5 max-lg:px-4 max-lg:py-3 max-lg:pb-[max(12px,env(safe-area-inset-bottom))] hidden";
-  var TW_CTA_RSVP = "bg-indigo-600 text-white";
+  var TW_CTA_RSVP = "bg-primary text-white";
   var TW_CTA_RSVP_DONE = "bg-green-600 text-white";
-  var TW_CTA_MANAGE = "bg-indigo-600 text-white";
-  var TW_CTA_TEAM = "bg-white text-indigo-600 !border-2 !border-indigo-200";
+  var TW_CTA_MANAGE = "bg-primary text-white";
+  var TW_CTA_TEAM = "bg-white text-primary !border-2 !border-primary-200";
   var TW_CTA_RAFFLE = "bg-gradient-to-br from-amber-500 to-amber-600 text-white";
   var TW_CTA_RAFFLE_OUTLINE = "bg-white text-amber-600 !border-2 !border-amber-300";
   var TW_CTA_RAFFLE_DONE = "bg-green-600 text-white";
@@ -6001,7 +7417,7 @@ Proceed to checkout?`;
             <div id="etSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
                 <header id="etSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
                     <div class="flex-1 min-w-0">
-                        <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Event Team</p>
+                        <p class="text-[11px] uppercase tracking-wide font-bold" style="color:var(--color-primary, #13366E)">Event Team</p>
                         <h2 id="etSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">\u2026</h2>
                         <p id="etSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
                     </div>
@@ -6019,7 +7435,7 @@ Proceed to checkout?`;
             #etSheetContent.et-sheet-content-chat { overflow:hidden; display:flex; flex-direction:column; min-height:0; padding-bottom:0; }
             .et-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; background:none; border-top:none; border-left:none; border-right:none; }
             .et-tab:hover { color:#374151; }
-            .et-tab.active { color:#4f46e5; border-bottom-color:#4f46e5; }
+            .et-tab.active { color:var(--color-primary, #13366E); border-bottom-color:var(--color-primary, #13366E); }
             .em-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; }
             .em-op-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
             .em-op-card { min-height:120px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:box-shadow .15s,border-color .15s; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; background:#fff; text-align:left; width:100%; }
@@ -6030,8 +7446,8 @@ Proceed to checkout?`;
             .em-section-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
             .em-section-title { margin:0; color:#111827; font-size:14px; font-weight:850; }
             .em-section-sub { margin:3px 0 0; color:#94a3b8; font-size:12px; line-height:1.4; }
-            .em-btn-primary { background:#4f46e5; color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; width:100%; }
-            .em-btn-primary:hover { background:#4338ca; }
+            .em-btn-primary { background:var(--color-primary, #13366E); color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; width:100%; }
+            .em-btn-primary:hover { background:var(--color-primary-hover, #0f2d5c); }
             .em-btn-ghost { background:#f3f4f6; color:#374151; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
             .em-btn-ghost:hover { background:#e5e7eb; }
             .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
@@ -6131,8 +7547,16 @@ Proceed to checkout?`;
   globalThis.EventsTeamShell = teamShellApi;
 
   // js/portal/events/team/panels.js
-  function memberGoing(rsvp) {
-    return typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+  function memberCommittedGoing(event, rsvp) {
+    if (typeof globalThis.evtIsCommittedGoing === "function") {
+      return window.evtIsCommittedGoing(event, rsvp);
+    }
+    if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+      return window.EventsHelpers.rsvpIsCommittedGoing(event, rsvp);
+    }
+    if (!rsvp) return false;
+    if (event?.pricing_mode === "paid") return rsvp.paid === true;
+    return !!(rsvp.status === "going" || rsvp.paid === true);
   }
   function backBtnHtml(variant) {
     if (variant !== "sheet") return "";
@@ -6140,9 +7564,32 @@ Proceed to checkout?`;
   }
   function ticketHtml(event, rsvp, opts = {}) {
     const { variant = "sheet", canvasId = "evtTeamTicketQR" } = opts;
-    const going = memberGoing(rsvp);
+    const going = memberCommittedGoing(event, rsvp);
+    const unpaidPrep = !!(event?.pricing_mode === "paid" && rsvp?.status === "going" && !going);
     const hasQr = going && rsvp?.qr_token && event.checkin_mode === "attendee_ticket";
     const title = evtEscapeHtml(event.title || "Event");
+    if (unpaidPrep) {
+      return `
+        ${backBtnHtml(variant)}
+        <div class="em-section-head">
+            <div>
+                <p class="em-section-title">Continue RSVP</p>
+                <p class="em-section-sub">${title}</p>
+            </div>
+        </div>
+        <div class="ed-notice"><span class="ed-notice-emoji">\u{1F4B3}</span><div><p class="ed-notice-title">Payment not finished</p><p class="ed-notice-sub">Complete checkout to confirm your spot and unlock your ticket.</p></div></div>`;
+    }
+    if (!going) {
+      return `
+        ${backBtnHtml(variant)}
+        <div class="em-section-head">
+            <div>
+                <p class="em-section-title">Not going yet</p>
+                <p class="em-section-sub">${title}</p>
+            </div>
+        </div>
+        <div class="ed-notice"><span class="ed-notice-emoji">\u{1F39F}\uFE0F</span><div><p class="ed-notice-title">RSVP first</p><p class="ed-notice-sub">Your ticket appears here once you are confirmed going.</p></div></div>`;
+    }
     const qrBlock = hasQr ? `<canvas id="${canvasId}"></canvas><p class="text-xs text-gray-500 mt-2">Show this QR code at check-in</p>` : `<div class="ed-notice"><span class="ed-notice-emoji">\u2705</span><div><p class="ed-notice-title">You are on the RSVP list</p><p class="ed-notice-sub">No QR ticket is required for this event.</p></div></div>`;
     return `
         ${backBtnHtml(variant)}
@@ -6157,7 +7604,7 @@ Proceed to checkout?`;
   function raffleHtml(event, eventId2, rsvp, opts = {}) {
     const { variant = "sheet" } = opts;
     const back = backBtnHtml(variant);
-    const going = memberGoing(rsvp);
+    const going = memberCommittedGoing(event, rsvp);
     const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && event.rsvp_enabled !== false;
     if (raffleBundled) {
       return `
@@ -6196,7 +7643,7 @@ Proceed to checkout?`;
   }
   async function wireTicketQr(event, rsvp, opts = {}) {
     const { canvasId = "evtTeamTicketQR" } = opts;
-    const going = memberGoing(rsvp);
+    const going = memberCommittedGoing(event, rsvp);
     const hasQr = going && rsvp?.qr_token && event.checkin_mode === "attendee_ticket";
     if (!hasQr) return;
     const canvas = document.getElementById(canvasId);
@@ -6287,7 +7734,7 @@ Proceed to checkout?`;
   var CHAT_ROW_SENT = "mb-0.5 flex max-w-[78%] flex-col items-end self-end";
   var CHAT_ROW_RECV = "mb-1 flex max-w-[88%] items-end gap-1.5 self-start";
   var CHAT_RECV_COL = "flex min-w-0 flex-1 flex-col items-start";
-  var CHAT_AVATAR = "evt-chat-avatar flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
+  var CHAT_AVATAR = "evt-chat-avatar flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 [&_img]:h-full [&_img]:w-full [&_img]:object-cover";
   var CHAT_AVATAR_HIDDEN = "invisible pointer-events-none";
   var CHAT_SENDER = "mb-0.5 px-3 text-[11px] font-semibold leading-tight text-gray-400";
   var CHAT_BUBBLE = "break-words whitespace-pre-wrap px-3 py-2 text-base leading-snug rounded-[18px]";
@@ -6328,7 +7775,7 @@ Proceed to checkout?`;
     const name = evtEscapeHtml(displayName(profile));
     const initials = evtEscapeHtml(profileInitials(profile));
     const url = profile?.profile_picture_url;
-    const inner = url ? `<img src="${evtEscapeHtml(url)}" alt="" loading="lazy">` : `<span class="text-[11px] font-bold leading-none text-indigo-600">${initials}</span>`;
+    const inner = url ? `<img src="${evtEscapeHtml(url)}" alt="" loading="lazy">` : `<span class="text-[11px] font-bold leading-none text-primary">${initials}</span>`;
     const spacerCls = spacer ? ` ${CHAT_AVATAR_HIDDEN}` : "";
     return `<div class="${CHAT_AVATAR}${spacerCls}" aria-hidden="${spacer ? "true" : "false"}" title="${name}">${inner}</div>`;
   }
@@ -6715,7 +8162,7 @@ Proceed to checkout?`;
     const entryFee = event.competition_config?.entry_fee_cents || 0;
     const showCompJoin = isCompetition && !isHost && !teamHubAccess && displayPhaseNum <= 1 && !isClosed;
     const showCompSubmit = isCompetition && !isHost && !teamHubAccess && submissionOpen && !!myCompetitionEntry && !isClosed;
-    const memberGoingNav = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+    const memberGoingNav = typeof globalThis.evtIsCommittedGoing === "function" ? window.evtIsCommittedGoing(event, rsvp) : window.EventsHelpers?.rsvpIsCommittedGoing?.(event, rsvp) || !!(rsvp && (event.pricing_mode === "paid" ? rsvp.paid === true : rsvp.status === "going" || rsvp.paid === true));
     const voterCtx = { hasRsvp: memberGoingNav, hasCompEntry: !!myCompetitionEntry };
     const voterEligible = compPh.isVoterEligible ? compPh.isVoterEligible(event.competition_config || {}, voterCtx) : true;
     const showCompVote = isCompetition && !isHost && !teamHubAccess && votingOpen && voterEligible && !isClosed;
@@ -6751,24 +8198,18 @@ Proceed to checkout?`;
         }
       }
       if (rsvpEnabled) {
-        if (rsvp?.paid) {
-          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP_DONE}" ${evtDataAction("evtOpenCtaPanel", "ticket", eventId2)}>${EVT_CTA_ICONS.ticket} RSVP'd \xB7 Ticket</button>`;
-        } else if (rsvp?.status === "going" && event.pricing_mode === "paid") {
-          const detailRoot = document.getElementById("eventsDetailView") || document;
-          const role = window.EventsPartySeats && typeof window.EventsPartySeats.readPayerRoleFromRoot === "function" ? window.EventsPartySeats.readPayerRoleFromRoot(detailRoot) : window.EventsSeatPicker && typeof window.EventsSeatPicker.readRoleFromRoot === "function" ? window.EventsSeatPicker.readRoleFromRoot(detailRoot) : "adult";
-          let partyTotal = null;
-          if (window.EventsPartySeats && typeof window.EventsPartySeats.partyBaseTotalCents === "function") {
-            const seats = window.EventsPartySeats.readSeatsFromRoot(detailRoot, event);
-            partyTotal = window.EventsPartySeats.partyBaseTotalCents(event, seats);
-          }
-          const label = window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === "function" ? window.EventsHelpers.rsvpPayButtonLabel(event, role, {
-            mode: "complete",
-            audience: "member",
-            ...partyTotal != null ? { partyTotalCents: partyTotal } : {}
-          }) : "Complete Payment";
-          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction("evtHandleRsvp", eventId2, "going")}>${label}</button>`;
-        } else if (rsvp?.status === "going") {
-          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP_DONE}" ${evtDataAction("evtOpenCtaPanel", "ticket", eventId2)}>${EVT_CTA_ICONS.ticket} Going \xB7 Ticket</button>`;
+        const plan = (globalThis.evtMyPaymentPlans || {})[eventId2] || null;
+        const hasDraft = !!window.EventsRsvpWizard?.hasDraft?.(eventId2, "member");
+        const cta = window.EventsHelpers?.rsvpCtaState ? window.EventsHelpers.rsvpCtaState(event, { rsvp, plan, hasDraft }) : null;
+        if (cta?.kind === "going") {
+          const cancelBtn = cta.showCancel ? `<button type="button" class="${TW_CTA_BTN} ed-cta-cancel-btn" ${evtDataAction("evtCancelMyParticipation", eventId2)} aria-label="${cta.cancelLabel || "Cancel"}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span>${cta.cancelLabel || "Cancel"}</span>
+                       </button>` : "";
+          const sub = cta.subLabel ? ` \xB7 ${cta.subLabel}` : "";
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP_DONE}" ${evtDataAction("evtOpenCtaPanel", "ticket", eventId2)}>${EVT_CTA_ICONS.ticket} ${cta.label}${sub}</button>${cancelBtn}`;
+        } else if (cta?.kind === "continue") {
+          primaryBtn = `<button class="${TW_CTA_BTN} ${TW_CTA_RSVP}" ${evtDataAction("evtHandleRsvp", eventId2, "going")}>Continue RSVP</button>`;
         } else if (canRsvp && !eventIsFull && event.pricing_mode === "paid") {
           const adultPrice = typeof globalThis.evtDetailAdultPriceCents === "function" ? globalThis.evtDetailAdultPriceCents(event) : event.adult_price_cents ?? event.rsvp_cost_cents ?? 0;
           const kidsPricingVaries = event.kids_free !== false || event.kid_price_cents != null && Number(event.kid_price_cents) !== Number(adultPrice);
@@ -6784,7 +8225,7 @@ Proceed to checkout?`;
       }
       if (raffleEnabled) {
         const raffleIncluded = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
-        const memberGoingNav2 = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+        const memberGoingNav2 = typeof globalThis.evtIsCommittedGoing === "function" ? window.evtIsCommittedGoing(event, rsvp) : window.EventsHelpers?.rsvpIsCommittedGoing?.(event, rsvp) || !!(rsvp && (event.pricing_mode === "paid" ? rsvp.paid === true : rsvp.status === "going" || rsvp.paid === true));
         if (!raffleIncluded) {
           const hasPrimary = !!primaryBtn;
           const activeCls = hasPrimary ? TW_CTA_RAFFLE_OUTLINE : TW_CTA_RAFFLE;
@@ -7263,10 +8704,23 @@ Proceed to checkout?`;
       supabaseClient.from("event_rsvps").select("user_id, status, paid, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
       supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, status, paid").eq("event_id", eventId2)
     ]);
-    const goingList = (rsvps || []).filter((r) => typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(r) : r.status === "going" || r.paid === true);
+    const goingList = (rsvps || []).filter((r) => {
+      if (typeof globalThis.evtIsCommittedGoing === "function") {
+        return window.evtIsCommittedGoing(event, r);
+      }
+      if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+        return window.EventsHelpers.rsvpIsCommittedGoing(event, r);
+      }
+      return event.pricing_mode === "paid" ? r.paid === true : r.status === "going" || r.paid === true;
+    });
     const maybeList = (rsvps || []).filter((r) => r.status === "maybe");
     const notGoingList = (rsvps || []).filter((r) => r.status === "not_going");
-    const guestGoingList = (guestRsvps || []).filter((g2) => g2.status === "going" || g2.paid === true);
+    const guestGoingList = (guestRsvps || []).filter((g2) => {
+      if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+        return window.EventsHelpers.rsvpIsCommittedGoing(event, g2);
+      }
+      return event.pricing_mode === "paid" ? g2.paid === true : g2.status === "going" || g2.paid === true;
+    });
     const { data: checkins, count: checkinCount } = await supabaseClient.from("event_checkins").select("user_id, profiles!event_checkins_user_id_fkey(first_name, last_name, profile_picture_url)", { count: "exact" }).eq("event_id", eventId2);
     let costItems = [];
     if (isLlc) {
@@ -7330,8 +8784,8 @@ Proceed to checkout?`;
     const cpInitials = creatorProfile ? ((creatorProfile.first_name || "?")[0] + (creatorProfile.last_name || "")[0]).toUpperCase() : "";
     const cpBadge = creatorProfile ? evtBadgeChip(creatorProfile.displayed_badge) : "";
     const cpTitle = creatorProfile ? creatorProfile.title || "Member" : "";
-    const memberGoing2 = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
-    const hasRsvp = rsvp && (memberGoing2 || rsvp.status === "maybe");
+    const memberGoing = typeof globalThis.evtIsCommittedGoing === "function" ? window.evtIsCommittedGoing(event, rsvp) : window.EventsHelpers?.rsvpIsCommittedGoing ? window.EventsHelpers.rsvpIsCommittedGoing(event, rsvp) : event.pricing_mode === "paid" ? !!(rsvp && rsvp.paid === true) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+    const hasRsvp = rsvp && (memberGoing || rsvp.status === "maybe");
     let memberPhone = null;
     let eventSmsRecipient = null;
     const { data: memberProfile } = await supabaseClient.from("profiles").select("phone").eq("id", globalThis.evtCurrentUser.id).maybeSingle();
@@ -7353,18 +8807,48 @@ Proceed to checkout?`;
     const entriesClosed = isClosed || isPast || deadlinePassed;
     const rsvpEnabled = event.rsvp_enabled !== false;
     const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
-    const eventIsFull = isLlc && event.max_participants && goingList.length >= event.max_participants;
+    const Cap = window.EventsCapacity;
+    const occupiedForCap = Cap && typeof Cap.countOccupiedCapacity === "function" ? Cap.countOccupiedCapacity(event, { goingList }) : goingList.length;
+    const eventIsFull = Cap && typeof Cap.eventIsAtCapacity === "function" ? Cap.eventIsAtCapacity(event, occupiedForCap) : false;
     let amenityVoteConfig = null;
     let amenityVoteTallies = null;
     if (!isComp && window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === "function") {
       amenityVoteConfig = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
       if (amenityVoteConfig.enabled) {
-        const { data: voteRows } = await supabaseClient.from("event_parties").select("amenity_vote_option_id, amenity_vote_status").eq("event_id", eventId2).eq("amenity_vote_status", "counted");
-        amenityVoteTallies = window.EventsAmenityVoting.tallyCounts(
-          voteRows || [],
-          amenityVoteConfig.options.map((o) => o.id)
-        );
+        const { data: tallyPayload, error: tallyErr } = await supabaseClient.rpc("get_event_amenity_vote_tallies", { p_event_id: eventId2 });
+        if (tallyErr) {
+          console.warn("Amenity tallies RPC failed", tallyErr);
+        }
+        const rawTallies = tallyPayload && tallyPayload.tallies || {};
+        const mapped = {};
+        for (const opt of amenityVoteConfig.options) {
+          mapped[opt.id] = Number(rawTallies[opt.id]) || 0;
+        }
+        for (const [id, n] of Object.entries(rawTallies)) {
+          if (!(id in mapped)) mapped[id] = Number(n) || 0;
+        }
+        amenityVoteTallies = mapped;
       }
+    }
+    let myPaymentPlan = null;
+    let myInstallmentsPaid = null;
+    let myInstallmentsTotal = null;
+    if (event.pricing_mode === "paid" && globalThis.evtCurrentUser?.id) {
+      const { data: parties } = await supabaseClient.from("event_parties").select("id, status").eq("event_id", eventId2).eq("payer_user_id", globalThis.evtCurrentUser.id).neq("status", "cancelled").order("created_at", { ascending: false }).limit(1);
+      const partyId = parties?.[0]?.id;
+      if (partyId) {
+        const { data: plan } = await supabaseClient.from("event_payment_plans").select("id, party_id, plan_kind, method, status, amount_paid_cents, remaining_cents, total_due_cents, next_debit_at").eq("party_id", partyId).maybeSingle();
+        myPaymentPlan = plan || null;
+        if (plan?.id) {
+          const { data: instRows } = await supabaseClient.from("event_payment_installments").select("id, status, sequence").eq("plan_id", plan.id);
+          const rows = instRows || [];
+          const countable = rows.filter((r) => r.status !== "cancelled");
+          myInstallmentsTotal = countable.length || null;
+          myInstallmentsPaid = countable.filter((r) => r.status === "succeeded").length;
+        }
+      }
+      globalThis.evtMyPaymentPlans = globalThis.evtMyPaymentPlans || {};
+      globalThis.evtMyPaymentPlans[eventId2] = myPaymentPlan;
     }
     return {
       eventId: eventId2,
@@ -7402,7 +8886,7 @@ Proceed to checkout?`;
       cpInitials,
       cpBadge,
       cpTitle,
-      memberGoing: memberGoing2,
+      memberGoing,
       hasRsvp,
       documentsHtml,
       mapHtml,
@@ -7421,7 +8905,10 @@ Proceed to checkout?`;
       memberPhone,
       eventSmsRecipient,
       amenityVoteConfig,
-      amenityVoteTallies
+      amenityVoteTallies,
+      myPaymentPlan,
+      myInstallmentsPaid,
+      myInstallmentsTotal
     };
   }
   globalThis.evtLoadDetailContext = evtLoadDetailContext;
@@ -7492,16 +8979,19 @@ Proceed to checkout?`;
   }
   function evtBuildDetailIncludedCatalogHtml(ctx) {
     const { event } = ctx;
-    if (!event || !window.EventsIncludedItems || typeof window.EventsIncludedItems.catalogListHtml !== "function") {
-      return "";
-    }
-    const listHtml = window.EventsIncludedItems.catalogListHtml(event.included_items);
-    if (!listHtml) return "";
+    if (!event || !window.EventsIncludedItems) return "";
+    const list = typeof window.EventsIncludedItems.normalizeIncludedItems === "function" ? window.EventsIncludedItems.normalizeIncludedItems(event.included_items) : [];
+    if (!list.length) return "";
+    const names = list.map((item) => String(item.name || "").trim()).filter(Boolean);
+    if (!names.length) return "";
+    let label;
+    if (names.length === 1) label = names[0];
+    else if (names.length === 2) label = `${names[0]} and ${names[1]}`;
+    else label = `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]}`;
+    const safe = typeof evtEscapeHtml === "function" ? evtEscapeHtml(label) : String(label).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return `
-        <div class="ed-included-catalog">
-            <p class="ed-about-heading" style="margin-top:16px">What&apos;s included</p>
-            <p class="ed-hint" style="margin-bottom:10px">Options you&apos;ll choose during RSVP.</p>
-            ${listHtml}
+        <div class="ed-included-catalog ed-included-teaser">
+            <p class="ed-hint" style="margin-top:14px;margin-bottom:0">You&apos;ll choose ${safe} when you RSVP.</p>
         </div>`;
   }
   function evtBuildDetailAmenityResultsHtml(ctx) {
@@ -7513,13 +9003,12 @@ Proceed to checkout?`;
     const showCtx = { isHost: hostLike, canManageEvent: hostLike, now: /* @__PURE__ */ new Date() };
     const canShow = window.EventsAmenityVoting.canShowResults(cfg, showCtx);
     const tallies = amenityVoteTallies || {};
-    if (!canShow) {
-      const pending = window.EventsAmenityVoting.pendingMessageHtml(cfg);
-      return pending ? `<div class="ed-amenity-results">${pending}</div>` : "";
-    }
+    if (!canShow) return "";
     const inner = window.EventsAmenityVoting.resultsHtml(cfg, tallies, { isHost: hostLike });
     if (!inner) return "";
-    const hint = hostLike && window.EventsAmenityVoting.totalVotes(tallies) <= 0 ? "" : '<p class="ed-hint ed-amenity-rsvp-hint">Cast your vote when you RSVP.</p>';
+    const votingClosed = window.EventsAmenityVoting.isVotingClosed(cfg);
+    const total = window.EventsAmenityVoting.totalVotes(tallies);
+    const hint = !hostLike && !votingClosed && total > 0 ? '<p class="ed-hint ed-amenity-rsvp-hint">Cast your vote when you RSVP.</p>' : "";
     return `<div class="ed-amenity-results">${inner}${hint}</div>`;
   }
   function evtReadSeatRoleForDetail(eventId2) {
@@ -7565,6 +9054,44 @@ Proceed to checkout?`;
     const choice = window.EventsPaymentChoice.readFromRoot(root2 || document);
     return window.EventsPaymentChoice.displayTotalCents(event, choice, base);
   }
+  function evtMemberRsvpStackBtnHtml(eventId2, cents, opts) {
+    const options = opts && typeof opts === "object" ? opts : {};
+    const amount = Math.max(0, Number(cents) || 0);
+    const primary = options.label || (options.complete ? "Continue RSVP" : "RSVP");
+    const priceHtml = amount > 0 ? `<span class="ed-rsvp-stack-price">${formatCurrency(amount)}</span>` : options.subLabel ? `<span class="ed-rsvp-stack-price">${options.subLabel}</span>` : "";
+    return `<button type="button" id="evtMemberRsvpPayBtn-${eventId2}" ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-primary-btn ed-rsvp-stack-btn">
+            <span class="ed-rsvp-stack-label">${primary}</span>
+            ${priceHtml}
+        </button>`;
+  }
+  function evtMemberRsvpCancelBtnHtml(eventId2, cancelMode) {
+    if (!cancelMode) return "";
+    const label = cancelMode === "remove" ? "Remove RSVP" : "Cancel";
+    return `<button type="button" id="evtMemberRsvpCancelBtn-${eventId2}" class="ed-rsvp-cancel-btn" ${evtDataAction("evtCancelMyParticipation", eventId2)} aria-label="${label}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        <span>${label}</span>
+    </button>`;
+  }
+  function evtResolveRsvpCtaState(eventId2, event, rsvp, extra) {
+    const x = extra && typeof extra === "object" ? extra : {};
+    const plan = x.plan || (globalThis.evtMyPaymentPlans || {})[eventId2] || null;
+    const hasDraft = !!(window.EventsRsvpWizard && typeof window.EventsRsvpWizard.hasDraft === "function" && window.EventsRsvpWizard.hasDraft(eventId2, "member"));
+    if (window.EventsHelpers && typeof window.EventsHelpers.rsvpCtaState === "function") {
+      return window.EventsHelpers.rsvpCtaState(event, {
+        rsvp,
+        plan,
+        hasDraft,
+        installmentsPaid: x.installmentsPaid,
+        installmentsTotal: x.installmentsTotal
+      });
+    }
+    if (rsvp?.paid) return { kind: "going", label: "Going", subLabel: "Paid in full", showCancel: true, cancelMode: "remove", cancelLabel: "Remove RSVP" };
+    if (rsvp?.status === "going" && event?.pricing_mode === "paid") {
+      return { kind: "continue", label: "Continue RSVP", subLabel: "", showCancel: false, cancelMode: null, cancelLabel: null };
+    }
+    if (hasDraft) return { kind: "continue", label: "Continue RSVP", subLabel: "", showCancel: false, cancelMode: null, cancelLabel: null };
+    return { kind: "rsvp", label: "RSVP", subLabel: "", showCancel: false, cancelMode: null, cancelLabel: null };
+  }
   function evtUpdateMemberRsvpBtnLabels(eventId2, event, opts) {
     if (!eventId2 || !event) return;
     const options = opts && typeof opts === "object" ? opts : {};
@@ -7573,11 +9100,32 @@ Proceed to checkout?`;
     const partyTotal = evtPartyTotalCents(event, root2);
     const displayTotal = evtFeeAwarePartyTotal(event, root2, partyTotal);
     const rsvp = options.rsvp || (globalThis.evtAllRsvps || {})[eventId2];
-    const unpaidGoing = !!(rsvp?.status === "going" && !rsvp?.paid && event.pricing_mode === "paid");
-    const labelOpts = unpaidGoing ? { mode: "complete", audience: "member", partyTotalCents: displayTotal } : { mode: "rsvp", audience: "member", partyTotalCents: displayTotal };
-    const label = window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === "function" ? window.EventsHelpers.rsvpPayButtonLabel(event, role, labelOpts) : `RSVP as Member \u2014 ${formatCurrency(displayTotal)}`;
+    const cta = evtResolveRsvpCtaState(eventId2, event, rsvp, {
+      plan: options.plan,
+      installmentsPaid: options.installmentsPaid,
+      installmentsTotal: options.installmentsTotal
+    });
     const payBtn = document.getElementById(`evtMemberRsvpPayBtn-${eventId2}`);
-    if (payBtn) payBtn.textContent = label;
+    if (payBtn) {
+      const labelEl = payBtn.querySelector(".ed-rsvp-stack-label");
+      let priceEl = payBtn.querySelector(".ed-rsvp-stack-price");
+      if (labelEl) {
+        labelEl.textContent = cta.label;
+        const sub = cta.kind === "going" ? cta.subLabel || "" : displayTotal > 0 ? formatCurrency(displayTotal) : "";
+        if (sub) {
+          if (!priceEl) {
+            priceEl = document.createElement("span");
+            priceEl.className = "ed-rsvp-stack-price";
+            payBtn.appendChild(priceEl);
+          }
+          priceEl.textContent = sub;
+        } else if (priceEl) {
+          priceEl.remove();
+        }
+      } else {
+        payBtn.textContent = cta.subLabel ? `${cta.label} \xB7 ${cta.subLabel}` : cta.label;
+      }
+    }
     const claimBtn = document.getElementById(`evtWaitlistClaimBtn-${eventId2}`);
     if (claimBtn) {
       claimBtn.textContent = displayTotal > 0 ? `Claim Spot \u2014 ${formatCurrency(displayTotal)}` : "Claim Spot \u2014 Free";
@@ -7600,9 +9148,9 @@ Proceed to checkout?`;
     });
   }
   function evtBuildDetailSmsOptInHtml(ctx) {
-    const { eventId: eventId2, isHost, memberPhone, memberGoing: memberGoing2, canRsvp, rsvpEnabled, eventSmsRecipient } = ctx;
+    const { eventId: eventId2, isHost, memberPhone, memberGoing, canRsvp, rsvpEnabled, eventSmsRecipient } = ctx;
     if (isHost || !memberPhone) return "";
-    if (!rsvpEnabled || !memberGoing2 && !canRsvp) return "";
+    if (!rsvpEnabled || !memberGoing && !canRsvp) return "";
     const checked = !!(eventSmsRecipient?.opted_in && !eventSmsRecipient?.opted_out_at);
     return `
         <label class="ed-checkbox-label" style="display:flex;gap:10px;align-items:flex-start;margin-top:12px">
@@ -7644,49 +9192,53 @@ Proceed to checkout?`;
         </div>
         ${canAccessTeamHub ? '<p class="ed-hint">Use <strong>Team</strong> for RSVP as yourself, raffle entry, and your ticket.</p>' : ""}`;
     } else if (canRsvp && !eventIsFull && event.pricing_mode === "paid") {
-      if (rsvp?.paid) {
+      const cta = evtResolveRsvpCtaState(eventId2, event, rsvp, {
+        plan: ctx.myPaymentPlan,
+        installmentsPaid: ctx.myInstallmentsPaid,
+        installmentsTotal: ctx.myInstallmentsTotal
+      });
+      if (cta.kind === "going") {
+        const payTok = window.EventsHelpers && typeof window.EventsHelpers.readPaymentInviteToken === "function" ? window.EventsHelpers.readPaymentInviteToken(eventId2) : (new URLSearchParams(window.location.search).get("t") || "").trim();
+        const paymentLinkHtml = payTok && window.EventsHelpers?.paymentMagicLinkHtml ? window.EventsHelpers.paymentMagicLinkHtml(payTok) : "";
+        const cancelHtml = evtMemberRsvpCancelBtnHtml(eventId2, cta.cancelMode);
         ctaHtml = `
             <div class="ed-rsvp-confirmed">
                 <div class="ed-rsvp-confirmed-row">
                     <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
-                    <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">Non-refundable \xB7 Contact admin for changes</span></div>
-                </div>
-            </div>`;
-      } else if (rsvp?.status === "going") {
-        const payLabel = window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === "function" ? window.EventsHelpers.rsvpPayButtonLabel(event, "adult", { mode: "complete", audience: "member" }) : `Complete Payment \u2014 ${formatCurrency(evtDetailAdultPriceCents(event))}`;
-        ctaHtml = `
-            <div class="ed-notice ed-notice-highlight" style="margin-bottom:12px">
-                <span class="ed-notice-emoji">\u{1F4B3}</span>
-                <div>
-                    <p class="ed-notice-title">Payment pending</p>
-                    <p class="ed-notice-sub">Complete checkout to confirm your RSVP.</p>
+                    <div>
+                        <span class="ed-rsvp-confirmed-title">${cta.label}</span>
+                        ${cta.subLabel ? `<span class="ed-rsvp-confirmed-sub">${cta.subLabel}</span>` : '<span class="ed-rsvp-confirmed-sub">Non-refundable</span>'}
+                    </div>
                 </div>
             </div>
-            <button id="evtMemberRsvpPayBtn-${eventId2}" ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-primary-btn">${payLabel}</button>
-            <button ${evtDataAction("evtMessageHost", eventId2)} class="ed-outline-btn">Message Host</button>
-            <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? " \xB7 Includes raffle entry" : ""}</p>`;
+            <div class="ed-rsvp-going-actions">
+                <button type="button" class="ed-primary-btn ed-rsvp-stack-btn" ${evtDataAction("evtOpenCtaPanel", "ticket", eventId2)}>
+                    <span class="ed-rsvp-stack-label">View ticket</span>
+                </button>
+                ${cancelHtml}
+            </div>
+            ${paymentLinkHtml}`;
       } else {
-        const payLabel = window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === "function" ? window.EventsHelpers.rsvpPayButtonLabel(event, "adult", { mode: "rsvp", audience: "member" }) : `RSVP as Member \u2014 ${formatCurrency(evtDetailAdultPriceCents(event))}`;
+        const payCents = evtDetailAdultPriceCents(event);
         ctaHtml = `
-            <button id="evtMemberRsvpPayBtn-${eventId2}" ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-primary-btn">${payLabel}</button>
-            <button ${evtDataAction("evtMessageHost", eventId2)} class="ed-outline-btn">Message Host</button>
+            ${evtMemberRsvpStackBtnHtml(eventId2, payCents, { label: cta.label, complete: cta.kind === "continue" })}
             <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? " \xB7 Includes raffle entry" : ""}</p>`;
       }
     } else if (canRsvp && !eventIsFull) {
+      const freeCta = evtResolveRsvpCtaState(eventId2, event, rsvp, {});
       if (rsvp?.status === "going") {
         ctaHtml = `
             <div class="ed-rsvp-confirmed">
                 <div class="ed-rsvp-confirmed-row">
                     <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
-                    <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">We'll see you there.</span></div>
+                    <div><span class="ed-rsvp-confirmed-title">Going</span><span class="ed-rsvp-confirmed-sub">We'll see you there.</span></div>
                 </div>
             </div>
             <button ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-outline-btn">Update RSVP</button>`;
       } else {
         const interestedActive = rsvp?.status === "maybe" ? " active" : "";
         ctaHtml = `
-            <button ${evtDataAction("evtHandleRsvp", eventId2, "going")} class="ed-primary-btn">RSVP as Member</button>
-            <button ${evtDataAction("evtMessageHost", eventId2)} class="ed-outline-btn">Message Host</button>
+            ${evtMemberRsvpStackBtnHtml(eventId2, 0, { label: freeCta.label })}
             <div class="ed-rsvp-secondary">
                 <button ${evtDataAction("evtHandleRsvp", eventId2, "maybe")} class="ed-rsvp-sm${interestedActive ? " active" : ""}">\u2764\uFE0F Interested</button>
             </div>`;
@@ -7718,6 +9270,13 @@ Proceed to checkout?`;
       memberPhone
     } = ctx;
     const showPrep = !isHost && canRsvp && !eventIsFull && !(event.pricing_mode === "paid" && rsvp?.paid);
+    if (!showPrep) return "";
+    if (window.EventsRsvpWizard && window.EventsRsvpWizard.needsPrep(event, {
+      mode: "member",
+      memberPhoneMissing: !memberPhone
+    })) {
+      return "";
+    }
     const showPartySeats = showPrep && window.EventsPartySeats && typeof window.EventsPartySeats.shouldShow === "function" && window.EventsPartySeats.shouldShow(event, { isHost });
     const seatRole = window.EventsIncludedItems && typeof window.EventsIncludedItems.defaultSeatRoleForCatalog === "function" ? window.EventsIncludedItems.defaultSeatRoleForCatalog(event.included_items) : "adult";
     let partySeatsHtml = "";
@@ -7887,29 +9446,15 @@ Proceed to checkout?`;
     }
     return `https://justicemcneal.com/events/?e=${encodeURIComponent(slug)}`;
   }
-  function evtBuildDetailGuestRsvpHintHtml(ctx) {
-    const { event, rsvpEnabled } = ctx;
-    if (!event || event.event_type === "competition" || !rsvpEnabled) {
-      return "";
-    }
-    if (event.member_only) {
-      return `<p class="ed-rsvp-members-only-note">Members-only event \u2014 guests cannot RSVP on the public page.</p>`;
-    }
-    if (!event.slug) return "";
-    const inviteUrl = evtDetailPublicInviteUrl(event.slug);
-    return `
-        <div class="ed-rsvp-guest-hint">
-            <p class="ed-rsvp-guest-hint-text">Guests RSVP on the <a href="${evtEscapeHtml(inviteUrl)}" target="_blank" rel="noopener">public event page</a>.</p>
-            <button type="button" class="ed-link-btn" ${evtDataAction("evtCopyShareUrl", event.slug)}>Copy public link</button>
-        </div>`;
+  function evtBuildDetailGuestRsvpHintHtml() {
+    return "";
   }
   function evtBuildDetailRsvpSectionHtml(ctx) {
     const ctaHtml = evtBuildDetailRsvpCtaHtml(ctx);
     const prepHtml = evtBuildDetailRsvpPrepHtml(ctx);
-    const guestHintHtml = evtBuildDetailGuestRsvpHintHtml(ctx);
     const smsOptInHtml = evtBuildDetailSmsOptInHtml(ctx);
     const seatInvitesPlaceholder = !ctx.isHost && ctx.rsvp?.status === "going" ? `<div id="portalSeatInfoInvites-${ctx.eventId}" class="ed-seat-info-invites-slot"></div>` : "";
-    return ctaHtml + prepHtml + seatInvitesPlaceholder + guestHintHtml + smsOptInHtml;
+    return ctaHtml + prepHtml + seatInvitesPlaceholder + smsOptInHtml;
   }
   function evtBuildDetailRaffleSectionHtml(ctx) {
     const {
@@ -7919,7 +9464,7 @@ Proceed to checkout?`;
       myRaffleEntry,
       raffleEntryCount,
       raffleWinners,
-      memberGoing: memberGoing2,
+      memberGoing,
       isHost,
       canAccessTeamHub,
       rsvpEnabled,
@@ -7933,7 +9478,7 @@ Proceed to checkout?`;
     const prizeCount = window.evtDetailRaffleWinnerCount(raffleConfig2, event);
     const prizesHtml = window.evtDetailRafflePrizesHtml(event);
     let entryStatusHtml = "";
-    const hasRaffleRsvp = memberGoing2;
+    const hasRaffleRsvp = memberGoing;
     const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
     if (myRaffleEntry) {
       entryStatusHtml = `<div class="ed-raffle-entry-chip">\u{1F39F}\uFE0F Entered</div>`;
@@ -7997,13 +9542,15 @@ Proceed to checkout?`;
       eventId: eventId2,
       event,
       rsvp,
-      isLlc,
       goingList,
       waitlist,
       myWaitlistEntry
     } = ctx;
-    if (!isLlc || !event.max_participants) return "";
-    const isFull = goingList.length >= event.max_participants;
+    const Cap = window.EventsCapacity;
+    const mode = Cap?.eventCapacityMode?.(event) || "none";
+    if (mode !== "soft" || !Cap?.eventHasCapacityLimit?.(event)) return "";
+    const occupied = Cap.countOccupiedCapacity(event, { goingList });
+    const isFull = Cap.eventIsAtCapacity(event, occupied);
     const canRsvpWl = ["open", "confirmed", "active"].includes(event.status);
     const activeWaitlist = waitlist.filter((w) => ["waiting", "offered"].includes(w.status));
     if (!isFull || !canRsvpWl) return "";
@@ -8151,7 +9698,7 @@ Proceed to checkout?`;
     const socialThreshold = Math.min(Math.floor(minNeeded * 0.5), 3);
     const showExactCount = currentGoing >= socialThreshold;
     let socialText = "";
-    if (isMet) socialText = `Event confirmed \xB7 ${currentGoing} going${event.max_participants ? " \xB7 " + (event.max_participants - currentGoing) + " spots left" : ""}`;
+    if (isMet) socialText = `Event confirmed \xB7 ${currentGoing} going${window.EventsCapacity?.eventHasCapacityLimit?.(event) ? " \xB7 " + (window.EventsCapacity.spotsRemaining(event, currentGoing) ?? 0) + " spots left" : ""}`;
     else if (showExactCount) socialText = `${currentGoing} going toward ${minNeeded} needed`;
     else socialText = `Minimum of ${minNeeded} needed to confirm`;
     return `<div class="ed-context-row"><span>${isMet ? "\u2705" : "\u26A0\uFE0F"}</span><div><strong>${isMet ? "Minimum met" : "Minimum threshold"}</strong><p>${socialText}${event.rsvp_deadline ? ` \xB7 RSVP by ${deadlineStr}` : ""}</p></div></div>`;
@@ -8254,7 +9801,7 @@ Proceed to checkout?`;
     const cards = upcoming.map((e) => {
       const d = new Date(e.start_date);
       const dateLabel = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      const imgHtml = e.banner_url ? `<img src="${e.banner_url}" alt="" loading="lazy">` : `<div style="height:120px;background:linear-gradient(135deg,#6366f1,#8b5cf6)"></div>`;
+      const imgHtml = e.banner_url ? `<img src="${e.banner_url}" alt="" loading="lazy">` : `<div style="height:120px;background:linear-gradient(135deg,#0B2545,#13366E)"></div>`;
       const onclickHandler = e.slug ? `globalThis.evtNavigateToEvent('${e.slug}')` : `globalThis.evtOpenDetail('${e.id}')`;
       return `<div class="evt-related-card" onclick="${onclickHandler}">${imgHtml}<div class="evt-related-card-body"><p class="evt-related-card-title">${evtEscapeHtml(e.title)}</p><p class="evt-related-card-meta">${dateLabel}${e.location_nickname ? " \xB7 " + evtEscapeHtml(e.location_nickname) : ""}</p></div></div>`;
     }).join("");
@@ -8280,9 +9827,8 @@ Proceed to checkout?`;
                         ${cpBadge ? cpBadge : ""}
                     </div>
                     <div class="ed-mh-body">
-                        <span class="ed-mh-label">Hosted by</span>
+                        <span class="ed-mh-label">Host</span>
                         <span class="ed-mh-name">${isLlc ? "Justice McNeal LLC" : evtEscapeHtml(cpName)}</span>
-                        ${!isLlc ? `<span class="ed-mh-sub">Organizer of this event</span>` : ""}
                     </div>
                     ${creatorProfile ? `<svg class="ed-mh-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>` : ""}
                 </div>`;
@@ -8307,7 +9853,7 @@ Proceed to checkout?`;
     if (!isHost) return "";
     function buildPersonRow(p) {
       const initials = ((p?.first_name?.[0] || "") + (p?.last_name?.[0] || "")).toUpperCase() || "?";
-      const avatar = p?.profile_picture_url ? `<img src="${p.profile_picture_url}" class="w-7 h-7 rounded-full object-cover" alt="">` : `<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xs font-bold">${initials}</div>`;
+      const avatar = p?.profile_picture_url ? `<img src="${p.profile_picture_url}" class="w-7 h-7 rounded-full object-cover" alt="">` : `<div class="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary text-xs font-bold">${initials}</div>`;
       return `<div class="flex items-center gap-2">${avatar}<span class="text-sm text-gray-700">${evtEscapeHtml(p?.first_name || "")} ${evtEscapeHtml(p?.last_name || "")}</span></div>`;
     }
     const checkinRows = (checkins || []).map((c) => buildPersonRow(c.profiles)).join("") || `<p class="text-xs text-gray-400 italic ml-6">None</p>`;
@@ -8451,8 +9997,8 @@ Proceed to checkout?`;
   }
   async function evtRenderDetailQrCanvases(ctx) {
     if (!ctx || !ctx.event) return;
-    const { event, rsvp, memberGoing: memberGoing2 } = ctx;
-    if (!memberGoing2 || event.checkin_mode !== "attendee_ticket") return;
+    const { event, rsvp, memberGoing } = ctx;
+    if (!memberGoing || event.checkin_mode !== "attendee_ticket") return;
     if (!rsvp || !rsvp.qr_token) return;
     const canvas = document.getElementById("myTicketQR");
     if (!canvas) return;
@@ -8662,17 +10208,8 @@ Proceed to checkout?`;
             <!-- \u2500\u2500\u2500 Immersive Hero \u2500\u2500\u2500 -->
             <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `${evtDataAction("evtOpenLightbox", event.banner_url)}` : ""} role="img" aria-label="Event banner">
                 <div class="ed-hero-scrim"></div>
-                <div class="ed-hero-nav">
-                    ${heroStatusBadgeHtml}
-                    <div class="ed-hero-pill-row">
-                        <button onclick="event.stopPropagation();globalThis.evtNavigateToList()" class="ed-hero-pill evt-hero-back-btn" title="Back" aria-label="Back to events">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-                        </button>
-                    </div>
-                </div>
                 <div class="ed-hero-bottom-content">
                     <h1 class="ed-hero-title">${evtEscapeHtml3(event.title)}</h1>
-                    <p class="ed-hero-subtitle">${cpName ? `Hosted by ${evtEscapeHtml3(cpName)}` : evtEscapeHtml3(tc.label)}${event.category ? ` &bull; ${evtEscapeHtml3((event.category || "").replace(/_/g, " "))}` : ""}</p>
                     <div class="ed-hero-info-bar">
                         <div class="ed-hero-info-item">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -8731,10 +10268,12 @@ Proceed to checkout?`;
                         </div>
                     </div>
                 </div>` : ""}
-                <!-- Mobile Attendees Card (S7) -->
-                ${mobileAttendeesHtml}
-                <!-- Mobile Hosted By Card (S8) -->
-                ${mobileHostedHtml}
+                <!-- Mobile Attendees + Host row (S7 / S8) -->
+                ${mobileAttendeesHtml || mobileHostedHtml ? `
+                <div class="ed-mobile-meta-row">
+                    ${mobileAttendeesHtml}
+                    ${mobileHostedHtml}
+                </div>` : ""}
                 <!-- About Card -->
                 <div class="ed-about-grid event-detail-card">
                     <div class="ed-about-left">
@@ -8934,7 +10473,7 @@ Proceed to checkout?`;
       cpInitials,
       cpBadge,
       cpTitle,
-      memberGoing: memberGoing2,
+      memberGoing,
       hasRsvp,
       documentsHtml,
       mapHtml,
@@ -8958,7 +10497,7 @@ Proceed to checkout?`;
     let qrHtml = "";
     let myCheckin = null;
     const checkinEnabled = event.checkin_enabled !== false;
-    if (checkinEnabled && memberGoing2 && event.checkin_mode === "attendee_ticket") {
+    if (checkinEnabled && memberGoing && event.checkin_mode === "attendee_ticket") {
       const { data: ci } = await supabaseClient.from("event_checkins").select("checked_in_at").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
       myCheckin = ci;
       const checkedInTime = myCheckin ? new Date(myCheckin.checked_in_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : null;
@@ -9009,6 +10548,7 @@ Proceed to checkout?`;
     }
     const detailView = document.getElementById("eventsDetailView");
     detailView.classList.add("event-detail-surface", "portal-event-detail-v2");
+    detailView.dataset.eventId = eventId2;
     const templateCtx = {
       event,
       eventId: eventId2,
@@ -9075,8 +10615,31 @@ Proceed to checkout?`;
     evtInitHeroCollapse();
     window.evtRunDetailPostRenderBasics({ eventId: eventId2 });
     setTimeout(() => {
-      window.evtRenderDetailQrCanvases({ event, eventId: eventId2, rsvp, memberGoing: memberGoing2 });
+      window.evtRenderDetailQrCanvases({ event, eventId: eventId2, rsvp, memberGoing });
       window.evtInitDetailInlineMaps({ event, showLocation });
+      if (window.EventsHelpers?.wirePaymentMagicLinkCopy) {
+        window.EventsHelpers.wirePaymentMagicLinkCopy(document);
+      }
+      const params = new URLSearchParams(window.location.search);
+      const paid = params.get("paid");
+      const t = (params.get("t") || "").trim();
+      if (paid === "rsvp" && t && window.EventsHelpers?.stashPaymentInviteToken) {
+        window.EventsHelpers.stashPaymentInviteToken(eventId2, t);
+      }
+      if (params.get("rsvp") === "1" && window.EventsRsvpWizard && !memberGoing) {
+        const openGoing = () => {
+          if (typeof globalThis.evtHandleRsvp === "function") {
+            globalThis.evtHandleRsvp(eventId2, "going");
+          } else if (typeof window.evtHandleRsvp === "function") {
+            window.evtHandleRsvp(eventId2, "going");
+          }
+        };
+        openGoing();
+        params.delete("rsvp");
+        const qs = params.toString();
+        const next = `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash || ""}`;
+        window.history.replaceState({}, "", next);
+      }
     }, 100);
   }
   function evtInitHeroCollapse() {
@@ -9536,7 +11099,7 @@ Proceed to checkout?`;
     const initial = (name[0] || "?").toUpperCase();
     const iconHtml = `<div style="
         width:32px;height:32px;border-radius:50%;
-        background:${isMe ? "#10b981" : "#6366f1"};
+        background:${isMe ? "#10b981" : "#13366E"};
         color:white;display:flex;align-items:center;justify-content:center;
         font-weight:700;font-size:13px;border:2px solid white;
         box-shadow:0 2px 8px rgba(0,0,0,.2);
@@ -9698,7 +11261,7 @@ Proceed to checkout?`;
       const votingLabel = compPh.votingWindowLabel ? compPh.votingWindowLabel(phase3, now) : { state: "not_configured", message: "" };
       const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps || {};
       const rsvp = rsvpMap[eventId2];
-      const hasRsvp = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+      const hasRsvp = typeof globalThis.evtIsCommittedGoing === "function" ? window.evtIsCommittedGoing(event, rsvp) : window.EventsHelpers?.rsvpIsCommittedGoing?.(event, rsvp) || (event?.pricing_mode === "paid" ? !!(rsvp && rsvp.paid === true) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true)));
       const voterCtx = { hasRsvp, hasCompEntry: !!myEntry };
       const voterEligible = compPh.isVoterEligible ? compPh.isVoterEligible(config, voterCtx) : true;
       const voterIneligibleMsg = compPh.voterEligibilityMessage ? compPh.voterEligibilityMessage(config) : "";
@@ -9842,7 +11405,7 @@ Proceed to checkout?`;
             if (entry.mime_type?.startsWith("image/") && resolvedUrl) {
               contentPreview = `<img src="${resolvedUrl}" class="w-full h-32 object-cover rounded-lg mt-2" alt="">`;
             } else if (resolvedUrl) {
-              contentPreview = `<a href="${resolvedUrl}" target="_blank" rel="noopener" class="mt-2 inline-block text-xs text-brand-600 font-semibold hover:underline">\u{1F4CE} Download ${evtEscapeHtml(entry.file_name || "file")}</a>`;
+              contentPreview = `<a href="${resolvedUrl}" target="_blank" rel="noopener" class="mt-2 inline-block text-xs text-primary font-semibold hover:underline">\u{1F4CE} Download ${evtEscapeHtml(entry.file_name || "file")}</a>`;
             } else {
               contentPreview = `<div class="mt-2 p-2 bg-gray-50 rounded-lg text-xs text-gray-500">\u{1F4CE} ${evtEscapeHtml(entry.file_name || "File")}</div>`;
             }
@@ -10232,7 +11795,7 @@ Proceed to checkout?`;
       }
       const { data: myEntry } = await supabaseClient.from("competition_entries").select("id").eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id).maybeSingle();
       const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps || {})[eventId2];
-      const hasRsvp = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
+      const hasRsvp = typeof globalThis.evtIsCommittedGoing === "function" ? window.evtIsCommittedGoing(event, rsvp) : window.EventsHelpers?.rsvpIsCommittedGoing?.(event, rsvp) || (event?.pricing_mode === "paid" ? !!(rsvp && rsvp.paid === true) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true)));
       if (compPh.isVoterEligible && !compPh.isVoterEligible(config, { hasRsvp, hasCompEntry: !!myEntry })) {
         alert(compPh.voterEligibilityMessage ? compPh.voterEligibilityMessage(config) : "You are not eligible to vote in this competition.");
         return;
@@ -10501,7 +12064,7 @@ Proceed to checkout?`;
       galleryHtml = `<p class="text-xs text-gray-400 mt-2">No photos yet. Be the first to share a memory!</p>`;
     }
     const uploadHtml = canUpload ? `
-        <div class="mt-3 p-3 border-2 border-dashed border-gray-200 rounded-xl text-center cursor-pointer hover:border-brand-400 hover:bg-brand-50/30 transition" id="scrapbookDropzone" onclick="document.getElementById('scrapbookFileInput').click()">
+        <div class="mt-3 p-3 border-2 border-dashed border-gray-200 rounded-xl text-center cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition" id="scrapbookDropzone" onclick="document.getElementById('scrapbookFileInput').click()">
             <input type="file" id="scrapbookFileInput" accept="image/*" multiple class="hidden" onchange="evtHandlePhotoSelect('${event.id}')">
             <svg class="w-6 h-6 text-gray-300 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             <p class="text-xs text-gray-400">Drop photos or tap to upload</p>
@@ -10509,8 +12072,8 @@ Proceed to checkout?`;
         </div>
         <div id="scrapbookUploadProgress" class="hidden mt-2">
             <div class="flex items-center gap-2">
-                <svg class="animate-spin h-4 w-4 text-brand-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                <span class="text-xs text-brand-600" id="scrapbookUploadText">Uploading...</span>
+                <svg class="animate-spin h-4 w-4 text-primary-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                <span class="text-xs text-primary" id="scrapbookUploadText">Uploading...</span>
             </div>
         </div>
     ` : "";
@@ -10805,6 +12368,14 @@ Proceed to checkout?`;
   function evtIsGoingRsvp(rsvp) {
     return !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
   }
+  function evtIsCommittedGoing(event, rsvp, plan) {
+    if (window.EventsHelpers && typeof window.EventsHelpers.rsvpIsCommittedGoing === "function") {
+      return window.EventsHelpers.rsvpIsCommittedGoing(event, rsvp, plan);
+    }
+    if (!rsvp) return false;
+    if (event?.pricing_mode === "paid") return rsvp.paid === true;
+    return evtIsGoingRsvp(rsvp);
+  }
   function evtIsRaffleEntriesOpen(event) {
     if (!event) return false;
     const now = /* @__PURE__ */ new Date();
@@ -10819,9 +12390,10 @@ Proceed to checkout?`;
   function evtCanEnterMemberRaffle(event, rsvp, myRaffleEntry) {
     if (!event?.raffle_enabled || !evtIsRaffleEntriesOpen(event) || myRaffleEntry) return false;
     if (evtIsRaffleBundledWithPaidRsvp(event)) return !!(rsvp && rsvp.paid === true);
-    return evtIsGoingRsvp(rsvp);
+    return evtIsCommittedGoing(event, rsvp);
   }
   window.evtIsGoingRsvp = evtIsGoingRsvp;
+  window.evtIsCommittedGoing = evtIsCommittedGoing;
   window.evtIsRaffleEntriesOpen = evtIsRaffleEntriesOpen;
   window.evtIsRaffleBundledWithPaidRsvp = evtIsRaffleBundledWithPaidRsvp;
   window.evtCanEnterMemberRaffle = evtCanEnterMemberRaffle;
@@ -10843,13 +12415,33 @@ Proceed to checkout?`;
     }
     return true;
   }
-  async function evtEnsureMemberPhoneForRsvp() {
+  async function evtEnsureMemberPhoneForRsvp(eventId2) {
     if (!globalThis.evtCurrentUser?.id) return null;
     const { data: profile } = await supabaseClient.from("profiles").select("phone").eq("id", globalThis.evtCurrentUser.id).maybeSingle();
     const existing = (profile?.phone || "").trim();
     if (existing) return existing;
     const inputEl = document.getElementById("evtMemberPhoneInput");
     const raw = (inputEl?.value || "").trim();
+    if (!inputEl && window.EventsRsvpWizard) {
+      const id = eventId2 || document.getElementById("eventsDetailView")?.dataset?.eventId || globalThis.evtDetailEventId || null;
+      const event = id && Array.isArray(globalThis.evtAllEvents) ? globalThis.evtAllEvents.find((e) => e.id === id) : null;
+      if (event) {
+        const displayName2 = typeof globalThis.evtMemberDisplayName === "function" ? globalThis.evtMemberDisplayName() : "Member";
+        window.EventsRsvpWizard.open({
+          event,
+          mode: "member",
+          memberName: displayName2,
+          memberPhoneMissing: true,
+          memberPhone: "",
+          onComplete: async () => {
+            if (typeof globalThis.evtOpenDetail === "function") {
+              await globalThis.evtOpenDetail(event.id);
+            }
+          }
+        });
+        return null;
+      }
+    }
     const validated = window.EventsHelpers && typeof window.EventsHelpers.validatePhone === "function" ? window.EventsHelpers.validatePhone(raw) : raw ? { value: raw } : { error: "Phone number is required." };
     if (validated.error) {
       alert(validated.error);
@@ -10934,6 +12526,38 @@ Proceed to checkout?`;
         alert("RSVPs are closed for this event.");
         return;
       }
+      if (status === "going" && window.EventsRsvpWizard) {
+        let memberPhoneMissing = true;
+        let memberPhone = "";
+        if (globalThis.evtCurrentUser?.id && window.supabaseClient) {
+          try {
+            const { data: profile, error: profErr } = await supabaseClient.from("profiles").select("phone, first_name, last_name").eq("id", globalThis.evtCurrentUser.id).maybeSingle();
+            if (!profErr) {
+              memberPhone = (profile?.phone || "").trim();
+              memberPhoneMissing = !memberPhone;
+            }
+          } catch (_) {
+            memberPhoneMissing = true;
+            memberPhone = "";
+          }
+        }
+        if (window.EventsRsvpWizard.needsPrep(event, { mode: "member", memberPhoneMissing })) {
+          const displayName2 = typeof globalThis.evtMemberDisplayName === "function" ? globalThis.evtMemberDisplayName() : "Member";
+          window.EventsRsvpWizard.open({
+            event,
+            mode: "member",
+            memberName: displayName2,
+            memberPhoneMissing,
+            memberPhone,
+            onComplete: async () => {
+              if (typeof globalThis.evtOpenDetail === "function") {
+                await globalThis.evtOpenDetail(eventId2);
+              }
+            }
+          });
+          return;
+        }
+      }
       const isPaidEvent = event.pricing_mode === "paid";
       const rsvpMap = window.evtAllRsvps || globalThis.evtAllRsvps;
       const existing = rsvpMap[eventId2];
@@ -11005,7 +12629,7 @@ Proceed to checkout?`;
       }
       let memberPhonePayload = {};
       if (status === "going") {
-        const phone = await evtEnsureMemberPhoneForRsvp();
+        const phone = await evtEnsureMemberPhoneForRsvp(eventId2);
         if (!phone) return;
         memberPhonePayload = { phone };
       }
@@ -11018,8 +12642,11 @@ Proceed to checkout?`;
         const confirmMsg = needsPaymentChoice && paymentChoice && window.EventsPaymentChoice.confirmMessage ? window.EventsPaymentChoice.confirmMessage(event, paymentChoice, partyTotal) : hasRequiredDisclaimers ? `RSVP costs ${formatCurrency(partyTotal)}.
 
 Proceed to checkout?` : null;
-        if (confirmMsg && !confirm(confirmMsg)) return;
-        const { url } = await callEdgeFunction("create-event-checkout", {
+        if (confirmMsg) {
+          const ok = window.EventsHelpers?.confirmDialog ? await window.EventsHelpers.confirmDialog({ message: confirmMsg }) : confirm(confirmMsg);
+          if (!ok) return;
+        }
+        const checkout = await callEdgeFunction("create-event-checkout", {
           event_id: eventId2,
           type: "rsvp",
           seats,
@@ -11033,8 +12660,19 @@ Proceed to checkout?` : null;
           } : {},
           ...investAcknowledged ? { invest_eligible_acknowledged: true } : {}
         });
-        if (url) {
-          window.location.href = url;
+        if (checkout?.invite_token && window.EventsHelpers?.stashPaymentInviteToken) {
+          window.EventsHelpers.stashPaymentInviteToken(eventId2, checkout.invite_token);
+        }
+        if (checkout?.fully_credited || checkout?.paid) {
+          if (window.EventsRsvpWizard?.clearDraft) {
+            window.EventsRsvpWizard.clearDraft(eventId2, "member");
+          }
+          evtRenderEvents();
+          await globalThis.evtOpenDetail(eventId2);
+          return;
+        }
+        if (checkout?.url) {
+          window.location.href = checkout.url;
         }
         return;
       }
@@ -11137,7 +12775,12 @@ Proceed to checkout?` : null;
       }
       if (existing) {
         if (existing.paid) {
-          alert("Paid RSVPs cannot be cancelled. Contact an admin for assistance.");
+          alert("Use Remove RSVP next to Going to leave this event. Payments already made are non-refundable.");
+          return;
+        }
+        const plan = (globalThis.evtMyPaymentPlans || {})[eventId2];
+        if (plan && ["active", "past_due", "completed", "setup"].includes(String(plan.status || ""))) {
+          alert("Use Cancel next to Going to leave this event. Payments already made are non-refundable.");
           return;
         }
         if (existing.status === status) {
@@ -11288,6 +12931,13 @@ Raffle entry is non-refundable. Proceed to checkout?`
   }
   async function evtJoinWaitlist(eventId2) {
     try {
+      const { data: eventRow, error: evtErr } = await supabaseClient.from("events").select("id, capacity_mode, max_participants, capacity_counts").eq("id", eventId2).maybeSingle();
+      if (evtErr) throw evtErr;
+      const Cap = window.EventsCapacity;
+      if (!Cap?.eventHasCapacityLimit?.(eventRow) || Cap.eventCapacityMode(eventRow) !== "soft") {
+        alert("Waitlist is only available for soft-capacity events.");
+        return;
+      }
       const { data: maxPos } = await supabaseClient.from("event_waitlist").select("position").eq("event_id", eventId2).order("position", { ascending: false }).limit(1).maybeSingle();
       const nextPos = (maxPos?.position || 0) + 1;
       const { error } = await supabaseClient.from("event_waitlist").insert({
@@ -11376,7 +13026,10 @@ ${window.EventsPaymentChoice.confirmMessage(event, paymentChoice, partyTotal)}` 
 RSVP costs ${formatCurrency(partyTotal)}.
 
 Proceed to checkout?` : null;
-      if (waitlistConfirm && !confirm(waitlistConfirm)) return;
+      if (waitlistConfirm) {
+        const ok = window.EventsHelpers?.confirmDialog ? await window.EventsHelpers.confirmDialog({ message: waitlistConfirm }) : confirm(waitlistConfirm);
+        if (!ok) return;
+      }
       if (!evtValidateMemberNoRefund(event, seatRole, hasRequiredDisclaimers)) return;
       if (window.EventsInvestAck) {
         const investErr = window.EventsInvestAck.validateAck(event, root2);
@@ -11386,10 +13039,10 @@ Proceed to checkout?` : null;
         }
       }
       const investAcknowledged = window.EventsInvestAck && window.EventsInvestAck.isRequired(event) && window.EventsInvestAck.readAcknowledgedFromRoot(root2);
-      const phone = await evtEnsureMemberPhoneForRsvp();
+      const phone = await evtEnsureMemberPhoneForRsvp(eventId2);
       if (!phone) return;
       await supabaseClient.from("event_waitlist").update({ status: "claimed" }).eq("event_id", eventId2).eq("user_id", globalThis.evtCurrentUser.id);
-      const { url } = await callEdgeFunction("create-event-checkout", {
+      const checkout = await callEdgeFunction("create-event-checkout", {
         event_id: eventId2,
         type: "rsvp",
         from_waitlist: true,
@@ -11404,8 +13057,16 @@ Proceed to checkout?` : null;
         } : {},
         ...investAcknowledged ? { invest_eligible_acknowledged: true } : {}
       });
-      if (url) {
-        window.location.href = url;
+      if (checkout?.invite_token && window.EventsHelpers?.stashPaymentInviteToken) {
+        window.EventsHelpers.stashPaymentInviteToken(eventId2, checkout.invite_token);
+      }
+      if (checkout?.fully_credited || checkout?.paid) {
+        evtRenderEvents();
+        await globalThis.evtOpenDetail(eventId2);
+        return;
+      }
+      if (checkout?.url) {
+        window.location.href = checkout.url;
       }
     } catch (err) {
       console.error("Claim waitlist error:", err);
@@ -11574,12 +13235,53 @@ Type the event title to confirm:`);
       alert("Failed to duplicate event: " + (err.message || "Unknown error"));
     }
   }
+  async function evtCancelMyParticipation(eventId2) {
+    try {
+      if (!eventId2 || !globalThis.evtCurrentUser?.id) return;
+      const rsvp = (window.evtAllRsvps || globalThis.evtAllRsvps || {})[eventId2];
+      const plan = (globalThis.evtMyPaymentPlans || {})[eventId2] || null;
+      const paidFull = !!(rsvp?.paid || plan?.status === "completed");
+      const title = paidFull ? "Remove RSVP?" : "Cancel RSVP?";
+      const confirmLabel = paidFull ? "Remove RSVP" : "Cancel RSVP";
+      const message = paidFull ? "Are you sure you want to remove your RSVP?\n\nPayments already made are non-refundable. If you rejoin later, prior payments may be credited toward a new RSVP." : "Are you sure you want to cancel your RSVP and stop future installment charges?\n\nPayments already made are non-refundable. If you rejoin later, you can pick up where you left off with prior payments credited.";
+      const ok = window.EventsHelpers?.confirmDialog ? await window.EventsHelpers.confirmDialog({
+        title,
+        message,
+        confirmLabel,
+        cancelLabel: "Keep RSVP"
+      }) : confirm(message);
+      if (!ok) return;
+      await callEdgeFunction("cancel-my-event-participation", { event_id: eventId2 });
+      delete (globalThis.evtAllRsvps || {})[eventId2];
+      if (window.evtAllRsvps) delete window.evtAllRsvps[eventId2];
+      if (globalThis.evtMyPaymentPlans) delete globalThis.evtMyPaymentPlans[eventId2];
+      if (window.EventsRsvpWizard?.clearDraft) {
+        window.EventsRsvpWizard.clearDraft(
+          eventId2,
+          "member",
+          String(globalThis.evtCurrentUser?.id || "member")
+        );
+      }
+      if (window.EventsHelpers?.toast) {
+        window.EventsHelpers.toast(paidFull ? "RSVP removed." : "RSVP cancelled.");
+      }
+      if (typeof evtRenderEvents === "function") evtRenderEvents();
+      if (typeof globalThis.evtOpenDetail === "function") {
+        await globalThis.evtOpenDetail(eventId2);
+      }
+    } catch (err) {
+      console.error("Cancel participation error:", err);
+      alert(err?.message || "Could not cancel RSVP.");
+    }
+  }
   publishGlobals({
     evtIsGoingRsvp,
+    evtIsCommittedGoing,
     evtIsRaffleEntriesOpen,
     evtIsRaffleBundledWithPaidRsvp,
     evtCanEnterMemberRaffle,
     evtHandleRsvp,
+    evtCancelMyParticipation,
     evtHandleEventSmsOptIn,
     evtHandleRaffleEntry,
     evtHandleFreeRaffleEntry,
@@ -11835,7 +13537,7 @@ Type the event title to confirm:`);
     return `
         <div class="ec-row">
             <label class="ec-label">Event type</label>
-            <div class="ec-grid-2" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="ec-grid-3">
                 ${types.map((t) => `
                     <div class="ec-type-card ${f.event_type === t.key ? "active" : ""} ${!t.enabled ? "disabled" : ""}" data-type="${t.key}" ${!t.enabled ? 'data-disabled="1"' : ""}>
                         <div class="ec-type-emoji">${t.emoji}</div>
@@ -12684,11 +14386,11 @@ Type the event title to confirm:`);
     }
     return null;
   }
-  function monthlyEstimateHtml(f, esc12) {
+  function monthlyEstimateHtml(f, esc15) {
     const est = monthlyEstimate(f);
     if (!est) return "";
-    if (est.error) return `<p class="ec-help" style="color:#d97706">${esc12(est.error)}</p>`;
-    return `<p class="ec-help" id="ecMonthlyHelper">If someone starts paying monthly today, ~$${esc12(est.monthly)}/month per adult until ${esc12(est.deadlineLabel)}. Actual amounts recalculate at RSVP.</p>`;
+    if (est.error) return `<p class="ec-help" style="color:#d97706">${esc15(est.error)}</p>`;
+    return `<p class="ec-help" id="ecMonthlyHelper">If someone starts paying monthly today, ~$${esc15(est.monthly)}/month per adult until ${esc15(est.deadlineLabel)}. Actual amounts recalculate at RSVP.</p>`;
   }
   function toDatetimeLocalValue(iso) {
     if (!iso) return "";
@@ -14482,7 +16184,7 @@ Type the event title to confirm:`);
     const steps = _steps2();
     const STATE4 = steps.getState();
     const validateStep = steps.validateStep;
-    const esc12 = steps.esc;
+    const esc15 = steps.esc;
     const close4 = steps.close;
     const editing = !!STATE4.editEventId;
     const isLlc = STATE4.form.event_type === "llc";
@@ -14739,8 +16441,8 @@ Type the event title to confirm:`);
     } catch (e) {
       const msg = e && e.message ? e.message : String(e);
       const errBox2 = document.getElementById("ecError");
-      if (errBox2 && typeof esc12 === "function") {
-        errBox2.innerHTML = `<div class="ec-error">${esc12(msg)}</div>`;
+      if (errBox2 && typeof esc15 === "function") {
+        errBox2.innerHTML = `<div class="ec-error">${esc15(msg)}</div>`;
       } else {
         alert("Save failed: " + msg);
       }
@@ -14822,9 +16524,9 @@ Type the event title to confirm:`);
     geocode: null,
     // { lat, lng, display } or null
     prizeImageFiles: {},
-    // item.id → File
+    // item.id ? File
     prizeImagePreviews: {},
-    // item.id → data-URL
+    // item.id ? data-URL
     form: {
       event_type: "member",
       title: "",
@@ -14868,16 +16570,16 @@ Type the event title to confirm:`);
     }
   };
   var CATEGORIES = [
-    { key: "party", label: "\u{1F389} Party" },
-    { key: "birthday", label: "\u{1F382} Birthday" },
-    { key: "trip", label: "\u2708\uFE0F Trip" },
-    { key: "cookout", label: "\u{1F354} Cookout" },
-    { key: "game_night", label: "\u{1F3AE} Game Night" },
-    { key: "meeting", label: "\u{1F4CB} Meeting" },
-    { key: "fundraiser", label: "\u{1F4B0} Fundraiser" },
-    { key: "volunteer", label: "\u{1F91D} Volunteer" },
-    { key: "celebration", label: "\u{1F973} Celebration" },
-    { key: "other", label: "\u{1F4CC} Other" }
+    { key: "party", label: "?? Party" },
+    { key: "birthday", label: "?? Birthday" },
+    { key: "trip", label: "?? Trip" },
+    { key: "cookout", label: "?? Cookout" },
+    { key: "game_night", label: "?? Game Night" },
+    { key: "meeting", label: "?? Meeting" },
+    { key: "fundraiser", label: "?? Fundraiser" },
+    { key: "volunteer", label: "?? Volunteer" },
+    { key: "celebration", label: "?? Celebration" },
+    { key: "other", label: "?? Other" }
   ];
   var TIMEZONES = [
     "America/New_York",
@@ -15072,51 +16774,53 @@ Type the event title to confirm:`);
         <div id="ecSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
         <div id="ecSheet" class="fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
             <div id="ecSheetPanel" class="bg-white w-full sm:max-w-2xl sm:max-h-[92vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-auto translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:92vh">
-                <header class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
+                <header class="px-5 sm:px-6 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0" style="padding-top:max(1rem, env(safe-area-inset-top, 0px))">
                     <div class="flex-1 min-w-0">
-                        <p id="ecSheetKicker" class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Create Event <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px]">BETA</span></p>
+                        <p id="ecSheetKicker" class="text-[11px] uppercase tracking-wide font-bold" style="color:var(--color-primary, #13366E)">Create Event <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px]">BETA</span></p>
                         <h2 id="ecSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">New event</h2>
                         <p id="ecSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
                     </div>
-                    <button id="ecSheetClose" class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" aria-label="Close">
+                    <button id="ecSheetClose" class="rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" style="min-width:44px;min-height:44px" aria-label="Close">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </header>
                 <div id="ecSheetSteps" class="flex items-center justify-center gap-2 px-5 py-2 border-b border-gray-100 flex-shrink-0"></div>
                 <div id="ecSheetContent" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5"></div>
-                <footer id="ecSheetFooter" class="px-5 sm:px-6 py-3 border-t border-gray-100 flex items-center justify-between gap-3 flex-shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
-                    <button id="ecBackBtn" class="text-sm font-semibold text-gray-600 hover:text-gray-800 px-3 py-2">Back</button>
-                    <div class="flex items-center gap-2">
-                        <button id="ecDraftBtn" class="text-sm font-semibold text-gray-600 hover:text-gray-800 px-3 py-2">Save draft</button>
-                        <button id="ecNextBtn" class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-xl text-sm font-bold transition">Next</button>
+                <footer id="ecSheetFooter" class="px-5 sm:px-6 py-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 flex-shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+                    <button id="ecBackBtn" class="text-sm font-semibold text-gray-600 hover:text-gray-800 px-3" style="min-height:44px">Back</button>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="ecDraftBtn" class="text-sm font-semibold text-gray-600 hover:text-gray-800 px-3" style="min-height:44px">Save draft</button>
+                        <button id="ecNextBtn" class="text-white px-5 rounded-xl text-sm font-bold transition" style="min-height:44px;background:var(--color-primary, #13366E)">Next</button>
                     </div>
                 </footer>
             </div>
         </div>
         <style>
             .ec-step-dot { width:8px; height:8px; border-radius:50%; background:#e5e7eb; transition:background .15s,width .15s; }
-            .ec-step-dot.active { background:#4f46e5; width:24px; border-radius:4px; }
-            .ec-step-dot.done { background:#a5b4fc; }
+            .ec-step-dot.active { background:var(--color-primary, #13366E); width:24px; border-radius:4px; }
+            .ec-step-dot.done { background:var(--color-border, #D5DFEC); }
             .ec-label { display:block; font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
             .ec-input { width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; font-size:16px; color:#111827; background:#fff; }
-            .ec-input:focus { outline:none; border-color:#4f46e5; box-shadow:0 0 0 3px rgba(79,70,229,.12); }
+            .ec-input:focus { outline:none; border-color:var(--color-primary, #13366E); box-shadow:0 0 0 3px var(--color-focus-ring, rgba(19, 54, 110, 0.35)); }
             .ec-input:disabled, .ec-textarea:disabled { background:#f3f4f6; color:#6b7280; cursor:not-allowed; }
             .ec-textarea { min-height:90px; resize:vertical; font-family:inherit; }
             .ec-help { font-size:11px; color:#9ca3af; margin-top:4px; }
             .ec-row { margin-bottom:14px; }
             .ec-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-            @media(max-width:480px) { .ec-grid-2 { grid-template-columns:1fr; } }
-            .ec-type-card { padding:14px; border:2px solid #e5e7eb; border-radius:12px; cursor:pointer; transition:border-color .15s,background .15s; }
-            .ec-type-card.active { border-color:#4f46e5; background:#eef2ff; }
+            @media(max-width:639px) { .ec-grid-2 { grid-template-columns:1fr; } }
+            .ec-grid-3 { display:grid; grid-template-columns:1fr; gap:12px; }
+            @media(min-width:640px) { .ec-grid-3 { grid-template-columns:1fr 1fr 1fr; } }
+            .ec-type-card { padding:14px; border:2px solid #e5e7eb; border-radius:12px; cursor:pointer; transition:border-color .15s,background .15s; min-height:44px; }
+            .ec-type-card.active { border-color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); }
             .ec-type-card.disabled { opacity:.45; cursor:not-allowed; }
             .ec-type-emoji { font-size:24px; line-height:1; }
             .ec-banner-drop { border:2px dashed #d1d5db; border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; }
-            .ec-banner-drop:hover { border-color:#a5b4fc; background:#fafafa; }
-            .ec-banner-drop--over { border-color:#4f46e5; background:#eef2ff; }
+            .ec-banner-drop:hover { border-color:var(--color-border, #D5DFEC); background:#fafafa; }
+            .ec-banner-drop--over { border-color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); }
             .ec-banner-preview { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; }
             .ec-embed-preview { width:100%; max-width:240px; aspect-ratio:4/5; object-fit:cover; border-radius:12px; display:block; }
             .ec-pill { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; background:#f3f4f6; color:#374151; cursor:pointer; border:1px solid transparent; }
-            .ec-pill.active { background:#4f46e5; color:#fff; }
+            .ec-pill.active { background:var(--color-primary, #13366E); color:#fff; }
             .ec-checkbox-row { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid #e5e7eb; border-radius:10px; cursor:pointer; }
             .ec-checkbox-row input { margin-top:3px; }
             .ec-lock-banner { margin-bottom:12px; border-radius:10px; border:1px solid #fde68a; background:#fffbeb; color:#92400e; padding:10px 12px; font-size:12px; }
@@ -15133,10 +16837,10 @@ Type the event title to confirm:`);
             .ec-raffle-grid { display:grid; grid-template-columns:1.2fr .8fr .65fr auto; gap:8px; align-items:end; }
             .ec-raffle-item-grid { display:grid; grid-template-columns:.45fr 1.1fr .9fr .55fr auto; gap:8px; align-items:end; margin-top:8px; }
             .ec-icon-btn { width:34px; height:34px; border-radius:9px; border:1px solid #e5e7eb; background:#fff; color:#4b5563; font-weight:800; display:inline-flex; align-items:center; justify-content:center; }
-            .ec-icon-btn:hover { border-color:#c7d2fe; color:#4f46e5; background:#eef2ff; }
+            .ec-icon-btn:hover { border-color:var(--color-border, #D5DFEC); color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); }
             .ec-icon-btn:disabled { opacity:.4; cursor:not-allowed; }
             .ec-mini-btn { border:1px solid #e5e7eb; background:#fff; color:#374151; border-radius:9px; padding:7px 10px; font-size:12px; font-weight:700; }
-            .ec-mini-btn:hover { border-color:#c7d2fe; color:#4f46e5; background:#eef2ff; }
+            .ec-mini-btn:hover { border-color:var(--color-border, #D5DFEC); color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); }
             .ec-mini-btn:disabled { opacity:.4; cursor:not-allowed; }
             .ec-check { display:flex; align-items:center; gap:8px; font-size:14px; color:#0b2545; font-weight:600; cursor:pointer; }
             .ec-check input { width:18px; height:18px; accent-color:#13366e; }
@@ -15163,11 +16867,11 @@ Type the event title to confirm:`);
             .ec-md-btn:hover { background:#eef2f6; border-color:#13366e; }
             .ec-md-btn em { font-style:italic; font-weight:600; }
             .ec-raffle-summary { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-            .ec-raffle-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#4338ca; font-size:11px; font-weight:700; }
+            .ec-raffle-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:var(--color-surface, #EEF2F6); color:var(--color-primary, #13366E); font-size:11px; font-weight:700; }
             .ec-raffle-item-wrap { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fff; margin-top:8px; }
             .ec-prize-img-row { margin-top:8px; display:flex; align-items:center; gap:8px; }
             .ec-prize-img-drop { flex:0 0 auto; width:72px; height:72px; border:2px dashed #d1d5db; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-direction:column; cursor:pointer; transition:border-color .15s,background .15s; font-size:11px; color:#9ca3af; text-align:center; overflow:hidden; }
-            .ec-prize-img-drop:hover, .ec-prize-img-drop--over { border-color:#4f46e5; background:#eef2ff; color:#4f46e5; }
+            .ec-prize-img-drop:hover, .ec-prize-img-drop--over { border-color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); color:var(--color-primary, #13366E); }
             .ec-prize-img-drop img { width:100%; height:100%; object-fit:cover; border-radius:8px; display:block; }
             .ec-prize-img-label { flex:1; min-width:0; font-size:11px; color:#6b7280; }
             .ec-prize-img-label strong { display:block; color:#374151; font-size:12px; margin-bottom:1px; }
@@ -15266,7 +16970,7 @@ Type the event title to confirm:`);
     dots.innerHTML = steps.map(
       (s, i) => `<div class="ec-step-dot ${i === STATE2.step ? "active" : i < STATE2.step ? "done" : ""}" title="${s.label}"></div>`
     ).join("");
-    document.getElementById("ecSheetSub").textContent = `Step ${STATE2.step + 1} of ${steps.length} \xB7 ${steps[STATE2.step].label}`;
+    document.getElementById("ecSheetSub").textContent = `Step ${STATE2.step + 1} of ${steps.length} ? ${steps[STATE2.step].label}`;
     document.getElementById("ecBackBtn").style.visibility = STATE2.step === 0 ? "hidden" : "visible";
     const draftBtn = document.getElementById("ecDraftBtn");
     if (draftBtn) draftBtn.textContent = editing ? "Save as draft" : "Save draft";
@@ -15827,13 +17531,13 @@ Type the event title to confirm:`);
         <div id="emSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
         <div id="emSheet" class="em-sheet-hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
             <div id="emSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
-                <header id="emSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
+                <header id="emSheetHeader" class="px-5 sm:px-6 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0" style="padding-top:max(1rem, env(safe-area-inset-top, 0px))">
                     <div class="flex-1 min-w-0">
-                        <p class="text-[11px] uppercase tracking-wide font-bold text-brand-600">Manage Event</p>
+                        <p class="text-[11px] uppercase tracking-wide font-bold" style="color:var(--color-primary, #13366E)">Manage Event</p>
                         <h2 id="emSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">\u2026</h2>
                         <p id="emSheetSub" class="text-xs text-gray-400 mt-0.5"></p>
                     </div>
-                    <button id="emSheetClose" class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" aria-label="Close">
+                    <button id="emSheetClose" class="rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 flex-shrink-0" style="min-width:44px;min-height:44px" aria-label="Close">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </header>
@@ -15846,7 +17550,7 @@ Type the event title to confirm:`);
             #emSheetTabs::-webkit-scrollbar { display: none; }
             .em-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; }
             .em-tab:hover { color:#374151; }
-            .em-tab.active { color:#4f46e5; border-bottom-color:#4f46e5; }
+            .em-tab.active { color:var(--color-primary, #13366E); border-bottom-color:var(--color-primary, #13366E); }
             .em-tab.placeholder { color:#cbd5e1; }
             .em-tab.placeholder.active { color:#9ca3af; border-bottom-color:#cbd5e1; }
             .em-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; }
@@ -15860,10 +17564,10 @@ Type the event title to confirm:`);
             .em-op-meta { margin-top:auto; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
             .em-op-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:#f8fafc; color:#475569; font-size:11px; font-weight:700; }
             .em-op-progress { height:7px; border-radius:999px; overflow:hidden; background:#eef2f7; margin-top:auto; }
-            .em-op-progress span { display:block; height:100%; width:0; border-radius:inherit; background:#4f46e5; }
+            .em-op-progress span { display:block; height:100%; width:0; border-radius:inherit; background:var(--color-primary, #13366E); }
             .em-command-card { background:linear-gradient(135deg,#111827,#312e81); color:#fff; border:0; overflow:hidden; position:relative; }
             .em-command-card:after { content:""; position:absolute; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,.08); right:-70px; top:-80px; }
-            .em-command-eyebrow { font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#c7d2fe; margin:0 0 6px; }
+            .em-command-eyebrow { font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--color-border, #D5DFEC); margin:0 0 6px; }
             .em-command-title { font-size:20px; font-weight:850; margin:0; line-height:1.15; }
             .em-command-copy { font-size:12px; line-height:1.5; color:#dbeafe; margin:8px 0 0; max-width:560px; }
             .em-metric-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
@@ -15889,7 +17593,7 @@ Type the event title to confirm:`);
             .em-stat-num { font-size:24px; font-weight:800; color:#111827; }
             .em-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f1f5f9; }
             .em-row:last-child { border-bottom:none; }
-            .em-avatar { width:32px; height:32px; border-radius:50%; background:#e0e7ff; color:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; overflow:hidden; }
+            .em-avatar { width:32px; height:32px; border-radius:50%; background:var(--color-surface, #EEF2F6); color:var(--color-primary, #13366E); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; overflow:hidden; }
             .em-avatar img { width:100%; height:100%; object-fit:cover; }
             .em-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
             .em-pill-going { background:#d1fae5; color:#065f46; }
@@ -15904,13 +17608,18 @@ Type the event title to confirm:`);
             .em-btn-danger:hover { background:#b91c1c; }
             .em-btn-ghost { background:#f3f4f6; color:#374151; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; }
             .em-btn-ghost:hover { background:#e5e7eb; }
-            .em-btn-primary { background:#4f46e5; color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; }
-            .em-btn-primary:hover { background:#4338ca; }
+            .em-btn-primary { background:var(--color-primary, #13366E); color:#fff; padding:9px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; cursor:pointer; }
+            .em-btn-primary:hover { background:#0f2d5c; }
             .em-btn-primary:disabled { opacity:.55; cursor:not-allowed; }
             .em-input { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; }
-            .em-input:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
+            .em-input:focus { outline:none; border-color:var(--color-primary, #13366E); box-shadow:0 0 0 3px rgba(19,54,110,.18); }
             .em-textarea { width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:9px 11px; font-size:13px; color:#111827; background:#fff; resize:vertical; min-height:92px; }
-            .em-textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(129,140,248,.18); }
+            .em-textarea:focus { outline:none; border-color:var(--color-primary, #13366E); box-shadow:0 0 0 3px rgba(19,54,110,.18); }
+            @media (max-width:639px) {
+                .em-btn-primary, .em-btn-ghost, .em-btn-danger { min-height:44px; padding:10px 14px; }
+                .em-tab { min-height:44px; display:inline-flex; align-items:center; padding:12px 14px; }
+                .em-input, .em-textarea { font-size:16px; padding:11px 12px; }
+            }
             .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
             .em-placeholder svg { width:48px; height:48px; margin-bottom:12px; opacity:.4; }
             .em-notif-row { align-items:flex-start; }
@@ -16302,25 +18011,25 @@ Type the event title to confirm:`);
     const e = STATE4.event;
     const saveBtn = document.getElementById("emPricingSave");
     const status = document.getElementById("emPricingStatus");
-    function setStatus(message, isError) {
+    function setStatus3(message, isError) {
       if (!status) return;
       status.className = isError ? "text-xs text-red-600" : "text-xs text-gray-400";
       status.textContent = message;
     }
     if (!e) return;
     if (pricingLocked(STATE4)) {
-      setStatus("Pricing is locked after RSVPs.", true);
+      setStatus3("Pricing is locked after RSVPs.", true);
       return;
     }
     const formValues = readFormValues();
     const validationError = validatePricingForm(formValues, e.pricing_mode);
     if (validationError) {
-      setStatus(validationError, true);
+      setStatus3(validationError, true);
       return;
     }
     const payload = buildUpdatePayload(formValues, e.pricing_mode);
     if (saveBtn) saveBtn.disabled = true;
-    setStatus("Saving\u2026", false);
+    setStatus3("Saving\u2026", false);
     try {
       const rsvpCount = await countEventRsvps2(e.id);
       if (rsvpCount > 0) {
@@ -16343,7 +18052,7 @@ Type the event title to confirm:`);
       }, 0);
       api9().notifyParent?.("updated", e.id);
     } catch (err) {
-      setStatus("Update failed: " + (err.message || "unknown error"), true);
+      setStatus3("Update failed: " + (err.message || "unknown error"), true);
     } finally {
       if (saveBtn) saveBtn.disabled = false;
     }
@@ -16568,25 +18277,25 @@ Type the event title to confirm:`);
     const e = STATE4.event;
     const saveBtn = document.getElementById("emDiscSave");
     const status = document.getElementById("emDiscStatus");
-    function setStatus(message, isError) {
+    function setStatus3(message, isError) {
       if (!status) return;
       status.className = isError ? "text-xs text-red-600" : "text-xs text-gray-400";
       status.textContent = message;
     }
     if (!e) return;
     if (disclaimersLocked(STATE4)) {
-      setStatus("Disclaimers are locked after RSVPs.", true);
+      setStatus3("Disclaimers are locked after RSVPs.", true);
       return;
     }
     const form = { disclaimers: getDraft(STATE4) };
     const validationError = validateDisclaimers(form);
     if (validationError) {
-      setStatus(validationError, true);
+      setStatus3(validationError, true);
       return;
     }
     const normalized = window.EventsDisclaimers && typeof window.EventsDisclaimers.normalizeDisclaimers === "function" ? window.EventsDisclaimers.normalizeDisclaimers(form.disclaimers) : form.disclaimers;
     if (saveBtn) saveBtn.disabled = true;
-    setStatus("Saving\u2026", false);
+    setStatus3("Saving\u2026", false);
     try {
       const rsvpCount = await countEventRsvps3(e.id);
       if (rsvpCount > 0) {
@@ -16610,7 +18319,7 @@ Type the event title to confirm:`);
       }, 0);
       api10().notifyParent?.("updated", e.id);
     } catch (err) {
-      setStatus("Update failed: " + (err.message || "unknown error"), true);
+      setStatus3("Update failed: " + (err.message || "unknown error"), true);
     } finally {
       if (saveBtn) saveBtn.disabled = false;
     }
@@ -16623,15 +18332,645 @@ Type the event title to confirm:`);
   };
   globalThis.EventsManageDisclaimersEditor = manageDisclaimersEditorApi;
 
-  // js/portal/events/manage/overview.js
+  // js/portal/events/manage/sms-invites.js
   var PUBLIC_SITE_URL = "https://justicemcneal.com";
+  var inviteUi = {
+    members: [],
+    selected: /* @__PURE__ */ new Set(),
+    search: "",
+    loading: false,
+    loaded: false,
+    status: "",
+    recentInvites: []
+  };
+  function esc3(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function maskPhone(phone) {
+    const digits = String(phone || "").replace(/\D/g, "");
+    if (digits.length < 4) return "***";
+    return `***-***-${digits.slice(-4)}`;
+  }
+  function publicInviteUrl(event) {
+    const slug = event?.slug || "";
+    if (typeof globalThis.evtPublicEventInviteUrl === "function") {
+      return globalThis.evtPublicEventInviteUrl(slug);
+    }
+    return PUBLIC_SITE_URL + "/events/?e=" + encodeURIComponent(slug);
+  }
+  function invitePreviewBody(event) {
+    const title = (event?.title || "Event").trim() || "Event";
+    const url = publicInviteUrl(event);
+    return `${title}: You're invited. ${url}`;
+  }
+  function filteredMembers() {
+    const q = String(inviteUi.search || "").trim().toLowerCase();
+    if (!q) return inviteUi.members;
+    return inviteUi.members.filter((m) => {
+      const name = `${m.first_name || ""} ${m.last_name || ""}`.trim().toLowerCase();
+      const phone = String(m.phone || "").replace(/\D/g, "");
+      return name.includes(q) || phone.includes(q.replace(/\D/g, ""));
+    });
+  }
+  function renderMemberList() {
+    const list = document.getElementById("emSmsInviteList");
+    if (!list) return;
+    if (inviteUi.loading) {
+      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">Loading members with phones\u2026</p>`;
+      return;
+    }
+    const rows = filteredMembers();
+    if (!inviteUi.loaded) {
+      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">Preparing member list\u2026</p>`;
+      return;
+    }
+    if (!inviteUi.members.length) {
+      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">No active members with a phone on file. Add numbers below.</p>`;
+      return;
+    }
+    if (!rows.length) {
+      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">No members match this search.</p>`;
+      return;
+    }
+    list.innerHTML = rows.map((m) => {
+      const name = `${m.first_name || ""} ${m.last_name || ""}`.trim() || "Member";
+      const checked = inviteUi.selected.has(m.id) ? "checked" : "";
+      return `
+            <label class="em-attendee-card" style="cursor:pointer;align-items:flex-start">
+                <input type="checkbox" class="mt-1" data-sms-invite-member="${esc3(m.id)}" ${checked}
+                    style="width:18px;height:18px;accent-color:var(--color-primary,#13366E)">
+                <div class="em-attendee-main" style="margin-left:8px">
+                    <p class="em-attendee-name">${esc3(name)}</p>
+                    <p class="em-attendee-sub">${esc3(maskPhone(m.phone))}</p>
+                </div>
+            </label>`;
+    }).join("");
+    list.querySelectorAll("[data-sms-invite-member]").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const id = cb.getAttribute("data-sms-invite-member");
+        if (!id) return;
+        if (cb.checked) inviteUi.selected.add(id);
+        else inviteUi.selected.delete(id);
+        updateSelectedCount();
+      });
+    });
+    updateSelectedCount();
+  }
+  function updateSelectedCount() {
+    const el = document.getElementById("emSmsInviteSelectedCount");
+    if (el) el.textContent = String(inviteUi.selected.size);
+  }
+  function setStatus(msg, isError) {
+    inviteUi.status = msg || "";
+    const el = document.getElementById("emSmsInviteStatus");
+    if (!el) return;
+    el.textContent = inviteUi.status;
+    el.className = isError ? "text-xs text-red-600 mt-2" : "text-xs text-gray-500 mt-2";
+  }
+  async function loadInviteMembers() {
+    inviteUi.loading = true;
+    inviteUi.loaded = false;
+    renderMemberList();
+    try {
+      const { data, error } = await supabaseClient.from("profiles").select("id, first_name, last_name, phone").eq("is_active", true).not("phone", "is", null).neq("phone", "").order("first_name", { ascending: true }).limit(500);
+      if (error) throw error;
+      inviteUi.members = (data || []).filter((r) => String(r.phone || "").trim());
+      inviteUi.loaded = true;
+    } catch (err) {
+      console.error("SMS invite member load failed", err);
+      inviteUi.members = [];
+      inviteUi.loaded = true;
+      setStatus(err.message || "Could not load members with phones.", true);
+    } finally {
+      inviteUi.loading = false;
+      renderMemberList();
+    }
+  }
+  function parseExtraPhones(raw) {
+    return String(raw || "").split(/[\s,;]+/).map((p) => p.trim()).filter(Boolean);
+  }
+  async function loadRecentInvites(eventId2) {
+    if (!eventId2) {
+      inviteUi.recentInvites = [];
+      renderRecentInvites();
+      return;
+    }
+    try {
+      const { data, error } = await supabaseClient.from("sms_messages").select("id, created_at, recipient_count, body").eq("event_id", eventId2).eq("message_type", "event_invite").order("created_at", { ascending: false }).limit(5);
+      if (error) throw error;
+      inviteUi.recentInvites = data || [];
+    } catch (err) {
+      console.error("Recent invite log load failed", err);
+      inviteUi.recentInvites = [];
+    }
+    renderRecentInvites();
+  }
+  function renderRecentInvites() {
+    const el = document.getElementById("emSmsInviteRecent");
+    if (!el) return;
+    const rows = inviteUi.recentInvites || [];
+    if (!rows.length) {
+      el.innerHTML = `<p class="text-xs text-gray-400 italic py-1">No invite SMS sent yet for this event.</p>`;
+      return;
+    }
+    el.innerHTML = rows.map((m) => {
+      const when = m.created_at ? new Date(m.created_at).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      }) : "\u2014";
+      const n = Number(m.recipient_count) || 0;
+      return `<p class="text-xs text-gray-600" style="margin:4px 0">${esc3(when)} \xB7 ${n} recipient${n === 1 ? "" : "s"}</p>`;
+    }).join("");
+  }
+  function smsInvitesHtml(event) {
+    if (!event?.slug) return "";
+    const preview = invitePreviewBody(event);
+    return `
+        <div class="em-card mt-3" id="emSmsInvitesCard">
+            <div class="em-section-head">
+                <div>
+                    <h3 class="em-section-title">SMS invites</h3>
+                    <p class="em-section-sub">Pick members with phones and/or add numbers. Sends the event name + public link (not a payment link).</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mb-2">Message preview</p>
+            <p class="text-sm text-gray-800 mb-3" style="background:var(--color-surface,#EEF2F6);border:1px solid var(--color-border,#D5DFEC);border-radius:10px;padding:10px 12px;line-height:1.4">${esc3(preview)}</p>
+            <div class="flex flex-wrap items-center gap-2 mb-2">
+                <input type="search" id="emSmsInviteSearch" placeholder="Search members\u2026"
+                    class="em-input" style="flex:1;min-width:160px;font-size:16px">
+                <span class="text-xs text-gray-500"><span id="emSmsInviteSelectedCount">0</span> selected</span>
+            </div>
+            <div id="emSmsInviteList" style="max-height:220px;overflow:auto;margin-bottom:12px"></div>
+            <label class="text-xs text-gray-500 block mb-1" for="emSmsInvitePhones">Extra phone numbers</label>
+            <textarea id="emSmsInvitePhones" rows="2" placeholder="+15551234567, +15559876543"
+                class="em-textarea w-full mb-3" style="font-size:16px"></textarea>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" class="em-btn-primary" id="emSmsInviteSend">Send SMS invites</button>
+                <button type="button" class="em-btn-ghost" id="emSmsInviteClear">Clear selection</button>
+            </div>
+            <p id="emSmsInviteStatus" class="text-xs text-gray-500 mt-2"></p>
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--color-border,#D5DFEC)">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                    <p class="text-xs font-semibold text-gray-700" style="margin:0">Recent invites</p>
+                    <button type="button" class="em-btn-ghost" style="font-size:11px;padding:4px 8px" data-overview-tab="notifications">See all SMS history</button>
+                </div>
+                <div id="emSmsInviteRecent"><p class="text-xs text-gray-400 italic py-1">Loading\u2026</p></div>
+            </div>
+        </div>`;
+  }
+  function wireSmsInvites(event) {
+    if (!event?.slug) return;
+    inviteUi.selected = /* @__PURE__ */ new Set();
+    inviteUi.search = "";
+    inviteUi.status = "";
+    setStatus("");
+    const search = document.getElementById("emSmsInviteSearch");
+    search?.addEventListener("input", () => {
+      inviteUi.search = search.value || "";
+      renderMemberList();
+    });
+    document.getElementById("emSmsInviteClear")?.addEventListener("click", () => {
+      inviteUi.selected.clear();
+      const phones = document.getElementById("emSmsInvitePhones");
+      if (phones) phones.value = "";
+      renderMemberList();
+      setStatus("Selection cleared.");
+    });
+    document.getElementById("emSmsInviteSend")?.addEventListener("click", async () => {
+      const btn = document.getElementById("emSmsInviteSend");
+      const phonesEl = document.getElementById("emSmsInvitePhones");
+      const member_ids = [...inviteUi.selected];
+      const phones = parseExtraPhones(phonesEl?.value || "");
+      if (!member_ids.length && !phones.length) {
+        setStatus("Select at least one member or add a phone number.", true);
+        return;
+      }
+      if (typeof callEdgeFunction !== "function") {
+        setStatus("SMS send is unavailable right now.", true);
+        return;
+      }
+      const prev = btn?.textContent;
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Sending\u2026";
+      }
+      setStatus("Sending invites\u2026");
+      try {
+        const result = await callEdgeFunction("send-event-invites", {
+          event_id: event.id,
+          member_ids,
+          phones
+        });
+        if (result?.error) throw new Error(result.error);
+        const dry = result?.dry_run ? " (dry run \u2014 SMS_SEND_ENABLED off)" : "";
+        const parts = [
+          `Sent ${result?.sent ?? 0}${dry}`,
+          result?.skipped_suppressed ? `${result.skipped_suppressed} suppressed` : null,
+          result?.skipped_invalid ? `${result.skipped_invalid} invalid` : null,
+          result?.failed ? `${result.failed} failed` : null
+        ].filter(Boolean);
+        setStatus(parts.join(" \xB7 "));
+        await loadRecentInvites(event.id);
+      } catch (err) {
+        setStatus(err.message || "Could not send invites.", true);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = prev || "Send SMS invites";
+        }
+      }
+    });
+    loadInviteMembers();
+    loadRecentInvites(event.id);
+  }
+
+  // js/portal/events/manage/hosts.js
+  var hostsUi = {
+    event: null,
+    hosts: [],
+    candidates: [],
+    search: "",
+    loading: false,
+    status: ""
+  };
+  function esc4(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function setHostsStatus(msg, isError) {
+    hostsUi.status = msg || "";
+    const el = document.getElementById("emHostsStatus");
+    if (!el) return;
+    el.textContent = hostsUi.status;
+    el.className = isError ? "text-xs text-red-600 mt-2" : "text-xs text-gray-500 mt-2";
+  }
+  function hostDisplayName(row) {
+    const p = row.profiles || {};
+    return `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
+  }
+  function filteredCandidates(event) {
+    const q = String(hostsUi.search || "").trim().toLowerCase();
+    const hostIds = new Set((hostsUi.hosts || []).map((h) => h.user_id));
+    const creatorId = event?.created_by;
+    return (hostsUi.candidates || []).filter((m) => {
+      if (!m?.id) return false;
+      if (hostIds.has(m.id)) return false;
+      if (creatorId && m.id === creatorId) return false;
+      if (!q) return true;
+      const name = `${m.first_name || ""} ${m.last_name || ""}`.trim().toLowerCase();
+      return name.includes(q);
+    }).slice(0, 12);
+  }
+  function renderHostsList() {
+    const el = document.getElementById("emHostsList");
+    if (!el) return;
+    if (hostsUi.loading) {
+      el.innerHTML = `<p class="text-xs text-gray-400 italic py-2">Loading hosts\u2026</p>`;
+      return;
+    }
+    const rows = hostsUi.hosts || [];
+    if (!rows.length) {
+      el.innerHTML = `<p class="text-xs text-gray-400 italic py-2">No co-hosts yet. Add a member below.</p>`;
+      return;
+    }
+    el.innerHTML = rows.map((h) => {
+      const name = hostDisplayName(h);
+      const role = String(h.role || "co_host") === "co_host" ? "Co-host" : "Check-in staff";
+      return `
+            <div class="em-attendee-card" style="align-items:center">
+                <div class="em-attendee-main">
+                    <p class="em-attendee-name">${esc4(name)}</p>
+                    <p class="em-attendee-sub">${esc4(role)}</p>
+                </div>
+                <button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px"
+                    data-remove-host="${esc4(h.id)}">Remove</button>
+            </div>`;
+    }).join("");
+    el.querySelectorAll("[data-remove-host]").forEach((btn) => {
+      btn.addEventListener("click", () => removeHost(btn.getAttribute("data-remove-host")));
+    });
+  }
+  function renderHostCandidates(event) {
+    const el = document.getElementById("emHostsCandidates");
+    if (!el) return;
+    const rows = filteredCandidates(event);
+    if (!String(hostsUi.search || "").trim()) {
+      el.innerHTML = `<p class="text-xs text-gray-400 italic py-1">Search members to add as co-host.</p>`;
+      return;
+    }
+    if (!rows.length) {
+      el.innerHTML = `<p class="text-xs text-gray-400 italic py-1">No matching members.</p>`;
+      return;
+    }
+    el.innerHTML = rows.map((m) => {
+      const name = `${m.first_name || ""} ${m.last_name || ""}`.trim() || "Member";
+      return `
+            <div class="em-attendee-card" style="align-items:center">
+                <div class="em-attendee-main">
+                    <p class="em-attendee-name">${esc4(name)}</p>
+                    <p class="em-attendee-sub">Add as co-host</p>
+                </div>
+                <button type="button" class="em-btn-primary" style="font-size:11px;padding:6px 9px"
+                    data-add-host="${esc4(m.id)}">Add</button>
+            </div>`;
+    }).join("");
+    el.querySelectorAll("[data-add-host]").forEach((btn) => {
+      btn.addEventListener("click", () => addHost(event, btn.getAttribute("data-add-host")));
+    });
+  }
+  async function loadHosts(eventId2) {
+    hostsUi.loading = true;
+    renderHostsList();
+    try {
+      const { data, error } = await supabaseClient.from("event_hosts").select("id, user_id, role, created_at, profiles!event_hosts_user_id_fkey(first_name, last_name)").eq("event_id", eventId2).order("created_at", { ascending: true });
+      if (error) throw error;
+      hostsUi.hosts = data || [];
+    } catch (err) {
+      console.error("Hosts load failed", err);
+      hostsUi.hosts = [];
+      setHostsStatus(err.message || "Could not load hosts.", true);
+    } finally {
+      hostsUi.loading = false;
+      renderHostsList();
+    }
+  }
+  async function loadHostCandidates() {
+    try {
+      const { data, error } = await supabaseClient.from("profiles").select("id, first_name, last_name").eq("is_active", true).order("first_name", { ascending: true }).limit(500);
+      if (error) throw error;
+      hostsUi.candidates = data || [];
+    } catch (err) {
+      console.error("Host candidates load failed", err);
+      hostsUi.candidates = [];
+    }
+  }
+  async function addHost(event, userId) {
+    if (!event?.id || !userId) return;
+    const uid = globalThis.evtCurrentUser?.id;
+    if (!uid) {
+      setHostsStatus("Sign in required to add hosts.", true);
+      return;
+    }
+    setHostsStatus("Adding co-host\u2026");
+    try {
+      const { error } = await supabaseClient.from("event_hosts").insert({
+        event_id: event.id,
+        user_id: userId,
+        role: "co_host",
+        granted_by: uid
+      });
+      if (error) {
+        const msg = String(error.message || "");
+        if (msg.includes("duplicate") || error.code === "23505") {
+          throw new Error("That member is already a host on this event.");
+        }
+        if (msg.toLowerCase().includes("policy") || msg.toLowerCase().includes("permission")) {
+          throw new Error("Only the event creator or an Event Coordinator can add hosts.");
+        }
+        throw error;
+      }
+      hostsUi.search = "";
+      const search = document.getElementById("emHostsSearch");
+      if (search) search.value = "";
+      setHostsStatus("Co-host added.");
+      await loadHosts(event.id);
+      renderHostCandidates(event);
+    } catch (err) {
+      setHostsStatus(err.message || "Could not add host.", true);
+    }
+  }
+  async function removeHost(hostRowId) {
+    if (!hostRowId) return;
+    if (!confirm("Remove this co-host from the event?")) return;
+    setHostsStatus("Removing\u2026");
+    try {
+      const { error } = await supabaseClient.from("event_hosts").delete().eq("id", hostRowId);
+      if (error) {
+        const msg = String(error.message || "").toLowerCase();
+        if (msg.includes("policy") || msg.includes("permission")) {
+          throw new Error("Only the event creator or an Event Coordinator can remove hosts.");
+        }
+        throw error;
+      }
+      setHostsStatus("Co-host removed.");
+      const event = hostsUi.event;
+      if (event?.id) {
+        await loadHosts(event.id);
+        renderHostCandidates(event);
+      }
+    } catch (err) {
+      setHostsStatus(err.message || "Could not remove host.", true);
+    }
+  }
+  function hostsHtml(event) {
+    if (!event?.id) return "";
+    return `
+        <div class="em-card mt-3" id="emHostsCard">
+            <div class="em-section-head">
+                <div>
+                    <h3 class="em-section-title">Team hosts</h3>
+                    <p class="em-section-sub">Add co-hosts who can manage this event (aligned with Event Coordinator moderation). Global coordinators already manage all events.</p>
+                </div>
+            </div>
+            <div id="emHostsList"></div>
+            <label class="text-xs text-gray-500 block mb-1 mt-3" for="emHostsSearch">Add member</label>
+            <input type="search" id="emHostsSearch" placeholder="Search members by name\u2026"
+                class="em-input w-full mb-2" style="font-size:16px">
+            <div id="emHostsCandidates"></div>
+            <p id="emHostsStatus" class="text-xs text-gray-500 mt-2"></p>
+        </div>`;
+  }
+  function wireHosts(event) {
+    if (!event?.id) return;
+    hostsUi.event = event;
+    hostsUi.search = "";
+    hostsUi.status = "";
+    setHostsStatus("");
+    const search = document.getElementById("emHostsSearch");
+    search?.addEventListener("input", () => {
+      hostsUi.search = search.value || "";
+      renderHostCandidates(event);
+    });
+    loadHosts(event.id);
+    loadHostCandidates().then(() => renderHostCandidates(event));
+  }
+
+  // js/portal/events/manage/amenity-voting.js
   function api11() {
     return window.EventsManageOverviewApi || {};
   }
   function getState5() {
     return api11().getState?.() || {};
   }
-  function esc3(s) {
+  function esc5(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function toDatetimeLocal(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function normalizeCfg(event) {
+    if (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === "function") {
+      return window.EventsAmenityVoting.normalizeConfig(event?.amenity_voting);
+    }
+    return { enabled: false, options: [], closes_at: null, results_visible: "after_close" };
+  }
+  function setStatus2(msg, isError) {
+    const el = document.getElementById("emAmenityVoteStatus");
+    if (!el) return;
+    el.textContent = msg || "";
+    el.className = isError ? "text-xs text-red-600 mt-2" : "text-xs text-gray-500 mt-2";
+  }
+  function amenityVotingHtml(event) {
+    const cfg = normalizeCfg(event);
+    if (!cfg.enabled) return "";
+    const STATE4 = getState5();
+    const closed = window.EventsAmenityVoting?.isVotingClosed?.(cfg) === true;
+    const closeLabel = cfg.closes_at ? new Date(cfg.closes_at).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    }) : "No close time set";
+    const visibilityLabel = String(cfg.results_visible || "after_close").replace(/_/g, " ");
+    const parties = STATE4.parties || [];
+    const tallies = window.EventsAmenityVoting?.tallyCounts?.(
+      parties,
+      cfg.options.map((o) => o.id)
+    ) || {};
+    const provisional = parties.filter((p) => p.amenity_vote_status === "provisional").length;
+    const resultsInner = window.EventsAmenityVoting?.resultsHtml?.(cfg, tallies, { isHost: true }) || "";
+    return `
+        <div class="em-card mt-3" id="emAmenityVotingCard">
+            <div class="em-section-head">
+                <div>
+                    <h3 class="em-section-title">Amenity voting</h3>
+                    <p class="em-section-sub">Close voting and control when attendees see results. Option list stays locked after RSVPs.</p>
+                </div>
+            </div>
+            <div class="em-metric-grid mb-3">
+                <div class="em-metric"><span>Status</span><strong style="font-size:16px">${closed ? "Closed" : "Open"}</strong><small>${esc5(closeLabel)}</small></div>
+                <div class="em-metric"><span>Options</span><strong>${cfg.options.length}</strong><small>Locked</small></div>
+                <div class="em-metric"><span>Results</span><strong style="font-size:14px">${esc5(visibilityLabel)}</strong><small>Attendee visibility</small></div>
+                <div class="em-metric"><span>Provisional</span><strong>${provisional}</strong><small>Not yet counted</small></div>
+            </div>
+            <div class="ed-amenity-results mb-3" style="background:var(--color-surface,#EEF2F6);border:1px solid var(--color-border,#D5DFEC);border-radius:12px;padding:12px">
+                ${resultsInner || '<p class="text-xs text-gray-400 italic">No counted votes yet.</p>'}
+            </div>
+            ${!closed ? `
+            <button type="button" class="em-btn-primary mb-3" id="emAmenityCloseNow" style="font-size:13px">Close voting now</button>
+            ` : `
+            <p class="text-xs text-gray-500 mb-3">Voting is closed. You can still change results visibility or set a later reopen time below (sets a future close).</p>
+            `}
+            <label class="text-xs text-gray-500 block mb-1" for="emAmenityClosesAt">Closes at</label>
+            <input type="datetime-local" id="emAmenityClosesAt" class="text-sm w-full mb-3"
+                value="${esc5(toDatetimeLocal(cfg.closes_at))}"
+                style="border:1px solid var(--color-border,#D5DFEC);border-radius:8px;padding:8px 10px">
+            <label class="text-xs text-gray-500 block mb-1" for="emAmenityResultsVisible">Show results to attendees</label>
+            <select id="emAmenityResultsVisible" class="text-sm w-full mb-3"
+                style="border:1px solid var(--color-border,#D5DFEC);border-radius:8px;padding:8px 10px">
+                <option value="after_close"${cfg.results_visible === "after_close" ? " selected" : ""}>After voting closes</option>
+                <option value="always"${cfg.results_visible === "always" ? " selected" : ""}>Always</option>
+                <option value="host_only"${cfg.results_visible === "host_only" ? " selected" : ""}>Hosts only</option>
+            </select>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" class="em-btn-primary" id="emAmenityVoteSave" style="font-size:13px">Save voting settings</button>
+            </div>
+            <p id="emAmenityVoteStatus" class="text-xs text-gray-500 mt-2"></p>
+        </div>`;
+  }
+  async function patchAmenityVoting(nextPartial) {
+    const STATE4 = getState5();
+    const e = STATE4.event;
+    if (!e?.id) throw new Error("Event not loaded.");
+    const cfg = normalizeCfg(e);
+    if (!cfg.enabled) throw new Error("Amenity voting is not enabled on this event.");
+    const merged = {
+      ...cfg,
+      ...nextPartial,
+      enabled: true,
+      options: cfg.options
+    };
+    const normalized = window.EventsAmenityVoting?.normalizeConfig?.(merged) || merged;
+    normalized.enabled = true;
+    normalized.options = cfg.options;
+    const { data, error } = await supabaseClient.from("events").update({ amenity_voting: normalized }).eq("id", e.id).select("amenity_voting").single();
+    if (error) throw error;
+    STATE4.event.amenity_voting = data?.amenity_voting ?? normalized;
+    api11().notifyParent?.("updated", e.id);
+    return STATE4.event.amenity_voting;
+  }
+  async function closeVotingNow() {
+    if (!confirm("Close amenity voting now? Attendees will no longer be able to cast a vote.")) return;
+    setStatus2("Closing voting\u2026");
+    try {
+      await patchAmenityVoting({ closes_at: (/* @__PURE__ */ new Date()).toISOString() });
+      setStatus2("Voting closed.");
+      api11().renderTab?.("overview");
+    } catch (err) {
+      setStatus2(err.message || "Could not close voting.", true);
+    }
+  }
+  async function saveVotingSettings() {
+    const closesEl = document.getElementById("emAmenityClosesAt");
+    const visEl = document.getElementById("emAmenityResultsVisible");
+    const closesRaw = closesEl?.value?.trim() || "";
+    let closesAt = null;
+    if (closesRaw) {
+      const d = new Date(closesRaw);
+      if (Number.isNaN(d.getTime())) {
+        setStatus2("Enter a valid close date/time.", true);
+        return;
+      }
+      closesAt = d.toISOString();
+    }
+    const resultsVisible = visEl?.value || "after_close";
+    setStatus2("Saving\u2026");
+    try {
+      await patchAmenityVoting({
+        closes_at: closesAt,
+        results_visible: resultsVisible
+      });
+      setStatus2("Saved voting settings.");
+      api11().renderTab?.("overview");
+      setTimeout(() => {
+        const el = document.getElementById("emAmenityVoteStatus");
+        if (el) {
+          el.className = "text-xs text-emerald-600 mt-2";
+          el.textContent = "Saved voting settings.";
+        }
+      }, 0);
+    } catch (err) {
+      setStatus2(err.message || "Could not save.", true);
+    }
+  }
+  function wireAmenityVoting(event) {
+    const cfg = normalizeCfg(event);
+    if (!cfg.enabled) return;
+    document.getElementById("emAmenityCloseNow")?.addEventListener("click", () => closeVotingNow());
+    document.getElementById("emAmenityVoteSave")?.addEventListener("click", () => saveVotingSettings());
+  }
+
+  // js/portal/events/manage/overview.js
+  var PUBLIC_SITE_URL2 = "https://justicemcneal.com";
+  function api12() {
+    return window.EventsManageOverviewApi || {};
+  }
+  function getState6() {
+    return api12().getState?.() || {};
+  }
+  function esc6(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -16663,7 +19002,7 @@ Type the event title to confirm:`);
     if (typeof globalThis.evtPublicEventInviteUrl === "function") {
       return globalThis.evtPublicEventInviteUrl(slug);
     }
-    return PUBLIC_SITE_URL + "/events/?e=" + encodeURIComponent(slug);
+    return PUBLIC_SITE_URL2 + "/events/?e=" + encodeURIComponent(slug);
   }
   function safeFilename(value) {
     return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
@@ -16695,10 +19034,11 @@ Type the event title to confirm:`);
     }
   }
   function overviewHtml() {
-    const STATE4 = getState5();
+    const STATE4 = getState6();
     const e = STATE4.event;
-    const guestGoing = STATE4.guestRsvps.filter((r) => r.status === "going").length;
-    const going = STATE4.rsvps.filter((r) => r.status === "going").length + guestGoing;
+    const isCommitted = (row) => window.EventsHelpers?.rsvpIsCommittedGoing ? window.EventsHelpers.rsvpIsCommittedGoing(e, row) : e.pricing_mode === "paid" ? row?.paid === true : !!(row && (row.status === "going" || row.paid === true));
+    const guestGoing = STATE4.guestRsvps.filter(isCommitted).length;
+    const going = STATE4.rsvps.filter(isCommitted).length + guestGoing;
     const maybe = STATE4.rsvps.filter((r) => r.status === "maybe").length;
     const paid = STATE4.rsvps.filter((r) => r.paid).length + STATE4.guestRsvps.filter((r) => r.paid).length;
     const checked = STATE4.checkins.length;
@@ -16714,10 +19054,11 @@ Type the event title to confirm:`);
     const transportMethod = e.transportation_method;
     const transportEstimate = e.transportation_estimate_cents ? money(e.transportation_estimate_cents) : "";
     const ticketHelper = window.EventsManageTicketHandoff;
-    const goingMembers = STATE4.rsvps.filter((r) => r.status === "going");
+    const goingMembers = STATE4.rsvps.filter(isCommitted);
     const planeHandoff = isLlc && transportMethod === "plane" && ticketHelper ? ticketHelper.computePlaneTicketHandoff({
       goingRsvps: goingMembers,
-      documents: STATE4.eventDocuments || []
+      documents: STATE4.eventDocuments || [],
+      event: e
     }) : null;
     const costBreakdown = e.cost_breakdown || {};
     const budgetIncluded = Number(costBreakdown.total_included_cents) || 0;
@@ -16792,6 +19133,19 @@ Type the event title to confirm:`);
 
         ${operationsHtml ? `<div class="em-op-grid">${operationsHtml}</div>` : ""}
 
+        ${e.slug ? `
+        <div class="em-card mb-3" id="emAnnounceCard">
+            <div class="em-section-head"><div><h3 class="em-section-title">Announce</h3><p class="em-section-sub">Share the invite and send SMS invites before opening the full editor.</p></div></div>
+            <canvas id="emInviteQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
+            <p class="text-xs text-gray-400 text-center mt-2 break-all">${esc6(inviteUrl)}</p>
+            <div class="flex flex-wrap justify-center gap-2 mt-3 mb-1">
+                <button class="em-btn-primary" data-share-invite-url>Share invite</button>
+                <button class="em-btn-primary" data-download-invite-qr>Download QR</button>
+                <button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>
+            </div>
+        </div>
+        ${smsInvitesHtml(e)}` : ""}
+
         <div class="em-card mb-3">
             <div class="em-section-head" style="margin-bottom:12px">
                 <div>
@@ -16806,13 +19160,13 @@ Type the event title to confirm:`);
             <h3 class="font-bold text-gray-800 text-sm mb-3">Details</h3>
             <div class="space-y-2 text-sm">
                 <div class="flex justify-between gap-3"><span class="text-gray-500">When</span><span class="text-gray-800 font-medium text-right">${startLocal}</span></div>
-                ${e.location_nickname ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Where</span><span class="text-gray-800 font-medium text-right truncate">${esc3(e.location_nickname)}</span></div>` : ""}
+                ${e.location_nickname ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Where</span><span class="text-gray-800 font-medium text-right truncate">${esc6(e.location_nickname)}</span></div>` : ""}
                 <div class="flex justify-between gap-3"><span class="text-gray-500">Status</span><span class="text-gray-800 font-medium uppercase tracking-wide text-xs">${e.status}</span></div>
                 <div class="flex justify-between gap-3"><span class="text-gray-500">Pricing</span><span class="text-gray-800 font-medium">${pricingModeLabel(e)}</span></div>
                 ${e.pricing_mode === "paid" ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Adult price</span><span class="text-gray-800 font-medium">${money(adultCents)}</span></div>` : ""}
                 ${e.pricing_mode === "paid" ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Kids</span><span class="text-gray-800 font-medium">${e.kids_free !== false ? "Free" : `${money(e.kid_price_cents)} per child`}</span></div>` : ""}
                 ${e.fund_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Fund deadline</span><span class="text-gray-800 font-medium">${new Date(e.fund_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>` : ""}
-                <div class="flex justify-between gap-3"><span class="text-gray-500">Capacity</span><span class="text-gray-800 font-medium text-right">${esc3(capacityLabel(e))}</span></div>
+                <div class="flex justify-between gap-3"><span class="text-gray-500">Capacity</span><span class="text-gray-800 font-medium text-right">${esc6(capacityLabel(e))}</span></div>
                 ${e.rsvp_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">RSVP deadline</span><span class="text-gray-800 font-medium">${new Date(e.rsvp_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></div>` : ""}
             </div>
         </div>
@@ -16831,11 +19185,11 @@ Type the event title to confirm:`);
             <form id="emCopyForm" class="space-y-3">
                 <div>
                     <label for="emCopyTitle" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Title *</label>
-                    <input id="emCopyTitle" class="em-input" type="text" maxlength="120" required value="${esc3(e.title || "")}">
+                    <input id="emCopyTitle" class="em-input" type="text" maxlength="120" required value="${esc6(e.title || "")}">
                 </div>
                 <div>
                     <label for="emCopyDescription" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Description</label>
-                    <textarea id="emCopyDescription" class="em-textarea" rows="4" maxlength="2000">${esc3(e.description || "")}</textarea>
+                    <textarea id="emCopyDescription" class="em-textarea" rows="4" maxlength="2000">${esc6(e.description || "")}</textarea>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <button type="submit" id="emCopySave" class="em-btn-primary">Save changes</button>
@@ -16871,17 +19225,8 @@ Type the event title to confirm:`);
             </div>
             <p class="text-xs text-gray-400 mt-3">Tap any tab above for Money, Docs, Raffle, or Comp details.</p>
         </div>
-        ${e.slug ? `
-        <div class="em-card mt-3">
-            <div class="em-section-head"><div><h3 class="em-section-title">Invitation QR</h3><p class="em-section-sub">Use this public event link on printed or digital invitations.</p></div></div>
-            <canvas id="emInviteQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
-            <p class="text-xs text-gray-400 text-center mt-2 break-all">${esc3(inviteUrl)}</p>
-            <div class="flex flex-wrap justify-center gap-2 mt-3">
-                <button class="em-btn-primary" data-share-invite-url>Share invite</button>
-                <button class="em-btn-primary" data-download-invite-qr>Download QR</button>
-                <button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>
-            </div>
-        </div>` : ""}
+        ${hostsHtml(e)}
+        ${amenityVotingHtml(e)}
         ${e.checkin_enabled !== false && e.checkin_mode === "venue_scan" && e.venue_qr_token ? `
         <div class="em-card mt-3">
             <h3 class="font-bold text-gray-800 text-sm mb-3">\u{1F4CD} Venue QR Code</h3>
@@ -16891,7 +19236,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireOverview() {
-    const STATE4 = getState5();
+    const STATE4 = getState6();
     const e = STATE4.event;
     if (!e) return;
     const inviteUrl = publicEventUrl(e);
@@ -16911,11 +19256,14 @@ Type the event title to confirm:`);
     document.getElementById("emSheetContent").querySelectorAll("[data-download-invite-qr]").forEach((btn) => {
       btn.addEventListener("click", () => downloadCanvasPng("emInviteQR", `${safeFilename(e.slug || e.title || "event")}-invite-qr.png`));
     });
+    wireSmsInvites(e);
+    wireHosts(e);
+    wireAmenityVoting(e);
     document.getElementById("emSheetContent").querySelectorAll("[data-overview-tab]").forEach((btn) => {
       btn.addEventListener("click", () => {
         STATE4.activeTab = btn.dataset.overviewTab;
-        api11().renderTabs?.();
-        api11().renderTab?.(STATE4.activeTab);
+        api12().renderTabs?.();
+        api12().renderTab?.(STATE4.activeTab);
       });
     });
     wirePricingEditor();
@@ -16961,7 +19309,7 @@ Type the event title to confirm:`);
     }
   }
   async function saveEventCopy(form) {
-    const STATE4 = getState5();
+    const STATE4 = getState6();
     const e = STATE4.event;
     if (!e || !form) return;
     const titleInput = document.getElementById("emCopyTitle");
@@ -16970,25 +19318,25 @@ Type the event title to confirm:`);
     const status = document.getElementById("emCopyStatus");
     const title = (titleInput?.value || "").trim();
     const description = (descriptionInput?.value || "").trim();
-    function setStatus(message, isError) {
+    function setStatus3(message, isError) {
       if (!status) return;
       status.className = isError ? "text-xs text-red-600" : "text-xs text-gray-400";
       status.textContent = message;
     }
     if (!title) {
-      setStatus("Title is required.", true);
+      setStatus3("Title is required.", true);
       titleInput?.focus();
       return;
     }
     if (saveBtn) saveBtn.disabled = true;
-    setStatus("Saving...", false);
+    setStatus3("Saving...", false);
     try {
       const { data, error } = await supabaseClient.from("events").update({ title, description: description || null }).eq("id", e.id).select("title, description").single();
       if (error) throw error;
       STATE4.event.title = data?.title || title;
       STATE4.event.description = data?.description || null;
-      api11().renderHeader?.();
-      api11().renderTab?.("overview");
+      api12().renderHeader?.();
+      api12().renderTab?.("overview");
       setTimeout(() => {
         const refreshedStatus = document.getElementById("emCopyStatus");
         if (refreshedStatus) {
@@ -16999,9 +19347,9 @@ Type the event title to confirm:`);
           }, 2500);
         }
       }, 0);
-      api11().notifyParent?.("updated", e.id);
+      api12().notifyParent?.("updated", e.id);
     } catch (err) {
-      setStatus("Update failed: " + (err.message || "unknown error"), true);
+      setStatus3("Update failed: " + (err.message || "unknown error"), true);
     } finally {
       if (saveBtn) saveBtn.disabled = false;
     }
@@ -17027,7 +19375,7 @@ Type the event title to confirm:`);
     }
   }
   async function toggleFeatured() {
-    const STATE4 = getState5();
+    const STATE4 = getState6();
     const btn = document.getElementById("emFeaturedToggle");
     if (!btn) return;
     const newVal = !STATE4.event.is_featured;
@@ -17039,7 +19387,7 @@ Type the event title to confirm:`);
       return;
     }
     STATE4.event.is_featured = newVal;
-    api11().renderTab?.("overview");
+    api12().renderTab?.("overview");
     document.dispatchEvent(new CustomEvent("events:manage:updated", { detail: { eventId: STATE4.event.id } }));
   }
   var manageOverviewApi = {
@@ -17054,22 +19402,22 @@ Type the event title to confirm:`);
   globalThis.EventsManageOverview = manageOverviewApi;
 
   // js/portal/events/manage/images.js
-  function api12() {
+  function api13() {
     return window.EventsManageImagesApi || {};
   }
-  function esc4(s) {
+  function esc7(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
   var imgFiles = { banner: null, embed: null };
   function imgDropZone(id, label, hint, currentUrl) {
-    const STATE4 = api12().getState?.() || {};
+    const STATE4 = api13().getState?.() || {};
     const hasImg = !!currentUrl;
     return `
         <div id="${id}Zone" class="em-img-zone${hasImg ? " em-img-zone--has" : ""}" data-zone="${id}">
             <input id="${id}FileInput" type="file" accept="image/*" style="display:none">
-            <img id="${id}Preview" src="${esc4(currentUrl)}" alt=""
+            <img id="${id}Preview" src="${esc7(currentUrl)}" alt=""
                  style="width:100%;border-radius:10px;object-fit:cover;max-height:200px;margin-bottom:10px;${hasImg ? "" : "display:none"}">
             <div id="${id}Prompt" style="${hasImg ? "display:none" : ""}">
                 <svg style="width:32px;height:32px;color:#9ca3af;margin-bottom:8px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4-4a3 3 0 014 0l4 4m-4-4l1.5-1.5a3 3 0 014 0L20 16M14 8h.01M4 19h16a1 1 0 001-1V6a1 1 0 00-1-1H4a1 1 0 00-1 1v12a1 1 0 001 1z"/></svg>
@@ -17080,16 +19428,16 @@ Type the event title to confirm:`);
             <button type="button" class="em-btn-ghost" style="font-size:12px;padding:6px 12px" data-pick="${id}">Choose file</button>
         </div>
         <p style="font-size:11px;color:#9ca3af;margin-top:6px">Or paste a URL:</p>
-        <input id="${id}UrlInput" class="em-input" type="url" placeholder="https://\u2026" value="${esc4(currentUrl)}" style="margin-top:4px">
+        <input id="${id}UrlInput" class="em-input" type="url" placeholder="https://\u2026" value="${esc7(currentUrl)}" style="margin-top:4px">
     `;
   }
   function imagesHtml() {
-    const STATE4 = api12().getState?.() || {};
+    const STATE4 = api13().getState?.() || {};
     const e = STATE4.event;
     return `
         <style>
             .em-img-zone { border:2px dashed #e5e7eb; border-radius:14px; padding:24px 16px; text-align:center; cursor:pointer; transition:border-color .15s,background .15s; display:flex; flex-direction:column; align-items:center; gap:4px; }
-            .em-img-zone:hover, .em-img-zone.em-drag-over { border-color:#818cf8; background:#f5f3ff; }
+            .em-img-zone:hover, .em-img-zone.em-drag-over { border-color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); }
             .em-img-zone--has { padding:14px 16px; }
         </style>
 
@@ -17126,7 +19474,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireImages() {
-    const STATE4 = api12().getState?.() || {};
+    const STATE4 = api13().getState?.() || {};
     const e = STATE4.event;
     imgFiles.banner = null;
     imgFiles.embed = null;
@@ -17220,7 +19568,7 @@ Type the event title to confirm:`);
         setTimeout(() => {
           status.textContent = "";
         }, 2500);
-        api12().notifyParent?.("updated", e.id);
+        api13().notifyParent?.("updated", e.id);
       } catch (err) {
         status.textContent = "Error: " + (err.message || "save failed");
       } finally {
@@ -17235,8 +19583,13 @@ Type the event title to confirm:`);
   globalThis.EventsManageImages = manageImagesApi;
 
   // js/portal/events/manage/ticket-handoff.js
-  function computePlaneTicketHandoff({ goingRsvps, documents }) {
-    const going = (goingRsvps || []).filter((r) => r.status === "going");
+  function computePlaneTicketHandoff({ goingRsvps, documents, event }) {
+    const going = (goingRsvps || []).filter((r) => {
+      if (window.EventsHelpers?.rsvpIsCommittedGoing && event) {
+        return window.EventsHelpers.rsvpIsCommittedGoing(event, r);
+      }
+      return r.status === "going" && (event?.pricing_mode !== "paid" || r.paid === true);
+    });
     const total = going.length;
     const ticketDocs = (documents || []).filter(
       (d) => d.doc_type === "plane_ticket" && d.target_user_id
@@ -17266,16 +19619,16 @@ Type the event title to confirm:`);
   globalThis.EventsManageTicketHandoff = ticketHandoffApi;
 
   // js/portal/events/manage/docs.js
-  function api13() {
+  function api14() {
     return window.EventsManageDocsApi || {};
   }
-  function esc5(s) {
+  function esc8(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
   async function loadDocs() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     const { data, error } = await supabaseClient.from("event_documents").select("id, doc_type, label, file_name, file_size_bytes, file_path, distributed, target_user_id, created_at, profiles:target_user_id(first_name, last_name, profile_picture_url)").eq("event_id", STATE4.eventId).order("created_at", { ascending: true });
     if (error) throw error;
     const docs = data || [];
@@ -17295,7 +19648,7 @@ Type the event title to confirm:`);
     STATE4.eventDocuments = data || [];
   }
   function docTypeIcon(type) {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     return {
       plane_ticket: "\u2708\uFE0F",
       group_ticket: "\u{1F3AB}",
@@ -17305,18 +19658,18 @@ Type the event title to confirm:`);
     }[type] || "\u{1F4C4}";
   }
   function formatBytes(bytes) {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     if (!bytes) return "\u2014";
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / 1024 / 1024).toFixed(1) + " MB";
   }
   function docsHtml() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     const docs = STATE4.tabData.docs.docs;
     const groupDocs = docs.filter((d) => !d.target_user_id);
     const memberDocs = docs.filter((d) => d.target_user_id);
-    const goingMembers = STATE4.rsvps.filter((r) => r.status === "going").map((r) => {
+    const goingMembers = STATE4.rsvps.filter((r) => window.EventsHelpers?.rsvpIsCommittedGoing ? window.EventsHelpers.rsvpIsCommittedGoing(STATE4.event, r) : STATE4.event?.pricing_mode === "paid" ? r.paid === true : r.status === "going").map((r) => {
       const profile = r.profiles || {};
       return {
         id: r.user_id,
@@ -17333,8 +19686,8 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:16px">${docTypeIcon(d.doc_type)}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc5(d.label || d.file_name || "Document")}</p>
-                    <p class="em-attendee-sub">${esc5(d.file_name || "")} \xB7 ${formatBytes(d.file_size_bytes)}</p>
+                    <p class="em-attendee-name">${esc8(d.label || d.file_name || "Document")}</p>
+                    <p class="em-attendee-sub">${esc8(d.file_name || "")} \xB7 ${formatBytes(d.file_size_bytes)}</p>
                     <div class="flex flex-wrap gap-1 mt-2">${distBtn}<span class="em-pill em-pill-going">${d.target_user_id ? "Member file" : "Group file"}</span></div>
                 </div>
                 <button data-doc-action="delete" data-id="${d.id}" class="text-xs text-red-600 font-semibold hover:underline" style="background:none;border:none;cursor:pointer">Delete</button>
@@ -17354,24 +19707,25 @@ Type the event title to confirm:`);
         const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
         return `
                 <div style="margin-bottom:14px">
-                    <div class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">${esc5(name)} <span class="text-gray-400 font-normal">\xB7 ${u.docs.length}</span></div>
+                    <div class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">${esc8(name)} <span class="text-gray-400 font-normal">\xB7 ${u.docs.length}</span></div>
                     ${u.docs.map(docRow).join("")}
                 </div>
             `;
       }).join("");
     }
-    const memberOptions = goingMembers.map((m) => `<option value="${esc5(m.id)}">${esc5(m.name)}</option>`).join("");
-    const typeOptions = (api13().getDocTypes?.() || []).map((t) => `<option value="${esc5(t.value)}">${esc5(t.label)}</option>`).join("");
+    const memberOptions = goingMembers.map((m) => `<option value="${esc8(m.id)}">${esc8(m.name)}</option>`).join("");
+    const typeOptions = (api14().getDocTypes?.() || []).map((t) => `<option value="${esc8(t.value)}">${esc8(t.label)}</option>`).join("");
     const isPlaneLlc = STATE4.event?.event_type === "llc" && STATE4.event?.transportation_mode === "llc_provides" && STATE4.event?.transportation_method === "plane";
     const ticketHelper = window.EventsManageTicketHandoff;
     const planeHandoff = isPlaneLlc && ticketHelper ? ticketHelper.computePlaneTicketHandoff({
-      goingRsvps: STATE4.rsvps.filter((r) => r.status === "going"),
-      documents: docs
+      goingRsvps: STATE4.rsvps,
+      documents: docs,
+      event: STATE4.event
     }) : null;
     const firstMissingUserId = planeHandoff?.missingUserIds?.[0] || "";
     return `
         ${planeHandoff && planeHandoff.missingCount ? `
-        <div class="em-card mb-4" style="border-color:#fcd34d;background:#fffbeb" data-doc-preset-member="${esc5(firstMissingUserId)}">
+        <div class="em-card mb-4" style="border-color:#fcd34d;background:#fffbeb" data-doc-preset-member="${esc8(firstMissingUserId)}">
             <p class="text-sm font-bold text-amber-900">${planeHandoff.missingCount} member${planeHandoff.missingCount === 1 ? "" : "s"} still need plane tickets</p>
             <p class="text-xs text-amber-800 mt-1">Upload per-member plane tickets below. The form will preset the next member who needs a ticket.</p>
         </div>` : ""}
@@ -17431,7 +19785,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireDocs() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     const targetMode = document.getElementById("emDocTargetMode");
     const memberWrap = document.getElementById("emDocMemberWrap");
     const type = document.getElementById("emDocType");
@@ -17466,13 +19820,13 @@ Type the event title to confirm:`);
         }
         STATE4.tabData.docs = null;
         await _syncEventDocuments(STATE4);
-        api13().renderTab?.("docs");
-        api13().notifyParent?.("updated", STATE4.eventId);
+        api14().renderTab?.("docs");
+        api14().notifyParent?.("updated", STATE4.eventId);
       });
     });
   }
   async function uploadDocFromManage() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     const btn = document.getElementById("emDocUploadBtn");
     const mode = document.getElementById("emDocTargetMode")?.value || "group";
     const targetUserId = mode === "member" ? document.getElementById("emDocMember")?.value || "" : "";
@@ -17503,8 +19857,8 @@ Type the event title to confirm:`);
       if (dbErr) throw dbErr;
       STATE4.tabData.docs = null;
       await _syncEventDocuments(STATE4);
-      api13().renderTab?.("docs");
-      api13().notifyParent?.("updated", STATE4.eventId);
+      api14().renderTab?.("docs");
+      api14().notifyParent?.("updated", STATE4.eventId);
     } catch (err) {
       alert("Upload failed: " + (err.message || err));
     } finally {
@@ -17521,10 +19875,10 @@ Type the event title to confirm:`);
   globalThis.EventsManageDocs = manageDocsApi;
 
   // js/portal/events/manage/rsvps.js
-  function api14() {
+  function api15() {
     return window.EventsManageRsvpsApi || {};
   }
-  function esc6(s) {
+  function esc9(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -17591,17 +19945,164 @@ Type the event title to confirm:`);
       isPayerGuest
     };
   }
+  function adultKidSubExtra(seats) {
+    const list = Array.isArray(seats) ? seats : [];
+    if (!list.length) return "";
+    const adults = list.filter((s) => s.role !== "kid").length;
+    const kids = list.filter((s) => s.role === "kid").length;
+    const bits = [];
+    if (adults) bits.push(`${adults} adult${adults === 1 ? "" : "s"}`);
+    if (kids) bits.push(`${kids} kid${kids === 1 ? "" : "s"}`);
+    return bits.length ? ` \xB7 ${bits.join(" \xB7 ")}` : "";
+  }
+  function humanizeOptionKey(key) {
+    return String(key || "").replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).trim() || "Option";
+  }
+  function seatOptionsSummary(seat, catalog) {
+    const opts = seat && seat.options && typeof seat.options === "object" ? seat.options : null;
+    if (!opts) return "";
+    const entries = Object.entries(opts).filter(([, v]) => v != null && String(v).trim() !== "");
+    if (!entries.length) return "";
+    let nameById = null;
+    if (window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === "function") {
+      const list = window.EventsIncludedItems.normalizeIncludedItems(catalog);
+      nameById = new Map(list.map((item) => [String(item.id), item.name || item.id]));
+    }
+    return entries.map(([k, v]) => {
+      const label = nameById && nameById.get(String(k)) || humanizeOptionKey(k);
+      return `${label}: ${String(v).trim()}`;
+    }).join(" \xB7 ");
+  }
+  function tsvCell(value) {
+    return String(value == null ? "" : value).replace(/\t/g, " ").replace(/\r?\n/g, " ").trim();
+  }
+  function buildRosterTsv(STATE4) {
+    const idx = buildPartyIndexes(STATE4);
+    const parties = Array.isArray(STATE4.parties) ? STATE4.parties : [];
+    const seats = Array.isArray(STATE4.seats) ? STATE4.seats : [];
+    const rsvps = Array.isArray(STATE4.rsvps) ? STATE4.rsvps : [];
+    const guests = Array.isArray(STATE4.guestRsvps) ? STATE4.guestRsvps : [];
+    const catalog = STATE4.event?.included_items;
+    const partyById = new Map(parties.map((p) => [p.id, p]));
+    const header = ["Name", "Role", "Kind", "Payer", "Status", "Paid", "Phone", "Options"];
+    const rows = [];
+    function memberByUserId(userId) {
+      return rsvps.find((r) => r.user_id === userId) || null;
+    }
+    function guestById(guestId) {
+      return guests.find((g2) => g2.id === guestId) || null;
+    }
+    function pushSeatRow(seat, party) {
+      if (!party || party.status === "cancelled") return;
+      const role = seat.role === "kid" ? "kid" : "adult";
+      let kind = "guest";
+      let name = (seat.display_name || "").trim() || "Guest";
+      let status = party.status === "pending_payment" ? "pending_payment" : "going";
+      let paid = false;
+      let phone = "";
+      if (seat.linked_user_id) {
+        kind = "member";
+        const r = memberByUserId(seat.linked_user_id);
+        if (r) {
+          const p = r.profiles || {};
+          name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || name;
+          status = r.status || status;
+          paid = !!r.paid;
+          phone = (p.phone || "").trim();
+        }
+      } else if (seat.linked_guest_rsvp_id) {
+        kind = "guest";
+        const g2 = guestById(seat.linked_guest_rsvp_id);
+        if (g2) {
+          name = (g2.guest_name || "").trim() || name;
+          status = g2.status || status;
+          paid = !!g2.paid;
+          phone = (g2.guest_phone || "").trim();
+        }
+      } else if (party.payer_kind === "member") {
+        kind = "member";
+      }
+      const optSum = seatOptionsSummary(seat, catalog);
+      const options = optSum || (seat.options_complete ? "complete" : "pending");
+      rows.push([
+        name,
+        role,
+        kind,
+        idx.payerLabel(party) || "",
+        status,
+        paid ? "yes" : "no",
+        phone,
+        options
+      ].map(tsvCell));
+    }
+    const activeSeats = seats.filter((s) => {
+      const party = partyById.get(s.party_id);
+      return party && party.status !== "cancelled";
+    });
+    if (activeSeats.length) {
+      const sorted = [...activeSeats].sort((a, b) => {
+        if (a.party_id !== b.party_id) return String(a.party_id).localeCompare(String(b.party_id));
+        return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0);
+      });
+      for (const seat of sorted) {
+        pushSeatRow(seat, partyById.get(seat.party_id));
+      }
+    } else {
+      const event = STATE4.event;
+      for (const r of rsvps.filter((row) => isCommittedGoingRow(event, row))) {
+        const p = r.profiles || {};
+        const party = idx.partyForMember(r);
+        rows.push([
+          `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member",
+          "adult",
+          "member",
+          idx.payerLabel(party) || "",
+          r.status,
+          r.paid ? "yes" : "no",
+          (p.phone || "").trim(),
+          ""
+        ].map(tsvCell));
+      }
+      for (const g2 of guests.filter((row) => isCommittedGoingRow(event, row))) {
+        const party = idx.partyForGuest(g2);
+        rows.push([
+          (g2.guest_name || "").trim() || "Guest",
+          "adult",
+          "guest",
+          idx.payerLabel(party) || "",
+          g2.status,
+          g2.paid ? "yes" : "no",
+          (g2.guest_phone || "").trim(),
+          ""
+        ].map(tsvCell));
+      }
+    }
+    return [header, ...rows].map((cols) => cols.join("	")).join("\n");
+  }
+  function latestAckedAt(acks) {
+    if (!Array.isArray(acks) || !acks.length) return null;
+    let best = null;
+    for (const row of acks) {
+      const raw = row && row.acked_at;
+      if (!raw) continue;
+      const t = new Date(raw).getTime();
+      if (Number.isNaN(t)) continue;
+      if (best == null || t > best) best = t;
+    }
+    return best == null ? null : new Date(best);
+  }
   function partyMetaHtml(opts) {
     const {
       party,
       seats,
       isPayer,
       payerName,
-      awaitingAttach
+      awaitingAttach,
+      event: eventRow
     } = opts || {};
     if (!party) return { pills: [], subExtra: "", seatsBlock: "" };
     const pills = [];
-    let subExtra = "";
+    let subExtra = adultKidSubExtra(seats);
     const incomplete = seats.filter((s) => !s.options_complete);
     const inviteTokens = incomplete.filter((s) => s.info_invite_token).map((s) => ({
       seat_id: s.id,
@@ -17620,28 +20121,66 @@ Type the event title to confirm:`);
       });
       if (seats.length > 1 || extras.length) {
         pills.push('<span class="em-pill em-pill-going">Pays for party</span>');
-        const adults = seats.filter((s) => s.role !== "kid").length;
-        const kids = seats.filter((s) => s.role === "kid").length;
-        const bits = [];
-        if (adults) bits.push(`${adults} adult${adults === 1 ? "" : "s"}`);
-        if (kids) bits.push(`${kids} kid${kids === 1 ? "" : "s"}`);
-        if (bits.length) subExtra = ` \xB7 ${bits.join(" \xB7 ")}`;
       } else {
         pills.push('<span class="em-pill em-pill-going">Paid by: Self</span>');
       }
     } else if (payerName) {
-      pills.push(`<span class="em-pill em-pill-going">Paid by: ${esc6(payerName)}</span>`);
+      pills.push(`<span class="em-pill em-pill-going">Paid by: ${esc9(payerName)}</span>`);
     }
     if (incomplete.length && !(awaitingAttach || party.status === "awaiting_attach")) {
       pills.push('<span class="em-pill em-pill-not">Sizes pending</span>');
     }
+    const Disc = window.EventsDisclaimers;
+    if (Disc && typeof Disc.hasRequiredDisclaimers === "function" && Disc.hasRequiredDisclaimers(eventRow?.disclaimers) && !(awaitingAttach || party.status === "awaiting_attach")) {
+      const acks = Array.isArray(party.disclaimer_acks) ? party.disclaimer_acks : [];
+      const ackIds = acks.map((a) => a && a.id != null ? String(a.id) : "").filter(Boolean);
+      const missing = typeof Disc.validateAcks === "function" ? Disc.validateAcks(eventRow.disclaimers, ackIds) : null;
+      if (!missing) {
+        const when = latestAckedAt(acks);
+        const whenTxt = when ? ` \xB7 ${when.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : "";
+        pills.push(`<span class="em-pill em-pill-checked">Disclaimers acked${esc9(whenTxt)}</span>`);
+      } else {
+        pills.push('<span class="em-pill em-pill-not">No disclaimer ack</span>');
+      }
+    }
+    const Vote = window.EventsAmenityVoting;
+    if (Vote && typeof Vote.normalizeConfig === "function") {
+      const cfg = Vote.normalizeConfig(eventRow?.amenity_voting);
+      if (cfg.enabled && !(awaitingAttach || party.status === "awaiting_attach")) {
+        const status = String(party.amenity_vote_status || "none");
+        const optId = party.amenity_vote_option_id ? String(party.amenity_vote_option_id) : "";
+        const opt = (cfg.options || []).find((o) => String(o.id) === optId);
+        const optLabel = opt?.label ? ` \xB7 ${opt.label}` : "";
+        if (status === "counted") {
+          pills.push(`<span class="em-pill em-pill-checked">Vote: counted${esc9(optLabel)}</span>`);
+        } else if (status === "provisional") {
+          pills.push(`<span class="em-pill em-pill-maybe">Vote: provisional${esc9(optLabel)}</span>`);
+        } else if (status === "removed") {
+          pills.push('<span class="em-pill em-pill-not">Vote: removed</span>');
+        } else {
+          pills.push('<span class="em-pill em-pill-not">No vote</span>');
+        }
+      }
+    }
+    let paymentLinkBlock = "";
+    if (isPayer && party?.invite_token && !(awaitingAttach || party.status === "awaiting_attach")) {
+      const tok = esc9(party.invite_token);
+      paymentLinkBlock = `
+            <div class="em-party-pay-link" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">
+                <button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-copy-pay-link="${tok}">Copy payment link</button>
+                <button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-resend-pay-sms="${esc9(party.id)}">Resend SMS</button>
+            </div>`;
+    }
     let seatsBlock = "";
-    const showSeatList = isPayer && !(awaitingAttach || party.status === "awaiting_attach") && seats.length > 0 && (seats.length > 1 || incomplete.length);
+    const showSeatList = isPayer && !(awaitingAttach || party.status === "awaiting_attach") && seats.length > 0;
     if (showSeatList) {
+      const catalog = eventRow?.included_items;
       const rows = seats.map((s) => {
         const role = s.role === "kid" ? "Kid" : "Adult";
         const status = s.options_complete ? "Options complete" : "Sizes pending";
-        return `<li style="font-size:12px;color:#4b5563;margin:2px 0">${esc6(s.display_name || "Guest")} \xB7 ${role} \xB7 ${status}</li>`;
+        const optSum = seatOptionsSummary(s, catalog);
+        const optPart = optSum ? ` \xB7 ${esc9(optSum)}` : "";
+        return `<li style="font-size:12px;color:#4b5563;margin:2px 0">${esc9(s.display_name || "Guest")} \xB7 ${role} \xB7 ${status}${optPart}</li>`;
       }).join("");
       let invitesHtml = "";
       if (inviteTokens.length && window.EventsHelpers?.seatInfoInvitesHtml) {
@@ -17657,44 +20196,61 @@ Type the event title to confirm:`);
                 ${invitesHtml}
             </div>`;
     }
-    return { pills, subExtra, seatsBlock };
+    return { pills, subExtra, seatsBlock: `${paymentLinkBlock}${seatsBlock}` };
+  }
+  function isCommittedGoingRow(event, row) {
+    if (window.EventsHelpers?.rsvpIsCommittedGoing) {
+      return window.EventsHelpers.rsvpIsCommittedGoing(event, row);
+    }
+    if (event?.pricing_mode === "paid") return row?.paid === true;
+    return !!(row && (row.status === "going" || row.paid === true));
   }
   function rsvpsHtml() {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api15().getState?.() || {};
     const e = STATE4.event;
-    const going = STATE4.rsvps.filter((r) => r.status === "going");
+    const going = STATE4.rsvps.filter((r) => isCommittedGoingRow(e, r));
+    const paymentPending = STATE4.rsvps.filter((r) => r.status === "going" && !isCommittedGoingRow(e, r));
     const maybe = STATE4.rsvps.filter((r) => r.status === "maybe");
     const not = STATE4.rsvps.filter((r) => r.status === "not_going");
-    const guestGoing = STATE4.guestRsvps.filter((r) => r.status === "going");
+    const guestGoing = STATE4.guestRsvps.filter((r) => isCommittedGoingRow(e, r));
+    const guestPaymentPending = STATE4.guestRsvps.filter((r) => r.status === "going" && !isCommittedGoingRow(e, r));
     const checkedSet = new Set(STATE4.checkins.map((c) => c.user_id));
     const guestCheckedSet = new Set(STATE4.checkins.map((c) => c.guest_token).filter(Boolean));
     const totalGoing = going.length + guestGoing.length;
+    const totalPending = paymentPending.length + guestPaymentPending.length;
     const checkedTotal = STATE4.checkins.length;
-    const capacity = e.max_participants || 0;
-    const capacityLeft = capacity ? Math.max(0, capacity - totalGoing) : null;
+    const capacity = window.EventsCapacity?.eventHasCapacityLimit?.(e) ? window.EventsCapacity.eventMaxParticipants(e) || 0 : 0;
+    const occupiedCap = capacity ? window.EventsCapacity.countOccupiedCapacity(e, {
+      seats: STATE4.seats,
+      parties: STATE4.parties,
+      goingList: [...going, ...guestGoing]
+    }) : 0;
+    const capacityLeft = capacity ? Math.max(0, capacity - occupiedCap) : null;
     const minNeeded = Number(e.min_participants || 0);
     const thresholdLeft = minNeeded ? Math.max(0, minNeeded - totalGoing) : 0;
     const checkedPct = totalGoing ? Math.round(checkedTotal / totalGoing * 100) : 0;
     const isLlcPlane = e.event_type === "llc" && e.transportation_mode === "llc_provides" && e.transportation_method === "plane";
     const ticketHelper = window.EventsManageTicketHandoff;
     const documents = STATE4.eventDocuments || STATE4.tabData?.docs?.docs || [];
-    const planeHandoff = isLlcPlane && ticketHelper ? ticketHelper.computePlaneTicketHandoff({ goingRsvps: going, documents }) : null;
+    const planeHandoff = isLlcPlane && ticketHelper ? ticketHelper.computePlaneTicketHandoff({ goingRsvps: going, documents, event: e }) : null;
     const idx = buildPartyIndexes(STATE4);
     function memberRow(r) {
       const p = r.profiles || {};
       const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
       const initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?";
-      const avatar = p.profile_picture_url ? `<img src="${esc6(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
+      const avatar = p.profile_picture_url ? `<img src="${esc9(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
+      const committed = isCommittedGoingRow(e, r);
       const pills = [];
-      if (r.status === "going") pills.push('<span class="em-pill em-pill-going">Going</span>');
+      if (committed) pills.push('<span class="em-pill em-pill-going">Going</span>');
+      else if (r.status === "going") pills.push('<span class="em-pill em-pill-maybe">Payment pending</span>');
       else if (r.status === "maybe") pills.push('<span class="em-pill em-pill-maybe">Maybe</span>');
       else pills.push('<span class="em-pill em-pill-not">Not going</span>');
       if (r.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
       if (checkedSet.has(r.user_id)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
-      if (e.invest_eligible && r.status === "going" && r.paid) {
+      if (e.invest_eligible && committed && r.paid) {
         pills.push(r.invest_eligible_acknowledged ? '<span class="em-pill em-pill-checked">Invest ack \u2713</span>' : '<span class="em-pill em-pill-not">No invest ack</span>');
       }
-      if (isLlcPlane && r.status === "going" && ticketHelper) {
+      if (isLlcPlane && committed && ticketHelper) {
         const hasTicket = ticketHelper.memberHasPlaneTicket(r.user_id, documents);
         pills.push(hasTicket ? '<span class="em-pill em-pill-checked">Ticket uploaded</span>' : '<span class="em-pill em-pill-not">Needs ticket</span>');
       }
@@ -17709,17 +20265,24 @@ Type the event title to confirm:`);
           seats,
           isPayer,
           payerName: idx.payerLabel(party),
-          awaitingAttach: false
+          awaitingAttach: false,
+          event: e
         });
         pills.push(...meta.pills);
         subExtra = meta.subExtra || "";
         seatsBlock = meta.seatsBlock || "";
       }
-      return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${esc6(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? " \xB7 ticket ready" : ""}${subExtra}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div>${seatsBlock}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="member" data-rsvp-id="${esc6(r.id)}" data-user-id="${esc6(r.user_id)}" data-paid="${r.paid ? "1" : "0"}" data-name="${esc6(name)}">Remove</button></div>`;
+      const hasParty = !!(r.party_id || r.status === "going" && idx.partyForMember(r)?.id);
+      const removeLabel = r.paid || hasParty ? "Cancel participation" : "Remove";
+      return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${esc9(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? " \xB7 ticket ready" : ""}${subExtra}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div>${seatsBlock}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="member" data-rsvp-id="${esc9(r.id)}" data-user-id="${esc9(r.user_id)}" data-paid="${r.paid ? "1" : "0"}" data-has-party="${hasParty ? "1" : "0"}" data-name="${esc9(name)}">${removeLabel}</button></div>`;
     }
     function guestRow(g2) {
       const initials = (g2.guest_name || "G").slice(0, 1).toUpperCase();
+      const guestCommitted = isCommittedGoingRow(e, g2);
       const pills = ['<span class="em-pill em-pill-going">Guest</span>'];
+      if (g2.status === "going" && !guestCommitted) {
+        pills.push('<span class="em-pill em-pill-maybe">Payment pending</span>');
+      }
       if (g2.paid) pills.push('<span class="em-pill em-pill-paid">Paid</span>');
       if (guestCheckedSet.has(g2.guest_token)) pills.push('<span class="em-pill em-pill-checked">Checked in</span>');
       const name = g2.guest_name || "Guest";
@@ -17732,10 +20295,13 @@ Type the event title to confirm:`);
         seats,
         isPayer,
         payerName: idx.payerLabel(party),
-        awaitingAttach
+        awaitingAttach,
+        event: e
       });
       pills.push(...meta.pills);
-      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${esc6(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc6(name)}</p><p class="em-attendee-sub">${esc6(g2.guest_email || "Public guest")}${meta.subExtra || ""}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div>${meta.seatsBlock || ""}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="guest" data-rsvp-id="${esc6(g2.id)}" data-guest-token="${esc6(g2.guest_token)}" data-paid="${g2.paid ? "1" : "0"}" data-name="${esc6(name)}">Remove</button></div>`;
+      const hasParty = !!(g2.party_id || party?.id);
+      const removeLabel = g2.paid || hasParty ? "Cancel participation" : "Remove";
+      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${esc9(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc9(name)}</p><p class="em-attendee-sub">${esc9(g2.guest_email || "Public guest")}${meta.subExtra || ""}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div>${meta.seatsBlock || ""}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="guest" data-rsvp-id="${esc9(g2.id)}" data-guest-token="${esc9(g2.guest_token)}" data-paid="${g2.paid ? "1" : "0"}" data-has-party="${hasParty ? "1" : "0"}" data-name="${esc9(name)}">${removeLabel}</button></div>`;
     }
     function section(title, list, emptyText) {
       return `
@@ -17750,13 +20316,17 @@ Type the event title to confirm:`);
             <p class="em-command-eyebrow">Attendance command</p>
             <h3 class="em-command-title">${totalGoing ? `${totalGoing} attending` : "No confirmed attendees yet"}</h3>
             <p class="em-command-copy">${thresholdLeft ? `${thresholdLeft} more RSVP${thresholdLeft === 1 ? "" : "s"} needed to meet the minimum.` : "Minimum and attendance signals are in good shape."} ${capacityLeft !== null ? `${capacityLeft} spot${capacityLeft === 1 ? "" : "s"} still available.` : "Capacity is open-ended."}</p>
+            <div class="em-op-meta" style="margin-top:12px">
+                <button type="button" class="em-btn-ghost" data-copy-roster>Copy roster</button>
+            </div>
         </div>
 
         <div class="em-metric-grid mb-4">
             <div class="em-metric"><span>Total going</span><strong>${totalGoing}</strong><small>${going.length} member \xB7 ${guestGoing.length} guest</small></div>
             <div class="em-metric"><span>Checked in</span><strong>${checkedTotal}</strong><small>${checkedPct}% of going</small></div>
             <div class="em-metric"><span>Interested</span><strong>${maybe.length}</strong><small>Member maybes</small></div>
-            <div class="em-metric"><span>Capacity</span><strong>${capacityLeft === null ? "Open" : capacityLeft}</strong><small>${capacity ? `${totalGoing}/${capacity} filled` : "No max set"}</small></div>
+            <div class="em-metric"><span>Capacity</span><strong>${capacityLeft === null ? "Open" : capacityLeft}</strong><small>${capacity ? `${occupiedCap}/${capacity} filled` : "No max set"}</small></div>
+            ${totalPending ? `<div class="em-metric"><span>Payment pending</span><strong>${totalPending}</strong><small>${paymentPending.length} member \xB7 ${guestPaymentPending.length} guest</small></div>` : ""}
         </div>
 
         ${section("Going members", going, "No members are going yet.")}
@@ -17764,6 +20334,12 @@ Type the event title to confirm:`);
             <div class="em-section-head"><div><h3 class="em-section-title">Public guests <span class="text-gray-400 font-normal">\xB7 ${guestGoing.length}</span></h3><p class="em-section-sub">Guests from the public event link and ticket flow.</p></div></div>
             ${guestGoing.length ? guestGoing.map(guestRow).join("") : '<p class="text-xs text-gray-400 italic py-2">No public guests yet.</p>'}
         </div>
+        ${totalPending ? `
+        <div class="em-card mb-3">
+            <div class="em-section-head"><div><h3 class="em-section-title">Payment pending <span class="text-gray-400 font-normal">\xB7 ${totalPending}</span></h3><p class="em-section-sub">Started checkout but not yet paid \u2014 not counted in Going.</p></div></div>
+            ${paymentPending.map(memberRow).join("")}
+            ${guestPaymentPending.map(guestRow).join("")}
+        </div>` : ""}
         ${section("Interested", maybe, "No interested members.")}
         ${not.length ? section("Not going", not, "") : ""}
     `;
@@ -17771,15 +20347,93 @@ Type the event title to confirm:`);
   function wireRsvps() {
     const panel = document.getElementById("emSheetContent");
     panel?.querySelectorAll("[data-remove-rsvp]").forEach((btn) => {
-      btn.addEventListener("click", () => api14().removeParticipationPerson?.(btn));
+      btn.addEventListener("click", () => api15().removeParticipationPerson?.(btn));
     });
     if (panel && window.EventsHelpers && typeof window.EventsHelpers.wireSeatInfoInviteCopy === "function") {
       window.EventsHelpers.wireSeatInfoInviteCopy(panel);
     }
+    panel?.querySelectorAll("[data-copy-roster]").forEach((btn) => {
+      if (btn.dataset.copyRosterWired) return;
+      btn.dataset.copyRosterWired = "1";
+      btn.addEventListener("click", async () => {
+        const STATE4 = api15().getState?.() || {};
+        const text = buildRosterTsv(STATE4);
+        try {
+          if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+          else {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+          }
+          const prev = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(() => {
+            btn.textContent = prev || "Copy roster";
+          }, 1500);
+        } catch (_) {
+          prompt("Copy this roster (TSV):", text);
+        }
+      });
+    });
+    panel?.querySelectorAll("[data-copy-pay-link]").forEach((btn) => {
+      if (btn.dataset.copyWired) return;
+      btn.dataset.copyWired = "1";
+      btn.addEventListener("click", async () => {
+        const token = btn.getAttribute("data-copy-pay-link") || "";
+        const url = window.EventsHelpers?.paymentMagicLinkUrl ? window.EventsHelpers.paymentMagicLinkUrl(token) : `${window.location.origin}/events/payments/?t=${encodeURIComponent(token)}`;
+        if (!url) return;
+        try {
+          if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(url);
+          else {
+            const ta = document.createElement("textarea");
+            ta.value = url;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+          }
+          const prev = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(() => {
+            btn.textContent = prev || "Copy payment link";
+          }, 1500);
+        } catch (_) {
+          prompt("Copy this payment link:", url);
+        }
+      });
+    });
+    panel?.querySelectorAll("[data-resend-pay-sms]").forEach((btn) => {
+      if (btn.dataset.resendWired) return;
+      btn.dataset.resendWired = "1";
+      btn.addEventListener("click", async () => {
+        const partyId = btn.getAttribute("data-resend-pay-sms") || "";
+        if (!partyId) return;
+        btn.disabled = true;
+        const prev = btn.textContent;
+        btn.textContent = "Sending\u2026";
+        try {
+          const result = await callEdgeFunction("resend-event-party-payment-link", { party_id: partyId });
+          if (result?.error) throw new Error(result.error);
+          btn.textContent = result?.skipped ? "Skipped" : "Sent";
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = prev || "Resend SMS";
+          }, 1800);
+        } catch (err) {
+          alert(err.message || "Could not resend SMS.");
+          btn.disabled = false;
+          btn.textContent = prev || "Resend SMS";
+        }
+      });
+    });
   }
   var manageRsvpsApi = {
     rsvpsHtml,
-    wireRsvps
+    wireRsvps,
+    buildRosterTsv
   };
   globalThis.EventsManageRsvps = manageRsvpsApi;
 
@@ -17795,8 +20449,26 @@ Type the event title to confirm:`);
     { value: "cancellation", label: "Cancellation" },
     { value: "update", label: "Schedule / location update" }
   ];
+  var TYPE_LABELS = {
+    event_invite: "Event invite",
+    event_payment_link: "Payment link",
+    event_payment_failed: "Payment failed",
+    manual: "Manual update",
+    cancellation: "Cancellation",
+    update: "Schedule / location update",
+    rsvp_confirmation: "RSVP confirmation",
+    reminder_24h: "24h reminder"
+  };
+  var HISTORY_FILTERS = [
+    { key: "all", label: "All" },
+    { key: "invites", label: "Invites" },
+    { key: "payment_links", label: "Payment links" },
+    { key: "manual", label: "Manual" }
+  ];
+  var MANUAL_HISTORY_TYPES = /* @__PURE__ */ new Set(["manual", "cancellation", "update"]);
   var UI = {
     filter: "all",
+    historyFilter: "all",
     search: "",
     selected: /* @__PURE__ */ new Set(),
     expandedMessageId: null,
@@ -17804,15 +20476,15 @@ Type the event title to confirm:`);
     messageType: "manual",
     selectAllOptedInOnLoad: false
   };
-  function api15() {
+  function api16() {
     return window.EventsManageNotificationsApi || {};
   }
-  function esc7(s) {
+  function esc10(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
-  function maskPhone(phone) {
+  function maskPhone2(phone) {
     const digits = String(phone || "").replace(/\D/g, "");
     if (digits.length < 4) return "***";
     return `***-***-${digits.slice(-4)}`;
@@ -17850,7 +20522,7 @@ Type the event title to confirm:`);
     throw new Error(_smsSchemaMissingMessage(err) || err.message || fallback);
   }
   async function loadNotifications() {
-    const STATE4 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const eventId2 = STATE4.eventId;
     if (!eventId2) return { recipients: [], messages: [], suppressedPhones: /* @__PURE__ */ new Set(), lastSentAt: null };
     const { data: recipients, error: recErr } = await supabaseClient.from("event_sms_recipients").select(`
@@ -17895,7 +20567,7 @@ Type the event title to confirm:`);
       return {
         ...r,
         phone_e164: phone,
-        phone_masked: maskPhone(phone),
+        phone_masked: maskPhone2(phone),
         globally_suppressed: phone ? suppressedPhones.has(phone) : false,
         latest_delivery: latestByRecipient[r.id] || null
       };
@@ -17909,6 +20581,20 @@ Type the event title to confirm:`);
       lastSentAt,
       senderProfiles: {}
     };
+  }
+  function messageTypeLabel(type) {
+    const t = String(type || "");
+    return TYPE_LABELS[t] || t || "Message";
+  }
+  function getFilteredHistoryMessages(data) {
+    const list = data.messages || [];
+    const f = UI.historyFilter || "all";
+    if (f === "invites") return list.filter((m) => m.message_type === "event_invite");
+    if (f === "payment_links") {
+      return list.filter((m) => m.message_type === "event_payment_link" || m.message_type === "event_payment_failed");
+    }
+    if (f === "manual") return list.filter((m) => MANUAL_HISTORY_TYPES.has(m.message_type));
+    return list;
   }
   function getFilteredRecipients(data) {
     const q = UI.search.trim().toLowerCase();
@@ -17946,7 +20632,7 @@ Type the event title to confirm:`);
     };
   }
   function notificationsHtml() {
-    const STATE4 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const data = STATE4.tabData?.notifications || { recipients: [], messages: [] };
     const metrics = summaryMetrics(data);
     const visible = getFilteredRecipients(data);
@@ -17958,24 +20644,25 @@ Type the event title to confirm:`);
     const recipientRows = visible.length ? visible.map((r) => {
       const checked = UI.selected.has(r.id) ? " checked" : "";
       const disabled = isEligibleToSend(r) ? "" : " disabled";
-      const delivery = r.latest_delivery?.status ? `<span class="em-pill">${esc7(r.latest_delivery.status)}</span>` : '<span class="text-xs text-gray-400">\u2014</span>';
+      const delivery = r.latest_delivery?.status ? `<span class="em-pill">${esc10(r.latest_delivery.status)}</span>` : '<span class="text-xs text-gray-400">\u2014</span>';
       const suppressed = r.globally_suppressed ? '<span class="em-pill em-pill-not">STOP</span>' : "";
       return `
-                <div class="em-row em-notif-row" data-recipient-id="${esc7(r.id)}">
-                    <input type="checkbox" class="em-notif-check" data-recipient-id="${esc7(r.id)}"${checked}${disabled} aria-label="Select ${esc7(r.display_name || "recipient")}">
+                <div class="em-row em-notif-row" data-recipient-id="${esc10(r.id)}">
+                    <input type="checkbox" class="em-notif-check" data-recipient-id="${esc10(r.id)}"${checked}${disabled} aria-label="Select ${esc10(r.display_name || "recipient")}">
                     <div class="flex-1 min-w-0">
-                        <p class="em-attendee-name">${esc7(r.display_name || "Unknown")}</p>
-                        <p class="em-attendee-sub">${esc7(r.phone_masked)}${r.email ? ` \xB7 ${esc7(r.email)}` : ""}</p>
+                        <p class="em-attendee-name">${esc10(r.display_name || "Unknown")}</p>
+                        <p class="em-attendee-sub">${esc10(r.phone_masked)}${r.email ? ` \xB7 ${esc10(r.email)}` : ""}</p>
                         <div class="flex flex-wrap gap-1 mt-1">
-                            <span class="em-pill ${optOutClass(r)}">${esc7(optOutLabel(r))}</span>
-                            <span class="em-pill">${esc7(SOURCE_LABELS[r.consent_source] || r.consent_source)}</span>
+                            <span class="em-pill ${optOutClass(r)}">${esc10(optOutLabel(r))}</span>
+                            <span class="em-pill">${esc10(SOURCE_LABELS[r.consent_source] || r.consent_source)}</span>
                             ${suppressed}
                             ${delivery}
                         </div>
                     </div>
                 </div>`;
     }).join("") : '<p class="text-xs text-gray-400 italic py-3">No recipients match this filter.</p>';
-    const historyRows = (data.messages || []).length ? data.messages.map((m) => {
+    const filteredMessages = getFilteredHistoryMessages(data);
+    const historyRows = filteredMessages.length ? filteredMessages.map((m) => {
       const dels = data.deliveriesByMessage?.[m.id] || [];
       const counts = dels.reduce((acc, d) => {
         acc[d.status] = (acc[d.status] || 0) + 1;
@@ -17986,23 +20673,23 @@ Type the event title to confirm:`);
       const preview = (m.body || "").length > 120 ? `${m.body.slice(0, 120)}\u2026` : m.body || "";
       const detail2 = expanded ? `<div class="mt-2 space-y-1">${dels.map((d) => {
         const name = data.recipients.find((r) => r.id === d.event_sms_recipient_id)?.display_name;
-        return `<p class="text-xs text-gray-600">${esc7(name || maskPhone(d.phone_e164))} \xB7 ${esc7(d.status)}${d.error_message ? ` \u2014 ${esc7(d.error_message)}` : ""}</p>`;
+        return `<p class="text-xs text-gray-600">${esc10(name || maskPhone2(d.phone_e164))} \xB7 ${esc10(d.status)}${d.error_message ? ` \u2014 ${esc10(d.error_message)}` : ""}</p>`;
       }).join("") || '<p class="text-xs text-gray-400">No per-recipient rows.</p>'}</div>` : "";
       return `
                 <div class="em-card mb-2">
-                    <button type="button" class="w-full text-left" data-toggle-message="${esc7(m.id)}">
+                    <button type="button" class="w-full text-left" data-toggle-message="${esc10(m.id)}">
                         <div class="flex justify-between gap-2">
-                            <strong class="text-sm text-gray-900">${esc7(m.message_type)}</strong>
+                            <strong class="text-sm text-gray-900">${esc10(messageTypeLabel(m.message_type))}</strong>
                             <span class="text-xs text-gray-400">${new Date(m.created_at).toLocaleString()}</span>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">${esc7(preview)}</p>
-                        <p class="text-xs text-gray-400 mt-1">${m.recipient_count} recipients \xB7 ${esc7(summary)}</p>
+                        <p class="text-xs text-gray-500 mt-1">${esc10(preview)}</p>
+                        <p class="text-xs text-gray-400 mt-1">${m.recipient_count} recipients \xB7 ${esc10(summary)}</p>
                     </button>
                     ${detail2}
                 </div>`;
-    }).join("") : '<p class="text-xs text-gray-400 italic py-2">No messages sent for this event yet.</p>';
+    }).join("") : `<p class="text-xs text-gray-400 italic py-2">${(data.messages || []).length ? "No messages match this filter." : "No messages sent for this event yet."}</p>`;
     return `
-        <div class="em-card em-command-card mb-4" style="background:linear-gradient(135deg,#0f172a,#4338ca)">
+        <div class="em-card em-command-card mb-4" style="background:linear-gradient(135deg,#0f172a,var(--color-primary, #13366E))">
             <p class="em-command-eyebrow">Notifications</p>
             <h3 class="em-command-title">Event SMS</h3>
             <p class="em-command-copy">Send manual updates to opted-in recipients. Phones are masked in this view.</p>
@@ -18012,7 +20699,7 @@ Type the event title to confirm:`);
             <div class="em-metric"><span>Recipients</span><strong>${metrics.total}</strong><small>All contacts</small></div>
             <div class="em-metric"><span>Opted in</span><strong>${metrics.optedIn}</strong><small>Eligible to send</small></div>
             <div class="em-metric"><span>Opted out</span><strong>${metrics.optedOut}</strong><small>Event preference</small></div>
-            <div class="em-metric"><span>Global STOP</span><strong>${metrics.suppressed}</strong><small>Last sent: ${esc7(lastSentLabel)}</small></div>
+            <div class="em-metric"><span>Global STOP</span><strong>${metrics.suppressed}</strong><small>Last sent: ${esc10(lastSentLabel)}</small></div>
         </div>
 
         <div class="em-card mb-4">
@@ -18026,10 +20713,10 @@ Type the event title to confirm:`);
             <select id="emNotifMessageType" class="em-input mb-2" aria-label="SMS message type">
                 ${MESSAGE_TYPES.map((t) => {
       const sel = UI.messageType === t.value ? " selected" : "";
-      return `<option value="${esc7(t.value)}"${sel}>${esc7(t.label)}</option>`;
+      return `<option value="${esc10(t.value)}"${sel}>${esc10(t.label)}</option>`;
     }).join("")}
             </select>
-            <textarea id="emNotifBody" class="em-textarea" maxlength="1600" placeholder="Write your event update\u2026">${esc7(UI.prefillBody || "")}</textarea>
+            <textarea id="emNotifBody" class="em-textarea" maxlength="1600" placeholder="Write your event update\u2026">${esc10(UI.prefillBody || "")}</textarea>
             <p class="text-xs text-gray-400 mt-1"><span id="emNotifCharCount">${(UI.prefillBody || "").length}</span> / 1600 characters</p>
             <div class="flex flex-wrap gap-2 mt-3">
                 <button type="button" class="em-btn-primary" id="emNotifSendBtn"${selectedEligible.length ? "" : " disabled"}>Send SMS</button>
@@ -18049,11 +20736,11 @@ Type the event title to confirm:`);
             <div class="flex flex-wrap gap-2 mb-3">
                 ${["all", "opted_in", "opted_out", "guests", "members", "failed"].map((f) => {
       const label = { all: "All", opted_in: "Opted in", opted_out: "Opted out", guests: "Guests", members: "Members", failed: "Failed" }[f];
-      const active = UI.filter === f ? "background:#eef2ff;color:#4338ca" : "background:#f3f4f6;color:#374151";
+      const active = UI.filter === f ? "background:var(--color-surface, #EEF2F6);color:var(--color-primary, #13366E)" : "background:#f3f4f6;color:#374151";
       return `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 10px;${active}" data-notif-filter="${f}">${label}</button>`;
     }).join("")}
             </div>
-            <input type="search" id="emNotifSearch" class="em-input mb-3" placeholder="Search name, email, or last 4 of phone" value="${esc7(UI.search)}">
+            <input type="search" id="emNotifSearch" class="em-input mb-3" placeholder="Search name, email, or last 4 of phone" value="${esc10(UI.search)}">
             <label class="text-xs text-gray-500 flex items-center gap-2 mb-2">
                 <input type="checkbox" id="emNotifSelectVisible"> Select all visible
             </label>
@@ -18064,20 +20751,26 @@ Type the event title to confirm:`);
             <div class="em-section-head">
                 <div>
                     <h3 class="em-section-title">Message history</h3>
-                    <p class="em-section-sub">Tap a message to expand delivery details.</p>
+                    <p class="em-section-sub">Invites, payment links, and manual blasts. Tap a message to expand delivery details.</p>
                 </div>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-3">
+                ${HISTORY_FILTERS.map((f) => {
+      const active = UI.historyFilter === f.key ? "background:var(--color-surface, #EEF2F6);color:var(--color-primary, #13366E)" : "background:#f3f4f6;color:#374151";
+      return `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 10px;${active}" data-history-filter="${f.key}">${esc10(f.label)}</button>`;
+    }).join("")}
             </div>
             ${historyRows}
         </div>
     `;
   }
   async function refreshNotificationsTab() {
-    const STATE4 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     STATE4.tabData.notifications = await loadNotifications();
-    api15().renderTab?.("notifications");
+    api16().renderTab?.("notifications");
   }
   async function sendSelectedSms() {
-    const STATE4 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const data = STATE4.tabData?.notifications;
     if (!data) return;
     const body = document.getElementById("emNotifBody")?.value?.trim() || "";
@@ -18134,21 +20827,27 @@ Type the event title to confirm:`);
     }
   }
   function wireNotifications() {
-    const STATE4 = api15().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const data = STATE4.tabData?.notifications;
     const root2 = document.getElementById("emSheetContent");
     if (!root2 || !data) return;
     root2.querySelectorAll("[data-notif-filter]").forEach((btn) => {
       btn.addEventListener("click", () => {
         UI.filter = btn.dataset.notifFilter || "all";
-        api15().renderTab?.("notifications");
+        api16().renderTab?.("notifications");
+      });
+    });
+    root2.querySelectorAll("[data-history-filter]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        UI.historyFilter = btn.dataset.historyFilter || "all";
+        api16().renderTab?.("notifications");
       });
     });
     const search = document.getElementById("emNotifSearch");
     if (search) {
       search.addEventListener("input", () => {
         UI.search = search.value;
-        api15().renderTab?.("notifications");
+        api16().renderTab?.("notifications");
       });
     }
     const body = document.getElementById("emNotifBody");
@@ -18177,7 +20876,7 @@ Type the event title to confirm:`);
         if (!id || cb.disabled) return;
         if (cb.checked) UI.selected.add(id);
         else UI.selected.delete(id);
-        api15().renderTab?.("notifications");
+        api16().renderTab?.("notifications");
       });
     });
     document.getElementById("emNotifSelectVisible")?.addEventListener("change", (e) => {
@@ -18189,29 +20888,30 @@ Type the event title to confirm:`);
       } else {
         visible.forEach((r) => UI.selected.delete(r.id));
       }
-      api15().renderTab?.("notifications");
+      api16().renderTab?.("notifications");
     });
     document.getElementById("emNotifSelectOptedIn")?.addEventListener("click", () => {
       (data.recipients || []).forEach((r) => {
         if (isEligibleToSend(r)) UI.selected.add(r.id);
       });
-      api15().renderTab?.("notifications");
+      api16().renderTab?.("notifications");
     });
     document.getElementById("emNotifClearSelection")?.addEventListener("click", () => {
       UI.selected.clear();
-      api15().renderTab?.("notifications");
+      api16().renderTab?.("notifications");
     });
     document.getElementById("emNotifSendBtn")?.addEventListener("click", () => sendSelectedSms());
     root2.querySelectorAll("[data-toggle-message]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.toggleMessage;
         UI.expandedMessageId = UI.expandedMessageId === id ? null : id;
-        api15().renderTab?.("notifications");
+        api16().renderTab?.("notifications");
       });
     });
   }
   function resetNotificationsUi(prefill = "") {
     UI.filter = "all";
+    UI.historyFilter = "all";
     UI.search = "";
     UI.selected.clear();
     UI.expandedMessageId = null;
@@ -18246,10 +20946,10 @@ Type the event title to confirm:`);
   globalThis.EventsManageNotifications = manageNotificationsApi;
 
   // js/portal/events/manage/money.js
-  function api16() {
+  function api17() {
     return window.EventsManageMoneyApi || {};
   }
-  function esc8(s) {
+  function esc11(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -18257,15 +20957,46 @@ Type the event title to confirm:`);
   function money2(cents) {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
   }
+  function formatDebitAt(iso, planStatus) {
+    if (String(planStatus || "") === "completed") return "None";
+    if (!iso) return "\u2014";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "\u2014";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
+  function planStatusPill(status) {
+    const s = String(status || "");
+    if (s === "past_due") return '<span class="em-pill em-pill-not">Past due</span>';
+    if (s === "active") return '<span class="em-pill em-pill-going">Active</span>';
+    if (s === "completed") return '<span class="em-pill em-pill-checked">Completed</span>';
+    if (s === "setup") return '<span class="em-pill em-pill-maybe">Setup</span>';
+    if (s === "cancelled") return '<span class="em-pill em-pill-not">Cancelled</span>';
+    return s ? `<span class="em-pill em-pill-maybe">${esc11(s)}</span>` : "";
+  }
+  function methodLabel(method) {
+    const m = String(method || "").toLowerCase();
+    if (m === "ach") return "Bank (ACH)";
+    if (m === "card") return "Card";
+    return method || "\u2014";
+  }
+  function planKindLabel(kind) {
+    const k = String(kind || "").toLowerCase();
+    if (k === "full") return "Full pay";
+    if (k === "monthly") return "Monthly";
+    return kind || "\u2014";
+  }
   async function loadMoney() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const isLlc = STATE4.event?.event_type === "llc";
     const queries = [
       supabaseClient.from("event_rsvps").select("id, user_id, status, amount_paid_cents, paid, refunded, refund_amount_cents, stripe_payment_intent_id, profiles!event_rsvps_user_id_fkey(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
       supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, status, paid, amount_paid_cents, stripe_payment_intent_id").eq("event_id", eventId2),
       supabaseClient.from("event_raffle_entries").select("id, paid, amount_paid_cents").eq("event_id", eventId2),
-      supabaseClient.from("prize_pool_contributions").select("id, amount_cents").eq("event_id", eventId2)
+      supabaseClient.from("prize_pool_contributions").select("id, amount_cents").eq("event_id", eventId2),
+      supabaseClient.from("event_payment_plans").select("id, party_id, plan_kind, method, status, amount_paid_cents, remaining_cents, total_due_cents, next_debit_at").eq("event_id", eventId2),
+      supabaseClient.from("event_parties").select("id, payer_kind, payer_user_id, payer_guest_rsvp_id, invite_token, status").eq("event_id", eventId2),
+      supabaseClient.from("event_payment_installments").select("id, plan_id").eq("event_id", eventId2).eq("status", "failed")
     ];
     if (isLlc) {
       queries.push(
@@ -18273,42 +21004,68 @@ Type the event title to confirm:`);
       );
     }
     const results = await Promise.all(queries);
-    const [rsvpsRes, guestRes, raffleRes, poolRes, costRes] = results;
+    const [rsvpsRes, guestRes, raffleRes, poolRes, plansRes, partiesRes, failedInstRes, costRes] = results;
+    const failedPlanIds = [...new Set((failedInstRes?.data || []).map((r) => r.plan_id).filter(Boolean))];
     return {
       rsvps: rsvpsRes.data || [],
       guests: guestRes.data || [],
       raffle: raffleRes.data || [],
       poolPays: poolRes.data || [],
+      plans: plansRes?.data || [],
+      parties: partiesRes?.data || [],
+      failedPlanIds,
       costItems: isLlc ? costRes?.data || [] : [],
       costBreakdown: isLlc ? STATE4.event?.cost_breakdown || null : null
     };
   }
+  function payerNameFromParty(party, rsvps, guests) {
+    if (!party) return "Payer";
+    if (party.payer_kind === "member" && party.payer_user_id) {
+      const row = (rsvps || []).find((r) => r.user_id === party.payer_user_id);
+      const p = row?.profiles || {};
+      return `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
+    }
+    if (party.payer_kind === "guest" && party.payer_guest_rsvp_id) {
+      const g2 = (guests || []).find((row) => row.id === party.payer_guest_rsvp_id);
+      return (g2?.guest_name || "").trim() || "Guest";
+    }
+    return "Payer";
+  }
   function moneyHtml() {
-    const STATE4 = api16().getState?.() || {};
-    const d = STATE4.tabData.money;
+    const STATE4 = api17().getState?.() || {};
+    const d = STATE4.tabData.money || {};
     const adultCents = Number(STATE4.event?.adult_price_cents);
     const isPaidEvent = STATE4.event?.pricing_mode === "paid" || Number.isFinite(adultCents) && adultCents > 0 || Number(STATE4.event?.rsvp_cost_cents || 0) > 0;
-    const paidRsvps = d.rsvps.filter((r) => r.paid);
-    const paidGuests = d.guests.filter((g2) => g2.paid);
-    const refundedRsvps = d.rsvps.filter((r) => r.refunded);
+    const paidRsvps = (d.rsvps || []).filter((r) => r.paid);
+    const paidGuests = (d.guests || []).filter((g2) => g2.paid);
+    const refundedRsvps = (d.rsvps || []).filter((r) => r.refunded);
     const unpaidGoing = isPaidEvent ? STATE4.rsvps.filter((r) => r.status === "going" && !r.paid).length + STATE4.guestRsvps.filter((g2) => g2.status === "going" && !g2.paid).length : 0;
     const rsvpRevenue = paidRsvps.reduce((s, r) => s + (r.amount_paid_cents || 0), 0);
     const guestRevenue = paidGuests.reduce((s, g2) => s + (g2.amount_paid_cents || 0), 0);
-    const raffleRevenue = d.raffle.filter((e) => e.paid).reduce((s, e) => s + (e.amount_paid_cents || 0), 0);
-    const poolRevenue = d.poolPays.reduce((s, p) => s + (p.amount_cents || 0), 0);
+    const raffleRevenue = (d.raffle || []).filter((e) => e.paid).reduce((s, e) => s + (e.amount_paid_cents || 0), 0);
+    const poolRevenue = (d.poolPays || []).reduce((s, p) => s + (p.amount_cents || 0), 0);
     const refunded = refundedRsvps.reduce((s, r) => s + (r.refund_amount_cents || 0), 0);
     const grossRevenue = rsvpRevenue + guestRevenue + raffleRevenue + poolRevenue;
     const netRevenue = grossRevenue - refunded;
+    const plans = Array.isArray(d.plans) ? d.plans : [];
+    const parties = Array.isArray(d.parties) ? d.parties : [];
+    const partyById = new Map(parties.map((p) => [p.id, p]));
+    const failedPlanSet = new Set(d.failedPlanIds || []);
+    const openPlans = plans.filter((p) => {
+      const st = String(p.status || "");
+      return st === "active" || st === "past_due";
+    });
+    const pastDueCount = plans.filter((p) => String(p.status) === "past_due" || failedPlanSet.has(p.id)).length;
+    const remainingDue = openPlans.reduce((s, p) => s + (Number(p.remaining_cents) || 0), 0);
     const fmt = window.formatCurrency || money2;
-    const ticketLabel = isPaidEvent ? "Paid RSVPs" : "Ticketed RSVPs";
     function paymentRow({ name, sub, amount, refundedAmount, stripeId, avatarHtml: avatarHtml2, isGuest }) {
       const refundPill = refundedAmount ? `<span class="em-pill em-pill-not">Refunded ${fmt(refundedAmount)}</span>` : `<span class="em-pill em-pill-paid">${amount > 0 ? `Paid ${fmt(amount)}` : "Ticketed"}</span>`;
       return `
             <div class="em-attendee-card">
                 <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ""}>${avatarHtml2}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc8(name)}</p>
-                    <p class="em-attendee-sub">${esc8(sub)}</p>
+                    <p class="em-attendee-name">${esc11(name)}</p>
+                    <p class="em-attendee-sub">${esc11(sub)}</p>
                     <div class="flex flex-wrap gap-1 mt-2">${refundPill}${isGuest ? '<span class="em-pill em-pill-going">Guest</span>' : ""}</div>
                 </div>
                 ${stripeId ? `<a href="https://dashboard.stripe.com/payments/${encodeURIComponent(stripeId)}" target="_blank" rel="noopener" class="text-xs text-brand-600 font-semibold hover:underline whitespace-nowrap">Stripe \u2197</a>` : ""}
@@ -18318,7 +21075,7 @@ Type the event title to confirm:`);
       const p = r.profiles || {};
       const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
       const initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?";
-      const avatar = p.profile_picture_url ? `<img src="${esc8(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
+      const avatar = p.profile_picture_url ? `<img src="${esc11(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
       return paymentRow({ name, sub: "Member RSVP payment", amount: r.amount_paid_cents || 0, refundedAmount: r.refund_amount_cents || 0, stripeId: r.stripe_payment_intent_id, avatarHtml: avatar });
     });
     const guestRows = paidGuests.map((g2) => paymentRow({
@@ -18327,14 +21084,40 @@ Type the event title to confirm:`);
       amount: g2.amount_paid_cents || 0,
       refundedAmount: 0,
       stripeId: g2.stripe_payment_intent_id,
-      avatarHtml: `<span>${esc8((g2.guest_name || "G").slice(0, 1).toUpperCase())}</span>`,
+      avatarHtml: `<span>${esc11((g2.guest_name || "G").slice(0, 1).toUpperCase())}</span>`,
       isGuest: true
     }));
     const paymentRows = [...memberRows, ...guestRows].join("") || `<p class="text-xs text-gray-400 italic py-2">No paid RSVPs yet.</p>`;
+    const planRows = plans.length ? plans.map((plan) => {
+      const party = partyById.get(plan.party_id);
+      const name = payerNameFromParty(party, d.rsvps, d.guests);
+      const isGuest = party?.payer_kind === "guest";
+      const initials = (name || "P").slice(0, 1).toUpperCase();
+      const failed = String(plan.status) === "past_due" || failedPlanSet.has(plan.id);
+      const pills = [
+        planStatusPill(plan.status),
+        failed ? '<span class="em-pill em-pill-not">Failed charge</span>' : "",
+        `<span class="em-pill em-pill-going">${esc11(planKindLabel(plan.plan_kind))}</span>`,
+        `<span class="em-pill em-pill-maybe">${esc11(methodLabel(plan.method))}</span>`,
+        isGuest ? '<span class="em-pill em-pill-going">Guest</span>' : ""
+      ].filter(Boolean).join("");
+      const inviteTok = party?.invite_token ? esc11(party.invite_token) : "";
+      const copyBtn = inviteTok ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-money-copy-pay-link="${inviteTok}">Copy payment link</button>` : "";
+      return `
+                <div class="em-attendee-card">
+                    <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ""}><span>${esc11(initials)}</span></div>
+                    <div class="em-attendee-main">
+                        <p class="em-attendee-name">${esc11(name)}</p>
+                        <p class="em-attendee-sub">Paid ${fmt(plan.amount_paid_cents || 0)} \xB7 Remaining ${fmt(plan.remaining_cents || 0)} \xB7 Next debit ${esc11(formatDebitAt(plan.next_debit_at, plan.status))}</p>
+                        <div class="flex flex-wrap gap-1 mt-2">${pills}</div>
+                        ${copyBtn ? `<div style="margin-top:8px">${copyBtn}</div>` : ""}
+                    </div>
+                </div>`;
+    }).join("") : `<p class="text-xs text-gray-400 italic py-2">No payment plans yet.</p>`;
     const isLlc = STATE4.event?.event_type === "llc";
     const costItems = d.costItems || [];
     const costBreakdown = d.costBreakdown || {};
-    const goingCount = STATE4.rsvps.filter((r) => r.status === "going").length + STATE4.guestRsvps.filter((g2) => g2.status === "going").length;
+    const goingCount = (STATE4.rsvps || []).filter((r) => window.EventsHelpers?.rsvpIsCommittedGoing ? window.EventsHelpers.rsvpIsCommittedGoing(STATE4.event, r) : STATE4.event?.pricing_mode === "paid" ? r.paid === true : r.status === "going").length + (STATE4.guestRsvps || []).filter((g2) => window.EventsHelpers?.rsvpIsCommittedGoing ? window.EventsHelpers.rsvpIsCommittedGoing(STATE4.event, g2) : STATE4.event?.pricing_mode === "paid" ? g2.paid === true : g2.status === "going").length;
     const buyInCents = Number(STATE4.event?.adult_price_cents ?? STATE4.event?.rsvp_cost_cents ?? 0);
     const budgetIncluded = Number(costBreakdown.total_included_cents) || costItems.filter((i) => i.included_in_buyin !== false).reduce((s, i) => s + (Number(i.total_cost_cents) || 0), 0);
     const projectedAtGoing = goingCount * buyInCents;
@@ -18346,7 +21129,7 @@ Type the event title to confirm:`);
         const included = item.included_in_buyin !== false;
         const amt = included ? Number(item.total_cost_cents) || 0 : Number(item.avg_per_person_cents) || 0;
         const amtLabel = included ? fmt(amt) : `~${fmt(amt)}/person`;
-        return `<div class="em-money-row"><span>${esc8(item.name || "Item")}${included ? "" : " (OOP)"}</span><strong>${amtLabel}</strong></div>`;
+        return `<div class="em-money-row"><span>${esc11(item.name || "Item")}${included ? "" : " (OOP)"}</span><strong>${amtLabel}</strong></div>`;
       }).join("") : `<p class="text-xs text-gray-400 italic py-2">No cost items on file. Budget totals use saved breakdown if available.</p>`;
       return `
             <div class="em-card">
@@ -18360,23 +21143,30 @@ Type the event title to confirm:`);
                 ${budgetIncluded > 0 ? `<p class="text-xs text-gray-500 mt-2">${budgetDeltaLabel}.</p>` : ""}
             </div>`;
     }
+    const plansSection = isPaidEvent || plans.length ? `
+            <div class="em-card mb-4" style="grid-column:1/-1">
+                <div class="em-section-head"><div><h3 class="em-section-title">Payment plans <span class="text-gray-400 font-normal">\xB7 ${plans.length}</span></h3><p class="em-section-sub">Per-payer paid, remaining, next debit, and failed charges (Stripe-backed schedule).</p></div></div>
+                ${planRows}
+            </div>` : "";
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Money command</p>
             <h3 class="em-command-title">${fmt(netRevenue)} net collected</h3>
-            <p class="em-command-copy">${grossRevenue ? `${fmt(grossRevenue)} gross across RSVP, guest, raffle, and prize-pool activity.` : isPaidEvent ? "No paid activity has landed yet." : "This free event has no RSVP revenue to collect."} ${unpaidGoing ? `${unpaidGoing} going attendee${unpaidGoing === 1 ? "" : "s"} still show unpaid.` : isPaidEvent ? "No unpaid going attendees are currently flagged." : "Ticketed attendees are tracked for access and check-in."}</p>
+            <p class="em-command-copy">${grossRevenue ? `${fmt(grossRevenue)} gross across RSVP, guest, raffle, and prize-pool activity.` : isPaidEvent ? "No paid activity has landed yet." : "This free event has no RSVP revenue to collect."} ${unpaidGoing ? `${unpaidGoing} going attendee${unpaidGoing === 1 ? "" : "s"} still show unpaid.` : isPaidEvent ? "No unpaid going attendees are currently flagged." : "Ticketed attendees are tracked for access and check-in."}${pastDueCount ? ` ${pastDueCount} plan${pastDueCount === 1 ? "" : "s"} past due.` : ""}</p>
         </div>
 
         <div class="em-metric-grid mb-4">
             <div class="em-metric"><span>Gross</span><strong>${fmt(grossRevenue)}</strong><small>All sources</small></div>
             <div class="em-metric"><span>Net</span><strong>${fmt(netRevenue)}</strong><small>After refunds</small></div>
-            <div class="em-metric"><span>Refunded</span><strong>${fmt(refunded)}</strong><small>${refundedRsvps.length} member RSVP${refundedRsvps.length === 1 ? "" : "s"}</small></div>
-            <div class="em-metric"><span>${ticketLabel}</span><strong>${paidRsvps.length + paidGuests.length}</strong><small>${paidRsvps.length} member \xB7 ${paidGuests.length} guest</small></div>
+            <div class="em-metric"><span>Past due</span><strong>${pastDueCount}</strong><small>Plans / failed</small></div>
+            <div class="em-metric"><span>Remaining due</span><strong>${fmt(remainingDue)}</strong><small>Open plans</small></div>
         </div>
+
+        ${plansSection}
 
         <div class="em-money-layout">
             <div class="em-card">
-                <div class="em-section-head"><div><h3 class="em-section-title">${isPaidEvent ? "Paid attendees" : "Ticketed attendees"} <span class="text-gray-400 font-normal">\xB7 ${paidRsvps.length + paidGuests.length}</span></h3><p class="em-section-sub">${isPaidEvent ? "Member and public guest RSVP payments." : "Members and public guests with issued event tickets."}</p></div></div>
+                <div class="em-section-head"><div><h3 class="em-section-title">${isPaidEvent ? "One-shot / ticketed" : "Ticketed attendees"} <span class="text-gray-400 font-normal">\xB7 ${paidRsvps.length + paidGuests.length}</span></h3><p class="em-section-sub">${isPaidEvent ? "Legacy RSVP payment rows (audit). Prefer Payment plans above for schedules." : "Members and public guests with issued event tickets."}</p></div></div>
                 ${paymentRows}
             </div>
 
@@ -18395,7 +21185,34 @@ Type the event title to confirm:`);
     `;
   }
   function wireMoney() {
-    const STATE4 = api16().getState?.() || {};
+    const panel = document.getElementById("emSheetContent");
+    panel?.querySelectorAll("[data-money-copy-pay-link]").forEach((btn) => {
+      if (btn.dataset.copyWired) return;
+      btn.dataset.copyWired = "1";
+      btn.addEventListener("click", async () => {
+        const token = btn.getAttribute("data-money-copy-pay-link") || "";
+        const url = window.EventsHelpers?.paymentMagicLinkUrl ? window.EventsHelpers.paymentMagicLinkUrl(token) : `${window.location.origin}/events/payments/?t=${encodeURIComponent(token)}`;
+        if (!url) return;
+        try {
+          if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(url);
+          else {
+            const ta = document.createElement("textarea");
+            ta.value = url;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+          }
+          const prev = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(() => {
+            btn.textContent = prev || "Copy payment link";
+          }, 1500);
+        } catch (_) {
+          prompt("Copy this payment link:", url);
+        }
+      });
+    });
   }
   var manageMoneyApi = {
     loadMoney,
@@ -18405,10 +21222,10 @@ Type the event title to confirm:`);
   globalThis.EventsManageMoney = manageMoneyApi;
 
   // js/portal/events/manage/competition.js
-  function api17() {
+  function api18() {
     return window.EventsManageCompetitionApi || {};
   }
-  function esc9(s) {
+  function esc12(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -18423,7 +21240,7 @@ Type the event title to confirm:`);
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
   async function loadComp() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const [phasesRes, entriesRes, votesRes, winnersRes, contribRes] = await Promise.all([
       supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true }),
@@ -18445,10 +21262,10 @@ Type the event title to confirm:`);
     };
   }
   function compHtml() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const e = STATE4.event;
     if (e.event_type !== "competition") {
-      return api17().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
+      return api18().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
     }
     const d = STATE4.tabData.comp;
     const fmt = window.formatCurrency || money3;
@@ -18484,22 +21301,22 @@ Type the event title to confirm:`);
     const submissionWindowCard = `
         <div class="em-card mb-4">
             <div class="em-section-head"><div><h3 class="em-section-title">Submission window</h3><p class="em-section-sub">Phase 2 GFX upload window \u2014 separate from the event date.</p></div></div>
-            <p class="text-sm font-semibold text-gray-800">${esc9(windowStatusTitle)}</p>
-            <p class="text-xs text-gray-500 mt-1">${esc9(windowLabel.message || (phase2Configured ? "" : "Set open and close times for competitor uploads."))}</p>
+            <p class="text-sm font-semibold text-gray-800">${esc12(windowStatusTitle)}</p>
+            <p class="text-xs text-gray-500 mt-1">${esc12(windowLabel.message || (phase2Configured ? "" : "Set open and close times for competitor uploads."))}</p>
             ${phase2Configured ? `
-                <div class="em-money-row mt-2"><span>Opens</span><strong>${esc9(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase2.starts_at) : new Date(phase2.starts_at).toLocaleString())}</strong></div>
-                <div class="em-money-row"><span>Closes</span><strong>${esc9(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase2.ends_at) : new Date(phase2.ends_at).toLocaleString())}</strong></div>
+                <div class="em-money-row mt-2"><span>Opens</span><strong>${esc12(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase2.starts_at) : new Date(phase2.starts_at).toLocaleString())}</strong></div>
+                <div class="em-money-row"><span>Closes</span><strong>${esc12(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase2.ends_at) : new Date(phase2.ends_at).toLocaleString())}</strong></div>
             ` : ""}
             <form id="emCompSubmissionWindowForm" class="grid sm:grid-cols-2 gap-3 mt-3">
                 <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Opens
-                    <input id="emCompSubOpens" type="datetime-local" class="em-input mt-1" value="${esc9(toDatetimeLocalValue3(defaultOpens))}">
+                    <input id="emCompSubOpens" type="datetime-local" class="em-input mt-1" value="${esc12(toDatetimeLocalValue3(defaultOpens))}">
                 </label>
                 <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Closes
-                    <input id="emCompSubCloses" type="datetime-local" class="em-input mt-1" value="${esc9(toDatetimeLocalValue3(defaultCloses))}">
+                    <input id="emCompSubCloses" type="datetime-local" class="em-input mt-1" value="${esc12(toDatetimeLocalValue3(defaultCloses))}">
                 </label>
                 <div class="sm:col-span-2 flex flex-wrap items-center gap-2">
                     <button type="submit" id="emCompSubSave" class="em-btn-primary">Save submission window</button>
-                    <a href="${esc9(detailUrl)}" class="em-btn-ghost" style="text-decoration:none">Open event detail \u2192</a>
+                    <a href="${esc12(detailUrl)}" class="em-btn-ghost" style="text-decoration:none">Open event detail \u2192</a>
                     <span id="emCompSubStatus" class="text-xs text-gray-400"></span>
                 </div>
             </form>
@@ -18509,22 +21326,22 @@ Type the event title to confirm:`);
     const votingWindowCard = `
         <div class="em-card mb-4">
             <div class="em-section-head"><div><h3 class="em-section-title">Voting window</h3><p class="em-section-sub">Phase 3 member voting \u2014 after submissions close.</p></div></div>
-            <p class="text-sm font-semibold text-gray-800">${esc9(voteStatusTitle)}</p>
-            <p class="text-xs text-gray-500 mt-1">${esc9(votingLabel.message || (phase3Configured ? "" : "Set open and close times for member voting."))}</p>
+            <p class="text-sm font-semibold text-gray-800">${esc12(voteStatusTitle)}</p>
+            <p class="text-xs text-gray-500 mt-1">${esc12(votingLabel.message || (phase3Configured ? "" : "Set open and close times for member voting."))}</p>
             ${phase3Configured ? `
-                <div class="em-money-row mt-2"><span>Opens</span><strong>${esc9(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase3.starts_at) : new Date(phase3.starts_at).toLocaleString())}</strong></div>
-                <div class="em-money-row"><span>Closes</span><strong>${esc9(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase3.ends_at) : new Date(phase3.ends_at).toLocaleString())}</strong></div>
+                <div class="em-money-row mt-2"><span>Opens</span><strong>${esc12(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase3.starts_at) : new Date(phase3.starts_at).toLocaleString())}</strong></div>
+                <div class="em-money-row"><span>Closes</span><strong>${esc12(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase3.ends_at) : new Date(phase3.ends_at).toLocaleString())}</strong></div>
             ` : ""}
             <form id="emCompVotingWindowForm" class="grid sm:grid-cols-2 gap-3 mt-3">
                 <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Opens
-                    <input id="emCompVoteOpens" type="datetime-local" class="em-input mt-1" value="${esc9(toDatetimeLocalValue3(defaultVoteOpens))}">
+                    <input id="emCompVoteOpens" type="datetime-local" class="em-input mt-1" value="${esc12(toDatetimeLocalValue3(defaultVoteOpens))}">
                 </label>
                 <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Closes
-                    <input id="emCompVoteCloses" type="datetime-local" class="em-input mt-1" value="${esc9(toDatetimeLocalValue3(defaultVoteCloses))}">
+                    <input id="emCompVoteCloses" type="datetime-local" class="em-input mt-1" value="${esc12(toDatetimeLocalValue3(defaultVoteCloses))}">
                 </label>
                 <div class="sm:col-span-2 flex flex-wrap items-center gap-2">
                     <button type="submit" id="emCompVoteSave" class="em-btn-primary">Save voting window</button>
-                    <a href="${esc9(detailUrl)}" class="em-btn-ghost" style="text-decoration:none">Open event detail \u2192</a>
+                    <a href="${esc12(detailUrl)}" class="em-btn-ghost" style="text-decoration:none">Open event detail \u2192</a>
                     <span id="emCompVoteStatus" class="text-xs text-gray-400"></span>
                 </div>
             </form>
@@ -18538,9 +21355,9 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:${color}22;color:${color};font-weight:900">${ph.phase_num}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc9(ph.name || "Competition phase")}</p>
+                    <p class="em-attendee-name">${esc12(ph.name || "Competition phase")}</p>
                     <p class="em-attendee-sub">${dates || "Dates not set"}</p>
-                    <div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked" style="background:${color}22;color:${color}">${esc9(ph.status || "pending")}</span>${ph.extended_once ? '<span class="em-pill em-pill-paid">Extended</span>' : ""}</div>
+                    <div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked" style="background:${color}22;color:${color}">${esc12(ph.status || "pending")}</span>${ph.extended_once ? '<span class="em-pill em-pill-paid">Extended</span>' : ""}</div>
                 </div>
             </div>
         `;
@@ -18555,9 +21372,9 @@ Type the event title to confirm:`);
       return `
             <div class="em-attendee-card">
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc9(name)}</p>
-                    <p class="em-attendee-sub">${esc9(entry.title || "Registered")}</p>
-                    <div class="flex flex-wrap gap-1 mt-2">${filePill}${votePill}<span class="em-pill em-pill-going">${esc9(entry.entry_type || "text")}</span></div>
+                    <p class="em-attendee-name">${esc12(name)}</p>
+                    <p class="em-attendee-sub">${esc12(entry.title || "Registered")}</p>
+                    <div class="flex flex-wrap gap-1 mt-2">${filePill}${votePill}<span class="em-pill em-pill-going">${esc12(entry.entry_type || "text")}</span></div>
                 </div>
             </div>`;
     }).join("") : `<p class="text-xs text-gray-400 italic py-2">No competitor entries yet.</p>`;
@@ -18567,8 +21384,8 @@ Type the event title to confirm:`);
       return `
             <div class="em-attendee-card">
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc9(name)}</p>
-                    <p class="em-attendee-sub">${esc9(entry.title || "Registered")} \xB7 removed from gallery</p>
+                    <p class="em-attendee-name">${esc12(name)}</p>
+                    <p class="em-attendee-sub">${esc12(entry.title || "Registered")} \xB7 removed from gallery</p>
                 </div>
             </div>`;
     }).join("") : "";
@@ -18587,8 +21404,8 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:18px">${medal}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc9(name)}</p>
-                    <p class="em-attendee-sub">${esc9(entry.title || "Winning entry")} \xB7 ${fmt(w.prize_amount_cents)}${w.needs_1099 ? " \xB7 1099 needed" : ""}</p>
+                    <p class="em-attendee-name">${esc12(name)}</p>
+                    <p class="em-attendee-sub">${esc12(entry.title || "Winning entry")} \xB7 ${fmt(w.prize_amount_cents)}${w.needs_1099 ? " \xB7 1099 needed" : ""}</p>
                     <div class="flex flex-wrap gap-1 mt-2">${payoutBadge}</div>
                 </div>
             </div>
@@ -18597,7 +21414,7 @@ Type the event title to confirm:`);
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Competition command</p>
-            <h3 class="em-command-title">${activePhase ? `Phase ${activePhase.phase_num}: ${esc9(activePhase.name || "Active")}` : "Competition setup"}</h3>
+            <h3 class="em-command-title">${activePhase ? `Phase ${activePhase.phase_num}: ${esc12(activePhase.name || "Active")}` : "Competition setup"}</h3>
             <p class="em-command-copy">${liveEntries.length} live entr${liveEntries.length === 1 ? "y" : "ies"}${entryTarget ? ` toward ${entryTarget} minimum` : ""}. ${d.voteCount} vote${d.voteCount === 1 ? "" : "s"} recorded with ${fmt(netPool)} net payout available.</p>
             <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${entryPct}%;background:#a78bfa"></span></div>
         </div>
@@ -18631,10 +21448,10 @@ Type the event title to confirm:`);
 
         <div class="em-card mb-3">
             <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving entries, voting, and payouts.</p></div></div>
-            <div class="em-money-row"><span>Entry type</span><strong>${esc9(cfg.entry_type || "any")}</strong></div>
+            <div class="em-money-row"><span>Entry type</span><strong>${esc12(cfg.entry_type || "any")}</strong></div>
             <div class="em-money-row"><span>Entry fee</span><strong>${cfg.entry_fee_cents ? fmt(cfg.entry_fee_cents) : "Free"}</strong></div>
             <div class="em-money-row"><span>House cut</span><strong>${housePct}%</strong></div>
-            <div class="em-money-row"><span>Voter eligibility</span><strong>${esc9(cfg.voter_eligibility || "all_members")}</strong></div>
+            <div class="em-money-row"><span>Voter eligibility</span><strong>${esc12(cfg.voter_eligibility || "all_members")}</strong></div>
             ${moderatedCount ? `<div class="em-money-row"><span>Moderated entries</span><strong style="color:#dc2626">${moderatedCount}</strong></div>` : ""}
         </div>
 
@@ -18646,7 +21463,7 @@ Type the event title to confirm:`);
     `;
   }
   async function saveSubmissionWindowFromManage() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const btn = document.getElementById("emCompSubSave");
     const statusEl = document.getElementById("emCompSubStatus");
     const opens = document.getElementById("emCompSubOpens")?.value;
@@ -18682,8 +21499,8 @@ Type the event title to confirm:`);
       const { error } = await supabaseClient.from("competition_phases").upsert(row, { onConflict: "event_id,phase_num" });
       if (error) throw error;
       STATE4.tabData.comp = null;
-      api17().renderTab?.("comp");
-      api17().notifyParent?.("updated", STATE4.eventId);
+      api18().renderTab?.("comp");
+      api18().notifyParent?.("updated", STATE4.eventId);
       if (statusEl) statusEl.textContent = "Saved \u2713";
     } catch (err) {
       alert("Failed to save submission window: " + (err.message || err));
@@ -18693,7 +21510,7 @@ Type the event title to confirm:`);
     }
   }
   async function saveVotingWindowFromManage() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const btn = document.getElementById("emCompVoteSave");
     const statusEl = document.getElementById("emCompVoteStatus");
     const opens = document.getElementById("emCompVoteOpens")?.value;
@@ -18729,8 +21546,8 @@ Type the event title to confirm:`);
       const { error } = await supabaseClient.from("competition_phases").upsert(row, { onConflict: "event_id,phase_num" });
       if (error) throw error;
       STATE4.tabData.comp = null;
-      api17().renderTab?.("comp");
-      api17().notifyParent?.("updated", STATE4.eventId);
+      api18().renderTab?.("comp");
+      api18().notifyParent?.("updated", STATE4.eventId);
       if (statusEl) statusEl.textContent = "Saved \u2713";
     } catch (err) {
       alert("Failed to save voting window: " + (err.message || err));
@@ -18757,11 +21574,11 @@ Type the event title to confirm:`);
   globalThis.EventsManageCompetition = manageCompetitionApi;
 
   // js/portal/events/manage/participation.js
-  function api18() {
+  function api19() {
     return window.EventsManageParticipationApi || {};
   }
   async function getParticipationResetCounts() {
-    const STATE4 = api18().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const tables = [
       ["member RSVPs", "event_rsvps"],
@@ -18778,7 +21595,7 @@ Type the event title to confirm:`);
     return results;
   }
   async function resetParticipation() {
-    const STATE4 = api18().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const e = STATE4.event;
     if (!e) return;
     let counts = [];
@@ -18793,10 +21610,10 @@ Type the event title to confirm:`);
     const typed = prompt(
       `Reset participation for "${e.title}"?
 
-This will delete:
+This will cancel open parties/payment plans (pending installments stop; no Stripe refund), then delete:
 ${summary}
 
-The event itself, images, links, pricing, and settings stay in place. Stripe payments are NOT refunded${paidTickets ? ` (${paidTickets} paid RSVP record${paidTickets === 1 ? "" : "s"} found)` : ""}.
+The event itself, images, links, pricing, and settings stay in place.${paidTickets ? ` ${paidTickets} paid RSVP record${paidTickets === 1 ? "" : "s"} found \u2014 succeeded charges are not refunded.` : ""}
 
 Type RESET to continue.`
     );
@@ -18809,21 +21626,23 @@ Type RESET to continue.`
         action: "reset_participation",
         event_id: e.id
       });
-      await api18().refreshEventManager?.("danger");
+      await api19().refreshEventManager?.("danger");
       alert("Participation reset complete. The event is still intact.");
     } catch (err) {
       alert("Reset failed: " + (err.message || "unknown error"));
     }
   }
   async function removeParticipationPerson(btn) {
-    const STATE4 = api18().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const kind = btn.dataset.removeRsvp;
     const name = btn.dataset.name || (kind === "guest" ? "this guest" : "this member");
     const isPaid = btn.dataset.paid === "1";
-    const warning = isPaid ? "\n\nThis was marked paid. Removing the record does not refund Stripe payments." : "";
-    if (!confirm(`Remove ${name} from this event? This also clears their check-in and raffle entry.${warning}`)) return;
+    const hasParty = btn.dataset.hasParty === "1";
+    const cancelLabel = isPaid || hasParty;
+    const warning = cancelLabel ? "\n\nThis cancels their party and any open payment plan (pending installments stop). Succeeded Stripe charges are NOT refunded." : "";
+    if (!confirm(`Cancel participation for ${name}? This also clears their check-in and raffle entry.${warning}`)) return;
     btn.disabled = true;
-    btn.textContent = "Removing...";
+    btn.textContent = cancelLabel ? "Cancelling..." : "Removing...";
     try {
       if (kind === "guest") {
         const guestToken = btn.dataset.guestToken;
@@ -18846,10 +21665,10 @@ Type RESET to continue.`
           user_id: userId
         });
       }
-      await api18().refreshEventManager?.("rsvps");
+      await api19().refreshEventManager?.("rsvps");
     } catch (err) {
-      alert("Remove failed: " + (err.message || "unknown error"));
-      api18().renderTab?.("rsvps");
+      alert("Cancel participation failed: " + (err.message || "unknown error"));
+      api19().renderTab?.("rsvps");
     }
   }
   var manageParticipationApi = {
@@ -18860,10 +21679,10 @@ Type RESET to continue.`
   globalThis.EventsManageParticipation = manageParticipationApi;
 
   // js/portal/events/manage/raffle.js
-  function api19() {
+  function api20() {
     return window.EventsManageRaffleApi || {};
   }
-  function esc10(s) {
+  function esc13(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -18877,7 +21696,7 @@ Type RESET to continue.`
     return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
   }
   async function loadRaffle() {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const [entriesRes, winnersRes, guestsRes] = await Promise.all([
       supabaseClient.from("event_raffle_entries").select("id, user_id, guest_token, paid, amount_paid_cents, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
@@ -18895,10 +21714,10 @@ Type RESET to continue.`
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
   function raffleHtml2() {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const e = STATE4.event;
     if (!e.raffle_enabled) {
-      return api19().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
+      return api20().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
     }
     const d = STATE4.tabData.raffle;
     const fmt = window.formatCurrency || money4;
@@ -18928,8 +21747,8 @@ Type RESET to continue.`
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:#faf5ff;color:#7c3aed;font-size:18px">${medal}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc10(name)}</p>
-                    <p class="em-attendee-sub">${ord(w.place)} place \xB7 ${esc10(w.prize_description || "Prize pending")}</p>
+                    <p class="em-attendee-name">${esc13(name)}</p>
+                    <p class="em-attendee-sub">${ord(w.place)} place \xB7 ${esc13(w.prize_description || "Prize pending")}</p>
                     <div class="flex flex-wrap gap-1 mt-2">
                         <span class="em-pill em-pill-checked">${w.user_id ? "Member" : "Guest"}</span>
                         ${w.selection_status === "pending_choice" ? '<span class="em-pill em-pill-paid">Needs prize choice</span>' : '<span class="em-pill em-pill-going">Prize assigned</span>'}
@@ -18944,12 +21763,12 @@ Type RESET to continue.`
       const items = raffleItems(config, cat.id);
       const pendingSlots = drawQueue.filter((slot) => slot.category_id === cat.id).length;
       const drawnCount = Math.max(0, (cat.winner_count || 0) - pendingSlots);
-      const itemPreview = items.length ? items.slice(0, 3).map((item) => `${item.emoji || "\u{1F381}"} ${esc10(item.name)}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "Prize details pending";
+      const itemPreview = items.length ? items.slice(0, 3).map((item) => `${item.emoji || "\u{1F381}"} ${esc13(item.name)}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "Prize details pending";
       const extraItems = Math.max(0, items.length - 3);
       return `
             <div class="em-card em-op-card">
                 <div class="em-op-head">
-                    <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${esc10(cat.label || "Prize category")}</p></div>
+                    <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${esc13(cat.label || "Prize category")}</p></div>
                     <span class="em-op-icon">\u{1F381}</span>
                 </div>
                 <p class="em-op-copy">${drawModeLabel(cat.draw_mode)} \xB7 ${drawnCount}/${cat.winner_count || 0} drawn</p>
@@ -18965,7 +21784,7 @@ Type RESET to continue.`
             <div class="em-section-head">
                 <div>
                     <h3 class="em-section-title">Next draw</h3>
-                    <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc10(prizeSlotLabel(nextSlot)) : "Next available prize"}${nextSlot?.category_label ? ` \xB7 ${esc10(nextSlot.category_label)}` : ""}</p>
+                    <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc13(prizeSlotLabel(nextSlot)) : "Next available prize"}${nextSlot?.category_label ? ` \xB7 ${esc13(nextSlot.category_label)}` : ""}</p>
                 </div>
                 <span class="em-pill em-pill-paid">${remainingDraws} remaining</span>
             </div>
@@ -18977,15 +21796,15 @@ Type RESET to continue.`
       const guest = en.guest_token ? guestByToken.get(en.guest_token) : null;
       const name = en.user_id ? `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member" : guest?.guest_name || "Guest";
       const sub = en.user_id ? "Member raffle entry" : guest?.guest_email || "Guest raffle entry";
-      const tokenAttr = en.guest_token ? ` data-guest-token="${esc10(en.guest_token)}"` : "";
-      const userAttr = en.user_id ? ` data-user-id="${esc10(en.user_id)}"` : "";
-      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#f5f3ff;color:#6d28d9"><span>\u{1F39F}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc10(name)}</p><p class="em-attendee-sub">${esc10(sub)}</p><div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked">${en.user_id ? "Member" : "Guest"}</span>${en.paid ? '<span class="em-pill em-pill-paid">Paid</span>' : ""}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-raffle-entry="${esc10(en.id)}"${userAttr}${tokenAttr} data-paid="${en.paid ? "1" : "0"}" data-name="${esc10(name)}">Remove</button></div>`;
+      const tokenAttr = en.guest_token ? ` data-guest-token="${esc13(en.guest_token)}"` : "";
+      const userAttr = en.user_id ? ` data-user-id="${esc13(en.user_id)}"` : "";
+      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#f5f3ff;color:#6d28d9"><span>\u{1F39F}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc13(name)}</p><p class="em-attendee-sub">${esc13(sub)}</p><div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked">${en.user_id ? "Member" : "Guest"}</span>${en.paid ? '<span class="em-pill em-pill-paid">Paid</span>' : ""}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-raffle-entry="${esc13(en.id)}"${userAttr}${tokenAttr} data-paid="${en.paid ? "1" : "0"}" data-name="${esc13(name)}">Remove</button></div>`;
     }).join("") : `<p class="text-xs text-gray-400 italic py-2">No eligible entries yet.</p>`;
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Raffle command</p>
             <h3 class="em-command-title">${allDrawn ? "All winners drawn" : `${remainingDraws} draw${remainingDraws === 1 ? "" : "s"} remaining`}</h3>
-            <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? "y" : "ies"} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : "No eligible raffle entries yet."} ${nextSlot ? `Next up: ${esc10(prizeSlotLabel(nextSlot))}.` : ""}</p>
+            <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? "y" : "ies"} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : "No eligible raffle entries yet."} ${nextSlot ? `Next up: ${esc13(prizeSlotLabel(nextSlot))}.` : ""}</p>
             <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${drawPct}%;background:#a78bfa"></span></div>
         </div>
 
@@ -19010,14 +21829,14 @@ Type RESET to continue.`
 
             <div class="em-card">
                 <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving the draw.</p></div></div>
-                <div class="em-money-row"><span>Type</span><strong>${esc10(e.raffle_type || "digital")}</strong></div>
-                <div class="em-money-row"><span>Draw trigger</span><strong>${esc10(e.raffle_draw_trigger || "manual")}</strong></div>
+                <div class="em-money-row"><span>Type</span><strong>${esc13(e.raffle_type || "digital")}</strong></div>
+                <div class="em-money-row"><span>Draw trigger</span><strong>${esc13(e.raffle_draw_trigger || "manual")}</strong></div>
                 <div class="em-money-row"><span>Entry cost</span><strong>${e.raffle_entry_cost_cents ? fmt(e.raffle_entry_cost_cents) : "Free"}</strong></div>
-                <div style="margin:12px 0;padding:12px;border:1px solid #eef2ff;border-radius:12px;background:#f8fafc">
+                <div style="margin:12px 0;padding:12px;border:1px solid var(--color-border, #D5DFEC);border-radius:12px;background:#f8fafc">
                     <label for="emRaffleEntryPrice" style="display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Raffle entry price</label>
                     <div style="display:flex;gap:8px;align-items:center">
                         <span style="font-size:13px;font-weight:800;color:#475569">$</span>
-                        <input id="emRaffleEntryPrice" class="em-input" type="number" min="0" max="500" step="0.01" value="${esc10(raffleEntryPriceDollars)}" ${paidEventRaffleIncluded ? "disabled" : ""} style="flex:1;min-width:0">
+                        <input id="emRaffleEntryPrice" class="em-input" type="number" min="0" max="500" step="0.01" value="${esc13(raffleEntryPriceDollars)}" ${paidEventRaffleIncluded ? "disabled" : ""} style="flex:1;min-width:0">
                         <button id="emRafflePriceSave" type="button" class="em-btn-primary" ${paidEventRaffleIncluded ? "disabled" : ""}>Save</button>
                     </div>
                     <p id="emRafflePriceStatus" class="text-xs text-gray-400 mt-2">${paidEventRaffleIncluded ? "Paid RSVP events include raffle entry with the RSVP, so separate raffle pricing is not used." : "Set 0 for a free raffle. Changes apply to future raffle checkouts only."}</p>
@@ -19036,7 +21855,7 @@ Type RESET to continue.`
     `;
   }
   function wireRaffle() {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const drawBtn = document.getElementById("emRaffleDrawBtn");
     if (drawBtn) {
       drawBtn.onclick = () => window.evtOpenRaffleDraw?.(STATE4.eventId, STATE4.event);
@@ -19070,7 +21889,7 @@ Type RESET to continue.`
     wireRafflePrizeImages();
   }
   function rafflePrizeSetupHtml(config, winners = []) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const model = window.EventsRaffleModel;
     if (!model) {
       return `<div class="em-card mt-3"><div class="em-section-head"><div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Raffle editor unavailable because the raffle model helper did not load.</p></div></div></div>`;
@@ -19079,7 +21898,7 @@ Type RESET to continue.`
     const categories = model.getOrderedCategories(normalized);
     const items = normalized.items || [];
     const validation = model.validateConfig(normalized);
-    const categoryOptions = categories.map((category) => `<option value="${esc10(category.id)}">${esc10(category.label)}</option>`).join("");
+    const categoryOptions = categories.map((category) => `<option value="${esc13(category.id)}">${esc13(category.label)}</option>`).join("");
     const usedPrizeIds = new Set((winners || []).map((winner) => winner.prize_id).filter(Boolean));
     const drawModeOptions = (selected) => [
       ["specific_item", "Specific items"],
@@ -19087,10 +21906,10 @@ Type RESET to continue.`
       ["winner_choice", "Winner chooses later"]
     ].map(([value, label]) => `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`).join("");
     const categoryRows = categories.length ? categories.map((category, index) => `
-        <div class="em-raffle-edit-row" data-em-raffle-category-row="${esc10(category.id)}" data-sort-order="${(index + 1) * 10}">
+        <div class="em-raffle-edit-row" data-em-raffle-category-row="${esc13(category.id)}" data-sort-order="${(index + 1) * 10}">
             <div>
                 <label class="em-raffle-edit-label">Category</label>
-                <input class="em-input" data-em-raffle-category-field="label" value="${esc10(category.label)}" maxlength="80">
+                <input class="em-input" data-em-raffle-category-field="label" value="${esc13(category.label)}" maxlength="80">
             </div>
             <div>
                 <label class="em-raffle-edit-label">Draw mode</label>
@@ -19100,45 +21919,45 @@ Type RESET to continue.`
                 <label class="em-raffle-edit-label">Winners</label>
                 <input class="em-input" type="number" min="0" step="1" data-em-raffle-category-field="winner_count" value="${category.winner_count ?? ""}">
             </div>
-            <button type="button" class="em-btn-ghost" data-em-raffle-remove-category="${esc10(category.id)}" data-category-label="${esc10(category.label)}" ${categories.length <= 1 ? "disabled" : ""}>Remove</button>
+            <button type="button" class="em-btn-ghost" data-em-raffle-remove-category="${esc13(category.id)}" data-category-label="${esc13(category.label)}" ${categories.length <= 1 ? "disabled" : ""}>Remove</button>
         </div>
     `).join("") : `<p class="text-xs text-gray-400 italic py-2">No prize categories yet.</p>`;
     const itemRows = items.length ? items.map((item, index) => {
       const previewUrl = prizeImagePreviews[item.id] || item.image_url || "";
       const pendingName = prizeImageFiles[item.id]?.name || "";
       return `
-        <div class="em-raffle-item-wrap" data-em-raffle-item-row="${esc10(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${esc10(item.image_url || "")}">
+        <div class="em-raffle-item-wrap" data-em-raffle-item-row="${esc13(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${esc13(item.image_url || "")}">
             <div class="em-raffle-edit-row em-raffle-item-row">
                 <div>
                     <label class="em-raffle-edit-label">Emoji</label>
-                    <input class="em-input" data-em-raffle-item-field="emoji" value="${esc10(item.emoji || "\u{1F381}")}" maxlength="4">
+                    <input class="em-input" data-em-raffle-item-field="emoji" value="${esc13(item.emoji || "\u{1F381}")}" maxlength="4">
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Prize</label>
-                    <input class="em-input" data-em-raffle-item-field="name" value="${esc10(item.name)}" maxlength="120">
+                    <input class="em-input" data-em-raffle-item-field="name" value="${esc13(item.name)}" maxlength="120">
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Category</label>
                     <select class="em-input" data-em-raffle-item-field="category_id">
-                        ${categories.map((category) => `<option value="${esc10(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${esc10(category.label)}</option>`).join("")}
+                        ${categories.map((category) => `<option value="${esc13(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${esc13(category.label)}</option>`).join("")}
                     </select>
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Qty</label>
                     <input class="em-input" type="number" min="1" step="1" data-em-raffle-item-field="quantity" value="${item.quantity || 1}">
                 </div>
-                <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${esc10(item.id)}" data-item-label="${esc10(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ""}>Remove</button>
+                <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${esc13(item.id)}" data-item-label="${esc13(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ""}>Remove</button>
             </div>
             <div class="em-prize-img-row">
-                <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-em-prize-file="${esc10(item.id)}">
-                <div class="em-prize-img-drop" data-em-prize-drop="${esc10(item.id)}" title="Click or drag an image here">
-                    ${previewUrl ? `<img src="${esc10(previewUrl)}" alt="Prize image">` : "<span>\u{1F4F7}</span>"}
+                <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-em-prize-file="${esc13(item.id)}">
+                <div class="em-prize-img-drop" data-em-prize-drop="${esc13(item.id)}" title="Click or drag an image here">
+                    ${previewUrl ? `<img src="${esc13(previewUrl)}" alt="Prize image">` : "<span>\u{1F4F7}</span>"}
                 </div>
-                <div class="em-prize-img-copy" data-em-prize-copy="${esc10(item.id)}">
-                    <strong>${pendingName ? esc10(pendingName) : previewUrl ? "Image set" : "Prize image"}</strong>
+                <div class="em-prize-img-copy" data-em-prize-copy="${esc13(item.id)}">
+                    <strong>${pendingName ? esc13(pendingName) : previewUrl ? "Image set" : "Prize image"}</strong>
                     <span>${previewUrl ? "Click or drop to replace. Save prize setup to keep changes." : "Click or drag a PNG, JPG, or WebP image here."}</span>
                 </div>
-                ${previewUrl ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-em-prize-clear="${esc10(item.id)}">Remove image</button>` : ""}
+                ${previewUrl ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-em-prize-clear="${esc13(item.id)}">Remove image</button>` : ""}
             </div>
         </div>
     `;
@@ -19155,7 +21974,7 @@ Type RESET to continue.`
                 .em-raffle-edit-label { display:block; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#94a3b8; margin-bottom:5px; }
                 .em-prize-img-row { margin-top:10px; display:flex; align-items:center; gap:9px; }
                 .em-prize-img-drop { width:72px; height:72px; border:2px dashed #d1d5db; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer; color:#9ca3af; background:#fff; flex-shrink:0; }
-                .em-prize-img-drop:hover, .em-prize-img-drop.em-drag-over { border-color:#818cf8; background:#f5f3ff; color:#4f46e5; }
+                .em-prize-img-drop:hover, .em-prize-img-drop.em-drag-over { border-color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); color:var(--color-primary, #13366E); }
                 .em-prize-img-drop img { width:100%; height:100%; object-fit:cover; display:block; }
                 .em-prize-img-drop span { font-size:19px; }
                 .em-prize-img-copy { flex:1; min-width:0; font-size:11px; color:#6b7280; line-height:1.35; }
@@ -19176,7 +21995,7 @@ Type RESET to continue.`
                 <button type="button" class="em-btn-ghost" data-em-raffle-add-item>Add prize</button>
             </div>
             ${itemRows}
-            ${validation.valid ? "" : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(esc10).join("<br>")}</div>`}
+            ${validation.valid ? "" : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(esc13).join("<br>")}</div>`}
             <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
                 <button type="button" id="emRafflePrizeSave" class="em-btn-primary">Save prize setup</button>
                 <span id="emRafflePrizeStatus" class="text-xs text-gray-400">${categories.length} categor${categories.length === 1 ? "y" : "ies"} \xB7 ${items.length} item${items.length === 1 ? "" : "s"}</span>
@@ -19185,7 +22004,7 @@ Type RESET to continue.`
     `;
   }
   function collectRafflePrizeConfigFromDom() {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const model = window.EventsRaffleModel;
     if (!model) throw new Error("Raffle model helper is not loaded.");
     const categoryRows = Array.from(document.querySelectorAll("[data-em-raffle-category-row]"));
@@ -19219,7 +22038,7 @@ Type RESET to continue.`
     return model.normalizeConfig({ version: 2, categories, items });
   }
   function wireRafflePrizeImages() {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     document.querySelectorAll("[data-em-prize-drop]").forEach((zone) => {
       const itemId = zone.dataset.emPrizeDrop;
       const fileInput = document.querySelector(`[data-em-prize-file="${CSS.escape(itemId)}"]`);
@@ -19248,7 +22067,7 @@ Type RESET to continue.`
     });
   }
   function setRafflePrizeImage(itemId, file) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
       alert("Please use a PNG, JPG, or WebP image.");
       return;
@@ -19262,16 +22081,16 @@ Type RESET to continue.`
     reader.onload = () => {
       prizeImagePreviews[itemId] = reader.result;
       const zone = document.querySelector(`[data-em-prize-drop="${CSS.escape(itemId)}"]`);
-      if (zone) zone.innerHTML = `<img src="${esc10(reader.result)}" alt="Prize image">`;
+      if (zone) zone.innerHTML = `<img src="${esc13(reader.result)}" alt="Prize image">`;
       const copy = document.querySelector(`[data-em-prize-copy="${CSS.escape(itemId)}"]`);
-      if (copy) copy.innerHTML = `<strong>${esc10(file.name)}</strong><span>Ready to upload. Save prize setup to keep this image.</span>`;
+      if (copy) copy.innerHTML = `<strong>${esc13(file.name)}</strong><span>Ready to upload. Save prize setup to keep this image.</span>`;
       const status = document.getElementById("emRafflePrizeStatus");
       if (status) status.textContent = "Image selected. Save prize setup to upload it.";
     };
     reader.readAsDataURL(file);
   }
   function clearRafflePrizeImage(itemId) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     if (!itemId) return;
     delete prizeImageFiles[itemId];
     delete prizeImagePreviews[itemId];
@@ -19287,7 +22106,7 @@ Type RESET to continue.`
     if (status) status.textContent = "Image removed. Save prize setup to keep this change.";
   }
   async function uploadPendingRafflePrizeImages(config) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const uploads = Object.entries(prizeImageFiles);
     if (!uploads.length) return config;
     const slug = safeFilename2(STATE4.event?.slug || STATE4.event?.title || STATE4.eventId || "event");
@@ -19304,7 +22123,7 @@ Type RESET to continue.`
     return config;
   }
   async function saveRafflePrizeSetup(action = {}) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const model = window.EventsRaffleModel;
     const status = document.getElementById("emRafflePrizeStatus");
     const saveBtn = document.getElementById("emRafflePrizeSave");
@@ -19349,7 +22168,7 @@ Type RESET to continue.`
       if (error) throw error;
       STATE4.event.raffle_prizes = config;
       STATE4.event.raffle_winner_count = winnerCount;
-      await api19().refreshEventManager?.("raffle");
+      await api20().refreshEventManager?.("raffle");
     } catch (err) {
       if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
       else alert("Prize setup save failed: " + (err.message || "unknown error"));
@@ -19360,18 +22179,18 @@ Type RESET to continue.`
     }
   }
   function categoryPrizeQuantity(config, categoryId) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     return (config.items || []).filter((item) => item.category_id === categoryId).reduce((sum, item) => sum + Math.max(1, Number(item.quantity || 1)), 0);
   }
   function capRaffleWinnerCounts(config) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     (config.categories || []).forEach((category) => {
       const quantity = categoryPrizeQuantity(config, category.id);
       category.winner_count = Math.min(Number(category.winner_count || 0), quantity);
     });
   }
   async function saveRaffleEntryPrice() {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const input = document.getElementById("emRaffleEntryPrice");
     const btn = document.getElementById("emRafflePriceSave");
     const status = document.getElementById("emRafflePriceStatus");
@@ -19396,7 +22215,7 @@ Type RESET to continue.`
       const { error } = await supabaseClient.from("events").update({ raffle_entry_cost_cents: cents }).eq("id", STATE4.eventId);
       if (error) throw error;
       STATE4.event.raffle_entry_cost_cents = cents;
-      await api19().refreshEventManager?.("raffle");
+      await api20().refreshEventManager?.("raffle");
     } catch (err) {
       if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
       if (btn) {
@@ -19406,7 +22225,7 @@ Type RESET to continue.`
     }
   }
   async function removeRaffleEntry(btn) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const name = btn.dataset.name || "this entry";
     const isPaid = btn.dataset.paid === "1";
     const warning = isPaid ? "\n\nThis was marked paid. Removing the record does not refund Stripe payments." : "";
@@ -19420,33 +22239,33 @@ Type RESET to continue.`
         entry_id: btn.dataset.removeRaffleEntry
       });
       STATE4.tabData.raffle = null;
-      await api19().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
-      api19().notifyParent?.("updated", STATE4.eventId);
+      await api20().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+      api20().notifyParent?.("updated", STATE4.eventId);
     } catch (err) {
       alert("Raffle entry remove failed: " + (err.message || "unknown error"));
       STATE4.tabData.raffle = null;
-      await api19().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+      await api20().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
     }
   }
   function winnerChoiceHtml(winner, config, winners) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     if (winner.selection_status !== "pending_choice") return "";
     const items = availableChoiceItems(config, winners, winner);
     if (!items.length) {
       return `<div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">No unassigned items are available in this category.</div>`;
     }
-    const options = items.map((item) => `<option value="${esc10(item.id)}">${esc10(item.emoji || "\u{1F381}")} ${esc10(item.name)}${item.quantity > 1 ? ` (${item.quantity} total)` : ""}</option>`).join("");
+    const options = items.map((item) => `<option value="${esc13(item.id)}">${esc13(item.emoji || "\u{1F381}")} ${esc13(item.name)}${item.quantity > 1 ? ` (${item.quantity} total)` : ""}</option>`).join("");
     return `
         <div class="mt-3 flex flex-col sm:flex-row gap-2">
-            <select id="emWinnerChoice_${esc10(winner.id)}" class="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-200">
+            <select id="emWinnerChoice_${esc13(winner.id)}" class="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-200">
                 ${options}
             </select>
-            <button type="button" data-raffle-assign-choice="1" data-winner-id="${esc10(winner.id)}" class="rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition">Assign prize</button>
+            <button type="button" data-raffle-assign-choice="1" data-winner-id="${esc13(winner.id)}" class="rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition">Assign prize</button>
         </div>
     `;
   }
   function availableChoiceItems(config, winners, currentWinner) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const items = raffleItems(config, currentWinner.category_id);
     const used = /* @__PURE__ */ new Map();
     (winners || []).forEach((winner) => {
@@ -19457,7 +22276,7 @@ Type RESET to continue.`
     return items.filter((item) => (used.get(item.id) || 0) < item.quantity);
   }
   async function assignWinnerChoice(winnerId) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const winner = (STATE4.tabData.raffle?.winners || []).find((row) => row.id === winnerId);
     if (!winner) return;
     const select = document.getElementById(`emWinnerChoice_${winnerId}`);
@@ -19475,42 +22294,42 @@ Type RESET to continue.`
     }).eq("id", winnerId).eq("event_id", STATE4.eventId).eq("selection_status", "pending_choice");
     if (error) return alert("Prize assignment failed: " + error.message);
     STATE4.tabData.raffle = null;
-    await api19().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+    await api20().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
     document.dispatchEvent(new CustomEvent("events:raffle:drawn", { detail: { eventId: STATE4.eventId } }));
   }
   function raffleConfig(event) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
     return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
   }
   function raffleCategories(config) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getOrderedCategories(config);
   }
   function raffleItems(config, categoryId) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
   }
   function raffleTotalWinners(config) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     if (!window.EventsRaffleModel) return 0;
     return window.EventsRaffleModel.getTotalWinnerCount(config);
   }
   function raffleDrawQueue(config, winners) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getDrawQueue(config, winners || []);
   }
   function drawModeLabel(drawMode) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     if (drawMode === "random_item") return "Random prize assigned";
     if (drawMode === "winner_choice") return "Winner chooses later";
     return "Specific prize";
   }
   function prizeSlotLabel(slot) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     if (!slot) return "";
     if (slot.prize_name) return slot.prize_name;
     if (slot.draw_mode === "winner_choice") return `${slot.category_label || "Prize tier"} choice`;
@@ -19521,10 +22340,10 @@ Type RESET to continue.`
     Object.keys(prizeImagePreviews).forEach((key) => delete prizeImagePreviews[key]);
   }
   function refreshRaffle(eventId2) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     if (eventId2 && eventId2 !== STATE4.eventId) return;
     STATE4.tabData.raffle = null;
-    if (STATE4.activeTab === "raffle") api19().renderTab?.("raffle");
+    if (STATE4.activeTab === "raffle") api20().renderTab?.("raffle");
   }
   document.addEventListener("events:raffle:drawn", (evt) => refreshRaffle(evt.detail?.eventId));
   var manageRaffleApi = {
@@ -19537,16 +22356,16 @@ Type RESET to continue.`
   globalThis.EventsManageRaffle = manageRaffleApi;
 
   // js/portal/events/manage/danger.js
-  function api20() {
+  function api21() {
     return window.EventsManageDangerApi || {};
   }
-  function esc11(s) {
+  function esc14(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
   function dangerHtml() {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api21().getState?.() || {};
     const e = STATE4.event;
     const isCancelled = e.status === "cancelled";
     const isCompleted = e.status === "completed";
@@ -19562,9 +22381,9 @@ Type RESET to continue.`
         </div>
 
         <div class="em-metric-grid mb-4">
-            <div class="em-metric"><span>Status</span><strong style="font-size:18px">${esc11(statusLabel)}</strong><small>Current lifecycle</small></div>
+            <div class="em-metric"><span>Status</span><strong style="font-size:18px">${esc14(statusLabel)}</strong><small>Current lifecycle</small></div>
             <div class="em-metric"><span>RSVP records</span><strong>${totalRsvps}</strong><small>Member + guest</small></div>
-            <div class="em-metric"><span>Paid tickets</span><strong>${paidTickets}</strong><small>Refund review</small></div>
+            <div class="em-metric"><span>Paid tickets</span><strong>${paidTickets}</strong><small>Paid records (no in-app refund)</small></div>
             <div class="em-metric"><span>Check-ins</span><strong>${checkins}</strong><small>Attendance history</small></div>
         </div>
 
@@ -19587,7 +22406,7 @@ Type RESET to continue.`
 
         <div class="em-danger-card" style="background:#fff7ed;border-color:#fed7aa">
             <p class="em-danger-title" style="color:#9a3412">Reset test participation</p>
-            <p class="em-danger-sub" style="color:#7c2d12">Keeps the event, images, date, pricing, location, and public URL. Removes RSVPs, guest RSVPs, check-ins, raffle entries, and drawn raffle winners. This does not refund Stripe payments.</p>
+            <p class="em-danger-sub" style="color:#7c2d12">Keeps the event, images, date, pricing, location, and public URL. Cancels parties/open payment plans (no Stripe refund), then removes RSVPs, guest RSVPs, check-ins, raffle entries, and drawn raffle winners.</p>
             <button class="em-btn-danger" data-action="reset-participation" style="background:#ea580c">Reset participation</button>
         </div>
 
@@ -19599,7 +22418,7 @@ Type RESET to continue.`
     `;
   }
   function wireDanger() {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api21().getState?.() || {};
     document.getElementById("emSheetContent").querySelectorAll("[data-action]").forEach((btn) => {
       btn.addEventListener("click", () => runDangerAction(btn.dataset.action));
     });
@@ -19617,7 +22436,7 @@ Type RESET to continue.`
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-4" role="dialog" aria-labelledby="emCancelSmsTitle">
             <h3 id="emCancelSmsTitle" class="text-base font-semibold text-gray-900">Send cancellation text?</h3>
             <p class="text-sm text-gray-600 mt-1">Notify ${optedInCount} opted-in attendee${optedInCount === 1 ? "" : "s"}. You can edit the message below. Phone numbers stay masked.</p>
-            <textarea id="emCancelSmsBody" class="em-textarea mt-3" rows="4" maxlength="1600">${esc11(defaultBody)}</textarea>
+            <textarea id="emCancelSmsBody" class="em-textarea mt-3" rows="4" maxlength="1600">${esc14(defaultBody)}</textarea>
             <p id="emCancelSmsResult" class="text-xs mt-2" style="min-height:1rem"></p>
             <div class="flex flex-wrap gap-2 mt-3 justify-end">
                 <button type="button" class="em-btn-ghost" data-cancel-sms-skip>Skip</button>
@@ -19684,7 +22503,7 @@ Type RESET to continue.`
     });
   }
   async function runDangerAction(action) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api21().getState?.() || {};
     const e = STATE4.event;
     if (!e) return;
     if (action === "delete") {
@@ -19699,22 +22518,27 @@ Type RESET to continue.`
         const { error } = await supabaseClient.from("events").delete().eq("id", e.id);
         if (error) throw error;
         alert("Event deleted.");
-        api20().close?.();
-        api20().notifyParent?.("deleted", e.id);
+        api21().close?.();
+        api21().notifyParent?.("deleted", e.id);
       } catch (err) {
         alert("Delete failed: " + (err.message || "unknown error"));
       }
       return;
     }
     if (action === "cancel") {
-      if (!confirm(`Mark "${e.title}" as cancelled?`)) return;
+      if (!confirm(`Mark "${e.title}" as cancelled?
+
+Paid attendees will NOT be auto-refunded. Rare exceptions are manager-approved out-of-band via Stripe Dashboard.`)) return;
       try {
-        const { error } = await supabaseClient.from("events").update({ status: "cancelled" }).eq("id", e.id);
-        if (error) throw error;
+        const result = await callEdgeFunction("process-event-cancellation", {
+          event_id: e.id,
+          reason: "manual"
+        });
         STATE4.event.status = "cancelled";
-        api20().renderHeader?.();
-        api20().renderTab?.("danger");
-        api20().notifyParent?.("updated", e.id);
+        api21().renderHeader?.();
+        api21().renderTab?.("danger");
+        api21().notifyParent?.("updated", e.id);
+        if (result?.message) alert(result.message);
         try {
           const { count } = await supabaseClient.from("event_sms_recipients").select("id", { count: "exact", head: true }).eq("event_id", e.id).eq("opted_in", true).is("opted_out_at", null);
           if (count && count > 0) {
@@ -19729,7 +22553,7 @@ Type RESET to continue.`
       return;
     }
     if (action === "reset-participation") {
-      await api20().resetParticipation?.();
+      await api21().resetParticipation?.();
       return;
     }
     if (action === "complete") {
@@ -19738,9 +22562,9 @@ Type RESET to continue.`
         const { error } = await supabaseClient.from("events").update({ status: "completed" }).eq("id", e.id);
         if (error) throw error;
         STATE4.event.status = "completed";
-        api20().renderHeader?.();
-        api20().renderTab?.("danger");
-        api20().notifyParent?.("updated", e.id);
+        api21().renderHeader?.();
+        api21().renderTab?.("danger");
+        api21().notifyParent?.("updated", e.id);
       } catch (err) {
         alert("Complete failed: " + (err.message || "unknown error"));
       }
@@ -19866,10 +22690,10 @@ Type RESET to continue.`
       partiesRes,
       seatsRes
     ] = await Promise.all([
-      supabaseClient.from("event_rsvps").select("id, user_id, status, paid, qr_token, party_id, invest_eligible_acknowledged, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
-      supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at, party_id, attach_requested").eq("event_id", eventId2),
+      supabaseClient.from("event_rsvps").select("id, user_id, status, paid, qr_token, party_id, invest_eligible_acknowledged, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url, phone)").eq("event_id", eventId2),
+      supabaseClient.from("event_guest_rsvps").select("id, guest_name, guest_email, guest_phone, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at, party_id, attach_requested").eq("event_id", eventId2),
       supabaseClient.from("event_checkins").select("user_id, guest_token, checked_in_at").eq("event_id", eventId2),
-      supabaseClient.from("event_parties").select("id, status, payer_kind, payer_user_id, payer_guest_rsvp_id").eq("event_id", eventId2),
+      supabaseClient.from("event_parties").select("id, status, payer_kind, payer_user_id, payer_guest_rsvp_id, invite_token, disclaimer_acks, amenity_vote_option_id, amenity_vote_status").eq("event_id", eventId2),
       supabaseClient.from("event_seats").select("id, party_id, role, display_name, options, options_complete, info_invite_token, linked_user_id, linked_guest_rsvp_id, sort_order").eq("event_id", eventId2).order("sort_order", { ascending: true })
     ]);
     STATE3.rsvps = rsvpsRes.data || [];
@@ -20075,8 +22899,9 @@ Type RESET to continue.`
     window.evtCurrentUserPic = profile?.profile_picture_url || null;
     window.evtCurrentUserInitials = ((profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "")).toUpperCase() || "?";
     if (typeof canCreateEvents === "function" && canCreateEvents()) {
-      document.getElementById("createEventBtn")?.classList.remove("hidden");
-      document.getElementById("createEventBtn")?.classList.add("flex");
+      const fab = document.getElementById("evtCreateFab");
+      fab?.classList.remove("hidden");
+      fab?.classList.add("flex");
     }
     evtSetupListeners();
     await loadEvents();
@@ -20101,6 +22926,7 @@ Type RESET to continue.`
       }
     }
     document.getElementById("createEventBtn")?.addEventListener("click", _openCreate);
+    document.getElementById("evtCreateFab")?.addEventListener("click", _openCreate);
     document.getElementById("emptyCreateBtn")?.addEventListener("click", _openCreate);
     document.addEventListener("events:created", () => loadEvents());
     document.getElementById("closeScannerModal")?.addEventListener("click", evtCloseScanner);

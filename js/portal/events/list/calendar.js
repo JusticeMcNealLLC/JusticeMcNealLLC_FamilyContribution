@@ -147,7 +147,7 @@ function renderCalendar() {
                 '</button>' +
             '</div>' +
             '<h3 class="evt-cal-title text-base font-semibold text-gray-900">' + MONTH_NAMES[month] + ' ' + year + '</h3>' +
-            '<button type="button" class="evt-cal-today text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-1 rounded-md hover:bg-brand-50" data-cal-nav="today">Today</button>' +
+            '<button type="button" class="evt-cal-today text-xs font-semibold text-primary hover:text-primary-700 px-2 py-1 rounded-md hover:bg-primary-50" data-cal-nav="today">Today</button>' +
         '</div>'
     );
 
@@ -174,9 +174,9 @@ function renderCalendar() {
             const shown = dayEvents.slice(0, 3);
             dots = '<div class="evt-cal-dots">' +
                 shown.map(ev => {
-                    const grad = (C.CATEGORY_GRADIENT && C.CATEGORY_GRADIENT[ev.category]) || C.DEFAULT_GRADIENT || 'linear-gradient(135deg,#6366f1,#8b5cf6)';
+                    const grad = (C.CATEGORY_GRADIENT && C.CATEGORY_GRADIENT[ev.category]) || C.DEFAULT_GRADIENT || 'linear-gradient(135deg,#0B2545,#13366E)';
                     const m = /#([0-9a-f]{3,6})/i.exec(grad);
-                    const color = m ? ('#' + m[1]) : '#6366f1';
+                    const color = m ? ('#' + m[1]) : '#13366E';
                     return '<span class="evt-cal-dot" style="background:' + color + '"></span>';
                 }).join('') +
                 (count > 3 ? '<span class="evt-cal-dot-more">+' + (count - 3) + '</span>' : '') +

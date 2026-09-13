@@ -43,7 +43,13 @@ async function pubRenderRaffleSection(event) {
     // desktop keeps an inline action because no sticky CTA is shown there.
     let myEntryHtml = '';
     let lockedBtnHtml = '';
-    const hasRsvp = pubCurrentUser ? (pubCurrentRsvp?.status === 'going' || !!pubCurrentRsvp?.paid) : !!pubGuestRsvp;
+    const hasRsvp = typeof pubHasRaffleEligibleRsvp === 'function'
+        ? pubHasRaffleEligibleRsvp()
+        : (pubCurrentUser
+            ? (window.EventsHelpers?.rsvpIsCommittedGoing?.(event, pubCurrentRsvp)
+                || (event.pricing_mode === 'paid' ? !!pubCurrentRsvp?.paid : (pubCurrentRsvp?.status === 'going' || !!pubCurrentRsvp?.paid)))
+            : (window.EventsHelpers?.rsvpIsCommittedGoing?.(event, pubGuestRsvp)
+                || (event.pricing_mode === 'paid' ? !!pubGuestRsvp?.paid : !!pubGuestRsvp)));
 
     if (entriesClosed) {
         // Show greyed-out locked button
@@ -252,7 +258,9 @@ function pubRaffleWinnersHtml(winners, guestWinnerNames) {
 async function pubHandlePaidRaffle() {
     if (!pubCurrentUser || !pubCurrentEvent) return;
 
-    if (!(pubCurrentRsvp?.status === 'going' || pubCurrentRsvp?.paid)) {
+    if (!(typeof pubHasRaffleEligibleRsvp === 'function'
+        ? pubHasRaffleEligibleRsvp()
+        : (pubCurrentRsvp?.status === 'going' || pubCurrentRsvp?.paid))) {
         alert('Please RSVP before entering the raffle.');
         return;
     }
@@ -280,7 +288,9 @@ async function pubHandlePaidRaffle() {
 async function pubHandleFreeRaffle() {
     if (!pubCurrentUser || !pubCurrentEvent) return;
 
-    if (!(pubCurrentRsvp?.status === 'going' || pubCurrentRsvp?.paid)) {
+    if (!(typeof pubHasRaffleEligibleRsvp === 'function'
+        ? pubHasRaffleEligibleRsvp()
+        : (pubCurrentRsvp?.status === 'going' || pubCurrentRsvp?.paid))) {
         alert('Please RSVP before entering the raffle.');
         return;
     }

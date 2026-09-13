@@ -93,7 +93,7 @@
         return 'adult';
     }
 
-    function seatRowIncludedHtml(event, prefix, index, role) {
+    function seatRowIncludedHtml(event, prefix, index, role, answers) {
         if (!window.EventsIncludedItems || typeof window.EventsIncludedItems.formFieldsHtml !== 'function') {
             return '';
         }
@@ -102,28 +102,34 @@
         return window.EventsIncludedItems.formFieldsHtml(catalog, {
             idPrefix: `${prefix}-seat-${index}`,
             role,
+            answers: answers || {},
         });
     }
 
     function seatRoleRadiosHtml(event, prefix, index, role, isPayer) {
+        // Payer cannot be a child seat — they are the RSVPing adult
+        if (isPayer) {
+            return `
+                <input type="hidden" data-party-seat-fixed-role="${index}" value="adult">
+                <span class="ed-party-seat-role-badge">Adult · ${escapeHtml(seatPriceLabel(event, 'adult'))}</span>`;
+        }
         const adultLabel = seatPriceLabel(event, 'adult');
         const kidLabel = seatPriceLabel(event, 'kid');
         const name = `${prefix}-role-${index}`;
+        const r = normalizeSeatRole(role);
         return `
             <div class="ed-party-seat-roles" role="radiogroup" aria-label="Seat type">
-                <label class="ed-seat-picker-option${role === 'adult' ? ' is-selected' : ''}">
+                <label class="ed-seat-picker-option${r === 'adult' ? ' is-selected' : ''}">
                     <input type="radio" name="${escapeHtml(name)}" value="adult" data-party-seat-role="1"
-                        data-party-seat-index="${index}" ${role === 'adult' ? 'checked' : ''}
-                        ${!isPayer ? 'disabled' : ''}>
+                        data-party-seat-index="${index}" ${r === 'adult' ? 'checked' : ''}>
                     <span class="ed-seat-picker-option-body">
                         <span class="ed-seat-picker-option-title">Adult</span>
                         <span class="ed-seat-picker-option-price">${escapeHtml(adultLabel)}</span>
                     </span>
                 </label>
-                <label class="ed-seat-picker-option${role === 'kid' ? ' is-selected' : ''}">
+                <label class="ed-seat-picker-option${r === 'kid' ? ' is-selected' : ''}">
                     <input type="radio" name="${escapeHtml(name)}" value="kid" data-party-seat-role="1"
-                        data-party-seat-index="${index}" ${role === 'kid' ? 'checked' : ''}
-                        ${!isPayer ? 'disabled' : ''}>
+                        data-party-seat-index="${index}" ${r === 'kid' ? 'checked' : ''}>
                     <span class="ed-seat-picker-option-body">
                         <span class="ed-seat-picker-option-title">Child</span>
                         <span class="ed-seat-picker-option-price">${escapeHtml(kidLabel)}</span>
@@ -134,7 +140,8 @@
 
     function seatRowHtml(event, prefix, index, seat, opts) {
         const isPayer = !!seat.is_payer;
-        const role = normalizeSeatRole(seat.role);
+        const hidePayerName = !!(opts && opts.hidePayerName);
+        const role = isPayer ? 'adult' : normalizeSeatRole(seat.role);
         const title = isPayer ? 'You (payer)' : `Guest ${index}`;
         const removeBtn = isPayer ? '' : `
             <button type="button" class="ed-party-seat-remove" data-party-seat-remove="${index}"
@@ -144,20 +151,28 @@
             : `<input type="hidden" data-party-seat-fixed-role="${index}" value="${escapeHtml(role)}">
                <span class="ed-party-seat-role-badge">${role === 'kid' ? 'Child' : 'Adult'} · ${escapeHtml(seatPriceLabel(event, role))}</span>`;
 
+        const nameId = `${prefix}-name-${index}`;
+        const nameValue = escapeHtml(seat.display_name || '');
+        const nameField = (isPayer && hidePayerName)
+            ? `<input type="hidden" class="ed-party-seat-name" id="${escapeHtml(nameId)}"
+                    data-party-seat-name="${index}" data-party-seat-payer="1"
+                    maxlength="${DISPLAY_NAME_MAX}" value="${nameValue}">`
+            : `<label class="ec-label" for="${escapeHtml(nameId)}">Name</label>
+                <input type="text" class="ec-input ed-party-seat-name" id="${escapeHtml(nameId)}"
+                    data-party-seat-name="${index}" maxlength="${DISPLAY_NAME_MAX}"
+                    value="${nameValue}" ${isPayer ? 'data-party-seat-payer="1"' : ''}
+                    placeholder="${isPayer ? 'Your name' : 'Guest name'}" required>`;
+
         return `
             <div class="ed-party-seat-row${isPayer ? ' is-payer' : ''}" data-party-seat-row="${index}">
                 <div class="ed-party-seat-header">
                     <span class="ed-party-seat-title">${escapeHtml(title)}</span>
                     ${removeBtn}
                 </div>
-                <label class="ec-label" for="${escapeHtml(prefix)}-name-${index}">Name</label>
-                <input type="text" class="ec-input ed-party-seat-name" id="${escapeHtml(prefix)}-name-${index}"
-                    data-party-seat-name="${index}" maxlength="${DISPLAY_NAME_MAX}"
-                    value="${escapeHtml(seat.display_name || '')}" ${isPayer ? 'data-party-seat-payer="1"' : ''}
-                    placeholder="${isPayer ? 'Your name' : 'Guest name'}" required>
+                ${nameField}
                 ${roleBlock}
                 <div class="ed-party-seat-inc" data-party-seat-inc="${index}">
-                    ${seatRowIncludedHtml(event, prefix, index, role)}
+                    ${seatRowIncludedHtml(event, prefix, index, role, seat.options || {})}
                 </div>
                 ${!isPayer && window.EventsIncludedItems
                     && typeof window.EventsIncludedItems.hasCatalogForRole === 'function'
@@ -168,26 +183,64 @@
     }
 
     /**
+     * Sync contact name into the hidden/visible payer seat name field.
+     * @param {ParentNode} root
+     * @param {string} name
+     */
+    function syncPayerNameFromContact(root, name) {
+        const scope = root || document;
+        const partyRoot = scope.querySelector
+            ? (scope.querySelector('[data-party-seats-root]') || scope)
+            : document;
+        const payerNameEl = partyRoot.querySelector
+            ? partyRoot.querySelector('[data-party-seat-payer="1"]')
+            : null;
+        if (!payerNameEl) return;
+        payerNameEl.value = String(name || '').trim().slice(0, DISPLAY_NAME_MAX);
+    }
+
+    /**
      * @param {object} event
-     * @param {{ idPrefix?: string, payerName?: string, defaultRole?: string }} opts
+     * @param {{ idPrefix?: string, payerName?: string, defaultRole?: string, hidePayerName?: boolean, hideLabel?: boolean, initialSeats?: Array }} opts
      */
     function formFieldsHtml(event, opts) {
         if (!event) return '';
         const prefix = (opts && opts.idPrefix) || 'partySeats';
+        const hidePayerName = !!(opts && opts.hidePayerName);
+        const hideLabel = !!(opts && opts.hideLabel);
         const payerName = String((opts && opts.payerName) || '').trim();
-        const payerRole = normalizeSeatRole((opts && opts.defaultRole) || defaultPayerRole(event));
-        const payerSeat = {
-            role: payerRole,
-            display_name: payerName,
-            is_payer: true,
-        };
-        const total = partyBaseTotalCents(event, [payerSeat]);
+        const initial = Array.isArray(opts?.initialSeats) ? opts.initialSeats.filter(Boolean) : [];
+
+        let seats;
+        if (initial.length) {
+            seats = initial.map((s, i) => {
+                const isPayer = i === 0 || !!s.is_payer;
+                return {
+                    role: isPayer ? 'adult' : normalizeSeatRole(s.role),
+                    display_name: String(s.display_name || (isPayer ? payerName : '')).trim(),
+                    is_payer: isPayer,
+                    options: (s.options && typeof s.options === 'object') ? s.options : {},
+                };
+            });
+            // Exactly one payer — first seat
+            seats.forEach((s, i) => { s.is_payer = i === 0; });
+            if (seats[0] && !seats[0].display_name && payerName) seats[0].display_name = payerName;
+        } else {
+            seats = [{
+                role: 'adult',
+                display_name: payerName,
+                is_payer: true,
+                options: {},
+            }];
+        }
+        const total = partyBaseTotalCents(event, seats);
 
         return `
-            <div class="ed-party-seats" data-party-seats-root="${escapeHtml(prefix)}">
-                <p class="ed-party-seats-label">Who's coming?</p>
+            <div class="ed-party-seats" data-party-seats-root="${escapeHtml(prefix)}"
+                data-hide-payer-name="${hidePayerName ? '1' : '0'}">
+                ${hideLabel ? '' : '<p class="ed-party-seats-label">Who\'s coming?</p>'}
                 <div class="ed-party-seat-rows" data-party-seat-rows="1">
-                    ${seatRowHtml(event, prefix, 0, payerSeat, opts)}
+                    ${seats.map((seat, i) => seatRowHtml(event, prefix, i, seat, opts)).join('')}
                 </div>
                 <div class="ed-party-seat-actions">
                     <button type="button" class="ed-btn-secondary ed-party-add-seat" data-party-add-role="adult">+ Add Adult</button>
@@ -211,21 +264,33 @@
         return {};
     }
 
-    function readSeatsFromRoot(root, event) {
+    function resolvePartyRoot(root) {
         const scope = root || document;
-        const partyRoot = scope.querySelector('[data-party-seats-root]');
+        if (scope.getAttribute && scope.getAttribute('data-party-seats-root') != null) {
+            return scope;
+        }
+        if (scope.querySelector) {
+            return scope.querySelector('[data-party-seats-root]');
+        }
+        return null;
+    }
+
+    function readSeatsFromRoot(root, event) {
+        const partyRoot = resolvePartyRoot(root);
         if (!partyRoot) return [];
         const prefix = partyRoot.getAttribute('data-party-seats-root') || 'partySeats';
         const rows = partyRoot.querySelectorAll('[data-party-seat-row]');
         const catalog = (window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === 'function')
-            ? window.EventsIncludedItems.normalizeIncludedItems(event.included_items)
+            ? window.EventsIncludedItems.normalizeIncludedItems(event && event.included_items)
             : [];
         const seats = [];
         rows.forEach((row) => {
             const index = Number(row.getAttribute('data-party-seat-row'));
             const nameEl = row.querySelector(`[data-party-seat-name="${index}"]`);
             const isPayer = !!row.querySelector('[data-party-seat-payer="1"]');
-            const role = readRoleFromRow(row, index);
+            // Payer is always adult — never treat as child even if stale radio exists
+            let role = readRoleFromRow(row, index);
+            if (isPayer) role = 'adult';
             const display_name = String(nameEl?.value || '').trim().slice(0, DISPLAY_NAME_MAX);
             const options = readAnswersFromRow(row, catalog, role);
             seats.push({
@@ -253,9 +318,22 @@
         totalEl.innerHTML = `Party total: <strong>${escapeHtml(formatMoney(total))}</strong>`;
     }
 
+    function partyRowOpts(partyRoot) {
+        return {
+            hidePayerName: partyRoot.getAttribute('data-hide-payer-name') === '1',
+        };
+    }
+
+    function wireIncludedChoices(scope) {
+        if (window.EventsIncludedItems && typeof window.EventsIncludedItems.wireChoiceControls === 'function') {
+            window.EventsIncludedItems.wireChoiceControls(scope);
+        }
+    }
+
     function reindexRows(partyRoot, event, prefix) {
         const rowsWrap = partyRoot.querySelector('[data-party-seat-rows="1"]');
         if (!rowsWrap) return;
+        const rowOpts = partyRowOpts(partyRoot);
         const rows = Array.from(rowsWrap.querySelectorAll('[data-party-seat-row]'));
         rows.forEach((row, i) => {
             const isPayer = row.classList.contains('is-payer');
@@ -264,7 +342,7 @@
             const role = readRoleFromRow(row, Number(row.getAttribute('data-party-seat-row')));
             const seat = { role, display_name, is_payer: isPayer };
             const tmp = document.createElement('div');
-            tmp.innerHTML = seatRowHtml(event, prefix, i, seat, {});
+            tmp.innerHTML = seatRowHtml(event, prefix, i, seat, rowOpts);
             const newRow = tmp.firstElementChild;
             rowsWrap.replaceChild(newRow, row);
         });
@@ -273,6 +351,7 @@
 
     function wireRowEvents(partyRoot, event, prefix) {
         const onChange = partyRoot._partyOnChange;
+        const rowOpts = partyRowOpts(partyRoot);
 
         partyRoot.querySelectorAll('[data-party-seat-role="1"]').forEach((input) => {
             if (input.dataset.wired) return;
@@ -289,6 +368,7 @@
                 const incWrap = row.querySelector(`[data-party-seat-inc="${index}"]`);
                 if (incWrap) {
                     incWrap.innerHTML = seatRowIncludedHtml(event, prefix, index, role);
+                    wireIncludedChoices(incWrap);
                 }
                 updateTotalLabel(partyRoot, event);
                 if (typeof onChange === 'function') onChange(readSeatsFromRoot(partyRoot, event), event);
@@ -332,18 +412,20 @@
                 const addRole = normalizeSeatRole(btn.getAttribute('data-party-add-role'));
                 const seat = { role: addRole, display_name: '', is_payer: false };
                 const tmp = document.createElement('div');
-                tmp.innerHTML = seatRowHtml(event, prefix, count, seat, {});
+                tmp.innerHTML = seatRowHtml(event, prefix, count, seat, rowOpts);
                 rowsWrap.appendChild(tmp.firstElementChild);
                 reindexRows(partyRoot, event, prefix);
                 updateTotalLabel(partyRoot, event);
                 if (typeof onChange === 'function') onChange(readSeatsFromRoot(partyRoot, event), event);
             });
         });
+
+        wireIncludedChoices(partyRoot);
     }
 
     function wireForm(root, event, onChange) {
         const scope = root || document;
-        const partyRoot = scope.querySelector('[data-party-seats-root]');
+        const partyRoot = resolvePartyRoot(scope);
         if (!partyRoot || !event) return;
         const prefix = partyRoot.getAttribute('data-party-seats-root') || 'partySeats';
         partyRoot._partyOnChange = onChange;
@@ -359,6 +441,7 @@
         readPayerRoleFromRoot,
         validatePartySeats,
         partyBaseTotalCents,
+        syncPayerNameFromContact,
         wireForm,
     };
 

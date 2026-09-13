@@ -78,7 +78,7 @@
         return `<div class="relative shrink-0 text-center min-w-[44px]">
             ${pin}
             <div class="text-[20px] leading-none font-extrabold text-gray-900">${day}</div>
-            <div class="text-[10px] tracking-wider font-bold text-brand-600 mt-0.5">${mon}</div>
+            <div class="text-[10px] tracking-wider font-bold text-primary mt-0.5">${mon}</div>
             <div class="evt-date-stamp-dow text-[9px] tracking-wider font-semibold text-gray-400 mt-0.5">${dow}</div>
         </div>`;
     }
@@ -119,7 +119,7 @@
                 return `<img src="${url}" alt="${name}" loading="lazy" class="w-7 h-7 rounded-full ring-2 ring-white object-cover bg-gray-100">`;
             }
             const initial = (a.first_name || '?').trim().charAt(0).toUpperCase() || '?';
-            return `<span class="w-7 h-7 rounded-full ring-2 ring-white bg-brand-100 text-brand-700 text-[11px] font-bold inline-flex items-center justify-center">${initial}</span>`;
+            return `<span class="w-7 h-7 rounded-full ring-2 ring-white bg-primary-100 text-primary-700 text-[11px] font-bold inline-flex items-center justify-center">${initial}</span>`;
         });
         if (overflow > 0) {
             pieces.push(`<span class="w-7 h-7 rounded-full ring-2 ring-white bg-gray-100 text-gray-600 text-[11px] font-bold inline-flex items-center justify-center">+${overflow}</span>`);
@@ -127,9 +127,12 @@
         return `<div class="flex -space-x-2">${pieces.join('')}</div>`;
     }
 
-    // Going ribbon (top of card) — events_003 §8.6
-    function _goingRibbon(rsvp) {
-        if (!rsvp || rsvp.status !== 'going') return '';
+    // Going ribbon (top of card) — events_003 §8.6 (committed Going only)
+    function _goingRibbon(event, rsvp) {
+        const committed = (window.EventsHelpers && typeof window.EventsHelpers.rsvpIsCommittedGoing === 'function')
+            ? window.EventsHelpers.rsvpIsCommittedGoing(event, rsvp)
+            : !!(rsvp && (event?.pricing_mode !== 'paid' ? rsvp.status === 'going' : rsvp.paid === true));
+        if (!committed) return '';
         return `<div class="evt-going-ribbon bg-emerald-50 text-emerald-700 text-[11px] font-bold uppercase tracking-wider px-4 py-1 flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
@@ -159,7 +162,7 @@
         const stateP    = P.statePill     ? P.statePill(event)            : '';
         const countP    = (variant === 'portal' && P.countdownChip)
                             ? P.countdownChip(event) : '';
-        const ribbon    = (variant === 'portal') ? _goingRibbon(opts.rsvp) : '';
+        const ribbon    = (variant === 'portal') ? _goingRibbon(event, opts.rsvp) : '';
         const stack     = (variant === 'portal') ? _avatarStack(opts.attendees) : '';
 
         // F7 — vlift date overlay chip (vertical white card on banner top-left)
@@ -172,7 +175,9 @@
             ? `<div class="evt-card-date-chip" aria-hidden="true"><span class="evt-card-date-mon">${_mon}</span><span class="evt-card-date-day">${_day}</span><span class="evt-card-date-dow" data-f15-dow>${_dow}</span></div>`
             : '';
         // F7 — RSVP footer outline button (portal vlift only; rendered for all, CSS gates)
-        const isGoing = !!(opts.rsvp && opts.rsvp.status === 'going');
+        const isGoing = (window.EventsHelpers && typeof window.EventsHelpers.rsvpIsCommittedGoing === 'function')
+            ? window.EventsHelpers.rsvpIsCommittedGoing(event, opts.rsvp)
+            : !!(opts.rsvp && (event.pricing_mode !== 'paid' ? opts.rsvp.status === 'going' : opts.rsvp.paid === true));
         const rsvpFooter = (variant === 'portal')
             ? `<button type="button" data-evt-card-rsvp="${event.id}" class="evt-card-rsvp${isGoing ? ' evt-card-rsvp--on' : ''}" aria-pressed="${isGoing ? 'true' : 'false'}">${isGoing ? '✓ Going' : 'Details'}</button>`
             : '';

@@ -15,10 +15,10 @@ export const TW_CTA_BAR = [
 
 export const TW_CTA_ACTIONS = 'evt-cta-actions max-lg:flex max-lg:shrink-0 max-lg:items-center max-lg:justify-center max-lg:gap-2.5 max-lg:px-4 max-lg:py-3 max-lg:pb-[max(12px,env(safe-area-inset-bottom))] hidden';
 
-export const TW_CTA_RSVP = 'bg-indigo-600 text-white';
+export const TW_CTA_RSVP = 'bg-primary text-white';
 export const TW_CTA_RSVP_DONE = 'bg-green-600 text-white';
-export const TW_CTA_MANAGE = 'bg-indigo-600 text-white';
-export const TW_CTA_TEAM = 'bg-white text-indigo-600 !border-2 !border-indigo-200';
+export const TW_CTA_MANAGE = 'bg-primary text-white';
+export const TW_CTA_TEAM = 'bg-white text-primary !border-2 !border-primary-200';
 export const TW_CTA_RAFFLE = 'bg-gradient-to-br from-amber-500 to-amber-600 text-white';
 export const TW_CTA_RAFFLE_OUTLINE = 'bg-white text-amber-600 !border-2 !border-amber-300';
 export const TW_CTA_RAFFLE_DONE = 'bg-green-600 text-white';

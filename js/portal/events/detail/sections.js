@@ -76,16 +76,27 @@ function evtBuildDetailPriceSummaryHtml(ctx) {
 
 function evtBuildDetailIncludedCatalogHtml(ctx) {
     const { event } = ctx;
-    if (!event || !window.EventsIncludedItems || typeof window.EventsIncludedItems.catalogListHtml !== 'function') {
-        return '';
-    }
-    const listHtml = window.EventsIncludedItems.catalogListHtml(event.included_items);
-    if (!listHtml) return '';
+    if (!event || !window.EventsIncludedItems) return '';
+    const list = (typeof window.EventsIncludedItems.normalizeIncludedItems === 'function')
+        ? window.EventsIncludedItems.normalizeIncludedItems(event.included_items)
+        : [];
+    if (!list.length) return '';
+
+    const names = list.map((item) => String(item.name || '').trim()).filter(Boolean);
+    if (!names.length) return '';
+
+    let label;
+    if (names.length === 1) label = names[0];
+    else if (names.length === 2) label = `${names[0]} and ${names[1]}`;
+    else label = `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+
+    const safe = (typeof evtEscapeHtml === 'function')
+        ? evtEscapeHtml(label)
+        : String(label).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
     return `
-        <div class="ed-included-catalog">
-            <p class="ed-about-heading" style="margin-top:16px">What&apos;s included</p>
-            <p class="ed-hint" style="margin-bottom:10px">Options you&apos;ll choose during RSVP.</p>
-            ${listHtml}
+        <div class="ed-included-catalog ed-included-teaser">
+            <p class="ed-hint" style="margin-top:14px;margin-bottom:0">You&apos;ll choose ${safe} when you RSVP.</p>
         </div>`;
 }
 
@@ -99,16 +110,16 @@ function evtBuildDetailAmenityResultsHtml(ctx) {
     const canShow = window.EventsAmenityVoting.canShowResults(cfg, showCtx);
     const tallies = amenityVoteTallies || {};
 
-    if (!canShow) {
-        const pending = window.EventsAmenityVoting.pendingMessageHtml(cfg);
-        return pending ? `<div class="ed-amenity-results">${pending}</div>` : '';
-    }
+    // Pending “Voting open” teaser removed — vote happens in RSVP; only show real results
+    if (!canShow) return '';
 
     const inner = window.EventsAmenityVoting.resultsHtml(cfg, tallies, { isHost: hostLike });
     if (!inner) return '';
-    const hint = hostLike && window.EventsAmenityVoting.totalVotes(tallies) <= 0
-        ? ''
-        : '<p class="ed-hint ed-amenity-rsvp-hint">Cast your vote when you RSVP.</p>';
+    const votingClosed = window.EventsAmenityVoting.isVotingClosed(cfg);
+    const total = window.EventsAmenityVoting.totalVotes(tallies);
+    const hint = (!hostLike && !votingClosed && total > 0)
+        ? '<p class="ed-hint ed-amenity-rsvp-hint">Cast your vote when you RSVP.</p>'
+        : '';
     return `<div class="ed-amenity-results">${inner}${hint}</div>`;
 }
 
@@ -183,6 +194,52 @@ function evtFeeAwarePartyTotal(event, root, partyTotal) {
     return window.EventsPaymentChoice.displayTotalCents(event, choice, base);
 }
 
+function evtMemberRsvpStackBtnHtml(eventId, cents, opts) {
+    const options = opts && typeof opts === 'object' ? opts : {};
+    const amount = Math.max(0, Number(cents) || 0);
+    const primary = options.label || (options.complete ? 'Continue RSVP' : 'RSVP');
+    const priceHtml = amount > 0
+        ? `<span class="ed-rsvp-stack-price">${formatCurrency(amount)}</span>`
+        : (options.subLabel
+            ? `<span class="ed-rsvp-stack-price">${options.subLabel}</span>`
+            : '');
+    return `<button type="button" id="evtMemberRsvpPayBtn-${eventId}" ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-primary-btn ed-rsvp-stack-btn">
+            <span class="ed-rsvp-stack-label">${primary}</span>
+            ${priceHtml}
+        </button>`;
+}
+
+function evtMemberRsvpCancelBtnHtml(eventId, cancelMode) {
+    if (!cancelMode) return '';
+    const label = cancelMode === 'remove' ? 'Remove RSVP' : 'Cancel';
+    return `<button type="button" id="evtMemberRsvpCancelBtn-${eventId}" class="ed-rsvp-cancel-btn" ${evtDataAction('evtCancelMyParticipation', eventId)} aria-label="${label}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        <span>${label}</span>
+    </button>`;
+}
+
+function evtResolveRsvpCtaState(eventId, event, rsvp, extra) {
+    const x = extra && typeof extra === 'object' ? extra : {};
+    const plan = x.plan || (globalThis.evtMyPaymentPlans || {})[eventId] || null;
+    const hasDraft = !!(window.EventsRsvpWizard && typeof window.EventsRsvpWizard.hasDraft === 'function'
+        && window.EventsRsvpWizard.hasDraft(eventId, 'member'));
+    if (window.EventsHelpers && typeof window.EventsHelpers.rsvpCtaState === 'function') {
+        return window.EventsHelpers.rsvpCtaState(event, {
+            rsvp,
+            plan,
+            hasDraft,
+            installmentsPaid: x.installmentsPaid,
+            installmentsTotal: x.installmentsTotal,
+        });
+    }
+    if (rsvp?.paid) return { kind: 'going', label: 'Going', subLabel: 'Paid in full', showCancel: true, cancelMode: 'remove', cancelLabel: 'Remove RSVP' };
+    if (rsvp?.status === 'going' && event?.pricing_mode === 'paid') {
+        return { kind: 'continue', label: 'Continue RSVP', subLabel: '', showCancel: false, cancelMode: null, cancelLabel: null };
+    }
+    if (hasDraft) return { kind: 'continue', label: 'Continue RSVP', subLabel: '', showCancel: false, cancelMode: null, cancelLabel: null };
+    return { kind: 'rsvp', label: 'RSVP', subLabel: '', showCancel: false, cancelMode: null, cancelLabel: null };
+}
+
 function evtUpdateMemberRsvpBtnLabels(eventId, event, opts) {
     if (!eventId || !event) return;
     const options = opts && typeof opts === 'object' ? opts : {};
@@ -191,16 +248,35 @@ function evtUpdateMemberRsvpBtnLabels(eventId, event, opts) {
     const partyTotal = evtPartyTotalCents(event, root);
     const displayTotal = evtFeeAwarePartyTotal(event, root, partyTotal);
     const rsvp = options.rsvp || (globalThis.evtAllRsvps || {})[eventId];
-    const unpaidGoing = !!(rsvp?.status === 'going' && !rsvp?.paid && event.pricing_mode === 'paid');
-    const labelOpts = unpaidGoing
-        ? { mode: 'complete', audience: 'member', partyTotalCents: displayTotal }
-        : { mode: 'rsvp', audience: 'member', partyTotalCents: displayTotal };
-    const label = (window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === 'function')
-        ? window.EventsHelpers.rsvpPayButtonLabel(event, role, labelOpts)
-        : `RSVP as Member — ${formatCurrency(displayTotal)}`;
+    const cta = evtResolveRsvpCtaState(eventId, event, rsvp, {
+        plan: options.plan,
+        installmentsPaid: options.installmentsPaid,
+        installmentsTotal: options.installmentsTotal,
+    });
 
     const payBtn = document.getElementById(`evtMemberRsvpPayBtn-${eventId}`);
-    if (payBtn) payBtn.textContent = label;
+    if (payBtn) {
+        const labelEl = payBtn.querySelector('.ed-rsvp-stack-label');
+        let priceEl = payBtn.querySelector('.ed-rsvp-stack-price');
+        if (labelEl) {
+            labelEl.textContent = cta.label;
+            const sub = cta.kind === 'going'
+                ? (cta.subLabel || '')
+                : (displayTotal > 0 ? formatCurrency(displayTotal) : '');
+            if (sub) {
+                if (!priceEl) {
+                    priceEl = document.createElement('span');
+                    priceEl.className = 'ed-rsvp-stack-price';
+                    payBtn.appendChild(priceEl);
+                }
+                priceEl.textContent = sub;
+            } else if (priceEl) {
+                priceEl.remove();
+            }
+        } else {
+            payBtn.textContent = cta.subLabel ? `${cta.label} · ${cta.subLabel}` : cta.label;
+        }
+    }
 
     const claimBtn = document.getElementById(`evtWaitlistClaimBtn-${eventId}`);
     if (claimBtn) {
@@ -281,53 +357,57 @@ function evtBuildDetailRsvpCtaHtml(ctx) {
         </div>
         ${canAccessTeamHub ? '<p class="ed-hint">Use <strong>Team</strong> for RSVP as yourself, raffle entry, and your ticket.</p>' : ''}`;
     } else if (canRsvp && !eventIsFull && event.pricing_mode === 'paid') {
-        if (rsvp?.paid) {
+        const cta = evtResolveRsvpCtaState(eventId, event, rsvp, {
+            plan: ctx.myPaymentPlan,
+            installmentsPaid: ctx.myInstallmentsPaid,
+            installmentsTotal: ctx.myInstallmentsTotal,
+        });
+        if (cta.kind === 'going') {
+            const payTok = (window.EventsHelpers && typeof window.EventsHelpers.readPaymentInviteToken === 'function')
+                ? window.EventsHelpers.readPaymentInviteToken(eventId)
+                : (new URLSearchParams(window.location.search).get('t') || '').trim();
+            const paymentLinkHtml = (payTok && window.EventsHelpers?.paymentMagicLinkHtml)
+                ? window.EventsHelpers.paymentMagicLinkHtml(payTok)
+                : '';
+            const cancelHtml = evtMemberRsvpCancelBtnHtml(eventId, cta.cancelMode);
             ctaHtml = `
             <div class="ed-rsvp-confirmed">
                 <div class="ed-rsvp-confirmed-row">
                     <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
-                    <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">Non-refundable · Contact admin for changes</span></div>
-                </div>
-            </div>`;
-        } else if (rsvp?.status === 'going') {
-            const payLabel = (window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === 'function')
-                ? window.EventsHelpers.rsvpPayButtonLabel(event, 'adult', { mode: 'complete', audience: 'member' })
-                : `Complete Payment — ${formatCurrency(evtDetailAdultPriceCents(event))}`;
-            ctaHtml = `
-            <div class="ed-notice ed-notice-highlight" style="margin-bottom:12px">
-                <span class="ed-notice-emoji">💳</span>
-                <div>
-                    <p class="ed-notice-title">Payment pending</p>
-                    <p class="ed-notice-sub">Complete checkout to confirm your RSVP.</p>
+                    <div>
+                        <span class="ed-rsvp-confirmed-title">${cta.label}</span>
+                        ${cta.subLabel ? `<span class="ed-rsvp-confirmed-sub">${cta.subLabel}</span>` : '<span class="ed-rsvp-confirmed-sub">Non-refundable</span>'}
+                    </div>
                 </div>
             </div>
-            <button id="evtMemberRsvpPayBtn-${eventId}" ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-primary-btn">${payLabel}</button>
-            <button ${evtDataAction('evtMessageHost', eventId)} class="ed-outline-btn">Message Host</button>
-            <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' · Includes raffle entry' : ''}</p>`;
+            <div class="ed-rsvp-going-actions">
+                <button type="button" class="ed-primary-btn ed-rsvp-stack-btn" ${evtDataAction('evtOpenCtaPanel', 'ticket', eventId)}>
+                    <span class="ed-rsvp-stack-label">View ticket</span>
+                </button>
+                ${cancelHtml}
+            </div>
+            ${paymentLinkHtml}`;
         } else {
-            const payLabel = (window.EventsHelpers && typeof window.EventsHelpers.rsvpPayButtonLabel === 'function')
-                ? window.EventsHelpers.rsvpPayButtonLabel(event, 'adult', { mode: 'rsvp', audience: 'member' })
-                : `RSVP as Member — ${formatCurrency(evtDetailAdultPriceCents(event))}`;
+            const payCents = evtDetailAdultPriceCents(event);
             ctaHtml = `
-            <button id="evtMemberRsvpPayBtn-${eventId}" ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-primary-btn">${payLabel}</button>
-            <button ${evtDataAction('evtMessageHost', eventId)} class="ed-outline-btn">Message Host</button>
+            ${evtMemberRsvpStackBtnHtml(eventId, payCents, { label: cta.label, complete: cta.kind === 'continue' })}
             <p class="ed-hint">Non-refundable unless cancelled by staff${event.raffle_enabled ? ' · Includes raffle entry' : ''}</p>`;
         }
     } else if (canRsvp && !eventIsFull) {
+        const freeCta = evtResolveRsvpCtaState(eventId, event, rsvp, {});
         if (rsvp?.status === 'going') {
             ctaHtml = `
             <div class="ed-rsvp-confirmed">
                 <div class="ed-rsvp-confirmed-row">
                     <div class="ed-rsvp-confirmed-check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
-                    <div><span class="ed-rsvp-confirmed-title">You're going!</span><span class="ed-rsvp-confirmed-sub">We'll see you there.</span></div>
+                    <div><span class="ed-rsvp-confirmed-title">Going</span><span class="ed-rsvp-confirmed-sub">We'll see you there.</span></div>
                 </div>
             </div>
             <button ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-outline-btn">Update RSVP</button>`;
         } else {
             const interestedActive = rsvp?.status === 'maybe' ? ' active' : '';
             ctaHtml = `
-            <button ${evtDataAction('evtHandleRsvp', eventId, 'going')} class="ed-primary-btn">RSVP as Member</button>
-            <button ${evtDataAction('evtMessageHost', eventId)} class="ed-outline-btn">Message Host</button>
+            ${evtMemberRsvpStackBtnHtml(eventId, 0, { label: freeCta.label })}
             <div class="ed-rsvp-secondary">
                 <button ${evtDataAction('evtHandleRsvp', eventId, 'maybe')} class="ed-rsvp-sm${interestedActive ? ' active' : ''}">❤️ Interested</button>
             </div>`;
@@ -362,6 +442,17 @@ function evtBuildDetailRsvpPrepHtml(ctx) {
 
     const showPrep = !isHost && canRsvp && !eventIsFull
         && !(event.pricing_mode === 'paid' && rsvp?.paid);
+
+    if (!showPrep) return '';
+
+    // Prep-heavy RSVPs open via the single CTA → EventsRsvpWizard (no duplicate Continue block)
+    if (window.EventsRsvpWizard
+        && window.EventsRsvpWizard.needsPrep(event, {
+            mode: 'member',
+            memberPhoneMissing: !memberPhone,
+        })) {
+        return '';
+    }
 
     const showPartySeats = showPrep
         && window.EventsPartySeats
@@ -575,32 +666,19 @@ function evtDetailPublicInviteUrl(slug) {
     return `https://justicemcneal.com/events/?e=${encodeURIComponent(slug)}`;
 }
 
-function evtBuildDetailGuestRsvpHintHtml(ctx) {
-    const { event, rsvpEnabled } = ctx;
-    if (!event || event.event_type === 'competition' || !rsvpEnabled) {
-        return '';
-    }
-    if (event.member_only) {
-        return `<p class="ed-rsvp-members-only-note">Members-only event — guests cannot RSVP on the public page.</p>`;
-    }
-    if (!event.slug) return '';
-    const inviteUrl = evtDetailPublicInviteUrl(event.slug);
-    return `
-        <div class="ed-rsvp-guest-hint">
-            <p class="ed-rsvp-guest-hint-text">Guests RSVP on the <a href="${evtEscapeHtml(inviteUrl)}" target="_blank" rel="noopener">public event page</a>.</p>
-            <button type="button" class="ed-link-btn" ${evtDataAction('evtCopyShareUrl', event.slug)}>Copy public link</button>
-        </div>`;
+function evtBuildDetailGuestRsvpHintHtml() {
+    // Guest public-link hint removed from Your RSVP card; share lives elsewhere on detail.
+    return '';
 }
 
 function evtBuildDetailRsvpSectionHtml(ctx) {
     const ctaHtml = evtBuildDetailRsvpCtaHtml(ctx);
     const prepHtml = evtBuildDetailRsvpPrepHtml(ctx);
-    const guestHintHtml = evtBuildDetailGuestRsvpHintHtml(ctx);
     const smsOptInHtml = evtBuildDetailSmsOptInHtml(ctx);
     const seatInvitesPlaceholder = (!ctx.isHost && ctx.rsvp?.status === 'going')
         ? `<div id="portalSeatInfoInvites-${ctx.eventId}" class="ed-seat-info-invites-slot"></div>`
         : '';
-    return ctaHtml + prepHtml + seatInvitesPlaceholder + guestHintHtml + smsOptInHtml;
+    return ctaHtml + prepHtml + seatInvitesPlaceholder + smsOptInHtml;
 }
 
 function evtBuildDetailRaffleSectionHtml(ctx) {
@@ -700,15 +778,17 @@ function evtBuildDetailWaitlistHtml(ctx) {
         eventId,
         event,
         rsvp,
-        isLlc,
         goingList,
         waitlist,
         myWaitlistEntry,
     } = ctx;
 
-    if (!isLlc || !event.max_participants) return '';
+    const Cap = window.EventsCapacity;
+    const mode = Cap?.eventCapacityMode?.(event) || 'none';
+    if (mode !== 'soft' || !Cap?.eventHasCapacityLimit?.(event)) return '';
 
-    const isFull = goingList.length >= event.max_participants;
+    const occupied = Cap.countOccupiedCapacity(event, { goingList });
+    const isFull = Cap.eventIsAtCapacity(event, occupied);
     const canRsvpWl = ['open', 'confirmed', 'active'].includes(event.status);
     const activeWaitlist = waitlist.filter(w => ['waiting', 'offered'].includes(w.status));
     if (!isFull || !canRsvpWl) return '';
@@ -864,7 +944,7 @@ function evtBuildDetailThresholdHtml(ctx) {
     const socialThreshold = Math.min(Math.floor(minNeeded * 0.5), 3);
     const showExactCount = currentGoing >= socialThreshold;
     let socialText = '';
-    if (isMet) socialText = `Event confirmed · ${currentGoing} going${event.max_participants ? ' · ' + (event.max_participants - currentGoing) + ' spots left' : ''}`;
+    if (isMet) socialText = `Event confirmed · ${currentGoing} going${(window.EventsCapacity?.eventHasCapacityLimit?.(event)) ? ' · ' + (window.EventsCapacity.spotsRemaining(event, currentGoing) ?? 0) + ' spots left' : ''}`;
     else if (showExactCount) socialText = `${currentGoing} going toward ${minNeeded} needed`;
     else socialText = `Minimum of ${minNeeded} needed to confirm`;
     return `<div class="ed-context-row"><span>${isMet ? '✅' : '⚠️'}</span><div><strong>${isMet ? 'Minimum met' : 'Minimum threshold'}</strong><p>${socialText}${event.rsvp_deadline ? ` · RSVP by ${deadlineStr}` : ''}</p></div></div>`;
@@ -978,7 +1058,7 @@ function evtBuildDetailRelatedEventsHtml(ctx) {
     const cards = upcoming.map(e => {
         const d = new Date(e.start_date);
         const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const imgHtml = e.banner_url ? `<img src="${e.banner_url}" alt="" loading="lazy">` : `<div style="height:120px;background:linear-gradient(135deg,#6366f1,#8b5cf6)"></div>`;
+        const imgHtml = e.banner_url ? `<img src="${e.banner_url}" alt="" loading="lazy">` : `<div style="height:120px;background:linear-gradient(135deg,#0B2545,#13366E)"></div>`;
         const onclickHandler = e.slug ? `globalThis.evtNavigateToEvent('${e.slug}')` : `globalThis.evtOpenDetail('${e.id}')`;
         return `<div class="evt-related-card" onclick="${onclickHandler}">${imgHtml}<div class="evt-related-card-body"><p class="evt-related-card-title">${evtEscapeHtml(e.title)}</p><p class="evt-related-card-meta">${dateLabel}${e.location_nickname ? ' · ' + evtEscapeHtml(e.location_nickname) : ''}</p></div></div>`;
     }).join('');
@@ -1009,9 +1089,8 @@ function evtBuildDetailMobileHostedHtml(ctx) {
                         ${cpBadge ? cpBadge : ''}
                     </div>
                     <div class="ed-mh-body">
-                        <span class="ed-mh-label">Hosted by</span>
+                        <span class="ed-mh-label">Host</span>
                         <span class="ed-mh-name">${isLlc ? 'Justice McNeal LLC' : evtEscapeHtml(cpName)}</span>
-                        ${!isLlc ? `<span class="ed-mh-sub">Organizer of this event</span>` : ''}
                     </div>
                     ${creatorProfile ? `<svg class="ed-mh-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>` : ''}
                 </div>`;
@@ -1041,7 +1120,7 @@ function evtBuildDetailAttendeeBreakdownHtml(ctx) {
         const initials = ((p?.first_name?.[0] || '') + (p?.last_name?.[0] || '')).toUpperCase() || '?';
         const avatar = p?.profile_picture_url
             ? `<img src="${p.profile_picture_url}" class="w-7 h-7 rounded-full object-cover" alt="">`
-            : `<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xs font-bold">${initials}</div>`;
+            : `<div class="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary text-xs font-bold">${initials}</div>`;
         return `<div class="flex items-center gap-2">${avatar}<span class="text-sm text-gray-700">${evtEscapeHtml(p?.first_name || '')} ${evtEscapeHtml(p?.last_name || '')}</span></div>`;
     }
 

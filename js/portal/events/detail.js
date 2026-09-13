@@ -182,6 +182,7 @@ if (costBreakdownHtml && event.rsvp_cost_cents) {
 
 const detailView = document.getElementById('eventsDetailView');
 detailView.classList.add('event-detail-surface', 'portal-event-detail-v2');
+detailView.dataset.eventId = eventId;
 const templateCtx = {
     event,
     eventId,
@@ -254,6 +255,29 @@ window.evtRunDetailPostRenderBasics({ eventId });
 setTimeout(() => {
     window.evtRenderDetailQrCanvases({ event, eventId, rsvp, memberGoing });
     window.evtInitDetailInlineMaps({ event, showLocation });
+    if (window.EventsHelpers?.wirePaymentMagicLinkCopy) {
+        window.EventsHelpers.wirePaymentMagicLinkCopy(document);
+    }
+    const params = new URLSearchParams(window.location.search);
+    const paid = params.get('paid');
+    const t = (params.get('t') || '').trim();
+    if (paid === 'rsvp' && t && window.EventsHelpers?.stashPaymentInviteToken) {
+        window.EventsHelpers.stashPaymentInviteToken(eventId, t);
+    }
+    if (params.get('rsvp') === '1' && window.EventsRsvpWizard && !memberGoing) {
+        const openGoing = () => {
+            if (typeof globalThis.evtHandleRsvp === 'function') {
+                globalThis.evtHandleRsvp(eventId, 'going');
+            } else if (typeof window.evtHandleRsvp === 'function') {
+                window.evtHandleRsvp(eventId, 'going');
+            }
+        };
+        openGoing();
+        params.delete('rsvp');
+        const qs = params.toString();
+        const next = `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash || ''}`;
+        window.history.replaceState({}, '', next);
+    }
 }, 100);
 }
 

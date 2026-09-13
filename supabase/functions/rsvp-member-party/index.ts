@@ -13,6 +13,7 @@ import {
 import { requireMemberPhone } from '../_shared/rsvp-contact.ts'
 import { needsVote, resolveVoteStatus, validateVote } from '../_shared/amenity-voting.ts'
 import {
+  assertCapacityForIncomingSeats,
   ensurePartyAndSeats,
   normalizePartySeats,
   partyBaseTotalCents,
@@ -112,6 +113,8 @@ serve(async (req) => {
     })
     const seatsErr = validatePartySeats(event, seats, catalog, { allowIncompleteGuests: true })
     if (seatsErr) throw new Error(seatsErr)
+
+    await assertCapacityForIncomingSeats(supabase, event, seats)
 
     const partyTotal = partyBaseTotalCents(event, seats)
     if (partyTotal > 0) {

@@ -5,21 +5,22 @@
  * ════════════════════════════════════════════════════════════════ */
 
 body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-body, 'Atkinson Hyperlegible Next', system-ui, sans-serif);
+    color: var(--color-text, #0B2545);
     margin: 0; display: flex; flex-direction: column;
     height: 100vh; height: 100dvh; overflow: hidden;
-    background: #fff;
+    background: var(--color-background, #FFFFFF);
 }
 
 /* Desktop nav at top */
-.pub-nav { flex-shrink: 0; background: #fff; border-bottom: 1px solid #ebebeb; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
-.pub-nav a:first-child { font-size: 16px; font-weight: 800; color: #222; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-.pub-nav-sign-in { font-size: 14px; font-weight: 600; color: #222; text-decoration: none; padding: 8px 16px; border: 1.5px solid #222; border-radius: 8px; transition: background .15s; }
-.pub-nav-sign-in:hover { background: #f7f7f7; }
+.pub-nav { flex-shrink: 0; background: var(--color-background, #fff); border-bottom: 1px solid var(--color-border, #D5DFEC); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+.pub-nav a:first-child { font-family: var(--font-headline, 'Source Serif 4', Georgia, serif); font-size: 16px; font-weight: 700; color: var(--color-text, #0B2545); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.pub-nav-sign-in { font-size: 14px; font-weight: 600; color: var(--color-primary, #13366E); text-decoration: none; padding: 8px 16px; border: 1.5px solid var(--color-primary, #13366E); border-radius: 8px; transition: background .15s; }
+.pub-nav-sign-in:hover { background: var(--color-surface, #EEF2F6); }
 @media (max-width: 639px) {
     .pub-nav {
         position: fixed; bottom: 0; left: 0; right: 0;
-        border-bottom: none; border-top: 1px solid #ebebeb;
+        border-bottom: none; border-top: 1px solid var(--color-border, #D5DFEC);
         z-index: 50; padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
 }
@@ -36,7 +37,7 @@ body {
 .evt-hero-btn:active { transform:scale(.92); }
 .evt-hero-btn svg { width:16px; height:16px; stroke:#222; }
 .evt-hero-content { position:absolute; bottom:0; left:0; right:0; padding:20px 24px; z-index:5; }
-.evt-hero-title { font-size:26px; font-weight:800; color:#fff; line-height:1.2; text-shadow:0 2px 12px rgba(0,0,0,.35); }
+.evt-hero-title { font-family: var(--font-headline, 'Source Serif 4', Georgia, serif); font-size:26px; font-weight:700; color:#fff; line-height:1.2; text-shadow:0 2px 12px rgba(0,0,0,.35); }
 @media(min-width:640px){ .evt-hero-title { font-size:34px; } .evt-hero-content { padding:28px 32px; } }
 .evt-tag { font-size:11px; padding:3px 10px; border-radius:6px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
 .evt-location-pill { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.92); color:#222; font-size:13px; font-weight:600; padding:6px 14px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,.15); backdrop-filter:blur(6px); }
@@ -51,9 +52,9 @@ body {
 @media(min-width:640px){ .evt-date-card-wrap { right:40px; } }
 .evt-date-card { background:rgba(255,255,255,.97); backdrop-filter:blur(8px); border-radius:14px; padding:10px 18px; display:flex; flex-direction:column; align-items:center; box-shadow:0 4px 16px rgba(0,0,0,.15); min-width:72px; cursor:pointer; transition:transform .15s,box-shadow .15s; position:relative; -webkit-tap-highlight-color:transparent; }
 .evt-date-card:active { transform:scale(.93); }
-.evt-date-card-cal-icon { position:absolute; bottom:-6px; right:-6px; width:22px; height:22px; border-radius:50%; background:#4f46e5; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(79,70,229,.4); }
+.evt-date-card-cal-icon { position:absolute; bottom:-6px; right:-6px; width:22px; height:22px; border-radius:50%; background:var(--color-primary, #13366E); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(19,54,110,.35); }
 .evt-date-card-cal-icon svg { width:12px; height:12px; fill:none; stroke:#fff; stroke-width:2.5; }
-.evt-date-card-month { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--brand,#6d28d9); line-height:1; }
+.evt-date-card-month { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--color-primary, #13366E); line-height:1; }
 .evt-date-card-day { font-size:28px; font-weight:800; color:#222; line-height:1.1; }
 .evt-date-card-time { font-size:11px; font-weight:600; color:#666; line-height:1; margin-top:2px; }
 .evt-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
@@ -219,7 +220,7 @@ body.public-event-detail #raffleSection { margin-top:16px; }
 /* Collapsible description */
 .evt-desc-collapsed { max-height:120px; overflow:hidden; position:relative; }
 .evt-desc-collapsed::after { content:''; position:absolute; bottom:0; left:0; right:0; height:48px; background:linear-gradient(transparent,#fff); pointer-events:none; }
-.evt-read-more { display:inline-block; font-size:14px; font-weight:600; color:#4f46e5; cursor:pointer; margin-top:8px; background:none; border:none; padding:0; }
+.evt-read-more { display:inline-block; font-size:14px; font-weight:600; color:var(--color-primary, #13366E); cursor:pointer; margin-top:8px; background:none; border:none; padding:0; }
 .evt-read-more:hover { text-decoration:underline; }
 
 /* RSVP simplified: Going + Not going (2-col) */
@@ -237,7 +238,7 @@ body.public-event-detail #raffleSection { margin-top:16px; }
 .evt-related-card-meta { font-size:12px; color:#717171; margin-top:4px; }
 
 /* Desc links/formatting */
-.evt-desc a { color:#4f46e5; text-decoration:underline; }
+.evt-desc a { color:var(--color-primary, #13366E); text-decoration:underline; }
 .evt-desc strong { font-weight:700; }
 .evt-desc em { font-style:italic; }
 
@@ -245,7 +246,7 @@ body.public-event-detail #raffleSection { margin-top:16px; }
 .evt-comment-reactions { display:flex; gap:4px; margin-top:6px; flex-wrap:wrap; }
 .evt-comment-react-btn { font-size:12px; padding:2px 8px; border-radius:20px; border:1px solid #ebebeb; background:#fff; cursor:pointer; display:flex; align-items:center; gap:3px; transition:all .15s; }
 .evt-comment-react-btn:hover { border-color:#c7c7c7; background:#f7f7f7; }
-.evt-comment-react-btn.active { border-color:#4f46e5; background:#ede9fe; }
+.evt-comment-react-btn.active { border-color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); }
 .evt-comment-react-btn .count { font-weight:600; color:#717171; }
 .evt-comment-add-react { font-size:14px; padding:2px 6px; border-radius:20px; border:1px dashed #ddd; background:none; cursor:pointer; color:#b0b0b0; }
 .evt-comment-add-react:hover { border-color:#999; color:#717171; }
@@ -272,7 +273,7 @@ body.public-event-detail #raffleSection { margin-top:16px; }
     .evt-cta-bar-has-footnote { gap:6px; padding-top:8px; }
     .evt-cta-footnote { margin:0; padding:0 4px 2px; text-align:center; font-size:11px; line-height:1.35; color:#6b7280; font-weight:600; letter-spacing:.01em; }
     .evt-cta-btn svg { width:18px; height:18px; stroke-width:2.5; fill:none; stroke:currentColor; flex-shrink:0; }
-    .evt-cta-rsvp { background:#4f46e5; color:#fff; }
+    .evt-cta-rsvp { background:var(--color-primary, #13366E); color:#fff; }
     .evt-cta-rsvp-done { background:#16a34a; color:#fff; }
     .evt-cta-raffle { background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; }
     .evt-cta-raffle-done { background:#16a34a; color:#fff; }
@@ -303,7 +304,7 @@ body.public-event-detail {
     min-height: 100vh;
     height: auto;
     overflow: auto;
-    background: #f8fafc;
+    background: var(--color-surface, #EEF2F6);
 }
 body.public-event-detail .pub-nav {
     position: sticky;
@@ -311,14 +312,15 @@ body.public-event-detail .pub-nav {
     bottom: auto;
     z-index: 70;
     border-top: 0;
-    border-bottom: 1px solid #ebebeb;
+    border-bottom: 1px solid var(--color-border, #D5DFEC);
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
     padding-bottom: 12px;
 }
 body.public-event-detail #eventContent {
     flex: 0 0 auto;
     overflow: visible;
     overscroll-behavior: auto;
-    background: #f8fafc;
+    background: var(--color-surface, #EEF2F6);
 }
 body.public-event-detail #eventContent .ed-card {
     opacity: 1;
@@ -391,7 +393,8 @@ body.public-event-detail .public-ed-map-col .ed-map {
 }
 @media (max-width: 1023px) {
     body.public-event-detail .pub-nav {
-        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        padding-top: max(12px, env(safe-area-inset-top, 0px));
+        padding-bottom: 12px;
     }
     body.public-event-detail .ed-page-header {
         position: sticky;
@@ -424,7 +427,7 @@ body.public-event-detail .public-ed-map-col .ed-map {
     margin-right: 4px;
 }
 .public-member-rsvp-link {
-    color: #4f46e5;
+    color: var(--color-primary, #13366E);
     font-weight: 700;
     text-decoration: none;
     white-space: nowrap;
@@ -445,8 +448,8 @@ body.public-event-detail .public-ed-map-col .ed-map {
     padding: 12px 18px;
     border-radius: 50px;
     background: #fff;
-    border: 1.5px solid #4f46e5;
-    color: #4f46e5;
+    border: 1.5px solid var(--color-primary, #13366E);
+    color: var(--color-primary, #13366E);
     font-size: 14px;
     font-weight: 700;
     text-decoration: none;
@@ -454,7 +457,7 @@ body.public-event-detail .public-ed-map-col .ed-map {
     box-sizing: border-box;
 }
 .pub-member-rsvp-btn:hover {
-    background: #4f46e5;
+    background: var(--color-primary, #13366E);
     color: #fff;
 }
 
@@ -482,7 +485,7 @@ body.public-event-detail .public-ed-map-col .ed-map {
     font-family: inherit;
 }
 #guestRsvpSection .pub-rsvp-text-link:hover {
-    color: #4f46e5;
+    color: var(--color-primary, #13366E);
     text-decoration: underline;
 }
 
@@ -918,7 +921,7 @@ body.public-event-detail .evt-raffle-buy:hover {
 }
 body.public-event-detail .evt-rsvp-pay,
 body.public-event-detail .evt-action-btn {
-    background: #4f46e5;
+    background: var(--color-primary, #13366E);
 }
 body.public-event-detail #commentsSection {
     padding: 24px;
@@ -1034,4 +1037,92 @@ body.public-event-detail .evt-footer {
     body.public-event-detail #gatedSection {
         padding: 20px;
     }
+}
+
+/* Theme overrides — portal detail.css indigo bleed on public page */
+body.public-event-detail .ed-primary-btn,
+body.public-event-detail .ed-btn-primary,
+body.public-event-detail a.ed-link,
+body.public-event-detail .ed-link-btn {
+    color: var(--color-primary, #13366E);
+}
+body.public-event-detail .ed-primary-btn,
+body.public-event-detail button.ed-primary-btn {
+    background: var(--color-primary, #13366E);
+    color: #fff;
+}
+body.public-event-detail .ed-about-heading,
+body.public-event-detail .ed-summary-heading,
+body.public-event-detail .ed-summary-title,
+body.public-event-detail .evt-hero-title {
+    font-family: var(--font-headline, 'Source Serif 4', Georgia, serif);
+    color: inherit;
+}
+body.public-event-detail .ed-summary-title,
+body.public-event-detail .ed-about-heading,
+body.public-event-detail .ed-summary-heading {
+    color: var(--color-text, #0B2545);
+}
+body.public-event-detail .ed-amenity-bar-fill {
+    background: var(--color-accent, #0E8B8B);
+}
+
+/* Branded confirm (RSVP → Stripe) — EventsHelpers.confirmDialog */
+.evt-confirm-dialog {
+    position: fixed; inset: 0; z-index: 10050;
+    display: flex; align-items: center; justify-content: center;
+    padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px));
+    opacity: 0; transition: opacity .18s ease; pointer-events: none;
+}
+.evt-confirm-dialog.is-open { opacity: 1; pointer-events: auto; }
+.evt-confirm-dialog__backdrop {
+    position: absolute; inset: 0;
+    background: rgba(11, 37, 69, .45);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.evt-confirm-dialog__panel {
+    position: relative; z-index: 1;
+    width: min(100%, 400px);
+    background: var(--color-background, #FFFFFF);
+    border: 1px solid var(--color-border, #D5DFEC);
+    border-radius: 20px;
+    box-shadow: 0 24px 64px rgba(11, 37, 69, .22);
+    padding: 22px 22px 18px;
+    font-family: var(--font-body, 'Atkinson Hyperlegible Next', system-ui, sans-serif);
+    color: var(--color-text, #0B2545);
+}
+.evt-confirm-dialog__title {
+    margin: 0 0 10px;
+    font-family: var(--font-headline, 'Source Serif 4', Georgia, serif);
+    font-size: 22px; font-weight: 700; line-height: 1.2;
+    color: var(--color-text, #0B2545);
+}
+.evt-confirm-dialog__body { margin: 0 0 18px; }
+.evt-confirm-dialog__text {
+    margin: 0 0 10px; font-size: 15px; line-height: 1.5;
+    color: var(--color-text, #0B2545);
+}
+.evt-confirm-dialog__text:last-child { margin-bottom: 0; }
+.evt-confirm-dialog__actions {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
+}
+.evt-confirm-dialog__btn {
+    min-height: 44px; padding: 10px 16px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: background .15s, border-color .15s, color .15s;
+}
+.evt-confirm-dialog__btn--cancel {
+    background: var(--color-surface, #EEF2F6);
+    color: var(--color-primary, #13366E);
+    border: 1px solid var(--color-border, #D5DFEC);
+}
+.evt-confirm-dialog__btn--cancel:hover { background: #fff; }
+.evt-confirm-dialog__btn--confirm {
+    background: var(--color-primary, #13366E);
+    color: #fff; border: 1px solid var(--color-primary, #13366E);
+}
+.evt-confirm-dialog__btn--confirm:hover { background: var(--color-primary-hover, #0f2d5c); }
+.evt-confirm-dialog__btn:focus-visible {
+    outline: 2px solid var(--color-accent, #0E8B8B);
+    outline-offset: 2px;
 }

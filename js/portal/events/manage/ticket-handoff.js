@@ -6,8 +6,13 @@
  * @param {{ goingRsvps?: Array, documents?: Array }} input
  * @returns {{ uploaded: number, total: number, missingUserIds: string[], missingCount: number, ticketPct: number }}
  */
-function computePlaneTicketHandoff({ goingRsvps, documents }) {
-    const going = (goingRsvps || []).filter((r) => r.status === 'going');
+function computePlaneTicketHandoff({ goingRsvps, documents, event }) {
+    const going = (goingRsvps || []).filter((r) => {
+        if (window.EventsHelpers?.rsvpIsCommittedGoing && event) {
+            return window.EventsHelpers.rsvpIsCommittedGoing(event, r);
+        }
+        return r.status === 'going' && (event?.pricing_mode !== 'paid' || r.paid === true);
+    });
     const total = going.length;
     const ticketDocs = (documents || []).filter(
         (d) => d.doc_type === 'plane_ticket' && d.target_user_id,

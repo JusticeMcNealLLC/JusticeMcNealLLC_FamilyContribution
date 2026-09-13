@@ -61,6 +61,9 @@ verify_jwt = false
 [functions.create-event-checkout]
 verify_jwt = false
 
+[functions.cancel-my-event-participation]
+verify_jwt = false
+
 [functions.manage-event-waitlist]
 verify_jwt = false
 
@@ -77,6 +80,9 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-event-sms]
+verify_jwt = false
+
+[functions.send-event-invites]
 verify_jwt = false
 
 [functions.twilio-sms-status-callback]

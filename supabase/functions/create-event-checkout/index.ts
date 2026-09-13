@@ -18,7 +18,7 @@ import {
 } from '../_shared/payment-choice.ts'
 import { preparePaidRsvpForCheckout } from '../_shared/paid-rsvp-prep.ts'
 import {
-  countCapacitySeats,
+  assertCapacityForIncomingSeats,
   normalizePartySeats,
   partyBaseTotalCents,
   validatePartySeats,
@@ -230,28 +230,8 @@ serve(async (req) => {
         }
       }
 
-      // Check capacity when party seats count toward cap
-      if (event.max_participants) {
-        const newCapSeats = countCapacitySeats(event, rsvpSeats)
-        if (newCapSeats > 0) {
-          const { count: memberCount } = await supabase
-            .from('event_rsvps')
-            .select('id', { count: 'exact', head: true })
-            .eq('event_id', event_id)
-            .eq('status', 'going')
-
-          const { count: guestCount } = await supabase
-            .from('event_guest_rsvps')
-            .select('id', { count: 'exact', head: true })
-            .eq('event_id', event_id)
-            .eq('status', 'going')
-
-          const totalGoing = (memberCount || 0) + (guestCount || 0)
-          if (totalGoing + newCapSeats > event.max_participants) {
-            throw new Error('This event is full')
-          }
-        }
-      }
+      // Capacity: soft/hard only (mode none ignores max_participants)
+      await assertCapacityForIncomingSeats(supabase, event, rsvpSeats)
 
       // LLC event: enforce cost_breakdown_locked — if LLC and breakdown exists, it must be locked
       if (event.event_type === 'llc' && event.cost_breakdown && !event.cost_breakdown_locked) {
@@ -469,20 +449,41 @@ serve(async (req) => {
       })
       if (isGuest) guestToken = prepResult.guest_token || null
 
-      // §13.10 full pay — Checkout amount must match plan total_due (source of truth)
+      // Prior payments cover the full obligation — no Stripe session
+      if (prepResult.fully_credited) {
+        return new Response(JSON.stringify({
+          ok: true,
+          paid: true,
+          fully_credited: true,
+          credited_cents: prepResult.credited_cents || 0,
+          party_id: prepResult.party_id,
+          plan_id: prepResult.plan_id,
+          rsvp_id: prepResult.rsvp_id,
+          invite_token: null,
+          ...(guestToken ? { guest_token: guestToken } : {}),
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // §13.10 full pay — Checkout amount must match remaining due (credit applied)
       if (payPlanKind === 'full' && prepResult.plan_id) {
         const { data: planRow } = await supabase
           .from('event_payment_plans')
-          .select('total_due_cents')
+          .select('total_due_cents, remaining_cents, amount_paid_cents')
           .eq('id', prepResult.plan_id)
           .maybeSingle()
+        const remaining = Number(planRow?.remaining_cents)
         const planDue = Number(planRow?.total_due_cents)
-        if (Number.isFinite(planDue) && planDue > 0) {
+        if (Number.isFinite(remaining) && remaining > 0) {
+          amountCents = remaining
+        } else if (Number.isFinite(planDue) && planDue > 0) {
           amountCents = planDue
         }
       }
 
-      // §13.10 monthly — charge first scheduled installment only
+      // §13.10 monthly — charge first scheduled installment only (already sized to remaining)
       if (payPlanKind === 'monthly' && prepResult.installment_id) {
         const { data: firstInst } = await supabase
           .from('event_payment_installments')
@@ -572,9 +573,21 @@ serve(async (req) => {
 
     // Success URL
     const origin = req.headers.get('origin') || 'https://justicemcneal.com'
+    let inviteTokenForUrl = ''
+    if (type === 'rsvp' && prepResult?.party_id) {
+      const { data: partyTok } = await supabase
+        .from('event_parties')
+        .select('invite_token')
+        .eq('id', prepResult.party_id)
+        .maybeSingle()
+      inviteTokenForUrl = String(partyTok?.invite_token || '').trim()
+    }
+    const tQs = inviteTokenForUrl ? `&t=${encodeURIComponent(inviteTokenForUrl)}` : ''
+    const eventSlug = String(event.slug || '').trim()
+    const portalEventKey = encodeURIComponent(eventSlug || event_id)
     const successUrl = isGuest
-      ? `${origin}/events/?e=${event.slug}&paid=${type}&guest_token=${guestToken}`
-      : `${origin}/portal/events.html?paid=${type}&event=${event_id}`
+      ? `${origin}/events/?e=${encodeURIComponent(eventSlug || event_id)}&paid=${type}&guest_token=${guestToken}${tQs}`
+      : `${origin}/pages/portal/events.html?paid=${type}&event=${portalEventKey}${tQs}`
 
     // Create one-time Checkout Session (§13.10 ACH/card save PM for off-session)
     const isAchRsvp = type === 'rsvp' && rsvpPayMethod === 'ach'
@@ -597,7 +610,9 @@ serve(async (req) => {
       ],
       mode: 'payment',
       success_url: successUrl,
-      cancel_url: `${origin}${isGuest ? `/events/?e=${event.slug}&canceled=true` : `/portal/events.html?canceled=true&event=${event_id}`}`,
+      cancel_url: `${origin}${isGuest
+        ? `/events/?e=${encodeURIComponent(eventSlug || event_id)}&canceled=true`
+        : `/pages/portal/events.html?canceled=true&event=${portalEventKey}`}`,
       metadata,
     }
     if (isAchRsvp || isCardRsvp) {
@@ -634,6 +649,7 @@ serve(async (req) => {
         ...(type === 'rsvp' && prepResult
           ? {
               party_id: prepResult.party_id,
+              invite_token: inviteTokenForUrl || undefined,
               seat_info_tokens: prepResult.seat_info_tokens || [],
               ...(prepResult.guest_token ? { guest_token: prepResult.guest_token } : {}),
             }

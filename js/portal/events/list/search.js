@@ -65,7 +65,7 @@ function renderSearchSuggest() {
         hist.forEach(q => {
             const qa = _escapeAttr(q);
             parts.push(
-                '<li class="evt-suggest-row flex items-center gap-2 px-3 py-2 hover:bg-brand-50 cursor-pointer" data-suggest-q="' + qa + '" role="option">' +
+                '<li class="evt-suggest-row flex items-center gap-2 px-3 py-2 hover:bg-primary-50 cursor-pointer" data-suggest-q="' + qa + '" role="option">' +
                     '<span class="text-gray-400" aria-hidden="true">🕐</span>' +
                     '<span class="flex-1 min-w-0 truncate text-sm text-gray-800">' + qa + '</span>' +
                     '<button type="button" class="evt-suggest-remove p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100" data-suggest-rm="' + qa + '" aria-label="Remove from history" title="Remove">' +
@@ -88,7 +88,7 @@ function renderSearchSuggest() {
         const emoji = (C.CATEGORY_EMOJI && C.CATEGORY_EMOJI[cat]) || '📅';
         const label = (C.CATEGORY_TAG && C.CATEGORY_TAG[cat]?.label) || cat;
         parts.push(
-            '<button type="button" class="evt-suggest-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-brand-50 border border-gray-200 text-sm text-gray-700" data-suggest-cat="' + cat + '">' +
+            '<button type="button" class="evt-suggest-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-primary-50 border border-gray-200 text-sm text-gray-700" data-suggest-cat="' + cat + '">' +
                 '<span aria-hidden="true">' + emoji + '</span><span>' + label + '</span>' +
             '</button>'
         );
@@ -229,11 +229,9 @@ function setupSearch() {
             e.preventDefault();
             if (input.value) {
                 clear?.click();
-            } else if (expand) {
-                expand.classList.add('hidden');
-                toggle?.setAttribute('aria-expanded', 'false');
-                toggle?.focus();
+            } else {
                 hideSearchSuggest();
+                input.blur();
             }
         }
     });

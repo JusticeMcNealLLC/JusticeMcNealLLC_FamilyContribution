@@ -31,9 +31,41 @@ Define request/response/auth contracts for:
 
 **Early payoff (2026-09-02):** [`request-event-party-payoff`](../../../../supabase/functions/request-event-party-payoff/index.ts) cancels future `scheduled` rows, creates `kind=payoff`, charges remaining via off-session PM or Checkout; webhook completes plan. Magic-link CTA still §13.11.
 
+**Pay off early CTA (2026-09-03, §13.11 line 447):** Public [`/events/payments/`](../../../../events/payments/index.html) shows **Pay off early** when remaining &gt; 0 and plan is `active`/`past_due`; Checkout success/cancel return to the same page (`paid=payoff` / `canceled=payoff`).
+
+**Payment magic-link SMS (2026-09-03, §13.11 line 448):** On first RSVP/pay setup success, webhook calls `notifyPartyPaymentLink` (`message_type=event_payment_link`, gated by `SMS_SEND_ENABLED` / dry-run; idempotent via `payment_link_sent_at`). Checkout returns `invite_token` and appends `&t=` on success URLs for on-screen show/copy. Host/payer resend: [`resend-event-party-payment-link`](../../../../supabase/functions/resend-event-party-payment-link/index.ts); manage RSVPs tab has Copy payment link + Resend SMS.
+
+**Update payment method FINAL (2026-09-03, §13.11 line 450):** Setup Checkout still via [`update-event-party-payment-method`](../../../../supabase/functions/update-event-party-payment-method/index.ts); webhook syncs `plan.method` from Stripe PM type (card ↔ ACH). [`get-event-party-payments`](../../../../supabase/functions/get-event-party-payments/index.ts) returns `method_last4` / `method_brand` for Method row display; post-update flash nudges Retry when past due.
+
+**Payments theme/mobile polish (2026-09-03, §13.11 line 451):** Standalone [`/events/payments/`](../../../../events/payments/index.html) uses Theme_JMLLC001 tokens, full safe-area insets (incl. left/right), focus-visible rings; no portal tab bar / `has-bottom-bar`.
+
+**Manage RSVPs tab MVP (2026-09-03, §13.12 line 455):** Manage → RSVPs shows adult/kid counts, seat option values, party disclaimer ack pills, amenity vote status, plus existing payer / payment / seat-info links ([`manage/rsvps.js`](../../../../js/portal/events/manage/rsvps.js)).
+
+**Manage Money tab MVP (2026-09-03, §13.12 line 456):** Manage → Money loads host-readable `event_payment_plans` (+ parties / failed installments) and shows per-payer paid, remaining, next debit, status/failed, method, plan kind, plus Copy payment link; metrics include Past due + Remaining due. No in-app refunds ([`manage/money.js`](../../../../js/portal/events/manage/money.js)).
+
+**Host SMS invites MVP (2026-09-03, §13.12 line 457):** Manage → Overview **SMS invites** picker (members with `profiles.phone` + ad-hoc numbers) calls [`send-event-invites`](../../../../supabase/functions/send-event-invites/index.ts); fixed template = event title + `/events/?e={slug}` (`message_type=event_invite`). Distinct from payment magic-link SMS.
+
+**Amenity vote commit/remove MVP (2026-09-03, §13.13 line 468):** On plan commit (`completePaidRsvpAfterCheckout` + `applyInstallmentSucceeded`) → `commitPartyAmenityVote` (`provisional`→`counted`, `amenity_vote_committed_at`). On never-pay (`checkout.session.expired` while uncommitted) → `removePartyAmenityVoteIfUncommitted`. Helpers in [`amenity-voting.ts`](../../../../supabase/functions/_shared/amenity-voting.ts).
+
+**Unpaid Checkout ≠ going (2026-09-04):** Public `public_event_going_count` on **paid** events counts `paid=true` only (migration 116) — unpaid Checkout prep rows do not inflate “X going”. Free events unchanged. On never-pay expire, webhook also cancels the unpaid party prep and sets payer RSVP to `not_going` ([`payment-schedule-webhook.ts`](../../../../supabase/functions/_shared/payment-schedule-webhook.ts)).
+
+**Resend payment SMS + copy roster MVP (2026-09-03, §13.12 line 458):** Manage → RSVPs already has Resend SMS via [`resend-event-party-payment-link`](../../../../supabase/functions/resend-event-party-payment-link/index.ts); **Copy roster** copies a TSV (name/role/kind/payer/status/paid/phone/options) from seats + RSVPs ([`manage/rsvps.js`](../../../../js/portal/events/manage/rsvps.js)).
+
+**Capacity mode runtime MVP (2026-09-03, §13.12 line 459):** RSVP/checkout enforce only when `capacity_mode` is `soft`/`hard` with positive `max_participants` (`none` ignores stale max — Colorado). Occupancy via seats + `capacity_counts`; waitlist UI/advance soft-only. Helpers: [`event-pricing.ts`](../../../../supabase/functions/_shared/event-pricing.ts), [`EventsCapacity`](../../../../js/components/events/capacity.js).
+
+**Invite send log thin FINAL (2026-09-03, §13.12 line 460):** Reuse `sms_messages` — Notifications history labels + filters (Invites / Payment links / Manual); Overview SMS invites shows last 5 `event_invite` rows + jump to Notifications ([`notifications.js`](../../../../js/portal/events/manage/notifications.js), [`sms-invites.js`](../../../../js/portal/events/manage/sms-invites.js)).
+
+**Team hosts strip FINAL (2026-09-03, §13.12 line 461):** Manage → Overview **Team hosts** lists/adds/removes `event_hosts` as `co_host` (creator / `events.manage_all` via existing RLS). Aligns per-event team with Event Coordinator moderation v1 ([`hosts.js`](../../../../js/portal/events/manage/hosts.js)).
+
+**Danger-zone payment-linked FINAL (2026-09-03, §13.12 line 462):** Manage Danger Zone cancel uses [`process-event-cancellation`](../../../../supabase/functions/process-event-cancellation/index.ts). Host **Cancel participation** / reset via [`manage-event-participation`](../../../../supabase/functions/manage-event-participation/index.ts) soft-cancels `event_parties` + open plans/pending installments ([`cancel-party-participation.ts`](../../../../supabase/functions/_shared/cancel-party-participation.ts)) — **no** `stripe.refunds.create` / no refund button.
+
+**Amenity close + results FINAL (2026-09-03, §13.13 line 469):** Manage → Overview **Amenity voting** card (close now + edit `closes_at` / `results_visible` + host tallies). Attendee-safe aggregates via RPC `get_event_amenity_vote_tallies` (migration 115). Portal detail + public `/events/` render results per `results_visible` ([`manage/amenity-voting.js`](../../../../js/portal/events/manage/amenity-voting.js)).
+
 **Failed payment UX (2026-09-02, §13.10 line 440):** On `payment_intent.payment_failed` → installment `failed` + plan `past_due` + SMS (`message_type=event_payment_failed`, gated by `SMS_PAYMENT_FAILURES_ENABLED` / `SMS_SEND_ENABLED`) with link `/events/payments/?t={invite_token}`. Idempotent via `failure_notified_at`. Edges: [`get-event-party-payments`](../../../../supabase/functions/get-event-party-payments/index.ts), [`retry-event-party-payment`](../../../../supabase/functions/retry-event-party-payment/index.ts) (`kind=retry`), [`update-event-party-payment-method`](../../../../supabase/functions/update-event-party-payment-method/index.ts) (Checkout `mode=setup`, `kind=pm_update`). Minimal public page: [`events/payments/`](../../../../events/payments/index.html). Full schedule UI / early-payoff polish remains §13.11.
 
 **Magic-link payments auth (2026-09-03, §13.11 line 445):** Public route [`/events/payments/`](../../../../events/payments/index.html). Auth via `invite_token` (`?t=` — canonical), `guest_token` (`?g=` → resolve payer party, client rewrites to `?t=`), or JWT member payer (omit token when exactly one party+plan; else `party_id` / `event_id` / `event_slug`). Shared: [`event-party-token.ts`](../../../../supabase/functions/_shared/event-party-token.ts).
+
+**Payments summary fields (2026-09-03, §13.11 line 446):** Public page shows Total, Paid, Remaining, Next debit, Plan (full/monthly), Method, Status from `get-event-party-payments` plan payload.
 
 **Webhook idempotency + reconcile (2026-09-03, §13.10 line 441):** `stripe_webhook_events` stores Stripe `event.id` (dedupe) + outcome (`processed`/`error`). [`stripe-webhook`](../../../../supabase/functions/stripe-webhook/index.ts) claims before handlers; duplicates return 200 without re-running. Mid-flight errors after claim are recovered by [`reconcile-event-party-payments`](../../../../supabase/functions/reconcile-event-party-payments/index.ts) (hourly cron): stuck `processing` installments &gt;15m with a PI id → retrieve Stripe → `applyInstallmentSucceeded` / `Failed` (no failure SMS from reconcile).
 

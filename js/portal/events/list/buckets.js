@@ -79,11 +79,11 @@ function renderBucket(label, events, rsvps, attendees) {
     if (useVlift && total > E_BUCKET_TRUNCATE) {
         if (truncated) {
             headerLink = '<button type="button" data-evt-bucket-toggle="' + slug +
-                '" class="evt-bucket-seeall text-xs font-semibold text-brand-600 hover:text-brand-700">' +
+                '" class="evt-bucket-seeall text-xs font-semibold text-primary hover:text-primary-700">' +
                 'See all (' + total + ') →</button>';
         } else {
             headerLink = '<button type="button" data-evt-bucket-toggle="' + slug +
-                '" class="evt-bucket-seeall text-xs font-semibold text-brand-600 hover:text-brand-700">' +
+                '" class="evt-bucket-seeall text-xs font-semibold text-primary hover:text-primary-700">' +
                 'Show less ↑</button>';
         }
     }

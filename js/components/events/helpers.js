@@ -250,9 +250,10 @@
 
     // ─── groupByBucket (time-bucket grouping) ─────────────
     // events_003 §8.7 — returns [{ label, events: [] }, ...]
-    // mode: 'upcoming' → Tonight | This week | This month | Later
+    // mode: 'upcoming' → Tonight | This week | This month | Later | Earlier*
     //       'past'     → Last week | Last month | Earlier
-    //       'going'    → Tonight | This week | Later
+    //       'going'    → Tonight | This week | Later | Earlier*
+    // *Earlier = start calendar day before today (stale still-open events)
     // Buckets with zero events are dropped. Input order preserved
     // within each bucket (caller is responsible for date-sort).
     function groupByBucket(events, mode = 'upcoming') {
@@ -262,9 +263,9 @@
 
         // Bucket schemas
         const schema = {
-            upcoming: ['Tonight', 'This week', 'This month', 'Later'],
+            upcoming: ['Tonight', 'This week', 'This month', 'Later', 'Earlier'],
             past:     ['Last week', 'Last month', 'Earlier'],
-            going:    ['Tonight', 'This week', 'Later'],
+            going:    ['Tonight', 'This week', 'Later', 'Earlier'],
         };
         const labels = schema[mode] || schema.upcoming;
         const buckets = Object.fromEntries(labels.map(l => [l, []]));
@@ -274,7 +275,8 @@
             if (!raw) return labels[labels.length - 1];
             const d = new Date(raw);
             if (isNaN(d)) return labels[labels.length - 1];
-            const dayDiff = Math.round((d - startOfToday) / 86_400_000);
+            const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const dayDiff = Math.round((startOfDay - startOfToday) / 86_400_000);
 
             if (mode === 'past') {
                 // dayDiff is negative for past
@@ -283,8 +285,9 @@
                 return 'Earlier';
             }
 
-            // upcoming / going
-            if (dayDiff <= 0)           return 'Tonight';   // today (any hour) or already started
+            // upcoming / going — never put prior calendar days in Tonight
+            if (dayDiff < 0)            return 'Earlier';
+            if (dayDiff === 0)          return 'Tonight';
             if (dayDiff <= 7)           return 'This week';
             if (mode === 'going')       return 'Later';
             if (dayDiff <= 30)          return 'This month';
@@ -398,6 +401,87 @@
         });
     }
 
+    function paymentMagicLinkUrl(token) {
+        const t = String(token || '').trim();
+        if (!t) return '';
+        const origin = (typeof window !== 'undefined' && window.location && window.location.origin)
+            ? window.location.origin
+            : 'https://justicemcneal.com';
+        return `${origin}/events/payments/?t=${encodeURIComponent(t)}`;
+    }
+
+    function stashPaymentInviteToken(eventId, token) {
+        const t = String(token || '').trim();
+        const id = String(eventId || '').trim();
+        if (!t || !id) return;
+        try {
+            sessionStorage.setItem(`event_pay_link_${id}`, t);
+        } catch (_) { /* ignore */ }
+    }
+
+    function readPaymentInviteToken(eventId) {
+        const params = new URLSearchParams(window.location.search || '');
+        const fromQuery = (params.get('t') || params.get('token') || '').trim();
+        if (fromQuery) return fromQuery;
+        const id = String(eventId || '').trim();
+        if (!id) return '';
+        try {
+            return String(sessionStorage.getItem(`event_pay_link_${id}`) || '').trim();
+        } catch (_) {
+            return '';
+        }
+    }
+
+    function paymentMagicLinkHtml(tokenOrUrl, opts) {
+        const options = opts && typeof opts === 'object' ? opts : {};
+        let url = String(tokenOrUrl || '').trim();
+        if (url && !/^https?:\/\//i.test(url)) {
+            url = paymentMagicLinkUrl(url);
+        }
+        if (!url) return '';
+        const title = options.title || 'Your payment link';
+        const sub = options.sub || 'We also texted this link when SMS is enabled. Save it to manage payments anytime.';
+        const safeUrl = escapeHtml(url);
+        return `
+            <div class="ed-seat-info-invites ed-payment-magic-link" data-payment-magic-link="1">
+                <p class="ed-seat-info-invites-title">${escapeHtml(title)}</p>
+                <p class="ed-seat-info-invites-sub">${escapeHtml(sub)}</p>
+                <div class="ed-seat-info-invite-row">
+                    <a class="ed-seat-info-invite-name" href="${safeUrl}" style="word-break:break-all;text-decoration:underline;color:var(--color-primary,#13366E)">Open My trip payments</a>
+                    <button type="button" class="ed-seat-info-invite-copy" data-payment-link-copy="${safeUrl}">Copy payment link</button>
+                </div>
+            </div>`;
+    }
+
+    function wirePaymentMagicLinkCopy(root) {
+        const scope = root || document;
+        scope.querySelectorAll('[data-payment-link-copy]').forEach((btn) => {
+            if (btn.dataset.copyWired) return;
+            btn.dataset.copyWired = '1';
+            btn.addEventListener('click', async () => {
+                const url = btn.getAttribute('data-payment-link-copy') || '';
+                if (!url) return;
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(url);
+                    } else {
+                        const ta = document.createElement('textarea');
+                        ta.value = url;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        ta.remove();
+                    }
+                    const prev = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => { btn.textContent = prev || 'Copy payment link'; }, 1500);
+                } catch (_) {
+                    prompt('Copy this payment link:', url);
+                }
+            });
+        });
+    }
+
     /** Pay CTA label for member/guest RSVP (§13.8 parity). opts.mode: 'rsvp' | 'complete'; opts.partyTotalCents for multi-seat */
     function rsvpPayButtonLabel(event, role, opts) {
         const options = opts && typeof opts === 'object' ? opts : {};
@@ -413,6 +497,102 @@
             return mode === 'complete' ? prefix : `${guestPrefix} — Free`;
         }
         return guestPrefix;
+    }
+
+    /**
+     * True when the member is committed Going (not Stripe-prep / abandoned checkout).
+     * Paid events: require rsvp.paid or an active/past_due/completed plan.
+     * Free / non-paid: status going or paid flag.
+     * Works for member RSVPs and guest RSVP rows (same status/paid shape).
+     */
+    function rsvpIsCommittedGoing(event, rsvp, plan) {
+        if (!rsvp) return false;
+        const pricingPaid = event?.pricing_mode === 'paid';
+        const paidFlag = rsvp.paid === true;
+        const statusGoing = rsvp.status === 'going';
+        if (!pricingPaid) {
+            return !!(statusGoing || paidFlag);
+        }
+        if (paidFlag) return true;
+        const planStatus = String(plan?.status || '').trim();
+        if (planStatus === 'active' || planStatus === 'past_due' || planStatus === 'completed') {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Unified RSVP CTA state for portal/public sticky + Your RSVP card.
+     * @returns {{ kind:'rsvp'|'continue'|'going', label:string, subLabel:string, showCancel:boolean, cancelMode:'cancel'|'remove'|null, cancelLabel:string|null }}
+     */
+    function rsvpCtaState(event, opts) {
+        const options = opts && typeof opts === 'object' ? opts : {};
+        const rsvp = options.rsvp || null;
+        const plan = options.plan || null;
+        const hasDraft = !!options.hasDraft;
+        const pricingPaid = event?.pricing_mode === 'paid';
+        const isGoing = !!(rsvp && (rsvp.status === 'going' || rsvp.paid === true));
+        const committed = rsvpIsCommittedGoing(event, rsvp, plan);
+        const amountPaid = Math.max(0, Number(plan?.amount_paid_cents) || Number(rsvp?.amount_paid_cents) || 0);
+        const totalDue = Math.max(0, Number(plan?.total_due_cents) || 0);
+        const remaining = plan != null
+            ? Math.max(0, Number(plan.remaining_cents != null ? plan.remaining_cents : (totalDue - amountPaid)) || 0)
+            : null;
+        const planStatus = String(plan?.status || '').trim();
+        const paidFull = !!(rsvp?.paid
+            || planStatus === 'completed'
+            || (remaining === 0 && amountPaid > 0));
+        const unpaidGoing = !!(pricingPaid && isGoing && !committed);
+
+        if (committed) {
+            let subLabel = '';
+            if (!pricingPaid) {
+                subLabel = '';
+            } else if (paidFull) {
+                subLabel = 'Paid in full';
+            } else {
+                const paidCount = options.installmentsPaid;
+                const totalCount = options.installmentsTotal;
+                if (paidCount != null && totalCount != null && Number(totalCount) > 0) {
+                    subLabel = `Paid ${Number(paidCount)}/${Number(totalCount)}`;
+                } else if (totalDue > 0) {
+                    subLabel = `Paid ${formatMoney(amountPaid)} / ${formatMoney(totalDue)}`;
+                } else {
+                    subLabel = 'Payment in progress';
+                }
+            }
+            const cancelMode = pricingPaid
+                ? (paidFull ? 'remove' : (planStatus === 'active' || planStatus === 'past_due' ? 'cancel' : (rsvp?.paid ? 'remove' : null)))
+                : null;
+            return {
+                kind: 'going',
+                label: 'Going',
+                subLabel,
+                showCancel: !!cancelMode,
+                cancelMode,
+                cancelLabel: cancelMode === 'remove' ? 'Remove RSVP' : (cancelMode === 'cancel' ? 'Cancel' : null),
+            };
+        }
+
+        if (hasDraft || unpaidGoing || (pricingPaid && planStatus === 'setup' && amountPaid <= 0 && isGoing)) {
+            return {
+                kind: 'continue',
+                label: 'Continue RSVP',
+                subLabel: '',
+                showCancel: false,
+                cancelMode: null,
+                cancelLabel: null,
+            };
+        }
+
+        return {
+            kind: 'rsvp',
+            label: 'RSVP',
+            subLabel: '',
+            showCancel: false,
+            cancelMode: null,
+            cancelLabel: null,
+        };
     }
 
     // ─── validatePhone (RSVP contact — §13.8) ─────────────
@@ -440,6 +620,85 @@
         }
     }
 
+    /**
+     * Themed confirm dialog (replaces window.confirm for RSVP → Stripe).
+     * @param {{ title?: string, message?: string, confirmLabel?: string, cancelLabel?: string }} opts
+     * @returns {Promise<boolean>}
+     */
+    function confirmDialog(opts = {}) {
+        const title = opts.title || 'Confirm payment';
+        const message = opts.message == null ? '' : String(opts.message);
+        const confirmLabel = opts.confirmLabel || 'Continue to checkout';
+        const cancelLabel = opts.cancelLabel || 'Cancel';
+
+        return new Promise((resolve) => {
+            document.getElementById('evtConfirmDialog')?.remove();
+
+            const root = document.createElement('div');
+            root.id = 'evtConfirmDialog';
+            root.className = 'evt-confirm-dialog';
+            root.setAttribute('role', 'dialog');
+            root.setAttribute('aria-modal', 'true');
+            root.setAttribute('aria-labelledby', 'evtConfirmDialogTitle');
+
+            const paragraphs = message.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
+            const bodyHtml = paragraphs.length
+                ? paragraphs.map((p) =>
+                    `<p class="evt-confirm-dialog__text">${escapeHtml(p).replace(/\n/g, '<br>')}</p>`
+                ).join('')
+                : '<p class="evt-confirm-dialog__text">Proceed to checkout?</p>';
+
+            root.innerHTML =
+                '<div class="evt-confirm-dialog__backdrop" data-evt-confirm-dismiss></div>' +
+                '<div class="evt-confirm-dialog__panel">' +
+                  `<h2 id="evtConfirmDialogTitle" class="evt-confirm-dialog__title">${escapeHtml(title)}</h2>` +
+                  `<div class="evt-confirm-dialog__body">${bodyHtml}</div>` +
+                  '<div class="evt-confirm-dialog__actions">' +
+                    `<button type="button" class="evt-confirm-dialog__btn evt-confirm-dialog__btn--cancel" data-evt-confirm-dismiss>${escapeHtml(cancelLabel)}</button>` +
+                    `<button type="button" class="evt-confirm-dialog__btn evt-confirm-dialog__btn--confirm" data-evt-confirm-ok>${escapeHtml(confirmLabel)}</button>` +
+                  '</div>' +
+                '</div>';
+
+            const prevOverflow = document.body.style.overflow;
+            let settled = false;
+            const finish = (ok) => {
+                if (settled) return;
+                settled = true;
+                document.removeEventListener('keydown', onKey, true);
+                document.body.style.overflow = prevOverflow;
+                root.remove();
+                resolve(!!ok);
+            };
+
+            const onKey = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    finish(false);
+                }
+            };
+
+            root.addEventListener('click', (e) => {
+                if (e.target.closest('[data-evt-confirm-ok]')) {
+                    e.preventDefault();
+                    finish(true);
+                } else if (e.target.closest('[data-evt-confirm-dismiss]')) {
+                    e.preventDefault();
+                    finish(false);
+                }
+            });
+
+            document.addEventListener('keydown', onKey, true);
+            document.body.style.overflow = 'hidden';
+            document.body.appendChild(root);
+            requestAnimationFrame(() => {
+                root.classList.add('is-open');
+                const okBtn = root.querySelector('[data-evt-confirm-ok]');
+                if (okBtn) okBtn.focus();
+            });
+        });
+    }
+
     // ─── Public exports ───────────────────────────────────
     const EventsHelpers = {
         escapeHtml,
@@ -455,6 +714,7 @@
         startLiveCountdown,
         toast,
         toggleModal,
+        confirmDialog,
         validatePhone,
         normalizeSeatRole,
         adultPriceCents,
@@ -464,7 +724,14 @@
         seatInfoInviteUrl,
         seatInfoInvitesHtml,
         wireSeatInfoInviteCopy,
+        paymentMagicLinkUrl,
+        paymentMagicLinkHtml,
+        wirePaymentMagicLinkCopy,
+        stashPaymentInviteToken,
+        readPaymentInviteToken,
         rsvpPayButtonLabel,
+        rsvpIsCommittedGoing,
+        rsvpCtaState,
     };
 
     window.EventsHelpers = EventsHelpers;

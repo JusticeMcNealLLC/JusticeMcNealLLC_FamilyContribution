@@ -26,6 +26,15 @@ included.includes('function defaultSeatRoleForCatalog(')
 included.includes('seatOptionsTitle(role)')
     ? pass('formFieldsHtml uses seatOptionsTitle')
     : fail('formFieldsHtml not using seatOptionsTitle');
+included.includes('ed-inc-chip')
+    && included.includes('wireChoiceControls')
+    ? pass('size/color chips + wireChoiceControls')
+    : fail('chips/swatches UX missing');
+
+const party = read('js/components/events/party-seats.js');
+party.includes('hidePayerName')
+    ? pass('party-seats hidePayerName for guest contact sync')
+    : fail('hidePayerName missing');
 
 console.log('\n── §13.8 client routing (event-level catalog gate) ───────────────────────');
 const engagement = read('js/portal/events/engagement/rsvp.js');
@@ -94,16 +103,17 @@ checkout.includes('metadata.seat_options')
     ? pass('create-event-checkout carries seat_options in metadata')
     : fail('checkout missing metadata.seat_options');
 
-console.log('\n── §13.8 cache bump v=160 ───────────────────────────────────────────────');
-read('events/index.html').includes('?v=163')
-    ? pass('public events at v=161')
-    : fail('public events not at v=161');
-read('pages/portal/events.html').includes('?v=163')
-    ? pass('portal events at v=161')
-    : fail('portal events not at v=161');
-read('sw.js').includes('?v=163')
-    ? pass('sw.js precache at v=161')
-    : fail('sw.js not at v=161');
+console.log('\n── §13.8 cache bump (name/choices UX) ───────────────────────────────────');
+read('events/index.html').includes('included-items.js?v=193')
+    ? pass('public included-items at v=193')
+    : fail('public included-items not at v=193');
+read('pages/portal/events.html').includes('?v=193')
+    || read('pages/portal/events.html').includes('events.bundle.js?v=191')
+    ? pass('portal events cache bumped')
+    : fail('portal events cache not bumped');
+read('sw.js').includes('jm-portal-v141')
+    ? pass('sw.js CACHE_NAME v141')
+    : fail('sw.js not at v141');
 
 console.log('\n── §13.8 brainstorm checklist ───────────────────────────────────────────');
 const brainstorm = read('docs/product/improvements/pages/events/000_events_system_overhaul_brainstorm.md');

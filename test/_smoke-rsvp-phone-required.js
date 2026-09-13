@@ -46,6 +46,7 @@ bodyJs.includes('placeholder="Phone number"') && !bodyJs.includes('optional')
 console.log('\n── §13.8 portal member ──────────────────────────────────────────────────');
 const sections = read('js/portal/events/detail/sections.js');
 const engagement = read('js/portal/events/engagement/rsvp.js');
+const wizard = read('js/components/events/rsvp-wizard.js');
 
 sections.includes('evtMemberPhoneInput')
     ? pass('sections.js member phone input')
@@ -53,6 +54,36 @@ sections.includes('evtMemberPhoneInput')
 engagement.includes('evtEnsureMemberPhoneForRsvp')
     ? pass('engagement/rsvp.js ensures member phone')
     : fail('evtEnsureMemberPhoneForRsvp missing');
+engagement.includes('memberPhoneMissing = true')
+    ? pass('engagement defaults unknown phone as missing')
+    : fail('engagement should default memberPhoneMissing = true');
+engagement.includes('EventsRsvpWizard.open')
+    && engagement.includes('memberPhoneMissing: true')
+    ? pass('ensure-phone reopens wizard when inline input missing')
+    : fail('ensure-phone should reopen wizard without inline input');
+
+wizard.includes("!(STATE.form.member_phone || '').trim()")
+    ? pass('wizard getSteps gates Phone on empty member_phone')
+    : fail('wizard still gates Phone only on memberPhoneMissing flag');
+wizard.includes('STATE.memberPhoneMissing || !(STATE.form.member_phone')
+    ? pass('wizard keeps contact when memberPhoneMissing even if phone filled')
+    : fail('wizard missing memberPhoneMissing || empty phone contact gate');
+wizard.includes('nextKey')
+    ? pass('wizard _next advances by step key')
+    : fail('wizard _next should advance by key');
+wizard.includes('STATE.form.seats = defaultSeats()')
+    ? pass('wizard seeds default seats on party step')
+    : fail('wizard missing defaultSeats seed on party');
+/if \(STATE\.memberPhoneMissing\) \{\s*steps\.push\(\{ key: 'contact'/.test(wizard)
+    ? fail('wizard still has inner memberPhoneMissing-only contact gate')
+    : pass('wizard dropped inner memberPhoneMissing-only contact gate');
+wizard.includes('Phone number is required. Add a mobile number to continue.')
+    ? pass('wizard blocks submit without phone')
+    : fail('wizard missing submit-time phone guard');
+
+rsvpJs.includes('pubMemberProfilePhone == null')
+    ? pass('public open treats unloaded phone as missing')
+    : fail('public open should treat null profile phone as missing');
 
 console.log('\n── §13.8 edge enforcement ───────────────────────────────────────────────');
 const guestFree = read('supabase/functions/rsvp-guest-free/index.ts');

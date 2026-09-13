@@ -91,11 +91,11 @@ async function _loadEventData(eventId) {
     ] = await Promise.all([
         supabaseClient
             .from('event_rsvps')
-            .select('id, user_id, status, paid, qr_token, party_id, invest_eligible_acknowledged, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url)')
+            .select('id, user_id, status, paid, qr_token, party_id, invest_eligible_acknowledged, profiles!event_rsvps_user_id_fkey(id, first_name, last_name, profile_picture_url, phone)')
             .eq('event_id', eventId),
         supabaseClient
             .from('event_guest_rsvps')
-            .select('id, guest_name, guest_email, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at, party_id, attach_requested')
+            .select('id, guest_name, guest_email, guest_phone, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at, party_id, attach_requested')
             .eq('event_id', eventId),
         supabaseClient
             .from('event_checkins')
@@ -103,7 +103,7 @@ async function _loadEventData(eventId) {
             .eq('event_id', eventId),
         supabaseClient
             .from('event_parties')
-            .select('id, status, payer_kind, payer_user_id, payer_guest_rsvp_id')
+            .select('id, status, payer_kind, payer_user_id, payer_guest_rsvp_id, invite_token, disclaimer_acks, amenity_vote_option_id, amenity_vote_status')
             .eq('event_id', eventId),
         supabaseClient
             .from('event_seats')

@@ -176,7 +176,7 @@ function raffleHtml() {
                 <div class="em-money-row"><span>Type</span><strong>${esc(e.raffle_type || 'digital')}</strong></div>
                 <div class="em-money-row"><span>Draw trigger</span><strong>${esc(e.raffle_draw_trigger || 'manual')}</strong></div>
                 <div class="em-money-row"><span>Entry cost</span><strong>${e.raffle_entry_cost_cents ? fmt(e.raffle_entry_cost_cents) : 'Free'}</strong></div>
-                <div style="margin:12px 0;padding:12px;border:1px solid #eef2ff;border-radius:12px;background:#f8fafc">
+                <div style="margin:12px 0;padding:12px;border:1px solid var(--color-border, #D5DFEC);border-radius:12px;background:#f8fafc">
                     <label for="emRaffleEntryPrice" style="display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Raffle entry price</label>
                     <div style="display:flex;gap:8px;align-items:center">
                         <span style="font-size:13px;font-weight:800;color:#475569">$</span>
@@ -323,7 +323,7 @@ function rafflePrizeSetupHtml(config, winners = []) {
                 .em-raffle-edit-label { display:block; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#94a3b8; margin-bottom:5px; }
                 .em-prize-img-row { margin-top:10px; display:flex; align-items:center; gap:9px; }
                 .em-prize-img-drop { width:72px; height:72px; border:2px dashed #d1d5db; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer; color:#9ca3af; background:#fff; flex-shrink:0; }
-                .em-prize-img-drop:hover, .em-prize-img-drop.em-drag-over { border-color:#818cf8; background:#f5f3ff; color:#4f46e5; }
+                .em-prize-img-drop:hover, .em-prize-img-drop.em-drag-over { border-color:var(--color-primary, #13366E); background:var(--color-surface, #EEF2F6); color:var(--color-primary, #13366E); }
                 .em-prize-img-drop img { width:100%; height:100%; object-fit:cover; display:block; }
                 .em-prize-img-drop span { font-size:19px; }
                 .em-prize-img-copy { flex:1; min-width:0; font-size:11px; color:#6b7280; line-height:1.35; }

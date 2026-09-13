@@ -142,7 +142,7 @@ body.evt-vlift .evt-stats-icon {
     flex-shrink: 0;
 }
 body.evt-vlift .evt-stats-icon svg { width: 18px; height: 18px; }
-body.evt-vlift .evt-stats-icon--purple { background: #eef2ff; color: #4f46e5; }
+body.evt-vlift .evt-stats-icon--purple { background: var(--color-surface, #EEF2F6); color: var(--color-primary, #13366E); }
 body.evt-vlift .evt-stats-icon--green  { background: #dcfce7; color: #16a34a; }
 body.evt-vlift .evt-stats-icon--blue   { background: #dbeafe; color: #2563eb; }
 body.evt-vlift .evt-stats-body {
@@ -174,14 +174,14 @@ body.evt-vlift .evt-stats-link {
     border: 0;
     border-radius: .5rem;
     background: transparent;
-    color: #4f46e5;
+    color: var(--color-primary, #13366E);
     font-size: .8125rem;
     font-weight: 600;
     cursor: pointer;
     text-align: center;
     transition: background .12s ease;
 }
-body.evt-vlift .evt-stats-link:hover { background: #eef2ff; }
+body.evt-vlift .evt-stats-link:hover { background: var(--color-surface, #EEF2F6); }
 
 /* ============================================================
  * F16 — Right-rail card polish
@@ -226,7 +226,7 @@ body.evt-vlift #evtRightRail .evt-stats {
     display: inline-block;
 }
 .evt-empty-link:focus-visible {
-    outline: 2px solid #6366f1;
+    outline: 2px solid var(--color-primary, #13366E);
     outline-offset: 3px;
     border-radius: 6px;
 }
@@ -311,7 +311,7 @@ body.evt-vlift #evtRightRail .evt-stats {
 .evt-context-row:active { background: #f3f4f6; }
 .evt-context-row--danger { color: #b91c1c; }
 .evt-context-row--cancel { justify-content: center; font-weight: 600; color: #6b7280; }
-.evt-context-row:focus-visible { outline: 2px solid #6366f1; outline-offset: -2px; }
+.evt-context-row:focus-visible { outline: 2px solid var(--color-primary, #13366E); outline-offset: -2px; }
 
 /* Toast */
 .evt-toast {

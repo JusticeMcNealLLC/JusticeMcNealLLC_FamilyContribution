@@ -121,18 +121,20 @@
 
     /**
      * @param {Array} catalog
-     * @param {{ idPrefix?: string }} opts
+     * @param {{ idPrefix?: string, ackedIds?: string[] }} opts
      */
     function formFieldsHtml(catalog, opts) {
         const list = normalizeDisclaimers(catalog);
         if (!list.length) return '';
         const prefix = (opts && opts.idPrefix) || 'discAck';
+        const acked = new Set(Array.isArray(opts?.ackedIds) ? opts.ackedIds.map(String) : []);
         const fields = list.map((d) => {
             const fieldId = `${prefix}-${d.id}`;
             const req = d.required ? ' <span class="text-red-500">*</span>' : '';
+            const checked = acked.has(String(d.id)) ? ' checked' : '';
             return `
                 <label class="ed-disc-ack" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;border:1px solid #d5dfec;border-radius:12px;background:#fff;cursor:pointer">
-                    <input type="checkbox" id="${escapeHtml(fieldId)}" data-disc-ack="${escapeHtml(d.id)}" ${d.required ? 'required' : ''} style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
+                    <input type="checkbox" id="${escapeHtml(fieldId)}" data-disc-ack="${escapeHtml(d.id)}" ${d.required ? 'required' : ''}${checked} style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
                     <span style="min-width:0">
                         <span style="display:block;font-size:13px;font-weight:700;color:#0b2545;margin-bottom:4px">${escapeHtml(d.title)}${req}</span>
                         <span style="display:block;font-size:12px;line-height:1.5;color:#374151">${escapeHtml(d.body)}</span>
