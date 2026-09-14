@@ -11,6 +11,7 @@ const { parseClassicChain, isProductionLoaded, chainOrderOk } = require('./_port
 const uiTw = fs.readFileSync(path.join(root, 'js/portal/events/team/ui-tw.js'), 'utf8');
 const sheet = fs.readFileSync(path.join(root, 'js/portal/events/team/sheet.js'), 'utf8');
 const toolsList = fs.readFileSync(path.join(root, 'js/portal/events/team/tools-list.js'), 'utf8');
+const shell = fs.readFileSync(path.join(root, 'js/portal/events/team/shell.js'), 'utf8');
 const ctaBar = fs.readFileSync(path.join(root, 'js/portal/events/team/cta-bar.js'), 'utf8');
 const detail = fs.readFileSync(path.join(root, 'js/portal/events/detail.js'), 'utf8');
 const detailData = fs.readFileSync(path.join(root, 'js/portal/events/detail/data.js'), 'utf8');
@@ -34,6 +35,10 @@ assert(!/RSVP for Raffle/.test(toolsList), 'no legacy RSVP for Raffle sticky CTA
 assert(/View Ticket/.test(toolsList), 'View Ticket in team tools');
 assert(/Manage Event/.test(toolsList), 'Manage Event remains available');
 assert(/em-op-grid/.test(toolsList) && /em-op-card/.test(toolsList), 'manage-style op cards');
+assert(/et-tool-icon/.test(toolsList) && /💬/.test(toolsList) && /✅/.test(toolsList) && /📷/.test(toolsList),
+    'tools cards include emoji icons');
+assert(/grid-template-columns:repeat\(2/.test(shell) && !/max-width:639px\)\{\s*#etSheetPanel[^}]*\.em-op-grid \{ grid-template-columns:1fr/.test(shell.replace(/\n/g, ' ')),
+    'tools grid stays multi-column on phone');
 assert(/export const teamToolsListApi/.test(toolsList), 'teamToolsListApi export');
 assert(/function initBottomNav/.test(ctaBar) && /globalThis\.evtInitBottomNav/.test(ctaBar), 'bottom nav in cta-bar.js');
 

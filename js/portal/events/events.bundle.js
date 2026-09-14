@@ -7465,7 +7465,8 @@ Proceed to checkout?`;
             .et-tab.active { color:var(--color-primary, #13366E); border-bottom-color:var(--color-primary, #13366E); }
             .em-card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; }
             .em-op-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-            .em-op-card { min-height:120px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:box-shadow .15s,border-color .15s; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; background:#fff; text-align:left; width:100%; }
+            .em-op-card { min-height:140px; display:flex; flex-direction:column; gap:8px; cursor:pointer; transition:box-shadow .15s,border-color .15s; border:1px solid rgba(0,0,0,.06); border-radius:16px; padding:16px; background:#fff; text-align:left; width:100%; }
+            .et-tool-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:var(--color-surface, #EEF2F6); font-size:22px; line-height:1; flex-shrink:0; }
             .em-op-card:hover:not(:disabled) { border-color:rgba(79,70,229,.25); box-shadow:0 4px 14px rgba(15,23,42,.06); }
             .em-op-card:disabled { opacity:.55; cursor:not-allowed; }
             .em-op-title { font-size:15px; font-weight:800; color:#111827; margin:0; line-height:1.15; }
@@ -7481,10 +7482,10 @@ Proceed to checkout?`;
             .et-tools-back { margin-bottom:12px; }
             @media(max-width:639px){
                 #etSheetPanel { height: 92dvh; height: 92vh; max-height: 92dvh; max-height: 92vh; }
-                .em-op-grid { grid-template-columns:1fr; }
             }
             @media(min-width:640px){
                 #etSheetPanel { height: min(760px, 90vh); max-height: min(760px, 90vh); }
+                .em-op-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
             }
         </style>
     `;
@@ -7699,12 +7700,13 @@ Proceed to checkout?`;
     const checkinEnabled = event.checkin_enabled !== false;
     return checkinEnabled && canManageEvent && event.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(event.status);
   }
-  function toolsOpCard(title, copy, onClick, disabled) {
+  function toolsOpCard(title, copy, onClick, disabled, icon) {
+    const iconHtml = icon ? `<span class="et-tool-icon" aria-hidden="true">${icon}</span>` : "";
     const copyHtml = copy ? `<p class="em-op-copy">${copy}</p>` : "";
     if (disabled) {
-      return `<button type="button" class="em-op-card" disabled aria-disabled="true"><p class="em-op-title">${title}</p>${copyHtml}</button>`;
+      return `<button type="button" class="em-op-card" disabled aria-disabled="true">${iconHtml}<p class="em-op-title">${title}</p>${copyHtml}</button>`;
     }
-    return `<button type="button" class="em-op-card" onclick="${onClick}"><p class="em-op-title">${title}</p>${copyHtml}</button>`;
+    return `<button type="button" class="em-op-card" onclick="${onClick}">${iconHtml}<p class="em-op-title">${title}</p>${copyHtml}</button>`;
   }
   function toolsHtml(event, eventId2, rsvp, myRaffleEntry, entriesClosed, eventIsFull, opts) {
     const { canManageEvent } = opts;
@@ -7713,44 +7715,44 @@ Proceed to checkout?`;
     const canRsvp = rsvpEnabled && ["open", "confirmed", "active"].includes(event.status) && !entriesClosed;
     const hasGoingRsvp = typeof globalThis.evtIsGoingRsvp === "function" ? window.evtIsGoingRsvp(rsvp) : !!(rsvp && (rsvp.status === "going" || rsvp.paid === true));
     const cards = [];
-    cards.push(toolsOpCard("Team Chat", "Private team coordination", `window.EventsTeam.open('${eventId2}',{tab:'chat'})`, false));
+    cards.push(toolsOpCard("Team Chat", "Private team coordination", `window.EventsTeam.open('${eventId2}',{tab:'chat'})`, false, "\u{1F4AC}"));
     if (rsvpEnabled) {
       if (!canRsvp) {
-        cards.push(toolsOpCard("RSVP as Myself", "RSVP is closed for this event", "", true));
+        cards.push(toolsOpCard("RSVP as Myself", "RSVP is closed for this event", "", true, "\u2705"));
       } else if (eventIsFull && !hasGoingRsvp) {
-        cards.push(toolsOpCard("RSVP as Myself", "Event is full", "", true));
+        cards.push(toolsOpCard("RSVP as Myself", "Event is full", "", true, "\u2705"));
       } else if (hasGoingRsvp) {
-        cards.push(toolsOpCard("RSVP as Myself", "You're RSVP'd \u2014 tap to update", `window.EventsTeam.close();evtHandleRsvp('${eventId2}','going')`, false));
+        cards.push(toolsOpCard("RSVP as Myself", "You're RSVP'd \u2014 tap to update", `window.EventsTeam.close();evtHandleRsvp('${eventId2}','going')`, false, "\u2705"));
       } else if (event.pricing_mode === "paid") {
-        cards.push(toolsOpCard("RSVP as Myself", `Paid RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}`, `window.EventsTeam.close();evtHandleRsvp('${eventId2}','going')`, false));
+        cards.push(toolsOpCard("RSVP as Myself", `Paid RSVP \u2014 ${formatCurrency(event.rsvp_cost_cents)}`, `window.EventsTeam.close();evtHandleRsvp('${eventId2}','going')`, false, "\u2705"));
       } else {
-        cards.push(toolsOpCard("RSVP as Myself", "Count yourself as going", `window.EventsTeam.close();evtHandleRsvp('${eventId2}','going')`, false));
+        cards.push(toolsOpCard("RSVP as Myself", "Count yourself as going", `window.EventsTeam.close();evtHandleRsvp('${eventId2}','going')`, false, "\u2705"));
       }
     }
     if (raffleEnabled) {
       const raffleBundled = typeof globalThis.evtIsRaffleBundledWithPaidRsvp === "function" ? window.evtIsRaffleBundledWithPaidRsvp(event) : event.pricing_mode === "paid" && rsvpEnabled;
       if (raffleBundled) {
-        cards.push(toolsOpCard("Enter Raffle", rsvp?.paid ? "Included with your paid RSVP" : "Included with paid RSVP", "", true));
+        cards.push(toolsOpCard("Enter Raffle", rsvp?.paid ? "Included with your paid RSVP" : "Included with paid RSVP", "", true, "\u{1F3B2}"));
       } else if (myRaffleEntry) {
-        cards.push(toolsOpCard("Enter Raffle", "Already entered", "", true));
+        cards.push(toolsOpCard("Enter Raffle", "Already entered", "", true, "\u{1F3B2}"));
       } else if (entriesClosed) {
-        cards.push(toolsOpCard("Enter Raffle", "Entries are closed", "", true));
+        cards.push(toolsOpCard("Enter Raffle", "Entries are closed", "", true, "\u{1F3B2}"));
       } else if (!hasGoingRsvp) {
-        cards.push(toolsOpCard("Enter Raffle", "RSVP first to enter the raffle", "", true));
+        cards.push(toolsOpCard("Enter Raffle", "RSVP first to enter the raffle", "", true, "\u{1F3B2}"));
       } else {
         const costLabel = event.raffle_entry_cost_cents > 0 ? formatCurrency(event.raffle_entry_cost_cents) : "Free entry";
-        cards.push(toolsOpCard("Enter Raffle", costLabel, `window.EventsTeam.openToolsView('raffle')`, false));
+        cards.push(toolsOpCard("Enter Raffle", costLabel, `window.EventsTeam.openToolsView('raffle')`, false, "\u{1F3B2}"));
       }
     }
     if (hasGoingRsvp) {
-      cards.push(toolsOpCard("View Ticket", "Your RSVP confirmation", `window.EventsTeam.openToolsView('ticket')`, false));
+      cards.push(toolsOpCard("View Ticket", "Your RSVP confirmation", `window.EventsTeam.openToolsView('ticket')`, false, "\u{1F3AB}"));
     }
     if (canUseEventScanner(event, canManageEvent)) {
-      cards.push(toolsOpCard("Scanner", "Scan attendee QR codes", `window.EventsTeam.close();evtOpenScanner('${eventId2}')`, false));
+      cards.push(toolsOpCard("Scanner", "Scan attendee QR codes", `window.EventsTeam.close();evtOpenScanner('${eventId2}')`, false, "\u{1F4F7}"));
     }
     if (canManageEvent) {
       const manageClick = `window.EventsTeam.close();(window.EventsManage?window.EventsManage.open('${eventId2}',{source:'portal'}):(window.location='../admin/events.html?id=${eventId2}'))`;
-      cards.push(toolsOpCard("Manage Event", "Hosts, RSVP, raffle, settings", manageClick, false));
+      cards.push(toolsOpCard("Manage Event", "Hosts, RSVP, raffle, settings", manageClick, false, "\u2699\uFE0F"));
     }
     return `<div class="em-op-grid">${cards.join("")}</div>`;
   }
