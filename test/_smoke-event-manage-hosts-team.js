@@ -29,12 +29,12 @@ hosts.includes("role: 'co_host'")
     ? pass('hosts list/add/remove co_host only')
     : fail('hosts.js missing co_host CRUD or exposes checkin_staff');
 
-const overview = read('js/portal/events/manage/overview.js');
-overview.includes("from './hosts.js'")
-    && overview.includes('hostsHtml')
-    && overview.includes('wireHosts')
-    ? pass('overview wires Team hosts strip')
-    : fail('overview missing hosts wiring');
+const people = read('js/portal/events/manage/people.js');
+people.includes("from './hosts.js'")
+    && people.includes('hostsHtml')
+    && people.includes('wireHosts')
+    ? pass('People tab wires Team hosts strip')
+    : fail('People tab missing hosts wiring');
 
 console.log('\n── Manage notifications gate still host/coordinator ─────────────────────');
 const sheet = read('js/portal/events/manage/sheet.js');
@@ -53,9 +53,9 @@ bundle.includes('Team hosts')
     : fail('bundle missing Team hosts');
 
 const html = read('pages/portal/events.html');
-html.includes('events.bundle.js?v=184')
-    ? pass('events.bundle cache bump v=184')
-    : fail('bundle ?v= not bumped to 184');
+html.includes('events.bundle.js?v=237')
+    ? pass('events.bundle cache bump v=237')
+    : fail('bundle ?v= not bumped to 237');
 
 console.log('\n── Docs ─────────────────────────────────────────────────────────────────');
 const brainstorm = read('docs/product/improvements/pages/events/000_events_system_overhaul_brainstorm.md');

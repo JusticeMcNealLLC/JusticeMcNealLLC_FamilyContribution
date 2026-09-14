@@ -215,7 +215,7 @@ function smsInvitesHtml(event) {
             <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--color-border,#D5DFEC)">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
                     <p class="text-xs font-semibold text-gray-700" style="margin:0">Recent invites</p>
-                    <button type="button" class="em-btn-ghost" style="font-size:11px;padding:4px 8px" data-overview-tab="notifications">See all SMS history</button>
+                    <button type="button" class="em-btn-ghost" style="font-size:11px;padding:4px 8px" data-scroll-people-reach>See all SMS history</button>
                 </div>
                 <div id="emSmsInviteRecent"><p class="text-xs text-gray-400 italic py-1">Loading…</p></div>
             </div>

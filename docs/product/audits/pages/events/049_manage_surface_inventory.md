@@ -81,20 +81,22 @@ EventsManage.close()
   → hide sheet, clear animation classes after timeout
 ```
 
-**Opts:** `{ source: 'admin' | 'portal', tab?: string, editCopy?: boolean }` — `editCopy` scrolls/focuses title editor on overview.
+**Opts:** `{ source: 'admin' | 'portal', tab?: string, editCopy?: boolean }` — `editCopy` opens the Event tab and focuses the title editor. Legacy keys `images`, `rsvps`, `notifications`, `comp` alias to Event / People / Competition.
 
-### 3.3 Tab model (8 tabs)
+### 3.3 Tab model (host jobs)
+
+Typical member event: **Overview · Event · People · Money · Danger**. Docs / Raffle / Competition hide when unused.
 
 | Tab key | Load | Editable today | Primary data |
 | --- | --- | --- | --- |
-| **overview** | Eager (on open) | Title/description; featured toggle (permissioned) | `STATE.event`, RSVP aggregates |
-| **images** | Eager | Banner + embed upload/URL | Supabase `event-banners` storage |
-| **rsvps** | Eager | Remove member/guest participation (edge fn) | `event_rsvps`, `event_guest_rsvps` |
-| **money** | Lazy `_renderTabAsync` | **Read-only** (M3b) | RSVPs, guests, raffle entries, pool contributions |
-| **docs** | Lazy | Upload, distribute, delete | `event_documents` + `event-documents` storage |
-| **raffle** | Lazy | Prize setup, entry price, remove entries, winner choice | Raffle tables + `EventsRaffleModel` |
-| **comp** | Lazy (competition type only) | **Read-only** (M3b) | phases, entries, votes, winners |
-| **danger** | Eager | Cancel, complete, reset participation, delete | `events` + edge participation reset |
+| **overview** | Eager (on open) | Invite/QR, amenity close-now | `STATE.event`, RSVP aggregates |
+| **event** | Eager | Copy, images, pricing, disclaimers, featured, amenity settings | `events` + `event-banners` |
+| **people** | Eager + lazy SMS | Roster, hosts, SMS invite/compose/history | RSVPs, `event_hosts`, SMS tables |
+| **money** | Lazy `_renderTabAsync` | **Read-only** | RSVPs, guests, raffle entries, pool |
+| **docs** | Lazy (LLC or existing files) | Upload, distribute, delete | `event_documents` |
+| **raffle** | Lazy (if `raffle_enabled`) | Prize setup, draw, entries | Raffle tables + `EventsRaffleModel` |
+| **comp** | Lazy (competition type only) | Submission/voting windows | phases, entries, votes, winners |
+| **danger** | Eager | Cancel, complete, reset, delete | `events` + edge participation reset |
 
 **Lazy cache:** `STATE.tabData[key]` cleared on `open()`; invalidated per-tab after mutations (e.g. `STATE.tabData.docs = null`).
 
@@ -106,7 +108,7 @@ EventsManage.close()
 | --- | --- | --- |
 | **Sheet open/close** | `_ensureMounted`, `open`, `close` | Injected DOM; Escape/backdrop close |
 | **Permissions / host controls** | `canManageEventBanners()` in overview | Featured toggle only; **no** in-sheet host-role gate — caller assumes authorized user |
-| **Event editing (copy)** | `_overviewHtml`, `_wireOverview`, `_saveEventCopy` | **Title + description only** — not date/location/pricing |
+| **Event editing (copy)** | `event.js` `saveEventCopy` + create-sheet handoff | Title + description on Event tab; When/Where/Included via **Edit event** |
 | **Date/location/details** | Overview “Details” card | **Display-only** — edit deferred to detail page / future M4 |
 | **Images** | `_imagesHtml`, `_wireImages`, `_imgDropZone` | Banner + embed; storage upload |
 | **RSVP / attendance** | `_rsvpsHtml`, `_wireRsvps`, `_removeParticipationPerson` | Lists + remove via `manage-event-participation` edge |

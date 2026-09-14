@@ -24,14 +24,14 @@ console.log('event SMS notifications UI smoke\n');
 assert(fs.existsSync(path.join(root, 'js/portal/events/manage/notifications.js')), 'notifications.js exists');
 pass('manage/notifications.js exists');
 
-assert(/key:\s*'notifications',\s*label:\s*'Notifications'/.test(shell), 'M3A_TABS includes Notifications after RSVPs');
-assert(shell.indexOf("key: 'rsvps'") < shell.indexOf("key: 'notifications'"), 'Notifications tab follows RSVPs');
-pass('shell tabs include Notifications in order');
+assert(/key:\s*'people',\s*label:\s*'People'/.test(shell), 'M3A_TABS includes People');
+assert(/notifications:\s*'people'/.test(shell), 'notifications alias maps to People');
+pass('shell tabs include People with notifications alias');
 
-assert(/tab === 'notifications'/.test(sheet), 'sheet routes notifications tab');
+assert(/key === 'people'/.test(sheet), 'sheet routes people tab');
 assert(/Notifications\.loadNotifications/.test(sheet), 'sheet lazy-loads notifications data');
 assert(!/\bM3A_TABS\b/.test(sheet), 'sheet must not reference module-local M3A_TABS');
-assert(/Shell\.getVisibleTabs/.test(sheet) && /canManageNotifications/.test(sheet), 'sheet uses shell tab API and permission gate');
+assert(/Shell\.resolveOpenTab/.test(sheet) && /canManageNotifications/.test(sheet), 'sheet uses shell tab API and permission gate');
 assert(/getVisibleTabs/.test(shell) && /tabs:\s*M3A_TABS/.test(shell), 'shell owns tabs and exports getVisibleTabs');
 pass('sheet router supports notifications tab');
 

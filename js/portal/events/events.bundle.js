@@ -298,7 +298,7 @@
           const number = Number(value);
           return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : null;
         }
-        const api22 = {
+        const api24 = {
           VERSION,
           DEFAULT_EMOJI,
           normalizeConfig,
@@ -311,10 +311,10 @@
           getDrawQueue,
           validateConfig
         };
-        root2.EventsRaffleModel = api22;
-        if (typeof module !== "undefined" && module.exports) module.exports = api22;
+        root2.EventsRaffleModel = api24;
+        if (typeof module !== "undefined" && module.exports) module.exports = api24;
         if (typeof root2.PortalEvents === "undefined") root2.PortalEvents = {};
-        root2.PortalEvents.raffleModel = api22;
+        root2.PortalEvents.raffleModel = api24;
       })(typeof globalThis !== "undefined" ? globalThis : window);
     }
   });
@@ -672,7 +672,7 @@
       const v = String(raw || "").trim().toLowerCase();
       return v === "kid" ? "kid" : "adult";
     }
-    function adultPriceCents2(event) {
+    function adultPriceCents3(event) {
       if (event?.adult_price_cents != null && Number.isFinite(Number(event.adult_price_cents))) {
         return Math.max(0, Number(event.adult_price_cents));
       }
@@ -685,7 +685,7 @@
         const kid = Number(event?.kid_price_cents);
         return Number.isFinite(kid) && kid >= 0 ? kid : 0;
       }
-      return adultPriceCents2(event);
+      return adultPriceCents3(event);
     }
     function partyBaseTotalCents(event, seats) {
       let total = 0;
@@ -1027,7 +1027,7 @@
       alertDialog,
       validatePhone,
       normalizeSeatRole,
-      adultPriceCents: adultPriceCents2,
+      adultPriceCents: adultPriceCents3,
       seatPriceCents,
       seatPriceLabel,
       partyBaseTotalCents,
@@ -1893,7 +1893,7 @@
         if (first && typeof first.focus === "function") first.focus();
       }
     }
-    const api22 = {
+    const api24 = {
       defaultConfig,
       normalizeConfig,
       normalizeOptions,
@@ -1910,7 +1910,7 @@
       voteStatusForRsvp,
       scrollToVoteField
     };
-    globalThis.EventsAmenityVoting = api22;
+    globalThis.EventsAmenityVoting = api24;
   })();
 
   // js/components/events/payment-choice.js
@@ -2166,8 +2166,8 @@
       const cents = displayTotalCents(event, choice, baseCents);
       if (cents <= 0) return "";
       const planKind = choice?.plan_kind || choice?.planKind || defaultPlanKind(event);
-      const money5 = formatMoney(cents);
-      return planKind === "monthly" ? `~${money5}/mo` : money5;
+      const money6 = formatMoney(cents);
+      return planKind === "monthly" ? `~${money6}/mo` : money6;
     }
     function wireForm(root2, event, getSeatPriceCents, onChange) {
       const scope = root2 || document;
@@ -2235,7 +2235,7 @@
 
 Proceed to checkout?`;
     }
-    const api22 = {
+    const api24 = {
       PLATFORM_CARD_FEE_BPS,
       needsChoice,
       enabledPlanKinds,
@@ -2259,7 +2259,7 @@ Proceed to checkout?`;
       defaultPlanKind,
       defaultMethod
     };
-    globalThis.EventsPaymentChoice = api22;
+    globalThis.EventsPaymentChoice = api24;
   })();
 
   // js/components/events/invest-ack.js
@@ -3106,7 +3106,7 @@ Proceed to checkout?`;
       }
       saveDraft();
     }
-    function esc15(str) {
+    function esc16(str) {
       if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === "function") {
         return window.EventsHelpers.escapeHtml(str);
       }
@@ -3144,7 +3144,7 @@ Proceed to checkout?`;
     function needsAmenityVote(event) {
       return !!(window.EventsAmenityVoting && typeof window.EventsAmenityVoting.needsVote === "function" && window.EventsAmenityVoting.needsVote(event));
     }
-    function adultPriceCents2(event) {
+    function adultPriceCents3(event) {
       if (window.EventsHelpers && typeof window.EventsHelpers.seatPriceCents === "function") {
         return window.EventsHelpers.seatPriceCents(event, "adult");
       }
@@ -3156,7 +3156,7 @@ Proceed to checkout?`;
       if (seats && seats.length && window.EventsPartySeats?.partyBaseTotalCents) {
         return window.EventsPartySeats.partyBaseTotalCents(event, seats);
       }
-      return adultPriceCents2(event);
+      return adultPriceCents3(event);
     }
     function needsPaymentChoice(event, totalCents) {
       return !!(window.EventsPaymentChoice && typeof window.EventsPaymentChoice.needsChoice === "function" && window.EventsPaymentChoice.needsChoice(event, totalCents));
@@ -3171,7 +3171,7 @@ Proceed to checkout?`;
       if (!event || event.rsvp_enabled === false) return false;
       if (event.event_type === "competition") return false;
       const mode = ctx && ctx.mode || "guest";
-      const total = adultPriceCents2(event);
+      const total = adultPriceCents3(event);
       const paidWithAmount = event.pricing_mode === "paid" && total > 0;
       if (paidWithAmount) return true;
       if (hasRequiredDisclaimers(event)) return true;
@@ -3214,7 +3214,7 @@ Proceed to checkout?`;
                     <div class="er-row">
                         <label class="er-label" for="erMemberPhone">Mobile phone</label>
                         <input id="erMemberPhone" class="er-input" type="tel" inputmode="tel"
-                            value="${esc15(STATE4.form.member_phone)}" placeholder="Phone number" required>
+                            value="${esc16(STATE4.form.member_phone)}" placeholder="Phone number" required>
                     </div>
                     <label class="er-check">
                         <input type="checkbox" id="erMemberSms" ${STATE4.form.member_sms_opt_in ? "checked" : ""}>
@@ -3228,17 +3228,17 @@ Proceed to checkout?`;
                 <div class="er-row">
                     <label class="er-label" for="erGuestName">Full name</label>
                     <input id="erGuestName" class="er-input" type="text" autocomplete="name"
-                        value="${esc15(STATE4.form.guest_name)}" placeholder="Your full name" required>
+                        value="${esc16(STATE4.form.guest_name)}" placeholder="Your full name" required>
                 </div>
                 <div class="er-row">
                     <label class="er-label" for="erGuestEmail">Email</label>
                     <input id="erGuestEmail" class="er-input" type="email" autocomplete="email"
-                        value="${esc15(STATE4.form.guest_email)}" placeholder="Email address" required>
+                        value="${esc16(STATE4.form.guest_email)}" placeholder="Email address" required>
                 </div>
                 <div class="er-row">
                     <label class="er-label" for="erGuestPhone">Phone</label>
                     <input id="erGuestPhone" class="er-input" type="tel" inputmode="tel" autocomplete="tel"
-                        value="${esc15(STATE4.form.guest_phone)}" placeholder="Phone number" required>
+                        value="${esc16(STATE4.form.guest_phone)}" placeholder="Phone number" required>
                 </div>
                 <label class="er-check">
                     <input type="checkbox" id="erGuestSms" ${STATE4.form.sms_opt_in ? "checked" : ""}>
@@ -3497,17 +3497,17 @@ Proceed to checkout?`;
       const seatLines = seats.map((s) => {
         const role = s.role === "kid" ? "Child" : "Adult";
         const opts = s.options && Object.keys(s.options).length ? ` \xB7 ${Object.values(s.options).join(", ")}` : "";
-        return `<div class="er-review-row"><span>${esc15(s.display_name || "Guest")}</span><span>${role}${esc15(opts)}</span></div>`;
+        return `<div class="er-review-row"><span>${esc16(s.display_name || "Guest")}</span><span>${role}${esc16(opts)}</span></div>`;
       }).join("") || '<div class="er-review-row"><span>Party</span><span>1 adult</span></div>';
-      const contact = STATE4.mode === "guest" ? `<div class="er-review-row"><span>Name</span><span>${esc15(STATE4.form.guest_name)}</span></div>
-               <div class="er-review-row"><span>Email</span><span>${esc15(STATE4.form.guest_email)}</span></div>
-               <div class="er-review-row"><span>Phone</span><span>${esc15(STATE4.form.guest_phone)}</span></div>` : STATE4.form.member_phone ? `<div class="er-review-row"><span>Phone</span><span>${esc15(STATE4.form.member_phone)}</span></div>` : "";
-      const pay = STATE4.form.payment_choice ? `<div class="er-review-row"><span>Plan</span><span>${esc15(STATE4.form.payment_choice.plan_kind || "")}</span></div>
-               <div class="er-review-row"><span>Method</span><span>${esc15(STATE4.form.payment_choice.method || "")}</span></div>` : "";
-      const totalRow = total > 0 ? `<div class="er-review-row"><span>Total</span><span>${esc15(formatMoney(total))}</span></div>` : "";
+      const contact = STATE4.mode === "guest" ? `<div class="er-review-row"><span>Name</span><span>${esc16(STATE4.form.guest_name)}</span></div>
+               <div class="er-review-row"><span>Email</span><span>${esc16(STATE4.form.guest_email)}</span></div>
+               <div class="er-review-row"><span>Phone</span><span>${esc16(STATE4.form.guest_phone)}</span></div>` : STATE4.form.member_phone ? `<div class="er-review-row"><span>Phone</span><span>${esc16(STATE4.form.member_phone)}</span></div>` : "";
+      const pay = STATE4.form.payment_choice ? `<div class="er-review-row"><span>Plan</span><span>${esc16(STATE4.form.payment_choice.plan_kind || "")}</span></div>
+               <div class="er-review-row"><span>Method</span><span>${esc16(STATE4.form.payment_choice.method || "")}</span></div>` : "";
+      const totalRow = total > 0 ? `<div class="er-review-row"><span>Total</span><span>${esc16(formatMoney(total))}</span></div>` : "";
       return `
             <div class="er-step">
-                <p class="er-lead">Confirm your RSVP for <strong>${esc15(event.title || "this event")}</strong>.</p>
+                <p class="er-lead">Confirm your RSVP for <strong>${esc16(event.title || "this event")}</strong>.</p>
                 <div class="er-review-card">${contact}${seatLines}${pay}${totalRow}</div>
             </div>`;
     }
@@ -3592,17 +3592,17 @@ Proceed to checkout?`;
       const dots = document.getElementById("erSheetSteps");
       if (dots) {
         dots.innerHTML = steps.map(
-          (s, i) => `<div class="er-dot${i === STATE4.step ? " is-active" : ""}${i < STATE4.step ? " is-done" : ""}" title="${esc15(s.label)}"></div>`
+          (s, i) => `<div class="er-dot${i === STATE4.step ? " is-active" : ""}${i < STATE4.step ? " is-done" : ""}" title="${esc16(s.label)}"></div>`
         ).join("");
       }
       const backBtn = document.getElementById("erBackBtn");
       if (backBtn) backBtn.style.visibility = STATE4.step === 0 ? "hidden" : "visible";
       _showError("");
       const content = document.getElementById("erSheetContent");
-      const api22 = STEPS[cur.key];
-      if (content && api22) {
-        content.innerHTML = api22.html();
-        api22.wire();
+      const api24 = STEPS[cur.key];
+      if (content && api24) {
+        content.innerHTML = api24.html();
+        api24.wire();
       }
       _refreshFooterLabels();
       if (content) content.scrollTop = 0;
@@ -3624,10 +3624,10 @@ Proceed to checkout?`;
       const cur = steps[STATE4.step];
       if (!cur) return;
       const curKey = cur.key;
-      const api22 = STEPS[curKey];
+      const api24 = STEPS[curKey];
       flushCurrentStep();
-      if (api22?.validate) {
-        const err = api22.validate();
+      if (api24?.validate) {
+        const err = api24.validate();
         if (err) {
           _showError(err);
           return;
@@ -3687,7 +3687,7 @@ Proceed to checkout?`;
       const event = STATE4.event;
       const seats = STATE4.form.seats && STATE4.form.seats.length ? STATE4.form.seats : defaultSeats();
       if (seats[0]) seats[0].display_name = STATE4.form.guest_name || seats[0].display_name;
-      const partyTotal = window.EventsPartySeats?.partyBaseTotalCents ? window.EventsPartySeats.partyBaseTotalCents(event, seats) : adultPriceCents2(event);
+      const partyTotal = window.EventsPartySeats?.partyBaseTotalCents ? window.EventsPartySeats.partyBaseTotalCents(event, seats) : adultPriceCents3(event);
       const needsPaid = event.pricing_mode === "paid" && partyTotal > 0;
       const seatRole = seats.find((s) => s.is_payer)?.role || "adult";
       const sms = {
@@ -3763,7 +3763,7 @@ Proceed to checkout?`;
         await supabaseClient.from("profiles").update({ phone: STATE4.form.member_phone }).eq("id", userId);
       }
       const seats = STATE4.form.seats && STATE4.form.seats.length ? STATE4.form.seats : defaultSeats();
-      const partyTotal = window.EventsPartySeats?.partyBaseTotalCents ? window.EventsPartySeats.partyBaseTotalCents(event, seats) : adultPriceCents2(event);
+      const partyTotal = window.EventsPartySeats?.partyBaseTotalCents ? window.EventsPartySeats.partyBaseTotalCents(event, seats) : adultPriceCents3(event);
       const needsPaid = event.pricing_mode === "paid" && partyTotal > 0;
       const seatRole = seats.find((s) => s.is_payer)?.role || "adult";
       const hasDisc = hasRequiredDisclaimers(event);
@@ -4242,10 +4242,10 @@ Proceed to checkout?`;
       if (!event || !event.category) return "";
       const emoji = C7.CATEGORY_EMOJI && C7.CATEGORY_EMOJI[event.category] || "\u{1F4C5}";
       const label = C7.CATEGORY_TAG && C7.CATEGORY_TAG[event.category]?.label || event.category;
-      const esc15 = H6.escapeHtml || ((s) => String(s == null ? "" : s));
-      return `<button type="button" data-evt-cat="${esc15(event.category)}"
+      const esc16 = H6.escapeHtml || ((s) => String(s == null ? "" : s));
+      return `<button type="button" data-evt-cat="${esc16(event.category)}"
             class="evt-cat-chip absolute top-2 left-2 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-base leading-none hover:scale-110 active:scale-95 transition-transform"
-            aria-label="Filter by ${esc15(label)}" title="Filter by ${esc15(label)}">${emoji}</button>`;
+            aria-label="Filter by ${esc16(label)}" title="Filter by ${esc16(label)}">${emoji}</button>`;
     }
     function _dateStamp(event) {
       const d = _startDate(event);
@@ -4527,9 +4527,9 @@ Proceed to checkout?`;
   function evtApplyDetailMobileHeader(slug) {
     const html11 = evtDetailMobileHeaderHtml(slug);
     const tryApply = (attempt) => {
-      const api22 = window.PageShell;
-      if (api22 && typeof api22.setMobileHeader === "function" && document.getElementById("mhSlotLeft")) {
-        api22.setMobileHeader(html11);
+      const api24 = window.PageShell;
+      if (api24 && typeof api24.setMobileHeader === "function" && document.getElementById("mhSlotLeft")) {
+        api24.setMobileHeader(html11);
         return;
       }
       if (attempt < 40) setTimeout(() => tryApply(attempt + 1), 25);
@@ -4538,9 +4538,9 @@ Proceed to checkout?`;
   }
   function evtResetDetailMobileHeader() {
     const tryReset = (attempt) => {
-      const api22 = window.PageShell;
-      if (api22 && typeof api22.resetMobileHeader === "function" && document.getElementById("mhSlotLeft")) {
-        api22.resetMobileHeader();
+      const api24 = window.PageShell;
+      if (api24 && typeof api24.resetMobileHeader === "function" && document.getElementById("mhSlotLeft")) {
+        api24.resetMobileHeader();
         return;
       }
       if (attempt < 40) setTimeout(() => tryReset(attempt + 1), 25);
@@ -5128,7 +5128,7 @@ Proceed to checkout?`;
     }
     const all = window.evtAllEvents || [];
     const rsvps = window.evtAllRsvps || {};
-    const esc15 = H.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc16 = H.escapeHtml || ((s) => String(s == null ? "" : s));
     const now = Date.now();
     const mine = all.filter((ev) => {
       const r = rsvps[ev.id];
@@ -5146,8 +5146,8 @@ Proceed to checkout?`;
       const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
       const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
       const hasBanner = !!ev.banner_url;
-      const thumbStyle = hasBanner ? "background: url('" + esc15(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#0B2545 0%,#13366E 100%);";
-      return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc15(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc15(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc15(dateStr) + ", " + esc15(timeStr) + "</span></span></button>";
+      const thumbStyle = hasBanner ? "background: url('" + esc16(ev.banner_url) + "') center/cover;" : "background: linear-gradient(135deg,#0B2545 0%,#13366E 100%);";
+      return '<button type="button" class="evt-myrsvp-row" data-evt-myrsvp="' + esc16(ev.id) + '"><span class="evt-myrsvp-thumb" aria-hidden="true" style="' + thumbStyle + '"></span><span class="evt-myrsvp-body"><span class="evt-myrsvp-title">' + esc16(ev.title || "Untitled event") + '</span><span class="evt-myrsvp-meta">' + esc16(dateStr) + ", " + esc16(timeStr) + "</span></span></button>";
     }).join("");
     mount.innerHTML = '<div class="evt-myrsvps"><div class="evt-myrsvps-head"><h3 class="evt-myrsvps-title">Your Upcoming RSVPs</h3><span class="evt-myrsvps-count">' + total + '</span></div><div class="evt-myrsvps-list">' + rows + '</div><button type="button" class="evt-myrsvps-all" data-evt-myrsvps-all>View All My Events</button></div>';
     mount.querySelectorAll("[data-evt-myrsvp]").forEach((btn) => {
@@ -5237,8 +5237,8 @@ Proceed to checkout?`;
       g2.className = "evt-header-greeting block text-xs text-gray-400 mb-1";
       title.parentNode.insertBefore(g2, title);
     }
-    const esc15 = H2.escapeHtml || ((s) => String(s == null ? "" : s));
-    g2.textContent = "Hey " + esc15(name) + " \u{1F44B}";
+    const esc16 = H2.escapeHtml || ((s) => String(s == null ? "" : s));
+    g2.textContent = "Hey " + esc16(name) + " \u{1F44B}";
   }
   function renderHeaderCount() {
     const el = document.getElementById("evtHeaderCount");
@@ -5485,10 +5485,10 @@ Proceed to checkout?`;
       host.innerHTML = "";
       return;
     }
-    const esc15 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc16 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
     const emoji = C3.CATEGORY_EMOJI && C3.CATEGORY_EMOJI[_activeCategory] || "\u{1F4C5}";
     const label = C3.CATEGORY_TAG && C3.CATEGORY_TAG[_activeCategory]?.label || _activeCategory;
-    host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-50 border border-primary-200 text-primary-700 text-xs font-semibold hover:bg-primary-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc15(label) + '</span><span aria-hidden="true" class="text-primary-500">\xD7</span><span class="sr-only">Clear ' + esc15(label) + " filter</span></button>";
+    host.innerHTML = '<button type="button" data-clear-cat class="evt-active-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-50 border border-primary-200 text-primary-700 text-xs font-semibold hover:bg-primary-100"><span aria-hidden="true">' + emoji + "</span><span>" + esc16(label) + '</span><span aria-hidden="true" class="text-primary-500">\xD7</span><span class="sr-only">Clear ' + esc16(label) + " filter</span></button>";
     host.querySelector("[data-clear-cat]")?.addEventListener("click", () => {
       _activeCategory = "";
       persistState();
@@ -5752,7 +5752,7 @@ Proceed to checkout?`;
   function renderCalendar() {
     const mount = document.getElementById("evtCalendarMount");
     if (!mount) return;
-    const esc15 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc16 = window.EventsHelpers && window.EventsHelpers.escapeHtml || ((s) => String(s == null ? "" : s));
     let calMonth = api4().getCalMonth?.();
     if (!calMonth) {
       const now = /* @__PURE__ */ new Date();
@@ -5800,7 +5800,7 @@ Proceed to checkout?`;
       }
       const clsCell = "evt-cal-cell" + (hasEv ? " evt-cal-cell--has" : "") + (isToday ? " evt-cal-cell--today" : "");
       parts.push(
-        '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc15(dateObj.toDateString()) + '"' : 'aria-label="' + esc15(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
+        '<button type="button" class="' + clsCell + '" data-cal-day="' + key + '" ' + (hasEv ? 'aria-label="' + count + " event" + (count > 1 ? "s" : "") + " on " + esc16(dateObj.toDateString()) + '"' : 'aria-label="' + esc16(dateObj.toDateString()) + '"') + (hasEv ? "" : ' aria-disabled="false"') + '><span class="evt-cal-daynum">' + d + "</span>" + dots + "</button>"
       );
     }
     parts.push("</div>");
@@ -5848,7 +5848,7 @@ Proceed to checkout?`;
       heroEl.innerHTML = "";
       return;
     }
-    const esc15 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc16 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const start = new Date(event.start_date);
     const rel = H3.relativeDate ? H3.relativeDate(start) : "";
     const time = H3.formatDate ? H3.formatDate(event.start_date, "time") : "";
@@ -5860,7 +5860,7 @@ Proceed to checkout?`;
     const isFav = !!(rsvp && rsvp.status === "maybe");
     const heartCls = "evt-hero-heart" + (isFav ? " evt-hero-heart--on" : "");
     const heartPath = isFav ? '<path d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z" fill="currentColor"/>' : '<path stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none" d="M12 21s-7-4.35-9.5-8.5C.8 9.6 2.4 6 6 6c2 0 3.4 1 4 2 .6-1 2-2 4-2 3.6 0 5.2 3.6 3.5 6.5C19 16.65 12 21 12 21z"/>';
-    const heartBtn = '<button type="button" data-evt-hero-heart="' + esc15(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
+    const heartBtn = '<button type="button" data-evt-hero-heart="' + esc16(event.id) + '" aria-label="' + (isFav ? "Remove from interested" : "Mark as interested") + '" aria-pressed="' + (isFav ? "true" : "false") + '" class="' + heartCls + '"><svg viewBox="0 0 24 24" class="w-5 h-5" aria-hidden="true">' + heartPath + "</svg></button>";
     const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
     const useVlift = document.body.classList.contains("evt-vlift");
     if (useVlift) {
@@ -5901,8 +5901,8 @@ Proceed to checkout?`;
       })();
       const quietDate = [fMon, fDay !== "" ? String(fDay) : ""].filter(Boolean).join(" ");
       const clusterHtml = attendeeCluster(event.id);
-      const timelocHtml = timeShort || loc ? '<div class="evt-hero-panel__timeloc">' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc15(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc15(loc) + "</span>" : "") + "</div>" : "";
-      heroEl.innerHTML = '<div class="evt-hero-vlift evt-hero-vlift--panel"><a href="' + href + '" data-evt-hero="' + esc15(event.id) + '" class="evt-hero-media block relative overflow-hidden focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300" style="' + heroBg(event, true) + '" aria-label="' + esc15(event.title || "Featured event") + '">' + goingRibbon + (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : "") + (quietDate ? '<span class="evt-hero-date-quiet" aria-hidden="true">' + esc15(quietDate) + "</span>" : "") + '</a><div class="evt-hero-panel"><h2 class="evt-hero-panel__title">' + esc15(event.title || "Untitled event") + "</h2>" + (hostLine ? '<p class="evt-hero-panel__host">' + esc15(hostLine) + "</p>" : "") + timelocHtml + (clusterHtml ? '<div class="evt-hero-panel__going">' + clusterHtml + "</div>" : "") + '<button type="button" data-evt-hero-cta="' + esc15(event.id) + '" class="evt-hero-panel__cta" aria-label="View details for ' + esc15(event.title || "this event") + '">View Details</button></div></div>';
+      const timelocHtml = timeShort || loc ? '<div class="evt-hero-panel__timeloc">' + (timeShort ? '<span class="inline-flex items-center gap-1">' + clkIcon + esc16(timeShort) + "</span>" : "") + (loc ? '<span class="inline-flex items-center gap-1">' + pinIcon + esc16(loc) + "</span>" : "") + "</div>" : "";
+      heroEl.innerHTML = '<div class="evt-hero-vlift evt-hero-vlift--panel"><a href="' + href + '" data-evt-hero="' + esc16(event.id) + '" class="evt-hero-media block relative overflow-hidden focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300" style="' + heroBg(event, true) + '" aria-label="' + esc16(event.title || "Featured event") + '">' + goingRibbon + (event.is_featured ? '<span class="evt-hero-kicker" data-f14-kicker>FEATURED EVENT</span>' : "") + (quietDate ? '<span class="evt-hero-date-quiet" aria-hidden="true">' + esc16(quietDate) + "</span>" : "") + '</a><div class="evt-hero-panel"><h2 class="evt-hero-panel__title">' + esc16(event.title || "Untitled event") + "</h2>" + (hostLine ? '<p class="evt-hero-panel__host">' + esc16(hostLine) + "</p>" : "") + timelocHtml + (clusterHtml ? '<div class="evt-hero-panel__going">' + clusterHtml + "</div>" : "") + '<button type="button" data-evt-hero-cta="' + esc16(event.id) + '" class="evt-hero-panel__cta" aria-label="View details for ' + esc16(event.title || "this event") + '">View Details</button></div></div>';
       const ctaBtn = heroEl.querySelector("button[data-evt-hero-cta]");
       if (ctaBtn) {
         ctaBtn.addEventListener("click", (e) => {
@@ -5932,7 +5932,7 @@ Proceed to checkout?`;
         });
       }
     } else {
-      heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc15(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(19,54,110,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc15(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc15(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc15(loc) + "</p>" : "") + "</div></a>";
+      heroEl.innerHTML = '<a href="' + href + '" data-evt-hero="' + esc16(event.id) + '" class="block relative rounded-3xl overflow-hidden text-white shadow-[0_10px_40px_rgba(19,54,110,0.18)] aspect-[4/5] sm:aspect-[16/10] focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-300" style="' + heroBg(event) + '">' + goingRibbon + '<div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">' + countP + stateP + '</div><div class="absolute inset-x-0 bottom-0 p-5 sm:p-6"><div class="text-[11px] font-bold uppercase tracking-[0.14em] text-white/75">' + esc16(dateLine) + '</div><h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1.5 drop-shadow-sm line-clamp-2">' + esc16(event.title || "Untitled event") + "</h2>" + (loc ? '<p class="text-sm text-white/85 mt-1 truncate">' + esc16(loc) + "</p>" : "") + "</div></a>";
     }
     const link = heroEl.querySelector("a[data-evt-hero]");
     if (link) {
@@ -5950,18 +5950,18 @@ Proceed to checkout?`;
   function attendeeCluster(eventId2) {
     const list = window.evtAttendees && window.evtAttendees[eventId2] || [];
     if (!list.length) return "";
-    const esc15 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc16 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const bubs = list.slice(0, 5).map((p, i) => {
       const pic = p && p.profile_picture_url;
       const first = p && p.first_name || "";
       const initial = (first.trim().charAt(0) || "?").toUpperCase();
       const ml = i === 0 ? "" : " -ml-2";
-      const inner = pic ? '<img src="' + esc15(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc15(initial) + "</span>";
-      return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc15(first) + '">' + inner + "</span>";
+      const inner = pic ? '<img src="' + esc16(pic) + '" alt="" loading="lazy" class="w-full h-full object-cover" />' : '<span class="evt-hero-cluster-init">' + esc16(initial) + "</span>";
+      return '<span class="evt-hero-cluster-bub' + ml + '" title="' + esc16(first) + '">' + inner + "</span>";
     }).join("");
     const trueCount = window.evtAttendeeCounts && window.evtAttendeeCounts[eventId2] || list.length;
     const labelN = String(trueCount);
-    return '<button type="button" data-evt-hero-going="' + esc15(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
+    return '<button type="button" data-evt-hero-going="' + esc16(eventId2) + '" class="evt-hero-cluster" aria-label="See who is going"><span class="evt-hero-cluster-stack">' + bubs + '</span><span class="evt-hero-cluster-label">' + labelN + " going</span></button>";
   }
   function renderLiveBanner(events) {
     const el = document.getElementById("evtLiveBanner");
@@ -5980,12 +5980,12 @@ Proceed to checkout?`;
       el.innerHTML = "";
       return;
     }
-    const esc15 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc16 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const first = live[0];
-    const label = live.length === 1 ? esc15(first.title || "An event") + " is happening now" : live.length + " events happening now";
+    const label = live.length === 1 ? esc16(first.title || "An event") + " is happening now" : live.length + " events happening now";
     const href = live.length === 1 && first.slug ? "?event=" + encodeURIComponent(first.slug) : "javascript:void(0)";
     el.classList.remove("hidden");
-    el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc15(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
+    el.innerHTML = '<a href="' + href + '" data-evt-live="' + esc16(first.id) + '" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold"><span class="relative flex w-2.5 h-2.5 shrink-0"><span class="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60"></span><span class="relative rounded-full bg-rose-600 w-2.5 h-2.5"></span></span><span class="flex-1 truncate">' + label + "</span>" + (live.length === 1 ? '<span aria-hidden="true" class="text-rose-500">\u2192</span>' : "") + "</a>";
     const link = el.querySelector("a[data-evt-live]");
     if (link && live.length === 1) {
       link.addEventListener("click", (e) => {
@@ -6037,13 +6037,13 @@ Proceed to checkout?`;
     });
   }
   function miniCard(event, attendees, goingCount) {
-    const esc15 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
+    const esc16 = H3.escapeHtml || ((s) => String(s == null ? "" : s));
     const d = new Date(event.start_date);
     const day = d.getDate();
     const mon = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
     const rel = H3.relativeDate ? H3.relativeDate(d) : "";
     const href = event.slug ? "?event=" + encodeURIComponent(event.slug) : "javascript:void(0)";
-    const title = esc15(event.title || "Untitled event");
+    const title = esc16(event.title || "Untitled event");
     const loc = event.location_nickname || event.location_text || "";
     let bannerStyle;
     if (event.banner_url) {
@@ -6057,7 +6057,7 @@ Proceed to checkout?`;
     const attLine = attCount ? '<span class="text-[11px] text-gray-500 truncate">' + attCount + " going</span>" : "";
     const isPinnedLlc = event.is_pinned && event.event_type === "llc";
     const pin = isPinnedLlc ? '<span class="evt-date-pin evt-date-pin--mini" aria-label="Pinned LLC event" title="Pinned">\u{1F4CC}</span>' : "";
-    return '<a href="' + href + '" data-evt-mini="' + esc15(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-primary mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc15(rel) : "") + (loc && rel ? " \xB7 " : "") + esc15(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
+    return '<a href="' + href + '" data-evt-mini="' + esc16(event.id) + '" class="snap-start shrink-0 w-[76%] sm:w-64 bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden"><div class="relative aspect-[16/9]" style="' + bannerStyle + '"><div class="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 text-center shadow-sm">' + pin + '<div class="text-[14px] leading-none font-extrabold text-gray-900">' + day + '</div><div class="text-[9px] tracking-wider font-bold text-primary mt-0.5">' + mon + '</div></div></div><div class="p-3"><h3 class="text-sm font-bold text-gray-900 line-clamp-1 leading-snug">' + title + '</h3><p class="text-[12px] text-gray-500 truncate mt-0.5">' + (rel ? esc16(rel) : "") + (loc && rel ? " \xB7 " : "") + esc16(loc) + "</p>" + (attLine ? '<div class="mt-1.5">' + attLine + "</div>" : "") + "</div></a>";
   }
   function renderTopPicks(events, attendees, heroId, eventsById) {
     const rail = document.getElementById("evtTopPicks");
@@ -14465,11 +14465,11 @@ Type the event title to confirm:`);
     }
     return null;
   }
-  function monthlyEstimateHtml(f, esc15) {
+  function monthlyEstimateHtml(f, esc16) {
     const est = monthlyEstimate(f);
     if (!est) return "";
-    if (est.error) return `<p class="ec-help" style="color:#d97706">${esc15(est.error)}</p>`;
-    return `<p class="ec-help" id="ecMonthlyHelper">If someone starts paying monthly today, ~$${esc15(est.monthly)}/month per adult until ${esc15(est.deadlineLabel)}. Actual amounts recalculate at RSVP.</p>`;
+    if (est.error) return `<p class="ec-help" style="color:#d97706">${esc16(est.error)}</p>`;
+    return `<p class="ec-help" id="ecMonthlyHelper">If someone starts paying monthly today, ~$${esc16(est.monthly)}/month per adult until ${esc16(est.deadlineLabel)}. Actual amounts recalculate at RSVP.</p>`;
   }
   function toDatetimeLocalValue(iso) {
     if (!iso) return "";
@@ -16310,7 +16310,7 @@ Type the event title to confirm:`);
     const steps = _steps2();
     const STATE4 = steps.getState();
     const validateStep = steps.validateStep;
-    const esc15 = steps.esc;
+    const esc16 = steps.esc;
     const close4 = steps.close;
     const editing = !!STATE4.editEventId;
     const isLlc = STATE4.form.event_type === "llc";
@@ -16582,8 +16582,8 @@ Type the event title to confirm:`);
     } catch (e) {
       const msg = e && e.message ? e.message : String(e);
       const errBox2 = document.getElementById("ecError");
-      if (errBox2 && typeof esc15 === "function") {
-        errBox2.innerHTML = `<div class="ec-error">${esc15(msg)}</div>`;
+      if (errBox2 && typeof esc16 === "function") {
+        errBox2.innerHTML = `<div class="ec-error">${esc16(msg)}</div>`;
       } else {
         _alert5("Save failed: " + msg, "Could not save");
       }
@@ -17704,15 +17704,24 @@ Type the event title to confirm:`);
   // js/portal/events/manage/shell.js
   var M3A_TABS = [
     { key: "overview", label: "Overview" },
-    { key: "images", label: "Images" },
-    { key: "rsvps", label: "RSVPs" },
-    { key: "notifications", label: "Notifications" },
+    { key: "event", label: "Event" },
+    { key: "people", label: "People" },
     { key: "money", label: "Money" },
     { key: "docs", label: "Docs" },
     { key: "raffle", label: "Raffle" },
-    { key: "comp", label: "Comp" },
-    { key: "danger", label: "Danger Zone" }
+    { key: "comp", label: "Competition" },
+    { key: "danger", label: "Danger" }
   ];
+  var TAB_ALIASES = {
+    images: "event",
+    rsvps: "people",
+    notifications: "people",
+    competition: "comp"
+  };
+  function resolveTabKey(key) {
+    if (!key) return "overview";
+    return TAB_ALIASES[key] || key;
+  }
   function api8() {
     return window.EventsManageShellApi || {};
   }
@@ -17846,10 +17855,21 @@ Type the event title to confirm:`);
   }
   function getVisibleTabs() {
     const st = getState2();
+    const e = st.event || {};
+    const docs = st.eventDocuments || [];
+    const isLlc = e.event_type === "llc";
     return M3A_TABS.filter((t) => {
-      if (t.key !== "notifications") return true;
-      return !!st.canManageNotifications;
+      if (t.key === "docs") return isLlc || docs.length > 0;
+      if (t.key === "raffle") return !!e.raffle_enabled;
+      if (t.key === "comp") return e.event_type === "competition";
+      return true;
     });
+  }
+  function resolveOpenTab(requested) {
+    const key = resolveTabKey(requested);
+    const visible = getVisibleTabs();
+    if (visible.some((t) => t.key === key)) return key;
+    return "overview";
   }
   function renderTabs2() {
     const STATE4 = getState2();
@@ -17917,7 +17937,9 @@ Type the event title to confirm:`);
     /** Full tab definitions (single source of truth). */
     tabs: M3A_TABS,
     getTabs: () => M3A_TABS,
-    getVisibleTabs
+    getVisibleTabs,
+    resolveTabKey,
+    resolveOpenTab
   };
   globalThis.EventsManageShell = manageShellApi;
 
@@ -18528,260 +18550,189 @@ Type the event title to confirm:`);
   };
   globalThis.EventsManageDisclaimersEditor = manageDisclaimersEditorApi;
 
-  // js/portal/events/manage/sms-invites.js
-  var PUBLIC_SITE_URL = "https://justicemcneal.com";
-  var inviteUi = {
-    members: [],
-    selected: /* @__PURE__ */ new Set(),
-    search: "",
-    loading: false,
-    loaded: false,
-    status: "",
-    recentInvites: []
-  };
+  // js/portal/events/manage/amenity-voting.js
+  function api11() {
+    return window.EventsManageOverviewApi || {};
+  }
+  function getState5() {
+    return api11().getState?.() || {};
+  }
   function esc3(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
-  function maskPhone(phone) {
-    const digits = String(phone || "").replace(/\D/g, "");
-    if (digits.length < 4) return "***";
-    return `***-***-${digits.slice(-4)}`;
+  function toDatetimeLocal(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
-  function publicInviteUrl(event) {
-    const slug = event?.slug || "";
-    if (typeof globalThis.evtPublicEventInviteUrl === "function") {
-      return globalThis.evtPublicEventInviteUrl(slug);
+  function normalizeCfg(event) {
+    if (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === "function") {
+      return window.EventsAmenityVoting.normalizeConfig(event?.amenity_voting);
     }
-    return PUBLIC_SITE_URL + "/events/?e=" + encodeURIComponent(slug);
-  }
-  function invitePreviewBody(event) {
-    const title = (event?.title || "Event").trim() || "Event";
-    const url = publicInviteUrl(event);
-    return `${title}: You're invited. ${url}`;
-  }
-  function filteredMembers() {
-    const q = String(inviteUi.search || "").trim().toLowerCase();
-    if (!q) return inviteUi.members;
-    return inviteUi.members.filter((m) => {
-      const name = `${m.first_name || ""} ${m.last_name || ""}`.trim().toLowerCase();
-      const phone = String(m.phone || "").replace(/\D/g, "");
-      return name.includes(q) || phone.includes(q.replace(/\D/g, ""));
-    });
-  }
-  function renderMemberList() {
-    const list = document.getElementById("emSmsInviteList");
-    if (!list) return;
-    if (inviteUi.loading) {
-      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">Loading members with phones\u2026</p>`;
-      return;
-    }
-    const rows = filteredMembers();
-    if (!inviteUi.loaded) {
-      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">Preparing member list\u2026</p>`;
-      return;
-    }
-    if (!inviteUi.members.length) {
-      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">No active members with a phone on file. Add numbers below.</p>`;
-      return;
-    }
-    if (!rows.length) {
-      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">No members match this search.</p>`;
-      return;
-    }
-    list.innerHTML = rows.map((m) => {
-      const name = `${m.first_name || ""} ${m.last_name || ""}`.trim() || "Member";
-      const checked = inviteUi.selected.has(m.id) ? "checked" : "";
-      return `
-            <label class="em-attendee-card" style="cursor:pointer;align-items:flex-start">
-                <input type="checkbox" class="mt-1" data-sms-invite-member="${esc3(m.id)}" ${checked}
-                    style="width:18px;height:18px;accent-color:var(--color-primary,#13366E)">
-                <div class="em-attendee-main" style="margin-left:8px">
-                    <p class="em-attendee-name">${esc3(name)}</p>
-                    <p class="em-attendee-sub">${esc3(maskPhone(m.phone))}</p>
-                </div>
-            </label>`;
-    }).join("");
-    list.querySelectorAll("[data-sms-invite-member]").forEach((cb) => {
-      cb.addEventListener("change", () => {
-        const id = cb.getAttribute("data-sms-invite-member");
-        if (!id) return;
-        if (cb.checked) inviteUi.selected.add(id);
-        else inviteUi.selected.delete(id);
-        updateSelectedCount();
-      });
-    });
-    updateSelectedCount();
-  }
-  function updateSelectedCount() {
-    const el = document.getElementById("emSmsInviteSelectedCount");
-    if (el) el.textContent = String(inviteUi.selected.size);
+    return { enabled: false, options: [], closes_at: null, results_visible: "after_close" };
   }
   function setStatus(msg, isError) {
-    inviteUi.status = msg || "";
-    const el = document.getElementById("emSmsInviteStatus");
+    const el = document.getElementById("emAmenityVoteStatus");
     if (!el) return;
-    el.textContent = inviteUi.status;
+    el.textContent = msg || "";
     el.className = isError ? "text-xs text-red-600 mt-2" : "text-xs text-gray-500 mt-2";
   }
-  async function loadInviteMembers() {
-    inviteUi.loading = true;
-    inviteUi.loaded = false;
-    renderMemberList();
-    try {
-      const { data, error } = await supabaseClient.from("profiles").select("id, first_name, last_name, phone").eq("is_active", true).not("phone", "is", null).neq("phone", "").order("first_name", { ascending: true }).limit(500);
-      if (error) throw error;
-      inviteUi.members = (data || []).filter((r) => String(r.phone || "").trim());
-      inviteUi.loaded = true;
-    } catch (err) {
-      console.error("SMS invite member load failed", err);
-      inviteUi.members = [];
-      inviteUi.loaded = true;
-      setStatus(err.message || "Could not load members with phones.", true);
-    } finally {
-      inviteUi.loading = false;
-      renderMemberList();
-    }
-  }
-  function parseExtraPhones(raw) {
-    return String(raw || "").split(/[\s,;]+/).map((p) => p.trim()).filter(Boolean);
-  }
-  async function loadRecentInvites(eventId2) {
-    if (!eventId2) {
-      inviteUi.recentInvites = [];
-      renderRecentInvites();
-      return;
-    }
-    try {
-      const { data, error } = await supabaseClient.from("sms_messages").select("id, created_at, recipient_count, body").eq("event_id", eventId2).eq("message_type", "event_invite").order("created_at", { ascending: false }).limit(5);
-      if (error) throw error;
-      inviteUi.recentInvites = data || [];
-    } catch (err) {
-      console.error("Recent invite log load failed", err);
-      inviteUi.recentInvites = [];
-    }
-    renderRecentInvites();
-  }
-  function renderRecentInvites() {
-    const el = document.getElementById("emSmsInviteRecent");
-    if (!el) return;
-    const rows = inviteUi.recentInvites || [];
-    if (!rows.length) {
-      el.innerHTML = `<p class="text-xs text-gray-400 italic py-1">No invite SMS sent yet for this event.</p>`;
-      return;
-    }
-    el.innerHTML = rows.map((m) => {
-      const when = m.created_at ? new Date(m.created_at).toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit"
-      }) : "\u2014";
-      const n = Number(m.recipient_count) || 0;
-      return `<p class="text-xs text-gray-600" style="margin:4px 0">${esc3(when)} \xB7 ${n} recipient${n === 1 ? "" : "s"}</p>`;
-    }).join("");
-  }
-  function smsInvitesHtml(event) {
-    if (!event?.slug) return "";
-    const preview = invitePreviewBody(event);
+  function amenityVotingStatusHtml(event) {
+    const cfg = normalizeCfg(event);
+    if (!cfg.enabled) return "";
+    const STATE4 = getState5();
+    const closed = window.EventsAmenityVoting?.isVotingClosed?.(cfg) === true;
+    const closeLabel = cfg.closes_at ? new Date(cfg.closes_at).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    }) : "No close time set";
+    const visibilityLabel = String(cfg.results_visible || "after_close").replace(/_/g, " ");
+    const parties = STATE4.parties || [];
+    const tallies = window.EventsAmenityVoting?.tallyCounts?.(
+      parties,
+      cfg.options.map((o) => o.id)
+    ) || {};
+    const provisional = parties.filter((p) => p.amenity_vote_status === "provisional").length;
+    const resultsInner = window.EventsAmenityVoting?.resultsHtml?.(cfg, tallies, { isHost: true }) || "";
     return `
-        <div class="em-card mt-3" id="emSmsInvitesCard">
+        <div class="em-card mt-3" id="emAmenityVotingCard">
             <div class="em-section-head">
                 <div>
-                    <h3 class="em-section-title">SMS invites</h3>
-                    <p class="em-section-sub">Pick members with phones and/or add numbers. Sends the event name + public link (not a payment link).</p>
+                    <h3 class="em-section-title">Amenity voting</h3>
+                    <p class="em-section-sub">Live status and tallies. Close voting here; change close time and visibility on Event.</p>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mb-2">Message preview</p>
-            <p class="text-sm text-gray-800 mb-3" style="background:var(--color-surface,#EEF2F6);border:1px solid var(--color-border,#D5DFEC);border-radius:10px;padding:10px 12px;line-height:1.4">${esc3(preview)}</p>
-            <div class="flex flex-wrap items-center gap-2 mb-2">
-                <input type="search" id="emSmsInviteSearch" placeholder="Search members\u2026"
-                    class="em-input" style="flex:1;min-width:160px;font-size:16px">
-                <span class="text-xs text-gray-500"><span id="emSmsInviteSelectedCount">0</span> selected</span>
+            <div class="em-metric-grid mb-3">
+                <div class="em-metric"><span>Status</span><strong style="font-size:16px">${closed ? "Closed" : "Open"}</strong><small>${esc3(closeLabel)}</small></div>
+                <div class="em-metric"><span>Options</span><strong>${cfg.options.length}</strong><small>Locked</small></div>
+                <div class="em-metric"><span>Results</span><strong style="font-size:14px">${esc3(visibilityLabel)}</strong><small>Attendee visibility</small></div>
+                <div class="em-metric"><span>Provisional</span><strong>${provisional}</strong><small>Not yet counted</small></div>
             </div>
-            <div id="emSmsInviteList" style="max-height:220px;overflow:auto;margin-bottom:12px"></div>
-            <label class="text-xs text-gray-500 block mb-1" for="emSmsInvitePhones">Extra phone numbers</label>
-            <textarea id="emSmsInvitePhones" rows="2" placeholder="+15551234567, +15559876543"
-                class="em-textarea w-full mb-3" style="font-size:16px"></textarea>
-            <div class="flex flex-wrap gap-2">
-                <button type="button" class="em-btn-primary" id="emSmsInviteSend">Send SMS invites</button>
-                <button type="button" class="em-btn-ghost" id="emSmsInviteClear">Clear selection</button>
+            <div class="ed-amenity-results mb-3" style="background:var(--color-surface,#EEF2F6);border:1px solid var(--color-border,#D5DFEC);border-radius:12px;padding:12px">
+                ${resultsInner || '<p class="text-xs text-gray-400 italic">No counted votes yet.</p>'}
             </div>
-            <p id="emSmsInviteStatus" class="text-xs text-gray-500 mt-2"></p>
-            <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--color-border,#D5DFEC)">
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
-                    <p class="text-xs font-semibold text-gray-700" style="margin:0">Recent invites</p>
-                    <button type="button" class="em-btn-ghost" style="font-size:11px;padding:4px 8px" data-overview-tab="notifications">See all SMS history</button>
-                </div>
-                <div id="emSmsInviteRecent"><p class="text-xs text-gray-400 italic py-1">Loading\u2026</p></div>
-            </div>
+            ${!closed ? `
+            <button type="button" class="em-btn-primary mb-3" id="emAmenityCloseNow" style="font-size:13px">Close voting now</button>
+            ` : `
+            <p class="text-xs text-gray-500 mb-3">Voting is closed.</p>
+            `}
+            <button type="button" class="em-btn-ghost" data-overview-tab="event">Voting settings</button>
+            <p id="emAmenityVoteStatus" class="text-xs text-gray-500 mt-2"></p>
         </div>`;
   }
-  function wireSmsInvites(event) {
-    if (!event?.slug) return;
-    inviteUi.selected = /* @__PURE__ */ new Set();
-    inviteUi.search = "";
-    inviteUi.status = "";
-    setStatus("");
-    const search = document.getElementById("emSmsInviteSearch");
-    search?.addEventListener("input", () => {
-      inviteUi.search = search.value || "";
-      renderMemberList();
-    });
-    document.getElementById("emSmsInviteClear")?.addEventListener("click", () => {
-      inviteUi.selected.clear();
-      const phones = document.getElementById("emSmsInvitePhones");
-      if (phones) phones.value = "";
-      renderMemberList();
-      setStatus("Selection cleared.");
-    });
-    document.getElementById("emSmsInviteSend")?.addEventListener("click", async () => {
-      const btn = document.getElementById("emSmsInviteSend");
-      const phonesEl = document.getElementById("emSmsInvitePhones");
-      const member_ids = [...inviteUi.selected];
-      const phones = parseExtraPhones(phonesEl?.value || "");
-      if (!member_ids.length && !phones.length) {
-        setStatus("Select at least one member or add a phone number.", true);
+  function amenityVotingSettingsHtml(event) {
+    const cfg = normalizeCfg(event);
+    if (!cfg.enabled) return "";
+    const closed = window.EventsAmenityVoting?.isVotingClosed?.(cfg) === true;
+    return `
+        <div class="em-card mb-3" id="emAmenitySettingsCard">
+            <div class="em-section-head">
+                <div>
+                    <h3 class="em-section-title">Amenity voting settings</h3>
+                    <p class="em-section-sub">Option list stays locked after RSVPs. Close time and who can see results can still change.</p>
+                </div>
+            </div>
+            ${closed ? `<p class="text-xs text-gray-500 mb-3">Voting is closed. A future close time reopens it until that moment.</p>` : ""}
+            <label class="text-xs text-gray-500 block mb-1" for="emAmenityClosesAt">Closes at</label>
+            <input type="datetime-local" id="emAmenityClosesAt" class="em-input mb-3"
+                value="${esc3(toDatetimeLocal(cfg.closes_at))}">
+            <label class="text-xs text-gray-500 block mb-1" for="emAmenityResultsVisible">Show results to attendees</label>
+            <select id="emAmenityResultsVisible" class="em-input mb-3">
+                <option value="after_close"${cfg.results_visible === "after_close" ? " selected" : ""}>After voting closes</option>
+                <option value="always"${cfg.results_visible === "always" ? " selected" : ""}>Always</option>
+                <option value="host_only"${cfg.results_visible === "host_only" ? " selected" : ""}>Hosts only</option>
+            </select>
+            <button type="button" class="em-btn-primary" id="emAmenityVoteSave" style="font-size:13px">Save voting settings</button>
+            <p id="emAmenityVoteStatus" class="text-xs text-gray-500 mt-2"></p>
+        </div>`;
+  }
+  async function patchAmenityVoting(nextPartial) {
+    const STATE4 = getState5();
+    const e = STATE4.event;
+    if (!e?.id) throw new Error("Event not loaded.");
+    const cfg = normalizeCfg(e);
+    if (!cfg.enabled) throw new Error("Amenity voting is not enabled on this event.");
+    const merged = {
+      ...cfg,
+      ...nextPartial,
+      enabled: true,
+      options: cfg.options
+    };
+    const normalized = window.EventsAmenityVoting?.normalizeConfig?.(merged) || merged;
+    normalized.enabled = true;
+    normalized.options = cfg.options;
+    const { data, error } = await supabaseClient.from("events").update({ amenity_voting: normalized }).eq("id", e.id).select("amenity_voting").single();
+    if (error) throw error;
+    STATE4.event.amenity_voting = data?.amenity_voting ?? normalized;
+    api11().notifyParent?.("updated", e.id);
+    return STATE4.event.amenity_voting;
+  }
+  async function closeVotingNow() {
+    const ok = window.EventsHelpers?.confirmDialog ? await window.EventsHelpers.confirmDialog({
+      title: "Close voting?",
+      message: "Close amenity voting now? Attendees will no longer be able to cast a vote.",
+      confirmLabel: "Close voting",
+      cancelLabel: "Keep open"
+    }) : window.confirm("Close amenity voting now? Attendees will no longer be able to cast a vote.");
+    if (!ok) return;
+    setStatus("Closing voting\u2026");
+    try {
+      await patchAmenityVoting({ closes_at: (/* @__PURE__ */ new Date()).toISOString() });
+      setStatus("Voting closed.");
+      api11().renderTab?.("overview");
+    } catch (err) {
+      setStatus(err.message || "Could not close voting.", true);
+    }
+  }
+  async function saveVotingSettings() {
+    const closesEl = document.getElementById("emAmenityClosesAt");
+    const visEl = document.getElementById("emAmenityResultsVisible");
+    const closesRaw = closesEl?.value?.trim() || "";
+    let closesAt = null;
+    if (closesRaw) {
+      const d = new Date(closesRaw);
+      if (Number.isNaN(d.getTime())) {
+        setStatus("Enter a valid close date/time.", true);
         return;
       }
-      if (typeof callEdgeFunction !== "function") {
-        setStatus("SMS send is unavailable right now.", true);
-        return;
-      }
-      const prev = btn?.textContent;
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = "Sending\u2026";
-      }
-      setStatus("Sending invites\u2026");
-      try {
-        const result = await callEdgeFunction("send-event-invites", {
-          event_id: event.id,
-          member_ids,
-          phones
-        });
-        if (result?.error) throw new Error(result.error);
-        const dry = result?.dry_run ? " (dry run \u2014 SMS_SEND_ENABLED off)" : "";
-        const parts = [
-          `Sent ${result?.sent ?? 0}${dry}`,
-          result?.skipped_suppressed ? `${result.skipped_suppressed} suppressed` : null,
-          result?.skipped_invalid ? `${result.skipped_invalid} invalid` : null,
-          result?.failed ? `${result.failed} failed` : null
-        ].filter(Boolean);
-        setStatus(parts.join(" \xB7 "));
-        await loadRecentInvites(event.id);
-      } catch (err) {
-        setStatus(err.message || "Could not send invites.", true);
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = prev || "Send SMS invites";
+      closesAt = d.toISOString();
+    }
+    const resultsVisible = visEl?.value || "after_close";
+    setStatus("Saving\u2026");
+    try {
+      await patchAmenityVoting({
+        closes_at: closesAt,
+        results_visible: resultsVisible
+      });
+      setStatus("Saved voting settings.");
+      api11().renderTab?.("event");
+      setTimeout(() => {
+        const el = document.getElementById("emAmenityVoteStatus");
+        if (el) {
+          el.className = "text-xs text-emerald-600 mt-2";
+          el.textContent = "Saved voting settings.";
         }
-      }
-    });
-    loadInviteMembers();
-    loadRecentInvites(event.id);
+      }, 0);
+    } catch (err) {
+      setStatus(err.message || "Could not save.", true);
+    }
+  }
+  function wireAmenityVotingStatus(event) {
+    const cfg = normalizeCfg(event);
+    if (!cfg.enabled) return;
+    document.getElementById("emAmenityCloseNow")?.addEventListener("click", () => closeVotingNow());
+  }
+  function wireAmenityVotingSettings(event) {
+    const cfg = normalizeCfg(event);
+    if (!cfg.enabled) return;
+    document.getElementById("emAmenityVoteSave")?.addEventListener("click", () => saveVotingSettings());
   }
 
   // js/portal/events/manage/hosts.js
@@ -18996,166 +18947,260 @@ Type the event title to confirm:`);
     loadHostCandidates().then(() => renderHostCandidates(event));
   }
 
-  // js/portal/events/manage/amenity-voting.js
-  function api11() {
-    return window.EventsManageOverviewApi || {};
-  }
-  function getState5() {
-    return api11().getState?.() || {};
-  }
+  // js/portal/events/manage/sms-invites.js
+  var PUBLIC_SITE_URL = "https://justicemcneal.com";
+  var inviteUi = {
+    members: [],
+    selected: /* @__PURE__ */ new Set(),
+    search: "",
+    loading: false,
+    loaded: false,
+    status: "",
+    recentInvites: []
+  };
   function esc5(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
-  function toDatetimeLocal(iso) {
-    if (!iso) return "";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "";
-    const pad = (n) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  function maskPhone(phone) {
+    const digits = String(phone || "").replace(/\D/g, "");
+    if (digits.length < 4) return "***";
+    return `***-***-${digits.slice(-4)}`;
   }
-  function normalizeCfg(event) {
-    if (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === "function") {
-      return window.EventsAmenityVoting.normalizeConfig(event?.amenity_voting);
+  function publicInviteUrl(event) {
+    const slug = event?.slug || "";
+    if (typeof globalThis.evtPublicEventInviteUrl === "function") {
+      return globalThis.evtPublicEventInviteUrl(slug);
     }
-    return { enabled: false, options: [], closes_at: null, results_visible: "after_close" };
+    return PUBLIC_SITE_URL + "/events/?e=" + encodeURIComponent(slug);
+  }
+  function invitePreviewBody(event) {
+    const title = (event?.title || "Event").trim() || "Event";
+    const url = publicInviteUrl(event);
+    return `${title}: You're invited. ${url}`;
+  }
+  function filteredMembers() {
+    const q = String(inviteUi.search || "").trim().toLowerCase();
+    if (!q) return inviteUi.members;
+    return inviteUi.members.filter((m) => {
+      const name = `${m.first_name || ""} ${m.last_name || ""}`.trim().toLowerCase();
+      const phone = String(m.phone || "").replace(/\D/g, "");
+      return name.includes(q) || phone.includes(q.replace(/\D/g, ""));
+    });
+  }
+  function renderMemberList() {
+    const list = document.getElementById("emSmsInviteList");
+    if (!list) return;
+    if (inviteUi.loading) {
+      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">Loading members with phones\u2026</p>`;
+      return;
+    }
+    const rows = filteredMembers();
+    if (!inviteUi.loaded) {
+      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">Preparing member list\u2026</p>`;
+      return;
+    }
+    if (!inviteUi.members.length) {
+      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">No active members with a phone on file. Add numbers below.</p>`;
+      return;
+    }
+    if (!rows.length) {
+      list.innerHTML = `<p class="text-xs text-gray-400 italic py-2">No members match this search.</p>`;
+      return;
+    }
+    list.innerHTML = rows.map((m) => {
+      const name = `${m.first_name || ""} ${m.last_name || ""}`.trim() || "Member";
+      const checked = inviteUi.selected.has(m.id) ? "checked" : "";
+      return `
+            <label class="em-attendee-card" style="cursor:pointer;align-items:flex-start">
+                <input type="checkbox" class="mt-1" data-sms-invite-member="${esc5(m.id)}" ${checked}
+                    style="width:18px;height:18px;accent-color:var(--color-primary,#13366E)">
+                <div class="em-attendee-main" style="margin-left:8px">
+                    <p class="em-attendee-name">${esc5(name)}</p>
+                    <p class="em-attendee-sub">${esc5(maskPhone(m.phone))}</p>
+                </div>
+            </label>`;
+    }).join("");
+    list.querySelectorAll("[data-sms-invite-member]").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const id = cb.getAttribute("data-sms-invite-member");
+        if (!id) return;
+        if (cb.checked) inviteUi.selected.add(id);
+        else inviteUi.selected.delete(id);
+        updateSelectedCount();
+      });
+    });
+    updateSelectedCount();
+  }
+  function updateSelectedCount() {
+    const el = document.getElementById("emSmsInviteSelectedCount");
+    if (el) el.textContent = String(inviteUi.selected.size);
   }
   function setStatus2(msg, isError) {
-    const el = document.getElementById("emAmenityVoteStatus");
+    inviteUi.status = msg || "";
+    const el = document.getElementById("emSmsInviteStatus");
     if (!el) return;
-    el.textContent = msg || "";
+    el.textContent = inviteUi.status;
     el.className = isError ? "text-xs text-red-600 mt-2" : "text-xs text-gray-500 mt-2";
   }
-  function amenityVotingHtml(event) {
-    const cfg = normalizeCfg(event);
-    if (!cfg.enabled) return "";
-    const STATE4 = getState5();
-    const closed = window.EventsAmenityVoting?.isVotingClosed?.(cfg) === true;
-    const closeLabel = cfg.closes_at ? new Date(cfg.closes_at).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit"
-    }) : "No close time set";
-    const visibilityLabel = String(cfg.results_visible || "after_close").replace(/_/g, " ");
-    const parties = STATE4.parties || [];
-    const tallies = window.EventsAmenityVoting?.tallyCounts?.(
-      parties,
-      cfg.options.map((o) => o.id)
-    ) || {};
-    const provisional = parties.filter((p) => p.amenity_vote_status === "provisional").length;
-    const resultsInner = window.EventsAmenityVoting?.resultsHtml?.(cfg, tallies, { isHost: true }) || "";
+  async function loadInviteMembers() {
+    inviteUi.loading = true;
+    inviteUi.loaded = false;
+    renderMemberList();
+    try {
+      const { data, error } = await supabaseClient.from("profiles").select("id, first_name, last_name, phone").eq("is_active", true).not("phone", "is", null).neq("phone", "").order("first_name", { ascending: true }).limit(500);
+      if (error) throw error;
+      inviteUi.members = (data || []).filter((r) => String(r.phone || "").trim());
+      inviteUi.loaded = true;
+    } catch (err) {
+      console.error("SMS invite member load failed", err);
+      inviteUi.members = [];
+      inviteUi.loaded = true;
+      setStatus2(err.message || "Could not load members with phones.", true);
+    } finally {
+      inviteUi.loading = false;
+      renderMemberList();
+    }
+  }
+  function parseExtraPhones(raw) {
+    return String(raw || "").split(/[\s,;]+/).map((p) => p.trim()).filter(Boolean);
+  }
+  async function loadRecentInvites(eventId2) {
+    if (!eventId2) {
+      inviteUi.recentInvites = [];
+      renderRecentInvites();
+      return;
+    }
+    try {
+      const { data, error } = await supabaseClient.from("sms_messages").select("id, created_at, recipient_count, body").eq("event_id", eventId2).eq("message_type", "event_invite").order("created_at", { ascending: false }).limit(5);
+      if (error) throw error;
+      inviteUi.recentInvites = data || [];
+    } catch (err) {
+      console.error("Recent invite log load failed", err);
+      inviteUi.recentInvites = [];
+    }
+    renderRecentInvites();
+  }
+  function renderRecentInvites() {
+    const el = document.getElementById("emSmsInviteRecent");
+    if (!el) return;
+    const rows = inviteUi.recentInvites || [];
+    if (!rows.length) {
+      el.innerHTML = `<p class="text-xs text-gray-400 italic py-1">No invite SMS sent yet for this event.</p>`;
+      return;
+    }
+    el.innerHTML = rows.map((m) => {
+      const when = m.created_at ? new Date(m.created_at).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      }) : "\u2014";
+      const n = Number(m.recipient_count) || 0;
+      return `<p class="text-xs text-gray-600" style="margin:4px 0">${esc5(when)} \xB7 ${n} recipient${n === 1 ? "" : "s"}</p>`;
+    }).join("");
+  }
+  function smsInvitesHtml(event) {
+    if (!event?.slug) return "";
+    const preview = invitePreviewBody(event);
     return `
-        <div class="em-card mt-3" id="emAmenityVotingCard">
+        <div class="em-card mt-3" id="emSmsInvitesCard">
             <div class="em-section-head">
                 <div>
-                    <h3 class="em-section-title">Amenity voting</h3>
-                    <p class="em-section-sub">Close voting and control when attendees see results. Option list stays locked after RSVPs.</p>
+                    <h3 class="em-section-title">SMS invites</h3>
+                    <p class="em-section-sub">Pick members with phones and/or add numbers. Sends the event name + public link (not a payment link).</p>
                 </div>
             </div>
-            <div class="em-metric-grid mb-3">
-                <div class="em-metric"><span>Status</span><strong style="font-size:16px">${closed ? "Closed" : "Open"}</strong><small>${esc5(closeLabel)}</small></div>
-                <div class="em-metric"><span>Options</span><strong>${cfg.options.length}</strong><small>Locked</small></div>
-                <div class="em-metric"><span>Results</span><strong style="font-size:14px">${esc5(visibilityLabel)}</strong><small>Attendee visibility</small></div>
-                <div class="em-metric"><span>Provisional</span><strong>${provisional}</strong><small>Not yet counted</small></div>
+            <p class="text-xs text-gray-500 mb-2">Message preview</p>
+            <p class="text-sm text-gray-800 mb-3" style="background:var(--color-surface,#EEF2F6);border:1px solid var(--color-border,#D5DFEC);border-radius:10px;padding:10px 12px;line-height:1.4">${esc5(preview)}</p>
+            <div class="flex flex-wrap items-center gap-2 mb-2">
+                <input type="search" id="emSmsInviteSearch" placeholder="Search members\u2026"
+                    class="em-input" style="flex:1;min-width:160px;font-size:16px">
+                <span class="text-xs text-gray-500"><span id="emSmsInviteSelectedCount">0</span> selected</span>
             </div>
-            <div class="ed-amenity-results mb-3" style="background:var(--color-surface,#EEF2F6);border:1px solid var(--color-border,#D5DFEC);border-radius:12px;padding:12px">
-                ${resultsInner || '<p class="text-xs text-gray-400 italic">No counted votes yet.</p>'}
-            </div>
-            ${!closed ? `
-            <button type="button" class="em-btn-primary mb-3" id="emAmenityCloseNow" style="font-size:13px">Close voting now</button>
-            ` : `
-            <p class="text-xs text-gray-500 mb-3">Voting is closed. You can still change results visibility or set a later reopen time below (sets a future close).</p>
-            `}
-            <label class="text-xs text-gray-500 block mb-1" for="emAmenityClosesAt">Closes at</label>
-            <input type="datetime-local" id="emAmenityClosesAt" class="text-sm w-full mb-3"
-                value="${esc5(toDatetimeLocal(cfg.closes_at))}"
-                style="border:1px solid var(--color-border,#D5DFEC);border-radius:8px;padding:8px 10px">
-            <label class="text-xs text-gray-500 block mb-1" for="emAmenityResultsVisible">Show results to attendees</label>
-            <select id="emAmenityResultsVisible" class="text-sm w-full mb-3"
-                style="border:1px solid var(--color-border,#D5DFEC);border-radius:8px;padding:8px 10px">
-                <option value="after_close"${cfg.results_visible === "after_close" ? " selected" : ""}>After voting closes</option>
-                <option value="always"${cfg.results_visible === "always" ? " selected" : ""}>Always</option>
-                <option value="host_only"${cfg.results_visible === "host_only" ? " selected" : ""}>Hosts only</option>
-            </select>
+            <div id="emSmsInviteList" style="max-height:220px;overflow:auto;margin-bottom:12px"></div>
+            <label class="text-xs text-gray-500 block mb-1" for="emSmsInvitePhones">Extra phone numbers</label>
+            <textarea id="emSmsInvitePhones" rows="2" placeholder="+15551234567, +15559876543"
+                class="em-textarea w-full mb-3" style="font-size:16px"></textarea>
             <div class="flex flex-wrap gap-2">
-                <button type="button" class="em-btn-primary" id="emAmenityVoteSave" style="font-size:13px">Save voting settings</button>
+                <button type="button" class="em-btn-primary" id="emSmsInviteSend">Send SMS invites</button>
+                <button type="button" class="em-btn-ghost" id="emSmsInviteClear">Clear selection</button>
             </div>
-            <p id="emAmenityVoteStatus" class="text-xs text-gray-500 mt-2"></p>
+            <p id="emSmsInviteStatus" class="text-xs text-gray-500 mt-2"></p>
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--color-border,#D5DFEC)">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                    <p class="text-xs font-semibold text-gray-700" style="margin:0">Recent invites</p>
+                    <button type="button" class="em-btn-ghost" style="font-size:11px;padding:4px 8px" data-scroll-people-reach>See all SMS history</button>
+                </div>
+                <div id="emSmsInviteRecent"><p class="text-xs text-gray-400 italic py-1">Loading\u2026</p></div>
+            </div>
         </div>`;
   }
-  async function patchAmenityVoting(nextPartial) {
-    const STATE4 = getState5();
-    const e = STATE4.event;
-    if (!e?.id) throw new Error("Event not loaded.");
-    const cfg = normalizeCfg(e);
-    if (!cfg.enabled) throw new Error("Amenity voting is not enabled on this event.");
-    const merged = {
-      ...cfg,
-      ...nextPartial,
-      enabled: true,
-      options: cfg.options
-    };
-    const normalized = window.EventsAmenityVoting?.normalizeConfig?.(merged) || merged;
-    normalized.enabled = true;
-    normalized.options = cfg.options;
-    const { data, error } = await supabaseClient.from("events").update({ amenity_voting: normalized }).eq("id", e.id).select("amenity_voting").single();
-    if (error) throw error;
-    STATE4.event.amenity_voting = data?.amenity_voting ?? normalized;
-    api11().notifyParent?.("updated", e.id);
-    return STATE4.event.amenity_voting;
-  }
-  async function closeVotingNow() {
-    if (!confirm("Close amenity voting now? Attendees will no longer be able to cast a vote.")) return;
-    setStatus2("Closing voting\u2026");
-    try {
-      await patchAmenityVoting({ closes_at: (/* @__PURE__ */ new Date()).toISOString() });
-      setStatus2("Voting closed.");
-      api11().renderTab?.("overview");
-    } catch (err) {
-      setStatus2(err.message || "Could not close voting.", true);
-    }
-  }
-  async function saveVotingSettings() {
-    const closesEl = document.getElementById("emAmenityClosesAt");
-    const visEl = document.getElementById("emAmenityResultsVisible");
-    const closesRaw = closesEl?.value?.trim() || "";
-    let closesAt = null;
-    if (closesRaw) {
-      const d = new Date(closesRaw);
-      if (Number.isNaN(d.getTime())) {
-        setStatus2("Enter a valid close date/time.", true);
+  function wireSmsInvites(event) {
+    if (!event?.slug) return;
+    inviteUi.selected = /* @__PURE__ */ new Set();
+    inviteUi.search = "";
+    inviteUi.status = "";
+    setStatus2("");
+    const search = document.getElementById("emSmsInviteSearch");
+    search?.addEventListener("input", () => {
+      inviteUi.search = search.value || "";
+      renderMemberList();
+    });
+    document.getElementById("emSmsInviteClear")?.addEventListener("click", () => {
+      inviteUi.selected.clear();
+      const phones = document.getElementById("emSmsInvitePhones");
+      if (phones) phones.value = "";
+      renderMemberList();
+      setStatus2("Selection cleared.");
+    });
+    document.getElementById("emSmsInviteSend")?.addEventListener("click", async () => {
+      const btn = document.getElementById("emSmsInviteSend");
+      const phonesEl = document.getElementById("emSmsInvitePhones");
+      const member_ids = [...inviteUi.selected];
+      const phones = parseExtraPhones(phonesEl?.value || "");
+      if (!member_ids.length && !phones.length) {
+        setStatus2("Select at least one member or add a phone number.", true);
         return;
       }
-      closesAt = d.toISOString();
-    }
-    const resultsVisible = visEl?.value || "after_close";
-    setStatus2("Saving\u2026");
-    try {
-      await patchAmenityVoting({
-        closes_at: closesAt,
-        results_visible: resultsVisible
-      });
-      setStatus2("Saved voting settings.");
-      api11().renderTab?.("overview");
-      setTimeout(() => {
-        const el = document.getElementById("emAmenityVoteStatus");
-        if (el) {
-          el.className = "text-xs text-emerald-600 mt-2";
-          el.textContent = "Saved voting settings.";
+      if (typeof callEdgeFunction !== "function") {
+        setStatus2("SMS send is unavailable right now.", true);
+        return;
+      }
+      const prev = btn?.textContent;
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Sending\u2026";
+      }
+      setStatus2("Sending invites\u2026");
+      try {
+        const result = await callEdgeFunction("send-event-invites", {
+          event_id: event.id,
+          member_ids,
+          phones
+        });
+        if (result?.error) throw new Error(result.error);
+        const dry = result?.dry_run ? " (dry run \u2014 SMS_SEND_ENABLED off)" : "";
+        const parts = [
+          `Sent ${result?.sent ?? 0}${dry}`,
+          result?.skipped_suppressed ? `${result.skipped_suppressed} suppressed` : null,
+          result?.skipped_invalid ? `${result.skipped_invalid} invalid` : null,
+          result?.failed ? `${result.failed} failed` : null
+        ].filter(Boolean);
+        setStatus2(parts.join(" \xB7 "));
+        await loadRecentInvites(event.id);
+      } catch (err) {
+        setStatus2(err.message || "Could not send invites.", true);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = prev || "Send SMS invites";
         }
-      }, 0);
-    } catch (err) {
-      setStatus2(err.message || "Could not save.", true);
-    }
-  }
-  function wireAmenityVoting(event) {
-    const cfg = normalizeCfg(event);
-    if (!cfg.enabled) return;
-    document.getElementById("emAmenityCloseNow")?.addEventListener("click", () => closeVotingNow());
-    document.getElementById("emAmenityVoteSave")?.addEventListener("click", () => saveVotingSettings());
+      }
+    });
+    loadInviteMembers();
+    loadRecentInvites(event.id);
   }
 
   // js/portal/events/manage/overview.js
@@ -19179,19 +19224,6 @@ Type the event title to confirm:`);
       return Number(e.adult_price_cents);
     }
     return Number(e?.rsvp_cost_cents || 0);
-  }
-  function capacityLabel(e) {
-    const mode = e?.capacity_mode || "none";
-    if (mode === "none") return "No limit";
-    const counts = e?.capacity_counts === "all" ? "adults + kids" : "adults only";
-    const cap = mode === "soft" ? "Soft cap" : "Hard cap";
-    const n = e?.max_participants || "\u2014";
-    return `${cap} \xB7 ${n} (${counts})`;
-  }
-  function pricingModeLabel(e) {
-    if (e?.pricing_mode === "paid") return "Paid";
-    if (e?.pricing_mode === "free_paid_raffle") return "Free + paid raffle";
-    return "Free";
   }
   function publicEventUrl(event) {
     const slug = event?.slug || "";
@@ -19240,7 +19272,6 @@ Type the event title to confirm:`);
     const checked = STATE4.checkins.length;
     const adultCents = adultPriceCents(e);
     const revenue = paid * adultCents;
-    const startLocal = new Date(e.start_date).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
     const isLlc = e.event_type === "llc";
     const minNeeded = Number(e.min_participants || 0);
     const thresholdPct = minNeeded ? Math.min(100, Math.round(going / minNeeded * 100)) : 0;
@@ -19269,7 +19300,7 @@ Type the event title to confirm:`);
             </div>
             <p class="em-op-copy">${thresholdCopy}</p>
             <div class="em-op-progress"><span style="width:${thresholdPct}%"></span></div>
-            <div class="em-op-meta"><span class="em-op-chip">${thresholdPct}% filled</span><button class="em-btn-ghost" data-overview-tab="rsvps">Review RSVPs</button></div>
+            <div class="em-op-meta"><span class="em-op-chip">${thresholdPct}% filled</span><button class="em-btn-ghost" data-overview-tab="people">Review RSVPs</button></div>
         </div>` : "";
     let transportCard = "";
     if (isLlc && transportMode) {
@@ -19316,7 +19347,6 @@ Type the event title to confirm:`);
             <div class="em-op-meta"><button class="em-btn-primary" data-overview-tab="docs">Manage Docs</button></div>
         </div>` : "";
     const operationsHtml = [thresholdCard, transportCard, documentsCard].filter(Boolean).join("");
-    const showFeaturedToggle = typeof canManageEventBanners === "function" && canManageEventBanners();
     const llcBudgetLine = isLlc && budgetIncluded > 0 ? `<p class="text-xs text-gray-500 mb-4">Trip budget <strong>${money(budgetIncluded)}</strong> \xB7 Collected <strong>${money(revenue)}</strong> \xB7 <button type="button" class="text-brand-600 font-semibold hover:underline" data-overview-tab="money" style="background:none;border:none;padding:0;cursor:pointer">View Money</button></p>` : isLlc ? `<p class="text-xs text-gray-500 mb-4">Collected <strong>${money(revenue)}</strong> \xB7 <button type="button" class="text-brand-600 font-semibold hover:underline" data-overview-tab="money" style="background:none;border:none;padding:0;cursor:pointer">View Money budget</button></p>` : "";
     return `
         ${llcBudgetLine}
@@ -19331,7 +19361,7 @@ Type the event title to confirm:`);
 
         ${e.slug ? `
         <div class="em-card mb-3" id="emAnnounceCard">
-            <div class="em-section-head"><div><h3 class="em-section-title">Announce</h3><p class="em-section-sub">Share the invite and send SMS invites before opening the full editor.</p></div></div>
+            <div class="em-section-head"><div><h3 class="em-section-title">Announce</h3><p class="em-section-sub">Share the invite link and QR. SMS lives on People.</p></div></div>
             <canvas id="emInviteQR" style="display:block;margin:0 auto;border-radius:12px"></canvas>
             <p class="text-xs text-gray-400 text-center mt-2 break-all">${esc6(inviteUrl)}</p>
             <div class="flex flex-wrap justify-center gap-2 mt-3 mb-1">
@@ -19339,90 +19369,18 @@ Type the event title to confirm:`);
                 <button class="em-btn-primary" data-download-invite-qr>Download QR</button>
                 <button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>
             </div>
-        </div>
-        ${smsInvitesHtml(e)}` : ""}
-
-        <div class="em-card mb-3">
-            <div class="em-section-head" style="margin-bottom:12px">
-                <div>
-                    <h3 class="em-section-title">Full event editor</h3>
-                    <p class="em-section-sub">Edit About, Included, When &amp; Where, pricing${(e.event_type || "member") === "llc" ? ", LLC settings," : ""}${e.event_type === "competition" ? " Competition settings," : ""} and disclaimers in the create sheet.</p>
-                </div>
-            </div>
-            ${(e.event_type || "member") === "member" || e.event_type === "llc" || e.event_type === "competition" ? `<button type="button" id="emEditEventBtn" class="em-btn-primary">Edit event</button>${e.event_type === "competition" ? '<p class="text-xs text-gray-500 mt-2">Competition prizes and rules lock after the first competitor registers.</p>' : ""}` : `<p class="text-xs text-gray-500">Sheet editing is available for member, LLC, and competition events.</p>`}
-        </div>
-
-        <div class="em-card mb-3">
-            <h3 class="font-bold text-gray-800 text-sm mb-3">Details</h3>
-            <div class="space-y-2 text-sm">
-                <div class="flex justify-between gap-3"><span class="text-gray-500">When</span><span class="text-gray-800 font-medium text-right">${startLocal}</span></div>
-                ${e.location_nickname ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Where</span><span class="text-gray-800 font-medium text-right truncate">${esc6(e.location_nickname)}</span></div>` : ""}
-                <div class="flex justify-between gap-3"><span class="text-gray-500">Status</span><span class="text-gray-800 font-medium uppercase tracking-wide text-xs">${e.status}</span></div>
-                <div class="flex justify-between gap-3"><span class="text-gray-500">Pricing</span><span class="text-gray-800 font-medium">${pricingModeLabel(e)}</span></div>
-                ${e.pricing_mode === "paid" ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Adult price</span><span class="text-gray-800 font-medium">${money(adultCents)}</span></div>` : ""}
-                ${e.pricing_mode === "paid" ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Kids</span><span class="text-gray-800 font-medium">${e.kids_free !== false ? "Free" : `${money(e.kid_price_cents)} per child`}</span></div>` : ""}
-                ${e.fund_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Fund deadline</span><span class="text-gray-800 font-medium">${new Date(e.fund_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>` : ""}
-                <div class="flex justify-between gap-3"><span class="text-gray-500">Capacity</span><span class="text-gray-800 font-medium text-right">${esc6(capacityLabel(e))}</span></div>
-                ${e.rsvp_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">RSVP deadline</span><span class="text-gray-800 font-medium">${new Date(e.rsvp_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></div>` : ""}
-            </div>
-        </div>
-
-        ${pricingEditorHtml(STATE4)}
-
-        ${disclaimersEditorHtml(STATE4)}
-
-        <div class="em-card mb-3" id="emCopyEditorCard">
-            <div class="em-section-head" style="margin-bottom:12px">
-                <div>
-                    <h3 class="em-section-title">Event copy</h3>
-                    <p class="em-section-sub">Edit the title and description shown across the portal and invite page.</p>
-                </div>
-            </div>
-            <form id="emCopyForm" class="space-y-3">
-                <div>
-                    <label for="emCopyTitle" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Title *</label>
-                    <input id="emCopyTitle" class="em-input" type="text" maxlength="120" required value="${esc6(e.title || "")}">
-                </div>
-                <div>
-                    <label for="emCopyDescription" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Description</label>
-                    <textarea id="emCopyDescription" class="em-textarea" rows="4" maxlength="2000">${esc6(e.description || "")}</textarea>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <button type="submit" id="emCopySave" class="em-btn-primary">Save changes</button>
-                    <button type="button" id="emCopyCancel" class="em-btn-ghost">Cancel</button>
-                    <span id="emCopyStatus" class="text-xs text-gray-400"></span>
-                </div>
-            </form>
-        </div>
-
-        ${showFeaturedToggle ? `
-        <div class="em-card mb-3">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="font-bold text-gray-800 text-sm">&#9733; Featured on portal</p>
-                    <p class="text-xs text-gray-500 mt-0.5">Show this event in the hero banner on the portal events page.</p>
-                </div>
-                <button id="emFeaturedToggle"
-                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${STATE4.event.is_featured ? "bg-brand-600" : "bg-gray-200"}"
-                    role="switch" aria-checked="${STATE4.event.is_featured ? "true" : "false"}"
-                    onclick="window._emToggleFeatured()"
-                >
-                    <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${STATE4.event.is_featured ? "translate-x-5" : "translate-x-0"}"></span>
-                </button>
-            </div>
         </div>` : ""}
 
         <div class="em-card">
-            <h3 class="font-bold text-gray-800 text-sm mb-3">Quick actions</h3>
+            <h3 class="font-bold text-gray-800 text-sm mb-3">Next actions</h3>
             <div class="flex flex-wrap gap-2">
+                <button type="button" class="em-btn-primary" data-overview-tab="event">Edit event</button>
+                <button type="button" class="em-btn-ghost" data-overview-tab="money">View money</button>
                 ${portalLink}
-                ${e.slug ? `<button class="em-btn-ghost" data-copy-invite-url>Copy invite link</button>` : ""}
-                ${e.checkin_enabled !== false && e.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(e.status) ? `<button class="em-btn-ghost" onclick="window.EventsManage.close();setTimeout(()=>window.evtOpenScanner&&window.evtOpenScanner('${STATE4.eventId}'),150)"><svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>Scan Attendees</button>` : ""}
+                ${e.checkin_enabled !== false && e.checkin_mode === "attendee_ticket" && ["open", "confirmed", "active"].includes(e.status) ? `<button class="em-btn-ghost" onclick="window.EventsManage.close();setTimeout(()=>window.evtOpenScanner&&window.evtOpenScanner('${STATE4.eventId}'),150)"><svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>Scan attendees</button>` : ""}
             </div>
-            <p class="text-xs text-gray-400 mt-3">Tap any tab above for Money, Docs, Raffle, or Comp details.</p>
         </div>
-        ${hostsHtml(e)}
-        ${amenityVotingHtml(e)}
+        ${amenityVotingStatusHtml(e)}
         ${e.checkin_enabled !== false && e.checkin_mode === "venue_scan" && e.venue_qr_token ? `
         <div class="em-card mt-3">
             <h3 class="font-bold text-gray-800 text-sm mb-3">\u{1F4CD} Venue QR Code</h3>
@@ -19452,28 +19410,185 @@ Type the event title to confirm:`);
     document.getElementById("emSheetContent").querySelectorAll("[data-download-invite-qr]").forEach((btn) => {
       btn.addEventListener("click", () => downloadCanvasPng("emInviteQR", `${safeFilename(e.slug || e.title || "event")}-invite-qr.png`));
     });
-    wireSmsInvites(e);
-    wireHosts(e);
-    wireAmenityVoting(e);
+    wireAmenityVotingStatus(e);
     document.getElementById("emSheetContent").querySelectorAll("[data-overview-tab]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        STATE4.activeTab = btn.dataset.overviewTab;
+        const requested = btn.dataset.overviewTab;
+        STATE4.activeTab = window.EventsManageShell?.resolveTabKey?.(requested) || requested;
         api12().renderTabs?.();
         api12().renderTab?.(STATE4.activeTab);
       });
     });
+  }
+  async function ensureQrCode() {
+    if (typeof globalThis.evtEnsureQRCode === "function") return window.evtEnsureQRCode();
+    return globalThis.QRCode;
+  }
+  async function renderOverviewQrs(inviteUrl, e) {
+    const inviteCanvas = document.getElementById("emInviteQR");
+    const venueCanvas = document.getElementById("emVenueQR");
+    if ((!inviteCanvas || !e.slug) && (!venueCanvas || !e.venue_qr_token)) return;
+    try {
+      const qr = await ensureQrCode();
+      if (inviteCanvas?.isConnected && e.slug) {
+        qr.toCanvas(inviteCanvas, inviteUrl, { width: 220, margin: 2, color: { dark: "#111827", light: "#ffffff" } });
+      }
+      if (venueCanvas?.isConnected && e.venue_qr_token) {
+        qr.toCanvas(venueCanvas, `${window.location.origin}/events/?e=${encodeURIComponent(e.slug || "")}&checkin=1`, { width: 200, margin: 2 });
+      }
+    } catch (err) {
+      console.warn("[events/manage] QR code renderer unavailable", err);
+    }
+  }
+  var manageOverviewApi = {
+    overviewHtml,
+    wireOverview,
+    ensureQrCode,
+    renderOverviewQrs
+  };
+  globalThis.EventsManageOverview = manageOverviewApi;
+
+  // js/portal/events/manage/event.js
+  function api13() {
+    return window.EventsManageEventApi || {};
+  }
+  function getState7() {
+    return api13().getState?.() || {};
+  }
+  function esc7(s) {
+    const el = document.createElement("span");
+    el.textContent = s == null ? "" : String(s);
+    return el.innerHTML;
+  }
+  function money2(cents) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format((cents || 0) / 100);
+  }
+  function adultPriceCents2(e) {
+    if (e?.adult_price_cents != null && Number.isFinite(Number(e.adult_price_cents))) {
+      return Number(e.adult_price_cents);
+    }
+    return Number(e?.rsvp_cost_cents || 0);
+  }
+  function capacityLabel(e) {
+    const mode = e?.capacity_mode || "none";
+    if (mode === "none") return "No limit";
+    const counts = e?.capacity_counts === "all" ? "adults + kids" : "adults only";
+    const cap = mode === "soft" ? "Soft cap" : "Hard cap";
+    const n = e?.max_participants || "\u2014";
+    return `${cap} \xB7 ${n} (${counts})`;
+  }
+  function pricingModeLabel(e) {
+    if (e?.pricing_mode === "paid") return "Paid";
+    if (e?.pricing_mode === "free_paid_raffle") return "Free + paid raffle";
+    return "Free";
+  }
+  function eventHtml() {
+    const STATE4 = getState7();
+    const e = STATE4.event;
+    if (!e) return "";
+    const Images2 = window.EventsManageImages;
+    const startLocal = new Date(e.start_date).toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    });
+    const adultCents = adultPriceCents2(e);
+    const showFeaturedToggle = typeof canManageEventBanners === "function" && canManageEventBanners();
+    const type = e.event_type || "member";
+    return `
+        <div class="em-card mb-3">
+            <div class="em-section-head" style="margin-bottom:12px">
+                <div>
+                    <h3 class="em-section-title">Full event editor</h3>
+                    <p class="em-section-sub">Edit About, Included, When &amp; Where${type === "llc" ? ", LLC settings," : ""}${type === "competition" ? " Competition settings," : ""} and voting options in the create sheet.</p>
+                </div>
+            </div>
+            ${type === "member" || type === "llc" || type === "competition" ? `<button type="button" id="emEditEventBtn" class="em-btn-primary">Edit event</button>${type === "competition" ? '<p class="text-xs text-gray-500 mt-2">Competition prizes and rules lock after the first competitor registers.</p>' : ""}` : `<p class="text-xs text-gray-500">Sheet editing is available for member, LLC, and competition events.</p>`}
+        </div>
+
+        <div class="em-card mb-3">
+            <h3 class="font-bold text-gray-800 text-sm mb-3">Details</h3>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between gap-3"><span class="text-gray-500">When</span><span class="text-gray-800 font-medium text-right">${startLocal}</span></div>
+                ${e.location_nickname ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Where</span><span class="text-gray-800 font-medium text-right truncate">${esc7(e.location_nickname)}</span></div>` : ""}
+                <div class="flex justify-between gap-3"><span class="text-gray-500">Status</span><span class="text-gray-800 font-medium uppercase tracking-wide text-xs">${esc7(e.status || "")}</span></div>
+                <div class="flex justify-between gap-3"><span class="text-gray-500">Pricing</span><span class="text-gray-800 font-medium">${pricingModeLabel(e)}</span></div>
+                ${e.pricing_mode === "paid" ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Adult price</span><span class="text-gray-800 font-medium">${money2(adultCents)}</span></div>` : ""}
+                ${e.pricing_mode === "paid" ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Kids</span><span class="text-gray-800 font-medium">${e.kids_free !== false ? "Free" : `${money2(e.kid_price_cents)} per child`}</span></div>` : ""}
+                ${e.fund_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">Fund deadline</span><span class="text-gray-800 font-medium">${new Date(e.fund_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>` : ""}
+                <div class="flex justify-between gap-3"><span class="text-gray-500">Capacity</span><span class="text-gray-800 font-medium text-right">${esc7(capacityLabel(e))}</span></div>
+                ${e.rsvp_deadline ? `<div class="flex justify-between gap-3"><span class="text-gray-500">RSVP deadline</span><span class="text-gray-800 font-medium">${new Date(e.rsvp_deadline).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span></div>` : ""}
+            </div>
+        </div>
+
+        <div class="em-card mb-3" id="emCopyEditorCard">
+            <div class="em-section-head" style="margin-bottom:12px">
+                <div>
+                    <h3 class="em-section-title">Event copy</h3>
+                    <p class="em-section-sub">Title and description shown across the portal and invite page.</p>
+                </div>
+            </div>
+            <form id="emCopyForm" class="space-y-3">
+                <div>
+                    <label for="emCopyTitle" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Title *</label>
+                    <input id="emCopyTitle" class="em-input" type="text" maxlength="120" required value="${esc7(e.title || "")}">
+                </div>
+                <div>
+                    <label for="emCopyDescription" class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Description</label>
+                    <textarea id="emCopyDescription" class="em-textarea" rows="4" maxlength="2000">${esc7(e.description || "")}</textarea>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="submit" id="emCopySave" class="em-btn-primary">Save changes</button>
+                    <button type="button" id="emCopyCancel" class="em-btn-ghost">Cancel</button>
+                    <span id="emCopyStatus" class="text-xs text-gray-400"></span>
+                </div>
+            </form>
+        </div>
+
+        ${showFeaturedToggle ? `
+        <div class="em-card mb-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="font-bold text-gray-800 text-sm">Featured on portal</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Show this event in the hero banner on the portal events page.</p>
+                </div>
+                <button id="emFeaturedToggle"
+                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${STATE4.event.is_featured ? "bg-brand-600" : "bg-gray-200"}"
+                    role="switch" aria-checked="${STATE4.event.is_featured ? "true" : "false"}"
+                    onclick="window._emToggleFeatured()"
+                >
+                    <span class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ${STATE4.event.is_featured ? "translate-x-5" : "translate-x-0"}"></span>
+                </button>
+            </div>
+        </div>` : ""}
+
+        ${typeof Images2?.imagesHtml === "function" ? Images2.imagesHtml() : ""}
+        ${pricingEditorHtml(STATE4)}
+        ${disclaimersEditorHtml(STATE4)}
+        ${amenityVotingSettingsHtml(e)}
+    `;
+  }
+  function wireEvent() {
+    const STATE4 = getState7();
+    const e = STATE4.event;
+    if (!e) return;
+    window.EventsManageImages?.wireImages?.();
     wirePricingEditor();
     wireDisclaimersEditor();
+    wireAmenityVotingSettings(e);
     document.getElementById("emEditEventBtn")?.addEventListener("click", () => {
-      const eventId2 = STATE4.eventId || STATE4.event?.id;
+      const eventId2 = STATE4.eventId || e.id;
       if (!eventId2) return;
-      if (window.EventsManage && typeof window.EventsManage.close === "function") {
-        window.EventsManage.close();
-      }
+      window.EventsManage?.close?.();
       setTimeout(() => {
-        if (window.EventsCreate && typeof window.EventsCreate.open === "function") {
-          window.EventsCreate.open({ eventId: eventId2 });
-        }
+        window.EventsCreate?.open?.({ eventId: eventId2 });
       }, 200);
     });
     const copyForm = document.getElementById("emCopyForm");
@@ -19485,8 +19600,8 @@ Type the event title to confirm:`);
       saveEventCopy(copyForm);
     });
     document.getElementById("emCopyCancel")?.addEventListener("click", () => {
-      if (copyTitle) copyTitle.value = STATE4.event?.title || "";
-      if (copyDescription) copyDescription.value = STATE4.event?.description || "";
+      if (copyTitle) copyTitle.value = e.title || "";
+      if (copyDescription) copyDescription.value = e.description || "";
       if (copyStatus) {
         copyStatus.className = "text-xs text-gray-400";
         copyStatus.textContent = "Changes discarded";
@@ -19505,7 +19620,7 @@ Type the event title to confirm:`);
     }
   }
   async function saveEventCopy(form) {
-    const STATE4 = getState6();
+    const STATE4 = getState7();
     const e = STATE4.event;
     if (!e || !form) return;
     const titleInput = document.getElementById("emCopyTitle");
@@ -19531,8 +19646,8 @@ Type the event title to confirm:`);
       if (error) throw error;
       STATE4.event.title = data?.title || title;
       STATE4.event.description = data?.description || null;
-      api12().renderHeader?.();
-      api12().renderTab?.("overview");
+      api13().renderHeader?.();
+      api13().renderTab?.("event");
       setTimeout(() => {
         const refreshedStatus = document.getElementById("emCopyStatus");
         if (refreshedStatus) {
@@ -19543,77 +19658,59 @@ Type the event title to confirm:`);
           }, 2500);
         }
       }, 0);
-      api12().notifyParent?.("updated", e.id);
+      api13().notifyParent?.("updated", e.id);
     } catch (err) {
       setStatus3("Update failed: " + (err.message || "unknown error"), true);
     } finally {
       if (saveBtn) saveBtn.disabled = false;
     }
   }
-  async function ensureQrCode() {
-    if (typeof globalThis.evtEnsureQRCode === "function") return window.evtEnsureQRCode();
-    return globalThis.QRCode;
-  }
-  async function renderOverviewQrs(inviteUrl, e) {
-    const inviteCanvas = document.getElementById("emInviteQR");
-    const venueCanvas = document.getElementById("emVenueQR");
-    if ((!inviteCanvas || !e.slug) && (!venueCanvas || !e.venue_qr_token)) return;
-    try {
-      const qr = await ensureQrCode();
-      if (inviteCanvas?.isConnected && e.slug) {
-        qr.toCanvas(inviteCanvas, inviteUrl, { width: 220, margin: 2, color: { dark: "#111827", light: "#ffffff" } });
-      }
-      if (venueCanvas?.isConnected && e.venue_qr_token) {
-        qr.toCanvas(venueCanvas, `${window.location.origin}/events/?e=${encodeURIComponent(e.slug || "")}&checkin=1`, { width: 200, margin: 2 });
-      }
-    } catch (err) {
-      console.warn("[events/manage] QR code renderer unavailable", err);
-    }
-  }
   async function toggleFeatured() {
-    const STATE4 = getState6();
+    const STATE4 = getState7();
     const btn = document.getElementById("emFeaturedToggle");
     if (!btn) return;
     const newVal = !STATE4.event.is_featured;
     btn.disabled = true;
     const { error } = await supabaseClient.from("events").update({ is_featured: newVal }).eq("id", STATE4.event.id);
     if (error) {
-      alert("Failed to update: " + error.message);
+      if (window.EventsHelpers?.alertDialog) {
+        window.EventsHelpers.alertDialog({ title: "Could not update", message: "Failed to update: " + error.message });
+      } else {
+        window.alert("Failed to update: " + error.message);
+      }
       btn.disabled = false;
       return;
     }
     STATE4.event.is_featured = newVal;
-    api12().renderTab?.("overview");
+    api13().renderTab?.("event");
     document.dispatchEvent(new CustomEvent("events:manage:updated", { detail: { eventId: STATE4.event.id } }));
   }
-  var manageOverviewApi = {
-    overviewHtml,
-    wireOverview,
+  var manageEventApi = {
+    eventHtml,
+    wireEvent,
     saveEventCopy,
-    ensureQrCode,
-    renderOverviewQrs,
     toggleFeatured
   };
   globalThis._emToggleFeatured = toggleFeatured;
-  globalThis.EventsManageOverview = manageOverviewApi;
+  globalThis.EventsManageEvent = manageEventApi;
 
   // js/portal/events/manage/images.js
-  function api13() {
+  function api14() {
     return window.EventsManageImagesApi || {};
   }
-  function esc7(s) {
+  function esc8(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
   var imgFiles = { banner: null, embed: null };
   function imgDropZone(id, label, hint, currentUrl) {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     const hasImg = !!currentUrl;
     return `
         <div id="${id}Zone" class="em-img-zone${hasImg ? " em-img-zone--has" : ""}" data-zone="${id}">
             <input id="${id}FileInput" type="file" accept="image/*" style="display:none">
-            <img id="${id}Preview" src="${esc7(currentUrl)}" alt=""
+            <img id="${id}Preview" src="${esc8(currentUrl)}" alt=""
                  style="width:100%;border-radius:10px;object-fit:cover;max-height:200px;margin-bottom:10px;${hasImg ? "" : "display:none"}">
             <div id="${id}Prompt" style="${hasImg ? "display:none" : ""}">
                 <svg style="width:32px;height:32px;color:#9ca3af;margin-bottom:8px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4-4a3 3 0 014 0l4 4m-4-4l1.5-1.5a3 3 0 014 0L20 16M14 8h.01M4 19h16a1 1 0 001-1V6a1 1 0 00-1-1H4a1 1 0 00-1 1v12a1 1 0 001 1z"/></svg>
@@ -19624,11 +19721,11 @@ Type the event title to confirm:`);
             <button type="button" class="em-btn-ghost" style="font-size:12px;padding:6px 12px" data-pick="${id}">Choose file</button>
         </div>
         <p style="font-size:11px;color:#9ca3af;margin-top:6px">Or paste a URL:</p>
-        <input id="${id}UrlInput" class="em-input" type="url" placeholder="https://\u2026" value="${esc7(currentUrl)}" style="margin-top:4px">
+        <input id="${id}UrlInput" class="em-input" type="url" placeholder="https://\u2026" value="${esc8(currentUrl)}" style="margin-top:4px">
     `;
   }
   function imagesHtml() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     const e = STATE4.event;
     return `
         <style>
@@ -19670,7 +19767,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireImages() {
-    const STATE4 = api13().getState?.() || {};
+    const STATE4 = api14().getState?.() || {};
     const e = STATE4.event;
     imgFiles.banner = null;
     imgFiles.embed = null;
@@ -19764,7 +19861,7 @@ Type the event title to confirm:`);
         setTimeout(() => {
           status.textContent = "";
         }, 2500);
-        api13().notifyParent?.("updated", e.id);
+        api14().notifyParent?.("updated", e.id);
       } catch (err) {
         status.textContent = "Error: " + (err.message || "save failed");
       } finally {
@@ -19777,6 +19874,47 @@ Type the event title to confirm:`);
     wireImages
   };
   globalThis.EventsManageImages = manageImagesApi;
+
+  // js/portal/events/manage/people.js
+  function api15() {
+    return window.EventsManagePeopleApi || {};
+  }
+  function getState8() {
+    return api15().getState?.() || {};
+  }
+  function peopleHtml() {
+    const STATE4 = getState8();
+    const e = STATE4.event;
+    if (!e) return "";
+    const Rsvps2 = window.EventsManageRsvps;
+    const Notifications2 = window.EventsManageNotifications;
+    const roster = typeof Rsvps2?.rsvpsHtml === "function" ? Rsvps2.rsvpsHtml() : "";
+    const reach = STATE4.canManageNotifications && typeof Notifications2?.notificationsHtml === "function" ? `<div id="emPeopleReach" class="mt-4">${Notifications2.notificationsHtml()}</div>` : "";
+    return `
+        ${roster}
+        ${hostsHtml(e)}
+        ${e.slug ? smsInvitesHtml(e) : ""}
+        ${reach}
+    `;
+  }
+  function wirePeople() {
+    const STATE4 = getState8();
+    const e = STATE4.event;
+    if (!e) return;
+    window.EventsManageRsvps?.wireRsvps?.();
+    wireHosts(e);
+    wireSmsInvites(e);
+    if (STATE4.canManageNotifications) {
+      window.EventsManageNotifications?.wireNotifications?.();
+    }
+    document.getElementById("emSheetContent")?.querySelectorAll("[data-scroll-people-reach]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.getElementById("emPeopleReach")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  }
+  var managePeopleApi = { peopleHtml, wirePeople };
+  globalThis.EventsManagePeople = managePeopleApi;
 
   // js/portal/events/manage/ticket-handoff.js
   function computePlaneTicketHandoff({ goingRsvps, documents, event }) {
@@ -19815,16 +19953,16 @@ Type the event title to confirm:`);
   globalThis.EventsManageTicketHandoff = ticketHandoffApi;
 
   // js/portal/events/manage/docs.js
-  function api14() {
+  function api16() {
     return window.EventsManageDocsApi || {};
   }
-  function esc8(s) {
+  function esc9(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
   async function loadDocs() {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const { data, error } = await supabaseClient.from("event_documents").select("id, doc_type, label, file_name, file_size_bytes, file_path, distributed, target_user_id, created_at, profiles:target_user_id(first_name, last_name, profile_picture_url)").eq("event_id", STATE4.eventId).order("created_at", { ascending: true });
     if (error) throw error;
     const docs = data || [];
@@ -19844,7 +19982,7 @@ Type the event title to confirm:`);
     STATE4.eventDocuments = data || [];
   }
   function docTypeIcon(type) {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     return {
       plane_ticket: "\u2708\uFE0F",
       group_ticket: "\u{1F3AB}",
@@ -19854,14 +19992,14 @@ Type the event title to confirm:`);
     }[type] || "\u{1F4C4}";
   }
   function formatBytes(bytes) {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     if (!bytes) return "\u2014";
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / 1024 / 1024).toFixed(1) + " MB";
   }
   function docsHtml() {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const docs = STATE4.tabData.docs.docs;
     const groupDocs = docs.filter((d) => !d.target_user_id);
     const memberDocs = docs.filter((d) => d.target_user_id);
@@ -19882,8 +20020,8 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:16px">${docTypeIcon(d.doc_type)}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc8(d.label || d.file_name || "Document")}</p>
-                    <p class="em-attendee-sub">${esc8(d.file_name || "")} \xB7 ${formatBytes(d.file_size_bytes)}</p>
+                    <p class="em-attendee-name">${esc9(d.label || d.file_name || "Document")}</p>
+                    <p class="em-attendee-sub">${esc9(d.file_name || "")} \xB7 ${formatBytes(d.file_size_bytes)}</p>
                     <div class="flex flex-wrap gap-1 mt-2">${distBtn}<span class="em-pill em-pill-going">${d.target_user_id ? "Member file" : "Group file"}</span></div>
                 </div>
                 <button data-doc-action="delete" data-id="${d.id}" class="text-xs text-red-600 font-semibold hover:underline" style="background:none;border:none;cursor:pointer">Delete</button>
@@ -19903,14 +20041,14 @@ Type the event title to confirm:`);
         const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
         return `
                 <div style="margin-bottom:14px">
-                    <div class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">${esc8(name)} <span class="text-gray-400 font-normal">\xB7 ${u.docs.length}</span></div>
+                    <div class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">${esc9(name)} <span class="text-gray-400 font-normal">\xB7 ${u.docs.length}</span></div>
                     ${u.docs.map(docRow).join("")}
                 </div>
             `;
       }).join("");
     }
-    const memberOptions = goingMembers.map((m) => `<option value="${esc8(m.id)}">${esc8(m.name)}</option>`).join("");
-    const typeOptions = (api14().getDocTypes?.() || []).map((t) => `<option value="${esc8(t.value)}">${esc8(t.label)}</option>`).join("");
+    const memberOptions = goingMembers.map((m) => `<option value="${esc9(m.id)}">${esc9(m.name)}</option>`).join("");
+    const typeOptions = (api16().getDocTypes?.() || []).map((t) => `<option value="${esc9(t.value)}">${esc9(t.label)}</option>`).join("");
     const isPlaneLlc = STATE4.event?.event_type === "llc" && STATE4.event?.transportation_mode === "llc_provides" && STATE4.event?.transportation_method === "plane";
     const ticketHelper = window.EventsManageTicketHandoff;
     const planeHandoff = isPlaneLlc && ticketHelper ? ticketHelper.computePlaneTicketHandoff({
@@ -19921,7 +20059,7 @@ Type the event title to confirm:`);
     const firstMissingUserId = planeHandoff?.missingUserIds?.[0] || "";
     return `
         ${planeHandoff && planeHandoff.missingCount ? `
-        <div class="em-card mb-4" style="border-color:#fcd34d;background:#fffbeb" data-doc-preset-member="${esc8(firstMissingUserId)}">
+        <div class="em-card mb-4" style="border-color:#fcd34d;background:#fffbeb" data-doc-preset-member="${esc9(firstMissingUserId)}">
             <p class="text-sm font-bold text-amber-900">${planeHandoff.missingCount} member${planeHandoff.missingCount === 1 ? "" : "s"} still need plane tickets</p>
             <p class="text-xs text-amber-800 mt-1">Upload per-member plane tickets below. The form will preset the next member who needs a ticket.</p>
         </div>` : ""}
@@ -19981,7 +20119,7 @@ Type the event title to confirm:`);
     `;
   }
   function wireDocs() {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const targetMode = document.getElementById("emDocTargetMode");
     const memberWrap = document.getElementById("emDocMemberWrap");
     const type = document.getElementById("emDocType");
@@ -20016,13 +20154,13 @@ Type the event title to confirm:`);
         }
         STATE4.tabData.docs = null;
         await _syncEventDocuments(STATE4);
-        api14().renderTab?.("docs");
-        api14().notifyParent?.("updated", STATE4.eventId);
+        api16().renderTab?.("docs");
+        api16().notifyParent?.("updated", STATE4.eventId);
       });
     });
   }
   async function uploadDocFromManage() {
-    const STATE4 = api14().getState?.() || {};
+    const STATE4 = api16().getState?.() || {};
     const btn = document.getElementById("emDocUploadBtn");
     const mode = document.getElementById("emDocTargetMode")?.value || "group";
     const targetUserId = mode === "member" ? document.getElementById("emDocMember")?.value || "" : "";
@@ -20053,8 +20191,8 @@ Type the event title to confirm:`);
       if (dbErr) throw dbErr;
       STATE4.tabData.docs = null;
       await _syncEventDocuments(STATE4);
-      api14().renderTab?.("docs");
-      api14().notifyParent?.("updated", STATE4.eventId);
+      api16().renderTab?.("docs");
+      api16().notifyParent?.("updated", STATE4.eventId);
     } catch (err) {
       alert("Upload failed: " + (err.message || err));
     } finally {
@@ -20071,10 +20209,10 @@ Type the event title to confirm:`);
   globalThis.EventsManageDocs = manageDocsApi;
 
   // js/portal/events/manage/rsvps.js
-  function api15() {
+  function api17() {
     return window.EventsManageRsvpsApi || {};
   }
-  function esc9(s) {
+  function esc10(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -20321,7 +20459,7 @@ Type the event title to confirm:`);
         pills.push('<span class="em-pill em-pill-going">Paid by: Self</span>');
       }
     } else if (payerName) {
-      pills.push(`<span class="em-pill em-pill-going">Paid by: ${esc9(payerName)}</span>`);
+      pills.push(`<span class="em-pill em-pill-going">Paid by: ${esc10(payerName)}</span>`);
     }
     if (incomplete.length && !(awaitingAttach || party.status === "awaiting_attach")) {
       pills.push('<span class="em-pill em-pill-not">Sizes pending</span>');
@@ -20334,7 +20472,7 @@ Type the event title to confirm:`);
       if (!missing) {
         const when = latestAckedAt(acks);
         const whenTxt = when ? ` \xB7 ${when.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : "";
-        pills.push(`<span class="em-pill em-pill-checked">Disclaimers acked${esc9(whenTxt)}</span>`);
+        pills.push(`<span class="em-pill em-pill-checked">Disclaimers acked${esc10(whenTxt)}</span>`);
       } else {
         pills.push('<span class="em-pill em-pill-not">No disclaimer ack</span>');
       }
@@ -20348,9 +20486,9 @@ Type the event title to confirm:`);
         const opt = (cfg.options || []).find((o) => String(o.id) === optId);
         const optLabel = opt?.label ? ` \xB7 ${opt.label}` : "";
         if (status === "counted") {
-          pills.push(`<span class="em-pill em-pill-checked">Vote: counted${esc9(optLabel)}</span>`);
+          pills.push(`<span class="em-pill em-pill-checked">Vote: counted${esc10(optLabel)}</span>`);
         } else if (status === "provisional") {
-          pills.push(`<span class="em-pill em-pill-maybe">Vote: provisional${esc9(optLabel)}</span>`);
+          pills.push(`<span class="em-pill em-pill-maybe">Vote: provisional${esc10(optLabel)}</span>`);
         } else if (status === "removed") {
           pills.push('<span class="em-pill em-pill-not">Vote: removed</span>');
         } else {
@@ -20360,11 +20498,11 @@ Type the event title to confirm:`);
     }
     let paymentLinkBlock = "";
     if (isPayer && party?.invite_token && !(awaitingAttach || party.status === "awaiting_attach")) {
-      const tok = esc9(party.invite_token);
+      const tok = esc10(party.invite_token);
       paymentLinkBlock = `
             <div class="em-party-pay-link" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">
                 <button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-copy-pay-link="${tok}">Copy payment link</button>
-                <button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-resend-pay-sms="${esc9(party.id)}">Resend SMS</button>
+                <button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-resend-pay-sms="${esc10(party.id)}">Resend SMS</button>
             </div>`;
     }
     let seatsBlock = "";
@@ -20375,8 +20513,8 @@ Type the event title to confirm:`);
         const role = s.role === "kid" ? "Kid" : "Adult";
         const status = s.options_complete ? "Options complete" : "Sizes pending";
         const optSum = seatOptionsSummary(s, catalog);
-        const optPart = optSum ? ` \xB7 ${esc9(optSum)}` : "";
-        return `<li style="font-size:12px;color:#4b5563;margin:2px 0">${esc9(s.display_name || "Guest")} \xB7 ${role} \xB7 ${status}${optPart}</li>`;
+        const optPart = optSum ? ` \xB7 ${esc10(optSum)}` : "";
+        return `<li style="font-size:12px;color:#4b5563;margin:2px 0">${esc10(s.display_name || "Guest")} \xB7 ${role} \xB7 ${status}${optPart}</li>`;
       }).join("");
       let invitesHtml = "";
       if (inviteTokens.length && window.EventsHelpers?.seatInfoInvitesHtml) {
@@ -20402,7 +20540,7 @@ Type the event title to confirm:`);
     return !!(row && (row.status === "going" || row.paid === true));
   }
   function rsvpsHtml() {
-    const STATE4 = api15().getState?.() || {};
+    const STATE4 = api17().getState?.() || {};
     const e = STATE4.event;
     const going = STATE4.rsvps.filter((r) => isCommittedGoingRow(e, r));
     const paymentPending = STATE4.rsvps.filter((r) => r.status === "going" && !isCommittedGoingRow(e, r));
@@ -20434,7 +20572,7 @@ Type the event title to confirm:`);
       const p = r.profiles || {};
       const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
       const initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?";
-      const avatar = p.profile_picture_url ? `<img src="${esc9(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
+      const avatar = p.profile_picture_url ? `<img src="${esc10(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
       const committed = isCommittedGoingRow(e, r);
       const pills = [];
       if (committed) pills.push('<span class="em-pill em-pill-going">Going</span>');
@@ -20470,7 +20608,7 @@ Type the event title to confirm:`);
       }
       const hasParty = !!(r.party_id || r.status === "going" && idx.partyForMember(r)?.id);
       const removeLabel = r.paid || hasParty ? "Cancel participation" : "Remove";
-      return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${esc9(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? " \xB7 ticket ready" : ""}${subExtra}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div>${seatsBlock}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="member" data-rsvp-id="${esc9(r.id)}" data-user-id="${esc9(r.user_id)}" data-paid="${r.paid ? "1" : "0"}" data-has-party="${hasParty ? "1" : "0"}" data-name="${esc9(name)}">${removeLabel}</button></div>`;
+      return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${esc10(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? " \xB7 ticket ready" : ""}${subExtra}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div>${seatsBlock}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="member" data-rsvp-id="${esc10(r.id)}" data-user-id="${esc10(r.user_id)}" data-paid="${r.paid ? "1" : "0"}" data-has-party="${hasParty ? "1" : "0"}" data-name="${esc10(name)}">${removeLabel}</button></div>`;
     }
     function guestRow(g2) {
       const initials = (g2.guest_name || "G").slice(0, 1).toUpperCase();
@@ -20497,7 +20635,7 @@ Type the event title to confirm:`);
       pills.push(...meta.pills);
       const hasParty = !!(g2.party_id || party?.id);
       const removeLabel = g2.paid || hasParty ? "Cancel participation" : "Remove";
-      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${esc9(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc9(name)}</p><p class="em-attendee-sub">${esc9(g2.guest_email || "Public guest")}${meta.subExtra || ""}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div>${meta.seatsBlock || ""}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="guest" data-rsvp-id="${esc9(g2.id)}" data-guest-token="${esc9(g2.guest_token)}" data-paid="${g2.paid ? "1" : "0"}" data-has-party="${hasParty ? "1" : "0"}" data-name="${esc9(name)}">${removeLabel}</button></div>`;
+      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${esc10(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc10(name)}</p><p class="em-attendee-sub">${esc10(g2.guest_email || "Public guest")}${meta.subExtra || ""}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join("")}</div>${meta.seatsBlock || ""}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="guest" data-rsvp-id="${esc10(g2.id)}" data-guest-token="${esc10(g2.guest_token)}" data-paid="${g2.paid ? "1" : "0"}" data-has-party="${hasParty ? "1" : "0"}" data-name="${esc10(name)}">${removeLabel}</button></div>`;
     }
     function section(title, list, emptyText) {
       return `
@@ -20543,7 +20681,7 @@ Type the event title to confirm:`);
   function wireRsvps() {
     const panel = document.getElementById("emSheetContent");
     panel?.querySelectorAll("[data-remove-rsvp]").forEach((btn) => {
-      btn.addEventListener("click", () => api15().removeParticipationPerson?.(btn));
+      btn.addEventListener("click", () => api17().removeParticipationPerson?.(btn));
     });
     if (panel && window.EventsHelpers && typeof window.EventsHelpers.wireSeatInfoInviteCopy === "function") {
       window.EventsHelpers.wireSeatInfoInviteCopy(panel);
@@ -20552,7 +20690,7 @@ Type the event title to confirm:`);
       if (btn.dataset.copyRosterWired) return;
       btn.dataset.copyRosterWired = "1";
       btn.addEventListener("click", async () => {
-        const STATE4 = api15().getState?.() || {};
+        const STATE4 = api17().getState?.() || {};
         const text = buildRosterTsv(STATE4);
         try {
           if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
@@ -20672,10 +20810,10 @@ Type the event title to confirm:`);
     messageType: "manual",
     selectAllOptedInOnLoad: false
   };
-  function api16() {
+  function api18() {
     return window.EventsManageNotificationsApi || {};
   }
-  function esc10(s) {
+  function esc11(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
@@ -20718,7 +20856,7 @@ Type the event title to confirm:`);
     throw new Error(_smsSchemaMissingMessage(err) || err.message || fallback);
   }
   async function loadNotifications() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const eventId2 = STATE4.eventId;
     if (!eventId2) return { recipients: [], messages: [], suppressedPhones: /* @__PURE__ */ new Set(), lastSentAt: null };
     const { data: recipients, error: recErr } = await supabaseClient.from("event_sms_recipients").select(`
@@ -20828,7 +20966,7 @@ Type the event title to confirm:`);
     };
   }
   function notificationsHtml() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const data = STATE4.tabData?.notifications || { recipients: [], messages: [] };
     const metrics = summaryMetrics(data);
     const visible = getFilteredRecipients(data);
@@ -20840,17 +20978,17 @@ Type the event title to confirm:`);
     const recipientRows = visible.length ? visible.map((r) => {
       const checked = UI.selected.has(r.id) ? " checked" : "";
       const disabled = isEligibleToSend(r) ? "" : " disabled";
-      const delivery = r.latest_delivery?.status ? `<span class="em-pill">${esc10(r.latest_delivery.status)}</span>` : '<span class="text-xs text-gray-400">\u2014</span>';
+      const delivery = r.latest_delivery?.status ? `<span class="em-pill">${esc11(r.latest_delivery.status)}</span>` : '<span class="text-xs text-gray-400">\u2014</span>';
       const suppressed = r.globally_suppressed ? '<span class="em-pill em-pill-not">STOP</span>' : "";
       return `
-                <div class="em-row em-notif-row" data-recipient-id="${esc10(r.id)}">
-                    <input type="checkbox" class="em-notif-check" data-recipient-id="${esc10(r.id)}"${checked}${disabled} aria-label="Select ${esc10(r.display_name || "recipient")}">
+                <div class="em-row em-notif-row" data-recipient-id="${esc11(r.id)}">
+                    <input type="checkbox" class="em-notif-check" data-recipient-id="${esc11(r.id)}"${checked}${disabled} aria-label="Select ${esc11(r.display_name || "recipient")}">
                     <div class="flex-1 min-w-0">
-                        <p class="em-attendee-name">${esc10(r.display_name || "Unknown")}</p>
-                        <p class="em-attendee-sub">${esc10(r.phone_masked)}${r.email ? ` \xB7 ${esc10(r.email)}` : ""}</p>
+                        <p class="em-attendee-name">${esc11(r.display_name || "Unknown")}</p>
+                        <p class="em-attendee-sub">${esc11(r.phone_masked)}${r.email ? ` \xB7 ${esc11(r.email)}` : ""}</p>
                         <div class="flex flex-wrap gap-1 mt-1">
-                            <span class="em-pill ${optOutClass(r)}">${esc10(optOutLabel(r))}</span>
-                            <span class="em-pill">${esc10(SOURCE_LABELS[r.consent_source] || r.consent_source)}</span>
+                            <span class="em-pill ${optOutClass(r)}">${esc11(optOutLabel(r))}</span>
+                            <span class="em-pill">${esc11(SOURCE_LABELS[r.consent_source] || r.consent_source)}</span>
                             ${suppressed}
                             ${delivery}
                         </div>
@@ -20869,17 +21007,17 @@ Type the event title to confirm:`);
       const preview = (m.body || "").length > 120 ? `${m.body.slice(0, 120)}\u2026` : m.body || "";
       const detail2 = expanded ? `<div class="mt-2 space-y-1">${dels.map((d) => {
         const name = data.recipients.find((r) => r.id === d.event_sms_recipient_id)?.display_name;
-        return `<p class="text-xs text-gray-600">${esc10(name || maskPhone2(d.phone_e164))} \xB7 ${esc10(d.status)}${d.error_message ? ` \u2014 ${esc10(d.error_message)}` : ""}</p>`;
+        return `<p class="text-xs text-gray-600">${esc11(name || maskPhone2(d.phone_e164))} \xB7 ${esc11(d.status)}${d.error_message ? ` \u2014 ${esc11(d.error_message)}` : ""}</p>`;
       }).join("") || '<p class="text-xs text-gray-400">No per-recipient rows.</p>'}</div>` : "";
       return `
                 <div class="em-card mb-2">
-                    <button type="button" class="w-full text-left" data-toggle-message="${esc10(m.id)}">
+                    <button type="button" class="w-full text-left" data-toggle-message="${esc11(m.id)}">
                         <div class="flex justify-between gap-2">
-                            <strong class="text-sm text-gray-900">${esc10(messageTypeLabel(m.message_type))}</strong>
+                            <strong class="text-sm text-gray-900">${esc11(messageTypeLabel(m.message_type))}</strong>
                             <span class="text-xs text-gray-400">${new Date(m.created_at).toLocaleString()}</span>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">${esc10(preview)}</p>
-                        <p class="text-xs text-gray-400 mt-1">${m.recipient_count} recipients \xB7 ${esc10(summary)}</p>
+                        <p class="text-xs text-gray-500 mt-1">${esc11(preview)}</p>
+                        <p class="text-xs text-gray-400 mt-1">${m.recipient_count} recipients \xB7 ${esc11(summary)}</p>
                     </button>
                     ${detail2}
                 </div>`;
@@ -20895,7 +21033,7 @@ Type the event title to confirm:`);
             <div class="em-metric"><span>Recipients</span><strong>${metrics.total}</strong><small>All contacts</small></div>
             <div class="em-metric"><span>Opted in</span><strong>${metrics.optedIn}</strong><small>Eligible to send</small></div>
             <div class="em-metric"><span>Opted out</span><strong>${metrics.optedOut}</strong><small>Event preference</small></div>
-            <div class="em-metric"><span>Global STOP</span><strong>${metrics.suppressed}</strong><small>Last sent: ${esc10(lastSentLabel)}</small></div>
+            <div class="em-metric"><span>Global STOP</span><strong>${metrics.suppressed}</strong><small>Last sent: ${esc11(lastSentLabel)}</small></div>
         </div>
 
         <div class="em-card mb-4">
@@ -20909,10 +21047,10 @@ Type the event title to confirm:`);
             <select id="emNotifMessageType" class="em-input mb-2" aria-label="SMS message type">
                 ${MESSAGE_TYPES.map((t) => {
       const sel = UI.messageType === t.value ? " selected" : "";
-      return `<option value="${esc10(t.value)}"${sel}>${esc10(t.label)}</option>`;
+      return `<option value="${esc11(t.value)}"${sel}>${esc11(t.label)}</option>`;
     }).join("")}
             </select>
-            <textarea id="emNotifBody" class="em-textarea" maxlength="1600" placeholder="Write your event update\u2026">${esc10(UI.prefillBody || "")}</textarea>
+            <textarea id="emNotifBody" class="em-textarea" maxlength="1600" placeholder="Write your event update\u2026">${esc11(UI.prefillBody || "")}</textarea>
             <p class="text-xs text-gray-400 mt-1"><span id="emNotifCharCount">${(UI.prefillBody || "").length}</span> / 1600 characters</p>
             <div class="flex flex-wrap gap-2 mt-3">
                 <button type="button" class="em-btn-primary" id="emNotifSendBtn"${selectedEligible.length ? "" : " disabled"}>Send SMS</button>
@@ -20936,7 +21074,7 @@ Type the event title to confirm:`);
       return `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 10px;${active}" data-notif-filter="${f}">${label}</button>`;
     }).join("")}
             </div>
-            <input type="search" id="emNotifSearch" class="em-input mb-3" placeholder="Search name, email, or last 4 of phone" value="${esc10(UI.search)}">
+            <input type="search" id="emNotifSearch" class="em-input mb-3" placeholder="Search name, email, or last 4 of phone" value="${esc11(UI.search)}">
             <label class="text-xs text-gray-500 flex items-center gap-2 mb-2">
                 <input type="checkbox" id="emNotifSelectVisible"> Select all visible
             </label>
@@ -20953,7 +21091,7 @@ Type the event title to confirm:`);
             <div class="flex flex-wrap gap-2 mb-3">
                 ${HISTORY_FILTERS.map((f) => {
       const active = UI.historyFilter === f.key ? "background:var(--color-surface, #EEF2F6);color:var(--color-primary, #13366E)" : "background:#f3f4f6;color:#374151";
-      return `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 10px;${active}" data-history-filter="${f.key}">${esc10(f.label)}</button>`;
+      return `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 10px;${active}" data-history-filter="${f.key}">${esc11(f.label)}</button>`;
     }).join("")}
             </div>
             ${historyRows}
@@ -20961,12 +21099,12 @@ Type the event title to confirm:`);
     `;
   }
   async function refreshNotificationsTab() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     STATE4.tabData.notifications = await loadNotifications();
-    api16().renderTab?.("notifications");
+    api18().renderTab?.("notifications");
   }
   async function sendSelectedSms() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const data = STATE4.tabData?.notifications;
     if (!data) return;
     const body = document.getElementById("emNotifBody")?.value?.trim() || "";
@@ -21023,27 +21161,27 @@ Type the event title to confirm:`);
     }
   }
   function wireNotifications() {
-    const STATE4 = api16().getState?.() || {};
+    const STATE4 = api18().getState?.() || {};
     const data = STATE4.tabData?.notifications;
     const root2 = document.getElementById("emSheetContent");
     if (!root2 || !data) return;
     root2.querySelectorAll("[data-notif-filter]").forEach((btn) => {
       btn.addEventListener("click", () => {
         UI.filter = btn.dataset.notifFilter || "all";
-        api16().renderTab?.("notifications");
+        api18().renderTab?.("notifications");
       });
     });
     root2.querySelectorAll("[data-history-filter]").forEach((btn) => {
       btn.addEventListener("click", () => {
         UI.historyFilter = btn.dataset.historyFilter || "all";
-        api16().renderTab?.("notifications");
+        api18().renderTab?.("notifications");
       });
     });
     const search = document.getElementById("emNotifSearch");
     if (search) {
       search.addEventListener("input", () => {
         UI.search = search.value;
-        api16().renderTab?.("notifications");
+        api18().renderTab?.("notifications");
       });
     }
     const body = document.getElementById("emNotifBody");
@@ -21072,7 +21210,7 @@ Type the event title to confirm:`);
         if (!id || cb.disabled) return;
         if (cb.checked) UI.selected.add(id);
         else UI.selected.delete(id);
-        api16().renderTab?.("notifications");
+        api18().renderTab?.("notifications");
       });
     });
     document.getElementById("emNotifSelectVisible")?.addEventListener("change", (e) => {
@@ -21084,24 +21222,24 @@ Type the event title to confirm:`);
       } else {
         visible.forEach((r) => UI.selected.delete(r.id));
       }
-      api16().renderTab?.("notifications");
+      api18().renderTab?.("notifications");
     });
     document.getElementById("emNotifSelectOptedIn")?.addEventListener("click", () => {
       (data.recipients || []).forEach((r) => {
         if (isEligibleToSend(r)) UI.selected.add(r.id);
       });
-      api16().renderTab?.("notifications");
+      api18().renderTab?.("notifications");
     });
     document.getElementById("emNotifClearSelection")?.addEventListener("click", () => {
       UI.selected.clear();
-      api16().renderTab?.("notifications");
+      api18().renderTab?.("notifications");
     });
     document.getElementById("emNotifSendBtn")?.addEventListener("click", () => sendSelectedSms());
     root2.querySelectorAll("[data-toggle-message]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.toggleMessage;
         UI.expandedMessageId = UI.expandedMessageId === id ? null : id;
-        api16().renderTab?.("notifications");
+        api18().renderTab?.("notifications");
       });
     });
   }
@@ -21142,15 +21280,15 @@ Type the event title to confirm:`);
   globalThis.EventsManageNotifications = manageNotificationsApi;
 
   // js/portal/events/manage/money.js
-  function api17() {
+  function api19() {
     return window.EventsManageMoneyApi || {};
   }
-  function esc11(s) {
+  function esc12(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
-  function money2(cents) {
+  function money3(cents) {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
   }
   function formatDebitAt(iso, planStatus) {
@@ -21167,7 +21305,7 @@ Type the event title to confirm:`);
     if (s === "completed") return '<span class="em-pill em-pill-checked">Completed</span>';
     if (s === "setup") return '<span class="em-pill em-pill-maybe">Setup</span>';
     if (s === "cancelled") return '<span class="em-pill em-pill-not">Cancelled</span>';
-    return s ? `<span class="em-pill em-pill-maybe">${esc11(s)}</span>` : "";
+    return s ? `<span class="em-pill em-pill-maybe">${esc12(s)}</span>` : "";
   }
   function methodLabel(method) {
     const m = String(method || "").toLowerCase();
@@ -21182,7 +21320,7 @@ Type the event title to confirm:`);
     return kind || "\u2014";
   }
   async function loadMoney() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const isLlc = STATE4.event?.event_type === "llc";
     const queries = [
@@ -21228,7 +21366,7 @@ Type the event title to confirm:`);
     return "Payer";
   }
   function moneyHtml() {
-    const STATE4 = api17().getState?.() || {};
+    const STATE4 = api19().getState?.() || {};
     const d = STATE4.tabData.money || {};
     const adultCents = Number(STATE4.event?.adult_price_cents);
     const isPaidEvent = STATE4.event?.pricing_mode === "paid" || Number.isFinite(adultCents) && adultCents > 0 || Number(STATE4.event?.rsvp_cost_cents || 0) > 0;
@@ -21253,15 +21391,15 @@ Type the event title to confirm:`);
     });
     const pastDueCount = plans.filter((p) => String(p.status) === "past_due" || failedPlanSet.has(p.id)).length;
     const remainingDue = openPlans.reduce((s, p) => s + (Number(p.remaining_cents) || 0), 0);
-    const fmt = window.formatCurrency || money2;
+    const fmt = window.formatCurrency || money3;
     function paymentRow({ name, sub, amount, refundedAmount, stripeId, avatarHtml: avatarHtml2, isGuest }) {
       const refundPill = refundedAmount ? `<span class="em-pill em-pill-not">Refunded ${fmt(refundedAmount)}</span>` : `<span class="em-pill em-pill-paid">${amount > 0 ? `Paid ${fmt(amount)}` : "Ticketed"}</span>`;
       return `
             <div class="em-attendee-card">
                 <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ""}>${avatarHtml2}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc11(name)}</p>
-                    <p class="em-attendee-sub">${esc11(sub)}</p>
+                    <p class="em-attendee-name">${esc12(name)}</p>
+                    <p class="em-attendee-sub">${esc12(sub)}</p>
                     <div class="flex flex-wrap gap-1 mt-2">${refundPill}${isGuest ? '<span class="em-pill em-pill-going">Guest</span>' : ""}</div>
                 </div>
                 ${stripeId ? `<a href="https://dashboard.stripe.com/payments/${encodeURIComponent(stripeId)}" target="_blank" rel="noopener" class="text-xs text-brand-600 font-semibold hover:underline whitespace-nowrap">Stripe \u2197</a>` : ""}
@@ -21271,7 +21409,7 @@ Type the event title to confirm:`);
       const p = r.profiles || {};
       const name = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member";
       const initials = ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?";
-      const avatar = p.profile_picture_url ? `<img src="${esc11(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
+      const avatar = p.profile_picture_url ? `<img src="${esc12(p.profile_picture_url)}" alt="">` : `<span>${initials}</span>`;
       return paymentRow({ name, sub: "Member RSVP payment", amount: r.amount_paid_cents || 0, refundedAmount: r.refund_amount_cents || 0, stripeId: r.stripe_payment_intent_id, avatarHtml: avatar });
     });
     const guestRows = paidGuests.map((g2) => paymentRow({
@@ -21280,7 +21418,7 @@ Type the event title to confirm:`);
       amount: g2.amount_paid_cents || 0,
       refundedAmount: 0,
       stripeId: g2.stripe_payment_intent_id,
-      avatarHtml: `<span>${esc11((g2.guest_name || "G").slice(0, 1).toUpperCase())}</span>`,
+      avatarHtml: `<span>${esc12((g2.guest_name || "G").slice(0, 1).toUpperCase())}</span>`,
       isGuest: true
     }));
     const paymentRows = [...memberRows, ...guestRows].join("") || `<p class="text-xs text-gray-400 italic py-2">No paid RSVPs yet.</p>`;
@@ -21293,18 +21431,18 @@ Type the event title to confirm:`);
       const pills = [
         planStatusPill(plan.status),
         failed ? '<span class="em-pill em-pill-not">Failed charge</span>' : "",
-        `<span class="em-pill em-pill-going">${esc11(planKindLabel(plan.plan_kind))}</span>`,
-        `<span class="em-pill em-pill-maybe">${esc11(methodLabel(plan.method))}</span>`,
+        `<span class="em-pill em-pill-going">${esc12(planKindLabel(plan.plan_kind))}</span>`,
+        `<span class="em-pill em-pill-maybe">${esc12(methodLabel(plan.method))}</span>`,
         isGuest ? '<span class="em-pill em-pill-going">Guest</span>' : ""
       ].filter(Boolean).join("");
-      const inviteTok = party?.invite_token ? esc11(party.invite_token) : "";
+      const inviteTok = party?.invite_token ? esc12(party.invite_token) : "";
       const copyBtn = inviteTok ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-money-copy-pay-link="${inviteTok}">Copy payment link</button>` : "";
       return `
                 <div class="em-attendee-card">
-                    <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ""}><span>${esc11(initials)}</span></div>
+                    <div class="em-avatar"${isGuest ? ' style="background:#fef3c7;color:#92400e"' : ""}><span>${esc12(initials)}</span></div>
                     <div class="em-attendee-main">
-                        <p class="em-attendee-name">${esc11(name)}</p>
-                        <p class="em-attendee-sub">Paid ${fmt(plan.amount_paid_cents || 0)} \xB7 Remaining ${fmt(plan.remaining_cents || 0)} \xB7 Next debit ${esc11(formatDebitAt(plan.next_debit_at, plan.status))}</p>
+                        <p class="em-attendee-name">${esc12(name)}</p>
+                        <p class="em-attendee-sub">Paid ${fmt(plan.amount_paid_cents || 0)} \xB7 Remaining ${fmt(plan.remaining_cents || 0)} \xB7 Next debit ${esc12(formatDebitAt(plan.next_debit_at, plan.status))}</p>
                         <div class="flex flex-wrap gap-1 mt-2">${pills}</div>
                         ${copyBtn ? `<div style="margin-top:8px">${copyBtn}</div>` : ""}
                     </div>
@@ -21325,7 +21463,7 @@ Type the event title to confirm:`);
         const included = item.included_in_buyin !== false;
         const amt = included ? Number(item.total_cost_cents) || 0 : Number(item.avg_per_person_cents) || 0;
         const amtLabel = included ? fmt(amt) : `~${fmt(amt)}/person`;
-        return `<div class="em-money-row"><span>${esc11(item.name || "Item")}${included ? "" : " (OOP)"}</span><strong>${amtLabel}</strong></div>`;
+        return `<div class="em-money-row"><span>${esc12(item.name || "Item")}${included ? "" : " (OOP)"}</span><strong>${amtLabel}</strong></div>`;
       }).join("") : `<p class="text-xs text-gray-400 italic py-2">No cost items on file. Budget totals use saved breakdown if available.</p>`;
       return `
             <div class="em-card">
@@ -21418,15 +21556,15 @@ Type the event title to confirm:`);
   globalThis.EventsManageMoney = manageMoneyApi;
 
   // js/portal/events/manage/competition.js
-  function api18() {
+  function api20() {
     return window.EventsManageCompetitionApi || {};
   }
-  function esc12(s) {
+  function esc13(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
-  function money3(cents) {
+  function money4(cents) {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
   }
   function toDatetimeLocalValue3(iso) {
@@ -21436,7 +21574,7 @@ Type the event title to confirm:`);
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
   async function loadComp() {
-    const STATE4 = api18().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const [phasesRes, entriesRes, votesRes, winnersRes, contribRes] = await Promise.all([
       supabaseClient.from("competition_phases").select("*").eq("event_id", eventId2).order("phase_num", { ascending: true }),
@@ -21458,13 +21596,13 @@ Type the event title to confirm:`);
     };
   }
   function compHtml() {
-    const STATE4 = api18().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const e = STATE4.event;
     if (e.event_type !== "competition") {
-      return api18().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
+      return api20().emptyHtml?.("Not a competition", 'This is not a competition event. Set event type to "Competition" to use this tab.');
     }
     const d = STATE4.tabData.comp;
-    const fmt = window.formatCurrency || money3;
+    const fmt = window.formatCurrency || money4;
     const cfg = e.competition_config || {};
     const compPh = window.EventsCompetitionPhases || {};
     const phases = compPh.normalizePhases ? compPh.normalizePhases(d.phases) : d.phases || [];
@@ -21497,22 +21635,22 @@ Type the event title to confirm:`);
     const submissionWindowCard = `
         <div class="em-card mb-4">
             <div class="em-section-head"><div><h3 class="em-section-title">Submission window</h3><p class="em-section-sub">Phase 2 GFX upload window \u2014 separate from the event date.</p></div></div>
-            <p class="text-sm font-semibold text-gray-800">${esc12(windowStatusTitle)}</p>
-            <p class="text-xs text-gray-500 mt-1">${esc12(windowLabel.message || (phase2Configured ? "" : "Set open and close times for competitor uploads."))}</p>
+            <p class="text-sm font-semibold text-gray-800">${esc13(windowStatusTitle)}</p>
+            <p class="text-xs text-gray-500 mt-1">${esc13(windowLabel.message || (phase2Configured ? "" : "Set open and close times for competitor uploads."))}</p>
             ${phase2Configured ? `
-                <div class="em-money-row mt-2"><span>Opens</span><strong>${esc12(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase2.starts_at) : new Date(phase2.starts_at).toLocaleString())}</strong></div>
-                <div class="em-money-row"><span>Closes</span><strong>${esc12(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase2.ends_at) : new Date(phase2.ends_at).toLocaleString())}</strong></div>
+                <div class="em-money-row mt-2"><span>Opens</span><strong>${esc13(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase2.starts_at) : new Date(phase2.starts_at).toLocaleString())}</strong></div>
+                <div class="em-money-row"><span>Closes</span><strong>${esc13(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase2.ends_at) : new Date(phase2.ends_at).toLocaleString())}</strong></div>
             ` : ""}
             <form id="emCompSubmissionWindowForm" class="grid sm:grid-cols-2 gap-3 mt-3">
                 <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Opens
-                    <input id="emCompSubOpens" type="datetime-local" class="em-input mt-1" value="${esc12(toDatetimeLocalValue3(defaultOpens))}">
+                    <input id="emCompSubOpens" type="datetime-local" class="em-input mt-1" value="${esc13(toDatetimeLocalValue3(defaultOpens))}">
                 </label>
                 <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Closes
-                    <input id="emCompSubCloses" type="datetime-local" class="em-input mt-1" value="${esc12(toDatetimeLocalValue3(defaultCloses))}">
+                    <input id="emCompSubCloses" type="datetime-local" class="em-input mt-1" value="${esc13(toDatetimeLocalValue3(defaultCloses))}">
                 </label>
                 <div class="sm:col-span-2 flex flex-wrap items-center gap-2">
                     <button type="submit" id="emCompSubSave" class="em-btn-primary">Save submission window</button>
-                    <a href="${esc12(detailUrl)}" class="em-btn-ghost" style="text-decoration:none">Open event detail \u2192</a>
+                    <a href="${esc13(detailUrl)}" class="em-btn-ghost" style="text-decoration:none">Open event detail \u2192</a>
                     <span id="emCompSubStatus" class="text-xs text-gray-400"></span>
                 </div>
             </form>
@@ -21522,22 +21660,22 @@ Type the event title to confirm:`);
     const votingWindowCard = `
         <div class="em-card mb-4">
             <div class="em-section-head"><div><h3 class="em-section-title">Voting window</h3><p class="em-section-sub">Phase 3 member voting \u2014 after submissions close.</p></div></div>
-            <p class="text-sm font-semibold text-gray-800">${esc12(voteStatusTitle)}</p>
-            <p class="text-xs text-gray-500 mt-1">${esc12(votingLabel.message || (phase3Configured ? "" : "Set open and close times for member voting."))}</p>
+            <p class="text-sm font-semibold text-gray-800">${esc13(voteStatusTitle)}</p>
+            <p class="text-xs text-gray-500 mt-1">${esc13(votingLabel.message || (phase3Configured ? "" : "Set open and close times for member voting."))}</p>
             ${phase3Configured ? `
-                <div class="em-money-row mt-2"><span>Opens</span><strong>${esc12(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase3.starts_at) : new Date(phase3.starts_at).toLocaleString())}</strong></div>
-                <div class="em-money-row"><span>Closes</span><strong>${esc12(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase3.ends_at) : new Date(phase3.ends_at).toLocaleString())}</strong></div>
+                <div class="em-money-row mt-2"><span>Opens</span><strong>${esc13(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase3.starts_at) : new Date(phase3.starts_at).toLocaleString())}</strong></div>
+                <div class="em-money-row"><span>Closes</span><strong>${esc13(compPh.formatPhaseDate ? compPh.formatPhaseDate(phase3.ends_at) : new Date(phase3.ends_at).toLocaleString())}</strong></div>
             ` : ""}
             <form id="emCompVotingWindowForm" class="grid sm:grid-cols-2 gap-3 mt-3">
                 <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Opens
-                    <input id="emCompVoteOpens" type="datetime-local" class="em-input mt-1" value="${esc12(toDatetimeLocalValue3(defaultVoteOpens))}">
+                    <input id="emCompVoteOpens" type="datetime-local" class="em-input mt-1" value="${esc13(toDatetimeLocalValue3(defaultVoteOpens))}">
                 </label>
                 <label class="text-xs font-bold uppercase tracking-wide text-gray-500">Closes
-                    <input id="emCompVoteCloses" type="datetime-local" class="em-input mt-1" value="${esc12(toDatetimeLocalValue3(defaultVoteCloses))}">
+                    <input id="emCompVoteCloses" type="datetime-local" class="em-input mt-1" value="${esc13(toDatetimeLocalValue3(defaultVoteCloses))}">
                 </label>
                 <div class="sm:col-span-2 flex flex-wrap items-center gap-2">
                     <button type="submit" id="emCompVoteSave" class="em-btn-primary">Save voting window</button>
-                    <a href="${esc12(detailUrl)}" class="em-btn-ghost" style="text-decoration:none">Open event detail \u2192</a>
+                    <a href="${esc13(detailUrl)}" class="em-btn-ghost" style="text-decoration:none">Open event detail \u2192</a>
                     <span id="emCompVoteStatus" class="text-xs text-gray-400"></span>
                 </div>
             </form>
@@ -21551,9 +21689,9 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:${color}22;color:${color};font-weight:900">${ph.phase_num}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc12(ph.name || "Competition phase")}</p>
+                    <p class="em-attendee-name">${esc13(ph.name || "Competition phase")}</p>
                     <p class="em-attendee-sub">${dates || "Dates not set"}</p>
-                    <div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked" style="background:${color}22;color:${color}">${esc12(ph.status || "pending")}</span>${ph.extended_once ? '<span class="em-pill em-pill-paid">Extended</span>' : ""}</div>
+                    <div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked" style="background:${color}22;color:${color}">${esc13(ph.status || "pending")}</span>${ph.extended_once ? '<span class="em-pill em-pill-paid">Extended</span>' : ""}</div>
                 </div>
             </div>
         `;
@@ -21568,9 +21706,9 @@ Type the event title to confirm:`);
       return `
             <div class="em-attendee-card">
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc12(name)}</p>
-                    <p class="em-attendee-sub">${esc12(entry.title || "Registered")}</p>
-                    <div class="flex flex-wrap gap-1 mt-2">${filePill}${votePill}<span class="em-pill em-pill-going">${esc12(entry.entry_type || "text")}</span></div>
+                    <p class="em-attendee-name">${esc13(name)}</p>
+                    <p class="em-attendee-sub">${esc13(entry.title || "Registered")}</p>
+                    <div class="flex flex-wrap gap-1 mt-2">${filePill}${votePill}<span class="em-pill em-pill-going">${esc13(entry.entry_type || "text")}</span></div>
                 </div>
             </div>`;
     }).join("") : `<p class="text-xs text-gray-400 italic py-2">No competitor entries yet.</p>`;
@@ -21580,8 +21718,8 @@ Type the event title to confirm:`);
       return `
             <div class="em-attendee-card">
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc12(name)}</p>
-                    <p class="em-attendee-sub">${esc12(entry.title || "Registered")} \xB7 removed from gallery</p>
+                    <p class="em-attendee-name">${esc13(name)}</p>
+                    <p class="em-attendee-sub">${esc13(entry.title || "Registered")} \xB7 removed from gallery</p>
                 </div>
             </div>`;
     }).join("") : "";
@@ -21600,8 +21738,8 @@ Type the event title to confirm:`);
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:#fef3c7;color:#92400e;font-size:18px">${medal}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc12(name)}</p>
-                    <p class="em-attendee-sub">${esc12(entry.title || "Winning entry")} \xB7 ${fmt(w.prize_amount_cents)}${w.needs_1099 ? " \xB7 1099 needed" : ""}</p>
+                    <p class="em-attendee-name">${esc13(name)}</p>
+                    <p class="em-attendee-sub">${esc13(entry.title || "Winning entry")} \xB7 ${fmt(w.prize_amount_cents)}${w.needs_1099 ? " \xB7 1099 needed" : ""}</p>
                     <div class="flex flex-wrap gap-1 mt-2">${payoutBadge}</div>
                 </div>
             </div>
@@ -21610,7 +21748,7 @@ Type the event title to confirm:`);
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Competition command</p>
-            <h3 class="em-command-title">${activePhase ? `Phase ${activePhase.phase_num}: ${esc12(activePhase.name || "Active")}` : "Competition setup"}</h3>
+            <h3 class="em-command-title">${activePhase ? `Phase ${activePhase.phase_num}: ${esc13(activePhase.name || "Active")}` : "Competition setup"}</h3>
             <p class="em-command-copy">${liveEntries.length} live entr${liveEntries.length === 1 ? "y" : "ies"}${entryTarget ? ` toward ${entryTarget} minimum` : ""}. ${d.voteCount} vote${d.voteCount === 1 ? "" : "s"} recorded with ${fmt(netPool)} net payout available.</p>
             <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${entryPct}%;background:#a78bfa"></span></div>
         </div>
@@ -21644,10 +21782,10 @@ Type the event title to confirm:`);
 
         <div class="em-card mb-3">
             <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving entries, voting, and payouts.</p></div></div>
-            <div class="em-money-row"><span>Entry type</span><strong>${esc12(cfg.entry_type || "any")}</strong></div>
+            <div class="em-money-row"><span>Entry type</span><strong>${esc13(cfg.entry_type || "any")}</strong></div>
             <div class="em-money-row"><span>Entry fee</span><strong>${cfg.entry_fee_cents ? fmt(cfg.entry_fee_cents) : "Free"}</strong></div>
             <div class="em-money-row"><span>House cut</span><strong>${housePct}%</strong></div>
-            <div class="em-money-row"><span>Voter eligibility</span><strong>${esc12(cfg.voter_eligibility || "all_members")}</strong></div>
+            <div class="em-money-row"><span>Voter eligibility</span><strong>${esc13(cfg.voter_eligibility || "all_members")}</strong></div>
             ${moderatedCount ? `<div class="em-money-row"><span>Moderated entries</span><strong style="color:#dc2626">${moderatedCount}</strong></div>` : ""}
         </div>
 
@@ -21659,7 +21797,7 @@ Type the event title to confirm:`);
     `;
   }
   async function saveSubmissionWindowFromManage() {
-    const STATE4 = api18().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const btn = document.getElementById("emCompSubSave");
     const statusEl = document.getElementById("emCompSubStatus");
     const opens = document.getElementById("emCompSubOpens")?.value;
@@ -21695,8 +21833,8 @@ Type the event title to confirm:`);
       const { error } = await supabaseClient.from("competition_phases").upsert(row, { onConflict: "event_id,phase_num" });
       if (error) throw error;
       STATE4.tabData.comp = null;
-      api18().renderTab?.("comp");
-      api18().notifyParent?.("updated", STATE4.eventId);
+      api20().renderTab?.("comp");
+      api20().notifyParent?.("updated", STATE4.eventId);
       if (statusEl) statusEl.textContent = "Saved \u2713";
     } catch (err) {
       alert("Failed to save submission window: " + (err.message || err));
@@ -21706,7 +21844,7 @@ Type the event title to confirm:`);
     }
   }
   async function saveVotingWindowFromManage() {
-    const STATE4 = api18().getState?.() || {};
+    const STATE4 = api20().getState?.() || {};
     const btn = document.getElementById("emCompVoteSave");
     const statusEl = document.getElementById("emCompVoteStatus");
     const opens = document.getElementById("emCompVoteOpens")?.value;
@@ -21742,8 +21880,8 @@ Type the event title to confirm:`);
       const { error } = await supabaseClient.from("competition_phases").upsert(row, { onConflict: "event_id,phase_num" });
       if (error) throw error;
       STATE4.tabData.comp = null;
-      api18().renderTab?.("comp");
-      api18().notifyParent?.("updated", STATE4.eventId);
+      api20().renderTab?.("comp");
+      api20().notifyParent?.("updated", STATE4.eventId);
       if (statusEl) statusEl.textContent = "Saved \u2713";
     } catch (err) {
       alert("Failed to save voting window: " + (err.message || err));
@@ -21770,11 +21908,11 @@ Type the event title to confirm:`);
   globalThis.EventsManageCompetition = manageCompetitionApi;
 
   // js/portal/events/manage/participation.js
-  function api19() {
+  function api21() {
     return window.EventsManageParticipationApi || {};
   }
   async function getParticipationResetCounts() {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api21().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const tables = [
       ["member RSVPs", "event_rsvps"],
@@ -21791,7 +21929,7 @@ Type the event title to confirm:`);
     return results;
   }
   async function resetParticipation() {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api21().getState?.() || {};
     const e = STATE4.event;
     if (!e) return;
     let counts = [];
@@ -21822,14 +21960,14 @@ Type RESET to continue.`
         action: "reset_participation",
         event_id: e.id
       });
-      await api19().refreshEventManager?.("danger");
+      await api21().refreshEventManager?.("danger");
       alert("Participation reset complete. The event is still intact.");
     } catch (err) {
       alert("Reset failed: " + (err.message || "unknown error"));
     }
   }
   async function removeParticipationPerson(btn) {
-    const STATE4 = api19().getState?.() || {};
+    const STATE4 = api21().getState?.() || {};
     const kind = btn.dataset.removeRsvp;
     const name = btn.dataset.name || (kind === "guest" ? "this guest" : "this member");
     const isPaid = btn.dataset.paid === "1";
@@ -21861,10 +21999,10 @@ Type RESET to continue.`
           user_id: userId
         });
       }
-      await api19().refreshEventManager?.("rsvps");
+      await api21().refreshEventManager?.("rsvps");
     } catch (err) {
       alert("Cancel participation failed: " + (err.message || "unknown error"));
-      api19().renderTab?.("rsvps");
+      api21().renderTab?.("rsvps");
     }
   }
   var manageParticipationApi = {
@@ -21875,15 +22013,15 @@ Type RESET to continue.`
   globalThis.EventsManageParticipation = manageParticipationApi;
 
   // js/portal/events/manage/raffle.js
-  function api20() {
+  function api22() {
     return window.EventsManageRaffleApi || {};
   }
-  function esc13(s) {
+  function esc14(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
-  function money4(cents) {
+  function money5(cents) {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format((cents || 0) / 100);
   }
   var prizeImageFiles = {};
@@ -21892,7 +22030,7 @@ Type RESET to continue.`
     return String(value || "event").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "event";
   }
   async function loadRaffle() {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     const eventId2 = STATE4.eventId;
     const [entriesRes, winnersRes, guestsRes] = await Promise.all([
       supabaseClient.from("event_raffle_entries").select("id, user_id, guest_token, paid, amount_paid_cents, profiles:user_id(first_name, last_name, profile_picture_url)").eq("event_id", eventId2),
@@ -21910,13 +22048,13 @@ Type RESET to continue.`
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   }
   function raffleHtml2() {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     const e = STATE4.event;
     if (!e.raffle_enabled) {
-      return api20().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
+      return api22().emptyHtml?.("Raffle not enabled", "Enable the raffle on the portal detail page (Edit event \u2192 Raffle).");
     }
     const d = STATE4.tabData.raffle;
-    const fmt = window.formatCurrency || money4;
+    const fmt = window.formatCurrency || money5;
     const guestByToken = new Map((d.guests || []).map((g2) => [g2.guest_token, g2]));
     const eligibleEntries = d.entries.filter((en) => en.paid || !e.raffle_entry_cost_cents);
     const memberEntries = eligibleEntries.filter((en) => en.user_id);
@@ -21943,8 +22081,8 @@ Type RESET to continue.`
             <div class="em-attendee-card">
                 <div class="em-avatar" style="background:#faf5ff;color:#7c3aed;font-size:18px">${medal}</div>
                 <div class="em-attendee-main">
-                    <p class="em-attendee-name">${esc13(name)}</p>
-                    <p class="em-attendee-sub">${ord(w.place)} place \xB7 ${esc13(w.prize_description || "Prize pending")}</p>
+                    <p class="em-attendee-name">${esc14(name)}</p>
+                    <p class="em-attendee-sub">${ord(w.place)} place \xB7 ${esc14(w.prize_description || "Prize pending")}</p>
                     <div class="flex flex-wrap gap-1 mt-2">
                         <span class="em-pill em-pill-checked">${w.user_id ? "Member" : "Guest"}</span>
                         ${w.selection_status === "pending_choice" ? '<span class="em-pill em-pill-paid">Needs prize choice</span>' : '<span class="em-pill em-pill-going">Prize assigned</span>'}
@@ -21959,12 +22097,12 @@ Type RESET to continue.`
       const items = raffleItems(config, cat.id);
       const pendingSlots = drawQueue.filter((slot) => slot.category_id === cat.id).length;
       const drawnCount = Math.max(0, (cat.winner_count || 0) - pendingSlots);
-      const itemPreview = items.length ? items.slice(0, 3).map((item) => `${item.emoji || "\u{1F381}"} ${esc13(item.name)}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "Prize details pending";
+      const itemPreview = items.length ? items.slice(0, 3).map((item) => `${item.emoji || "\u{1F381}"} ${esc14(item.name)}${item.quantity > 1 ? ` \xD7${item.quantity}` : ""}`).join(", ") : "Prize details pending";
       const extraItems = Math.max(0, items.length - 3);
       return `
             <div class="em-card em-op-card">
                 <div class="em-op-head">
-                    <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${esc13(cat.label || "Prize category")}</p></div>
+                    <div class="min-w-0"><p class="em-op-kicker">Prize group</p><p class="em-op-title">${esc14(cat.label || "Prize category")}</p></div>
                     <span class="em-op-icon">\u{1F381}</span>
                 </div>
                 <p class="em-op-copy">${drawModeLabel(cat.draw_mode)} \xB7 ${drawnCount}/${cat.winner_count || 0} drawn</p>
@@ -21980,7 +22118,7 @@ Type RESET to continue.`
             <div class="em-section-head">
                 <div>
                     <h3 class="em-section-title">Next draw</h3>
-                    <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc13(prizeSlotLabel(nextSlot)) : "Next available prize"}${nextSlot?.category_label ? ` \xB7 ${esc13(nextSlot.category_label)}` : ""}</p>
+                    <p class="em-section-sub" style="color:#6d28d9">${nextSlot ? esc14(prizeSlotLabel(nextSlot)) : "Next available prize"}${nextSlot?.category_label ? ` \xB7 ${esc14(nextSlot.category_label)}` : ""}</p>
                 </div>
                 <span class="em-pill em-pill-paid">${remainingDraws} remaining</span>
             </div>
@@ -21992,15 +22130,15 @@ Type RESET to continue.`
       const guest = en.guest_token ? guestByToken.get(en.guest_token) : null;
       const name = en.user_id ? `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Member" : guest?.guest_name || "Guest";
       const sub = en.user_id ? "Member raffle entry" : guest?.guest_email || "Guest raffle entry";
-      const tokenAttr = en.guest_token ? ` data-guest-token="${esc13(en.guest_token)}"` : "";
-      const userAttr = en.user_id ? ` data-user-id="${esc13(en.user_id)}"` : "";
-      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#f5f3ff;color:#6d28d9"><span>\u{1F39F}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc13(name)}</p><p class="em-attendee-sub">${esc13(sub)}</p><div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked">${en.user_id ? "Member" : "Guest"}</span>${en.paid ? '<span class="em-pill em-pill-paid">Paid</span>' : ""}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-raffle-entry="${esc13(en.id)}"${userAttr}${tokenAttr} data-paid="${en.paid ? "1" : "0"}" data-name="${esc13(name)}">Remove</button></div>`;
+      const tokenAttr = en.guest_token ? ` data-guest-token="${esc14(en.guest_token)}"` : "";
+      const userAttr = en.user_id ? ` data-user-id="${esc14(en.user_id)}"` : "";
+      return `<div class="em-attendee-card"><div class="em-avatar" style="background:#f5f3ff;color:#6d28d9"><span>\u{1F39F}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc14(name)}</p><p class="em-attendee-sub">${esc14(sub)}</p><div class="flex flex-wrap gap-1 mt-2"><span class="em-pill em-pill-checked">${en.user_id ? "Member" : "Guest"}</span>${en.paid ? '<span class="em-pill em-pill-paid">Paid</span>' : ""}</div></div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-raffle-entry="${esc14(en.id)}"${userAttr}${tokenAttr} data-paid="${en.paid ? "1" : "0"}" data-name="${esc14(name)}">Remove</button></div>`;
     }).join("") : `<p class="text-xs text-gray-400 italic py-2">No eligible entries yet.</p>`;
     return `
         <div class="em-card em-command-card mb-4">
             <p class="em-command-eyebrow">Raffle command</p>
             <h3 class="em-command-title">${allDrawn ? "All winners drawn" : `${remainingDraws} draw${remainingDraws === 1 ? "" : "s"} remaining`}</h3>
-            <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? "y" : "ies"} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : "No eligible raffle entries yet."} ${nextSlot ? `Next up: ${esc13(prizeSlotLabel(nextSlot))}.` : ""}</p>
+            <p class="em-command-copy">${eligibleEntries.length ? `${eligibleEntries.length} eligible entr${eligibleEntries.length === 1 ? "y" : "ies"} across ${memberEntries.length} member and ${guestEntries.length} guest entries.` : "No eligible raffle entries yet."} ${nextSlot ? `Next up: ${esc14(prizeSlotLabel(nextSlot))}.` : ""}</p>
             <div class="em-op-progress" style="margin-top:14px;background:rgba(255,255,255,.22)"><span style="width:${drawPct}%;background:#a78bfa"></span></div>
         </div>
 
@@ -22025,14 +22163,14 @@ Type RESET to continue.`
 
             <div class="em-card">
                 <div class="em-section-head"><div><h3 class="em-section-title">Configuration</h3><p class="em-section-sub">Rules currently driving the draw.</p></div></div>
-                <div class="em-money-row"><span>Type</span><strong>${esc13(e.raffle_type || "digital")}</strong></div>
-                <div class="em-money-row"><span>Draw trigger</span><strong>${esc13(e.raffle_draw_trigger || "manual")}</strong></div>
+                <div class="em-money-row"><span>Type</span><strong>${esc14(e.raffle_type || "digital")}</strong></div>
+                <div class="em-money-row"><span>Draw trigger</span><strong>${esc14(e.raffle_draw_trigger || "manual")}</strong></div>
                 <div class="em-money-row"><span>Entry cost</span><strong>${e.raffle_entry_cost_cents ? fmt(e.raffle_entry_cost_cents) : "Free"}</strong></div>
                 <div style="margin:12px 0;padding:12px;border:1px solid var(--color-border, #D5DFEC);border-radius:12px;background:#f8fafc">
                     <label for="emRaffleEntryPrice" style="display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Raffle entry price</label>
                     <div style="display:flex;gap:8px;align-items:center">
                         <span style="font-size:13px;font-weight:800;color:#475569">$</span>
-                        <input id="emRaffleEntryPrice" class="em-input" type="number" min="0" max="500" step="0.01" value="${esc13(raffleEntryPriceDollars)}" ${paidEventRaffleIncluded ? "disabled" : ""} style="flex:1;min-width:0">
+                        <input id="emRaffleEntryPrice" class="em-input" type="number" min="0" max="500" step="0.01" value="${esc14(raffleEntryPriceDollars)}" ${paidEventRaffleIncluded ? "disabled" : ""} style="flex:1;min-width:0">
                         <button id="emRafflePriceSave" type="button" class="em-btn-primary" ${paidEventRaffleIncluded ? "disabled" : ""}>Save</button>
                     </div>
                     <p id="emRafflePriceStatus" class="text-xs text-gray-400 mt-2">${paidEventRaffleIncluded ? "Paid RSVP events include raffle entry with the RSVP, so separate raffle pricing is not used." : "Set 0 for a free raffle. Changes apply to future raffle checkouts only."}</p>
@@ -22051,7 +22189,7 @@ Type RESET to continue.`
     `;
   }
   function wireRaffle() {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     const drawBtn = document.getElementById("emRaffleDrawBtn");
     if (drawBtn) {
       drawBtn.onclick = () => window.evtOpenRaffleDraw?.(STATE4.eventId, STATE4.event);
@@ -22085,7 +22223,7 @@ Type RESET to continue.`
     wireRafflePrizeImages();
   }
   function rafflePrizeSetupHtml(config, winners = []) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     const model = window.EventsRaffleModel;
     if (!model) {
       return `<div class="em-card mt-3"><div class="em-section-head"><div><h3 class="em-section-title">Prize setup</h3><p class="em-section-sub">Raffle editor unavailable because the raffle model helper did not load.</p></div></div></div>`;
@@ -22094,7 +22232,7 @@ Type RESET to continue.`
     const categories = model.getOrderedCategories(normalized);
     const items = normalized.items || [];
     const validation = model.validateConfig(normalized);
-    const categoryOptions = categories.map((category) => `<option value="${esc13(category.id)}">${esc13(category.label)}</option>`).join("");
+    const categoryOptions = categories.map((category) => `<option value="${esc14(category.id)}">${esc14(category.label)}</option>`).join("");
     const usedPrizeIds = new Set((winners || []).map((winner) => winner.prize_id).filter(Boolean));
     const drawModeOptions = (selected) => [
       ["specific_item", "Specific items"],
@@ -22102,10 +22240,10 @@ Type RESET to continue.`
       ["winner_choice", "Winner chooses later"]
     ].map(([value, label]) => `<option value="${value}" ${selected === value ? "selected" : ""}>${label}</option>`).join("");
     const categoryRows = categories.length ? categories.map((category, index) => `
-        <div class="em-raffle-edit-row" data-em-raffle-category-row="${esc13(category.id)}" data-sort-order="${(index + 1) * 10}">
+        <div class="em-raffle-edit-row" data-em-raffle-category-row="${esc14(category.id)}" data-sort-order="${(index + 1) * 10}">
             <div>
                 <label class="em-raffle-edit-label">Category</label>
-                <input class="em-input" data-em-raffle-category-field="label" value="${esc13(category.label)}" maxlength="80">
+                <input class="em-input" data-em-raffle-category-field="label" value="${esc14(category.label)}" maxlength="80">
             </div>
             <div>
                 <label class="em-raffle-edit-label">Draw mode</label>
@@ -22115,45 +22253,45 @@ Type RESET to continue.`
                 <label class="em-raffle-edit-label">Winners</label>
                 <input class="em-input" type="number" min="0" step="1" data-em-raffle-category-field="winner_count" value="${category.winner_count ?? ""}">
             </div>
-            <button type="button" class="em-btn-ghost" data-em-raffle-remove-category="${esc13(category.id)}" data-category-label="${esc13(category.label)}" ${categories.length <= 1 ? "disabled" : ""}>Remove</button>
+            <button type="button" class="em-btn-ghost" data-em-raffle-remove-category="${esc14(category.id)}" data-category-label="${esc14(category.label)}" ${categories.length <= 1 ? "disabled" : ""}>Remove</button>
         </div>
     `).join("") : `<p class="text-xs text-gray-400 italic py-2">No prize categories yet.</p>`;
     const itemRows = items.length ? items.map((item, index) => {
       const previewUrl = prizeImagePreviews[item.id] || item.image_url || "";
       const pendingName = prizeImageFiles[item.id]?.name || "";
       return `
-        <div class="em-raffle-item-wrap" data-em-raffle-item-row="${esc13(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${esc13(item.image_url || "")}">
+        <div class="em-raffle-item-wrap" data-em-raffle-item-row="${esc14(item.id)}" data-sort-order="${(index + 1) * 10}" data-image-url="${esc14(item.image_url || "")}">
             <div class="em-raffle-edit-row em-raffle-item-row">
                 <div>
                     <label class="em-raffle-edit-label">Emoji</label>
-                    <input class="em-input" data-em-raffle-item-field="emoji" value="${esc13(item.emoji || "\u{1F381}")}" maxlength="4">
+                    <input class="em-input" data-em-raffle-item-field="emoji" value="${esc14(item.emoji || "\u{1F381}")}" maxlength="4">
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Prize</label>
-                    <input class="em-input" data-em-raffle-item-field="name" value="${esc13(item.name)}" maxlength="120">
+                    <input class="em-input" data-em-raffle-item-field="name" value="${esc14(item.name)}" maxlength="120">
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Category</label>
                     <select class="em-input" data-em-raffle-item-field="category_id">
-                        ${categories.map((category) => `<option value="${esc13(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${esc13(category.label)}</option>`).join("")}
+                        ${categories.map((category) => `<option value="${esc14(category.id)}" ${item.category_id === category.id ? "selected" : ""}>${esc14(category.label)}</option>`).join("")}
                     </select>
                 </div>
                 <div>
                     <label class="em-raffle-edit-label">Qty</label>
                     <input class="em-input" type="number" min="1" step="1" data-em-raffle-item-field="quantity" value="${item.quantity || 1}">
                 </div>
-                <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${esc13(item.id)}" data-item-label="${esc13(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ""}>Remove</button>
+                <button type="button" class="em-btn-ghost" data-em-raffle-remove-item="${esc14(item.id)}" data-item-label="${esc14(item.name)}" ${usedPrizeIds.has(item.id) ? 'disabled title="Already assigned to a winner"' : ""}>Remove</button>
             </div>
             <div class="em-prize-img-row">
-                <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-em-prize-file="${esc13(item.id)}">
-                <div class="em-prize-img-drop" data-em-prize-drop="${esc13(item.id)}" title="Click or drag an image here">
-                    ${previewUrl ? `<img src="${esc13(previewUrl)}" alt="Prize image">` : "<span>\u{1F4F7}</span>"}
+                <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-em-prize-file="${esc14(item.id)}">
+                <div class="em-prize-img-drop" data-em-prize-drop="${esc14(item.id)}" title="Click or drag an image here">
+                    ${previewUrl ? `<img src="${esc14(previewUrl)}" alt="Prize image">` : "<span>\u{1F4F7}</span>"}
                 </div>
-                <div class="em-prize-img-copy" data-em-prize-copy="${esc13(item.id)}">
-                    <strong>${pendingName ? esc13(pendingName) : previewUrl ? "Image set" : "Prize image"}</strong>
+                <div class="em-prize-img-copy" data-em-prize-copy="${esc14(item.id)}">
+                    <strong>${pendingName ? esc14(pendingName) : previewUrl ? "Image set" : "Prize image"}</strong>
                     <span>${previewUrl ? "Click or drop to replace. Save prize setup to keep changes." : "Click or drag a PNG, JPG, or WebP image here."}</span>
                 </div>
-                ${previewUrl ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-em-prize-clear="${esc13(item.id)}">Remove image</button>` : ""}
+                ${previewUrl ? `<button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-em-prize-clear="${esc14(item.id)}">Remove image</button>` : ""}
             </div>
         </div>
     `;
@@ -22191,7 +22329,7 @@ Type RESET to continue.`
                 <button type="button" class="em-btn-ghost" data-em-raffle-add-item>Add prize</button>
             </div>
             ${itemRows}
-            ${validation.valid ? "" : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(esc13).join("<br>")}</div>`}
+            ${validation.valid ? "" : `<div class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">${validation.errors.map(esc14).join("<br>")}</div>`}
             <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
                 <button type="button" id="emRafflePrizeSave" class="em-btn-primary">Save prize setup</button>
                 <span id="emRafflePrizeStatus" class="text-xs text-gray-400">${categories.length} categor${categories.length === 1 ? "y" : "ies"} \xB7 ${items.length} item${items.length === 1 ? "" : "s"}</span>
@@ -22200,7 +22338,7 @@ Type RESET to continue.`
     `;
   }
   function collectRafflePrizeConfigFromDom() {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     const model = window.EventsRaffleModel;
     if (!model) throw new Error("Raffle model helper is not loaded.");
     const categoryRows = Array.from(document.querySelectorAll("[data-em-raffle-category-row]"));
@@ -22234,7 +22372,7 @@ Type RESET to continue.`
     return model.normalizeConfig({ version: 2, categories, items });
   }
   function wireRafflePrizeImages() {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     document.querySelectorAll("[data-em-prize-drop]").forEach((zone) => {
       const itemId = zone.dataset.emPrizeDrop;
       const fileInput = document.querySelector(`[data-em-prize-file="${CSS.escape(itemId)}"]`);
@@ -22263,7 +22401,7 @@ Type RESET to continue.`
     });
   }
   function setRafflePrizeImage(itemId, file) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
       alert("Please use a PNG, JPG, or WebP image.");
       return;
@@ -22277,16 +22415,16 @@ Type RESET to continue.`
     reader.onload = () => {
       prizeImagePreviews[itemId] = reader.result;
       const zone = document.querySelector(`[data-em-prize-drop="${CSS.escape(itemId)}"]`);
-      if (zone) zone.innerHTML = `<img src="${esc13(reader.result)}" alt="Prize image">`;
+      if (zone) zone.innerHTML = `<img src="${esc14(reader.result)}" alt="Prize image">`;
       const copy = document.querySelector(`[data-em-prize-copy="${CSS.escape(itemId)}"]`);
-      if (copy) copy.innerHTML = `<strong>${esc13(file.name)}</strong><span>Ready to upload. Save prize setup to keep this image.</span>`;
+      if (copy) copy.innerHTML = `<strong>${esc14(file.name)}</strong><span>Ready to upload. Save prize setup to keep this image.</span>`;
       const status = document.getElementById("emRafflePrizeStatus");
       if (status) status.textContent = "Image selected. Save prize setup to upload it.";
     };
     reader.readAsDataURL(file);
   }
   function clearRafflePrizeImage(itemId) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     if (!itemId) return;
     delete prizeImageFiles[itemId];
     delete prizeImagePreviews[itemId];
@@ -22302,7 +22440,7 @@ Type RESET to continue.`
     if (status) status.textContent = "Image removed. Save prize setup to keep this change.";
   }
   async function uploadPendingRafflePrizeImages(config) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     const uploads = Object.entries(prizeImageFiles);
     if (!uploads.length) return config;
     const slug = safeFilename2(STATE4.event?.slug || STATE4.event?.title || STATE4.eventId || "event");
@@ -22319,7 +22457,7 @@ Type RESET to continue.`
     return config;
   }
   async function saveRafflePrizeSetup(action = {}) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     const model = window.EventsRaffleModel;
     const status = document.getElementById("emRafflePrizeStatus");
     const saveBtn = document.getElementById("emRafflePrizeSave");
@@ -22364,7 +22502,7 @@ Type RESET to continue.`
       if (error) throw error;
       STATE4.event.raffle_prizes = config;
       STATE4.event.raffle_winner_count = winnerCount;
-      await api20().refreshEventManager?.("raffle");
+      await api22().refreshEventManager?.("raffle");
     } catch (err) {
       if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
       else alert("Prize setup save failed: " + (err.message || "unknown error"));
@@ -22375,18 +22513,18 @@ Type RESET to continue.`
     }
   }
   function categoryPrizeQuantity(config, categoryId) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     return (config.items || []).filter((item) => item.category_id === categoryId).reduce((sum, item) => sum + Math.max(1, Number(item.quantity || 1)), 0);
   }
   function capRaffleWinnerCounts(config) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     (config.categories || []).forEach((category) => {
       const quantity = categoryPrizeQuantity(config, category.id);
       category.winner_count = Math.min(Number(category.winner_count || 0), quantity);
     });
   }
   async function saveRaffleEntryPrice() {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     const input = document.getElementById("emRaffleEntryPrice");
     const btn = document.getElementById("emRafflePriceSave");
     const status = document.getElementById("emRafflePriceStatus");
@@ -22411,7 +22549,7 @@ Type RESET to continue.`
       const { error } = await supabaseClient.from("events").update({ raffle_entry_cost_cents: cents }).eq("id", STATE4.eventId);
       if (error) throw error;
       STATE4.event.raffle_entry_cost_cents = cents;
-      await api20().refreshEventManager?.("raffle");
+      await api22().refreshEventManager?.("raffle");
     } catch (err) {
       if (status) status.textContent = "Save failed: " + (err.message || "unknown error");
       if (btn) {
@@ -22421,7 +22559,7 @@ Type RESET to continue.`
     }
   }
   async function removeRaffleEntry(btn) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     const name = btn.dataset.name || "this entry";
     const isPaid = btn.dataset.paid === "1";
     const warning = isPaid ? "\n\nThis was marked paid. Removing the record does not refund Stripe payments." : "";
@@ -22435,33 +22573,33 @@ Type RESET to continue.`
         entry_id: btn.dataset.removeRaffleEntry
       });
       STATE4.tabData.raffle = null;
-      await api20().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
-      api20().notifyParent?.("updated", STATE4.eventId);
+      await api22().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+      api22().notifyParent?.("updated", STATE4.eventId);
     } catch (err) {
       alert("Raffle entry remove failed: " + (err.message || "unknown error"));
       STATE4.tabData.raffle = null;
-      await api20().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+      await api22().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
     }
   }
   function winnerChoiceHtml(winner, config, winners) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     if (winner.selection_status !== "pending_choice") return "";
     const items = availableChoiceItems(config, winners, winner);
     if (!items.length) {
       return `<div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">No unassigned items are available in this category.</div>`;
     }
-    const options = items.map((item) => `<option value="${esc13(item.id)}">${esc13(item.emoji || "\u{1F381}")} ${esc13(item.name)}${item.quantity > 1 ? ` (${item.quantity} total)` : ""}</option>`).join("");
+    const options = items.map((item) => `<option value="${esc14(item.id)}">${esc14(item.emoji || "\u{1F381}")} ${esc14(item.name)}${item.quantity > 1 ? ` (${item.quantity} total)` : ""}</option>`).join("");
     return `
         <div class="mt-3 flex flex-col sm:flex-row gap-2">
-            <select id="emWinnerChoice_${esc13(winner.id)}" class="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-200">
+            <select id="emWinnerChoice_${esc14(winner.id)}" class="flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-200">
                 ${options}
             </select>
-            <button type="button" data-raffle-assign-choice="1" data-winner-id="${esc13(winner.id)}" class="rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition">Assign prize</button>
+            <button type="button" data-raffle-assign-choice="1" data-winner-id="${esc14(winner.id)}" class="rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition">Assign prize</button>
         </div>
     `;
   }
   function availableChoiceItems(config, winners, currentWinner) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     const items = raffleItems(config, currentWinner.category_id);
     const used = /* @__PURE__ */ new Map();
     (winners || []).forEach((winner) => {
@@ -22472,7 +22610,7 @@ Type RESET to continue.`
     return items.filter((item) => (used.get(item.id) || 0) < item.quantity);
   }
   async function assignWinnerChoice(winnerId) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     const winner = (STATE4.tabData.raffle?.winners || []).find((row) => row.id === winnerId);
     if (!winner) return;
     const select = document.getElementById(`emWinnerChoice_${winnerId}`);
@@ -22490,42 +22628,42 @@ Type RESET to continue.`
     }).eq("id", winnerId).eq("event_id", STATE4.eventId).eq("selection_status", "pending_choice");
     if (error) return alert("Prize assignment failed: " + error.message);
     STATE4.tabData.raffle = null;
-    await api20().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
+    await api22().renderTabAsync?.("raffle", loadRaffle, raffleHtml2, wireRaffle);
     document.dispatchEvent(new CustomEvent("events:raffle:drawn", { detail: { eventId: STATE4.eventId } }));
   }
   function raffleConfig(event) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     if (!window.EventsRaffleModel) return event?.raffle_prizes || [];
     return window.EventsRaffleModel.normalizeConfig(event?.raffle_prizes || []);
   }
   function raffleCategories(config) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getOrderedCategories(config);
   }
   function raffleItems(config, categoryId) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getItemsForCategory(config, categoryId);
   }
   function raffleTotalWinners(config) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     if (!window.EventsRaffleModel) return 0;
     return window.EventsRaffleModel.getTotalWinnerCount(config);
   }
   function raffleDrawQueue(config, winners) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     if (!window.EventsRaffleModel) return [];
     return window.EventsRaffleModel.getDrawQueue(config, winners || []);
   }
   function drawModeLabel(drawMode) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     if (drawMode === "random_item") return "Random prize assigned";
     if (drawMode === "winner_choice") return "Winner chooses later";
     return "Specific prize";
   }
   function prizeSlotLabel(slot) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     if (!slot) return "";
     if (slot.prize_name) return slot.prize_name;
     if (slot.draw_mode === "winner_choice") return `${slot.category_label || "Prize tier"} choice`;
@@ -22536,10 +22674,10 @@ Type RESET to continue.`
     Object.keys(prizeImagePreviews).forEach((key) => delete prizeImagePreviews[key]);
   }
   function refreshRaffle(eventId2) {
-    const STATE4 = api20().getState?.() || {};
+    const STATE4 = api22().getState?.() || {};
     if (eventId2 && eventId2 !== STATE4.eventId) return;
     STATE4.tabData.raffle = null;
-    if (STATE4.activeTab === "raffle") api20().renderTab?.("raffle");
+    if (STATE4.activeTab === "raffle") api22().renderTab?.("raffle");
   }
   document.addEventListener("events:raffle:drawn", (evt) => refreshRaffle(evt.detail?.eventId));
   var manageRaffleApi = {
@@ -22552,16 +22690,16 @@ Type RESET to continue.`
   globalThis.EventsManageRaffle = manageRaffleApi;
 
   // js/portal/events/manage/danger.js
-  function api21() {
+  function api23() {
     return window.EventsManageDangerApi || {};
   }
-  function esc14(s) {
+  function esc15(s) {
     const el = document.createElement("span");
     el.textContent = s == null ? "" : String(s);
     return el.innerHTML;
   }
   function dangerHtml() {
-    const STATE4 = api21().getState?.() || {};
+    const STATE4 = api23().getState?.() || {};
     const e = STATE4.event;
     const isCancelled = e.status === "cancelled";
     const isCompleted = e.status === "completed";
@@ -22577,7 +22715,7 @@ Type RESET to continue.`
         </div>
 
         <div class="em-metric-grid mb-4">
-            <div class="em-metric"><span>Status</span><strong style="font-size:18px">${esc14(statusLabel)}</strong><small>Current lifecycle</small></div>
+            <div class="em-metric"><span>Status</span><strong style="font-size:18px">${esc15(statusLabel)}</strong><small>Current lifecycle</small></div>
             <div class="em-metric"><span>RSVP records</span><strong>${totalRsvps}</strong><small>Member + guest</small></div>
             <div class="em-metric"><span>Paid tickets</span><strong>${paidTickets}</strong><small>Paid records (no in-app refund)</small></div>
             <div class="em-metric"><span>Check-ins</span><strong>${checkins}</strong><small>Attendance history</small></div>
@@ -22614,7 +22752,7 @@ Type RESET to continue.`
     `;
   }
   function wireDanger() {
-    const STATE4 = api21().getState?.() || {};
+    const STATE4 = api23().getState?.() || {};
     document.getElementById("emSheetContent").querySelectorAll("[data-action]").forEach((btn) => {
       btn.addEventListener("click", () => runDangerAction(btn.dataset.action));
     });
@@ -22632,7 +22770,7 @@ Type RESET to continue.`
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-4" role="dialog" aria-labelledby="emCancelSmsTitle">
             <h3 id="emCancelSmsTitle" class="text-base font-semibold text-gray-900">Send cancellation text?</h3>
             <p class="text-sm text-gray-600 mt-1">Notify ${optedInCount} opted-in attendee${optedInCount === 1 ? "" : "s"}. You can edit the message below. Phone numbers stay masked.</p>
-            <textarea id="emCancelSmsBody" class="em-textarea mt-3" rows="4" maxlength="1600">${esc14(defaultBody)}</textarea>
+            <textarea id="emCancelSmsBody" class="em-textarea mt-3" rows="4" maxlength="1600">${esc15(defaultBody)}</textarea>
             <p id="emCancelSmsResult" class="text-xs mt-2" style="min-height:1rem"></p>
             <div class="flex flex-wrap gap-2 mt-3 justify-end">
                 <button type="button" class="em-btn-ghost" data-cancel-sms-skip>Skip</button>
@@ -22699,7 +22837,7 @@ Type RESET to continue.`
     });
   }
   async function runDangerAction(action) {
-    const STATE4 = api21().getState?.() || {};
+    const STATE4 = api23().getState?.() || {};
     const e = STATE4.event;
     if (!e) return;
     if (action === "delete") {
@@ -22714,8 +22852,8 @@ Type RESET to continue.`
         const { error } = await supabaseClient.from("events").delete().eq("id", e.id);
         if (error) throw error;
         alert("Event deleted.");
-        api21().close?.();
-        api21().notifyParent?.("deleted", e.id);
+        api23().close?.();
+        api23().notifyParent?.("deleted", e.id);
       } catch (err) {
         alert("Delete failed: " + (err.message || "unknown error"));
       }
@@ -22731,9 +22869,9 @@ Paid attendees will NOT be auto-refunded. Rare exceptions are manager-approved o
           reason: "manual"
         });
         STATE4.event.status = "cancelled";
-        api21().renderHeader?.();
-        api21().renderTab?.("danger");
-        api21().notifyParent?.("updated", e.id);
+        api23().renderHeader?.();
+        api23().renderTab?.("danger");
+        api23().notifyParent?.("updated", e.id);
         if (result?.message) alert(result.message);
         try {
           const { count } = await supabaseClient.from("event_sms_recipients").select("id", { count: "exact", head: true }).eq("event_id", e.id).eq("opted_in", true).is("opted_out_at", null);
@@ -22749,7 +22887,7 @@ Paid attendees will NOT be auto-refunded. Rare exceptions are manager-approved o
       return;
     }
     if (action === "reset-participation") {
-      await api21().resetParticipation?.();
+      await api23().resetParticipation?.();
       return;
     }
     if (action === "complete") {
@@ -22758,9 +22896,9 @@ Paid attendees will NOT be auto-refunded. Rare exceptions are manager-approved o
         const { error } = await supabaseClient.from("events").update({ status: "completed" }).eq("id", e.id);
         if (error) throw error;
         STATE4.event.status = "completed";
-        api21().renderHeader?.();
-        api21().renderTab?.("danger");
-        api21().notifyParent?.("updated", e.id);
+        api23().renderHeader?.();
+        api23().renderTab?.("danger");
+        api23().notifyParent?.("updated", e.id);
       } catch (err) {
         alert("Complete failed: " + (err.message || "unknown error"));
       }
@@ -22849,7 +22987,9 @@ Paid attendees will NOT be auto-refunded. Rare exceptions are manager-approved o
   }
   var Shell2 = window.EventsManageShell;
   var Overview = window.EventsManageOverview;
+  var EventTab = window.EventsManageEvent;
   var Images = window.EventsManageImages;
+  var People = window.EventsManagePeople;
   var Rsvps = window.EventsManageRsvps;
   var Danger = window.EventsManageDanger;
   var Money = window.EventsManageMoney;
@@ -22897,20 +23037,17 @@ Paid attendees will NOT be auto-refunded. Rare exceptions are manager-approved o
     STATE3.checkins = checkinsRes.data || [];
     STATE3.parties = partiesRes.data || [];
     STATE3.seats = seatsRes.data || [];
-    STATE3.eventDocuments = [];
-    if (STATE3.event?.event_type === "llc") {
-      const { data: docs } = await supabaseClient.from("event_documents").select("id, doc_type, target_user_id, distributed").eq("event_id", eventId2);
-      STATE3.eventDocuments = docs || [];
-    }
+    const { data: docs } = await supabaseClient.from("event_documents").select("id, doc_type, target_user_id, distributed").eq("event_id", eventId2);
+    STATE3.eventDocuments = docs || [];
   }
   async function open4(eventId2, opts = {}) {
     if (!eventId2) return;
     Shell2.ensureMounted();
     STATE3.eventId = eventId2;
     STATE3.source = opts.source || "admin";
-    const tabList = Shell2.getVisibleTabs?.() || Shell2.getTabs?.() || [];
-    STATE3.activeTab = tabList.some((t) => t.key === opts.tab) ? opts.tab : "overview";
     STATE3.editCopyOnOpen = !!opts.editCopy;
+    const requested = opts.editCopy ? "event" : opts.tab;
+    STATE3.activeTab = "overview";
     STATE3.tabData = {};
     Raffle?.clearPrizeImageState?.();
     Shell2.setLoadingChrome();
@@ -22920,9 +23057,7 @@ Paid attendees will NOT be auto-refunded. Rare exceptions are manager-approved o
     if (opts.notificationsPrefill && Notifications?.resetNotificationsUi) {
       Notifications.resetNotificationsUi(opts.notificationsPrefill);
     }
-    if (opts.tab === "notifications" && !STATE3.canManageNotifications) {
-      STATE3.activeTab = "overview";
-    }
+    STATE3.activeTab = Shell2.resolveOpenTab?.(requested) || "overview";
     Shell2.renderHeader();
     Shell2.renderTabs();
     _renderTab(STATE3.activeTab);
@@ -22931,38 +23066,34 @@ Paid attendees will NOT be auto-refunded. Rare exceptions are manager-approved o
     Shell2.closePanel();
   }
   function _renderTab(tab) {
-    if (tab === "overview") {
+    const key = Shell2.resolveTabKey?.(tab) || tab;
+    if (key === "overview") {
       _renderContent(Overview.overviewHtml());
       Overview.wireOverview();
       return;
     }
-    if (tab === "images") {
-      _renderContent(Images.imagesHtml());
-      Images.wireImages();
+    if (key === "event") {
+      _renderContent(EventTab.eventHtml());
+      EventTab.wireEvent();
       return;
     }
-    if (tab === "rsvps") {
-      _renderContent(Rsvps.rsvpsHtml());
-      Rsvps.wireRsvps();
+    if (key === "people") {
+      if (STATE3.canManageNotifications) {
+        return _renderTabAsync("notifications", Notifications.loadNotifications, People.peopleHtml, People.wirePeople);
+      }
+      _renderContent(People.peopleHtml());
+      People.wirePeople();
       return;
     }
-    if (tab === "notifications") {
-      return _renderTabAsync("notifications", Notifications.loadNotifications, Notifications.notificationsHtml, Notifications.wireNotifications);
-    }
-    if (tab === "danger") {
+    if (key === "danger") {
       _renderContent(Danger.dangerHtml());
       Danger.wireDanger();
       return;
     }
-    if (tab === "money") return _renderTabAsync("money", Money.loadMoney, Money.moneyHtml, Money.wireMoney);
-    if (tab === "docs") return _renderTabAsync("docs", Docs.loadDocs, Docs.docsHtml, Docs.wireDocs);
-    if (tab === "raffle") return _renderTabAsync("raffle", Raffle.loadRaffle, Raffle.raffleHtml, Raffle.wireRaffle);
-    if (tab === "comp") {
-      if (STATE3.event?.event_type !== "competition") {
-        _renderContent(Comp.compHtml());
-        Comp.wireComp();
-        return;
-      }
+    if (key === "money") return _renderTabAsync("money", Money.loadMoney, Money.moneyHtml, Money.wireMoney);
+    if (key === "docs") return _renderTabAsync("docs", Docs.loadDocs, Docs.docsHtml, Docs.wireDocs);
+    if (key === "raffle") return _renderTabAsync("raffle", Raffle.loadRaffle, Raffle.raffleHtml, Raffle.wireRaffle);
+    if (key === "comp") {
       return _renderTabAsync("comp", Comp.loadComp, Comp.compHtml, Comp.wireComp);
     }
   }
@@ -22976,14 +23107,16 @@ Paid attendees will NOT be auto-refunded. Rare exceptions are manager-approved o
         return;
       }
     }
-    if (STATE3.activeTab !== key) return;
+    const active = Shell2.resolveTabKey?.(STATE3.activeTab) || STATE3.activeTab;
+    const expected = key === "notifications" ? "people" : key;
+    if (active !== expected && active !== key) return;
     _renderContent(render());
     if (wire12) wire12();
   }
   async function _refreshEventManager(tab) {
     await _loadEventData(STATE3.eventId);
     STATE3.tabData = {};
-    if (tab) STATE3.activeTab = tab;
+    if (tab) STATE3.activeTab = Shell2.resolveOpenTab?.(tab) || tab;
     _renderHeader();
     _renderTabs();
     _renderTab(STATE3.activeTab);
@@ -23067,6 +23200,15 @@ Paid attendees will NOT be auto-refunded. Rare exceptions are manager-approved o
     renderTabs: () => Shell2.renderTabs(),
     renderTab: _renderTab,
     notifyParent: _notifyParent
+  };
+  globalThis.EventsManageEventApi = {
+    getState: () => STATE3,
+    renderHeader: () => Shell2.renderHeader(),
+    renderTab: _renderTab,
+    notifyParent: _notifyParent
+  };
+  globalThis.EventsManagePeopleApi = {
+    getState: () => STATE3
   };
   var eventsManageApi = { open: open4, close: close3, refreshRaffle: refreshRaffle2 };
   globalThis.EventsManage = eventsManageApi;

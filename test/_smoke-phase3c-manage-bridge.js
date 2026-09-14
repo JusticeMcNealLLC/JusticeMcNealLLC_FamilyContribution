@@ -68,6 +68,8 @@ console.log('\n── js/portal/events/manage/sheet.js — file structure ──
 const sheet = read('js/portal/events/manage/sheet.js');
 const shell = read('js/portal/events/manage/shell.js');
 const overview = read('js/portal/events/manage/overview.js');
+const eventTab = read('js/portal/events/manage/event.js');
+const peopleTab = read('js/portal/events/manage/people.js');
 const images = read('js/portal/events/manage/images.js');
 const docs = read('js/portal/events/manage/docs.js');
 const rsvps = read('js/portal/events/manage/rsvps.js');
@@ -101,15 +103,15 @@ sheet.includes('window.EventsManage')
     : fail('window.EventsManage not referenced in source');
 
 // ─── window._emToggleFeatured (inline onclick compatibility) ─
-console.log('\n── manage/overview.js — window._emToggleFeatured (inline onclick bridge) ───');
+console.log('\n── manage/event.js — window._emToggleFeatured (inline onclick bridge) ───');
 
-hasGlobalBridge(overview, '_emToggleFeatured')
-    ? pass('_emToggleFeatured bridged in overview.js (inline onclick compatibility preserved)')
-    : fail('_emToggleFeatured assignment missing in overview.js — featured toggle will break');
+hasGlobalBridge(eventTab, '_emToggleFeatured')
+    ? pass('_emToggleFeatured bridged in event.js (inline onclick compatibility preserved)')
+    : fail('_emToggleFeatured assignment missing in event.js — featured toggle will break');
 
-overview.includes('window._emToggleFeatured()')
-    ? pass('window._emToggleFeatured() called from inline onclick in overviewHtml')
-    : fail('window._emToggleFeatured() call missing from overviewHtml');
+eventTab.includes('window._emToggleFeatured()')
+    ? pass('window._emToggleFeatured() called from inline onclick in eventHtml')
+    : fail('window._emToggleFeatured() call missing from eventHtml');
 
 // ─── window.PortalEvents.manage bridge (Phase 3C additions) ─
 console.log('\n── manage/sheet.js — window.PortalEvents.manage bridge (Phase 3C) ─────────');
@@ -141,8 +143,8 @@ sheet.includes("detail.register('manage'")
 console.log('\n── manage/sheet.js — custom event dispatches ─────────────────────────────');
 
 // events:manage:updated (overview featured toggle; sheet _notifyParent for other tabs)
-(sheet.includes("'events:manage:updated'") || overview.includes("'events:manage:updated'"))
-    ? pass("'events:manage:updated' literal dispatch present (sheet or overview)")
+(sheet.includes("'events:manage:updated'") || overview.includes("'events:manage:updated'") || eventTab.includes("'events:manage:updated'"))
+    ? pass("'events:manage:updated' literal dispatch present (sheet, overview, or event)")
     : fail("'events:manage:updated' literal dispatch missing");
 
 // events:manage:deleted dispatched via _notifyParent helper (dynamic concatenation)
@@ -221,7 +223,7 @@ manageNsOk(overview, 'EventsManageOverview', 'manageOverviewApi')
     ? pass('EventsManageOverview namespace assigned')
     : fail('EventsManageOverview namespace missing');
 
-['function overviewHtml(', 'function wireOverview(', 'function saveEventCopy(', 'function renderOverviewQrs(', 'function toggleFeatured('].forEach(fn => {
+['function overviewHtml(', 'function wireOverview(', 'function renderOverviewQrs('].forEach(fn => {
     overview.includes(fn)
         ? pass(`overview.js owns ${fn.trim()}`)
         : fail(`overview.js missing ${fn.trim()}`);
@@ -256,9 +258,12 @@ console.log('\n── manage tab modules (Phase 5M.3B) ────────�
             ? pass(`${label}: owns ${fn.trim()}`)
             : fail(`${label}: missing ${fn.trim()}`);
     });
-    sheet.includes(delegate)
-        ? pass(`sheet.js delegates to ${delegate}`)
-        : fail(`sheet.js must delegate to ${delegate}`);
+    const delegated = sheet.includes(delegate)
+        || eventTab.includes(delegate.replace('Images.', ''))
+        || peopleTab.includes(delegate.replace('Rsvps.', ''));
+    delegated
+        ? pass(`host-job tabs still use ${delegate}`)
+        : fail(`missing delegate ${delegate}`);
 });
 
 console.log('\n── manage tab modules (Phase 5M.3C) ───────────────────────────────────────');

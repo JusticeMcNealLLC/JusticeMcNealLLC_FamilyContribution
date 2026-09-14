@@ -5,7 +5,7 @@
 //   • admin/events.html  → "Manage" button on each event card
 //   • portal/events.html → Host Controls "Manage event" button
 //
-// All 7 tabs: Overview, RSVPs, Money, Docs, Raffle, Comp, Danger Zone
+// Host-job tabs: Overview, Event, People, Money, Docs?, Raffle?, Competition?, Danger
 //
 // Public surface:
 //   window.EventsManage.open(eventId, { source: 'admin' | 'portal' })
@@ -43,7 +43,9 @@ function getDocTypes() {
 
 const Shell = window.EventsManageShell;
 const Overview = window.EventsManageOverview;
+const EventTab = window.EventsManageEvent;
 const Images = window.EventsManageImages;
+const People = window.EventsManagePeople;
 const Rsvps = window.EventsManageRsvps;
 const Danger = window.EventsManageDanger;
 const Money = window.EventsManageMoney;
@@ -118,14 +120,11 @@ async function _loadEventData(eventId) {
     STATE.parties = partiesRes.data || [];
     STATE.seats = seatsRes.data || [];
 
-    STATE.eventDocuments = [];
-    if (STATE.event?.event_type === 'llc') {
-        const { data: docs } = await supabaseClient
-            .from('event_documents')
-            .select('id, doc_type, target_user_id, distributed')
-            .eq('event_id', eventId);
-        STATE.eventDocuments = docs || [];
-    }
+    const { data: docs } = await supabaseClient
+        .from('event_documents')
+        .select('id, doc_type, target_user_id, distributed')
+        .eq('event_id', eventId);
+    STATE.eventDocuments = docs || [];
 }
 
 // ─── Open / Close ───────────────────────────────────────────────
@@ -134,9 +133,9 @@ async function open(eventId, opts = {}) {
     Shell.ensureMounted();
     STATE.eventId = eventId;
     STATE.source  = opts.source || 'admin';
-    const tabList = Shell.getVisibleTabs?.() || Shell.getTabs?.() || [];
-    STATE.activeTab = tabList.some(t => t.key === opts.tab) ? opts.tab : 'overview';
     STATE.editCopyOnOpen = !!opts.editCopy;
+    const requested = opts.editCopy ? 'event' : opts.tab;
+    STATE.activeTab = 'overview';
     STATE.tabData = {};
     Raffle?.clearPrizeImageState?.();
 
@@ -148,9 +147,7 @@ async function open(eventId, opts = {}) {
     if (opts.notificationsPrefill && Notifications?.resetNotificationsUi) {
         Notifications.resetNotificationsUi(opts.notificationsPrefill);
     }
-    if (opts.tab === 'notifications' && !STATE.canManageNotifications) {
-        STATE.activeTab = 'overview';
-    }
+    STATE.activeTab = Shell.resolveOpenTab?.(requested) || 'overview';
     Shell.renderHeader();
     Shell.renderTabs();
     _renderTab(STATE.activeTab);
@@ -161,19 +158,23 @@ function close() {
 }
 
 function _renderTab(tab) {
-    if (tab === 'overview') { _renderContent(Overview.overviewHtml()); Overview.wireOverview(); return; }
-    if (tab === 'images')   { _renderContent(Images.imagesHtml());   Images.wireImages();   return; }
-    if (tab === 'rsvps')    { _renderContent(Rsvps.rsvpsHtml()); Rsvps.wireRsvps(); return; }
-    if (tab === 'notifications') {
-        return _renderTabAsync('notifications', Notifications.loadNotifications, Notifications.notificationsHtml, Notifications.wireNotifications);
+    const key = Shell.resolveTabKey?.(tab) || tab;
+    if (key === 'overview') { _renderContent(Overview.overviewHtml()); Overview.wireOverview(); return; }
+    if (key === 'event')    { _renderContent(EventTab.eventHtml()); EventTab.wireEvent(); return; }
+    if (key === 'people') {
+        if (STATE.canManageNotifications) {
+            return _renderTabAsync('notifications', Notifications.loadNotifications, People.peopleHtml, People.wirePeople);
+        }
+        _renderContent(People.peopleHtml());
+        People.wirePeople();
+        return;
     }
-    if (tab === 'danger')   { _renderContent(Danger.dangerHtml()); Danger.wireDanger(); return; }
+    if (key === 'danger')   { _renderContent(Danger.dangerHtml()); Danger.wireDanger(); return; }
     // Lazy-loaded M3b tabs:
-    if (tab === 'money')    return _renderTabAsync('money',  Money.loadMoney,  Money.moneyHtml,  Money.wireMoney);
-    if (tab === 'docs')     return _renderTabAsync('docs',   Docs.loadDocs,   Docs.docsHtml,   Docs.wireDocs);
-    if (tab === 'raffle')   return _renderTabAsync('raffle', Raffle.loadRaffle, Raffle.raffleHtml, Raffle.wireRaffle);
-    if (tab === 'comp') {
-        if (STATE.event?.event_type !== 'competition') { _renderContent(Comp.compHtml()); Comp.wireComp(); return; }
+    if (key === 'money')    return _renderTabAsync('money',  Money.loadMoney,  Money.moneyHtml,  Money.wireMoney);
+    if (key === 'docs')     return _renderTabAsync('docs',   Docs.loadDocs,   Docs.docsHtml,   Docs.wireDocs);
+    if (key === 'raffle')   return _renderTabAsync('raffle', Raffle.loadRaffle, Raffle.raffleHtml, Raffle.wireRaffle);
+    if (key === 'comp') {
         return _renderTabAsync('comp', Comp.loadComp, Comp.compHtml, Comp.wireComp);
     }
 }
@@ -188,8 +189,9 @@ async function _renderTabAsync(key, loader, render, wire) {
             return;
         }
     }
-    // Guard: user may have switched tabs while loading
-    if (STATE.activeTab !== key) return;
+    const active = Shell.resolveTabKey?.(STATE.activeTab) || STATE.activeTab;
+    const expected = key === 'notifications' ? 'people' : key;
+    if (active !== expected && active !== key) return;
     _renderContent(render());
     if (wire) wire();
 }
@@ -200,7 +202,7 @@ function _wireOverview() { return Overview.wireOverview(); }
 async function _refreshEventManager(tab) {
     await _loadEventData(STATE.eventId);
     STATE.tabData = {};
-    if (tab) STATE.activeTab = tab;
+    if (tab) STATE.activeTab = Shell.resolveOpenTab?.(tab) || tab;
     _renderHeader();
     _renderTabs();
     _renderTab(STATE.activeTab);
@@ -304,6 +306,17 @@ globalThis.EventsManageOverviewApi = {
     renderTabs: () => Shell.renderTabs(),
     renderTab: _renderTab,
     notifyParent: _notifyParent,
+};
+
+globalThis.EventsManageEventApi = {
+    getState: () => STATE,
+    renderHeader: () => Shell.renderHeader(),
+    renderTab: _renderTab,
+    notifyParent: _notifyParent,
+};
+
+globalThis.EventsManagePeopleApi = {
+    getState: () => STATE,
 };
 
 // ─── Public surface ─────────────────────────────────────────────

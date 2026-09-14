@@ -49,28 +49,34 @@ hosts.includes('font-size:16px')
     ? pass('Hosts search uses 16px / em-input')
     : fail('Hosts search missing 16px');
 
-console.log('\n── Overview announce before Full event editor ───────────────────────────');
+console.log('\n── Host-job announce / editor split ─────────────────────────────────────');
 const overview = read('js/portal/events/manage/overview.js');
-const smsIdx = overview.indexOf('smsInvitesHtml');
-const editorIdx = overview.indexOf('Full event editor');
-smsIdx > -1 && editorIdx > -1 && smsIdx < editorIdx
-    ? pass('SMS invites HTML before Full event editor')
-    : fail('SMS invites still below Full event editor');
+const eventTab = read('js/portal/events/manage/event.js');
+const people = read('js/portal/events/manage/people.js');
 overview.includes('emAnnounceCard')
     || overview.includes('Announce')
-    ? pass('announce QR block present near top')
+    ? pass('Overview announce QR block present')
     : fail('announce QR block missing');
+!overview.includes('smsInvitesHtml') && !overview.includes('Full event editor')
+    ? pass('Overview no longer mounts SMS or the full editor')
+    : fail('Overview still mixes SMS / editor into the pulse tab');
+people.includes('smsInvitesHtml')
+    ? pass('People tab mounts SMS invites')
+    : fail('People tab missing SMS invites');
+eventTab.includes('Full event editor')
+    ? pass('Event tab owns Full event editor')
+    : fail('Event tab missing Full event editor');
 
 console.log('\n── Bundle + SW ──────────────────────────────────────────────────────────');
 const html = read('pages/portal/events.html');
-html.includes('events.bundle.js?v=190')
-    ? pass('portal bundle ?v=190')
-    : fail('bundle not bumped to 190');
+html.includes('events.bundle.js?v=237')
+    ? pass('portal bundle ?v=237')
+    : fail('bundle not bumped to 237');
 
 const sw = read('sw.js');
-sw.includes("CACHE_NAME = 'jm-portal-v139'")
-    && sw.includes('events.bundle.js?v=190')
-    ? pass('SW CACHE_NAME v139 + precache ?v=190')
+sw.includes("CACHE_NAME = 'jm-portal-v191'")
+    && sw.includes('events.bundle.js?v=237')
+    ? pass('SW CACHE_NAME v191 + precache ?v=237')
     : fail('SW cache/precache not bumped');
 
 const bundle = read('js/portal/events/events.bundle.js');

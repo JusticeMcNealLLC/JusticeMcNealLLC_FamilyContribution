@@ -40,8 +40,8 @@ bundle.includes('seatOptionsSummary')
     : fail('bundle missing RSVPs MVP');
 
 const html = read('pages/portal/events.html');
-html.includes('events.bundle.js?v=178')
-    ? pass('events.bundle cache bump v=178')
+html.includes('events.bundle.js?v=237')
+    ? pass('events.bundle cache bump v=237')
     : fail('bundle ?v= not bumped');
 
 console.log('\n── §13.12 docs ──────────────────────────────────────────────────────────');

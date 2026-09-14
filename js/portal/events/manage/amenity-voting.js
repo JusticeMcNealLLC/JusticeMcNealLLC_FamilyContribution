@@ -39,7 +39,7 @@ function setStatus(msg, isError) {
     el.className = isError ? 'text-xs text-red-600 mt-2' : 'text-xs text-gray-500 mt-2';
 }
 
-function amenityVotingHtml(event) {
+function amenityVotingStatusHtml(event) {
     const cfg = normalizeCfg(event);
     if (!cfg.enabled) return '';
 
@@ -66,7 +66,7 @@ function amenityVotingHtml(event) {
             <div class="em-section-head">
                 <div>
                     <h3 class="em-section-title">Amenity voting</h3>
-                    <p class="em-section-sub">Close voting and control when attendees see results. Option list stays locked after RSVPs.</p>
+                    <p class="em-section-sub">Live status and tallies. Close voting here; change close time and visibility on Event.</p>
                 </div>
             </div>
             <div class="em-metric-grid mb-3">
@@ -81,24 +81,43 @@ function amenityVotingHtml(event) {
             ${!closed ? `
             <button type="button" class="em-btn-primary mb-3" id="emAmenityCloseNow" style="font-size:13px">Close voting now</button>
             ` : `
-            <p class="text-xs text-gray-500 mb-3">Voting is closed. You can still change results visibility or set a later reopen time below (sets a future close).</p>
+            <p class="text-xs text-gray-500 mb-3">Voting is closed.</p>
             `}
+            <button type="button" class="em-btn-ghost" data-overview-tab="event">Voting settings</button>
+            <p id="emAmenityVoteStatus" class="text-xs text-gray-500 mt-2"></p>
+        </div>`;
+}
+
+function amenityVotingSettingsHtml(event) {
+    const cfg = normalizeCfg(event);
+    if (!cfg.enabled) return '';
+    const closed = window.EventsAmenityVoting?.isVotingClosed?.(cfg) === true;
+
+    return `
+        <div class="em-card mb-3" id="emAmenitySettingsCard">
+            <div class="em-section-head">
+                <div>
+                    <h3 class="em-section-title">Amenity voting settings</h3>
+                    <p class="em-section-sub">Option list stays locked after RSVPs. Close time and who can see results can still change.</p>
+                </div>
+            </div>
+            ${closed ? `<p class="text-xs text-gray-500 mb-3">Voting is closed. A future close time reopens it until that moment.</p>` : ''}
             <label class="text-xs text-gray-500 block mb-1" for="emAmenityClosesAt">Closes at</label>
-            <input type="datetime-local" id="emAmenityClosesAt" class="text-sm w-full mb-3"
-                value="${esc(toDatetimeLocal(cfg.closes_at))}"
-                style="border:1px solid var(--color-border,#D5DFEC);border-radius:8px;padding:8px 10px">
+            <input type="datetime-local" id="emAmenityClosesAt" class="em-input mb-3"
+                value="${esc(toDatetimeLocal(cfg.closes_at))}">
             <label class="text-xs text-gray-500 block mb-1" for="emAmenityResultsVisible">Show results to attendees</label>
-            <select id="emAmenityResultsVisible" class="text-sm w-full mb-3"
-                style="border:1px solid var(--color-border,#D5DFEC);border-radius:8px;padding:8px 10px">
+            <select id="emAmenityResultsVisible" class="em-input mb-3">
                 <option value="after_close"${cfg.results_visible === 'after_close' ? ' selected' : ''}>After voting closes</option>
                 <option value="always"${cfg.results_visible === 'always' ? ' selected' : ''}>Always</option>
                 <option value="host_only"${cfg.results_visible === 'host_only' ? ' selected' : ''}>Hosts only</option>
             </select>
-            <div class="flex flex-wrap gap-2">
-                <button type="button" class="em-btn-primary" id="emAmenityVoteSave" style="font-size:13px">Save voting settings</button>
-            </div>
+            <button type="button" class="em-btn-primary" id="emAmenityVoteSave" style="font-size:13px">Save voting settings</button>
             <p id="emAmenityVoteStatus" class="text-xs text-gray-500 mt-2"></p>
         </div>`;
+}
+
+function amenityVotingHtml(event) {
+    return amenityVotingStatusHtml(event);
 }
 
 async function patchAmenityVoting(nextPartial) {
@@ -133,7 +152,15 @@ async function patchAmenityVoting(nextPartial) {
 }
 
 async function closeVotingNow() {
-    if (!confirm('Close amenity voting now? Attendees will no longer be able to cast a vote.')) return;
+    const ok = window.EventsHelpers?.confirmDialog
+        ? await window.EventsHelpers.confirmDialog({
+            title: 'Close voting?',
+            message: 'Close amenity voting now? Attendees will no longer be able to cast a vote.',
+            confirmLabel: 'Close voting',
+            cancelLabel: 'Keep open',
+        })
+        : window.confirm('Close amenity voting now? Attendees will no longer be able to cast a vote.');
+    if (!ok) return;
     setStatus('Closing voting…');
     try {
         await patchAmenityVoting({ closes_at: new Date().toISOString() });
@@ -165,7 +192,7 @@ async function saveVotingSettings() {
             results_visible: resultsVisible,
         });
         setStatus('Saved voting settings.');
-        api().renderTab?.('overview');
+        api().renderTab?.('event');
         setTimeout(() => {
             const el = document.getElementById('emAmenityVoteStatus');
             if (el) {
@@ -178,11 +205,28 @@ async function saveVotingSettings() {
     }
 }
 
-function wireAmenityVoting(event) {
+function wireAmenityVotingStatus(event) {
     const cfg = normalizeCfg(event);
     if (!cfg.enabled) return;
     document.getElementById('emAmenityCloseNow')?.addEventListener('click', () => closeVotingNow());
+}
+
+function wireAmenityVotingSettings(event) {
+    const cfg = normalizeCfg(event);
+    if (!cfg.enabled) return;
     document.getElementById('emAmenityVoteSave')?.addEventListener('click', () => saveVotingSettings());
 }
 
-export { amenityVotingHtml, wireAmenityVoting };
+function wireAmenityVoting(event) {
+    wireAmenityVotingStatus(event);
+    wireAmenityVotingSettings(event);
+}
+
+export {
+    amenityVotingHtml,
+    amenityVotingStatusHtml,
+    amenityVotingSettingsHtml,
+    wireAmenityVoting,
+    wireAmenityVotingStatus,
+    wireAmenityVotingSettings,
+};

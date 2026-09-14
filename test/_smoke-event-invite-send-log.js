@@ -38,15 +38,15 @@ invites.includes("message_type', 'event_invite'")
     : fail('recent invite query missing');
 
 invites.includes('emSmsInviteRecent')
-    && invites.includes('data-overview-tab="notifications"')
+    && invites.includes('data-scroll-people-reach')
     && invites.includes('See all SMS history')
-    ? pass('Overview peek + jump to Notifications')
-    : fail('Overview invite peek missing');
+    ? pass('People peek + scroll to SMS history')
+    : fail('People invite peek missing');
 
 const html = read('pages/portal/events.html');
-html.includes('events.bundle.js?v=183')
-    ? pass('bundle ?v=183')
-    : fail('bundle not bumped to 183');
+html.includes('events.bundle.js?v=237')
+    ? pass('bundle ?v=237')
+    : fail('bundle not bumped to 237');
 
 const bundle = read('js/portal/events/events.bundle.js');
 bundle.includes('TYPE_LABELS')

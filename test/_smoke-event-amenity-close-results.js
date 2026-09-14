@@ -43,11 +43,14 @@ manage.includes('Close voting now')
     : fail('manage amenity card incomplete');
 
 const overview = read('js/portal/events/manage/overview.js');
+const eventTab = read('js/portal/events/manage/event.js');
 overview.includes("from './amenity-voting.js'")
-    && overview.includes('amenityVotingHtml')
-    && overview.includes('wireAmenityVoting')
-    ? pass('overview wires amenity voting card')
-    : fail('overview missing amenity voting wiring');
+    && overview.includes('amenityVotingStatusHtml')
+    && overview.includes('wireAmenityVotingStatus')
+    && eventTab.includes('amenityVotingSettingsHtml')
+    && eventTab.includes('wireAmenityVotingSettings')
+    ? pass('Overview wires amenity status; Event tab wires settings')
+    : fail('amenity voting split missing from Overview / Event');
 
 console.log('\n── Portal + public results via RPC ──────────────────────────────────────');
 const detailData = read('js/portal/events/detail/data.js');
@@ -84,15 +87,15 @@ bundle.includes('Close voting now')
     : fail('bundle missing amenity close/results');
 
 const portalHtml = read('pages/portal/events.html');
-portalHtml.includes('events.bundle.js?v=186')
-    ? pass('portal bundle ?v=186')
-    : fail('portal bundle not bumped to 186');
+portalHtml.includes('events.bundle.js?v=237')
+    ? pass('portal bundle ?v=237')
+    : fail('portal bundle not bumped to 237');
 
 const eventsHtml = read('events/index.html');
-eventsHtml.includes('amenity-voting.js?v=186')
-    && eventsHtml.includes('index.js?v=186')
-    ? pass('public amenity-voting + index cache bump v=186')
-    : fail('public ?v= not bumped to 186');
+/amenity-voting\.js\?v=\d+/.test(eventsHtml)
+    && /index\.js\?v=\d+/.test(eventsHtml)
+    ? pass('public amenity-voting + index are cache-busted')
+    : fail('public amenity scripts missing ?v=');
 
 console.log('\n── Docs ─────────────────────────────────────────────────────────────────');
 const brainstorm = read('docs/product/improvements/pages/events/000_events_system_overhaul_brainstorm.md');

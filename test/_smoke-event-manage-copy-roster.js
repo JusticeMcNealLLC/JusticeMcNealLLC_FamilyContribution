@@ -41,9 +41,9 @@ bundle.includes('buildRosterTsv')
     : fail('bundle missing copy roster / resend');
 
 const html = read('pages/portal/events.html');
-html.includes('events.bundle.js?v=181')
-    ? pass('events.bundle cache bump v=181')
-    : fail('bundle ?v= not bumped to 181');
+html.includes('events.bundle.js?v=237')
+    ? pass('events.bundle cache bump v=237')
+    : fail('bundle ?v= not bumped to 237');
 
 console.log('\n── §13.12 docs ──────────────────────────────────────────────────────────');
 const brainstorm = read('docs/product/improvements/pages/events/000_events_system_overhaul_brainstorm.md');

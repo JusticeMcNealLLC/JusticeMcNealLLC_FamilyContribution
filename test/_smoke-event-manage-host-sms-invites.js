@@ -37,7 +37,7 @@ mig.includes('event_invite')
     ? pass('migration allows event_invite (+ event_payment_link)')
     : fail('migration missing event_invite types');
 
-console.log('\n── §13.12 Overview SMS invites UI ───────────────────────────────────────');
+console.log('\n── §13.12 People SMS invites UI ─────────────────────────────────────────');
 const invites = read('js/portal/events/manage/sms-invites.js');
 invites.includes('send-event-invites')
     && invites.includes('SMS invites')
@@ -45,11 +45,11 @@ invites.includes('send-event-invites')
     ? pass('sms-invites.js picker + send')
     : fail('sms-invites UI missing');
 
-const overview = read('js/portal/events/manage/overview.js');
-overview.includes('smsInvitesHtml')
-    && overview.includes('wireSmsInvites')
-    ? pass('overview wires SMS invites below QR')
-    : fail('overview missing SMS invites wiring');
+const people = read('js/portal/events/manage/people.js');
+people.includes('smsInvitesHtml')
+    && people.includes('wireSmsInvites')
+    ? pass('People tab wires SMS invites with the roster')
+    : fail('People tab missing SMS invites wiring');
 
 const bundle = read('js/portal/events/events.bundle.js');
 bundle.includes('send-event-invites')
@@ -59,9 +59,9 @@ bundle.includes('send-event-invites')
     : fail('bundle missing host SMS invites');
 
 const html = read('pages/portal/events.html');
-html.includes('events.bundle.js?v=180')
-    ? pass('events.bundle cache bump v=180')
-    : fail('bundle ?v= not bumped to 180');
+html.includes('events.bundle.js?v=237')
+    ? pass('events.bundle cache bump v=237')
+    : fail('bundle ?v= not bumped to 237');
 
 console.log('\n── §13.12 docs ──────────────────────────────────────────────────────────');
 const brainstorm = read('docs/product/improvements/pages/events/000_events_system_overhaul_brainstorm.md');

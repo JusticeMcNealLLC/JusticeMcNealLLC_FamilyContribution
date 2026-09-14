@@ -354,8 +354,27 @@
 }
 
 @media (max-width: 767px) {
-  .portal-dashboard .dashboard-hero-col + .dashboard-hero-col {
+  .portal-dashboard .dashboard-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .portal-dashboard .dashboard-hero-col--contrib {
+    grid-column: 1 / -1;
+  }
+
+  .portal-dashboard .dashboard-hero-col {
+    padding: 1.25rem 1.15rem;
+  }
+
+  .portal-dashboard .dashboard-hero-col--bill,
+  .portal-dashboard .dashboard-hero-col--aside {
+    min-width: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .portal-dashboard .dashboard-hero-col--aside {
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
   }
 }
 
@@ -541,6 +560,23 @@
   color: #fff;
   line-height: 1.3;
   margin-top: 0.125rem;
+}
+
+@media (max-width: 767px) {
+  .portal-dashboard .dashboard-hero-col--aside {
+    gap: 0.75rem;
+  }
+
+  .portal-dashboard .dashboard-hero-date {
+    font-size: 1.375rem;
+  }
+
+  .portal-dashboard .dashboard-days-badge {
+    max-width: 100%;
+    white-space: normal;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.75rem;
+  }
 }
 
 @media (max-width: 479px) {

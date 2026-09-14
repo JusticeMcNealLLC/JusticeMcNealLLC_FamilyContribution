@@ -4,15 +4,26 @@
 
 const M3A_TABS = [
     { key: 'overview', label: 'Overview' },
-    { key: 'images',   label: 'Images'   },
-    { key: 'rsvps',    label: 'RSVPs'    },
-    { key: 'notifications', label: 'Notifications' },
+    { key: 'event',    label: 'Event'    },
+    { key: 'people',   label: 'People'   },
     { key: 'money',    label: 'Money'    },
     { key: 'docs',     label: 'Docs'     },
     { key: 'raffle',   label: 'Raffle'   },
-    { key: 'comp',     label: 'Comp'     },
-    { key: 'danger',   label: 'Danger Zone' },
+    { key: 'comp',     label: 'Competition' },
+    { key: 'danger',   label: 'Danger'   },
 ];
+
+const TAB_ALIASES = {
+    images: 'event',
+    rsvps: 'people',
+    notifications: 'people',
+    competition: 'comp',
+};
+
+function resolveTabKey(key) {
+    if (!key) return 'overview';
+    return TAB_ALIASES[key] || key;
+}
 
 function api() {
     return window.EventsManageShellApi || {};
@@ -152,10 +163,22 @@ function renderHeader() {
 
 function getVisibleTabs() {
     const st = getState();
+    const e = st.event || {};
+    const docs = st.eventDocuments || [];
+    const isLlc = e.event_type === 'llc';
     return M3A_TABS.filter((t) => {
-        if (t.key !== 'notifications') return true;
-        return !!st.canManageNotifications;
+        if (t.key === 'docs') return isLlc || docs.length > 0;
+        if (t.key === 'raffle') return !!e.raffle_enabled;
+        if (t.key === 'comp') return e.event_type === 'competition';
+        return true;
     });
+}
+
+function resolveOpenTab(requested) {
+    const key = resolveTabKey(requested);
+    const visible = getVisibleTabs();
+    if (visible.some((t) => t.key === key)) return key;
+    return 'overview';
 }
 
 // ─── Tab bar ────────────────────────────────────────────────────
@@ -233,6 +256,8 @@ export const manageShellApi = {
     tabs: M3A_TABS,
     getTabs: () => M3A_TABS,
     getVisibleTabs,
+    resolveTabKey,
+    resolveOpenTab,
 };
 
 globalThis.EventsManageShell = manageShellApi;
