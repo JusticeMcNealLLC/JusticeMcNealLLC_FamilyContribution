@@ -44,9 +44,9 @@ invites.includes('emSmsInviteRecent')
     : fail('People invite peek missing');
 
 const html = read('pages/portal/events.html');
-html.includes('events.bundle.js?v=237')
-    ? pass('bundle ?v=237')
-    : fail('bundle not bumped to 237');
+html.includes('events.bundle.js?v=238')
+    ? pass('bundle ?v=238')
+    : fail('bundle not bumped to 238');
 
 const bundle = read('js/portal/events/events.bundle.js');
 bundle.includes('TYPE_LABELS')

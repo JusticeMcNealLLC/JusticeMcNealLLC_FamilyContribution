@@ -72,6 +72,11 @@ people.includes('rsvpsHtml')
     ? pass('People tab mounts roster, hosts, SMS')
     : fail('People tab missing roster or messaging');
 
+/#emSheetPanel\s*\{[^}]*height:\s*92/.test(shell)
+    && /#emSheetContent \{ min-height: 0; \}/.test(shell)
+    ? pass('Manage panel height is fixed across tabs')
+    : fail('Manage panel still sizes to tab content');
+
 main.includes("manage/event.js") && main.includes("manage/people.js")
     && main.includes("manage/amenity-voting.js")
     && main.includes("manage/hosts.js")

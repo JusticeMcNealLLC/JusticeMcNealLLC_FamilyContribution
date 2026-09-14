@@ -69,14 +69,14 @@ eventTab.includes('Full event editor')
 
 console.log('\n── Bundle + SW ──────────────────────────────────────────────────────────');
 const html = read('pages/portal/events.html');
-html.includes('events.bundle.js?v=237')
-    ? pass('portal bundle ?v=237')
-    : fail('bundle not bumped to 237');
+html.includes('events.bundle.js?v=238')
+    ? pass('portal bundle ?v=238')
+    : fail('bundle not bumped to 238');
 
 const sw = read('sw.js');
-sw.includes("CACHE_NAME = 'jm-portal-v191'")
-    && sw.includes('events.bundle.js?v=237')
-    ? pass('SW CACHE_NAME v191 + precache ?v=237')
+sw.includes("CACHE_NAME = 'jm-portal-v192'")
+    && sw.includes('events.bundle.js?v=238')
+    ? pass('SW CACHE_NAME v192 + precache ?v=238')
     : fail('SW cache/precache not bumped');
 
 const bundle = read('js/portal/events/events.bundle.js');

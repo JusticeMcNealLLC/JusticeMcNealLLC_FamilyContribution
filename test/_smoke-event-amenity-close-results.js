@@ -87,9 +87,9 @@ bundle.includes('Close voting now')
     : fail('bundle missing amenity close/results');
 
 const portalHtml = read('pages/portal/events.html');
-portalHtml.includes('events.bundle.js?v=237')
-    ? pass('portal bundle ?v=237')
-    : fail('portal bundle not bumped to 237');
+portalHtml.includes('events.bundle.js?v=238')
+    ? pass('portal bundle ?v=238')
+    : fail('portal bundle not bumped to 238');
 
 const eventsHtml = read('events/index.html');
 /amenity-voting\.js\?v=\d+/.test(eventsHtml)

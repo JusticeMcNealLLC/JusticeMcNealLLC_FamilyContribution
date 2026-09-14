@@ -40,7 +40,7 @@ function getState() {
     root.innerHTML = `
         <div id="emSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
         <div id="emSheet" class="em-sheet-hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
-            <div id="emSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
+            <div id="emSheetPanel" class="bg-white w-full sm:max-w-3xl rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col">
                 <header id="emSheetHeader" class="px-5 sm:px-6 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0" style="padding-top:max(1rem, env(safe-area-inset-top, 0px))">
                     <div class="flex-1 min-w-0">
                         <p class="text-[11px] uppercase tracking-wide font-bold" style="color:var(--color-primary, #13366E)">Manage Event</p>
@@ -52,11 +52,18 @@ function getState() {
                     </button>
                 </header>
                 <nav id="emSheetTabs" class="flex gap-1 px-3 sm:px-4 border-b border-gray-100 overflow-x-auto flex-shrink-0" style="scrollbar-width:none;-ms-overflow-style:none"></nav>
-                <div id="emSheetContent" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"></div>
+                <div id="emSheetContent" class="flex-1 min-h-0 overflow-y-auto px-5 sm:px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"></div>
             </div>
         </div>
         <style>
             .em-sheet-hidden { display:none !important; }
+            #emSheetPanel {
+                height: 92dvh;
+                height: 92vh;
+                max-height: 92dvh;
+                max-height: 92vh;
+            }
+            #emSheetContent { min-height: 0; }
             #emSheetTabs::-webkit-scrollbar { display: none; }
             .em-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; }
             .em-tab:hover { color:#374151; }
@@ -135,10 +142,13 @@ function getState() {
             .em-notif-row { align-items:flex-start; }
             .em-notif-row input[type="checkbox"] { margin-top:4px; flex-shrink:0; }
             @media(max-width:639px){
-                #emSheetPanel { max-height: 92vh; }
+                #emSheetPanel { height: 92dvh; height: 92vh; max-height: 92dvh; max-height: 92vh; }
                 .em-op-grid { grid-template-columns:1fr; }
                 .em-metric-grid { grid-template-columns:1fr 1fr; }
                 .em-money-layout { grid-template-columns:1fr; }
+            }
+            @media(min-width:640px){
+                #emSheetPanel { height: min(760px, 90vh); max-height: min(760px, 90vh); }
             }
             @media(min-width:640px) and (max-width:900px){ .em-op-grid { grid-template-columns:1fr 1fr; } .em-money-layout { grid-template-columns:1fr; } }
         </style>

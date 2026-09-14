@@ -77,9 +77,9 @@ bundle.includes('process-event-cancellation')
     : fail('bundle missing danger-zone updates');
 
 const html = read('pages/portal/events.html');
-html.includes('events.bundle.js?v=237')
-    ? pass('events.bundle cache bump v=237')
-    : fail('bundle ?v= not bumped to 237');
+html.includes('events.bundle.js?v=238')
+    ? pass('events.bundle cache bump v=238')
+    : fail('bundle ?v= not bumped to 238');
 
 console.log('\n── Docs ─────────────────────────────────────────────────────────────────');
 const brainstorm = read('docs/product/improvements/pages/events/000_events_system_overhaul_brainstorm.md');
