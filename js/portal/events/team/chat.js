@@ -21,10 +21,10 @@ const CHAT_BUBBLE = 'break-words whitespace-pre-wrap px-3 py-2 text-base leading
 const CHAT_BUBBLE_SENT = 'rounded-br-md bg-[#007AFF] text-white';
 const CHAT_BUBBLE_RECV = 'rounded-bl-md bg-[#E9E9EB] text-gray-900';
 const CHAT_TIME = 'mt-0.5 px-1 text-[11px] leading-tight text-gray-400';
-const CHAT_COMPOSER = 'flex shrink-0 items-end gap-2 border-t border-gray-200/80 bg-gray-50/95 px-2.5 py-2 backdrop-blur-xl pb-[max(8px,env(safe-area-inset-bottom))]';
-const CHAT_INPUT_WRAP = 'flex min-h-9 flex-1 items-end rounded-full border border-gray-300/80 bg-white px-3 py-1.5';
-const CHAT_TEXTAREA = 'max-h-[100px] min-h-[22px] w-full resize-none border-0 bg-transparent text-base leading-snug outline-none placeholder:text-gray-400 disabled:opacity-55';
-const CHAT_SEND = 'flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-0 bg-[#007AFF] p-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:stroke-[2.5] [&_svg]:fill-none [&_svg]:stroke-current';
+const CHAT_COMPOSER = 'flex shrink-0 items-end border-t border-gray-200/80 bg-gray-50/95 px-3 py-2 backdrop-blur-xl pb-[max(8px,env(safe-area-inset-bottom))]';
+const CHAT_INPUT_WRAP = 'flex min-h-11 flex-1 items-end gap-2 rounded-full border border-gray-300/80 bg-white py-1 pl-4 pr-1';
+const CHAT_TEXTAREA = 'max-h-[100px] min-h-[22px] w-full resize-none border-0 bg-transparent py-1.5 text-base leading-snug outline-none placeholder:text-gray-400 disabled:opacity-55';
+const CHAT_SEND = 'flex h-9 w-9 shrink-0 items-center justify-center self-end rounded-full border-0 bg-[#007AFF] p-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:stroke-[2.5] [&_svg]:fill-none [&_svg]:stroke-current';
 
 const IM_SEND_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>';
 
@@ -274,10 +274,10 @@ function renderChatBody(eventId, opts) {
         <div id="evtTeamChatStatus" class="${CHAT_EMPTY} px-2 pb-1" aria-live="polite"></div>
         ${canCompose ? `
         <div class="${CHAT_COMPOSER}">
-            <div class="${CHAT_INPUT_WRAP}">
+            <div id="evtTeamChatInputWrap" class="${CHAT_INPUT_WRAP}">
                 <textarea id="evtTeamChatInput" class="${CHAT_TEXTAREA}" maxlength="${EVT_TEAM_CHAT_MAX_LEN}" rows="1" placeholder="Message" aria-label="Team chat message"></textarea>
+                <button type="button" id="evtTeamChatSendBtn" class="${CHAT_SEND}" ${evtDataAction('evtSendTeamChatMessage', eventId)} aria-label="Send message">${IM_SEND_SVG}</button>
             </div>
-            <button type="button" id="evtTeamChatSendBtn" class="${CHAT_SEND}" ${evtDataAction('evtSendTeamChatMessage', eventId)} aria-label="Send message">${IM_SEND_SVG}</button>
         </div>` : ''}`;
 }
 

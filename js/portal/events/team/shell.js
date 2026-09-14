@@ -22,8 +22,8 @@ function ensureMounted() {
     root.innerHTML = `
         <div id="etSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
         <div id="etSheet" class="et-sheet-hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
-            <div id="etSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
-                <header id="etSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
+            <div id="etSheetPanel" class="bg-white w-full sm:max-w-3xl rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col">
+                <header id="etSheetHeader" class="px-5 sm:px-6 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0" style="padding-top:max(1rem, env(safe-area-inset-top, 0px))">
                     <div class="flex-1 min-w-0">
                         <p class="text-[11px] uppercase tracking-wide font-bold" style="color:var(--color-primary, #13366E)">Event Team</p>
                         <h2 id="etSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">…</h2>
@@ -34,13 +34,26 @@ function ensureMounted() {
                     </button>
                 </header>
                 <nav id="etSheetTabs" class="flex gap-1 px-3 sm:px-4 border-b border-gray-100 overflow-x-auto flex-shrink-0" style="scrollbar-width:none;-ms-overflow-style:none"></nav>
-                <div id="etSheetContent" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"></div>
+                <div id="etSheetContent" class="flex-1 min-h-0 overflow-y-auto px-5 sm:px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"></div>
             </div>
         </div>
         <style>
             .et-sheet-hidden { display:none !important; }
+            #etSheetPanel {
+                height: 92dvh;
+                height: 92vh;
+                max-height: 92dvh;
+                max-height: 92vh;
+            }
+            #etSheetContent { min-height: 0; }
             #etSheetTabs::-webkit-scrollbar { display: none; }
             #etSheetContent.et-sheet-content-chat { overflow:hidden; display:flex; flex-direction:column; min-height:0; padding-bottom:0; }
+            #evtTeamChatInputWrap {
+                display:flex; align-items:flex-end; flex:1; min-width:0; min-height:44px;
+                gap:8px; padding:4px 4px 4px 16px;
+                border:1px solid #d1d5db; border-radius:999px; background:#fff;
+            }
+            #evtTeamChatInput { flex:1; min-width:0; }
             .et-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; background:none; border-top:none; border-left:none; border-right:none; }
             .et-tab:hover { color:#374151; }
             .et-tab.active { color:var(--color-primary, #13366E); border-bottom-color:var(--color-primary, #13366E); }
@@ -60,7 +73,13 @@ function ensureMounted() {
             .em-btn-ghost:hover { background:#e5e7eb; }
             .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
             .et-tools-back { margin-bottom:12px; }
-            @media(max-width:639px){ #etSheetPanel { max-height: 92vh; } .em-op-grid { grid-template-columns:1fr; } }
+            @media(max-width:639px){
+                #etSheetPanel { height: 92dvh; height: 92vh; max-height: 92dvh; max-height: 92vh; }
+                .em-op-grid { grid-template-columns:1fr; }
+            }
+            @media(min-width:640px){
+                #etSheetPanel { height: min(760px, 90vh); max-height: min(760px, 90vh); }
+            }
         </style>
     `;
     document.body.appendChild(root);

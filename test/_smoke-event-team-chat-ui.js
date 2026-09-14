@@ -42,6 +42,11 @@ assert(/globalThis\.evtCleanupTeamChat\s*=\s*cleanup/.test(chat), 'evtCleanupTea
 assert(/export const teamChatApi/.test(chat) && /PortalEvents\.team\.chat\s*=\s*teamChatApi/.test(chat),
     'PortalEvents.team.chat namespace via teamChatApi');
 assert(/EventsTeamShell\.renderContent|Shell\.renderContent/.test(chat), 'chat renders via EventsTeamShell.renderContent');
+assert(/evtTeamChatInputWrap/.test(chat) && /evtTeamChatSendBtn/.test(chat)
+    && chat.indexOf('evtTeamChatInputWrap') < chat.indexOf('evtTeamChatSendBtn'),
+    'send button sits inside the message field pill');
+assert(/#etSheetPanel\s*\{[^}]*height:\s*92/.test(shell) && /#etSheetContent \{ min-height: 0; \}/.test(shell),
+    'team sheet panel height is fixed across tabs');
 
 assert(/globalThis\.EventsTeam\s*=/.test(sheet), 'sheet.js exports EventsTeam');
 assert(/etSheetRoot/.test(shell), 'team shell mounts etSheetRoot');

@@ -7428,8 +7428,8 @@ Proceed to checkout?`;
     root2.innerHTML = `
         <div id="etSheetBackdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200 z-[60]"></div>
         <div id="etSheet" class="et-sheet-hidden fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center sm:p-6 pointer-events-none z-[61]">
-            <div id="etSheetPanel" class="bg-white w-full sm:max-w-3xl sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col" style="max-height:90vh">
-                <header id="etSheetHeader" class="px-5 sm:px-6 pt-4 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0">
+            <div id="etSheetPanel" class="bg-white w-full sm:max-w-3xl rounded-t-3xl sm:rounded-3xl shadow-2xl pointer-events-none translate-y-full sm:translate-y-4 sm:opacity-0 transition-all duration-300 flex flex-col">
+                <header id="etSheetHeader" class="px-5 sm:px-6 pb-3 border-b border-gray-100 flex items-start gap-3 flex-shrink-0" style="padding-top:max(1rem, env(safe-area-inset-top, 0px))">
                     <div class="flex-1 min-w-0">
                         <p class="text-[11px] uppercase tracking-wide font-bold" style="color:var(--color-primary, #13366E)">Event Team</p>
                         <h2 id="etSheetTitle" class="text-lg sm:text-xl font-extrabold text-gray-900 truncate">\u2026</h2>
@@ -7440,13 +7440,26 @@ Proceed to checkout?`;
                     </button>
                 </header>
                 <nav id="etSheetTabs" class="flex gap-1 px-3 sm:px-4 border-b border-gray-100 overflow-x-auto flex-shrink-0" style="scrollbar-width:none;-ms-overflow-style:none"></nav>
-                <div id="etSheetContent" class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"></div>
+                <div id="etSheetContent" class="flex-1 min-h-0 overflow-y-auto px-5 sm:px-6 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]"></div>
             </div>
         </div>
         <style>
             .et-sheet-hidden { display:none !important; }
+            #etSheetPanel {
+                height: 92dvh;
+                height: 92vh;
+                max-height: 92dvh;
+                max-height: 92vh;
+            }
+            #etSheetContent { min-height: 0; }
             #etSheetTabs::-webkit-scrollbar { display: none; }
             #etSheetContent.et-sheet-content-chat { overflow:hidden; display:flex; flex-direction:column; min-height:0; padding-bottom:0; }
+            #evtTeamChatInputWrap {
+                display:flex; align-items:flex-end; flex:1; min-width:0; min-height:44px;
+                gap:8px; padding:4px 4px 4px 16px;
+                border:1px solid #d1d5db; border-radius:999px; background:#fff;
+            }
+            #evtTeamChatInput { flex:1; min-width:0; }
             .et-tab { white-space:nowrap; padding:10px 12px; font-size:13px; font-weight:600; color:#6b7280; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; cursor:pointer; background:none; border-top:none; border-left:none; border-right:none; }
             .et-tab:hover { color:#374151; }
             .et-tab.active { color:var(--color-primary, #13366E); border-bottom-color:var(--color-primary, #13366E); }
@@ -7466,7 +7479,13 @@ Proceed to checkout?`;
             .em-btn-ghost:hover { background:#e5e7eb; }
             .em-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#9ca3af; }
             .et-tools-back { margin-bottom:12px; }
-            @media(max-width:639px){ #etSheetPanel { max-height: 92vh; } .em-op-grid { grid-template-columns:1fr; } }
+            @media(max-width:639px){
+                #etSheetPanel { height: 92dvh; height: 92vh; max-height: 92dvh; max-height: 92vh; }
+                .em-op-grid { grid-template-columns:1fr; }
+            }
+            @media(min-width:640px){
+                #etSheetPanel { height: min(760px, 90vh); max-height: min(760px, 90vh); }
+            }
         </style>
     `;
     document.body.appendChild(root2);
@@ -7755,10 +7774,10 @@ Proceed to checkout?`;
   var CHAT_BUBBLE_SENT = "rounded-br-md bg-[#007AFF] text-white";
   var CHAT_BUBBLE_RECV = "rounded-bl-md bg-[#E9E9EB] text-gray-900";
   var CHAT_TIME = "mt-0.5 px-1 text-[11px] leading-tight text-gray-400";
-  var CHAT_COMPOSER = "flex shrink-0 items-end gap-2 border-t border-gray-200/80 bg-gray-50/95 px-2.5 py-2 backdrop-blur-xl pb-[max(8px,env(safe-area-inset-bottom))]";
-  var CHAT_INPUT_WRAP = "flex min-h-9 flex-1 items-end rounded-full border border-gray-300/80 bg-white px-3 py-1.5";
-  var CHAT_TEXTAREA = "max-h-[100px] min-h-[22px] w-full resize-none border-0 bg-transparent text-base leading-snug outline-none placeholder:text-gray-400 disabled:opacity-55";
-  var CHAT_SEND = "flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-0 bg-[#007AFF] p-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:stroke-[2.5] [&_svg]:fill-none [&_svg]:stroke-current";
+  var CHAT_COMPOSER = "flex shrink-0 items-end border-t border-gray-200/80 bg-gray-50/95 px-3 py-2 backdrop-blur-xl pb-[max(8px,env(safe-area-inset-bottom))]";
+  var CHAT_INPUT_WRAP = "flex min-h-11 flex-1 items-end gap-2 rounded-full border border-gray-300/80 bg-white py-1 pl-4 pr-1";
+  var CHAT_TEXTAREA = "max-h-[100px] min-h-[22px] w-full resize-none border-0 bg-transparent py-1.5 text-base leading-snug outline-none placeholder:text-gray-400 disabled:opacity-55";
+  var CHAT_SEND = "flex h-9 w-9 shrink-0 items-center justify-center self-end rounded-full border-0 bg-[#007AFF] p-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:stroke-[2.5] [&_svg]:fill-none [&_svg]:stroke-current";
   var IM_SEND_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>';
   function canCreateTeamChat(event) {
     if (!event || !globalThis.evtCurrentUser?.id) return false;
@@ -7957,10 +7976,10 @@ Proceed to checkout?`;
         <div id="evtTeamChatStatus" class="${CHAT_EMPTY} px-2 pb-1" aria-live="polite"></div>
         ${canCompose ? `
         <div class="${CHAT_COMPOSER}">
-            <div class="${CHAT_INPUT_WRAP}">
+            <div id="evtTeamChatInputWrap" class="${CHAT_INPUT_WRAP}">
                 <textarea id="evtTeamChatInput" class="${CHAT_TEXTAREA}" maxlength="${EVT_TEAM_CHAT_MAX_LEN}" rows="1" placeholder="Message" aria-label="Team chat message"></textarea>
+                <button type="button" id="evtTeamChatSendBtn" class="${CHAT_SEND}" ${evtDataAction("evtSendTeamChatMessage", eventId2)} aria-label="Send message">${IM_SEND_SVG}</button>
             </div>
-            <button type="button" id="evtTeamChatSendBtn" class="${CHAT_SEND}" ${evtDataAction("evtSendTeamChatMessage", eventId2)} aria-label="Send message">${IM_SEND_SVG}</button>
         </div>` : ""}`;
   }
   async function initTab(eventId2, event) {
