@@ -157,6 +157,7 @@ function evtRouteByUrl() {
     const listView = document.getElementById('eventsListView');
     const detailView = document.getElementById('eventsDetailView');
     if (!listView || !detailView) return;
+    if (window.EventsDiscussion) window.EventsDiscussion.close();
 
     if (slug) {
         // Show detail, hide list
@@ -169,6 +170,7 @@ function evtRouteByUrl() {
     } else {
         // Show list, hide detail
         document.body.classList.remove('evt-detail-open');
+        if (window.EventsHeroTint) window.EventsHeroTint.clear();
         evtResetDetailMobileHeader();
         detailView.classList.add('hidden');
         detailView.innerHTML = '';

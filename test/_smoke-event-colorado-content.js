@@ -21,6 +21,8 @@ const sql = read('scripts/fill-colorado-event-content-2028.sql');
     ['Lodging tab', 'co-tab-lodging'],
     ['Clothing size', 'co-inc-size'],
     ['Clothing color', 'co-inc-color'],
+    ['Clothing size photo', 'photo-1556821840-3a63f95609a7'],
+    ['Clothing color photo', 'photo-1489987707025-afc232f7ea0f'],
     ['default-no-refunds', 'default-no-refunds'],
     ['default-flyers', 'default-flyers'],
     ['no in-app refunds policy', 'non-refundable for any reason via the event system'],

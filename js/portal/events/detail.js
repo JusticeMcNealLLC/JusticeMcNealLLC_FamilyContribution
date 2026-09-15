@@ -156,15 +156,22 @@ const pageHeaderActionsHtml = window.evtBuildDetailPageHeaderActionsHtml(ctx);
 
 // ── Description ──────────────────────────────────────
 const rawDesc = event.description || '';
-const aboutTabsHtml = (window.EventsAboutTabs && typeof window.EventsAboutTabs.aboutTabsHtml === 'function')
-    ? window.EventsAboutTabs.aboutTabsHtml(event.about_tabs, { idPrefix: `portalAbout-${eventId}` })
+const extraAboutTabs = (window.EventsAboutTabs && typeof window.EventsAboutTabs.normalizeAboutTabs === 'function')
+    ? window.EventsAboutTabs.normalizeAboutTabs(event.about_tabs)
+    : [];
+const hasAboutTabs = extraAboutTabs.length > 0;
+const aboutTabsHtml = hasAboutTabs && window.EventsAboutTabs && typeof window.EventsAboutTabs.aboutTabsHtml === 'function'
+    ? window.EventsAboutTabs.aboutTabsHtml(event.about_tabs, {
+        idPrefix: `portalAbout-${eventId}`,
+        overview: rawDesc,
+    })
     : '';
-const descHtml = rawDesc
-    ? window.evtMiniMarkdown(rawDesc)
-    : (aboutTabsHtml
-        ? ''
+const descHtml = hasAboutTabs
+    ? ''
+    : (rawDesc
+        ? window.evtMiniMarkdown(rawDesc)
         : '<span class="ed-no-desc">No details yet — check back closer to the event.</span>');
-const descIsLong = rawDesc.length > 500;
+const descIsLong = !hasAboutTabs && rawDesc.length > 500;
 
 // ── Collapsible cost wrapper ─────────────────────────
 if (costBreakdownHtml && event.rsvp_cost_cents) {
@@ -249,7 +256,7 @@ window.evtRunDetailPostRenderUi({
     canCreateTeamChat,
 });
 evtInitHeroCollapse();
-window.evtRunDetailPostRenderBasics({ eventId });
+window.evtRunDetailPostRenderBasics({ eventId, event });
 
 // QR canvas + inline maps after DOM render
 setTimeout(() => {

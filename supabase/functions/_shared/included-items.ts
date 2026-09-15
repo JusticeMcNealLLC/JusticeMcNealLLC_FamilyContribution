@@ -4,6 +4,7 @@ export const NAME_MAX = 80
 export const CHOICE_MAX = 40
 export const CHOICES_MAX = 40
 export const ANSWER_MAX = 120
+export const IMAGE_URL_MAX = 2000
 export const OPTION_TYPES = ['size', 'color', 'text', 'select'] as const
 export const APPLIES_TO = ['all', 'adult', 'kid'] as const
 
@@ -18,6 +19,14 @@ type IncludedItem = {
   option_type: string
   choices: string[]
   applies_to: 'all' | 'adult' | 'kid'
+  image_url?: string
+}
+
+function normalizeImageUrl(raw: unknown): string {
+  const v = String(raw || '').trim()
+  if (!v || v.length > IMAGE_URL_MAX) return ''
+  if (!/^https:\/\//i.test(v)) return ''
+  return v
 }
 
 function normalizeAppliesTo(raw: unknown): 'all' | 'adult' | 'kid' {
@@ -52,14 +61,17 @@ export function normalizeIncludedItems(items: unknown): IncludedItem[] {
       if (!choices.length) continue
     }
     const id = String(row.id || '').trim() || `inc-${out.length + 1}`
-    out.push({
+    const image_url = normalizeImageUrl(row.image_url)
+    const item: IncludedItem = {
       id,
       name,
       required: !!row.required,
       option_type,
       choices,
       applies_to: normalizeAppliesTo(row.applies_to),
-    })
+    }
+    if (image_url) item.image_url = image_url
+    out.push(item)
   }
   return out
 }

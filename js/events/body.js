@@ -614,7 +614,10 @@ async function pubRenderComments(event) {
             </div>`;
         }).join('');
     } else {
-        list.innerHTML = '<p style="font-size:14px;color:#b0b0b0;text-align:center">No comments yet — be the first!</p>';
+        list.innerHTML = `<div class="ed-comment-empty">
+            <span class="ed-comment-empty-icon">💬</span>
+            <p class="ed-comment-empty-text">No comments yet — be the first!</p>
+        </div>`;
     }
 
     // Show form or prompt
@@ -622,6 +625,11 @@ async function pubRenderComments(event) {
         form.classList.remove('hidden');
     } else {
         prompt.classList.remove('hidden');
+    }
+
+    if (window.EventsDiscussion) {
+        window.EventsDiscussion.wire(section);
+        window.EventsDiscussion.scrollToLatest(list);
     }
 }
 

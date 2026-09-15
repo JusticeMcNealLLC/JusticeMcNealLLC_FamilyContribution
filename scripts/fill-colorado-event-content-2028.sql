@@ -35,7 +35,8 @@ $about$::jsonb,
     "required": true,
     "option_type": "size",
     "applies_to": "all",
-    "choices": ["XS", "S", "M", "L", "XL", "XXL"]
+    "choices": ["XS", "S", "M", "L", "XL", "XXL"],
+    "image_url": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80"
   },
   {
     "id": "co-inc-color",
@@ -43,7 +44,8 @@ $about$::jsonb,
     "required": true,
     "option_type": "color",
     "applies_to": "all",
-    "choices": ["Black", "White", "Navy", "Gray", "Red", "Green"]
+    "choices": ["Black", "White", "Navy", "Gray", "Red", "Green"],
+    "image_url": "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80"
   }
 ]
 $included$::jsonb,

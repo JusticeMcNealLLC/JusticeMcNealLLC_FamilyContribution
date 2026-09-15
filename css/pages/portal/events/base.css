@@ -25,7 +25,7 @@
 .modal-panel { max-height: 90vh; }
 @media (max-width: 640px) {
     .modal-panel { max-height: 100dvh; max-height: -webkit-fill-available; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
-    #eventsDetailView { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    #eventsDetailView { padding-bottom: 1.5rem; }
 }
 
 /* Branded confirm (RSVP → Stripe) — EventsHelpers.confirmDialog */

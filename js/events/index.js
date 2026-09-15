@@ -314,7 +314,8 @@ function pubBuildPublicDetailShell(event, goingCount) {
         <div class="ed-content event-detail-shell public-event-shell">
             <div class="ed-detail-body event-detail-grid public-event-grid">
                 <div class="ed-main event-detail-main public-event-story">
-                    <div id="eventBanner" class="ed-hero" style="${bannerStyle}" role="img" aria-label="Event banner">
+                    <div id="eventBanner" class="ed-hero${event.banner_url ? ' ed-hero--photo' : ''}" ${event.banner_url ? '' : `style="${bannerStyle}"`} role="img" aria-label="Event banner">
+                        ${event.banner_url ? `<div class="ed-hero-photo" style="${bannerStyle}"></div><div class="ed-hero-fade" aria-hidden="true"></div>` : ''}
                         <div class="ed-hero-scrim"></div>
                         <div class="ed-hero-nav">
                             <div id="heroStatusBadge" aria-live="polite" aria-atomic="true"></div>
@@ -385,14 +386,19 @@ function pubBuildPublicDetailShell(event, goingCount) {
 
                         <div id="gatedSection" class="hidden ed-card event-detail-card evt-section"><div class="evt-info-card"><span class="evt-info-card-icon">🔓</span><div><p class="evt-info-card-title">Attendee Details</p><p id="gatedNotes" class="evt-info-card-sub" style="white-space:pre-line"></p></div></div></div>
                         <div id="raffleSection" class="ed-card event-detail-card"></div>
-                        <div id="commentsSection" class="hidden ed-card event-detail-card" role="region" aria-label="Discussion">
-                            <div class="ed-section-head"><h3>Discussion</h3></div>
-                            <div id="commentsList" class="ed-comments-list"></div>
-                            <div id="commentForm" class="hidden ed-comment-input-row">
-                                <div class="ed-comment-self-avatar">G</div>
-                                <div class="ed-comment-input-wrap"><input type="text" id="commentInput" placeholder="Add a comment..." class="ed-comment-input" aria-label="Write a comment"><button onclick="pubPostComment()" class="ed-comment-post">Post</button></div>
+                        <div id="commentsSection" class="hidden ed-card event-detail-card ed-discuss-card" data-discuss-section role="region" aria-label="Discussion">
+                            <div class="ed-discuss-head">
+                                <div class="ed-section-head"><h3>Discussion</h3></div>
+                                <button type="button" class="ed-discuss-open" data-discuss-open aria-expanded="false">Open</button>
                             </div>
-                            <div id="commentLoginPrompt" class="hidden ed-comment-empty"><span class="ed-comment-empty-icon">💬</span><p class="ed-comment-empty-text">RSVP to join the discussion</p></div>
+                            <div class="ed-discuss-body">
+                                <div id="commentsList" class="ed-comments-list"></div>
+                                <div id="commentForm" class="hidden ed-comment-input-row">
+                                    <div class="ed-comment-self-avatar">G</div>
+                                    <div class="ed-comment-input-wrap"><input type="text" id="commentInput" placeholder="Add a comment..." class="ed-comment-input" aria-label="Write a comment"><button onclick="pubPostComment()" class="ed-comment-post">Post</button></div>
+                                </div>
+                                <div id="commentLoginPrompt" class="hidden ed-comment-empty"><span class="ed-comment-empty-icon">💬</span><p class="ed-comment-empty-text">RSVP to join the discussion</p></div>
+                            </div>
                         </div>
                         <div class="evt-footer">&copy; Justice McNeal LLC · <a href="/">Home</a></div>
                     </div>
@@ -433,6 +439,13 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     content.classList.remove('hidden');
     content.classList.add('evt-fade-in');
     pubBuildPublicDetailShell(event, goingCount);
+    if (window.EventsHeroTint && event.banner_url) {
+        window.EventsHeroTint.apply({
+            hero: document.getElementById('eventBanner'),
+            url: event.banner_url,
+            theme: true,
+        });
+    }
 
     // ── OG meta tags handled by event-og edge function (crawlers hit that URL) ──
     // Set page title for the browser tab
@@ -560,10 +573,17 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     // Description (markdown, collapsible, empty state)
     const descEl = document.getElementById('eventDesc');
     const rawDesc = event.description || '';
-    const hasAboutTabs = Array.isArray(event.about_tabs) && event.about_tabs.length > 0;
-    if (rawDesc.trim()) {
+    const extraAboutTabs = (window.EventsAboutTabs && typeof window.EventsAboutTabs.normalizeAboutTabs === 'function')
+        ? window.EventsAboutTabs.normalizeAboutTabs(event.about_tabs)
+        : (Array.isArray(event.about_tabs) ? event.about_tabs : []);
+    const hasAboutTabs = extraAboutTabs.length > 0;
+    if (hasAboutTabs) {
+        descEl.innerHTML = '';
+        descEl.style.display = 'none';
+    } else if (rawDesc.trim()) {
         const rendered = pubMiniMarkdown(pubEscapeHtml(rawDesc)).replace(/\n/g, '<br>');
         descEl.classList.add('evt-desc');
+        descEl.style.display = '';
         descEl.innerHTML = rendered;
         if (rawDesc.length > 500) {
             descEl.classList.add('evt-desc-collapsed');
@@ -576,15 +596,17 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
             });
             descEl.parentNode.insertBefore(btn, descEl.nextSibling);
         }
-    } else if (!hasAboutTabs) {
-        descEl.innerHTML = '<em style="color:#b0b0b0">No details yet — check back closer to the event.</em>';
     } else {
-        descEl.innerHTML = '';
+        descEl.style.display = '';
+        descEl.innerHTML = '<em style="color:#b0b0b0">No details yet — check back closer to the event.</em>';
     }
 
     if (hasAboutTabs && window.EventsAboutTabs && typeof window.EventsAboutTabs.aboutTabsHtml === 'function') {
         const tabsWrap = document.createElement('div');
-        tabsWrap.innerHTML = window.EventsAboutTabs.aboutTabsHtml(event.about_tabs, { idPrefix: 'publicAbout' });
+        tabsWrap.innerHTML = window.EventsAboutTabs.aboutTabsHtml(event.about_tabs, {
+            idPrefix: 'publicAbout',
+            overview: rawDesc,
+        });
         const tabsNode = tabsWrap.firstElementChild;
         if (tabsNode) {
             let insertAfter = descEl;

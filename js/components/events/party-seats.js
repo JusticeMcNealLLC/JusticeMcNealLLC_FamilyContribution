@@ -103,6 +103,7 @@
             idPrefix: `${prefix}-seat-${index}`,
             role,
             answers: answers || {},
+            includeIntro: false,
         });
     }
 
@@ -239,6 +240,9 @@
             <div class="ed-party-seats" data-party-seats-root="${escapeHtml(prefix)}"
                 data-hide-payer-name="${hidePayerName ? '1' : '0'}">
                 ${hideLabel ? '' : '<p class="ed-party-seats-label">Who\'s coming?</p>'}
+                ${window.EventsIncludedItems && typeof window.EventsIncludedItems.packageIntroHtml === 'function'
+                    ? window.EventsIncludedItems.packageIntroHtml(event.included_items)
+                    : ''}
                 <div class="ed-party-seat-rows" data-party-seat-rows="1">
                     ${seats.map((seat, i) => seatRowHtml(event, prefix, i, seat, opts)).join('')}
                 </div>

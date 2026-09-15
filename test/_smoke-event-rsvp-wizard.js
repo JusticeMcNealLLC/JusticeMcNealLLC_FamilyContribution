@@ -42,6 +42,9 @@ wiz.includes("pricing_mode === 'paid'")
 
 wiz.includes('erSheetRoot')
     && wiz.includes('create-event-checkout')
+    && wiz.includes('erSheetTotal')
+    && wiz.includes('_refreshPartyTotalBar')
+    && wiz.includes('er-receipt')
     && read('css/pages/portal/events/detail.css').includes('safe-area-inset-bottom')
     ? pass('sheet shell + checkout submit + safe-area CSS')
     : fail('shell/submit incomplete');
@@ -105,6 +108,9 @@ read('sw.js').includes('jm-portal-v142')
 const css = read('css/pages/portal/events/detail.css');
 css.includes('.er-panel')
     && css.includes('.er-dot.is-active')
+    && css.includes('.er-total-bar')
+    && css.includes('.er-receipt')
+    && css.includes('height:92dvh')
     && css.includes('safe-area-inset-bottom')
     ? pass('wizard CSS present')
     : fail('wizard CSS missing');

@@ -66,6 +66,14 @@ function evtRunDetailPostRenderBasics(ctx) {
         window.EventsAboutTabs.wireAboutTabs(document.getElementById('eventsDetailView'));
     }
 
+    if (window.EventsHeroTint && ctx && ctx.event && ctx.event.banner_url) {
+        window.EventsHeroTint.apply({
+            hero: document.querySelector('#eventsDetailView .ed-hero'),
+            url: ctx.event.banner_url,
+            theme: true,
+        });
+    }
+
     if (typeof globalThis.evtWireSeatPickerPrep === 'function' && ctx && ctx.event && ctx.eventId) {
         globalThis.evtWireSeatPickerPrep(ctx.eventId, ctx.event);
     }

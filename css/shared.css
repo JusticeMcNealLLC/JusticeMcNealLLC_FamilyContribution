@@ -173,10 +173,9 @@
     left: 0;
     right: 0;
     z-index: 50;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    background: var(--color-background, #FFFFFF);
+    border-top: none;
+    box-shadow: none;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     touch-action: none;
     -webkit-touch-callout: none;
@@ -247,6 +246,9 @@
 @media (max-width: 767px) {
     .has-bottom-bar {
         padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
+    body.has-bottom-bar[data-active-page="events"] {
+        background-color: var(--color-background, #FFFFFF);
     }
 }
 
@@ -474,9 +476,9 @@
 
 /* Swipe hint indicator — pill floats above the tab bar strip */
 .bottom-tab-bar .swipe-hint {
-    position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+    position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
     width: 36px; height: 4px; border-radius: 999px;
-    background: rgba(0,0,0,0.18); margin-top: 0;
+    background: rgba(11, 37, 69, 0.12); margin-top: 0;
 }
 
 /* ─── Notification Panel ─── */

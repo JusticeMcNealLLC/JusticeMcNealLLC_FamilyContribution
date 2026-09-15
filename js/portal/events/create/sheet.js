@@ -85,6 +85,8 @@ const STATE = {
     geocode: null, // { lat, lng, display } or null
     prizeImageFiles: {},    // item.id ? File
     prizeImagePreviews: {}, // item.id ? data-URL
+    includedImageFiles: {},
+    includedImagePreviews: {},
     form: {
         event_type: 'member',
         title: '',
@@ -196,6 +198,8 @@ function _resetTransientState() {
     STATE.geocode = null;
     STATE.prizeImageFiles = {};
     STATE.prizeImagePreviews = {};
+    STATE.includedImageFiles = {};
+    STATE.includedImagePreviews = {};
     STATE._competitionPhases = null;
     Object.assign(STATE.form, _blankForm());
 }

@@ -30,6 +30,11 @@ included.includes('ed-inc-chip')
     && included.includes('wireChoiceControls')
     ? pass('size/color chips + wireChoiceControls')
     : fail('chips/swatches UX missing');
+included.includes('function packageIntroHtml(')
+    && included.includes('image_url')
+    && included.includes('This event includes clothing items')
+    ? pass('included item photos + clothing intro copy')
+    : fail('package intro / image_url missing');
 
 const party = read('js/components/events/party-seats.js');
 party.includes('hidePayerName')

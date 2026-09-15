@@ -89,6 +89,51 @@ function _presetsBarHtml(showAdd) {
     `;
 }
 
+function _imageHtml(item) {
+    const STATE = window.EventsCreateSteps.getState();
+    const files = STATE.includedImageFiles || {};
+    const previews = STATE.includedImagePreviews || {};
+    const preview = previews[item.id] || item.image_url || '';
+    const fileName = files[item.id]?.name || '';
+    return `
+        <div class="ec-prize-img-row" style="margin-top:12px">
+            <input type="file" accept="image/png,image/jpeg,image/webp" style="display:none" data-inc-image-file="${_esc(item.id)}">
+            <div class="ec-prize-img-drop" data-inc-image-drop="${_esc(item.id)}" title="Click or drag an image of this item">
+                ${preview ? `<img src="${_esc(preview)}" alt="Included item">` : `<span style="font-size:18px">📷</span>`}
+            </div>
+            <div class="ec-prize-img-label">
+                ${preview
+                    ? `<strong>${fileName ? _esc(fileName) : 'Photo set'}</strong><span>Shown on RSVP when guests pick size or color</span>`
+                    : `<strong>Item photo</strong><span>Optional. Guests see this on the RSVP clothing step.</span>`
+                }
+            </div>
+            ${preview ? `<button type="button" class="ec-prize-img-clear" data-inc-image-clear="${_esc(item.id)}">Remove</button>` : ''}
+        </div>
+    `;
+}
+
+function _setItemImage(item, file, render) {
+    const STATE = window.EventsCreateSteps.getState();
+    if (!file) return;
+    if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+        _alert('Please use a PNG, JPG, or WebP image.');
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        _alert('Image must be under 5 MB.');
+        return;
+    }
+    if (!STATE.includedImageFiles) STATE.includedImageFiles = {};
+    if (!STATE.includedImagePreviews) STATE.includedImagePreviews = {};
+    STATE.includedImageFiles[item.id] = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+        STATE.includedImagePreviews[item.id] = reader.result;
+        render();
+    };
+    reader.readAsDataURL(file);
+}
+
 function _choicesHtml(item) {
     if (!_needsChoices(item.option_type)) return '';
     const choices = Array.isArray(item.choices) ? item.choices : [];
@@ -168,6 +213,7 @@ function html() {
                     </div>
                 </div>
                 ${_choicesHtml(item)}
+                ${_imageHtml(item)}
             </div>
         `).join('')}
     `;
@@ -346,6 +392,38 @@ function wire() {
         });
     });
 
+    document.querySelectorAll('[data-inc-image-drop]').forEach((zone) => {
+        const id = zone.getAttribute('data-inc-image-drop');
+        const fileInput = document.querySelector(`[data-inc-image-file="${CSS.escape(id)}"]`);
+        const item = items.find((i) => i.id === id);
+        if (!item || !fileInput) return;
+        zone.addEventListener('click', () => fileInput.click());
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            zone.classList.add('ec-prize-img-drop--over');
+        });
+        zone.addEventListener('dragleave', (e) => {
+            if (!zone.contains(e.relatedTarget)) zone.classList.remove('ec-prize-img-drop--over');
+        });
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('ec-prize-img-drop--over');
+            _setItemImage(item, e.dataTransfer?.files?.[0], render);
+        });
+        fileInput.addEventListener('change', () => _setItemImage(item, fileInput.files?.[0], render));
+    });
+
+    document.querySelectorAll('[data-inc-image-clear]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-inc-image-clear');
+            const item = items.find((i) => i.id === id);
+            if (STATE.includedImageFiles) delete STATE.includedImageFiles[id];
+            if (STATE.includedImagePreviews) delete STATE.includedImagePreviews[id];
+            if (item) item.image_url = '';
+            render();
+        });
+    });
+
     document.querySelectorAll('[data-inc-remove]').forEach((el) => {
         el.addEventListener('click', async () => {
             const id = el.getAttribute('data-inc-remove');
@@ -361,6 +439,8 @@ function wire() {
                     : window.confirm('Remove this included item?');
                 if (!ok) return;
             }
+            if (STATE.includedImageFiles) delete STATE.includedImageFiles[id];
+            if (STATE.includedImagePreviews) delete STATE.includedImagePreviews[id];
             STATE.form.included_items = items.filter((i) => i.id !== id);
             render();
         });

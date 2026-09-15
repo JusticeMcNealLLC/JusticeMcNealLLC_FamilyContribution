@@ -52,6 +52,8 @@ async function evtLoadComments(eventId) {
             <span class="ed-comment-empty-icon">💬</span>
             <p class="ed-comment-empty-text">No comments yet — be the first!</p>
         </div>`;
+        window.EventsDiscussion?.wire(document.getElementById('portalCommentsSection'));
+        window.EventsDiscussion?.scrollToLatest(list);
         return;
     }
 
@@ -69,6 +71,8 @@ async function evtLoadComments(eventId) {
             </div>
         </div>`;
     }).join('');
+    window.EventsDiscussion?.wire(document.getElementById('portalCommentsSection'));
+    window.EventsDiscussion?.scrollToLatest(list);
 }
 
 async function evtPostComment(eventId) {

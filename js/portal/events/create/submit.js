@@ -251,6 +251,18 @@ async function submit(status) {
         const aboutTabs = (window.EventsAboutTabs && typeof window.EventsAboutTabs.normalizeAboutTabs === 'function')
             ? window.EventsAboutTabs.normalizeAboutTabs(f.about_tabs)
             : [];
+        const includedUploads = Object.entries(STATE.includedImageFiles || {});
+        for (const [itemId, imgFile] of includedUploads) {
+            const item = (Array.isArray(f.included_items) ? f.included_items : []).find((i) => i.id === itemId);
+            if (!item || !imgFile) continue;
+            const ext = String(imgFile.name.split('.').pop() || 'jpg').toLowerCase();
+            const path = `included/${slug}/${itemId}-${Date.now()}.${ext}`;
+            const up = await supabaseClient.storage
+                .from('event-banners')
+                .upload(path, imgFile, { contentType: imgFile.type });
+            if (up.error) throw new Error('Included item image upload failed: ' + up.error.message);
+            item.image_url = supabaseClient.storage.from('event-banners').getPublicUrl(path).data.publicUrl;
+        }
         const includedItems = (window.EventsIncludedItems && typeof window.EventsIncludedItems.normalizeIncludedItems === 'function')
             ? window.EventsIncludedItems.normalizeIncludedItems(f.included_items)
             : [];

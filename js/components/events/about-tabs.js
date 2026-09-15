@@ -39,14 +39,28 @@
         return md.replace(/\n/g, '<br>');
     }
 
+    function isOverviewTitle(title) {
+        return /^(overview|about)$/i.test(String(title || '').trim());
+    }
+
     /**
+     * Extra About sections (Itinerary, etc.). Empty when the event is description-only.
      * @param {Array} tabs
-     * @param {{ idPrefix?: string }} opts
+     * @param {{ idPrefix?: string, overview?: string }} opts
      */
     function aboutTabsHtml(tabs, opts) {
-        const list = normalizeAboutTabs(tabs);
-        if (!list.length) return '';
+        const extra = normalizeAboutTabs(tabs);
+        if (!extra.length) return '';
         const prefix = (opts && opts.idPrefix) || 'aboutTabs';
+        const overview = String(opts && opts.overview || '').trim();
+        const list = extra.slice();
+        if (overview && !extra.some((t) => isOverviewTitle(t.title))) {
+            list.unshift({
+                id: `${prefix}-overview`,
+                title: 'Overview',
+                body: overview.slice(0, BODY_MAX),
+            });
+        }
         const buttons = list.map((tab, i) => `
             <button type="button"
                 class="ed-about-tab${i === 0 ? ' is-active' : ''}"
@@ -87,6 +101,7 @@
                         if (on) panel.removeAttribute('hidden');
                         else panel.setAttribute('hidden', '');
                     });
+                    btn.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
                 });
             });
         });
@@ -96,6 +111,7 @@
         TITLE_MAX,
         BODY_MAX,
         normalizeAboutTabs,
+        isOverviewTitle,
         aboutTabsHtml,
         wireAboutTabs,
     };

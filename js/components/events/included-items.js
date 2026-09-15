@@ -9,6 +9,7 @@
     const CHOICE_MAX = 40;
     const CHOICES_MAX = 40;
     const ANSWER_MAX = 120;
+    const IMAGE_URL_MAX = 2000;
     const OPTION_TYPES = ['size', 'color', 'text', 'select'];
     const APPLIES_TO = ['all', 'adult', 'kid'];
     const SIZE_PRESET = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -26,6 +27,19 @@
 
     function needsChoices(type) {
         return type === 'size' || type === 'color' || type === 'select';
+    }
+
+    function normalizeImageUrl(raw) {
+        const v = String(raw || '').trim();
+        if (!v || v.length > IMAGE_URL_MAX) return '';
+        if (!/^https:\/\//i.test(v)) return '';
+        return v;
+    }
+
+    function looksLikeClothing(item) {
+        if (!item) return false;
+        if (item.option_type === 'size' || item.option_type === 'color') return true;
+        return /cloth|hoodie|shirt|apparel|jacket|tee|sweat/i.test(String(item.name || ''));
     }
 
     function normalizeAppliesTo(raw) {
@@ -58,14 +72,17 @@
                 if (!choices.length) continue;
             }
             const id = String(raw.id || '').trim() || `inc-${out.length + 1}`;
-            out.push({
+            const image_url = normalizeImageUrl(raw.image_url);
+            const row = {
                 id,
                 name,
                 required: !!raw.required,
                 option_type,
                 choices,
                 applies_to: normalizeAppliesTo(raw.applies_to),
-            });
+            };
+            if (image_url) row.image_url = image_url;
+            out.push(row);
         }
         return out;
     }
@@ -216,9 +233,34 @@
             </div>`;
     }
 
+    function packageIntroHtml(catalog) {
+        const list = normalizeIncludedItems(catalog);
+        if (!list.length) return '';
+        const clothing = list.some(looksLikeClothing);
+        const copy = clothing
+            ? 'This event includes clothing items with the event package. Pick your size and color so we can order yours.'
+            : 'This event includes items with your RSVP package. Choose your options below.';
+        const seen = new Set();
+        const figs = [];
+        for (const item of list) {
+            if (!item.image_url || seen.has(item.image_url)) continue;
+            seen.add(item.image_url);
+            figs.push(`
+                <figure class="ed-inc-preview">
+                    <img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}" loading="lazy">
+                    <figcaption>${escapeHtml(item.name)}</figcaption>
+                </figure>`);
+        }
+        return `
+            <div class="ed-inc-intro">
+                <p class="ed-inc-intro-copy">${copy}</p>
+                ${figs.length ? `<div class="ed-inc-previews">${figs.join('')}</div>` : ''}
+            </div>`;
+    }
+
     /**
      * @param {Array} catalog
-     * @param {{ idPrefix?: string, role?: string, answers?: Record<string, string> }} opts
+     * @param {{ idPrefix?: string, role?: string, answers?: Record<string, string>, includeIntro?: boolean }} opts
      */
     function formFieldsHtml(catalog, opts) {
         const role = (opts && opts.role) || 'adult';
@@ -226,6 +268,7 @@
         const list = forRole(catalog, role);
         if (!list.length) return '';
         const prefix = (opts && opts.idPrefix) || 'incOpt';
+        const includeIntro = !opts || opts.includeIntro !== false;
         const fields = list.map((item) => {
             const fieldId = `${prefix}-${item.id}`;
             const req = item.required ? ' <span class="text-red-500">*</span>' : '';
@@ -247,6 +290,7 @@
         }).join('');
         return `
             <div class="ed-inc-options" data-inc-options-root="${escapeHtml(prefix)}">
+                ${includeIntro ? packageIntroHtml(list) : ''}
                 <p class="ed-inc-options-title">${escapeHtml(seatOptionsTitle(role))}</p>
                 ${fields}
             </div>
@@ -324,9 +368,13 @@
             } else if (item.option_type === 'text') {
                 choicesHtml = '<p class="ed-inc-catalog-note">Free-text answer at RSVP</p>';
             }
+            const thumb = item.image_url
+                ? `<img class="ed-inc-catalog-thumb" src="${escapeHtml(item.image_url)}" alt="" loading="lazy">`
+                : '';
             return `
                 <li class="ed-inc-catalog-item">
                     <div class="ed-inc-catalog-head">
+                        ${thumb}
                         <span class="ed-inc-catalog-name">${escapeHtml(item.name)}</span>
                         <div class="ed-inc-catalog-badges">${requiredBadge}${appliesBadge}<span class="ed-inc-pill ed-inc-pill-type">${escapeHtml(typeLabel)}</span></div>
                     </div>
@@ -341,6 +389,7 @@
         CHOICE_MAX,
         CHOICES_MAX,
         ANSWER_MAX,
+        IMAGE_URL_MAX,
         OPTION_TYPES,
         APPLIES_TO,
         SIZE_PRESET,
@@ -357,6 +406,7 @@
         answersComplete,
         sanitizeAnswers,
         formFieldsHtml,
+        packageIntroHtml,
         readAnswersFromRoot,
         wireChoiceControls,
         catalogListHtml,

@@ -81,7 +81,8 @@ function evtBuildDetailTemplate(templateCtx) {
             <div class="ed-main event-detail-main portal-event-story">
 
             <!-- ─── Immersive Hero ─── -->
-            <div class="ed-hero" style="${bannerBg}" ${event.banner_url ? `${evtDataAction('evtOpenLightbox', event.banner_url)}` : ''} role="img" aria-label="Event banner">
+            <div class="ed-hero${event.banner_url ? ' ed-hero--photo' : ''}" ${event.banner_url ? '' : `style="${bannerBg}"`} ${event.banner_url ? `${evtDataAction('evtOpenLightbox', event.banner_url)}` : ''} role="img" aria-label="Event banner">
+                ${event.banner_url ? `<div class="ed-hero-photo" style="${bannerBg}"></div><div class="ed-hero-fade" aria-hidden="true"></div>` : ''}
                 <div class="ed-hero-scrim"></div>
                 <div class="ed-hero-bottom-content">
                     <h1 class="ed-hero-title">${evtEscapeHtml(event.title)}</h1>
@@ -155,7 +156,7 @@ function evtBuildDetailTemplate(templateCtx) {
                         <div class="ed-about-desc-col">
                             ${deadlinePassed && !isClosed && !isPast ? '<div class="ed-deadline-banner" style="margin-bottom:14px">🔒 RSVP deadline passed</div>' : ''}
                             <p class="ed-about-heading">About This Event</p>
-                            <div class="ed-desc${descIsLong ? ' ed-desc-collapsed' : ''}" id="evtDescWrap">${descHtml}</div>
+                            ${descHtml ? `<div class="ed-desc${descIsLong ? ' ed-desc-collapsed' : ''}" id="evtDescWrap">${descHtml}</div>` : ''}
                             ${descIsLong ? '<button class="ed-read-more" onclick="var w=document.getElementById(\'evtDescWrap\'),c=w.classList.toggle(\'ed-desc-collapsed\');this.textContent=c?\'Read more\':\'Show less\'">Read more</button>' : ''}
                             ${aboutTabsHtml || ''}
                             ${includedCatalogHtml || ''}
@@ -200,14 +201,19 @@ function evtBuildDetailTemplate(templateCtx) {
         <!-- Stats & Breakdown moved into Manage Event sheet (EventsManage) -->
 
         <!-- Comments -->
-        <div class="ed-card event-detail-card" id="portalCommentsSection" role="region" aria-label="Discussion">
-            ${_edSectionHead('Discussion')}
-            <div id="portalCommentsList" class="ed-comments-list"></div>
-            <div class="ed-comment-input-row">
-                <div class="ed-comment-self-avatar" id="portalCommentSelfAvatar"></div>
-                <div class="ed-comment-input-wrap">
-                    <input type="text" id="portalCommentInput" placeholder="Add a comment…" class="ed-comment-input" aria-label="Write a comment">
-                    <button ${evtDataAction('evtPostComment', eventId)} class="ed-comment-post" aria-label="Post comment">Post</button>
+        <div class="ed-card event-detail-card ed-discuss-card" id="portalCommentsSection" data-discuss-section role="region" aria-label="Discussion">
+            <div class="ed-discuss-head">
+                ${_edSectionHead('Discussion')}
+                <button type="button" class="ed-discuss-open" data-discuss-open aria-expanded="false">Open</button>
+            </div>
+            <div class="ed-discuss-body">
+                <div id="portalCommentsList" class="ed-comments-list"></div>
+                <div class="ed-comment-input-row">
+                    <div class="ed-comment-self-avatar" id="portalCommentSelfAvatar"></div>
+                    <div class="ed-comment-input-wrap">
+                        <input type="text" id="portalCommentInput" placeholder="Add a comment…" class="ed-comment-input" aria-label="Write a comment">
+                        <button ${evtDataAction('evtPostComment', eventId)} class="ed-comment-post" aria-label="Post comment">Post</button>
+                    </div>
                 </div>
             </div>
         </div>

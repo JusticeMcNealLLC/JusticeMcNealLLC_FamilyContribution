@@ -615,39 +615,130 @@
         return window.EventsPaymentChoice?.validateChoice?.(event, choice, total) || null;
     }
 
+    function reviewDateLabel(event) {
+        const raw = event?.start_date || event?.start_at;
+        if (!raw) return '';
+        if (window.EventsHelpers?.formatDate) {
+            const long = window.EventsHelpers.formatDate(raw, 'long');
+            if (long) return long;
+        }
+        try {
+            return new Date(raw).toLocaleDateString('en-US', {
+                weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+            });
+        } catch (_) {
+            return '';
+        }
+    }
+
+    function reviewPlaceLabel(event) {
+        return String(event?.location_nickname || event?.location_text || '').trim();
+    }
+
+    function reviewOptionPairs(seat) {
+        const catalog = window.EventsIncludedItems?.normalizeIncludedItems?.(STATE.event?.included_items) || [];
+        const opts = seat && seat.options && typeof seat.options === 'object' ? seat.options : {};
+        const pairs = [];
+        const seen = new Set();
+        for (const item of catalog) {
+            const v = opts[item.id];
+            if (v == null || String(v).trim() === '') continue;
+            seen.add(item.id);
+            pairs.push({ name: item.name, value: String(v) });
+        }
+        for (const [k, v] of Object.entries(opts)) {
+            if (seen.has(k) || v == null || String(v).trim() === '') continue;
+            pairs.push({ name: k, value: String(v) });
+        }
+        return pairs;
+    }
+
+    function payPlanLabel(kind) {
+        if (kind === 'monthly') return 'Monthly';
+        if (kind === 'full') return 'Pay in full';
+        return String(kind || '').trim();
+    }
+
+    function payMethodLabel(method) {
+        if (method === 'ach') return 'Bank (ACH)';
+        if (method === 'card') return 'Card';
+        return String(method || '').trim();
+    }
+
+    function reviewFact(label, value) {
+        if (!value) return '';
+        return `<div class="er-receipt-fact"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
+    }
+
     function stepReviewHtml() {
-        const event = STATE.event;
-        const seats = STATE.form.seats || [];
+        const event = STATE.event || {};
+        const seats = Array.isArray(STATE.form.seats) && STATE.form.seats.length
+            ? STATE.form.seats
+            : [{ display_name: STATE.form.guest_name || STATE.memberName || 'You', role: 'adult', options: {} }];
         const total = estimatedPartyTotal(event);
-        const seatLines = seats.map((s) => {
+        const when = reviewDateLabel(event);
+        const where = reviewPlaceLabel(event);
+        const people = seats.length === 1 ? '1 person' : `${seats.length} people`;
+
+        const factCells = [
+            reviewFact('When', when),
+            reviewFact('Where', where),
+            reviewFact('Party', people),
+        ].filter(Boolean).join('');
+
+        const seatBlocks = seats.map((s, i) => {
             const role = s.role === 'kid' ? 'Child' : 'Adult';
-            const opts = s.options && Object.keys(s.options).length
-                ? ` · ${Object.values(s.options).join(', ')}`
+            const name = s.display_name || (s.is_payer ? 'You' : `Guest ${i + 1}`);
+            const pairs = reviewOptionPairs(s);
+            const picks = pairs.length
+                ? `<div class="er-receipt-picks">${pairs.map((p) =>
+                    `<div class="er-receipt-pick"><span>${esc(p.name)}</span><strong>${esc(p.value)}</strong></div>`
+                ).join('')}</div>`
                 : '';
-            return `<div class="er-review-row"><span>${esc(s.display_name || 'Guest')}</span><span>${role}${esc(opts)}</span></div>`;
-        }).join('') || '<div class="er-review-row"><span>Party</span><span>1 adult</span></div>';
+            return `
+                <div class="er-receipt-line">
+                    <div class="er-receipt-line-head">
+                        <strong>${esc(name)}</strong>
+                        <span>${esc(role)}</span>
+                    </div>
+                    ${picks}
+                </div>`;
+        }).join('');
 
-        const contact = STATE.mode === 'guest'
-            ? `<div class="er-review-row"><span>Name</span><span>${esc(STATE.form.guest_name)}</span></div>
-               <div class="er-review-row"><span>Email</span><span>${esc(STATE.form.guest_email)}</span></div>
-               <div class="er-review-row"><span>Phone</span><span>${esc(STATE.form.guest_phone)}</span></div>`
-            : (STATE.form.member_phone
-                ? `<div class="er-review-row"><span>Phone</span><span>${esc(STATE.form.member_phone)}</span></div>`
-                : '');
+        const contactFacts = STATE.mode === 'guest'
+            ? [
+                reviewFact('Name', STATE.form.guest_name),
+                reviewFact('Email', STATE.form.guest_email),
+                reviewFact('Phone', STATE.form.guest_phone),
+            ].filter(Boolean).join('')
+            : reviewFact('Phone', STATE.form.member_phone);
 
-        const pay = STATE.form.payment_choice
-            ? `<div class="er-review-row"><span>Plan</span><span>${esc(STATE.form.payment_choice.plan_kind || '')}</span></div>
-               <div class="er-review-row"><span>Method</span><span>${esc(STATE.form.payment_choice.method || '')}</span></div>`
-            : '';
-
-        const totalRow = total > 0
-            ? `<div class="er-review-row"><span>Total</span><span>${esc(formatMoney(total))}</span></div>`
-            : '';
+        const pay = STATE.form.payment_choice || {};
+        const payFacts = [
+            reviewFact('Plan', payPlanLabel(pay.plan_kind)),
+            reviewFact('Method', payMethodLabel(pay.method)),
+        ].filter(Boolean).join('');
 
         return `
             <div class="er-step">
-                <p class="er-lead">Confirm your RSVP for <strong>${esc(event.title || 'this event')}</strong>.</p>
-                <div class="er-review-card">${contact}${seatLines}${pay}${totalRow}</div>
+                <p class="er-lead">Look this over like a receipt, then confirm.</p>
+                <article class="er-receipt">
+                    <header class="er-receipt-head">
+                        <p class="er-receipt-kicker">RSVP receipt</p>
+                        <h3 class="er-receipt-title">${esc(event.title || 'Event')}</h3>
+                    </header>
+                    ${factCells ? `<div class="er-receipt-facts" data-cols="${[when, where, people].filter(Boolean).length}">${factCells}</div>` : ''}
+                    <section class="er-receipt-section">
+                        <h4 class="er-receipt-label">Your party</h4>
+                        ${seatBlocks}
+                    </section>
+                    ${contactFacts ? `<section class="er-receipt-section"><h4 class="er-receipt-label">Contact</h4><div class="er-receipt-facts" data-cols="3">${contactFacts}</div></section>` : ''}
+                    ${payFacts ? `<section class="er-receipt-section"><h4 class="er-receipt-label">Payment</h4><div class="er-receipt-facts" data-cols="2">${payFacts}</div></section>` : ''}
+                    <footer class="er-receipt-total">
+                        <span>Party total</span>
+                        <strong>${esc(total > 0 ? formatMoney(total) : 'Free')}</strong>
+                    </footer>
+                </article>
             </div>`;
     }
 
@@ -683,6 +774,11 @@
                         </button>
                     </header>
                     <div id="erSheetSteps" class="er-dots"></div>
+                    <div id="erSheetTotal" class="er-total-bar hidden" hidden>
+                        <span class="er-total-bar-label">Party total</span>
+                        <span class="er-total-bar-meta" id="erSheetTotalMeta"></span>
+                        <strong class="er-total-bar-amt" id="erSheetTotalAmt"></strong>
+                    </div>
                     <div id="erSheetContent" class="er-content"></div>
                     <div id="erSheetError" class="er-error hidden"></div>
                     <footer class="er-footer">
@@ -710,6 +806,36 @@
         el.classList.remove('hidden');
     }
 
+    function partySeatCount() {
+        const seats = STATE.form.seats;
+        if (Array.isArray(seats) && seats.length) return seats.length;
+        return 1;
+    }
+
+    function shouldShowPartyTotalBar(steps) {
+        const partyIdx = steps.findIndex((s) => s.key === 'party');
+        if (partyIdx >= 0) return STATE.step >= partyIdx;
+        const contactIdx = steps.findIndex((s) => s.key === 'contact');
+        if (contactIdx >= 0 && STATE.step <= contactIdx) return false;
+        return estimatedPartyTotal(STATE.event) > 0;
+    }
+
+    function _refreshPartyTotalBar() {
+        const bar = document.getElementById('erSheetTotal');
+        const amt = document.getElementById('erSheetTotalAmt');
+        const meta = document.getElementById('erSheetTotalMeta');
+        if (!bar) return;
+        const steps = getSteps();
+        const show = shouldShowPartyTotalBar(steps);
+        bar.hidden = !show;
+        bar.classList.toggle('hidden', !show);
+        if (!show) return;
+        const total = estimatedPartyTotal(STATE.event);
+        const n = partySeatCount();
+        if (amt) amt.textContent = total > 0 ? formatMoney(total) : 'Free';
+        if (meta) meta.textContent = n === 1 ? '1 person' : `${n} people`;
+    }
+
     function _refreshFooterLabels() {
         const steps = getSteps();
         const nextBtn = document.getElementById('erNextBtn');
@@ -721,6 +847,7 @@
         } else {
             nextBtn.textContent = 'Next';
         }
+        _refreshPartyTotalBar();
     }
 
     function _render() {
