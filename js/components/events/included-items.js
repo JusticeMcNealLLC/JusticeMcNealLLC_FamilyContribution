@@ -233,6 +233,20 @@
             </div>`;
     }
 
+    function teaserHtml(catalog) {
+        const list = normalizeIncludedItems(catalog);
+        const names = list.map((item) => String(item.name || '').trim()).filter(Boolean);
+        if (!names.length) return '';
+        let label;
+        if (names.length === 1) label = names[0];
+        else if (names.length === 2) label = names[0] + ' and ' + names[1];
+        else label = names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
+        return `
+        <div class="ed-included-catalog ed-included-teaser">
+            <p class="ed-hint" style="margin-top:14px;margin-bottom:0">You&apos;ll choose ${escapeHtml(label)} when you RSVP.</p>
+        </div>`;
+    }
+
     function packageIntroHtml(catalog) {
         const list = normalizeIncludedItems(catalog);
         if (!list.length) return '';
@@ -406,6 +420,7 @@
         answersComplete,
         sanitizeAnswers,
         formFieldsHtml,
+        teaserHtml,
         packageIntroHtml,
         readAnswersFromRoot,
         wireChoiceControls,

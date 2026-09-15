@@ -394,7 +394,7 @@ function pubBuildPublicDetailShell(event, goingCount) {
                             <div class="ed-discuss-body">
                                 <div id="commentsList" class="ed-comments-list"></div>
                                 <div id="commentForm" class="hidden ed-comment-input-row">
-                                    <div class="ed-comment-self-avatar">G</div>
+                                    <div class="ed-comment-self-avatar" id="commentSelfAvatar">G</div>
                                     <div class="ed-comment-input-wrap"><input type="text" id="commentInput" placeholder="Add a comment..." class="ed-comment-input" aria-label="Write a comment"><button onclick="pubPostComment()" class="ed-comment-post">Post</button></div>
                                 </div>
                                 <div id="commentLoginPrompt" class="hidden ed-comment-empty"><span class="ed-comment-empty-icon">💬</span><p class="ed-comment-empty-text">RSVP to join the discussion</p></div>
@@ -460,14 +460,11 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         locPillEl.innerHTML = `<span class="evt-location-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg> ${pubEscapeHtml(event.location_nickname)}</span>`;
     }
 
-    // Banner
+    // Banner — photo lives on .ed-hero-photo so the top fade can show
     const bannerEl = document.getElementById('eventBanner');
     if (event.banner_url) {
-        bannerEl.style.backgroundImage = `url(${event.banner_url})`;
         bannerEl.style.cursor = 'pointer';
         bannerEl.addEventListener('click', () => pubOpenLightbox(event.banner_url));
-    } else {
-        bannerEl.style.background = 'linear-gradient(135deg, #222, #444)';
     }
     // Prevent hero action buttons from triggering lightbox
     bannerEl.querySelectorAll('.evt-hero-btn').forEach(b => b.addEventListener('click', e => e.stopPropagation()));
@@ -582,16 +579,16 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         descEl.style.display = 'none';
     } else if (rawDesc.trim()) {
         const rendered = pubMiniMarkdown(pubEscapeHtml(rawDesc)).replace(/\n/g, '<br>');
-        descEl.classList.add('evt-desc');
+        descEl.classList.add('ed-desc');
         descEl.style.display = '';
         descEl.innerHTML = rendered;
         if (rawDesc.length > 500) {
-            descEl.classList.add('evt-desc-collapsed');
+            descEl.classList.add('ed-desc-collapsed');
             const btn = document.createElement('button');
-            btn.className = 'evt-read-more';
+            btn.className = 'ed-read-more';
             btn.textContent = 'Read more';
             btn.addEventListener('click', () => {
-                const isCollapsed = descEl.classList.toggle('evt-desc-collapsed');
+                const isCollapsed = descEl.classList.toggle('ed-desc-collapsed');
                 btn.textContent = isCollapsed ? 'Read more' : 'Show less';
             });
             descEl.parentNode.insertBefore(btn, descEl.nextSibling);
@@ -611,12 +608,18 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         if (tabsNode) {
             let insertAfter = descEl;
             const maybeBtn = descEl.nextSibling;
-            if (maybeBtn && maybeBtn.classList && maybeBtn.classList.contains('evt-read-more')) {
+            if (maybeBtn && maybeBtn.classList && maybeBtn.classList.contains('ed-read-more')) {
                 insertAfter = maybeBtn;
             }
             insertAfter.parentNode.insertBefore(tabsNode, insertAfter.nextSibling);
             window.EventsAboutTabs.wireAboutTabs(descEl.parentNode);
         }
+    }
+
+    const teaserHtml = window.EventsIncludedItems?.teaserHtml?.(event.included_items) || '';
+    if (teaserHtml) {
+        const col = descEl.parentNode;
+        if (col) col.insertAdjacentHTML('beforeend', teaserHtml);
     }
 
     // Gated Notes

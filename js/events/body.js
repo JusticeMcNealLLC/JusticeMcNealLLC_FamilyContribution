@@ -589,12 +589,15 @@ async function pubRenderComments(event) {
         .order('created_at', { ascending: true })
         .limit(100);
 
-    // Show section if there are comments or user can post
     const canPost = pubCurrentRsvp || pubGuestRsvp;
-
-    if ((!comments || comments.length === 0) && !canPost) return;
-
     section.classList.remove('hidden');
+
+    const selfEl = document.getElementById('commentSelfAvatar');
+    if (selfEl) {
+        const guestName = pubGuestRsvp?.guest_name || '';
+        const initial = (guestName || pubCurrentUser?.email || 'G').trim().charAt(0).toUpperCase() || 'G';
+        selfEl.textContent = initial;
+    }
 
     // Render comments
     if (comments && comments.length > 0) {
