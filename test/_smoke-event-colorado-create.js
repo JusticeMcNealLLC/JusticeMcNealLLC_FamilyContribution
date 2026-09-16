@@ -24,7 +24,7 @@ const sql = read('scripts/create-colorado-event-2028.sql');
     ['fund_deadline 2027-11-01', '2027-11-01'],
     ['start_date 2028-01-25', '2028-01-25'],
     ['status draft', "'draft'"],
-    ['event_type member', "'member'"],
+    ['event_type llc', "'llc'"],
     ['location_lat', '39.605'],
     ['location_lng', '-105.95417'],
 ].forEach(([label, needle]) => {

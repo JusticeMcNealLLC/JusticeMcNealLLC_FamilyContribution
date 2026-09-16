@@ -24,8 +24,8 @@
     <!-- Leaflet.js for event map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <link rel="stylesheet" href="../css/pages/events/detail.css?v=164">
-    <link rel="stylesheet" href="../css/pages/portal/events/detail.css?v=206">
-    <link rel="stylesheet" href="../css/pages/public-event.css?v=189">
+    <link rel="stylesheet" href="../css/pages/portal/events/detail.css?v=209">
+    <link rel="stylesheet" href="../css/pages/public-event.css?v=192">
 </head>
 <body class="antialiased">
 
@@ -35,7 +35,7 @@
             <img src="/assets/icons/icon-192.png" alt="Justice McNeal LLC" style="width:32px;height:32px;border-radius:8px;display:block;">
             Justice McNeal LLC
         </a>
-        <a href="/pages/login/" class="pub-nav-sign-in" id="pubNavSignIn">Sign In</a>
+        <a href="/pages/login/" class="pub-nav-sign-in" id="pubNavSignIn" data-public-signin>Sign In</a>
     </nav>
     <script>
         (function () {
@@ -44,7 +44,7 @@
             var dest = '/pages/portal/events.html?event=' + encodeURIComponent(slug);
             var href = '/pages/login/?redirect=' + encodeURIComponent(dest);
             function apply() {
-                document.querySelectorAll('.pub-nav-sign-in, a[href="/pages/login/"]').forEach(function (a) {
+                document.querySelectorAll('[data-public-signin], a[href="/pages/login/"]').forEach(function (a) {
                     a.setAttribute('href', href);
                 });
             }
@@ -309,9 +309,9 @@
     <script src="../js/components/events/pills.js"></script>
     <script src="../js/components/events/card.js"></script>
     <script src="../js/portal/events/core/raffle-model.js"></script>
-    <script src="../js/events/index.js?v=200"></script>
-    <script src="../js/events/hero.js?v=222"></script>
-    <script src="../js/events/body.js?v=197"></script>
+    <script src="../js/events/index.js?v=202"></script>
+    <script src="../js/events/hero.js?v=223"></script>
+    <script src="../js/events/body.js?v=199"></script>
     <script src="../js/events/rsvp.js?v=196"></script>
     <script src="../js/events/raffle.js?v=173"></script>
     <script src="../js/events/ticket.js?v=172"></script>

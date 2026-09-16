@@ -575,6 +575,37 @@ async function pubRenderInviteBanner(event) {
 
 /* ── Comments / Discussion ───────────────── */
 
+function pubOpenDiscussionRsvp() {
+    if (pubCurrentUser && typeof pubOpenMemberRsvpFlow === 'function') {
+        pubOpenMemberRsvpFlow();
+        return;
+    }
+    if (typeof pubOpenGuestRsvpWizard === 'function' && pubOpenGuestRsvpWizard()) return;
+    if (typeof pubOpenCtaPanel === 'function') pubOpenCtaPanel('rsvp');
+}
+
+function pubSetDiscussionComposerLocked(locked) {
+    const form = document.getElementById('commentForm');
+    const input = document.getElementById('commentInput');
+    const post = form?.querySelector('.ed-comment-post');
+    if (!form || !input) return;
+
+    form.classList.remove('hidden');
+    form.classList.toggle('ed-comment-input-row--locked', locked);
+    input.disabled = locked;
+    input.readOnly = locked;
+    input.placeholder = locked ? 'RSVP to join the discussion' : 'Add a comment...';
+    input.setAttribute('aria-label', locked ? 'RSVP to join the discussion' : 'Write a comment');
+    if (post) {
+        post.disabled = locked;
+        post.setAttribute('aria-disabled', locked ? 'true' : 'false');
+    }
+    form.onclick = locked ? (e) => {
+        e.preventDefault();
+        pubOpenDiscussionRsvp();
+    } : null;
+}
+
 async function pubRenderComments(event) {
     const section = document.getElementById('commentsSection');
     const list    = document.getElementById('commentsList');
@@ -589,7 +620,9 @@ async function pubRenderComments(event) {
         .order('created_at', { ascending: true })
         .limit(100);
 
-    const canPost = pubCurrentRsvp || pubGuestRsvp;
+    const canPost = typeof pubHasRaffleEligibleRsvp === 'function'
+        ? pubHasRaffleEligibleRsvp()
+        : !!(pubCurrentRsvp || pubGuestRsvp);
     section.classList.remove('hidden');
 
     const selfEl = document.getElementById('commentSelfAvatar');
@@ -619,16 +652,12 @@ async function pubRenderComments(event) {
     } else {
         list.innerHTML = `<div class="ed-comment-empty">
             <span class="ed-comment-empty-icon">💬</span>
-            <p class="ed-comment-empty-text">No comments yet — be the first!</p>
+            <p class="ed-comment-empty-text">${canPost ? 'No comments yet — be the first!' : 'No comments yet'}</p>
         </div>`;
     }
 
-    // Show form or prompt
-    if (canPost) {
-        form.classList.remove('hidden');
-    } else {
-        prompt.classList.remove('hidden');
-    }
+    if (prompt) prompt.classList.add('hidden');
+    pubSetDiscussionComposerLocked(!canPost);
 
     if (window.EventsDiscussion) {
         window.EventsDiscussion.wire(section);
@@ -642,6 +671,16 @@ async function pubPostComment() {
     const body  = (input.value || '').trim();
     if (!body || !pubCurrentEvent) return;
 
+    const canPost = typeof pubHasRaffleEligibleRsvp === 'function'
+        ? pubHasRaffleEligibleRsvp()
+        : !!(pubCurrentRsvp || pubGuestRsvp);
+    if (!canPost) {
+        if (window.EventsHelpers?.toast) {
+            window.EventsHelpers.toast('Finish your RSVP to join the discussion.');
+        }
+        return;
+    }
+
     const payload = {
         event_id: pubCurrentEvent.id,
         body: body
@@ -653,7 +692,7 @@ async function pubPostComment() {
         payload.guest_name  = pubGuestRsvp.guest_name;
         payload.guest_token = pubGuestRsvp.guest_token;
     } else {
-        return; // Can't post without identity
+        return;
     }
 
     const { error } = await supabaseClient.from('event_comments').insert(payload);

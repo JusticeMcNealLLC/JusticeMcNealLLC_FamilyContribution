@@ -104,6 +104,7 @@ const PUB_CTA_ICONS = {
     check: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
     ticket: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"/></svg>',
     lock: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>',
+    person: '<svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>',
 };
 
 function pubPublicCtaLabel(text) {
@@ -158,7 +159,7 @@ function pubInitBottomNav(event) {
         } else if (pubCurrentUser) {
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubHandleRsvp('going')">RSVP</button>`;
         } else if (event.member_only) {
-            rsvpBtn = `<a href="${typeof pubPortalLoginHref === 'function' ? pubPortalLoginHref(event.slug) : '/pages/login/'}" class="evt-cta-btn evt-cta-rsvp">Sign In to RSVP</a>`;
+            rsvpBtn = `<a href="${typeof pubPortalLoginHref === 'function' ? pubPortalLoginHref(event.slug) : '/pages/login/'}" class="evt-cta-btn evt-cta-rsvp" data-public-signin>Sign In to RSVP</a>`;
         } else if (event.pricing_mode === 'paid' && (typeof pubEventPaidCents === 'function' ? pubEventPaidCents(event) : event.rsvp_cost_cents) > 0) {
             const paidCents = typeof pubEventPaidCents === 'function' ? pubEventPaidCents(event) : event.rsvp_cost_cents;
             rsvpBtn = `<button class="evt-cta-btn evt-cta-rsvp" onclick="pubOpenGuestRsvpWizard() || pubOpenCtaPanel('rsvp')">RSVP — ${pubFormatCurrency(paidCents)}</button>`;
@@ -198,10 +199,15 @@ function pubInitBottomNav(event) {
 
     if (!rsvpBtn && !raffleBtn) return;
 
+    const showSignInIcon = !pubCurrentUser && !pubGuestRsvp && !event.member_only;
+    const signInBtn = showSignInIcon
+        ? `<a href="${typeof pubPortalLoginHref === 'function' ? pubPortalLoginHref(event.slug) : '/pages/login/'}" class="evt-cta-signin" data-public-signin aria-label="Sign in">${PUB_CTA_ICONS.person}</a>`
+        : '';
+
     const bar = document.createElement('div');
     bar.id = 'evtCtaBar';
     bar.className = 'evt-cta-bar' + (ctaFootnote ? ' evt-cta-bar-has-footnote' : '');
-    bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${rsvpBtn + raffleBtn}</div>${ctaFootnote}`;
+    bar.innerHTML = `<div id="evtCtaPanel" class="evt-cta-panel hidden"></div><div class="evt-cta-actions">${signInBtn + rsvpBtn + raffleBtn}</div>${ctaFootnote}`;
     document.body.appendChild(bar);
     document.body.style.paddingBottom = ctaFootnote ? '92px' : '80px';
 

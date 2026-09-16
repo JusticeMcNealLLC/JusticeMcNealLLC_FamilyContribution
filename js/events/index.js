@@ -32,7 +32,7 @@ function pubPortalLoginHref(eventSlug) {
 
 function pubApplyPublicSignInLinks(eventSlug) {
     const href = pubPortalLoginHref(eventSlug);
-    document.querySelectorAll('a[href="/pages/login/"], a[href^="/pages/login/?"]').forEach(link => {
+    document.querySelectorAll('[data-public-signin], a[href="/pages/login/"], a[href^="/pages/login/?"]').forEach(link => {
         link.setAttribute('href', href);
     });
 }
@@ -97,7 +97,7 @@ function pubGenericAvatarStackHtml(count) {
 
 function pubAttendanceLabel(count) {
     const n = Math.max(0, Number(count) || 0);
-    if (n === 0) return 'Be the first to RSVP';
+    if (n === 0) return 'No RSVPs yet';
     return `${n} ${n === 1 ? 'person' : 'people'} going`;
 }
 
@@ -106,11 +106,17 @@ function pubRenderPublicAttendance(goingCount, event) {
     if (!countEl) return;
 
     const n = Math.max(0, Number(goingCount) || 0);
-    const stack = n > 0 ? pubGenericAvatarStackHtml(n) : '';
+    if (n === 0) {
+        countEl.innerHTML = '';
+        countEl.classList.add('hidden');
+        return;
+    }
+
+    const stack = pubGenericAvatarStackHtml(n);
     const primary = pubAttendanceLabel(n);
     const Cap = window.EventsCapacity;
-    let sub = n === 0 ? 'RSVP to join this event' : '';
-    if (Cap?.eventHasCapacityLimit?.(event) && n > 0) {
+    let sub = '';
+    if (Cap?.eventHasCapacityLimit?.(event)) {
         const left = Cap.spotsRemaining(event, n);
         sub = left > 0 ? `${left} spots left` : 'Sold out';
     }
@@ -295,6 +301,8 @@ function pubBuildPublicDetailShell(event, goingCount) {
     const dateMain = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const dateLong = start.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     const weekday = start.toLocaleDateString('en-US', { weekday: 'long' });
+    const weekdayShort = start.toLocaleDateString('en-US', { weekday: 'short' });
+    const locationSub = event.location_nickname && event.location_text ? event.location_text : 'Location';
     const timeStr = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     const endTimeStr = end ? end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
     const showTime = !event.gate_time || pubCurrentRsvp || pubGuestRsvp;
@@ -317,30 +325,24 @@ function pubBuildPublicDetailShell(event, goingCount) {
                     <div id="eventBanner" class="ed-hero${event.banner_url ? ' ed-hero--photo' : ''}" ${event.banner_url ? '' : `style="${bannerStyle}"`} role="img" aria-label="Event banner">
                         ${event.banner_url ? `<div class="ed-hero-photo" style="${bannerStyle}"></div><div class="ed-hero-fade" aria-hidden="true"></div>` : ''}
                         <div class="ed-hero-scrim"></div>
-                        <div class="ed-hero-nav">
-                            <div id="heroStatusBadge" aria-live="polite" aria-atomic="true"></div>
-                            <div id="eventTags" class="ed-hero-pills"></div>
-                        </div>
                         <div class="ed-hero-bottom-content">
                             <h1 id="eventContentTitle" class="ed-hero-title">${pubEscapeHtml(event.title || 'Event')}</h1>
-                            <div id="heroLocationPill" class="public-ed-hidden-mount"></div>
-                            <p class="ed-hero-subtitle">Hosted by ${pubEscapeHtml(hostName)}${categoryLabel ? ` &bull; ${pubEscapeHtml(categoryLabel)}` : ''}</p>
                             <div class="ed-hero-info-bar">
                                 <div class="ed-hero-info-item">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    <div><span class="ed-hero-info-main">${dateMain}</span><span class="ed-hero-info-sub">${weekday}</span></div>
+                                    <div><span class="ed-hero-info-main">${dateMain}</span><span class="ed-hero-info-sub">${weekdayShort}</span></div>
                                 </div>
                                 ${showTime ? `<div class="ed-hero-info-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><div><span class="ed-hero-info-main">${timeStr}</span><span class="ed-hero-info-sub">${endTimeStr ? `Ends ${endTimeStr}` : 'Start time'}</span></div></div>` : ''}
-                                ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-hero-info-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><div><span class="ed-hero-info-main">${pubEscapeHtml(event.location_nickname || event.location_text || '')}</span><span class="ed-hero-info-sub">${pubEscapeHtml(event.location_nickname && event.location_text ? event.location_text : 'Location')}</span></div></div>` : ''}
+                                ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-hero-info-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><div><span class="ed-hero-info-main">${pubEscapeHtml(event.location_nickname || event.location_text || '')}</span><span class="ed-hero-info-sub">${pubEscapeHtml(locationSub)}</span></div></div>` : ''}
                             </div>
                         </div>
                     </div>
 
                     <div class="ed-content-cards public-event-sections">
                         <div class="ed-qi-bar">
-                            <div class="ed-qi-col"><svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="ed-qi-main">${dateMain}</span><span class="ed-qi-sub">${weekday}</span></div>
+                            <div class="ed-qi-col"><svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="ed-qi-main">${dateMain}</span><span class="ed-qi-sub">${weekdayShort}</span></div>
                             ${showTime ? `<div class="ed-qi-col"><svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="ed-qi-main">${timeStr}</span><span class="ed-qi-sub">Start time</span></div>` : ''}
-                            ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-qi-col ed-qi-col-loc"><svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="ed-qi-main">${pubEscapeHtml(event.location_nickname || event.location_text || '')}</span><span class="ed-qi-sub">Location</span></div>` : ''}
+                            ${showLocation && (event.location_nickname || event.location_text) ? `<div class="ed-qi-col ed-qi-col-loc"><svg class="ed-qi-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="ed-qi-main">${pubEscapeHtml(event.location_nickname || event.location_text || '')}</span><span class="ed-qi-sub">${pubEscapeHtml(locationSub)}</span></div>` : ''}
                         </div>
                         ${showLocation && event.location_lat && event.location_lng ? `
                         <div class="ed-mobile-map-card">
@@ -421,7 +423,7 @@ function pubBuildPublicDetailShell(event, goingCount) {
                     </div>
                     <div id="memberRsvpCard" class="hidden ed-card ed-card-rsvp event-detail-card-tight public-action-card"><p class="ed-summary-heading">Your RSVP</p><div id="rsvpSection" class="evt-section" role="region" aria-label="RSVP"></div></div>
                     <div id="guestRsvpSection" class="hidden ed-card event-detail-card-tight public-action-card"><p class="ed-summary-heading">RSVP for This Event</p><p class="public-ed-muted" style="margin-bottom:14px">No account needed. Enter your name, email, and phone.</p><div class="public-ed-field-stack"><input type="text" id="guestNameInput" placeholder="Your full name" class="evt-input" aria-label="Full name"><input type="email" id="guestEmailInput" placeholder="Email address" class="evt-input" aria-label="Email address"><input type="tel" id="guestPhoneInput" placeholder="Phone number" class="evt-input" required aria-label="Phone number"><div id="guestSeatPicker"></div><div id="guestIncludedOptions"></div><div id="guestDisclaimerAcks"></div><div id="guestAmenityVote"></div><div id="guestPaymentChoice"></div><label class="evt-checkbox-label"><input type="checkbox" id="guestSmsConsentCheck"><span>Text me event updates at this number. Message/data rates may apply. Reply STOP to opt out.</span></label><label class="evt-checkbox-label hidden"><input type="checkbox" id="guestNoRefundCheck"><span>I understand this payment is non-refundable unless cancelled by staff.</span></label><button onclick="pubHandleGuestRsvp()" id="guestRsvpBtn" class="evt-rsvp-pay">RSVP as Guest</button></div>${pubMemberRsvpPromptHtml(event.slug)}<div class="pub-rsvp-links"><button type="button" onclick="pubToggleLookup()" class="pub-rsvp-text-link">Already RSVP'd? Look up your ticket</button></div><div id="lookupPanel" class="hidden" style="margin-top:14px"><p class="public-ed-muted" style="margin-bottom:10px">Enter the email you used to RSVP and your ticket will show here.</p><div class="public-ed-field-stack"><input type="email" id="lookupEmailInput" placeholder="Email used for RSVP" class="evt-input" aria-label="Email used for RSVP"><button onclick="pubLookupGuestTicket()" id="lookupBtn" class="evt-action-btn">Find My Ticket</button></div><div id="lookupResult" style="margin-top:10px"></div></div></div>
-                    <div id="memberOnlyNotice" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-notice-card"><span class="evt-notice-icon">🔒</span><div><p class="evt-notice-title">Members-only event</p><p class="evt-notice-sub">Sign in with your member account to RSVP.</p><a href="${pubPortalLoginHref(event.slug)}" class="pub-member-rsvp-btn pub-member-rsvp-btn--inline">Sign in to RSVP</a></div></div></div>
+                    <div id="memberOnlyNotice" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-notice-card"><span class="evt-notice-icon">🔒</span><div><p class="evt-notice-title">Members-only event</p><p class="evt-notice-sub">Sign in with your member account to RSVP.</p><a href="${pubPortalLoginHref(event.slug)}" data-public-signin class="pub-member-rsvp-btn pub-member-rsvp-btn--inline">Sign in to RSVP</a></div></div></div>
                     <div id="ticketSection" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-qr-card"><h3 class="evt-qr-title">🎫 Your Event Ticket</h3><canvas id="ticketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p></div></div>
                     <div id="guestTicketSection" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div class="evt-qr-card"><div style="font-size:36px;margin-bottom:8px">🎉</div><h3 class="evt-qr-title">You're In!</h3><p id="guestTicketName" style="font-size:13px;color:#717171;margin-bottom:16px"></p><canvas id="guestTicketQR" style="display:block;margin:0 auto"></canvas><p class="evt-qr-sub">Show this QR code at check-in</p><p style="font-size:13px;color:#f59e0b;font-weight:600;margin-top:10px">Bookmark this page. This is your ticket.</p></div></div>
                     <div id="venueCheckin" class="hidden ed-card event-detail-card-tight evt-section public-action-card"><div id="checkinResult"></div></div>
@@ -454,12 +456,6 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     // Title moved to content area — set it there
     document.getElementById('eventContentTitle').textContent = event.title;
 
-    // Location nickname pill on banner
-    const locPillEl = document.getElementById('heroLocationPill');
-    if (event.location_nickname) {
-        locPillEl.innerHTML = `<span class="evt-location-pill"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 0115 0z"/></svg> ${pubEscapeHtml(event.location_nickname)}</span>`;
-    }
-
     // Banner — photo lives on .ed-hero-photo so the top fade can show
     const bannerEl = document.getElementById('eventBanner');
     if (event.banner_url) {
@@ -469,64 +465,12 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     // Prevent hero action buttons from triggering lightbox
     bannerEl.querySelectorAll('.evt-hero-btn').forEach(b => b.addEventListener('click', e => e.stopPropagation()));
 
-    // Tags (frosted glass pills on hero)
-    const tagsEl = document.getElementById('eventTags');
-    const tc = PUB_TYPE_COLORS[event.event_type] || PUB_TYPE_COLORS.llc;
-    let tagsHtml = `<span class="evt-tag" style="background:rgba(255,255,255,.18);backdrop-filter:blur(6px);color:#fff">${tc.label}</span>`;
-    if (event.category) {
-        tagsHtml += `<span class="evt-tag" style="background:rgba(255,255,255,.18);backdrop-filter:blur(6px);color:#fff">${PUB_CATEGORY_EMOJI[event.category] || '📌'} ${event.category}</span>`;
-    }
-    tagsEl.innerHTML = tagsHtml;
-
-    // Meta — section removed (info on banner); keep start/end refs for calendar
-    const start = new Date(event.start_date);
-    const end   = event.end_date ? new Date(event.end_date) : null;
-    const isGatedDate = event.gate_time && !pubCurrentRsvp;
     const isGatedLoc  = event.gate_location && !pubCurrentRsvp;
-
-    // ── Hero Date Card + Status Badge ──────
-    const heroMonthStr = start.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-    const heroDayStr = start.getDate();
-    const heroTimeShort = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-
-    const heroBadge = document.getElementById('heroStatusBadge');
     const isClosed = event.status === 'completed' || event.status === 'cancelled';
     const isPast   = new Date(event.start_date) < new Date() && event.status !== 'active';
     const deadlinePassed = event.rsvp_deadline && new Date(event.rsvp_deadline) < new Date();
 
-    // Determine status
-    let badgeLabel = '', badgeCls = '', dotPulse = false;
-    if (event.status === 'cancelled') {
-        badgeLabel = 'Cancelled'; badgeCls = 'evt-status-cancelled'; dotPulse = false;
-    } else if (event.status === 'completed') {
-        badgeLabel = 'Ended'; badgeCls = 'evt-status-ended'; dotPulse = false;
-    } else if (isPast) {
-        badgeLabel = 'Ended'; badgeCls = 'evt-status-ended'; dotPulse = false;
-    } else if (event.status === 'active') {
-        badgeLabel = 'Live'; badgeCls = 'evt-status-live'; dotPulse = true;
-    } else {
-        // Upcoming — show countdown
-        const msUntil = new Date(event.start_date) - new Date();
-        const d = Math.floor(msUntil / 86400000);
-        const h = Math.floor((msUntil % 86400000) / 3600000);
-        const m = Math.floor((msUntil % 3600000) / 60000);
-        if (d > 0) {
-            badgeLabel = `${d}d ${h}h`; badgeCls = 'evt-status-soon'; dotPulse = d === 0;
-        } else if (h > 0) {
-            badgeLabel = `${h}h ${m}m`; badgeCls = 'evt-status-soon'; dotPulse = true;
-        } else {
-            badgeLabel = `${m}m`; badgeCls = 'evt-status-soon'; dotPulse = true;
-        }
-    }
-
-    heroBadge.innerHTML = `<span class="evt-status-badge ${badgeCls}"><span class="evt-status-dot${dotPulse ? ' pulse' : ''}"></span>${badgeLabel}</span>`;
-
-    // Live countdown updater (smart: 1s tick when < 1 hour)
-    if (!isClosed && !isPast && event.status !== 'active') {
-        pubStartLiveCountdown(event.start_date, heroBadge);
-    }
-
-    // Also show body-level status banner for deadline-passed (not reflected in hero)
+    // Body-level status banner for deadline-passed
     const statusBanner = document.getElementById('eventStatusBanner');
     if (deadlinePassed && !isClosed && !isPast) {
         statusBanner.innerHTML = `<span class="evt-status-banner evt-status-past-body">🔒 RSVP deadline passed</span>`;

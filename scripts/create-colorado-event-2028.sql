@@ -34,7 +34,7 @@ INSERT INTO events (
 )
 SELECT
     creator.id,
-    'member',
+    'llc',
     'trip',
     'Colorado Snowboarding Trip 2028',
     'colorado-snowboarding-2028',

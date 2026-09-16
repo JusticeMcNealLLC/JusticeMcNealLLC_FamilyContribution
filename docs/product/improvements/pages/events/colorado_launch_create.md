@@ -6,7 +6,7 @@ Staging create for the family snowboarding trip. About / included / disclaimers 
 
 | Field | Value |
 | --- | --- |
-| `event_type` | `member` |
+| `event_type` | `llc` |
 | `member_only` | `false` |
 | `title` | `Colorado Snowboarding Trip 2028` |
 | `slug` | `colorado-snowboarding-2028` |
@@ -46,7 +46,7 @@ node test/_smoke-event-colorado-create.js
 
 ## Portal recreate (production later)
 
-Portal → Events → Create → type **Member**:
+Portal → Events → Create → type **LLC** (`member_only` off so guests can RSVP):
 
 | Step | Set |
 | --- | --- |

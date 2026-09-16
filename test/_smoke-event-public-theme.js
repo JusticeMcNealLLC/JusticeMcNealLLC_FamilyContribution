@@ -29,9 +29,11 @@ html.includes('theme-color" content="#13366E"')
     && !html.includes('family=Inter')
     ? pass('no Inter Google Fonts link')
     : fail('still loads Inter from Google Fonts');
-html.includes('public-event.css?v=187')
-    && html.includes('index.js?v=191')
-    ? pass('public CSS/JS cache bump (css v=187, index.js v=191)')
+html.includes('public-event.css?v=192')
+    && html.includes('detail.css?v=209')
+    && html.includes('index.js?v=202')
+    && html.includes('hero.js?v=223')
+    ? pass('public CSS/JS cache bump (css v=192, portal detail v=209)')
     : fail('public ?v= not bumped');
 
 console.log('\n── public-event.css tokens + safe-area ──────────────────────────────────');
@@ -50,10 +52,9 @@ css.includes('--color-primary')
     ? pass('uses --color-primary + --font-headline')
     : fail('missing theme token usage');
 css.includes('body.public-event-detail .pub-nav')
-    && css.includes('safe-area-inset-top')
-    && /body\.public-event-detail\s+\.pub-nav[\s\S]*?safe-area-inset-top/.test(css)
-    ? pass('sticky pub-nav uses safe-area-inset-top')
-    : fail('pub-nav missing top safe-area');
+    && /body\.public-event-detail\s+\.pub-nav[\s\S]*?display:\s*none/.test(css)
+    ? pass('public-event-detail hides pub-nav')
+    : fail('public-event-detail pub-nav not hidden');
 
 console.log('\n── public index.js colors ───────────────────────────────────────────────');
 const js = read('js/events/index.js');
@@ -63,6 +64,41 @@ const js = read('js/events/index.js');
     && !js.includes('#a855f7')
     ? pass('no indigo/purple hardcodes in index.js')
     : fail('indigo/purple hardcodes remain in index.js');
+
+console.log('\n── public hero matches portal ───────────────────────────────────────────');
+!js.includes('ed-hero-nav')
+    && !js.includes('ed-hero-subtitle')
+    && !js.includes('heroLocationPill')
+    && !js.includes('heroStatusBadge')
+    ? pass('public shell has no hero pills, countdown, or hosted-by line')
+    : fail('public shell still has hero-only chrome');
+js.includes("weekday: 'short'")
+    && js.includes('location_nickname && event.location_text ? event.location_text : \'Location\'')
+    ? pass('qi-bar uses weekday short + portal location subtext')
+    : fail('qi-bar weekday/location copy not matched to portal');
+html.includes('[data-public-signin]')
+    ? pass('login redirect targets data-public-signin')
+    : fail('login script missing data-public-signin selector');
+const hero = read('js/events/hero.js');
+hero.includes('evt-cta-signin')
+    && hero.includes('data-public-signin')
+    && hero.includes('aria-label="Sign in"')
+    && hero.includes('!event.member_only')
+    ? pass('CTA bar adds Sign In icon for guests (not member-only)')
+    : fail('CTA Sign In icon missing or shown for member-only');
+css.includes('.evt-cta-signin')
+    ? pass('Sign In icon styles present')
+    : fail('missing .evt-cta-signin styles');
+!css.includes('body.public-event-detail .ed-hero {')
+    && !css.includes('rgba(79,70,229')
+    ? pass('public-event.css no longer restyles shared hero/surface')
+    : fail('public-event.css still overrides shared event-detail chrome');
+const shared = read('css/pages/portal/events/detail.css');
+shared.includes('.event-detail-surface .ed-hero')
+    && shared.includes('.event-detail-surface .ed-qi-bar')
+    && shared.includes('.event-detail-surface .event-detail-card-tight')
+    ? pass('portal detail.css scopes v2 chrome to .event-detail-surface')
+    : fail('shared event-detail-surface rules missing');
 
 console.log('\n── magic-link payments still themed ─────────────────────────────────────');
 const pay = read('events/payments/index.html');
