@@ -10,6 +10,7 @@ const OPTION_TYPES = [
     { key: 'color', label: 'Color' },
     { key: 'text', label: 'Text' },
     { key: 'select', label: 'Select' },
+    { key: 'info', label: 'Included (no options)' },
 ];
 const APPLIES_OPTIONS = [
     { key: 'all', label: 'Everyone' },
@@ -205,12 +206,14 @@ function html() {
                         <label class="ec-label">Option type</label>
                         <select class="ec-input" data-inc-type="${_esc(item.id)}">${_typeOptions(item.option_type || 'size')}</select>
                     </div>
-                    <div style="display:flex;align-items:flex-end;min-height:42px">
+                    ${item.option_type === 'info'
+                        ? `<p class="ec-help" style="align-self:end;margin:0 0 6px">Shown on the event — guests do not pick anything.</p>`
+                        : `<div style="display:flex;align-items:flex-end;min-height:42px">
                         <label class="ec-check">
                             <input type="checkbox" data-inc-required="${_esc(item.id)}" ${item.required ? 'checked' : ''}>
                             <span>Required at RSVP</span>
                         </label>
-                    </div>
+                    </div>`}
                 </div>
                 ${_choicesHtml(item)}
                 ${_imageHtml(item)}
@@ -320,6 +323,7 @@ function wire() {
             item.option_type = el.value;
             if (!_needsChoices(item.option_type)) item.choices = [];
             else if (!Array.isArray(item.choices)) item.choices = [];
+            if (item.option_type === 'info') item.required = false;
             render();
         });
     });

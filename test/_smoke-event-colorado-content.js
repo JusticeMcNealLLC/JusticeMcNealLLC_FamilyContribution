@@ -19,10 +19,12 @@ const sql = read('scripts/fill-colorado-event-content-2028.sql');
     ["What's covered tab", 'co-tab-covered'],
     ['What to bring tab', 'co-tab-bring'],
     ['Lodging tab', 'co-tab-lodging'],
-    ['Clothing size', 'co-inc-size'],
-    ['Clothing color', 'co-inc-color'],
-    ['Clothing size photo', 'photo-1556821840-3a63f95609a7'],
-    ['Clothing color photo', 'photo-1489987707025-afc232f7ea0f'],
+    ['Black beanie', 'co-inc-beanie'],
+    ['Snow pants', 'co-inc-pants'],
+    ['Beanie is included/info', '"option_type": "info"'],
+    ['Pants adults only', '"applies_to": "adult"'],
+    ['Beanie photo', 'colorado-2028-beanie.jpg'],
+    ['Pants photo', 'colorado-2028-snow-pants.jpg'],
     ['default-no-refunds', 'default-no-refunds'],
     ['default-flyers', 'default-flyers'],
     ['no in-app refunds policy', 'non-refundable for any reason via the event system'],
@@ -30,6 +32,22 @@ const sql = read('scripts/fill-colorado-event-content-2028.sql');
 ].forEach(([label, needle]) => {
     sql.includes(needle) ? pass(`SQL has ${label}`) : fail(`SQL missing ${label}`);
 });
+
+const beanieImg = path.join(root, 'assets/events/colorado-2028-beanie.jpg');
+const pantsImg = path.join(root, 'assets/events/colorado-2028-snow-pants.jpg');
+fs.existsSync(beanieImg) && fs.statSync(beanieImg).size > 1000
+    ? pass('beanie catalog image in assets/events')
+    : fail('missing assets/events/colorado-2028-beanie.jpg');
+fs.existsSync(pantsImg) && fs.statSync(pantsImg).size > 1000
+    ? pass('snow pants catalog image in assets/events')
+    : fail('missing assets/events/colorado-2028-snow-pants.jpg');
+
+const helper = read('js/components/events/included-items.js');
+helper.includes("'info'")
+    && helper.includes("option_type === 'info'")
+    && helper.includes('assets\\/')
+    ? pass('included-items helper supports info type + /assets/ photos')
+    : fail('included-items helper missing info type or asset URLs');
 
 console.log('\n── Runbook + apply script ───────────────────────────────────────────────');
 const runbook = read('docs/product/improvements/pages/events/colorado_launch_create.md');

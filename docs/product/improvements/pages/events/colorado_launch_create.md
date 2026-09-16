@@ -64,7 +64,7 @@ Applied on staging (`slug = colorado-snowboarding-2028`):
 | Column | Content |
 | --- | --- |
 | `about_tabs` | Itinerary, What's covered, What to bring, Lodging & travel |
-| `included_items` | Clothing size (XS–XXL) + Clothing color (Trip clothing preset) |
+| `included_items` | Black beanie (included, no RSVP choice) + adult snow-pants size (S–4XL) |
 | `disclaimers` | `default-no-refunds` (no in-app refunds; rare out-of-band only) + `default-flyers` |
 
 ```bash

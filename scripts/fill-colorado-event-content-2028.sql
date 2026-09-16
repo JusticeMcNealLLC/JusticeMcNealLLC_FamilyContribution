@@ -13,12 +13,12 @@ UPDATE events SET
   {
     "id": "co-tab-covered",
     "title": "What's covered",
-    "body": "**$1,000 per adult**; **kids free**.\n\nThe trip pool covers shared lodging, travel/car prep, supplies, and on-mountain amenities as the host budget allows.\n\nACH preferred; card allowed with fee pass-through. Pay in full or monthly until the deadline; early payoff is OK."
+    "body": "**$1,000 per adult**; **kids free**.\n\nThe trip pool covers shared lodging, travel/car prep, supplies, and on-mountain amenities as the host budget allows.\n\n**Included apparel**\n- **Black beanie** — one size, one color. Adults get one; older kids may fit. No RSVP choice.\n- **Snow pants** — adults only. Pick your size at RSVP. Kids bring their own (we are not ordering kid sizes).\n\nACH preferred; card allowed with fee pass-through. Pay in full or monthly until the deadline; early payoff is OK."
   },
   {
     "id": "co-tab-bring",
     "title": "What to bring",
-    "body": "**Clothing / gear (plan to have):**\n\n- Goggles\n- Gloves\n- Puffer jacket\n- Sweater\n- Snow pants\n- Warm socks\n- Hand warmers\n- Sturdy shoes (e.g. Hoka or New Balance)\n\nAt RSVP, pick **clothing size** and **clothing color** for trip apparel we order.\n\n**Also:** offline maps, charging cables, and a travel playlist."
+    "body": "**Clothing / gear (plan to have):**\n\n- Goggles\n- Gloves\n- Puffer jacket\n- Sweater\n- Warm socks\n- Hand warmers\n- Sturdy shoes (e.g. Hoka or New Balance)\n- **Kids:** your own snow pants\n\nAdults pick **snow-pants size** at RSVP. The trip beanie is one-size black — nothing to choose.\n\n**Also:** offline maps, charging cables, and a travel playlist."
   },
   {
     "id": "co-tab-lodging",
@@ -30,22 +30,22 @@ $about$::jsonb,
     included_items = $included$
 [
   {
-    "id": "co-inc-size",
-    "name": "Clothing size",
-    "required": true,
-    "option_type": "size",
+    "id": "co-inc-beanie",
+    "name": "Black beanie",
+    "required": false,
+    "option_type": "info",
     "applies_to": "all",
-    "choices": ["XS", "S", "M", "L", "XL", "XXL"],
-    "image_url": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=80"
+    "choices": [],
+    "image_url": "/assets/events/colorado-2028-beanie.jpg"
   },
   {
-    "id": "co-inc-color",
-    "name": "Clothing color",
+    "id": "co-inc-pants",
+    "name": "Snow pants",
     "required": true,
-    "option_type": "color",
-    "applies_to": "all",
-    "choices": ["Black", "White", "Navy", "Gray", "Red", "Green"],
-    "image_url": "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80"
+    "option_type": "size",
+    "applies_to": "adult",
+    "choices": ["S", "M", "L", "XL", "XXL", "3XL", "4XL"],
+    "image_url": "/assets/events/colorado-2028-snow-pants.jpg"
   }
 ]
 $included$::jsonb,

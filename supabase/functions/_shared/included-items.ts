@@ -5,7 +5,7 @@ export const CHOICE_MAX = 40
 export const CHOICES_MAX = 40
 export const ANSWER_MAX = 120
 export const IMAGE_URL_MAX = 2000
-export const OPTION_TYPES = ['size', 'color', 'text', 'select'] as const
+export const OPTION_TYPES = ['size', 'color', 'text', 'select', 'info'] as const
 export const APPLIES_TO = ['all', 'adult', 'kid'] as const
 
 function needsChoices(type: string) {
@@ -25,8 +25,9 @@ type IncludedItem = {
 function normalizeImageUrl(raw: unknown): string {
   const v = String(raw || '').trim()
   if (!v || v.length > IMAGE_URL_MAX) return ''
-  if (!/^https:\/\//i.test(v)) return ''
-  return v
+  if (/^https:\/\//i.test(v)) return v
+  if (/^\/assets\/[A-Za-z0-9._\-\/]+\.(?:jpg|jpeg|png|webp)$/i.test(v)) return v
+  return ''
 }
 
 function normalizeAppliesTo(raw: unknown): 'all' | 'adult' | 'kid' {
@@ -65,7 +66,7 @@ export function normalizeIncludedItems(items: unknown): IncludedItem[] {
     const item: IncludedItem = {
       id,
       name,
-      required: !!row.required,
+      required: option_type === 'info' ? false : !!row.required,
       option_type,
       choices,
       applies_to: normalizeAppliesTo(row.applies_to),
@@ -87,6 +88,7 @@ export function validateAnswers(catalog: unknown, answers: unknown, role?: strin
   const list = role ? forRole(catalog, role) : normalizeIncludedItems(catalog)
   const map = answers && typeof answers === 'object' ? answers as Record<string, unknown> : {}
   for (const item of list) {
+    if (item.option_type === 'info') continue
     const raw = map[item.id]
     const value = raw == null ? '' : String(raw).trim()
     if (item.required && !value) return `${item.name} is required.`
@@ -104,6 +106,7 @@ export function sanitizeAnswers(catalog: unknown, answers: unknown, role?: strin
   const map = answers && typeof answers === 'object' ? answers as Record<string, unknown> : {}
   const out: Record<string, string> = {}
   for (const item of list) {
+    if (item.option_type === 'info') continue
     const value = map[item.id] == null ? '' : String(map[item.id]).trim().slice(0, ANSWER_MAX)
     if (!value) continue
     if (needsChoices(item.option_type) && !item.choices.includes(value)) continue

@@ -1447,7 +1447,7 @@
     const CHOICES_MAX2 = 40;
     const ANSWER_MAX = 120;
     const IMAGE_URL_MAX = 2e3;
-    const OPTION_TYPES2 = ["size", "color", "text", "select"];
+    const OPTION_TYPES2 = ["size", "color", "text", "select", "info"];
     const APPLIES_TO = ["all", "adult", "kid"];
     const SIZE_PRESET2 = ["XS", "S", "M", "L", "XL", "XXL"];
     const COLOR_PRESET2 = ["Black", "White", "Navy", "Gray", "Red", "Green"];
@@ -1466,13 +1466,14 @@
     function normalizeImageUrl(raw) {
       const v = String(raw || "").trim();
       if (!v || v.length > IMAGE_URL_MAX) return "";
-      if (!/^https:\/\//i.test(v)) return "";
-      return v;
+      if (/^https:\/\//i.test(v)) return v;
+      if (/^\/assets\/[A-Za-z0-9._\-\/]+\.(?:jpg|jpeg|png|webp)$/i.test(v)) return v;
+      return "";
     }
     function looksLikeClothing(item) {
       if (!item) return false;
       if (item.option_type === "size" || item.option_type === "color") return true;
-      return /cloth|hoodie|shirt|apparel|jacket|tee|sweat/i.test(String(item.name || ""));
+      return /cloth|hoodie|shirt|apparel|jacket|tee|sweat|beanie|hat|pant/i.test(String(item.name || ""));
     }
     function normalizeAppliesTo(raw) {
       const v = String(raw || "").trim();
@@ -1507,7 +1508,7 @@
         const row = {
           id,
           name,
-          required: !!raw.required,
+          required: option_type === "info" ? false : !!raw.required,
           option_type,
           choices,
           applies_to: normalizeAppliesTo(raw.applies_to)
@@ -1545,6 +1546,7 @@
       const list = role ? forRole(catalog, role) : normalizeIncludedItems(catalog);
       const map = answers && typeof answers === "object" ? answers : {};
       for (const item of list) {
+        if (item.option_type === "info") continue;
         const raw = map[item.id];
         const value = raw == null ? "" : String(raw).trim();
         if (item.required && !value) {
@@ -1569,6 +1571,7 @@
       const map = answers && typeof answers === "object" ? answers : {};
       const out = {};
       for (const item of list) {
+        if (item.option_type === "info") continue;
         const value = map[item.id] == null ? "" : String(map[item.id]).trim().slice(0, ANSWER_MAX);
         if (!value) continue;
         if (needsChoices(item.option_type) && !item.choices.includes(value)) continue;
@@ -1648,24 +1651,36 @@
                 ${swatches}
             </div>`;
     }
+    function joinItemNames(items) {
+      const names = items.map((item) => String(item.name || "").trim()).filter(Boolean);
+      if (!names.length) return "";
+      if (names.length === 1) return names[0];
+      if (names.length === 2) return names[0] + " and " + names[1];
+      return names.slice(0, -1).join(", ") + ", and " + names[names.length - 1];
+    }
     function teaserHtml(catalog) {
       const list = normalizeIncludedItems(catalog);
-      const names = list.map((item) => String(item.name || "").trim()).filter(Boolean);
-      if (!names.length) return "";
-      let label;
-      if (names.length === 1) label = names[0];
-      else if (names.length === 2) label = names[0] + " and " + names[1];
-      else label = names.slice(0, -1).join(", ") + ", and " + names[names.length - 1];
+      if (!list.length) return "";
+      const answerable = list.filter((item) => item.option_type !== "info");
+      const label = joinItemNames(answerable.length ? answerable : list);
+      if (!label) return "";
+      const line = answerable.length ? `You&apos;ll choose ${escapeHtml(label)} when you RSVP.` : `Package includes ${escapeHtml(label)}.`;
       return `
         <div class="ed-included-catalog ed-included-teaser">
-            <p class="ed-hint" style="margin-top:14px;margin-bottom:0">You&apos;ll choose ${escapeHtml(label)} when you RSVP.</p>
+            <p class="ed-hint" style="margin-top:14px;margin-bottom:0">${line}</p>
         </div>`;
     }
     function packageIntroHtml(catalog) {
       const list = normalizeIncludedItems(catalog);
       if (!list.length) return "";
       const clothing = list.some(looksLikeClothing);
-      const copy = clothing ? "This event includes clothing items with the event package. Pick your size and color so we can order yours." : "This event includes items with your RSVP package. Choose your options below.";
+      const answerable = list.filter((item) => item.option_type !== "info");
+      let copy = "This event includes items with your RSVP package. Choose your options below.";
+      if (!answerable.length) {
+        copy = "These items are included with the event package.";
+      } else if (clothing) {
+        copy = "This event includes clothing items with the event package. Pick your size so we can order yours.";
+      }
       const seen = /* @__PURE__ */ new Set();
       const figs = [];
       for (const item of list) {
@@ -1690,7 +1705,11 @@
       if (!list.length) return "";
       const prefix = opts && opts.idPrefix || "incOpt";
       const includeIntro = !opts || opts.includeIntro !== false;
-      const fields = list.map((item) => {
+      const answerable = list.filter((item) => item.option_type !== "info");
+      if (!answerable.length) {
+        return includeIntro ? `<div class="ed-inc-options" data-inc-options-root="${escapeHtml(prefix)}">${packageIntroHtml(list)}</div>` : "";
+      }
+      const fields = answerable.map((item) => {
         const fieldId = `${prefix}-${item.id}`;
         const req = item.required ? ' <span class="text-red-500">*</span>' : "";
         const selected = String(answers[item.id] || "").trim().slice(0, ANSWER_MAX);
@@ -1757,6 +1776,7 @@
       if (type === "size") return "Size";
       if (type === "color") return "Color";
       if (type === "select") return "Choice";
+      if (type === "info") return "Included";
       return "Text";
     }
     function appliesToLabel(appliesTo) {
@@ -1777,6 +1797,8 @@
           choicesHtml = `<div class="ed-inc-catalog-choices">${item.choices.map((c) => `<span class="ed-inc-pill ed-inc-pill-choice">${escapeHtml(c)}</span>`).join("")}</div>`;
         } else if (item.option_type === "text") {
           choicesHtml = '<p class="ed-inc-catalog-note">Free-text answer at RSVP</p>';
+        } else if (item.option_type === "info") {
+          choicesHtml = '<p class="ed-inc-catalog-note">Included with the package \u2014 no RSVP choice</p>';
         }
         const thumb = item.image_url ? `<img class="ed-inc-catalog-thumb" src="${escapeHtml(item.image_url)}" alt="" loading="lazy">` : "";
         return `
@@ -14369,7 +14391,8 @@ Type the event title to confirm:`);
     { key: "size", label: "Size" },
     { key: "color", label: "Color" },
     { key: "text", label: "Text" },
-    { key: "select", label: "Select" }
+    { key: "select", label: "Select" },
+    { key: "info", label: "Included (no options)" }
   ];
   var APPLIES_OPTIONS = [
     { key: "all", label: "Everyone" },
@@ -14544,12 +14567,12 @@ Type the event title to confirm:`);
                         <label class="ec-label">Option type</label>
                         <select class="ec-input" data-inc-type="${_esc3(item.id)}">${_typeOptions(item.option_type || "size")}</select>
                     </div>
-                    <div style="display:flex;align-items:flex-end;min-height:42px">
+                    ${item.option_type === "info" ? `<p class="ec-help" style="align-self:end;margin:0 0 6px">Shown on the event \u2014 guests do not pick anything.</p>` : `<div style="display:flex;align-items:flex-end;min-height:42px">
                         <label class="ec-check">
                             <input type="checkbox" data-inc-required="${_esc3(item.id)}" ${item.required ? "checked" : ""}>
                             <span>Required at RSVP</span>
                         </label>
-                    </div>
+                    </div>`}
                 </div>
                 ${_choicesHtml(item)}
                 ${_imageHtml(item)}
@@ -14650,6 +14673,7 @@ Type the event title to confirm:`);
         item.option_type = el.value;
         if (!_needsChoices(item.option_type)) item.choices = [];
         else if (!Array.isArray(item.choices)) item.choices = [];
+        if (item.option_type === "info") item.required = false;
         render();
       });
     });
