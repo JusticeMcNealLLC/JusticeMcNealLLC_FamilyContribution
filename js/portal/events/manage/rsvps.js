@@ -123,6 +123,30 @@ function seatOptionsSummary(seat, catalog) {
     }).join(' · ');
 }
 
+function rsvpAnswersText(eventRow, answers) {
+    const Questions = window.EventsRsvpQuestions;
+    if (!Questions || typeof Questions.normalizeQuestions !== 'function') return '';
+    const values = answers && typeof answers === 'object' ? answers : {};
+    return Questions.normalizeQuestions(eventRow?.rsvp_questions).map((question) => {
+        const value = values[question.id];
+        const blank = Array.isArray(value) ? value.length === 0 : !String(value == null ? '' : value).trim();
+        if (blank) return '';
+        const labels = new Map((question.choices || []).map((choice) => [choice.id, choice.label]));
+        const answer = Array.isArray(value)
+            ? value.map((item) => labels.get(item) || item).join(', ')
+            : (labels.get(value) || String(value));
+        return `${question.prompt}: ${answer}`;
+    }).filter(Boolean).join(' | ');
+}
+
+function rsvpAnswersHtml(eventRow, answers) {
+    const Questions = window.EventsRsvpQuestions;
+    if (!Questions || typeof Questions.summaryHtml !== 'function') return '';
+    const summary = Questions.summaryHtml(eventRow?.rsvp_questions, answers);
+    if (!summary) return '';
+    return `<div class="em-rsvp-answer-block" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--color-border,#d5dfec)"><p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">RSVP answers</p>${summary}</div>`;
+}
+
 function tsvCell(value) {
     return String(value == null ? '' : value)
         .replace(/\t/g, ' ')
@@ -137,10 +161,11 @@ function buildRosterTsv(STATE) {
     const seats = Array.isArray(STATE.seats) ? STATE.seats : [];
     const rsvps = Array.isArray(STATE.rsvps) ? STATE.rsvps : [];
     const guests = Array.isArray(STATE.guestRsvps) ? STATE.guestRsvps : [];
-    const catalog = STATE.event?.included_items;
+    const event = STATE.event;
+    const catalog = event?.included_items;
     const partyById = new Map(parties.map((p) => [p.id, p]));
 
-    const header = ['Name', 'Role', 'Kind', 'Payer', 'Status', 'Paid', 'Phone', 'Options'];
+    const header = ['Name', 'Role', 'Kind', 'Payer', 'Status', 'Paid', 'Phone', 'Options', 'RSVP answers'];
     const rows = [];
 
     function memberByUserId(userId) {
@@ -158,6 +183,7 @@ function buildRosterTsv(STATE) {
         let status = party.status === 'pending_payment' ? 'pending_payment' : 'going';
         let paid = false;
         let phone = '';
+        let answers = {};
 
         if (seat.linked_user_id) {
             kind = 'member';
@@ -168,6 +194,7 @@ function buildRosterTsv(STATE) {
                 status = r.status || status;
                 paid = !!r.paid;
                 phone = (p.phone || '').trim();
+                answers = r.rsvp_answers || {};
             }
         } else if (seat.linked_guest_rsvp_id) {
             kind = 'guest';
@@ -177,6 +204,7 @@ function buildRosterTsv(STATE) {
                 status = g.status || status;
                 paid = !!g.paid;
                 phone = (g.guest_phone || '').trim();
+                answers = g.rsvp_answers || {};
             }
         } else if (party.payer_kind === 'member') {
             kind = 'member';
@@ -193,6 +221,7 @@ function buildRosterTsv(STATE) {
             paid ? 'yes' : 'no',
             phone,
             options,
+            rsvpAnswersText(event, answers),
         ].map(tsvCell));
     }
 
@@ -210,7 +239,6 @@ function buildRosterTsv(STATE) {
             pushSeatRow(seat, partyById.get(seat.party_id));
         }
     } else {
-        const event = STATE.event;
         for (const r of rsvps.filter((row) => isCommittedGoingRow(event, row))) {
             const p = r.profiles || {};
             const party = idx.partyForMember(r);
@@ -223,6 +251,7 @@ function buildRosterTsv(STATE) {
                 r.paid ? 'yes' : 'no',
                 (p.phone || '').trim(),
                 '',
+                rsvpAnswersText(event, r.rsvp_answers),
             ].map(tsvCell));
         }
         for (const g of guests.filter((row) => isCommittedGoingRow(event, row))) {
@@ -236,6 +265,7 @@ function buildRosterTsv(STATE) {
                 g.paid ? 'yes' : 'no',
                 (g.guest_phone || '').trim(),
                 '',
+                rsvpAnswersText(event, g.rsvp_answers),
             ].map(tsvCell));
         }
     }
@@ -329,9 +359,14 @@ function partyMetaHtml(opts) {
         const cfg = Vote.normalizeConfig(eventRow?.amenity_voting);
         if (cfg.enabled && !(awaitingAttach || party.status === 'awaiting_attach')) {
             const status = String(party.amenity_vote_status || 'none');
-            const optId = party.amenity_vote_option_id ? String(party.amenity_vote_option_id) : '';
-            const opt = (cfg.options || []).find((o) => String(o.id) === optId);
-            const optLabel = opt?.label ? ` · ${opt.label}` : '';
+            const optIds = typeof Vote.normalizeVoteIds === 'function'
+                ? Vote.normalizeVoteIds(party.amenity_vote_option_id)
+                : (party.amenity_vote_option_id ? [String(party.amenity_vote_option_id)] : []);
+            const optLabels = (cfg.options || [])
+                .filter((o) => optIds.includes(String(o.id)))
+                .map((o) => o.label)
+                .filter(Boolean);
+            const optLabel = optLabels.length ? ` · ${optLabels.join(', ')}` : '';
             if (status === 'counted') {
                 pills.push(`<span class="em-pill em-pill-checked">Vote: counted${esc(optLabel)}</span>`);
             } else if (status === 'provisional') {
@@ -462,6 +497,7 @@ function rsvpsHtml() {
 
         let subExtra = '';
         let seatsBlock = '';
+        const answersBlock = rsvpAnswersHtml(e, r.rsvp_answers);
         if (r.status === 'going') {
             const party = idx.partyForMember(r);
             const seats = idx.seatsForParty(party);
@@ -481,7 +517,7 @@ function rsvpsHtml() {
 
         const hasParty = !!(r.party_id || (r.status === 'going' && idx.partyForMember(r)?.id));
         const removeLabel = (r.paid || hasParty) ? 'Cancel participation' : 'Remove';
-        return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${esc(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? ' · ticket ready' : ''}${subExtra}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join('')}</div>${seatsBlock}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="member" data-rsvp-id="${esc(r.id)}" data-user-id="${esc(r.user_id)}" data-paid="${r.paid ? '1' : '0'}" data-has-party="${hasParty ? '1' : '0'}" data-name="${esc(name)}">${removeLabel}</button></div>`;
+        return `<div class="em-attendee-card"><div class="em-avatar">${avatar}</div><div class="em-attendee-main"><p class="em-attendee-name">${esc(name)}</p><p class="em-attendee-sub">Member RSVP${r.qr_token ? ' · ticket ready' : ''}${subExtra}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join('')}</div>${seatsBlock}${answersBlock}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="member" data-rsvp-id="${esc(r.id)}" data-user-id="${esc(r.user_id)}" data-paid="${r.paid ? '1' : '0'}" data-has-party="${hasParty ? '1' : '0'}" data-name="${esc(name)}">${removeLabel}</button></div>`;
     }
 
     function guestRow(g) {
@@ -508,10 +544,11 @@ function rsvpsHtml() {
             event: e,
         });
         pills.push(...meta.pills);
+        const answersBlock = rsvpAnswersHtml(e, g.rsvp_answers);
 
         const hasParty = !!(g.party_id || party?.id);
         const removeLabel = (g.paid || hasParty) ? 'Cancel participation' : 'Remove';
-        return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${esc(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc(name)}</p><p class="em-attendee-sub">${esc(g.guest_email || 'Public guest')}${meta.subExtra || ''}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join('')}</div>${meta.seatsBlock || ''}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="guest" data-rsvp-id="${esc(g.id)}" data-guest-token="${esc(g.guest_token)}" data-paid="${g.paid ? '1' : '0'}" data-has-party="${hasParty ? '1' : '0'}" data-name="${esc(name)}">${removeLabel}</button></div>`;
+        return `<div class="em-attendee-card"><div class="em-avatar" style="background:#fef3c7;color:#92400e"><span>${esc(initials)}</span></div><div class="em-attendee-main"><p class="em-attendee-name">${esc(name)}</p><p class="em-attendee-sub">${esc(g.guest_email || 'Public guest')}${meta.subExtra || ''}</p><div class="flex flex-wrap gap-1 mt-2">${pills.join('')}</div>${meta.seatsBlock || ''}${answersBlock}</div><button type="button" class="em-btn-ghost" style="font-size:11px;padding:6px 9px" data-remove-rsvp="guest" data-rsvp-id="${esc(g.id)}" data-guest-token="${esc(g.guest_token)}" data-paid="${g.paid ? '1' : '0'}" data-has-party="${hasParty ? '1' : '0'}" data-name="${esc(name)}">${removeLabel}</button></div>`;
     }
 
     function section(title, list, emptyText) {

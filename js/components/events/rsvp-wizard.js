@@ -33,6 +33,7 @@
             seats: null,
             disclaimer_acks: [],
             amenity_vote_option_id: '',
+            rsvp_answers: {},
             invest_acknowledged: false,
             no_refund_accepted: false,
             payment_choice: null,
@@ -146,6 +147,11 @@
             }
             const nr = document.getElementById('erNoRefund');
             if (nr) STATE.form.no_refund_accepted = !!nr.checked;
+        } else if (cur.key === 'questions') {
+            const root = document.getElementById('erQuestionsRoot') || document.getElementById('erSheetContent');
+            if (window.EventsRsvpQuestions?.readAnswersFromRoot) {
+                STATE.form.rsvp_answers = window.EventsRsvpQuestions.readAnswersFromRoot(root, STATE.event.rsvp_questions);
+            }
         } else if (cur.key === 'pay') {
             const root = document.getElementById('erPayRoot') || document.getElementById('erSheetContent');
             if (window.EventsPaymentChoice?.readFromRoot) {
@@ -204,6 +210,12 @@
             && window.EventsAmenityVoting.needsVote(event));
     }
 
+    function needsRsvpQuestions(event) {
+        return !!(window.EventsRsvpQuestions
+            && typeof window.EventsRsvpQuestions.hasQuestions === 'function'
+            && window.EventsRsvpQuestions.hasQuestions(event?.rsvp_questions));
+    }
+
     function adultPriceCents(event) {
         if (window.EventsHelpers && typeof window.EventsHelpers.seatPriceCents === 'function') {
             return window.EventsHelpers.seatPriceCents(event, 'adult');
@@ -254,6 +266,7 @@
         if (paidWithAmount) return true;
         if (hasRequiredDisclaimers(event)) return true;
         if (needsAmenityVote(event)) return true;
+        if (needsRsvpQuestions(event)) return true;
         if (hasIncludedCatalog(event)) return true;
         if (needsInvestAck(event)) return true;
         if (mode === 'member' && ctx && ctx.memberPhoneMissing) return true;
@@ -285,6 +298,10 @@
 
         if (showPartySeats(event) || hasIncludedCatalog(event)) {
             steps.push({ key: 'party', label: 'Party' });
+        }
+
+        if (needsRsvpQuestions(event)) {
+            steps.push({ key: 'questions', label: 'Questions' });
         }
 
         const needLegal = hasRequiredDisclaimers(event)
@@ -572,6 +589,37 @@
         return null;
     }
 
+    function stepQuestionsHtml() {
+        if (!window.EventsRsvpQuestions?.formFieldsHtml) return '<p class="er-lead">Questions unavailable.</p>';
+        return `<div class="er-step" id="erQuestionsRoot">
+            ${window.EventsRsvpQuestions.formFieldsHtml(STATE.event?.rsvp_questions, {
+                idPrefix: 'erQuestion',
+                answers: STATE.form.rsvp_answers,
+            })}
+        </div>`;
+    }
+
+    function stepQuestionsWire() {
+        const root = document.getElementById('erQuestionsRoot') || document.getElementById('erSheetContent');
+        const sync = () => {
+            if (window.EventsRsvpQuestions?.readAnswersFromRoot) {
+                STATE.form.rsvp_answers = window.EventsRsvpQuestions.readAnswersFromRoot(root, STATE.event?.rsvp_questions);
+            }
+            scheduleSaveDraft();
+        };
+        root?.addEventListener('input', sync);
+        root?.addEventListener('change', sync);
+        sync();
+    }
+
+    function stepQuestionsValidate() {
+        const root = document.getElementById('erQuestionsRoot') || document.getElementById('erSheetContent');
+        if (window.EventsRsvpQuestions?.readAnswersFromRoot) {
+            STATE.form.rsvp_answers = window.EventsRsvpQuestions.readAnswersFromRoot(root, STATE.event?.rsvp_questions);
+        }
+        return window.EventsRsvpQuestions?.validateAnswers?.(STATE.event?.rsvp_questions, STATE.form.rsvp_answers) || null;
+    }
+
     function stepPayHtml() {
         const event = STATE.event;
         const total = estimatedPartyTotal(event);
@@ -734,6 +782,9 @@
                     </section>
                     ${contactFacts ? `<section class="er-receipt-section"><h4 class="er-receipt-label">Contact</h4><div class="er-receipt-facts" data-cols="3">${contactFacts}</div></section>` : ''}
                     ${payFacts ? `<section class="er-receipt-section"><h4 class="er-receipt-label">Payment</h4><div class="er-receipt-facts" data-cols="2">${payFacts}</div></section>` : ''}
+                    ${window.EventsRsvpQuestions?.summaryHtml?.(event.rsvp_questions, STATE.form.rsvp_answers)
+                        ? `<section class="er-receipt-section"><h4 class="er-receipt-label">RSVP answers</h4>${window.EventsRsvpQuestions.summaryHtml(event.rsvp_questions, STATE.form.rsvp_answers)}</section>`
+                        : ''}
                     <footer class="er-receipt-total">
                         <span>Party total</span>
                         <strong>${esc(total > 0 ? formatMoney(total) : 'Free')}</strong>
@@ -748,6 +799,7 @@
     const STEPS = {
         contact: { html: stepContactHtml, wire: stepContactWire, validate: stepContactValidate },
         party: { html: stepPartyHtml, wire: stepPartyWire, validate: stepPartyValidate },
+        questions: { html: stepQuestionsHtml, wire: stepQuestionsWire, validate: stepQuestionsValidate },
         legal: { html: stepLegalHtml, wire: stepLegalWire, validate: stepLegalValidate },
         pay: { html: stepPayHtml, wire: stepPayWire, validate: stepPayValidate },
         review: { html: stepReviewHtml, wire: stepReviewWire, validate: stepReviewValidate },
@@ -997,6 +1049,7 @@
                 seats,
                 seat_role: seatRole,
                 ...sms,
+                rsvp_answers: STATE.form.rsvp_answers,
                 ...(hasDisc ? { disclaimer_acks: STATE.form.disclaimer_acks } : {}),
                 ...(amenity ? { amenity_vote_option_id: STATE.form.amenity_vote_option_id } : {}),
                 ...(payChoice ? { plan_kind: payChoice.plan_kind, method: payChoice.method } : {}),
@@ -1026,6 +1079,7 @@
             seats,
             seat_role: seatRole,
             ...sms,
+            rsvp_answers: STATE.form.rsvp_answers,
             ...(hasDisc ? { disclaimer_acks: STATE.form.disclaimer_acks } : {}),
             ...(amenity ? { amenity_vote_option_id: STATE.form.amenity_vote_option_id } : {}),
         });
@@ -1087,6 +1141,7 @@
                 seats,
                 seat_role: seatRole,
                 ...phonePayload,
+                rsvp_answers: STATE.form.rsvp_answers,
                 ...(hasDisc ? { disclaimer_acks: STATE.form.disclaimer_acks } : {}),
                 ...(amenity ? { amenity_vote_option_id: STATE.form.amenity_vote_option_id } : {}),
                 ...(payChoice ? { plan_kind: payChoice.plan_kind, method: payChoice.method } : {}),
@@ -1113,6 +1168,7 @@
             seats,
             seat_role: seatRole,
             ...phonePayload,
+            rsvp_answers: STATE.form.rsvp_answers,
             ...(hasDisc ? { disclaimer_acks: STATE.form.disclaimer_acks } : {}),
             ...(amenity ? { amenity_vote_option_id: STATE.form.amenity_vote_option_id } : {}),
             ...(STATE.form.invest_acknowledged ? { invest_eligible_acknowledged: true } : {}),

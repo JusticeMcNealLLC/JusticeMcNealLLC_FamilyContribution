@@ -44,6 +44,9 @@ const voting = read('js/portal/events/create/step-voting.js');
 voting.includes("cfg.options.push({ id: _newOptionId(), label: '', description: '' })")
     ? pass('Enable seeds blank amenity options')
     : fail('Enable does not seed amenity options');
+voting.includes('ecAmenitySelectionMode')
+    ? pass('Amenity creator exposes single or multiple selection mode')
+    : fail('Amenity creator missing selection mode control');
 /\.filter\(\(o\) => o\.label\)/.test(voting)
     ? fail('Amenity sync still drops blank options')
     : pass('Amenity sync keeps blank option rows');

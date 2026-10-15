@@ -779,6 +779,16 @@ function pubValidateDisclaimerAcks(event, ackIds) {
     return window.EventsDisclaimers.validateAcks(catalog, ackIds);
 }
 
+function pubReadRsvpAnswers(event, root) {
+    if (!window.EventsRsvpQuestions?.readAnswersFromRoot) return {};
+    return window.EventsRsvpQuestions.readAnswersFromRoot(root || document, event?.rsvp_questions);
+}
+
+function pubValidateRsvpAnswers(event, answers) {
+    if (!window.EventsRsvpQuestions?.validateAnswers) return null;
+    return window.EventsRsvpQuestions.validateAnswers(event?.rsvp_questions, answers);
+}
+
 /* ── Raffle Section (Public Page) ────────── */
 
 async function pubHandlePaidRsvp() {
@@ -818,6 +828,13 @@ async function pubHandlePaidRsvp() {
             window.EventsAmenityVoting.scrollToVoteField(memberRoot);
         }
         alert(voteErr);
+        return;
+    }
+    const rsvp_answers = pubReadRsvpAnswers(pubCurrentEvent, memberRoot);
+    const questionErr = pubValidateRsvpAnswers(pubCurrentEvent, rsvp_answers);
+    if (questionErr) {
+        pubOpenMemberRsvpFlow();
+        alert(questionErr);
         return;
     }
     if (window.EventsInvestAck) {
@@ -862,6 +879,7 @@ async function pubHandlePaidRsvp() {
                 seats,
                 seat_role,
                 phone,
+                rsvp_answers,
                 ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
                 ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
             });
@@ -897,6 +915,7 @@ async function pubHandlePaidRsvp() {
             seats,
             seat_role,
             phone,
+            rsvp_answers,
             ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
             ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
             ...(needsPaymentChoice && paymentChoice ? {
@@ -944,12 +963,14 @@ async function pubHandleRsvp(status) {
         const showSeatPicker = !!(window.EventsSeatPicker
             && window.EventsSeatPicker.shouldShow(pubCurrentEvent, {}));
         const needsPartyEdge = status === 'going'
-            && (hasIncludedCatalog || hasRequiredDisclaimers || showPartySeats || showSeatPicker || needsAmenityVote);
+            && (hasIncludedCatalog || hasRequiredDisclaimers || showPartySeats || showSeatPicker || needsAmenityVote
+                || window.EventsRsvpQuestions?.hasQuestions?.(pubCurrentEvent.rsvp_questions));
 
         let seats = [];
         let seat_role = 'adult';
         let disclaimer_acks = [];
         let amenity_vote_option_id = null;
+        let rsvp_answers = {};
 
         if (status === 'going') {
             seats = pubReadPartySeats(pubCurrentEvent, memberRoot, pubMemberProfileName || 'Member');
@@ -992,6 +1013,13 @@ async function pubHandleRsvp(status) {
                     return;
                 }
             }
+            rsvp_answers = pubReadRsvpAnswers(pubCurrentEvent, memberRoot);
+            const questionErr = pubValidateRsvpAnswers(pubCurrentEvent, rsvp_answers);
+            if (questionErr) {
+                pubOpenMemberRsvpFlow();
+                alert(questionErr);
+                return;
+            }
             if (window.EventsInvestAck) {
                 const investErr = window.EventsInvestAck.validateAck(pubCurrentEvent, memberRoot);
                 if (investErr) {
@@ -1022,6 +1050,7 @@ async function pubHandleRsvp(status) {
                 seats,
                 seat_role,
                 phone,
+                rsvp_answers,
                 ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
                 ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
             });
@@ -1041,6 +1070,7 @@ async function pubHandleRsvp(status) {
                 seats,
                 seat_role,
                 phone,
+                rsvp_answers,
                 ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
                 ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
             });
@@ -1068,6 +1098,7 @@ async function pubHandleRsvp(status) {
                     seats,
                     seat_role,
                     phone,
+                    rsvp_answers,
                 });
                 await applyPartyResult(result);
                 if (window.pubCtaRaffleIntent && document.getElementById('evtCtaBar')) {
@@ -1091,6 +1122,7 @@ async function pubHandleRsvp(status) {
                 seats,
                 seat_role,
                 phone,
+                rsvp_answers,
             });
             await applyPartyResult(result);
             if (window.pubCtaRaffleIntent && document.getElementById('evtCtaBar')) {
@@ -1457,6 +1489,12 @@ async function pubHandleGuestRsvp() {
         alert(voteErr);
         return;
     }
+    const rsvp_answers = pubReadRsvpAnswers(pubCurrentEvent, guestRoot);
+    const questionErr = pubValidateRsvpAnswers(pubCurrentEvent, rsvp_answers);
+    if (questionErr) {
+        alert(questionErr);
+        return;
+    }
     const hasIncludedCatalog = pubHasIncludedCatalog(pubCurrentEvent);
     const hasRequiredDisclaimers = pubHasRequiredDisclaimers(pubCurrentEvent);
     const needsAmenityVote = pubNeedsAmenityVote(pubCurrentEvent);
@@ -1477,7 +1515,8 @@ async function pubHandleGuestRsvp() {
         && window.EventsPartySeats.shouldShow(pubCurrentEvent, {}));
     const showSeatPicker = !!(window.EventsSeatPicker
         && window.EventsSeatPicker.shouldShow(pubCurrentEvent, {}));
-    const needsParty = hasIncludedCatalog || hasRequiredDisclaimers || showPartySeats || showSeatPicker || needsAmenityVote;
+    const needsParty = hasIncludedCatalog || hasRequiredDisclaimers || showPartySeats || showSeatPicker || needsAmenityVote
+        || window.EventsRsvpQuestions?.hasQuestions?.(pubCurrentEvent.rsvp_questions);
 
     btn.disabled = true;
     btn.textContent = 'Processing...';
@@ -1503,6 +1542,7 @@ async function pubHandleGuestRsvp() {
                 seats,
                 seat_role,
                 ...smsPayload,
+                rsvp_answers,
                 ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
                 ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
                 ...(needsPaymentChoice && paymentChoice ? {
@@ -1523,6 +1563,7 @@ async function pubHandleGuestRsvp() {
                 seat_role,
                 payment_intent: paymentIntent,
                 ...smsPayload,
+                rsvp_answers,
                 ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
                 ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
             });

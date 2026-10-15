@@ -87,6 +87,7 @@ async function _loadEventData(eventId) {
     const [
         rsvpsRes,
         guestRes,
+        answersRes,
         checkinsRes,
         partiesRes,
         seatsRes,
@@ -98,6 +99,10 @@ async function _loadEventData(eventId) {
         supabaseClient
             .from('event_guest_rsvps')
             .select('id, guest_name, guest_email, guest_phone, guest_token, status, paid, amount_paid_cents, stripe_payment_intent_id, created_at, party_id, attach_requested')
+            .eq('event_id', eventId),
+        supabaseClient
+            .from('event_rsvp_answers')
+            .select('event_rsvp_id, event_guest_rsvp_id, answers')
             .eq('event_id', eventId),
         supabaseClient
             .from('event_checkins')
@@ -114,8 +119,20 @@ async function _loadEventData(eventId) {
             .order('sort_order', { ascending: true }),
     ]);
 
-    STATE.rsvps = rsvpsRes.data || [];
-    STATE.guestRsvps = guestRes.data || [];
+    const answersByMemberId = new Map((answersRes.data || [])
+        .filter((row) => row.event_rsvp_id)
+        .map((row) => [row.event_rsvp_id, row.answers || {}]));
+    const answersByGuestId = new Map((answersRes.data || [])
+        .filter((row) => row.event_guest_rsvp_id)
+        .map((row) => [row.event_guest_rsvp_id, row.answers || {}]));
+    STATE.rsvps = (rsvpsRes.data || []).map((row) => ({
+        ...row,
+        rsvp_answers: answersByMemberId.get(row.id) || {},
+    }));
+    STATE.guestRsvps = (guestRes.data || []).map((row) => ({
+        ...row,
+        rsvp_answers: answersByGuestId.get(row.id) || {},
+    }));
     STATE.checkins = checkinsRes.data || [];
     STATE.parties = partiesRes.data || [];
     STATE.seats = seatsRes.data || [];

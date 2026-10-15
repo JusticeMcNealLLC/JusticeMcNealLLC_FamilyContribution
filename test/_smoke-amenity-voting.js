@@ -53,6 +53,53 @@ cfg.enabled === true && cfg.options.length === 2
     ? pass('normalizeConfig enables with 2 options')
     : fail('normalizeConfig failed for valid config');
 
+const multipleCfg = av.normalizeConfig({
+    enabled: true,
+    selection_mode: 'multiple',
+    options: [
+        { id: 'a', label: 'Hotel' },
+        { id: 'b', label: 'Airbnb' },
+        { id: 'c', label: 'Cabin' },
+    ],
+});
+multipleCfg.selection_mode === 'multiple'
+    ? pass('normalizeConfig preserves multiple selection mode')
+    : fail('normalizeConfig missing multiple selection mode');
+
+const multipleHtml = av.formFieldsHtml(multipleCfg, {
+    idPrefix: 'multi',
+    selectedOptionId: '["a","c"]',
+});
+multipleHtml.includes('type="checkbox"')
+    && multipleHtml.includes('Select all that apply')
+    ? pass('multiple amenity mode renders checkbox options')
+    : fail('multiple amenity mode should render checkbox options');
+
+const selectedMultiple = av.readVoteFromRoot({
+    querySelector(selector) {
+        return this.querySelectorAll(selector)[0] || null;
+    },
+    querySelectorAll(selector) {
+        return selector === '[data-amenity-vote]:checked'
+            ? [{ type: 'checkbox', value: 'a', getAttribute: () => 'a' }, { type: 'checkbox', value: 'c', getAttribute: () => 'c' }]
+            : [];
+    },
+});
+selectedMultiple === '["a","c"]'
+    ? pass('multiple amenity selections serialize as an ordered array')
+    : fail(`multiple amenity selections serialized as ${selectedMultiple}`);
+
+av.validateVote(multipleCfg, selectedMultiple) === null
+    ? pass('multiple amenity vote validates')
+    : fail('multiple amenity vote should validate');
+
+const multipleTallies = av.tallyCounts([
+    { amenity_vote_option_id: '["a","c"]', amenity_vote_status: 'counted' },
+], ['a', 'b', 'c']);
+multipleTallies.a === 1 && multipleTallies.b === 0 && multipleTallies.c === 1
+    ? pass('multiple amenity votes tally each selected option')
+    : fail(`multiple amenity tallies wrong: ${JSON.stringify(multipleTallies)}`);
+
 const disabled = av.normalizeConfig({ enabled: true, options: [{ id: 'x', label: 'Only one' }] });
 disabled.enabled === false
     ? pass('normalizeConfig disables when fewer than 2 options')

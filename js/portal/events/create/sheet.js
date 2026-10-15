@@ -18,8 +18,10 @@
 import { validateFundDeadline, toDatetimeLocalValue, centsToDollars } from './pricing-helpers.js';
 import { validateAboutTabs } from './step-about.js';
 import { validateIncludedItems } from './step-included.js';
+import { validateItinerary } from './step-itinerary.js';
 import { validateDisclaimers, seedDefaultDisclaimers, ensureDefaultDisclaimers } from './step-disclaimers.js';
 import { validateVoting } from './step-voting.js';
+import { validateQuestions } from './step-questions.js';
 
 // --- Feature flag -- always on (sheet is now the default) -----
 function isFlagOn() { return true; }
@@ -30,6 +32,8 @@ function getSteps() {
         { key: 'about',       label: 'About' },
         { key: 'included',    label: 'Included' },
         { key: 'when',        label: 'When & Where' },
+        { key: 'itinerary',   label: 'Itinerary' },
+        { key: 'questions',   label: 'Questions' },
     ];
     if (STATE.form.event_type === 'competition') {
         steps.push({ key: 'competition', label: 'Competition' });
@@ -75,6 +79,7 @@ const STATE = {
     pricingLocked: false,
     disclaimersLocked: false,
     votingLocked: false,
+    rsvpQuestionsLocked: false,
     competitionLocked: false,
     bannerFile: null,
     bannerPreviewUrl: null,
@@ -94,6 +99,7 @@ const STATE = {
         description: '',
         about_tabs: [],
         included_items: [],
+        itinerary: { enabled: false, days: [] },
         start_date: '',
         end_date: '',
         timezone: 'America/New_York',
@@ -113,7 +119,8 @@ const STATE = {
         raffle_config: null,
         member_only: false,
         disclaimers: seedDefaultDisclaimers(),
-        amenity_voting: { enabled: false, options: [], closes_at: null, results_visible: 'after_close' },
+        amenity_voting: { enabled: false, selection_mode: 'single', options: [], closes_at: null, results_visible: 'after_close' },
+        rsvp_questions: [],
         // LLC thin fields
         min_participants: '',
         llc_cut_pct: '0',
@@ -153,6 +160,7 @@ function _blankForm() {
         event_type: 'member', title: '', category: 'other', description: '',
         about_tabs: [],
         included_items: [],
+        itinerary: { enabled: false, days: [] },
         start_date: '', end_date: '', timezone: 'America/New_York',
         location_text: '', location_nickname: '',
         max_participants: '', rsvp_deadline: '',
@@ -164,7 +172,8 @@ function _blankForm() {
         raffle_config: null,
         member_only: false,
         disclaimers: seedDefaultDisclaimers(),
-        amenity_voting: { enabled: false, options: [], closes_at: null, results_visible: 'after_close' },
+        amenity_voting: { enabled: false, selection_mode: 'single', options: [], closes_at: null, results_visible: 'after_close' },
+        rsvp_questions: [],
         min_participants: '',
         llc_cut_pct: '0',
         show_cost_breakdown: true,
@@ -188,6 +197,7 @@ function _resetTransientState() {
     STATE.pricingLocked = false;
     STATE.disclaimersLocked = false;
     STATE.votingLocked = false;
+    STATE.rsvpQuestionsLocked = false;
     STATE.competitionLocked = false;
     STATE.bannerFile = null;
     STATE.bannerPreviewUrl = null;
@@ -259,6 +269,12 @@ function _hydrateFromEvent(event) {
     const amenityVoting = (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === 'function')
         ? window.EventsAmenityVoting.normalizeConfig(event.amenity_voting)
         : { enabled: false, options: [], closes_at: null, results_visible: 'after_close' };
+    const itinerary = (window.EventsItinerary && typeof window.EventsItinerary.normalizeConfig === 'function')
+        ? window.EventsItinerary.normalizeConfig(event.itinerary)
+        : { enabled: false, days: [] };
+    const rsvpQuestions = (window.EventsRsvpQuestions && typeof window.EventsRsvpQuestions.normalizeQuestions === 'function')
+        ? window.EventsRsvpQuestions.normalizeQuestions(event.rsvp_questions)
+        : [];
 
     let raffleConfig = null;
     if (event.raffle_enabled && event.raffle_prizes) {
@@ -282,6 +298,7 @@ function _hydrateFromEvent(event) {
         description: event.description || '',
         about_tabs: aboutTabs,
         included_items: includedItems,
+        itinerary,
         start_date: toDatetimeLocalValue(event.start_date),
         end_date: toDatetimeLocalValue(event.end_date),
         timezone: event.timezone || 'America/New_York',
@@ -302,6 +319,7 @@ function _hydrateFromEvent(event) {
         member_only: !!event.member_only,
         disclaimers,
         amenity_voting: amenityVoting,
+        rsvp_questions: rsvpQuestions,
         min_participants: event.min_participants != null ? String(event.min_participants) : '',
         llc_cut_pct: event.llc_cut_pct != null ? String(event.llc_cut_pct) : '0',
         show_cost_breakdown: event.show_cost_breakdown !== false,
@@ -492,6 +510,16 @@ function _ensureMounted() {
             }
             .ec-md-btn:hover { background:#eef2f6; border-color:#13366e; }
             .ec-md-btn em { font-style:italic; font-weight:600; }
+            .ec-itinerary-editor { display:flex; flex-direction:column; gap:12px; }
+            .ec-itinerary-day { padding:12px; border:1px solid #d5dfec; border-radius:14px; background:#f8fafc; }
+            .ec-itinerary-day-head, .ec-itinerary-activity-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+            .ec-itinerary-day-head { margin-bottom:10px; }
+            .ec-itinerary-day-head strong { display:block; color:#0b2545; font-size:14px; }
+            .ec-itinerary-day-number { display:block; color:#0e8b8b; font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+            .ec-itinerary-date-key { flex:0 0 auto; color:#6b7280; font-size:11px; }
+            .ec-itinerary-activities-editor { display:flex; flex-direction:column; gap:8px; margin:10px 0; }
+            .ec-itinerary-activity { padding:10px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+            .ec-itinerary-activity .ec-textarea { min-height:64px; margin-top:8px; }
             .ec-raffle-summary { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
             .ec-raffle-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; background:var(--color-surface, #EEF2F6); color:var(--color-primary, #13366E); font-size:11px; font-weight:700; }
             .ec-raffle-item-wrap { border:1px solid #e5e7eb; border-radius:12px; padding:10px; background:#fff; margin-top:8px; }
@@ -557,6 +585,7 @@ async function open(opts) {
             STATE.pricingLocked = rsvpCount > 0;
             STATE.disclaimersLocked = rsvpCount > 0;
             STATE.votingLocked = rsvpCount > 0;
+            STATE.rsvpQuestionsLocked = rsvpCount > 0;
             if (type === 'competition') {
                 const entryCount = await _countCompetitionEntries(eventId);
                 STATE.competitionLocked = entryCount > 0;
@@ -641,6 +670,8 @@ function _render() {
     if (key === 'about' && stepApis.about)    { c.innerHTML = stepApis.about.html();   stepApis.about.wire(); }
     if (key === 'included' && stepApis.included) { c.innerHTML = stepApis.included.html(); stepApis.included.wire(); }
     if (key === 'when' && stepApis.when)      { c.innerHTML = stepApis.when.html();    stepApis.when.wire(); }
+    if (key === 'itinerary' && stepApis.itinerary) { c.innerHTML = stepApis.itinerary.html(); stepApis.itinerary.wire(); }
+    if (key === 'questions' && stepApis.questions) { c.innerHTML = stepApis.questions.html(); stepApis.questions.wire(); }
     if (key === 'pricing' && stepApis.pricing){ c.innerHTML = stepApis.pricing.html(); stepApis.pricing.wire(); }
     if (key === 'llc' && stepApis.llc)        { c.innerHTML = stepApis.llc.html();     stepApis.llc.wire(); }
     if (key === 'competition' && stepApis.competition) { c.innerHTML = stepApis.competition.html(); stepApis.competition.wire(); }
@@ -681,6 +712,15 @@ function _validateStep() {
         if (f.capacity_mode === 'soft' || f.capacity_mode === 'hard') {
             if (!f.max_participants || Number(f.max_participants) <= 0) return 'Seat limit is required when using a capacity cap.';
         }
+    }
+    if (key === 'itinerary') {
+        const itineraryErr = validateItinerary(f);
+        if (itineraryErr) return itineraryErr;
+    }
+    if (key === 'questions') {
+        if (STATE.rsvpQuestionsLocked) return null;
+        const questionsErr = validateQuestions(f);
+        if (questionsErr) return questionsErr;
     }
     if (key === 'pricing') {
         if (STATE.pricingLocked) return null;

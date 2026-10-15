@@ -12,6 +12,7 @@ import {
 } from '../_shared/disclaimers.ts'
 import { requireMemberPhone } from '../_shared/rsvp-contact.ts'
 import { needsVote, resolveVoteStatus, validateVote } from '../_shared/amenity-voting.ts'
+import { normalizeQuestions, saveRsvpAnswers, validateAnswers } from '../_shared/rsvp-questions.ts'
 import {
   assertCapacityForIncomingSeats,
   ensurePartyAndSeats,
@@ -55,6 +56,7 @@ serve(async (req) => {
       phone,
       seat_role,
       amenity_vote_option_id,
+      rsvp_answers,
     } = body
     if (!event_id) throw new Error('event_id is required')
 
@@ -78,10 +80,13 @@ serve(async (req) => {
 
     const catalog = normalizeIncludedItems(event.included_items)
     const discCatalog = normalizeDisclaimers(event.disclaimers)
+    const questionCatalog = normalizeQuestions(event.rsvp_questions)
+    const questionResult = validateAnswers(questionCatalog, rsvp_answers)
+    if (questionResult.error) throw new Error(questionResult.error)
     const voteRequired = needsVote(event)
     const hasSeatRole = seat_role != null && String(seat_role).trim() !== ''
     const needsParty = catalog.length > 0 || hasRequiredDisclaimers(discCatalog) || hasSeatRole
-      || voteRequired || (Array.isArray(rawSeats) && rawSeats.length > 0)
+      || voteRequired || questionCatalog.length > 0 || (Array.isArray(rawSeats) && rawSeats.length > 0)
     if (!needsParty) {
       throw new Error('This event does not require party RSVP')
     }
@@ -130,6 +135,7 @@ serve(async (req) => {
       .select()
       .single()
     if (rsvpErr) throw new Error(rsvpErr.message)
+    await saveRsvpAnswers(supabase, event_id, questionResult.answers, { rsvpId: rsvp.id })
 
     const voteStatus = voteRequired && amenity_vote_option_id
       ? resolveVoteStatus(partyTotal)

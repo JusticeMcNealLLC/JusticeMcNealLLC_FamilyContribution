@@ -10,6 +10,7 @@
     const DESC_MAX = 240;
     const OPTIONS_MAX = 10;
     const RESULTS_VISIBLE = ['after_close', 'always', 'host_only'];
+    const SELECTION_MODES = ['single', 'multiple'];
 
     function escapeHtml(str) {
         if (window.EventsHelpers && typeof window.EventsHelpers.escapeHtml === 'function') {
@@ -24,6 +25,7 @@
     function defaultConfig() {
         return {
             enabled: false,
+            selection_mode: 'single',
             options: [],
             closes_at: null,
             results_visible: 'after_close',
@@ -57,6 +59,8 @@
         const base = defaultConfig();
         if (!raw || typeof raw !== 'object') return base;
         const options = normalizeOptions(raw.options);
+        let selectionMode = String(raw.selection_mode || base.selection_mode).trim();
+        if (!SELECTION_MODES.includes(selectionMode)) selectionMode = base.selection_mode;
         let resultsVisible = String(raw.results_visible || base.results_visible).trim();
         if (!RESULTS_VISIBLE.includes(resultsVisible)) resultsVisible = base.results_visible;
         let closesAt = raw.closes_at;
@@ -68,6 +72,7 @@
         }
         return {
             enabled: raw.enabled === true && options.length >= 2,
+            selection_mode: selectionMode,
             options,
             closes_at: closesAt,
             results_visible: resultsVisible,
@@ -97,9 +102,10 @@
         for (const id of ids) tallies[id] = 0;
         for (const row of (parties || [])) {
             if (!row || row.amenity_vote_status !== 'counted') continue;
-            const optId = row.amenity_vote_option_id;
-            if (!optId || !ids.has(optId)) continue;
-            tallies[optId] = (tallies[optId] || 0) + 1;
+            for (const optId of normalizeVoteIds(row.amenity_vote_option_id)) {
+                if (!ids.has(optId)) continue;
+                tallies[optId] = (tallies[optId] || 0) + 1;
+            }
         }
         return tallies;
     }
@@ -182,14 +188,17 @@
         const cfg = normalizeConfig(config);
         if (!cfg.enabled || isVotingClosed(cfg)) return '';
         const prefix = (opts && opts.idPrefix) || 'amenityVote';
-        const selected = String(opts?.selectedOptionId || '').trim();
+        const selected = normalizeVoteIds(opts?.selectedOptionId || opts?.selectedOptionIds);
         const name = `${prefix}-group`;
+        const multiple = cfg.selection_mode === 'multiple';
+        const inputType = multiple ? 'checkbox' : 'radio';
+        const required = multiple ? '' : ' required';
         const fields = cfg.options.map((opt) => {
             const fieldId = `${prefix}-${opt.id}`;
-            const checked = selected && selected === String(opt.id) ? ' checked' : '';
+            const checked = selected.includes(String(opt.id)) ? ' checked' : '';
             return `
                 <label class="ed-amenity-vote-opt" style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px;border:1px solid #d5dfec;border-radius:12px;background:#fff;cursor:pointer">
-                    <input type="radio" name="${escapeHtml(name)}" id="${escapeHtml(fieldId)}" value="${escapeHtml(opt.id)}" data-amenity-vote="${escapeHtml(opt.id)}" required${checked} style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
+                    <input type="${inputType}" name="${escapeHtml(name)}" id="${escapeHtml(fieldId)}" value="${escapeHtml(opt.id)}" data-amenity-vote="${escapeHtml(opt.id)}"${required}${checked} style="margin-top:3px;width:18px;height:18px;accent-color:#13366e;flex-shrink:0">
                     <span style="min-width:0">
                         <span style="display:block;font-size:13px;font-weight:700;color:#0b2545;margin-bottom:4px">${escapeHtml(opt.label)}</span>
                         ${opt.description ? `<span style="display:block;font-size:12px;line-height:1.5;color:#374151">${escapeHtml(opt.description)}</span>` : ''}
@@ -198,9 +207,9 @@
             `;
         }).join('');
         return `
-            <div class="ed-amenity-vote" data-amenity-vote-root="${escapeHtml(prefix)}" style="margin:12px 0">
+            <div class="ed-amenity-vote" data-amenity-vote-root="${escapeHtml(prefix)}" data-amenity-selection-mode="${escapeHtml(cfg.selection_mode)}" style="margin:12px 0">
                 <p style="font-size:13px;font-weight:700;color:#0b2545;margin:0 0 8px">Amenity preference <span class="text-red-500">*</span></p>
-                <p class="ed-hint" style="margin:0 0 8px">Pick one option for your party. Your vote counts after RSVP is complete.</p>
+                <p class="ed-hint" style="margin:0 0 8px">${multiple ? 'Select all that apply for your party.' : 'Pick one option for your party.'} Your vote counts after RSVP is complete.</p>
                 ${fields}
             </div>
         `;
@@ -208,18 +217,51 @@
 
     function readVoteFromRoot(root) {
         const scope = root || document;
-        const checked = scope.querySelector('[data-amenity-vote]:checked');
-        return checked ? String(checked.getAttribute('data-amenity-vote') || checked.value || '').trim() : '';
+        const checked = typeof scope.querySelectorAll === 'function'
+            ? Array.from(scope.querySelectorAll('[data-amenity-vote]:checked'))
+            : [];
+        if (!checked.length && typeof scope.querySelector === 'function') {
+            const one = scope.querySelector('[data-amenity-vote]:checked');
+            if (one) checked.push(one);
+        }
+        const values = checked
+            .map((field) => String(field.getAttribute?.('data-amenity-vote') || field.value || '').trim())
+            .filter(Boolean);
+        if (!values.length) return '';
+        const rootEl = typeof scope.querySelector === 'function'
+            ? scope.querySelector('[data-amenity-vote-root]')
+            : null;
+        const multiple = rootEl?.getAttribute?.('data-amenity-selection-mode') === 'multiple'
+            || checked.some((field) => String(field.type || '').toLowerCase() === 'checkbox');
+        return multiple ? JSON.stringify([...new Set(values)]) : values[0];
     }
 
     function validateVote(config, optionId) {
         const cfg = normalizeConfig(config);
         if (!cfg.enabled || isVotingClosed(cfg)) return null;
-        const id = String(optionId || '').trim();
-        if (!id) return 'Please select an amenity preference.';
-        const valid = cfg.options.some((o) => o.id === id);
+        const ids = normalizeVoteIds(optionId);
+        if (!ids.length) return 'Please select an amenity preference.';
+        if (cfg.selection_mode === 'single' && ids.length !== 1) {
+            return 'Please select one amenity preference.';
+        }
+        const valid = ids.every((id) => cfg.options.some((o) => o.id === id));
         if (!valid) return 'Please select a valid amenity option.';
         return null;
+    }
+
+    function normalizeVoteIds(raw) {
+        if (Array.isArray(raw)) {
+            return [...new Set(raw.map((id) => String(id || '').trim()).filter(Boolean))];
+        }
+        const value = String(raw || '').trim();
+        if (!value) return [];
+        if (value.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) return normalizeVoteIds(parsed);
+            } catch (_) { /* preserve legacy scalar value */ }
+        }
+        return [value];
     }
 
     function voteStatusForRsvp(event, seatPriceCents) {
@@ -242,6 +284,7 @@
         defaultConfig,
         normalizeConfig,
         normalizeOptions,
+        normalizeVoteIds,
         isVotingClosed,
         canShowResults,
         tallyCounts,

@@ -28,6 +28,11 @@ function _newTabId() {
     return `tab-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function _addTab(title, body) {
+    _tabs().push({ id: _newTabId(), title: title || '', body: body || '' });
+    window.EventsCreateSteps.render();
+}
+
 function _tabs() {
     const STATE = window.EventsCreateSteps.getState();
     if (!Array.isArray(STATE.form.about_tabs)) STATE.form.about_tabs = [];
@@ -85,7 +90,10 @@ function html() {
                 <p class="text-sm text-gray-600">Add optional About sections for the event page — itinerary, lodging, what to bring, and anything else guests need.</p>
                 <p class="ec-help">You can skip this step and add tabs later before publishing.</p>
             </div>
-            <button type="button" id="ecAboutAdd" class="ec-mini-btn">+ Add tab</button>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" id="ecAboutAdd" class="ec-mini-btn">+ Add tab</button>
+                <button type="button" id="ecAboutAddLodging" class="ec-mini-btn">+ Add Lodging &amp; travel</button>
+            </div>
         `;
     }
 
@@ -115,7 +123,10 @@ function html() {
                 </div>
             </div>
         `).join('')}
-        <button type="button" id="ecAboutAdd" class="ec-mini-btn" style="margin-top:12px">+ Add tab</button>
+        <div class="flex flex-wrap gap-2" style="margin-top:12px">
+            <button type="button" id="ecAboutAdd" class="ec-mini-btn">+ Add tab</button>
+            <button type="button" id="ecAboutAddLodging" class="ec-mini-btn">+ Add Lodging &amp; travel</button>
+        </div>
     `;
 }
 
@@ -166,10 +177,8 @@ function wire() {
     const render = window.EventsCreateSteps.render;
     const tabs = _tabs();
 
-    document.getElementById('ecAboutAdd')?.addEventListener('click', () => {
-        tabs.push({ id: _newTabId(), title: '', body: '' });
-        render();
-    });
+    document.getElementById('ecAboutAdd')?.addEventListener('click', () => _addTab());
+    document.getElementById('ecAboutAddLodging')?.addEventListener('click', () => _addTab('Lodging & travel'));
 
     document.querySelectorAll('[data-about-title]').forEach((el) => {
         el.addEventListener('input', () => {

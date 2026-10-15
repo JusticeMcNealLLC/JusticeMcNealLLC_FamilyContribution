@@ -6,21 +6,27 @@ UPDATE events SET
     amenity_voting = $av$
 {
   "enabled": true,
+  "selection_mode": "multiple",
   "options": [
+    {
+      "id": "co-am-snowboarding",
+      "label": "Snowboarding",
+      "description": "A group snowboarding day on the mountain."
+    },
+    {
+      "id": "co-am-tubing",
+      "label": "Snow tubing",
+      "description": "A group snow tubing outing."
+    },
     {
       "id": "co-am-dinner",
       "label": "Group dinner night",
       "description": "Shared sit-down dinner for the party."
     },
     {
-      "id": "co-am-lessons",
-      "label": "Ski/snowboard lesson block",
-      "description": "Group lesson time on the mountain."
-    },
-    {
-      "id": "co-am-hot-tub",
-      "label": "Hot tub / lodge hangout",
-      "description": "Evening lodge hangout and hot tub."
+      "id": "co-am-ice-skating",
+      "label": "Ice skating",
+      "description": "Group ice skating outing."
     }
   ],
   "closes_at": null,

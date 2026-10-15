@@ -517,7 +517,8 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
     const extraAboutTabs = (window.EventsAboutTabs && typeof window.EventsAboutTabs.normalizeAboutTabs === 'function')
         ? window.EventsAboutTabs.normalizeAboutTabs(event.about_tabs)
         : (Array.isArray(event.about_tabs) ? event.about_tabs : []);
-    const hasAboutTabs = extraAboutTabs.length > 0;
+    const hasItinerary = !!(event.itinerary && event.itinerary.enabled === true);
+    const hasAboutTabs = extraAboutTabs.length > 0 || hasItinerary;
     if (hasAboutTabs) {
         descEl.innerHTML = '';
         descEl.style.display = 'none';
@@ -547,6 +548,8 @@ function pubRenderEvent(event, goingCount, isCheckin, ticketToken) {
         tabsWrap.innerHTML = window.EventsAboutTabs.aboutTabsHtml(event.about_tabs, {
             idPrefix: 'publicAbout',
             overview: rawDesc,
+            itinerary: event.itinerary,
+            event,
         });
         const tabsNode = tabsWrap.firstElementChild;
         if (tabsNode) {

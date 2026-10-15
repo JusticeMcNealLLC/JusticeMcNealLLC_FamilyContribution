@@ -64,17 +64,17 @@ pay.includes('opts?.choice')
     : fail('payment-choice hydrate missing');
 
 console.log('\n── Ship bumps ───────────────────────────────────────────────────────────');
-read('pages/portal/events.html').includes('events.bundle.js?v=220')
-    ? pass('portal bundle ?v=220')
-    : fail('portal bundle not bumped to 220');
+read('pages/portal/events.html').includes('events.bundle.js?v=258')
+    ? pass('portal bundle ?v=258')
+    : fail('portal bundle not bumped to 256');
 
-read('events/index.html').includes('rsvp-wizard.js?v=220')
-    ? pass('public rsvp-wizard ?v=220')
+read('events/index.html').includes('rsvp-wizard.js?v=224')
+    ? pass('public rsvp-wizard ?v=224')
     : fail('public wizard asset not bumped');
 
-read('sw.js').includes('jm-portal-v169')
-    ? pass('SW CACHE_NAME v169')
-    : fail('SW not bumped to v169');
+read('sw.js').includes('jm-portal-v221')
+    ? pass('SW CACHE_NAME v221')
+    : fail('SW not bumped to v219');
 
 const bundle = read('js/portal/events/events.bundle.js');
 bundle.includes('jm:er-rsvp-draft:v1:')

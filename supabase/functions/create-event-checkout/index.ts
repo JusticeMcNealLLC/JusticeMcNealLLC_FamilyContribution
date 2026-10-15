@@ -12,6 +12,7 @@ import {
 } from '../_shared/disclaimers.ts'
 import { requirePhone, requireMemberPhone } from '../_shared/rsvp-contact.ts'
 import { needsVote, validateVote } from '../_shared/amenity-voting.ts'
+import { normalizeQuestions, validateAnswers } from '../_shared/rsvp-questions.ts'
 import {
   resolveCheckoutTotals,
   validateChoice as validatePaymentChoice,
@@ -64,6 +65,7 @@ serve(async (req) => {
       phone,
       seat_role,
       amenity_vote_option_id,
+      rsvp_answers,
       plan_kind,
       method,
     } = await req.json()
@@ -123,11 +125,16 @@ serve(async (req) => {
 
     let seatOptionsJson = ''
     let disclaimerAcksJson = ''
+    let normalizedRsvpAnswers: Record<string, unknown> = {}
     let rsvpSeatRole: 'adult' | 'kid' = 'adult'
     let rsvpSeats: ReturnType<typeof normalizePartySeats> = []
     if (type === 'rsvp') {
       const catalog = normalizeIncludedItems(event.included_items)
       const discCatalog = normalizeDisclaimers(event.disclaimers)
+      const questionCatalog = normalizeQuestions(event.rsvp_questions)
+      const questionResult = validateAnswers(questionCatalog, rsvp_answers)
+      if (questionResult.error) throw new Error(questionResult.error)
+      normalizedRsvpAnswers = questionResult.answers
       const ackErr = validateAcks(discCatalog, disclaimer_acks)
       if (ackErr) throw new Error(ackErr)
       const ackIds = parseAckIds(disclaimer_acks)
@@ -431,6 +438,7 @@ serve(async (req) => {
         seatOptions: seat_options,
         disclaimerAcks: disclaimer_acks,
         amenityVoteOptionId: amenity_vote_option_id,
+        rsvpAnswers: normalizedRsvpAnswers,
         planKind: payPlanKind,
         method: payMethod,
         payer: isGuest

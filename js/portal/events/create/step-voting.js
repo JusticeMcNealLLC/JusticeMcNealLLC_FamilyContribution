@@ -21,7 +21,7 @@ function _cfg() {
     if (!STATE.form.amenity_voting || typeof STATE.form.amenity_voting !== 'object') {
         STATE.form.amenity_voting = (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.defaultConfig === 'function')
             ? window.EventsAmenityVoting.defaultConfig()
-            : { enabled: false, options: [], closes_at: null, results_visible: 'after_close' };
+            : { enabled: false, selection_mode: 'single', options: [], closes_at: null, results_visible: 'after_close' };
     }
     return STATE.form.amenity_voting;
 }
@@ -69,6 +69,11 @@ function html() {
                 <span><span class="text-sm font-semibold text-gray-800">Enable amenity voting</span><span class="block text-xs text-gray-500">Requires at least two options.</span></span>
             </label>
             <div id="ecAmenityFields" class="${av.enabled ? '' : 'hidden'}">
+                <label class="ec-label">Attendee selections</label>
+                <select id="ecAmenitySelectionMode" class="ec-input mb-3"${locked ? ' disabled' : ''}>
+                    <option value="single" ${av.selection_mode !== 'multiple' ? 'selected' : ''}>Allow one option</option>
+                    <option value="multiple" ${av.selection_mode === 'multiple' ? 'selected' : ''}>Allow multiple options</option>
+                </select>
                 <p class="text-sm font-semibold text-gray-800 mb-2">Options</p>
                 <div id="ecAmenityOptions">${optionsHtml}</div>
                 ${locked ? '' : '<button type="button" id="ecAmenityAdd" class="ec-btn-ghost text-sm mb-4">+ Add option</button>'}
@@ -88,6 +93,8 @@ function _syncFromDom() {
     const cfg = _cfg();
     const enabledEl = document.getElementById('ecAmenityEnabled');
     cfg.enabled = !!(enabledEl && enabledEl.checked);
+    const modeEl = document.getElementById('ecAmenitySelectionMode');
+    cfg.selection_mode = modeEl?.value === 'multiple' ? 'multiple' : 'single';
     const closesEl = document.getElementById('ecAmenityCloses');
     cfg.closes_at = closesEl && closesEl.value ? new Date(closesEl.value).toISOString() : null;
     const visEl = document.getElementById('ecAmenityResultsVisible');
@@ -121,6 +128,7 @@ function wire() {
         }
     });
     document.getElementById('ecAmenityCloses')?.addEventListener('change', _syncFromDom);
+    document.getElementById('ecAmenitySelectionMode')?.addEventListener('change', _syncFromDom);
     document.getElementById('ecAmenityResultsVisible')?.addEventListener('change', _syncFromDom);
     document.getElementById('ecAmenityAdd')?.addEventListener('click', () => {
         if (locked) return;
@@ -154,6 +162,9 @@ function wire() {
 export function validateVoting(form) {
     const av = form.amenity_voting;
     if (!av || av.enabled !== true) return null;
+    if (!['single', 'multiple'].includes(av.selection_mode || 'single')) {
+        return 'Choose whether attendees can select one or multiple amenity options.';
+    }
     const labeled = (av.options || []).filter((o) => o && String(o.label || '').trim());
     if (labeled.length < 2) return 'Add at least two amenity options when voting is enabled.';
     return null;

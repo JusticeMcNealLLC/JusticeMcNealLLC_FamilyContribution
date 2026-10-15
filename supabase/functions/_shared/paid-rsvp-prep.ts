@@ -18,6 +18,7 @@ import {
   resolveCheckoutTotals,
 } from './payment-choice.ts'
 import { buildMonthlyInstallmentRows } from './payment-schedule.ts'
+import { saveRsvpAnswers } from './rsvp-questions.ts'
 import {
   ensurePartyAndSeats,
   normalizePartySeats,
@@ -33,6 +34,7 @@ export type PreparePaidRsvpContext = {
   seatRole?: 'adult' | 'kid'
   seatOptions?: unknown
   disclaimerAcks: unknown
+  rsvpAnswers?: Record<string, unknown>
   amenityVoteOptionId?: string | null
   planKind: PlanKind
   method: PayMethod
@@ -454,7 +456,7 @@ export async function preparePaidRsvpForCheckout(
   supabase: any,
   ctx: PreparePaidRsvpContext,
 ): Promise<PreparePaidRsvpResult> {
-  const { event, disclaimerAcks, planKind, method, payer } = ctx
+  const { event, disclaimerAcks, rsvpAnswers = {}, planKind, method, payer } = ctx
   const eventId = event.id
   const catalog = normalizeIncludedItems(event.included_items)
   const discCatalog = normalizeDisclaimers(event.disclaimers)
@@ -521,6 +523,7 @@ export async function preparePaidRsvpForCheckout(
 
   if (payer.kind === 'member') {
     const rsvp = await upsertMemberRsvp(supabase, eventId, payer.userId)
+    await saveRsvpAnswers(supabase, eventId, rsvpAnswers, { rsvpId: rsvp.id })
     rsvpId = rsvp.id
   } else {
     const token = payer.guestToken?.trim() || crypto.randomUUID()
@@ -532,6 +535,7 @@ export async function preparePaidRsvpForCheckout(
       payer.guestPhone,
       token,
     )
+    await saveRsvpAnswers(supabase, eventId, rsvpAnswers, { guestRsvpId: guestRsvp.id })
     rsvpId = guestRsvp.id
     guestToken = guestRsvp.guest_token
   }

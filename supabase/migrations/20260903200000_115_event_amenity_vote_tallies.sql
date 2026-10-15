@@ -85,13 +85,28 @@ BEGIN
 
     IF v_visible THEN
         FOR r IN
-            SELECT p.amenity_vote_option_id AS opt_id, COUNT(*)::int AS cnt
-            FROM public.event_parties p
-            WHERE p.event_id = p_event_id
-              AND p.amenity_vote_status = 'counted'
-              AND p.amenity_vote_option_id IS NOT NULL
-              AND btrim(p.amenity_vote_option_id) <> ''
-            GROUP BY p.amenity_vote_option_id
+            WITH counted_votes AS (
+                SELECT
+                    p.id,
+                    CASE
+                        WHEN btrim(p.amenity_vote_option_id) LIKE '[%'
+                            THEN p.amenity_vote_option_id::jsonb
+                        ELSE jsonb_build_array(p.amenity_vote_option_id)
+                    END AS option_ids
+                FROM public.event_parties p
+                WHERE p.event_id = p_event_id
+                  AND p.amenity_vote_status = 'counted'
+                  AND p.amenity_vote_option_id IS NOT NULL
+                  AND btrim(p.amenity_vote_option_id) <> ''
+            ), expanded_votes AS (
+                SELECT DISTINCT p.id, vote.opt_id
+                FROM counted_votes p
+                CROSS JOIN LATERAL jsonb_array_elements_text(p.option_ids) AS vote(opt_id)
+                WHERE btrim(vote.opt_id) <> ''
+            )
+            SELECT opt_id, COUNT(*)::int AS cnt
+            FROM expanded_votes
+            GROUP BY opt_id
         LOOP
             v_tallies := v_tallies || jsonb_build_object(r.opt_id, r.cnt);
             v_total := v_total + r.cnt;

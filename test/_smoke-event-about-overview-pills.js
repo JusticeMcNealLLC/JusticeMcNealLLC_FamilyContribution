@@ -52,12 +52,12 @@ template.includes('includedCatalogHtml || \'\'')
     : fail('Included catalog accidentally folded into pills');
 
 console.log('\n── Pill row ─────────────────────────────────────────────────────────────');
-css.includes('flex-wrap:nowrap')
-    && css.includes('overflow-x:auto')
+css.includes('flex-wrap:wrap')
+    && css.includes('overflow:visible')
     && css.includes('min-height:44px')
     && css.includes('white-space:nowrap')
-    ? pass('tablist is one scrollable row')
-    : fail('tablist still wraps or is not scrollable');
+    ? pass('tablist wraps so every choice stays directly accessible')
+    : fail('tablist still hides later choices');
 
 console.log(failed ? `\n✗ ${failed} check(s) failed\n` : '\n✓ about overview pills smoke: ALL PASS\n');
 process.exit(failed ? 1 : 0);

@@ -4,6 +4,7 @@ const LABEL_MAX = 80
 const DESC_MAX = 240
 const OPTIONS_MAX = 10
 const RESULTS_VISIBLE = ['after_close', 'always', 'host_only'] as const
+const SELECTION_MODES = ['single', 'multiple'] as const
 
 type AmenityOption = {
   id: string
@@ -13,6 +14,7 @@ type AmenityOption = {
 
 type AmenityConfig = {
   enabled: boolean
+  selection_mode: 'single' | 'multiple'
   options: AmenityOption[]
   closes_at: string | null
   results_visible: string
@@ -47,6 +49,7 @@ function normalizeOptions(items: unknown): AmenityOption[] {
 export function normalizeConfig(raw: unknown): AmenityConfig {
   const base = {
     enabled: false,
+    selection_mode: 'single' as const,
     options: [] as AmenityOption[],
     closes_at: null as string | null,
     results_visible: 'after_close',
@@ -54,6 +57,9 @@ export function normalizeConfig(raw: unknown): AmenityConfig {
   if (!raw || typeof raw !== 'object') return base
   const row = raw as Record<string, unknown>
   const options = normalizeOptions(row.options)
+  const selectionMode = SELECTION_MODES.includes(String(row.selection_mode || '').trim() as typeof SELECTION_MODES[number])
+    ? String(row.selection_mode).trim() as 'single' | 'multiple'
+    : base.selection_mode
   let resultsVisible = String(row.results_visible || base.results_visible).trim()
   if (!RESULTS_VISIBLE.includes(resultsVisible as typeof RESULTS_VISIBLE[number])) {
     resultsVisible = base.results_visible
@@ -65,6 +71,7 @@ export function normalizeConfig(raw: unknown): AmenityConfig {
   }
   return {
     enabled: row.enabled === true && options.length >= 2,
+    selection_mode: selectionMode,
     options,
     closes_at: closesAt,
     results_visible: resultsVisible,
@@ -87,10 +94,32 @@ export function needsVote(event: { amenity_voting?: unknown } | null | undefined
 export function validateVote(config: unknown, optionId: unknown): string | null {
   const cfg = normalizeConfig(config)
   if (!cfg.enabled || isVotingClosed(cfg)) return null
-  const id = String(optionId || '').trim()
-  if (!id) return 'Please select an amenity preference.'
-  if (!cfg.options.some((o) => o.id === id)) return 'Please select a valid amenity option.'
+  const ids = normalizeVoteIds(optionId)
+  if (!ids.length) return 'Please select an amenity preference.'
+  if (cfg.selection_mode === 'single' && ids.length !== 1) {
+    return 'Please select one amenity preference.'
+  }
+  if (!ids.every((id) => cfg.options.some((o) => o.id === id))) {
+    return 'Please select a valid amenity option.'
+  }
   return null
+}
+
+export function normalizeVoteIds(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return [...new Set(raw.map((id) => String(id || '').trim()).filter(Boolean))]
+  }
+  const value = String(raw || '').trim()
+  if (!value) return []
+  if (value.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(value)
+      if (Array.isArray(parsed)) return normalizeVoteIds(parsed)
+    } catch (_) {
+      // Preserve legacy scalar values when the stored text is not valid JSON.
+    }
+  }
+  return [value]
 }
 
 export function resolveVoteStatus(seatPriceCents: number): AmenityVoteStatus {

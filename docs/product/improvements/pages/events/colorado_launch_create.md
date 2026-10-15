@@ -8,7 +8,7 @@ Staging create for the family snowboarding trip. About / included / disclaimers 
 | --- | --- |
 | `event_type` | `llc` |
 | `member_only` | `false` |
-| `title` | `Colorado Snowboarding Trip 2028` |
+| `title` | `Colorado Snowboarding Trip 2027` |
 | `slug` | `colorado-snowboarding-2028` |
 | `category` | `trip` |
 | `location_text` | `Keystone, Colorado` |
@@ -22,7 +22,7 @@ Staging create for the family snowboarding trip. About / included / disclaimers 
 | `capacity_mode` | `none` |
 | `max_participants` | `NULL` |
 | `fund_deadline` | `2027-11-01` (America/New_York start-of-day) |
-| `start_date` | `2028-01-25` (late January; Keystone) |
+| `start_date` / `end_date` | `2027-12-14` – `2027-12-18` (Keystone) |
 | `status` | `open` (after dry-run prep **482**) |
 | ACH / card | DB defaults (`TRUE`) |
 
@@ -51,7 +51,7 @@ Portal → Events → Create → type **LLC** (`member_only` off so guests can R
 | Step | Set |
 | --- | --- |
 | Basics | Title, category **Trip**, location Keystone |
-| When | Start **2028-01-25**; capacity **No limit** |
+| When | **2027-12-14 – 2027-12-18**; capacity **No limit** |
 | Pricing | Paid; adult **1000**; **Kids free**; fund deadline **2027-11-01** |
 | Review | Save as **draft** (or open when ready for dry-run) |
 

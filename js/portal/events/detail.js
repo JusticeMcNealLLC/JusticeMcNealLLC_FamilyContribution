@@ -159,11 +159,14 @@ const rawDesc = event.description || '';
 const extraAboutTabs = (window.EventsAboutTabs && typeof window.EventsAboutTabs.normalizeAboutTabs === 'function')
     ? window.EventsAboutTabs.normalizeAboutTabs(event.about_tabs)
     : [];
-const hasAboutTabs = extraAboutTabs.length > 0;
+const hasItinerary = !!(event.itinerary && event.itinerary.enabled === true);
+const hasAboutTabs = extraAboutTabs.length > 0 || hasItinerary;
 const aboutTabsHtml = hasAboutTabs && window.EventsAboutTabs && typeof window.EventsAboutTabs.aboutTabsHtml === 'function'
     ? window.EventsAboutTabs.aboutTabsHtml(event.about_tabs, {
         idPrefix: `portalAbout-${eventId}`,
         overview: rawDesc,
+        itinerary: event.itinerary,
+        event,
     })
     : '';
 const descHtml = hasAboutTabs

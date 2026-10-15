@@ -9,12 +9,14 @@
 import '../../components/events/constants.js'; // EventsConstants (shared)
 import '../../components/events/helpers.js'; // EventsHelpers (shared)
 import '../../components/events/capacity.js'; // EventsCapacity (shared)
+import '../../components/events/itinerary.js'; // EventsItinerary (shared)
 import '../../components/events/about-tabs.js'; // EventsAboutTabs (shared)
 import '../../components/events/hero-tint.js'; // EventsHeroTint (banner fade)
 import '../../components/events/discussion.js'; // EventsDiscussion (pane + sheet)
 import '../../components/events/included-items.js'; // EventsIncludedItems (shared)
 import '../../components/events/disclaimers.js'; // EventsDisclaimers (shared)
 import '../../components/events/amenity-voting.js'; // EventsAmenityVoting (shared)
+import '../../components/events/rsvp-questions.js'; // EventsRsvpQuestions (shared)
 import '../../components/events/payment-choice.js'; // EventsPaymentChoice (shared)
 import '../../components/events/invest-ack.js'; // EventsInvestAck (shared)
 import '../../components/events/seat-picker.js'; // EventsSeatPicker (shared, legacy single-seat)
@@ -67,11 +69,13 @@ import './create/step-basics.js';
 import './create/step-about.js';
 import './create/step-included.js';
 import './create/step-when.js';
+import './create/step-itinerary.js';
 import './create/step-pricing.js';
 import './create/step-llc.js';
 import './create/step-competition.js';
 import './create/step-disclaimers.js';
 import './create/step-voting.js';
+import './create/step-questions.js';
 import './create/step-review.js';
 import './create/raffle-builder.js';
 import './create/submit.js';

@@ -27,11 +27,33 @@ const sql = read('scripts/fill-colorado-event-content-2028.sql');
     ['Pants photo', 'colorado-2028-snow-pants.jpg'],
     ['default-no-refunds', 'default-no-refunds'],
     ['default-flyers', 'default-flyers'],
+    ['five-day itinerary', 'itinerary = $itinerary$'],
+    ['arrival rest day', 'Arrival & rest day'],
+    ['snowboarding activity', 'Snowboarding'],
+    ['ice skating activity', 'Ice skating'],
+    ['snow tubing activity', 'Snow tubing'],
+    ['departure rest day', 'Departure & rest day'],
     ['no in-app refunds policy', 'non-refundable for any reason via the event system'],
+    ['airfare excluded from covered costs', 'Airfare and transportation are not included'],
+    ['self-arranged flight plan', 'Everyone is responsible for booking and paying for their own plane ticket'],
+    ['Atlanta to Denver route', 'Atlanta to Denver'],
+    ['Denver drive time', 'about an hour from the Airbnb area'],
+    ['rental car plan', '2-3 rental cars'],
+    ['airfare planning tip', '30-45 days before departure'],
+    ['no group transportation', 'The event will not provide group transportation'],
+    ['transportation disabled', 'transportation_enabled = FALSE'],
     ['target slug', "colorado-snowboarding-2028"],
 ].forEach(([label, needle]) => {
     sql.includes(needle) ? pass(`SQL has ${label}`) : fail(`SQL missing ${label}`);
 });
+
+const prep = read('scripts/prep-colorado-dry-run-2028.sql');
+[
+    '"label": "Snowboarding"',
+    '"label": "Snow tubing"',
+    '"label": "Ice skating"',
+    '"label": "Group dinner night"',
+].forEach((needle) => prep.includes(needle) ? pass(`Colorado amenity seed has ${needle}`) : fail(`Colorado amenity seed missing ${needle}`));
 
 const beanieImg = path.join(root, 'assets/events/colorado-2028-beanie.jpg');
 const pantsImg = path.join(root, 'assets/events/colorado-2028-snow-pants.jpg');
@@ -71,6 +93,12 @@ submit.includes('about_tabs')
     && submit.includes('disclaimers')
     ? pass('submit.js still writes about_tabs / included_items / disclaimers')
     : fail('submit.js missing JSON column writes');
+
+const createSql = read('scripts/create-colorado-event-2028.sql');
+createSql.includes('transportation_enabled')
+    && createSql.includes('FALSE')
+    ? pass('Colorado create SQL disables provided transportation')
+    : fail('Colorado create SQL still defaults to provided transportation');
 
 const included = read('js/portal/events/create/step-included.js');
 included.includes('Clothing size')

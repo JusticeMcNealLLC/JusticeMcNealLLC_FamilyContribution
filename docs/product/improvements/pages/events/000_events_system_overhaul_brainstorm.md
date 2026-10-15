@@ -2,7 +2,7 @@
 
 **Status:** Living spec + actionable checklist (implementation proceeds plan-section by plan-section)  
 **Date:** 2026-08-30 (checklist expanded; §11 resolved same day)  
-**Primary driver:** Colorado snowboarding trip (January 2028)  
+**Primary driver:** Colorado snowboarding trip (December 2027)
 **Scope:** Universal events platform; Colorado is the first paid multi-month worked example  
 **How to use §13:** Each checkbox is sized for **one plan-mode session** (spec → implement → smoke). Work top-to-bottom within a section; sections can overlap slightly when noted. Check items only when that slice is **done in production-ready form** for that phase’s bar (MVP vs final called out).
 
@@ -248,7 +248,7 @@ Build on existing manage tabs (`RSVPs`, `Money`, etc. in portal events manage) r
 | Field | Value |
 | --- | --- |
 | Trip | Family snowboarding — Colorado |
-| Event date | **January 2028** |
+| Event date | **December 14–18, 2027** |
 | Announce / site ready | **~2–3 months** — product announce-ready; host sends **system SMS invites** (and/or shares public URL) |
 | Payment deadline | **October or November 2027** (~16 months runway from now; ~11–12 months from announce) |
 | Price | **$1000 / adult**; ACH preferred; card allowed with fee pass-through |
@@ -477,7 +477,7 @@ Nothing material left open for announce. Implementation details (exact Stripe fe
 
 ### 13.15 Colorado launch package
 
-- [x] **MVP** — Create Colorado event with $1000 adult, kids free, no capacity cap, Oct/Nov 2027 deadline, Jan 2028 date
+- [x] **MVP** — Create Colorado event with $1000 adult, kids free, no capacity cap, Nov 2027 deadline, Dec 14–18, 2027 dates
 - [x] **MVP** — About tabs + included clothing options + no-refund disclaimers filled
 - [ ] **MVP** — End-to-end dry run: SMS invite → guest RSVP → vote → ACH/card setup → magic-link SMS → host roster/money
 - [ ] **MVP** — Host sends real SMS invites to family; cache/SW bump

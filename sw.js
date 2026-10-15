@@ -2,13 +2,15 @@
 // Cache-first for statics, network-first for API calls.
 // Push notification handler for native OS notifications.
 
-const CACHE_NAME = 'jm-portal-v213';
+const CACHE_NAME = 'jm-portal-v221';
 
 // Shell assets to pre-cache on install
 const SHELL_ASSETS = [
     '/pages/portal/index.html',
     '/pages/portal/feed.html',
     '/pages/portal/quests.html',
+    '/portal/settings.html',
+    '/pages/portal/settings.html',
     '/js/pages/portal/index.js',
     '/js/pages/portal/ui/greeting.js',
     '/js/pages/portal/ui/activityCarousel.js',
@@ -53,14 +55,18 @@ const SHELL_ASSETS = [
     '/js/components/pageShell/ui/adminBadges.js',
     '/js/components/pageShell/ui/reentrySplash.js',
     '/js/config.js',
+    '/js/portal/settings.js',
+    '/js/components/notifications.js',
+    '/js/push.js',
+    '/js/auth/shared.js',
     '/js/lottie-effects.js',
     '/assets/lottie/founders.json',
     '/assets/lottie/cat-playing.json',
     '/assets/banner/founder1.webp',
     '/assets/banner/cat1.webp',
     '/pages/portal/events.html',
-    '/css/pages/portal/events/index.css?v=242',
-    '/js/portal/events/events.bundle.js?v=251',
+    '/css/pages/portal/events/index.css?v=246',
+    '/js/portal/events/events.bundle.js?v=258',
     '/manifest.json',
 ];
 

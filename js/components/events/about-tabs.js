@@ -43,6 +43,10 @@
         return /^(overview|about)$/i.test(String(title || '').trim());
     }
 
+    function isItineraryTitle(title) {
+        return /^itinerary$/i.test(String(title || '').trim());
+    }
+
     /**
      * Extra About sections (Itinerary, etc.). Empty when the event is description-only.
      * @param {Array} tabs
@@ -50,15 +54,24 @@
      */
     function aboutTabsHtml(tabs, opts) {
         const extra = normalizeAboutTabs(tabs);
-        if (!extra.length) return '';
         const prefix = (opts && opts.idPrefix) || 'aboutTabs';
         const overview = String(opts && opts.overview || '').trim();
+        const itinerary = opts && opts.itinerary;
+        const hasItinerary = !!(itinerary && itinerary.enabled === true);
+        if (!extra.length && !hasItinerary) return '';
         const list = extra.slice();
         if (overview && !extra.some((t) => isOverviewTitle(t.title))) {
             list.unshift({
                 id: `${prefix}-overview`,
                 title: 'Overview',
                 body: overview.slice(0, BODY_MAX),
+            });
+        }
+        if (hasItinerary && !list.some((t) => isItineraryTitle(t.title))) {
+            list.push({
+                id: `${prefix}-itinerary`,
+                title: 'Itinerary',
+                body: '',
             });
         }
         const buttons = list.map((tab, i) => `
@@ -72,6 +85,9 @@
                 data-about-panel="${escapeHtml(tab.id)}"
                 ${i === 0 ? '' : 'hidden'}>
                 <div class="ed-about-tab-body">${bodyToHtml(tab.body)}</div>
+                ${isItineraryTitle(tab.title) && hasItinerary && window.EventsItinerary && typeof window.EventsItinerary.calendarHtml === 'function'
+                    ? window.EventsItinerary.calendarHtml(itinerary, opts.event)
+                    : ''}
             </div>
         `).join('');
         return `
@@ -84,25 +100,34 @@
 
     function wireAboutTabs(root) {
         const scope = root || document;
-        scope.querySelectorAll('[data-about-tabs-root]').forEach((wrap) => {
+        const roots = [];
+        if (scope.matches && scope.matches('[data-about-tabs-root]')) roots.push(scope);
+        if (scope.querySelectorAll) {
+            scope.querySelectorAll('[data-about-tabs-root]').forEach((wrap) => roots.push(wrap));
+        }
+
+        roots.forEach((wrap) => {
             if (wrap.dataset.aboutWired === '1') return;
             wrap.dataset.aboutWired = '1';
-            wrap.querySelectorAll('[data-about-tab]').forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    const id = btn.getAttribute('data-about-tab');
-                    wrap.querySelectorAll('[data-about-tab]').forEach((b) => {
-                        const on = b.getAttribute('data-about-tab') === id;
-                        b.classList.toggle('is-active', on);
-                        b.setAttribute('aria-selected', on ? 'true' : 'false');
-                    });
-                    wrap.querySelectorAll('[data-about-panel]').forEach((panel) => {
-                        const on = panel.getAttribute('data-about-panel') === id;
-                        panel.classList.toggle('hidden', !on);
-                        if (on) panel.removeAttribute('hidden');
-                        else panel.setAttribute('hidden', '');
-                    });
-                    btn.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
+            wrap.addEventListener('click', (event) => {
+                const btn = event.target && event.target.closest
+                    ? event.target.closest('[data-about-tab]')
+                    : null;
+                if (!btn || !wrap.contains(btn)) return;
+
+                const id = btn.getAttribute('data-about-tab');
+                wrap.querySelectorAll('[data-about-tab]').forEach((b) => {
+                    const on = b.getAttribute('data-about-tab') === id;
+                    b.classList.toggle('is-active', on);
+                    b.setAttribute('aria-selected', on ? 'true' : 'false');
                 });
+                wrap.querySelectorAll('[data-about-panel]').forEach((panel) => {
+                    const on = panel.getAttribute('data-about-panel') === id;
+                    panel.classList.toggle('hidden', !on);
+                    if (on) panel.removeAttribute('hidden');
+                    else panel.setAttribute('hidden', '');
+                });
+                btn.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
             });
         });
     }
@@ -112,6 +137,7 @@
         BODY_MAX,
         normalizeAboutTabs,
         isOverviewTitle,
+        isItineraryTitle,
         aboutTabsHtml,
         wireAboutTabs,
     };

@@ -75,8 +75,8 @@ engagement.includes('EventsRsvpWizard.needsPrep')
     : fail('portal engagement wiring missing');
 
 const sections = read('js/portal/events/detail/sections.js');
-sections.includes('er-wizard-prompt')
-    && sections.includes('EventsRsvpWizard.needsPrep')
+sections.includes('EventsRsvpWizard.needsPrep')
+    && sections.includes('return \'\';')
     ? pass('portal detail strips inline prep for wizard')
     : fail('portal sections prep strip missing');
 
@@ -92,17 +92,17 @@ main.includes('rsvp-wizard.js')
 
 console.log('\n── Assets ───────────────────────────────────────────────────────────────');
 const html = read('events/index.html');
-html.includes('rsvp-wizard.js?v=194')
-    && html.includes('detail.css?v=194')
-    ? pass('public page loads wizard + CSS v194')
+html.includes('rsvp-wizard.js?v=224')
+    && html.includes('detail.css?v=211')
+    ? pass('public page loads wizard + CSS v224/v211')
     : fail('public asset bump incomplete');
 
-read('pages/portal/events.html').includes('events.bundle.js?v=194')
-    ? pass('portal bundle ?v=194')
+read('pages/portal/events.html').includes('events.bundle.js?v=258')
+    ? pass('portal bundle ?v=258')
     : fail('portal bundle not bumped');
 
-read('sw.js').includes('jm-portal-v142')
-    ? pass('SW CACHE_NAME v142')
+read('sw.js').includes('jm-portal-v221')
+    ? pass('SW CACHE_NAME v221')
     : fail('SW not bumped');
 
 const css = read('css/pages/portal/events/detail.css');

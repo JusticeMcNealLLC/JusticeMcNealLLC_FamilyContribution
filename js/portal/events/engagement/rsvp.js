@@ -183,6 +183,18 @@ function evtValidatePartySeatsForSubmit(event, seats) {
     return null;
 }
 
+function evtReadRsvpAnswersForSubmit(event, root) {
+    return window.EventsRsvpQuestions?.readAnswersFromRoot
+        ? window.EventsRsvpQuestions.readAnswersFromRoot(root || document, event?.rsvp_questions)
+        : {};
+}
+
+function evtValidateRsvpAnswersForSubmit(event, answers) {
+    return window.EventsRsvpQuestions?.validateAnswers
+        ? window.EventsRsvpQuestions.validateAnswers(event?.rsvp_questions, answers)
+        : null;
+}
+
 function evtPartyTotalForSubmit(event) {
     const root = document.getElementById('eventsDetailView') || document;
     if (window.EventsPartySeats && typeof window.EventsPartySeats.partyBaseTotalCents === 'function') {
@@ -299,6 +311,7 @@ async function evtHandleRsvp(eventId, status) {
             }
         }
         let amenity_vote_option_id = null;
+        let rsvp_answers = {};
         if (status === 'going' && needsAmenityVote) {
             const amenityCfg = window.EventsAmenityVoting.normalizeConfig(event.amenity_voting);
             amenity_vote_option_id = window.EventsAmenityVoting.readVoteFromRoot(root) || '';
@@ -308,6 +321,14 @@ async function evtHandleRsvp(eventId, status) {
                     window.EventsAmenityVoting.scrollToVoteField(root);
                 }
                 alert(voteErr);
+                return;
+            }
+        }
+        if (status === 'going') {
+            rsvp_answers = evtReadRsvpAnswersForSubmit(event, root);
+            const questionErr = evtValidateRsvpAnswersForSubmit(event, rsvp_answers);
+            if (questionErr) {
+                alert(questionErr);
                 return;
             }
         }
@@ -325,7 +346,8 @@ async function evtHandleRsvp(eventId, status) {
             && typeof window.EventsPartySeats.shouldShow === 'function'
             && window.EventsPartySeats.shouldShow(event, { isHost: false }));
         const needsPartyEdge = status === 'going'
-            && (hasIncludedCatalog || hasRequiredDisclaimers || showPartySeats || needsAmenityVote);
+            && (hasIncludedCatalog || hasRequiredDisclaimers || showPartySeats || needsAmenityVote
+                || window.EventsRsvpQuestions?.hasQuestions?.(event.rsvp_questions));
         const partyTotal = status === 'going' ? evtPartyTotalForSubmit(event) : 0;
         const needsPaidCheckout = isPaidEvent && status === 'going' && partyTotal > 0;
         const needsPaymentChoice = window.EventsPaymentChoice
@@ -379,6 +401,7 @@ async function evtHandleRsvp(eventId, status) {
                 seats,
                 seat_role: seatRole,
                 ...memberPhonePayload,
+                rsvp_answers,
                 ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
                 ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
                 ...(needsPaymentChoice && paymentChoice ? {
@@ -417,6 +440,7 @@ async function evtHandleRsvp(eventId, status) {
                     seats,
                     seat_role: seatRole,
                     ...memberPhonePayload,
+                    rsvp_answers,
                     ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
                     ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
                 });
@@ -434,6 +458,7 @@ async function evtHandleRsvp(eventId, status) {
                 seats,
                 seat_role: seatRole,
                 ...memberPhonePayload,
+                rsvp_answers,
                 ...(hasRequiredDisclaimers ? { disclaimer_acks } : {}),
                 ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
             });
@@ -474,6 +499,7 @@ async function evtHandleRsvp(eventId, status) {
                 seats,
                 seat_role: seatRole,
                 ...memberPhonePayload,
+                rsvp_answers,
                 disclaimer_acks,
                 ...(needsAmenityVote ? { amenity_vote_option_id } : {}),
             });
@@ -497,6 +523,7 @@ async function evtHandleRsvp(eventId, status) {
                 seats,
                 seat_role: seatRole,
                 ...memberPhonePayload,
+                rsvp_answers,
                 amenity_vote_option_id,
             });
             if (result?.rsvp) {

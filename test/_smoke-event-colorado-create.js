@@ -22,7 +22,9 @@ const sql = read('scripts/create-colorado-event-2028.sql');
     ['kids_free true', 'kids_free'],
     ['capacity_mode none', "'none'"],
     ['fund_deadline 2027-11-01', '2027-11-01'],
-    ['start_date 2028-01-25', '2028-01-25'],
+    ['start_date 2027-12-14', '2027-12-14'],
+    ['end_date 2027-12-18', '2027-12-18'],
+    ['itinerary seed', 'itinerary'],
     ['status draft', "'draft'"],
     ['event_type llc', "'llc'"],
     ['location_lat', '39.605'],
@@ -33,7 +35,8 @@ const sql = read('scripts/create-colorado-event-2028.sql');
 
 runbook.includes('100000')
     && runbook.includes('2027-11-01')
-    && runbook.includes('2028-01-25')
+    && runbook.includes('2027-12-14')
+    && runbook.includes('2027-12-18')
     && runbook.includes('capacity_mode')
     && runbook.includes('d92a898d-a6e8-4e11-a40f-32f2dd857b4c')
     && runbook.includes('39.605')
@@ -74,7 +77,7 @@ apply.includes('load-env')
 
 console.log('\n── Docs ─────────────────────────────────────────────────────────────────');
 const brainstorm = read('docs/product/improvements/pages/events/000_events_system_overhaul_brainstorm.md');
-brainstorm.includes('[x] **MVP** — Create Colorado event with $1000 adult, kids free, no capacity cap, Oct/Nov 2027 deadline, Jan 2028 date')
+brainstorm.includes('[x] **MVP** — Create Colorado event with $1000 adult, kids free, no capacity cap, Nov 2027 deadline, Dec 14–18, 2027 dates')
     ? pass('brainstorm line 480 checked')
     : fail('brainstorm 480 not checked');
 brainstorm.includes('[x] **MVP** — About tabs + included clothing options + no-refund disclaimers filled')

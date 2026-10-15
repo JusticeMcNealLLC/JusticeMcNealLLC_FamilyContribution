@@ -102,8 +102,18 @@ function wire() {
     const STATE = window.EventsCreateSteps.getState();
     const render = window.EventsCreateSteps.render;
     const get = id => document.getElementById(id);
-    get('ecStart')?.addEventListener('input', e => STATE.form.start_date = e.target.value);
-    get('ecEnd')?.addEventListener('input', e => STATE.form.end_date = e.target.value);
+    const syncItinerary = () => {
+        if (STATE.form.itinerary?.enabled && window.EventsItinerary) {
+            STATE.form.itinerary = window.EventsItinerary.syncDaysToRange(
+                STATE.form.itinerary,
+                STATE.form.start_date,
+                STATE.form.end_date,
+                STATE.form.timezone,
+            );
+        }
+    };
+    get('ecStart')?.addEventListener('input', e => { STATE.form.start_date = e.target.value; syncItinerary(); });
+    get('ecEnd')?.addEventListener('input', e => { STATE.form.end_date = e.target.value; syncItinerary(); });
     get('ecTz')?.addEventListener('change', e => STATE.form.timezone = e.target.value);
     get('ecLocNick')?.addEventListener('input', e => STATE.form.location_nickname = e.target.value);
     document.querySelectorAll('input[name="ecCapacityMode"]').forEach(el => {

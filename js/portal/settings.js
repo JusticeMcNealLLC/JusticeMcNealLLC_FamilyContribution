@@ -1,3 +1,5 @@
+import { loadSubscription } from '../pages/portal/loaders/subscription.js';
+
 // Settings page functionality
 
 let settingsUser = null;

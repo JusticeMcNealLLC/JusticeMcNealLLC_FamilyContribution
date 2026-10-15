@@ -18,6 +18,9 @@ const sql = read('scripts/prep-colorado-dry-run-2028.sql');
 sql.includes("status = 'open'")
     && sql.includes('amenity_voting')
     && sql.includes('co-am-dinner')
+    && sql.includes('co-am-ice-skating')
+    && sql.includes('selection_mode')
+    && sql.includes('Ice skating')
     && sql.includes('colorado-snowboarding-2028')
     ? pass('prep SQL opens event + amenity options')
     : fail('prep SQL incomplete');

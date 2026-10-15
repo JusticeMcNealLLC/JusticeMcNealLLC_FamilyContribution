@@ -21,6 +21,7 @@ import {
   validatePartySeats,
 } from '../_shared/party-seats.ts'
 import { needsVote, resolveVoteStatus, validateVote } from '../_shared/amenity-voting.ts'
+import { normalizeQuestions, saveRsvpAnswers, validateAnswers } from '../_shared/rsvp-questions.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') as string
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
@@ -110,6 +111,7 @@ serve(async (req) => {
       disclaimer_acks,
       seat_role,
       amenity_vote_option_id,
+      rsvp_answers,
       payment_intent: rawPaymentIntent,
     } = await req.json()
 
@@ -150,6 +152,9 @@ serve(async (req) => {
     }
 
     const discCatalog = normalizeDisclaimers(event.disclaimers)
+    const questionCatalog = normalizeQuestions(event.rsvp_questions)
+    const questionResult = validateAnswers(questionCatalog, rsvp_answers)
+    if (questionResult.error) throw new Error(questionResult.error)
     const ackErr = validateAcks(discCatalog, disclaimer_acks)
     if (ackErr) throw new Error(ackErr)
 
@@ -172,7 +177,7 @@ serve(async (req) => {
     const emailLower = guest_email.trim().toLowerCase()
 
     async function finalizeGuestParty(guestRow: any, alreadyExists: boolean) {
-      await supabase
+      const { error: updateError } = await supabase
         .from('event_guest_rsvps')
         .update({
           guest_phone: guestPhoneE164,
@@ -180,6 +185,8 @@ serve(async (req) => {
           attach_requested: attachLater,
         })
         .eq('id', guestRow.id)
+      if (updateError) throw new Error(updateError.message)
+      await saveRsvpAnswers(supabase, event_id, questionResult.answers, { guestRsvpId: guestRow.id })
 
       if (sms_opt_in === true) {
         const smsUpsert = await upsertEventSmsRecipient(supabase, {

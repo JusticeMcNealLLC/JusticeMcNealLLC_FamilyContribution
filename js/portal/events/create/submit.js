@@ -272,10 +272,21 @@ async function submit(status) {
         const amenityVoting = (window.EventsAmenityVoting && typeof window.EventsAmenityVoting.normalizeConfig === 'function')
             ? window.EventsAmenityVoting.normalizeConfig(f.amenity_voting)
             : { enabled: false, options: [], closes_at: null, results_visible: 'after_close' };
+        const rsvpQuestions = (window.EventsRsvpQuestions && typeof window.EventsRsvpQuestions.normalizeQuestions === 'function')
+            ? window.EventsRsvpQuestions.normalizeQuestions(f.rsvp_questions)
+            : [];
+        const itinerary = (window.EventsItinerary && typeof window.EventsItinerary.normalizeConfig === 'function')
+            ? window.EventsItinerary.normalizeConfig(f.itinerary)
+            : { enabled: false, days: [] };
+        itinerary.days = (itinerary.days || []).map((day) => ({
+            ...day,
+            activities: (day.activities || []).filter((activity) => activity.title || activity.details),
+        }));
 
         let lockPricing = !!STATE.pricingLocked;
         let lockDisclaimers = !!STATE.disclaimersLocked;
         let lockVoting = !!STATE.votingLocked;
+        let lockRsvpQuestions = !!STATE.rsvpQuestionsLocked;
         let lockCompetition = !!STATE.competitionLocked;
         if (editing) {
             const rsvpCount = await countEventRsvps(STATE.editEventId);
@@ -283,6 +294,7 @@ async function submit(status) {
                 lockPricing = true;
                 lockDisclaimers = true;
                 lockVoting = true;
+                lockRsvpQuestions = true;
                 STATE.pricingLocked = true;
                 STATE.disclaimersLocked = true;
                 STATE.votingLocked = true;
@@ -307,6 +319,8 @@ async function submit(status) {
             description: f.description.trim() || null,
             about_tabs: aboutTabs,
             included_items: includedItems,
+            itinerary,
+            rsvp_questions: rsvpQuestions,
             banner_url: bannerUrl,
             embed_image_url: embedImageUrl,
             start_date: startISO,
@@ -391,6 +405,9 @@ async function submit(status) {
         if (!lockVoting && !isComp) {
             record.amenity_voting = amenityVoting;
         }
+        if (lockRsvpQuestions && editing) {
+            delete record.rsvp_questions;
+        }
 
         let data;
         if (editing) {
@@ -410,6 +427,9 @@ async function submit(status) {
             }
             if (!isComp && !Object.prototype.hasOwnProperty.call(record, 'amenity_voting')) {
                 record.amenity_voting = amenityVoting;
+            }
+            if (!Object.prototype.hasOwnProperty.call(record, 'rsvp_questions')) {
+                record.rsvp_questions = rsvpQuestions;
             }
             if (!Object.prototype.hasOwnProperty.call(record, 'pricing_mode')) {
                 record.pricing_mode = f.pricing_mode;

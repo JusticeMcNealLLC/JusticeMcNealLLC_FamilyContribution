@@ -46,9 +46,23 @@ function html() {
         </div>
 
         <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">Itinerary</h3>
+            <div class="ec-review-row"><span>Calendar</span><span>${f.itinerary?.enabled ? 'Shown on event page' : 'Off'}</span></div>
+            ${f.itinerary?.enabled ? `<div class="ec-review-row"><span>Days</span><span>${(f.itinerary.days || []).length}</span></div>` : ''}
+            ${f.itinerary?.enabled ? `<div class="ec-review-row"><span>Activities</span><span>${(f.itinerary.days || []).reduce((sum, day) => sum + (day.activities || []).length, 0)}</span></div>` : ''}
+        </div>
+
+        <div class="ec-review-card">
             <h3 class="font-bold text-gray-800 text-sm mb-2">Included</h3>
             <div class="ec-review-row"><span>Items</span><span>${(f.included_items || []).length
                 ? _esc(`${(f.included_items || []).length} · ${(f.included_items || []).map(i => (i.name || '').trim() || 'Untitled').join(' · ')}`)
+                : 'None'}</span></div>
+        </div>
+
+        <div class="ec-review-card">
+            <h3 class="font-bold text-gray-800 text-sm mb-2">RSVP questions</h3>
+            <div class="ec-review-row"><span>Questions</span><span>${(f.rsvp_questions || []).length
+                ? _esc(`${(f.rsvp_questions || []).length} · ${(f.rsvp_questions || []).map(q => (q.prompt || '').trim() || 'Untitled').join(' · ')}`)
                 : 'None'}</span></div>
         </div>
 
