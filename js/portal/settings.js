@@ -1,5 +1,5 @@
 import { loadSubscription } from '../pages/portal/loaders/subscription.js';
-import { openBankSetup, showBankSetupReturnNotice } from '../pages/portal/utils/bankSetup.js';
+import { openBankSetup, setupManualBankForm, showBankSetupReturnNotice } from '../pages/portal/utils/bankSetup.js';
 
 // Settings page functionality
 
@@ -392,7 +392,7 @@ function setupBillingButtons() {
     }
 
     document.getElementById('linkBankBtn')?.addEventListener('click', () => openBankSetup());
-    document.getElementById('linkBankManualBtn')?.addEventListener('click', () => openBankSetup({ manual: true }));
+    setupManualBankForm();
     showBankSetupReturnNotice(document.getElementById('bankSetupNotice'));
 
     // Cancel subscription

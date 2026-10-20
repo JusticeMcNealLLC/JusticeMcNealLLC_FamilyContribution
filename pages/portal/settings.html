@@ -175,7 +175,23 @@
                     <button id="linkBankManualBtn" type="button" class="mt-2 text-xs text-gray-500 underline py-2">
                         Bank not showing up? Enter account details manually
                     </button>
+                    <form id="manualBankForm" class="hidden mt-3 space-y-3" autocomplete="off">
+                        <input id="bankHolderName" type="text" required placeholder="Name on account" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm">
+                        <input id="bankRouting" type="text" inputmode="numeric" required maxlength="9" placeholder="Routing number (9 digits)" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm">
+                        <input id="bankAccount" type="text" inputmode="numeric" required maxlength="17" placeholder="Account number" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm">
+                        <select id="bankAccountType" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white">
+                            <option value="checking">Checking</option>
+                            <option value="savings">Savings</option>
+                        </select>
+                        <p class="text-xs text-gray-500 leading-relaxed">
+                            By submitting, you authorize Justice McNeal LLC to debit this account for your monthly contribution and any one-time deposits you make, through Stripe, until you cancel. Stripe will send a small test deposit in 1–2 business days to verify the account.
+                        </p>
+                        <button type="submit" id="manualBankSubmit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl transition text-sm">
+                            Submit Bank Account
+                        </button>
+                    </form>
                     <div id="bankSetupNotice" class="hidden mt-2 text-sm text-emerald-700"></div>
+                    <div id="bankSetupError" class="hidden mt-2 text-sm text-red-600"></div>
                 </div>
 
                 <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
