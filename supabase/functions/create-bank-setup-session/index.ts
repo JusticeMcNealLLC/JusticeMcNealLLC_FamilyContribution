@@ -6,6 +6,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno&no-check'
+import { cancelPendingContributionSetups } from '../_shared/contribution-bank-setup.ts'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   apiVersion: '2023-10-16',
@@ -70,6 +71,8 @@ serve(async (req) => {
       if (routing.length !== 9) throw new Error('Routing number must be 9 digits.')
       if (account.length < 4 || account.length > 17) throw new Error('Enter a valid account number.')
       if (!holderName) throw new Error('Enter the name on the bank account.')
+
+      await cancelPendingContributionSetups(stripe, customerRow.stripe_customer_id)
 
       const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
       const setupIntent = await stripe.setupIntents.create({

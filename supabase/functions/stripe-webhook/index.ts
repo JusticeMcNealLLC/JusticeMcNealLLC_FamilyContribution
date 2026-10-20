@@ -13,6 +13,7 @@ import {
   parseAcksMetadata,
 } from '../_shared/disclaimers.ts'
 import { normalizeSeatRole } from '../_shared/event-pricing.ts'
+import { cancelPendingContributionSetups } from '../_shared/contribution-bank-setup.ts'
 import { completePaidRsvpAfterCheckout } from '../_shared/paid-rsvp-prep.ts'
 import {
   applyCheckoutSessionExpired,
@@ -272,6 +273,7 @@ async function applyContributionPaymentMethod(si: Stripe.SetupIntent) {
     })
   }
   console.log('Contribution payment method set to bank:', pmId, 'subscription:', subscriptionId)
+  await cancelPendingContributionSetups(stripe, customerId, si.id)
 }
 
 // Handler: delayed (ACH) Checkout payment cleared
