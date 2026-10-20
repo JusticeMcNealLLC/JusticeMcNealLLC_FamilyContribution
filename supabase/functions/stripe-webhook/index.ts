@@ -1348,24 +1348,29 @@ async function handleInvoicePaid(supabase: any, invoice: Stripe.Invoice) {
     ? new Date(invoice.lines.data[0].period.start * 1000).toISOString()
     : null
 
-  const { error } = await supabase.from('invoices').upsert({
-    user_id: userId,
-    stripe_invoice_id: invoice.id,
-    amount_paid_cents: invoice.amount_paid,
-    stripe_fee_cents: stripeFee,
-    net_amount_cents: netAmount,
-    status: invoice.status,
-    hosted_invoice_url: invoice.hosted_invoice_url,
-    invoice_pdf: invoice.invoice_pdf,
-    created_at: new Date(invoice.created * 1000).toISOString(),
-    paid_at: paidAt,
-    period_start: periodStart,
-  }, {
-    onConflict: 'stripe_invoice_id',
-  })
+  // $0 invoices (trial / billing-date moves) aren't contributions; skip so streaks and totals ignore them
+  if ((invoice.amount_paid || 0) > 0) {
+    const { error } = await supabase.from('invoices').upsert({
+      user_id: userId,
+      stripe_invoice_id: invoice.id,
+      amount_paid_cents: invoice.amount_paid,
+      stripe_fee_cents: stripeFee,
+      net_amount_cents: netAmount,
+      status: invoice.status,
+      hosted_invoice_url: invoice.hosted_invoice_url,
+      invoice_pdf: invoice.invoice_pdf,
+      created_at: new Date(invoice.created * 1000).toISOString(),
+      paid_at: paidAt,
+      period_start: periodStart,
+    }, {
+      onConflict: 'stripe_invoice_id',
+    })
 
-  if (error) {
-    console.error('Error inserting invoice:', error)
+    if (error) {
+      console.error('Error inserting invoice:', error)
+    }
+  } else {
+    console.log('Skipping $0 invoice record:', invoice.id)
   }
 
   // Also refresh the subscription's current_period_end from Stripe

@@ -10,8 +10,9 @@ export function getStatusText(status, cancelAtPeriodEnd) {
             return 'Past Due';
         case 'canceled':
             return 'Canceled';
+        // trialing is only used to shift a member's billing date, not as a real trial
         case 'trialing':
-            return 'Trial';
+            return 'Active';
         default:
             return status || '--';
     }
