@@ -16,6 +16,7 @@ docs/
   business/                ← company strategy & money (not code tickets)
     strategy/              ← LLC structure, property, profits, tax
     ventures/              ← named ventures (Karry Kraze, AI, …)
+    meetings/              ← quarterly review decks + meeting notes (YYYY-MM-DD-*.pdf)
     ideas/
       revenue-ideas.md     ← brainstorm how the LLC makes more money
   legal/
@@ -32,6 +33,7 @@ docs/
 | Code/refactor audit | `product/audits/` |
 | Making the LLC more money / new ventures | `business/ideas/` or `business/ventures/` |
 | Holding / property / tax strategy | `business/strategy/` |
+| Family / quarterly meeting decks | `business/meetings/` |
 | Legal / trust / foundation policy | `legal/official/` |
 
 **Revenue brainstorm:** [`business/ideas/revenue-ideas.md`](./business/ideas/revenue-ideas.md)
