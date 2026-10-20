@@ -61,6 +61,41 @@ export function setupManualBankForm() {
     });
 }
 
+function describePaymentMethod(pm) {
+    if (!pm) return null;
+    if (pm.type === 'card') {
+        const brand = pm.brand ? pm.brand.charAt(0).toUpperCase() + pm.brand.slice(1) : 'Card';
+        return `${brand} ending ${pm.last4}`;
+    }
+    if (pm.type === 'bank') return `${pm.bank_name || 'Bank'} ending ${pm.last4}`;
+    return 'Payment method on file';
+}
+
+export async function loadPaymentMethodDisplay(currentEl, pendingEl) {
+    if (!currentEl) return;
+    try {
+        const { current, pending } = await callEdgeFunction('get-payment-method');
+        currentEl.textContent = describePaymentMethod(current) || 'No payment method on file';
+
+        if (pending && pendingEl) {
+            pendingEl.textContent = `${describePaymentMethod(pending)} waiting for verification. `;
+            if (pending.verification_url) {
+                const link = document.createElement('a');
+                link.href = pending.verification_url;
+                link.target = '_blank';
+                link.rel = 'noopener';
+                link.className = 'underline font-semibold';
+                link.textContent = 'Verify deposit';
+                pendingEl.append(link);
+            }
+            pendingEl.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error loading payment method:', error);
+        currentEl.textContent = 'Payment method on file';
+    }
+}
+
 export function showBankSetupReturnNotice(noticeEl) {
     const params = new URLSearchParams(window.location.search);
     const status = params.get('bank');

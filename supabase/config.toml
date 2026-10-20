@@ -10,6 +10,9 @@ verify_jwt = false
 [functions.create-bank-setup-session]
 verify_jwt = false
 
+[functions.get-payment-method]
+verify_jwt = false
+
 [functions.invite-user]
 verify_jwt = false
 

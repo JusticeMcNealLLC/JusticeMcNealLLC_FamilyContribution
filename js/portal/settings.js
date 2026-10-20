@@ -1,5 +1,5 @@
 import { loadSubscription } from '../pages/portal/loaders/subscription.js';
-import { openBankSetup, setupManualBankForm, showBankSetupReturnNotice } from '../pages/portal/utils/bankSetup.js';
+import { openBankSetup, setupManualBankForm, showBankSetupReturnNotice, loadPaymentMethodDisplay } from '../pages/portal/utils/bankSetup.js';
 
 // Settings page functionality
 
@@ -409,11 +409,10 @@ function setupBillingButtons() {
         });
     }
 
-    // Load payment method display (placeholder for now)
-    const paymentMethodEl = document.getElementById('paymentMethod');
-    if (paymentMethodEl) {
-        paymentMethodEl.textContent = 'Card on file';
-    }
+    loadPaymentMethodDisplay(
+        document.getElementById('paymentMethod'),
+        document.getElementById('paymentMethodPending'),
+    );
 }
 
 async function openBillingPortalWithFlow(flowType) {
