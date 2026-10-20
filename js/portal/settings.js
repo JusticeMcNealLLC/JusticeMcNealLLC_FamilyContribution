@@ -1,4 +1,5 @@
 import { loadSubscription } from '../pages/portal/loaders/subscription.js';
+import { openBankSetup, showBankSetupReturnNotice } from '../pages/portal/utils/bankSetup.js';
 
 // Settings page functionality
 
@@ -389,6 +390,10 @@ function setupBillingButtons() {
             await openBillingPortalWithFlow('payment_method_update');
         });
     }
+
+    document.getElementById('linkBankBtn')?.addEventListener('click', () => openBankSetup());
+    document.getElementById('linkBankManualBtn')?.addEventListener('click', () => openBankSetup({ manual: true }));
+    showBankSetupReturnNotice(document.getElementById('bankSetupNotice'));
 
     // Cancel subscription
     if (cancelSubscriptionBtn) {

@@ -90,6 +90,12 @@ serve(async (req) => {
         console.log('Checkout async payment failed:', event.data.object.id, 'type:', event.data.object.metadata?.payment_type)
         break
 
+      case 'setup_intent.succeeded':
+        if (event.data.object.metadata?.jm_type === 'contribution_pm_update') {
+          await applyContributionPaymentMethod(event.data.object)
+        }
+        break
+
       case 'payment_intent.succeeded':
         await handlePaymentIntentSucceeded(supabase, event.data.object)
         break
@@ -181,6 +187,14 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
     ) {
       await handleEventPmUpdateCheckout(supabase, session)
     }
+    if (session.metadata?.jm_type === 'contribution_pm_update' && session.setup_intent) {
+      const si = await stripe.setupIntents.retrieve(session.setup_intent as string)
+      if (si.status === 'succeeded') {
+        await applyContributionPaymentMethod(si)
+      } else {
+        console.log('Contribution bank setup awaiting verification:', si.id, si.status)
+      }
+    }
     return
   }
 
@@ -236,6 +250,28 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
 
     await recordExtraDeposit(supabase, session)
   }
+}
+
+// Make a verified bank account the default for the member's contribution subscription
+async function applyContributionPaymentMethod(si: Stripe.SetupIntent) {
+  const pmId = typeof si.payment_method === 'string' ? si.payment_method : si.payment_method?.id
+  const customerId = typeof si.customer === 'string' ? si.customer : si.customer?.id
+  const subscriptionId = si.metadata?.subscription_id
+  if (!pmId || !customerId) {
+    console.error('Contribution bank setup missing payment method or customer:', si.id)
+    return
+  }
+
+  await stripe.customers.update(customerId, {
+    invoice_settings: { default_payment_method: pmId },
+  })
+  if (subscriptionId) {
+    await stripe.subscriptions.update(subscriptionId, {
+      default_payment_method: pmId,
+      payment_settings: { payment_method_types: ['card', 'us_bank_account'] },
+    })
+  }
+  console.log('Contribution payment method set to bank:', pmId, 'subscription:', subscriptionId)
 }
 
 // Handler: delayed (ACH) Checkout payment cleared
