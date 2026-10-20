@@ -82,6 +82,14 @@ serve(async (req) => {
         await handleCheckoutExpired(supabase, event.data.object)
         break
 
+      case 'checkout.session.async_payment_succeeded':
+        await handleCheckoutAsyncPaymentSucceeded(supabase, event.data.object)
+        break
+
+      case 'checkout.session.async_payment_failed':
+        console.log('Checkout async payment failed:', event.data.object.id, 'type:', event.data.object.metadata?.payment_type)
+        break
+
       case 'payment_intent.succeeded':
         await handlePaymentIntentSucceeded(supabase, event.data.object)
         break
@@ -220,67 +228,86 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
       return
     }
 
-    // Get user ID from metadata or customer
-    let userId = session.metadata?.supabase_user_id
-    if (!userId && session.customer) {
-      userId = await getUserIdFromCustomer(supabase, session.customer as string)
-    }
-    if (!userId) {
-      console.error('Could not identify user for extra deposit session:', session.id)
+    // ACH completes Checkout before funds clear — recorded on async_payment_succeeded instead
+    if (session.payment_status !== 'paid') {
+      console.log('Extra deposit awaiting bank payment:', session.id, 'status:', session.payment_status)
       return
     }
 
-    // Retrieve fee data and receipt URL from the payment intent → charge → balance_transaction
-    const amountPaid = session.amount_total || 0
-    let stripeFee = 0
-    let netAmount = amountPaid
-    let receiptUrl: string | null = null
+    await recordExtraDeposit(supabase, session)
+  }
+}
 
-    try {
-      if (session.payment_intent) {
-        const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent as string, {
-          expand: ['latest_charge.balance_transaction'],
-        })
-        const charge = paymentIntent.latest_charge as Stripe.Charge
-        if (charge && typeof charge === 'object') {
-          // Grab the receipt URL from the charge
-          receiptUrl = charge.receipt_url || null
-          const bt = charge.balance_transaction as Stripe.BalanceTransaction
-          if (bt && typeof bt === 'object') {
-            stripeFee = bt.fee || 0
-            netAmount = bt.net || (amountPaid - stripeFee)
-            console.log(`Extra deposit ${session.id}: gross=${amountPaid}, fee=${stripeFee}, net=${netAmount}`)
-          }
+// Handler: delayed (ACH) Checkout payment cleared
+async function handleCheckoutAsyncPaymentSucceeded(supabase: any, session: Stripe.Checkout.Session) {
+  if (session.mode === 'payment' && session.metadata?.payment_type === 'extra_deposit') {
+    await recordExtraDeposit(supabase, session)
+    return
+  }
+  console.log('Async payment succeeded (no handler):', session.id, 'mode:', session.mode)
+}
+
+async function recordExtraDeposit(supabase: any, session: Stripe.Checkout.Session) {
+  // Get user ID from metadata or customer
+  let userId = session.metadata?.supabase_user_id
+  if (!userId && session.customer) {
+    userId = await getUserIdFromCustomer(supabase, session.customer as string)
+  }
+  if (!userId) {
+    console.error('Could not identify user for extra deposit session:', session.id)
+    return
+  }
+
+  // Retrieve fee data and receipt URL from the payment intent → charge → balance_transaction
+  const amountPaid = session.amount_total || 0
+  let stripeFee = 0
+  let netAmount = amountPaid
+  let receiptUrl: string | null = null
+
+  try {
+    if (session.payment_intent) {
+      const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent as string, {
+        expand: ['latest_charge.balance_transaction'],
+      })
+      const charge = paymentIntent.latest_charge as Stripe.Charge
+      if (charge && typeof charge === 'object') {
+        // Grab the receipt URL from the charge
+        receiptUrl = charge.receipt_url || null
+        const bt = charge.balance_transaction as Stripe.BalanceTransaction
+        if (bt && typeof bt === 'object') {
+          stripeFee = bt.fee || 0
+          netAmount = bt.net || (amountPaid - stripeFee)
+          console.log(`Extra deposit ${session.id}: gross=${amountPaid}, fee=${stripeFee}, net=${netAmount}`)
         }
       }
-    } catch (feeErr) {
-      console.error('Error retrieving extra deposit fee data (non-fatal):', feeErr)
-      netAmount = amountPaid
     }
+  } catch (feeErr) {
+    console.error('Error retrieving extra deposit fee data (non-fatal):', feeErr)
+    netAmount = amountPaid
+  }
 
-    // Store as an invoice record using the payment_intent ID as the unique key
-    const stripeInvoiceId = (session.payment_intent as string) || `ed_${session.id}`
+  // Store as an invoice record using the payment_intent ID as the unique key
+  const stripeInvoiceId = (session.payment_intent as string) || `ed_${session.id}`
 
-    const { error } = await supabase.from('invoices').upsert({
-      user_id: userId,
-      stripe_invoice_id: stripeInvoiceId,
-      amount_paid_cents: amountPaid,
-      stripe_fee_cents: stripeFee,
-      net_amount_cents: netAmount,
-      status: 'paid',
-      hosted_invoice_url: receiptUrl,
-      invoice_pdf: null,
-      payment_type: 'extra_deposit',
-      created_at: new Date().toISOString(),
-    }, {
-      onConflict: 'stripe_invoice_id',
-    })
+  const { error } = await supabase.from('invoices').upsert({
+    user_id: userId,
+    stripe_invoice_id: stripeInvoiceId,
+    amount_paid_cents: amountPaid,
+    stripe_fee_cents: stripeFee,
+    net_amount_cents: netAmount,
+    status: 'paid',
+    hosted_invoice_url: receiptUrl,
+    invoice_pdf: null,
+    payment_type: 'extra_deposit',
+    created_at: new Date().toISOString(),
+  }, {
+    onConflict: 'stripe_invoice_id',
+  })
 
-    if (error) {
-      console.error('Error inserting extra deposit invoice:', error)
-    } else {
-      console.log('Extra deposit recorded for user:', userId, 'amount:', amountPaid)
-    }
+  if (error) {
+    console.error('Error inserting extra deposit invoice:', error)
+  } else {
+    console.log('Extra deposit recorded for user:', userId, 'amount:', amountPaid)
   }
 }
 
@@ -1135,6 +1162,8 @@ async function handlePrizePoolPayment(supabase: any, session: Stripe.Checkout.Se
 // Handler: Subscription created
 async function handleSubscriptionCreated(supabase: any, subscription: Stripe.Subscription) {
   console.log('Subscription created:', subscription.id)
+  // Endpoint payloads use the endpoint's API version (basil: no top-level current_period_end); re-read at the SDK's pinned version
+  subscription = await stripe.subscriptions.retrieve(subscription.id)
 
   // Get user ID from customer
   const userId = await getUserIdFromCustomer(supabase, subscription.customer as string)
@@ -1172,6 +1201,8 @@ async function handleSubscriptionCreated(supabase: any, subscription: Stripe.Sub
 // Handler: Subscription updated
 async function handleSubscriptionUpdated(supabase: any, subscription: Stripe.Subscription) {
   console.log('Subscription updated:', subscription.id)
+  // Endpoint payloads use the endpoint's API version (basil: no top-level current_period_end); re-read at the SDK's pinned version
+  subscription = await stripe.subscriptions.retrieve(subscription.id)
   console.log('current_period_end raw:', subscription.current_period_end)
 
   // Get user ID from customer
@@ -1242,6 +1273,8 @@ async function handleSubscriptionDeleted(supabase: any, subscription: Stripe.Sub
 // Handler: Invoice paid
 async function handleInvoicePaid(supabase: any, invoice: Stripe.Invoice) {
   console.log('Invoice paid:', invoice.id)
+  // Endpoint payloads use the endpoint's API version (basil: no invoice.charge / invoice.subscription); re-read at the SDK's pinned version
+  invoice = await stripe.invoices.retrieve(invoice.id)
 
   // Get user ID from customer
   const userId = await getUserIdFromCustomer(supabase, invoice.customer as string)

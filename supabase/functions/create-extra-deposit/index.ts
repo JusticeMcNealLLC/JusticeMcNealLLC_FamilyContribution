@@ -99,7 +99,10 @@ serve(async (req) => {
     // Create one-time Checkout Session (mode: 'payment')
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'us_bank_account'],
+      payment_method_options: {
+        us_bank_account: { verification_method: 'automatic' },
+      },
       line_items: [
         {
           price_data: {
