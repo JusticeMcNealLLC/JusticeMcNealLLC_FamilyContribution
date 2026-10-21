@@ -48,7 +48,7 @@ A full-featured, invite-only family financial platform and social hub. Members c
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Vanilla JS + Tailwind CSS (CDN) + Inter font |
+| Frontend | Vanilla JS + Tailwind CSS + Inter font; React + TypeScript islands for rebuilt sections (`react/`) |
 | Backend | Supabase (Auth, PostgreSQL, Realtime, Storage, Edge Functions) |
 | Payments | Stripe (Subscriptions, Checkout, Billing Portal, Connect Express) |
 | Hosting | GitHub Pages (custom domain via CNAME) |
@@ -279,6 +279,17 @@ UPDATE profiles SET role = 'admin' WHERE email = 'your-email@example.com';
 
 ### 5. Deploy to GitHub Pages
 Push to GitHub → Settings → Pages → select branch. Custom domain via CNAME file.
+
+### React islands
+Sections rebuilt in React live in `react/` (one entry per island in `react/islands/`). Pages mount them into a placeholder div (e.g. `#react-settings-billing`) and load the built file from `js/react/`. GitHub Pages has no build step, so after editing `react/`:
+
+```bash
+npm run typecheck
+npm run build:react      # or npm run dev:react to rebuild on save
+npm run build:tailwind   # when you used new Tailwind classes
+```
+
+Commit the rebuilt `js/react/` files with the source; the React islands workflow fails if they're out of date.
 
 ---
 

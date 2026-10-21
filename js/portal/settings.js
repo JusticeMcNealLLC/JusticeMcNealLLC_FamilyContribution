@@ -1,7 +1,4 @@
-import { loadSubscription } from '../pages/portal/loaders/subscription.js';
-import { openBankSetup, setupManualBankForm, showBankSetupReturnNotice, loadPaymentMethodDisplay } from '../pages/portal/utils/bankSetup.js';
-
-// Settings page functionality
+// Settings page functionality (the Billing section is React: react/features/billing)
 
 let settingsUser = null;
 
@@ -22,9 +19,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Load user roles
     await loadSettingsRoles(user.id);
-
-    // Load subscription for billing info
-    await loadSubscription(user.id);
 
     // Load payout settings
     await loadPayoutSettings(user.id);
@@ -381,19 +375,7 @@ async function handlePasswordChange() {
 }
 
 function setupBillingButtons() {
-    const updatePaymentBtn = document.getElementById('updatePaymentBtn');
     const cancelSubscriptionBtn = document.getElementById('cancelSubscriptionBtn');
-
-    // Update payment method
-    if (updatePaymentBtn) {
-        updatePaymentBtn.addEventListener('click', async function() {
-            await openBillingPortalWithFlow('payment_method_update');
-        });
-    }
-
-    document.getElementById('linkBankBtn')?.addEventListener('click', () => openBankSetup());
-    setupManualBankForm();
-    showBankSetupReturnNotice(document.getElementById('bankSetupNotice'));
 
     // Cancel subscription
     if (cancelSubscriptionBtn) {
@@ -408,11 +390,6 @@ function setupBillingButtons() {
             }
         });
     }
-
-    loadPaymentMethodDisplay(
-        document.getElementById('paymentMethod'),
-        document.getElementById('paymentMethodPending'),
-    );
 }
 
 async function openBillingPortalWithFlow(flowType) {

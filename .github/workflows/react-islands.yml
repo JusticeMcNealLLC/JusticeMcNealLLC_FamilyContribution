@@ -1,0 +1,35 @@
+name: React islands
+
+on:
+  push:
+    paths:
+      - 'react/**'
+      - 'js/react/**'
+      - 'scripts/build-react.js'
+      - 'tsconfig.json'
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    paths:
+      - 'react/**'
+      - 'js/react/**'
+      - 'scripts/build-react.js'
+      - 'tsconfig.json'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  typecheck-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build:react
+      # GitHub Pages serves the committed js/react output, so it must match the source
+      - name: Built output is committed
+        run: git diff --exit-code -- js/react/*.js || (echo "Run npm run build:react and commit js/react/" && exit 1)

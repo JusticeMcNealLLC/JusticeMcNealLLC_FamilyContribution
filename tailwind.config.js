@@ -9,6 +9,7 @@ module.exports = {
         './events/**/*.html',
         './public/**/*.html',
         './js/**/*.js',
+        './react/**/*.{ts,tsx}',
         './test/**/*.html',
     ],
     theme: {
