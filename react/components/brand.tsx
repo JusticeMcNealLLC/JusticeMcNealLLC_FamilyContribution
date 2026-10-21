@@ -6,17 +6,50 @@ const buttonBase =
     'inline-flex items-center justify-center gap-2 min-h-[44px] px-5 rounded-xl text-[15px] font-bold transition ' +
     'disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jm-primary';
 
+export const primaryButtonClass = `${buttonBase} bg-jm-primary text-white hover:bg-jm-primary-hover`;
+export const secondaryButtonClass =
+    `${buttonBase} bg-white text-jm-primary border border-jm-border hover:bg-jm-surface hover:border-jm-primary`;
+const dangerButtonClass = `${buttonBase} bg-white text-red-700 border border-red-200 hover:bg-red-50 hover:border-red-300`;
+
 export function PrimaryButton({ className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
-    return <button type="button" {...props} className={`${buttonBase} bg-jm-primary text-white hover:bg-jm-primary-hover ${className}`} />;
+    return <button type="button" {...props} className={`${primaryButtonClass} ${className}`} />;
 }
 
 export function SecondaryButton({ className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
+    return <button type="button" {...props} className={`${secondaryButtonClass} ${className}`} />;
+}
+
+export function DangerButton({ className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
+    return <button type="button" {...props} className={`${dangerButtonClass} ${className}`} />;
+}
+
+export function Switch({ checked, onChange, label, disabled }: {
+    checked: boolean;
+    onChange: (next: boolean) => void;
+    label: string;
+    disabled?: boolean;
+}) {
     return (
         <button
-            type="button"
-            {...props}
-            className={`${buttonBase} bg-white text-jm-primary border border-jm-border hover:bg-jm-surface hover:border-jm-primary ${className}`}
-        />
+            type="button" role="switch" aria-checked={checked} aria-label={label} disabled={disabled}
+            onClick={() => onChange(!checked)}
+            className="group shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none"
+        >
+            <span
+                className={
+                    'relative inline-flex h-6 w-11 rounded-full transition-colors ' +
+                    'group-focus-visible:ring-[3px] group-focus-visible:ring-jm-primary/30 ' +
+                    (checked ? 'bg-jm-primary' : 'bg-jm-muted/60')
+                }
+            >
+                <span
+                    className={
+                        'absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow motion-safe:transition-transform ' +
+                        (checked ? 'translate-x-5' : 'translate-x-0')
+                    }
+                />
+            </span>
+        </button>
     );
 }
 

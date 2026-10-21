@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ExternalLink, SecondaryButton, SettingsRow } from '../../components/settings';
+import { SecondaryButton } from '../../components/brand';
+import { ExternalLink, Notice, SettingsRow } from '../../components/settings';
 import { redirectToStripe } from './api';
 import { ManualBankForm } from './ManualBankForm';
 
@@ -56,12 +57,16 @@ export function PayByBankRow({ onBankSubmitted }: { onBankSubmitted: () => void 
             value="Lower fees than a card"
             action={<SecondaryButton onClick={linkBank} disabled={opening}>{opening ? 'Opening…' : 'Link Bank'}</SecondaryButton>}
         >
-            <button type="button" className="mt-2 text-xs text-gray-500 underline py-2" onClick={() => setShowManual((v) => !v)}>
+            <button
+                type="button" aria-expanded={showManual}
+                className="mt-1 min-h-[44px] text-sm text-jm-muted underline underline-offset-2 hover:text-jm-primary text-left"
+                onClick={() => setShowManual((v) => !v)}
+            >
                 Bank not showing up? Enter account details manually
             </button>
             {showManual && <ManualBankForm onSubmitted={handleManualSubmitted} />}
-            {notice && <div className="mt-2 text-sm text-emerald-700">{notice}</div>}
-            {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
+            {notice && <Notice tone="success">{notice}</Notice>}
+            {error && <Notice tone="error">{error}</Notice>}
         </SettingsRow>
     );
 }

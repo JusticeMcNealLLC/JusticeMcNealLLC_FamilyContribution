@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { Avatar, Field, PrimaryButton, ProgressBar, SecondaryButton, TextInput } from '../../components/brand';
+import { SettingsSection } from '../../components/settings';
 import { fetchProfile, fetchRoles, saveProfile, type ProfileData, type ProfileForm, type Role } from './api';
 import { profileCompleteness, validateProfile, type ProfileErrors } from './validation';
 
@@ -171,14 +172,7 @@ export function ProfileSection() {
 }
 
 function ProfileShell({ children }: { children: ReactNode }) {
-    return (
-        <section className="mb-6 fade-in">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Profile</h2>
-            <div className="font-jm-body text-jm-navy bg-white rounded-2xl border border-jm-border overflow-hidden shadow-[0_1px_2px_rgba(11,37,69,0.06)]">
-                {children}
-            </div>
-        </section>
-    );
+    return <SettingsSection title="Profile" divided={false}>{children}</SettingsSection>;
 }
 
 function ProfileSkeleton() {

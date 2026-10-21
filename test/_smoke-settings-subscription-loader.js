@@ -16,10 +16,7 @@ assert(
     /<script type="module" src="\.\.\/\.\.\/js\/portal\/settings\.js"><\/script>/.test(html),
     'settings.js should load as a module'
 );
-assert(
-    settings.includes("import { loadSubscription } from '../pages/portal/loaders/subscription.js';"),
-    'settings.js should import loadSubscription'
-);
+assert(/checkAuth\(\)/.test(settings), 'settings.js should guard the page with checkAuth');
 assert(sw.includes("'/pages/portal/settings.html'"), 'service worker should cache the settings page');
 assert(sw.includes("'/js/portal/settings.js'"), 'service worker should cache settings.js');
 assert(sw.includes("'/js/pages/portal/loaders/subscription.js'"), 'service worker should cache the subscription loader');

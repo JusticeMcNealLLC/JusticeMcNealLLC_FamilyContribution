@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getStatusText } from '../../../js/pages/portal/utils/subscriptionStatus.js';
-import { SettingsRow, SettingsSection, secondaryButtonClass } from '../../components/settings';
+import { secondaryButtonClass } from '../../components/brand';
+import { SettingsRow, SettingsSection } from '../../components/settings';
 import { fetchPaymentMethod, fetchSubscription, type PaymentMethodInfo, type SubscriptionSummary } from './api';
 import { PaymentMethodRow } from './PaymentMethodRow';
 import { PayByBankRow } from './PayByBankRow';
@@ -30,7 +31,7 @@ export function BillingSection() {
     }, [loadPaymentMethod]);
 
     return (
-        <SettingsSection title="Billing" delayMs={140}>
+        <SettingsSection title="Billing" delayMs={120}>
             <PaymentMethodRow info={paymentMethod} />
             <PayByBankRow onBankSubmitted={loadPaymentMethod} />
             <SettingsRow

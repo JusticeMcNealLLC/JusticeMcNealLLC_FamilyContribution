@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ExternalLink, SecondaryButton, SettingsRow } from '../../components/settings';
+import { SecondaryButton } from '../../components/brand';
+import { ExternalLink, Notice, SettingsRow } from '../../components/settings';
 import { describePaymentMethod, redirectToStripe, type PaymentMethodInfo } from './api';
 
 export function PaymentMethodRow({ info }: { info: PaymentMethodInfo | null | undefined }) {
@@ -7,7 +8,7 @@ export function PaymentMethodRow({ info }: { info: PaymentMethodInfo | null | un
     const [error, setError] = useState<string | null>(null);
 
     const current =
-        info === undefined ? 'Loading...'
+        info === undefined ? 'Loading…'
         : info === null ? 'Payment method on file'
         : describePaymentMethod(info.current) || 'No payment method on file';
 
@@ -32,12 +33,12 @@ export function PaymentMethodRow({ info }: { info: PaymentMethodInfo | null | un
             action={<SecondaryButton onClick={openPortal} disabled={opening}>{opening ? 'Opening…' : 'Update'}</SecondaryButton>}
         >
             {pending && (
-                <div className="text-xs text-amber-700 mt-1">
+                <Notice tone="warning">
                     {describePaymentMethod(pending)} waiting for verification.{' '}
                     {pending.verification_url && <ExternalLink href={pending.verification_url}>Verify deposit</ExternalLink>}
-                </div>
+                </Notice>
             )}
-            {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
+            {error && <Notice tone="error">{error}</Notice>}
         </SettingsRow>
     );
 }

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
+import { Field, PrimaryButton, TextInput } from '../../components/brand';
+import { Notice } from '../../components/settings';
 import { submitManualBank, type ManualBankInput } from './api';
-
-const inputClass = 'w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm';
 
 const emptyForm: ManualBankInput = {
     account_holder_name: '',
@@ -36,40 +36,44 @@ export function ManualBankForm({ onSubmitted }: { onSubmitted: (verificationUrl:
     }
 
     return (
-        <form className="mt-3 space-y-3" autoComplete="off" onSubmit={handleSubmit}>
-            <input
-                type="text" required placeholder="Name on account" aria-label="Name on account" className={inputClass}
-                value={form.account_holder_name} onChange={(e) => update('account_holder_name', e.target.value)}
-            />
-            <input
-                type="text" inputMode="numeric" required maxLength={9}
-                placeholder="Routing number (9 digits)" aria-label="Routing number" className={inputClass}
-                value={form.routing_number} onChange={(e) => update('routing_number', e.target.value)}
-            />
-            <input
-                type="text" inputMode="numeric" required maxLength={17}
-                placeholder="Account number" aria-label="Account number" className={inputClass}
-                value={form.account_number} onChange={(e) => update('account_number', e.target.value)}
-            />
-            <select
-                aria-label="Account type" className={`${inputClass} bg-white`}
-                value={form.account_type} onChange={(e) => update('account_type', e.target.value as ManualBankInput['account_type'])}
-            >
-                <option value="checking">Checking</option>
-                <option value="savings">Savings</option>
-            </select>
-            <p className="text-xs text-gray-500 leading-relaxed">
+        <form className="mt-3 space-y-3 rounded-xl bg-jm-surface p-4" autoComplete="off" onSubmit={handleSubmit}>
+            <Field id="manualBankName" label="Name on account">
+                <TextInput
+                    id="manualBankName" required
+                    value={form.account_holder_name} onChange={(e) => update('account_holder_name', e.target.value)}
+                />
+            </Field>
+            <Field id="manualBankRouting" label="Routing number" hint="9 digits">
+                <TextInput
+                    id="manualBankRouting" inputMode="numeric" required maxLength={9}
+                    value={form.routing_number} onChange={(e) => update('routing_number', e.target.value)}
+                />
+            </Field>
+            <Field id="manualBankAccount" label="Account number">
+                <TextInput
+                    id="manualBankAccount" inputMode="numeric" required maxLength={17}
+                    value={form.account_number} onChange={(e) => update('account_number', e.target.value)}
+                />
+            </Field>
+            <Field id="manualBankType" label="Account type">
+                <select
+                    id="manualBankType"
+                    className="w-full min-h-[44px] rounded-lg border border-jm-border bg-white px-3.5 py-2.5 text-[15px] text-jm-navy focus:outline-none focus:border-jm-primary focus:ring-[3px] focus:ring-jm-primary/30"
+                    value={form.account_type} onChange={(e) => update('account_type', e.target.value as ManualBankInput['account_type'])}
+                >
+                    <option value="checking">Checking</option>
+                    <option value="savings">Savings</option>
+                </select>
+            </Field>
+            <p className="text-xs text-jm-muted leading-relaxed">
                 By submitting, you authorize Justice McNeal LLC to debit this account for your monthly contribution and any
                 one-time deposits you make, through Stripe, until you cancel. Stripe will send a small test deposit in 1–2
                 business days to verify the account.
             </p>
-            {error && <div className="text-sm text-red-600">{error}</div>}
-            <button
-                type="submit" disabled={submitting}
-                className="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-xl transition text-sm disabled:opacity-60"
-            >
+            {error && <Notice tone="error">{error}</Notice>}
+            <PrimaryButton type="submit" disabled={submitting} className="w-full">
                 {submitting ? 'Submitting…' : 'Submit Bank Account'}
-            </button>
+            </PrimaryButton>
         </form>
     );
 }
