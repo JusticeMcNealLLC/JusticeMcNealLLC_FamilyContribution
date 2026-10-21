@@ -3,18 +3,23 @@ const path = require('path');
 const assert = require('assert');
 
 const root = path.resolve(__dirname, '..');
-const settingsHtml = fs.readFileSync(path.join(root, 'pages/portal/settings.html'), 'utf8');
-const settingsJs = fs.readFileSync(path.join(root, 'js/portal/settings.js'), 'utf8');
-const memberModal = fs.readFileSync(path.join(root, 'js/admin/members/members-modal.js'), 'utf8');
-const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
+const settingsHtml = read('pages/portal/settings.html');
+const profileApi = read('react/features/profile/api.ts');
+const profileValidation = read('react/features/profile/validation.ts');
+const profileSection = read('react/features/profile/ProfileSection.tsx');
+const memberModal = read('js/admin/members/members-modal.js');
+const sw = read('sw.js');
 
-assert(/id="settingsBirthday"/.test(settingsHtml), 'settings page should render a birthday input');
-assert(/id="settingsPhone"/.test(settingsHtml), 'settings page should render a phone input');
-assert(/\.select\('first_name, last_name, birthday, phone, profile_picture_url'\)/.test(settingsJs), 'settings profile load should fetch birthday and phone');
-assert(/birthday: birthday \|\| null/.test(settingsJs), 'settings save should persist birthday');
-assert(/phone: phoneNorm/.test(settingsJs), 'settings save should persist phone');
-assert(/Birthday must be in the past/.test(settingsJs), 'settings save should validate future birthdays');
-assert(/normalizeSettingsPhone/.test(settingsJs), 'settings save should validate phone');
+assert(/id="react-settings-profile"/.test(settingsHtml), 'settings page should mount the React profile section');
+assert(/js\/react\/settings\.js/.test(settingsHtml), 'settings page should load the settings React bundle');
+assert(/id="profileBirthday"/.test(profileSection), 'profile section should render a birthday input');
+assert(/id="profilePhone"/.test(profileSection), 'profile section should render a phone input');
+assert(/\.select\('first_name, last_name, birthday, phone, profile_picture_url'\)/.test(profileApi), 'profile load should fetch birthday and phone');
+assert(/birthday: form\.birthday \|\| null/.test(profileApi), 'profile save should persist birthday');
+assert(/phone: form\.phone\.trim\(\) \|\| null/.test(profileApi), 'profile save should persist phone');
+assert(/Birthday must be in the past/.test(profileValidation), 'profile save should validate future birthdays');
+assert(/10-digit US phone number/.test(profileValidation), 'profile save should validate phone');
 
 assert(/data-action="reset-onboarding"/.test(memberModal), 'member sheet settings should include reset onboarding action');
 assert(/function _onResetOnboarding\(/.test(memberModal), 'member sheet should implement reset onboarding handler');
@@ -22,6 +27,6 @@ assert(/setup_completed: false/.test(memberModal), 'reset onboarding should set 
 assert(/updated_at: new Date\(\)\.toISOString\(\)/.test(memberModal), 'reset onboarding should touch updated_at');
 assert(/Birthday'/.test(memberModal), 'member overview should show birthday state');
 
-assert(/jm-portal-v113/.test(sw), 'service worker cache should be bumped for changed static assets');
+assert(/'\/js\/react\/settings\.js'/.test(sw), 'service worker should cache the settings React bundle');
 
 console.log('settings/admin onboarding smoke: all pass');
